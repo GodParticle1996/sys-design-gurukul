@@ -1,0 +1,11 @@
+# docker compose --profile ex1-algorithms up --build   → node tools/algos.js
+# ex0-slowmo mein koi service nahi chahiye — sirf tools:  docker compose run --rm tools node tools/slowmo.js   (phir: node tools/mini.js)
+x-be: &be { build: ., profiles: ["ex1-algorithms"], command: node services/backend.js }
+services:
+  lb: { build: ., profiles: ["ex1-algorithms"], command: node services/lb.js, environment: { PORT: "5201", BACKENDS: "http://backend1:5202,http://backend2:5203,http://backend3:5204,http://backend4:5205,http://backend5:5206" }, ports: ["5201:5201"] }
+  backend1: { <<: *be, environment: { PORT: "5202" }, ports: ["5202:5202"] }
+  backend2: { <<: *be, environment: { PORT: "5203" }, ports: ["5203:5203"] }
+  backend3: { <<: *be, environment: { PORT: "5204" }, ports: ["5204:5204"] }
+  backend4: { <<: *be, environment: { PORT: "5205" }, ports: ["5205:5205"] }
+  backend5: { <<: *be, environment: { PORT: "5206" }, ports: ["5206:5206"] }
+  tools: { build: ., profiles: ["tools"], environment: { LB_HOST: "lb", BACKEND1_HOST: "backend1", BACKEND2_HOST: "backend2", BACKEND3_HOST: "backend3", BACKEND4_HOST: "backend4", BACKEND5_HOST: "backend5" } }

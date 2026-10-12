@@ -1,0 +1,9 @@
+{ "about": "Achha agent: runbook aur incident padho, summary likho, khatam.",
+  "calls": [
+    { "tool": "fetch", "host": "docs.internal", "url": "/docs/runbook" },
+    { "tool": "fetch", "host": "docs.internal", "url": "/docs/incident" },
+    { "tool": "think", "ms": 30 },
+    { "tool": "write", "path": "summary.md", "data": "INC-4471: 3 IPs, 30 min, curl UA. Next: block IPs, rotate tokens." },
+    { "tool": "read", "path": "summary.md" },
+    { "tool": "done" }
+  ] }

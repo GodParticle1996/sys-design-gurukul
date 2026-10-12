@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-30-deepseek",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DeepSeek-V3: MoE routing balance (free vs aux-loss vs bias), real throttled link training step with sequential vs overlapped communication and BF16 vs FP8 gradient bytes, KV cache per user for MHA vs GQA vs MLA",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

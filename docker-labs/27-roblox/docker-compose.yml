@@ -1,0 +1,22 @@
+# docker compose --profile ex1-matchmaker up --build   → node tools/joins.js
+# docker compose --profile ex2-crash up --build        → node tools/crash.js
+# (ex2: instances fleet container ke andar chalte hain — tools ko INSTANCE_HOST=localhost aur ports 5040-5049 chahiye)
+services:
+  matchmaker:
+    build: .
+    profiles: ["ex1-matchmaker"]
+    command: node services/matchmaker.js
+    environment: { PORT: "5031" }
+    ports: ["5031:5031"]
+  platform:
+    build: .
+    profiles: ["ex2-crash"]
+    command: node services/platform.js
+    environment: { PORT: "5032" }
+    ports: ["5032:5032"]
+  fleet:
+    build: .
+    profiles: ["ex2-crash"]
+    command: node services/fleet.js
+    environment: { PORT: "5033", PLATFORM_HOST: "platform" }
+    ports: ["5033:5033", "5040-5049:5040-5049"]

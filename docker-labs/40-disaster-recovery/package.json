@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-40-disaster-recovery",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Disaster recovery (Node): region A dies under traffic — backup & restore vs pilot light vs warm standby vs active-active, measuring RTO (time to serve again), RPO (acknowledged orders lost) and what runs idle in region B; plus slow-motion tools (lib/replicator.js, lib/failover.js), sync vs async replication, DNS TTL model and why a replica is not a backup",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

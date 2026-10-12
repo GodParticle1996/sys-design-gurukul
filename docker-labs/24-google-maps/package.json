@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-24-google-maps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Google Maps: Dijkstra vs A* vs bidirectional vs CRP-style cell overlay on a 90k-junction graph, recomputing one cell after a jam vs full preprocessing, static vs time-dependent ETA against a shifted real curve, full scan vs Hilbert/S2 key range scan over 1M places",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

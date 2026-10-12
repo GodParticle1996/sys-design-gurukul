@@ -1,0 +1,4 @@
+# docker compose --profile ex1-pool up --build   → node tools/clients.js ...
+services:
+  db:     { build: ., profiles: ["ex1-pool"], command: node services/db.js,     environment: { PORT: "5131" }, ports: ["5131:5131", "5141:5141"] }
+  pooler: { build: ., profiles: ["ex1-pool"], command: node services/pooler.js, environment: { PORT: "5132", DB_HOST: db }, ports: ["5132:5132", "5142:5142"] }

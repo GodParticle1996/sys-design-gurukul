@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-36-distributed-locks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Distributed locks: TTL lock with a fencing counter, worker GC pause causing double charges with a single lock and with 5-node Redlock majority, fencing token checked by the ledger stopping them, and notify-all vs queued waiters (thundering herd wake-ups)",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

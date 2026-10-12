@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-23-datadog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Datadog March 2023: shared unowned ip-rule table, systemd-networkd deleting Cilium's foreign rules on in-place patch vs fresh boot, protocol-tag and ManageForeign fixes, synchronized auto-update vs staged waves with aged canaries, thundering-herd recovery",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

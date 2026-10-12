@@ -1,0 +1,10 @@
+# docker compose --profile ex0-slowmo up --build   → node tools/slowmo.js  (phir: node tools/mini.js)
+# docker compose --profile ex1-jitter up --build   → node tools/jitter.js
+# docker compose --profile ex2-storm up --build    → node tools/storm.js
+# docker compose --profile ex3-layers up --build   → node tools/layers.js
+services:
+  gateway: { build: ., profiles: ["ex1-jitter"], command: node services/gateway.js, environment: { PORT: "5161" }, ports: ["5161:5161"] }
+  fragile: { build: ., profiles: ["ex0-slowmo", "ex2-storm"], command: node services/fragile.js, environment: { PORT: "5165" }, ports: ["5165:5165"] }
+  hop-a: { build: ., profiles: ["ex3-layers"], command: node services/hop.js, environment: { PORT: "5162", NAME: "A", NEXT: "http://hop-b:5163" }, ports: ["5162:5162"] }
+  hop-b: { build: ., profiles: ["ex3-layers"], command: node services/hop.js, environment: { PORT: "5163", NAME: "B", NEXT: "http://hop-c:5164" }, ports: ["5163:5163"] }
+  hop-c: { build: ., profiles: ["ex3-layers"], command: node services/hop.js, environment: { PORT: "5164", NAME: "C" }, ports: ["5164:5164"] }

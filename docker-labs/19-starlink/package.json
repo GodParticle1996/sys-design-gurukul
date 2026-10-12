@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-19-starlink",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Starlink: satellites that leave view every epoch (blackhole links), direct path vs PoP-anchored tunnel with reactive (dead-interval) vs scheduled (ephemeris, make-before-break) handover, surprise failures, fiber vs vacuum latency break-even",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

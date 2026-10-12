@@ -1,0 +1,12 @@
+# docker compose --profile ex1-election up --build
+# Note: nodes ek doosre ko localhost par dhoondhte hain, isliye compose mein network_mode: host.
+x-node: &node
+  build: .
+  network_mode: host
+  command: node services/raft-node.js
+services:
+  node-1: { <<: *node, profiles: ["ex1-election", "ex2-quorum-partition"], environment: { ID: "1", SAME_TIMEOUT: "${SAME_TIMEOUT:-0}" } }
+  node-2: { <<: *node, profiles: ["ex1-election", "ex2-quorum-partition"], environment: { ID: "2", SAME_TIMEOUT: "${SAME_TIMEOUT:-0}" } }
+  node-3: { <<: *node, profiles: ["ex1-election", "ex2-quorum-partition"], environment: { ID: "3", SAME_TIMEOUT: "${SAME_TIMEOUT:-0}" } }
+  node-4: { <<: *node, profiles: ["ex1-election", "ex2-quorum-partition"], environment: { ID: "4", SAME_TIMEOUT: "${SAME_TIMEOUT:-0}" } }
+  node-5: { <<: *node, profiles: ["ex1-election", "ex2-quorum-partition"], environment: { ID: "5", SAME_TIMEOUT: "${SAME_TIMEOUT:-0}" } }

@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-41-load-balancing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Load balancing algorithms on five backends with heavy-tailed request sizes: round robin, random, least connections, resource-based on stale heartbeats, and power of two choices — identical backends and one 3x slower backend",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

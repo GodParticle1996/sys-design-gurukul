@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System Gurukul — system design seekho, chalaake</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏛️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="topbar"></header>
+  <main id="app"></main>
+  <!-- Engine (load order CRITICAL — games.js MUST come before perfsim.js/canvas.js & app.js) -->
+  <script src="core.js"></script>
+  <script src="data-core.js"></script>
+  <script src="visuals.js"></script>
+  <script src="games.js"></script>
+  <script src="perfsim.js"></script>
+  <script src="canvas.js"></script>
+  <script src="labs.js"></script>
+  <script src="dockerlab.js"></script>
+  <script src="explain.js"></script>
+  <!-- Content (har track apni file mein — nayi cheez seekhi? bas data file mein level add karo) -->
+  <script src="data-flow.js"></script>
+  <script src="data-api.js"></script>
+  <script src="data-data.js"></script>
+  <script src="data-resil.js"></script>
+  <script src="data-dist.js"></script>
+  <script src="data-shapes.js"></script>
+  <script src="data-builds.js"></script>
+  <script src="data-feed.js"></script>
+  <!-- Feed ke naye postmortems (pm-spiral ke baad judte hain) -->
+  <script src="data-feed-2.js"></script>
+  <!-- 🏢 Real Company Stories (har video ka apna file) -->
+  <script src="data-st-01-reddit.js"></script>
+  <script src="data-st-02-cloudflare.js"></script>
+  <script src="data-st-03-jira.js"></script>
+  <script src="data-st-04-snowflake.js"></script>
+  <script src="data-st-05-airtable.js"></script>
+  <script src="data-st-06-slack.js"></script>
+  <script src="data-st-07-discord.js"></script>
+  <script src="data-st-08-instagram.js"></script>
+  <script src="data-st-09-stripe.js"></script>
+  <script src="data-st-10-prime.js"></script>
+  <script src="data-st-11-dropbox.js"></script>
+  <script src="data-st-12-whatsapp.js"></script>
+  <script src="data-st-13-roblox.js"></script>
+  <script src="data-st-14-notion.js"></script>
+  <!-- 🤖 AI Companies -->
+  <script src="data-ai-01-safety.js"></script>
+  <script src="data-ai-02-colab.js"></script>
+  <script src="data-ai-03-tiktok.js"></script>
+  <script src="data-ai-04-replit.js"></script>
+  <script src="data-ai-05-deepseek.js"></script>
+  <script src="data-ai-06-aws.js"></script>
+  <!-- 🌍 Planet-scale Infra -->
+  <script src="data-pl-01-bittorrent.js"></script>
+  <script src="data-pl-02-starlink.js"></script>
+  <script src="data-pl-03-youtube.js"></script>
+  <script src="data-pl-04-gmail.js"></script>
+  <script src="data-pl-05-search.js"></script>
+  <script src="data-pl-06-maps.js"></script>
+  <!-- gaps SABSE AAKHIR mein: registerLevelsAfter ko target track pehle se registered chahiye -->
+  <script src="data-gaps.js"></script>
+  <!-- purane topics ko gehra karne wale videos (extendLevel) + consensus — gaps ke BAAD -->
+  <script src="data-ext-videos.js"></script>
+  <script src="data-ext-episodes.js"></script>
+  <script src="data-ext-sdd1.js"></script>
+  <script src="data-v2-00-tracks.js"></script>
+  <script src="data-v2-breaker-1-kyun.js"></script>
+  <script src="data-v2-breaker-2-kaise.js"></script>
+  <script src="data-v2-breaker-3-code.js"></script>
+  <script src="data-v2-breaker-4-library.js"></script>
+  <script src="data-v2-breaker-5-kab.js"></script>
+  <script src="data-v2-retries-1-kyun.js"></script>
+  <script src="data-v2-retries-2-kaise.js"></script>
+  <script src="data-v2-retries-3-code.js"></script>
+  <script src="data-v2-retries-4-library.js"></script>
+  <script src="data-v2-retries-5-kab.js"></script>
+  <script src="data-v2-backpressure-1-kyun.js"></script>
+  <script src="data-v2-backpressure-2-kaise.js"></script>
+  <script src="data-v2-backpressure-3-code.js"></script>
+  <script src="data-v2-backpressure-4-library.js"></script>
+  <script src="data-v2-backpressure-5-kab.js"></script>
+  <script src="data-v2-noisy-1-kyun.js"></script>
+  <script src="data-v2-noisy-2-kaise.js"></script>
+  <script src="data-v2-noisy-3-code.js"></script>
+  <script src="data-v2-noisy-4-library.js"></script>
+  <script src="data-v2-noisy-5-kab.js"></script>
+  <script src="data-v2-random-1-kyun.js"></script>
+  <script src="data-v2-random-2-kaise.js"></script>
+  <script src="data-v2-random-3-code.js"></script>
+  <script src="data-v2-random-4-kab.js"></script>
+  <script src="data-v2-health-1-kyun.js"></script>
+  <script src="data-v2-health-2-kaise.js"></script>
+  <script src="data-v2-health-3-code.js"></script>
+  <script src="data-v2-health-4-library.js"></script>
+  <script src="data-v2-health-5-kab.js"></script>
+  <script src="data-v2-chaos-1-kyun.js"></script>
+  <script src="data-v2-chaos-2-kaise.js"></script>
+  <script src="data-v2-chaos-3-code.js"></script>
+  <script src="data-v2-chaos-4-kab.js"></script>
+  <!-- Screens (last — boot happens here) -->
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-28-tiktok",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TikTok/Monolith: hashed vs cuckoo embedding tables and expiry, streaming join of impressions and delayed actions with window size vs wrong negatives, nightly batch vs online updates when a user's taste flips mid-session",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

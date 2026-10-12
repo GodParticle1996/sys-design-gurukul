@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-14-dropbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dropbox Magic Pocket: real Reed-Solomon 6+4 erasure coding vs 3x replication, SMR write amplification, rent-vs-own cost model",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,11 @@
+# docker compose --profile ex1-monkey up --build   → node tools/monkey.js
+# (ya ex2-faults → faults.js · ex3-experiment → experiment.js)
+# Tools host par chalte hain (node tools/...), isliye lb aur apps ke ports bahar khule hain.
+# Yeh file pattern se likhi gayi hai — is machine par Docker nahi hai, chala ke nahi dekhi gayi.
+x-all: &all ["ex1-monkey", "ex2-faults", "ex3-experiment"]
+x-app: &app { build: ., profiles: *all, command: node services/app.js }
+services:
+  lb:   { build: ., profiles: *all, command: node services/lb.js, environment: { PORT: "5211", APPS: "http://app1:5212,http://app2:5213,http://app3:5214" }, ports: ["5211:5211"] }
+  app1: { <<: *app, environment: { PORT: "5212" }, ports: ["5212:5212"] }
+  app2: { <<: *app, environment: { PORT: "5213" }, ports: ["5213:5213"] }
+  app3: { <<: *app, environment: { PORT: "5214" }, ports: ["5214:5214"] }

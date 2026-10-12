@@ -1,0 +1,43 @@
+# Har exercise ka apna profile hai:
+#   docker compose --profile ex1-facts-answers up --build
+# Docker nahi hai? Sab kuch Node se bhi chalta hai:  npm start ex1-facts-answers
+services:
+  vote-service:
+    build: .
+    profiles: ["ex1-facts-answers"]
+    command: node services/vote-service.js
+    environment: { PORT: "4101", MODE: "${MODE:-sync}" }
+    ports: ["4101:4101"]
+
+  rank-service:
+    build: .
+    profiles: ["ex2-hot-rank"]
+    command: node services/rank-service.js
+    environment: { PORT: "4102", CLOCK: "${CLOCK:-submitted}" }
+    ports: ["4102:4102"]
+
+  listing-service:
+    build: .
+    profiles: ["ex3-cache-layers"]
+    command: node services/listing-service.js
+    environment: { PORT: "4103", LOCK: "${LOCK:-0}", STALE: "${STALE:-0}" }
+    ports: ["4103:4103"]
+
+  monolith:
+    build: .
+    profiles: ["ex4-strangler"]
+    command: node services/monolith.js
+    environment: { PORT: "4105" }
+    ports: ["4105:4105"]
+  new-service:
+    build: .
+    profiles: ["ex4-strangler"]
+    command: node services/new-service.js
+    environment: { PORT: "4106", BUG_RATE: "0.3" }
+    ports: ["4106:4106"]
+  gateway:
+    build: .
+    profiles: ["ex4-strangler"]
+    command: node services/gateway.js
+    environment: { PORT: "4104", SHIFT: "0" }
+    ports: ["4104:4104"]

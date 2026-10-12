@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-04-snowflake",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Snowflake: storage/compute alag, local cache, lazy resize, work stealing",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

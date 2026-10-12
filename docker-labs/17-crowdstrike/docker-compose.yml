@@ -1,0 +1,15 @@
+# MODE=kernel docker compose --profile ex1-content-push up --build
+# (dusre terminal: node tools/incident.js --validator spec --rollout global)
+services:
+  cloud:
+    build: .
+    profiles: ["ex1-content-push"]
+    command: node services/cloud.js
+    environment: { PORT: "4871" }
+    ports: ["4871:4871"]
+  fleet:
+    build: .
+    profiles: ["ex1-content-push"]
+    command: node services/fleet.js
+    environment: { PORT: "4872", MODE: "${MODE:-kernel}", CLOUD_HOST: "cloud" }
+    ports: ["4872:4872"]

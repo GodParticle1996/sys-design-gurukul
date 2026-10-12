@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-07-discord",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Discord: partition key, hot partition + coalescing, live migration with checkpoints",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-05-airtable",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Airtable: in-memory base aur uski chhat, live views ke diffs, dual-run migration",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

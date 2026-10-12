@@ -1,0 +1,9 @@
+# docker compose --profile ex1-chain up --build   → node tools/spof.js
+# ex2: node tools/badwrite.js (koi server nahi)
+services:
+  lb:   { build: ., profiles: ["ex1-chain"], command: node services/tier.js, environment: { PORT: "5101", NAME: "lb" },   ports: ["5101:5101"] }
+  app1: { build: ., profiles: ["ex1-chain"], command: node services/tier.js, environment: { PORT: "5102", NAME: "app1" }, ports: ["5102:5102"] }
+  app2: { build: ., profiles: ["ex1-chain"], command: node services/tier.js, environment: { PORT: "5103", NAME: "app2" }, ports: ["5103:5103"] }
+  db1:  { build: ., profiles: ["ex1-chain"], command: node services/tier.js, environment: { PORT: "5104", NAME: "db1" },  ports: ["5104:5104"] }
+  db2:  { build: ., profiles: ["ex1-chain"], command: node services/tier.js, environment: { PORT: "5105", NAME: "db2" },  ports: ["5105:5105"] }
+# Docker ke saath: DOCKER=1 node tools/spof.js  (tiers ek dusre ko service naam se bulate hain)

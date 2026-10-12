@@ -1,0 +1,22 @@
+# docker compose --profile ex1-upload up --build     → node tools/upload.js
+# docker compose --profile ex3-vttablet up --build   → node tools/clients.js --via direct | vttablet
+# ex2, ex4: node tools/transcode.js | node tools/truetime.js  (koi server nahi)
+services:
+  edge:
+    build: .
+    profiles: ["ex1-upload"]
+    command: node services/edge.js
+    environment: { PORT: "4961" }
+    ports: ["4961:4961"]
+  db:
+    build: .
+    profiles: ["ex3-vttablet"]
+    command: node services/db.js
+    environment: { PORT: "4971", MAX_CONN: "500" }
+    ports: ["4971:4971", "4976:4976"]
+  vttablet:
+    build: .
+    profiles: ["ex3-vttablet"]
+    command: node services/vttablet.js
+    environment: { PORT: "4972", DB_HOST: "db", POOL: "20", CONSOLIDATE: "${CONSOLIDATE:-1}" }
+    ports: ["4972:4972", "4977:4977"]

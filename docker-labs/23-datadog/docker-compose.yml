@@ -1,0 +1,29 @@
+# PROTO=cilium / MANAGE_FOREIGN=0 se fix dekho
+# docker compose --profile ex1-rules up --build      → node tools/incident.js --case reboot-test | in-place
+# docker compose --profile ex3-recovery up --build   → node tools/recover.js --nodes 5000
+# ex2: node tools/fleet.js (koi server nahi)
+services:
+  kernel:
+    build: .
+    profiles: ["ex1-rules"]
+    command: node services/kernel.js
+    environment: { PORT: "4991" }
+    ports: ["4991:4991"]
+  cilium:
+    build: .
+    profiles: ["ex1-rules"]
+    command: node services/cilium.js
+    environment: { PORT: "4992", KERNEL_HOST: "kernel", PROTO: "${PROTO:-}" }
+    ports: ["4992:4992"]
+  networkd:
+    build: .
+    profiles: ["ex1-rules"]
+    command: node services/networkd.js
+    environment: { PORT: "4993", KERNEL_HOST: "kernel", MANAGE_FOREIGN: "${MANAGE_FOREIGN:-1}" }
+    ports: ["4993:4993"]
+  control-plane:
+    build: .
+    profiles: ["ex3-recovery"]
+    command: node services/controlplane.js
+    environment: { PORT: "4994" }
+    ports: ["4994:4994"]

@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-21-youtube",
+  "version": "1.0.0",
+  "private": true,
+  "description": "YouTube: resumable chunked upload over a flaky link vs one blob, parallel chunked transcoding with overlap for seams, vttablet-style pooling + query consolidation + LIMIT guard in front of a connection-limited DB, TrueTime commit-wait vs NTP timestamps",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

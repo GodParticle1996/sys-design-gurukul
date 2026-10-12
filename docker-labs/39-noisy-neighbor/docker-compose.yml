@@ -1,0 +1,10 @@
+# docker compose --profile ex1-fairness up --build    → node tools/tenants.js   (phir: node tools/tenants.js --scenario average)
+# docker compose --profile ex2-autoscale up --build   → node tools/autoscale.js
+# docker compose --profile ex3-batch up --build       → node tools/batch.js
+#
+# ex0-slowmo mein koi service nahi chahiye — sirf tools:
+#   docker compose run --rm tools node tools/slowmo.js
+#   docker compose run --rm tools node tools/mini.js
+services:
+  shared: { build: ., profiles: ["ex1-fairness", "ex2-autoscale", "ex3-batch"], command: node services/shared.js, environment: { PORT: "5181" }, ports: ["5181:5181"] }
+  tools: { build: ., profiles: ["tools"], environment: { SHARED_HOST: "shared" } }

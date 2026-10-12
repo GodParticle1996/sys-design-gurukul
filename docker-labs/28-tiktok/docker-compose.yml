@@ -1,0 +1,9 @@
+# docker compose --profile ex2-join up --build   → node tools/stream.js
+# ex1, ex3: node tools/embeddings.js | node tools/tasteflip.js (koi server nahi)
+services:
+  joiner:
+    build: .
+    profiles: ["ex2-join"]
+    command: node services/joiner.js
+    environment: { PORT: "5051", WINDOW_MS: "3000" }
+    ports: ["5051:5051"]

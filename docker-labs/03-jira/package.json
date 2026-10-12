@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-03-jira",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jira: tenant isolation, index reconciliation, permission-aware search",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

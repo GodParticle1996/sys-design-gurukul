@@ -1,0 +1,23 @@
+# docker compose --profile ex1-connections up --build     → node tools/conns.js --conns 20000
+# docker compose --profile ex3-store-forward up --build   → node tools/offline.js
+# ex2 aur threads: node tools/contention.js | node tools/threads.js (koi server nahi)
+services:
+  registry:
+    build: .
+    profiles: ["ex1-connections", "ex3-store-forward"]
+    command: node services/registry.js
+    environment: { PORT: "5013" }
+    ports: ["5013:5013"]
+  chat1:
+    build: .
+    profiles: ["ex1-connections", "ex3-store-forward"]
+    command: node services/chat.js
+    environment: { PORT: "5011", NAME: "chat1", REGISTRY_HOST: "registry", CHAT1_HOST: "chat1" }
+    ports: ["5011:5011", "5111:5111"]
+    ulimits: { nofile: { soft: 65536, hard: 65536 } }
+  chat2:
+    build: .
+    profiles: ["ex3-store-forward"]
+    command: node services/chat.js
+    environment: { PORT: "5012", NAME: "chat2", REGISTRY_HOST: "registry", CHAT2_HOST: "chat2" }
+    ports: ["5012:5012", "5112:5112"]

@@ -1,0 +1,34 @@
+# docker compose --profile ex1-boot-payload up --build
+services:
+  workspace:
+    build: .
+    profiles: ["ex1-boot-payload"]
+    command: node services/workspace.js
+    environment: { PORT: "4601", BOOT: "${BOOT:-full}", USERS: "${USERS:-20000}" }
+    ports: ["4601:4601"]
+  edge-sim:
+    build: .
+    profiles: ["ex2-fanout-presence"]
+    command: node services/edge-sim.js
+    environment: { PORT: "4604" }
+    ports: ["4604:4604"]
+  channel-server:
+    build: .
+    profiles: ["ex2-fanout-presence"]
+    command: node services/channel-server.js
+    environment: { PORT: "4603", FANOUT: "${FANOUT:-broadcast}", EDGE: "${EDGE:-0}", EDGE_PORT: "4604" }
+    volumes: ["./data:/app/data"]
+    ports: ["4603:4603"]
+  shard-router:
+    build: .
+    profiles: ["ex3-hot-shard"]
+    command: node services/shard-router.js
+    environment: { PORT: "4607", ROUTING: "${ROUTING:-code}" }
+    ports: ["4607:4607"]
+  job-queue:
+    build: .
+    profiles: ["ex4-queue-jam"]
+    command: node services/job-queue.js
+    environment: { PORT: "4608", DEQUEUE_ON: "${DEQUEUE_ON:-1}", DEQUEUE_COST: "${DEQUEUE_COST:-1}", DURABLE: "${DURABLE:-0}" }
+    volumes: ["./data:/app/data"]
+    ports: ["4608:4608"]

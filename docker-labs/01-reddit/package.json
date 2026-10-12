@@ -1,0 +1,10 @@
+{
+  "name": "docker-lab-01-reddit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reddit: facts vs answers, hot rank, cache layers, strangler fig",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "engines": { "node": ">=18" }
+}

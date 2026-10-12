@@ -1,0 +1,12 @@
+{
+  "name": "docker-lab-42-chaos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chaos engineering on three app instances behind a round-robin load balancer (Node): a chaos monkey that kills random instances, three fault kinds (crash, slow, zombie) against health checks, retry and passive ejection, and a chaos experiment with a steady-state check, a hypothesis and an abort rule - plus slow-motion tools and a tiny runnable experiment",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

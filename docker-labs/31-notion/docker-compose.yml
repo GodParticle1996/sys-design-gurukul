@@ -1,0 +1,21 @@
+# docker compose --profile ex1-blocks up --build   → node tools/pageload.js
+# docker compose --profile ex2-lake up --build     → node tools/lake.js
+services:
+  blocks:
+    build: .
+    profiles: ["ex1-blocks"]
+    command: node services/blocks.js
+    environment: { PORT: "5091" }
+    ports: ["5091:5091"]
+  primary:
+    build: .
+    profiles: ["ex2-lake"]
+    command: node services/db.js
+    environment: { PORT: "5092", ROLE: "primary" }
+    ports: ["5092:5092"]
+  lake:
+    build: .
+    profiles: ["ex2-lake"]
+    command: node services/db.js
+    environment: { PORT: "5093", ROLE: "lake" }
+    ports: ["5093:5093"]

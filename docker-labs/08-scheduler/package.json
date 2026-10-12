@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-08-scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Distributed scheduler: TTL leader lock, zombie leader, idempotency key, priority + watchdog",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

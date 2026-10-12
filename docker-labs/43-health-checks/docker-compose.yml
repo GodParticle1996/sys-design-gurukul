@@ -1,0 +1,7 @@
+# docker compose --profile ex1-deep-shallow up --build   → node tools/dbblip.js
+# (ya ex2-probe-load → probeload.js · ex3-startup → slowstart.js · ex4-graceful → rollout.js)
+# Pods cluster container ke andar hi processes hain (ports 5230–5299), isliye woh range bahar khuli hai.
+x-all: &all ["ex1-deep-shallow", "ex2-probe-load", "ex3-startup", "ex4-graceful"]
+services:
+  db:      { build: ., profiles: *all, command: node services/db.js, environment: { PORT: "5222" }, ports: ["5222:5222"] }
+  cluster: { build: ., profiles: *all, command: node services/cluster.js, environment: { PORT: "5221", DB_URL: "http://db:5222" }, ports: ["5221:5221", "5230-5299:5230-5299"] }

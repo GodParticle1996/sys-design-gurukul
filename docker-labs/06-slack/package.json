@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-06-slack",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Slack: boot payload + injection, fan-out + replay, hot shard + routing layer, queue jam",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

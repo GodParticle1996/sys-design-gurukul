@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-35-connection-pooling",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Connection pooling: DB with 2 MB per connection, 500 max and CPU contention; closed-loop pool size sweep (throughput peaks near 2x cores), 1,000 mostly-idle clients direct vs transaction pooling vs session pooling",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

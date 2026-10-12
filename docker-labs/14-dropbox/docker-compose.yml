@@ -1,0 +1,13 @@
+# docker compose --profile ex1-erasure up --build
+# (dusre terminal mein: node tools/durability.js   ya   docker compose run --rm -e DISKS_HOST=disks tools node tools/durability.js)
+services:
+  disks:
+    build: .
+    profiles: ["ex1-erasure"]
+    command: node services/disks.js
+    environment: { PORT: "4841" }
+    ports: ["4841:4841"]
+  tools:
+    build: .
+    profiles: ["tools"]
+    command: node tools/smr.js

@@ -1,0 +1,14 @@
+# docker compose --profile ex1-containment up --build
+services:
+  web:
+    build: .
+    profiles: ["ex1-containment"]
+    command: node services/web.js
+    environment: { PORT: "4801" }
+    ports: ["4801:4801"]
+  runner:
+    build: .
+    profiles: ["ex1-containment"]
+    command: node services/runner.js
+    environment: { PORT: "4802", WEB_HOST: "web", WEB_PORT: "4801" }
+    ports: ["4802:4802"]

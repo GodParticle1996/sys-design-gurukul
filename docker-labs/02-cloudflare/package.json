@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-02-cloudflare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare: anycast slicing, config push, early drop, isolates + shared pool",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-20-aws",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AWS at scale: delta vs constant-work config push under a 10,000-change storm, poison request vs none/shard/shuffle sharding with real crashing workers, TCP single-path vs SRD multipath tail latency, shared metadata DB vs tiny per-AZ cells during a re-mirror storm",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

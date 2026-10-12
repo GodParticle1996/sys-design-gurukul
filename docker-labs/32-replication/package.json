@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-32-replication",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Replication everywhere: LB → app → DB chain, kill each tier with and without replicas, active-passive takeover after health checks vs active-active retry, the single LB left over, and why a replica is not a backup (bad DELETE replicated vs snapshot + log point-in-time restore)",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

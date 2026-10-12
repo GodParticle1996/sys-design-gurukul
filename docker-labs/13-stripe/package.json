@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-13-stripe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stripe monolith: selective test execution via static call graph (and its dynamic-call blind spot) + single-thread runtime scaled with processes",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

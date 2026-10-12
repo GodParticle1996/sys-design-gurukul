@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-43-health-checks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Health probes on a mini cluster (Node): a mini-kubelet runs liveness/readiness/startup probes against real pod processes — deep vs shallow checks during a DB blip, probe load cached vs uncached, a slow-starting app with and without a startupProbe, and graceful SIGTERM during a rolling restart",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

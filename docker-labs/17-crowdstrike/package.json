@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-17-crowdstrike",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CrowdStrike 2024: 21-vs-20 content contract bug, spec-only vs contract validator, global vs ringed rollout with canary halt, kernel vs user-mode crash domain, boot loop",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

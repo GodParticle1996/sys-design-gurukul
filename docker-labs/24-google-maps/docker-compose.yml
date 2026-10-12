@@ -1,0 +1,9 @@
+# docker compose --profile ex1-routing up --build   → node tools/route.js | node tools/jam.js
+# ex2/ex3: node tools/eta.js | node tools/nearby.js  (koi server nahi)
+services:
+  maps:
+    build: .
+    profiles: ["ex1-routing"]
+    command: node services/maps.js
+    environment: { PORT: "5001", GRID: "300", CELL: "15" }
+    ports: ["5001:5001"]

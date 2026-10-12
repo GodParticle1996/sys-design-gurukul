@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-39-noisy-neighbor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Noisy neighbour: one bursty tenant and two quiet tenants on a shared 4-worker service — shared FIFO vs per-tenant quota vs fair queuing, the autoscaling trigger window, and a cleanup batch job at peak vs low priority vs off-peak",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

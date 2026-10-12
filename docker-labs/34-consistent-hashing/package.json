@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-34-consistent-hashing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consistent hashing with 7 real cache node processes and 100,000 keys: modulo vs single-point ring vs 150 virtual nodes vs weighted vnodes — load skew, cache misses when a node dies, keys moved when a node joins",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

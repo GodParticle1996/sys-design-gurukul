@@ -1,0 +1,24 @@
+# DISH_MODE=direct|reactive|scheduled  SURPRISE=1 (optional)  docker compose --profile ex1-handover up --build
+# (dusre terminal: node tools/session.js --secs 20)
+services:
+  server:
+    build: .
+    profiles: ["ex1-handover"]
+    command: node services/server.js
+    environment: { PORT: "4891" }
+  sky:
+    build: .
+    profiles: ["ex1-handover"]
+    command: node services/sky.js
+    environment: { PORT: "4892", SURPRISE: "${SURPRISE:-0}" }
+  pop:
+    build: .
+    profiles: ["ex1-handover"]
+    command: node services/pop.js
+    environment: { PORT: "4894", SERVER_HOST: "server" }
+  dish:
+    build: .
+    profiles: ["ex1-handover"]
+    command: node services/dish.js
+    environment: { PORT: "4893", DISH_MODE: "${DISH_MODE:-scheduled}", SKY_HOST: "sky", POP_HOST: "pop", SERVER_HOST: "server" }
+    ports: ["4893:4893", "4895:4895"]

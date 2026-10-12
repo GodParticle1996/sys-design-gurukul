@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-31-notion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Notion: block tree with permissions inherited from ancestors (per-block walk vs memoized), workspace vs block-id sharding shards touched per page load, re-parenting a block changes who can see it, analytics scan on the primary vs a CDC data-lake copy",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

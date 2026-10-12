@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-22-gmail",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gmail: ack-before vs ack-after multi-site commit with a primary crash, SMTP retries with and without Message-ID idempotency, attachment dedup by SHA-256 with refcounts, labels-as-query vs folder moves",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

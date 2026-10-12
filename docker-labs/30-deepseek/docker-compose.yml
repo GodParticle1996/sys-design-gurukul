@@ -1,0 +1,9 @@
+# docker compose --profile ex2-overlap up --build   → node tools/trainstep.js
+# ex1, ex3: node tools/router.js | node tools/kvcache.js (koi server nahi)
+services:
+  peer:
+    build: .
+    profiles: ["ex2-overlap"]
+    command: node services/peer.js
+    environment: { PORT: "5081", LINK_MBPS: "200" }
+    ports: ["5081:5081"]

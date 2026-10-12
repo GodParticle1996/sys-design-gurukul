@@ -1,0 +1,14 @@
+# docker compose --profile ex2-fanout up --build   → node tools/fanout.js
+# ex1, ex3: node tools/index.js | node tools/pagerank.js (koi server nahi)
+services:
+  leaf:
+    build: .
+    profiles: ["ex2-fanout"]
+    command: node services/leaf.js
+    environment: { PORT: "5021", STRAGGLER: "0.01" }
+  root:
+    build: .
+    profiles: ["ex2-fanout"]
+    command: node services/root.js
+    environment: { PORT: "5022", LEAF_HOST: "leaf", HEDGE_MS: "10" }
+    ports: ["5022:5022"]

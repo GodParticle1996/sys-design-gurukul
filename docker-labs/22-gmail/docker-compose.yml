@@ -1,0 +1,34 @@
+# docker compose --profile ex1-ack up --build          → node tools/ack.js | node tools/labels.js
+# docker compose --profile ex2-smtp up --build         → node tools/smtp.js
+# docker compose --profile ex3-attachments up --build  → node tools/attach.js
+services:
+  store-a:
+    build: .
+    profiles: ["ex1-ack"]
+    command: node services/store.js
+    environment: { PORT: "4981", SITE: "site-a" }
+    ports: ["4981:4981"]
+  store-b:
+    build: .
+    profiles: ["ex1-ack"]
+    command: node services/store.js
+    environment: { PORT: "4982", SITE: "site-b" }
+    ports: ["4982:4982"]
+  frontend:
+    build: .
+    profiles: ["ex1-ack"]
+    command: node services/frontend.js
+    environment: { PORT: "4983", STORE_A_HOST: "store-a", STORE_B_HOST: "store-b" }
+    ports: ["4983:4983"]
+  mx:
+    build: .
+    profiles: ["ex2-smtp"]
+    command: node services/mx.js
+    environment: { PORT: "4984" }
+    ports: ["4984:4984"]
+  blobstore:
+    build: .
+    profiles: ["ex3-attachments"]
+    command: node services/blobstore.js
+    environment: { PORT: "4985" }
+    ports: ["4985:4985"]

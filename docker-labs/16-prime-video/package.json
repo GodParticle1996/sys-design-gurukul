@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-16-prime-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prime Video VQA: microservice boundary tax (object store + orchestrator transitions + account throttle) vs in-process monolith scaled by copies",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

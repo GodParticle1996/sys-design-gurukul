@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-11-ai-containment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI agent containment: egress allowlist, workspace jail, budget, monitor + kill switch, auditable policy",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

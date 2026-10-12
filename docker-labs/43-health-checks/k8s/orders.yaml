@@ -1,0 +1,95 @@
+# KhanaKart orders-service — wahi niyam jo lab ka mini cluster
+# chalata hai, asli Kubernetes ki bhasha mein.
+#
+# ⚠️ Is machine par Kubernetes nahi hai: yeh file chala ke
+#    NAHI dekhi gayi. Settings ke naam aur default values
+#    Kubernetes ki documentation se hain.
+#
+# kind / minikube par try karna ho:
+#   docker build -t health-lab:1 .
+#   kind load docker-image health-lab:1    (minikube: minikube image load health-lab:1)
+#   kubectl apply -f k8s/orders.yaml
+#   kubectl get pods -w
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 5222
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: health-lab:1
+          command: ["node", "services/db.js"]
+          env:
+            - { name: PORT, value: "5222" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders
+spec:
+  selector:
+    app: orders
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: orders
+  template:
+    metadata:
+      labels:
+        app: orders
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: app
+          image: health-lab:1
+          command: ["node", "services/pod.js"]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DB_URL, value: "http://db:5222" }
+            - { name: STARTUP_MS, value: "6000" }
+            - { name: GRACEFUL, value: "1" }
+          ports:
+            - containerPort: 8080
+          startupProbe:            # "shuru ho gaye?"
+            httpGet: { path: /livez, port: 8080 }
+            periodSeconds: 1
+            failureThreshold: 30   # 30 s tak ki chhoot
+          livenessProbe:           # "zinda ho?"
+            httpGet: { path: /livez, port: 8080 }
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:          # "traffic bhejein?"
+            httpGet: { path: /readyz, port: 8080 }
+            periodSeconds: 5
+            failureThreshold: 2
+          lifecycle:
+            preStop:               # pehle 5 s ruko
+              exec: { command: ["sleep", "5"] }

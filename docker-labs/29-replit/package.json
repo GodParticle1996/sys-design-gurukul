@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-29-replit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Replit Agent: real on-disk full-copy vs copy-on-write block snapshots and rollback for 1 MB and 200 MB projects, 30-step agent with no-undo vs rollback vs 3 parallel forks, copy-on-write forkable database where DROP TABLE in the fork leaves production intact",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

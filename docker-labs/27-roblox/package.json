@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-27-roblox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Roblox: matchmaker placing 20,000 joins (fill-first vs nearest vs 5-factor with party seat reservation), real instance processes crashing — game state dies with the instance, platform inventory survives, 3 small instances vs 1 big shard blast radius",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,21 @@
+# docker compose --profile ex1-selective-tests up --build
+# WORKERS=4 docker compose --profile ex2-gil up --build
+services:
+  ci:
+    build: .
+    profiles: ["ex1-selective-tests"]
+    command: node services/ci.js
+    environment: { PORT: "4821", DYNAMIC_EDGES: "${DYNAMIC_EDGES:-60}" }
+    ports: ["4821:4821"]
+  charge:
+    build: .
+    profiles: ["ex2-gil"]
+    command: node services/charge.js
+    environment: { PORT: "4822", WORKERS: "${WORKERS:-1}", EXTRAS: "${EXTRAS:-queue}", WORKER_HOST: "receipt-worker" }
+    ports: ["4822:4822"]
+  receipt-worker:
+    build: .
+    profiles: ["ex2-gil"]
+    command: node services/receipt-worker.js
+    environment: { PORT: "4823" }
+    ports: ["4823:4823"]

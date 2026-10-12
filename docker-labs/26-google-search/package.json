@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-26-google-search",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Google Search: inverted index with delta+varint posting lists and skip-pointer intersection, 100-shard scatter-gather with 1% stragglers (single vs hedged vs double), PageRank with a link farm (damping vs TrustRank seeds)",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

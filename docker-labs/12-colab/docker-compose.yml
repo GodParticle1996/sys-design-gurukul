@@ -1,0 +1,15 @@
+# docker compose --profile ex1-syscall-tax up --build      (phir: docker compose run --rm workload ...)
+# docker compose --profile ex2-gpu-pool up --build
+services:
+  sentry:
+    build: .
+    profiles: ["ex1-syscall-tax"]
+    command: node services/sentry.js
+    environment: { PORT: "4811" }
+    ports: ["4811:4811"]
+  pool:
+    build: .
+    profiles: ["ex2-gpu-pool"]
+    command: node services/pool.js
+    environment: { PORT: "4812" }
+    ports: ["4812:4812"]

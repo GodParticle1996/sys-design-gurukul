@@ -1,0 +1,20 @@
+# docker compose --profile ex1-tenant-isolation up --build
+services:
+  api:
+    build: .
+    profiles: ["ex1-tenant-isolation"]
+    command: node services/api.js
+    environment: { PORT: "4301", TENANCY: "${TENANCY:-shared}", CAP: "${CAP:-0}" }
+    ports: ["4301:4301"]
+  index-api:
+    build: .
+    profiles: ["ex2-index-reconcile"]
+    command: node services/index-api.js
+    environment: { PORT: "4310", DROP_RATE: "${DROP_RATE:-0.1}", RECONCILE: "${RECONCILE:-off}" }
+    ports: ["4310:4310"]
+  search:
+    build: .
+    profiles: ["ex3-permission-search"]
+    command: node services/search.js
+    environment: { PORT: "4320", PERM: "${PERM:-after}" }
+    ports: ["4320:4320"]

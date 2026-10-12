@@ -1,0 +1,20 @@
+# docker compose --profile ex1-anycast-slicing up --build
+# (Docker nahi hai? npm start ex1-anycast-slicing)
+services:
+  city-1: { build: ., profiles: ["ex1-anycast-slicing"], command: node services/edge-city.js, environment: { PORT: "4201", CITY: "city-1", CAP: "700" }, ports: ["4201:4201"] }
+  city-2: { build: ., profiles: ["ex1-anycast-slicing"], command: node services/edge-city.js, environment: { PORT: "4202", CITY: "city-2", CAP: "700" }, ports: ["4202:4202"] }
+  city-3: { build: ., profiles: ["ex1-anycast-slicing"], command: node services/edge-city.js, environment: { PORT: "4203", CITY: "city-3", CAP: "700" }, ports: ["4203:4203"] }
+  city-4: { build: ., profiles: ["ex1-anycast-slicing"], command: node services/edge-city.js, environment: { PORT: "4204", CITY: "city-4", CAP: "700" }, ports: ["4204:4204"] }
+  city-5: { build: ., profiles: ["ex1-anycast-slicing"], command: node services/edge-city.js, environment: { PORT: "4205", CITY: "city-5", CAP: "700" }, ports: ["4205:4205"] }
+  city-6: { build: ., profiles: ["ex1-anycast-slicing"], command: node services/edge-city.js, environment: { PORT: "4206", CITY: "city-6", CAP: "700" }, ports: ["4206:4206"] }
+
+  config-service: { build: ., profiles: ["ex2-config-push"], command: node services/config-service.js, environment: { PORT: "4210" }, ports: ["4210:4210"] }
+  edge-1: { build: ., profiles: ["ex2-config-push"], command: node services/edge.js, environment: { PORT: "4211", NAME: "edge-1", CONFIG: "${CONFIG:-central}" }, ports: ["4211:4211"] }
+  edge-2: { build: ., profiles: ["ex2-config-push"], command: node services/edge.js, environment: { PORT: "4212", NAME: "edge-2", CONFIG: "${CONFIG:-central}" }, ports: ["4212:4212"] }
+  edge-3: { build: ., profiles: ["ex2-config-push"], command: node services/edge.js, environment: { PORT: "4213", NAME: "edge-3", CONFIG: "${CONFIG:-central}" }, ports: ["4213:4213"] }
+
+  guarded-service: { build: ., profiles: ["ex3-early-drop"], command: node services/guarded-service.js, environment: { PORT: "4221", STATS_PORT: "4321", DROP: "${DROP:-app}" }, ports: ["4221:4221", "4321:4321"] }
+  edge-filter: { build: ., profiles: ["ex3-early-drop"], command: node services/edge-filter.js, environment: { PORT: "4220", UPSTREAM: "4221", FILTER: "${FILTER:-0}" }, ports: ["4220:4220"] }
+
+  origin: { build: ., profiles: ["ex4-isolates-pool"], command: node services/origin.js, environment: { PORT: "4231" }, ports: ["4231:4231"] }
+  runtime: { build: ., profiles: ["ex4-isolates-pool"], command: node services/runtime.js, environment: { PORT: "4230", SANDBOX: "${SANDBOX:-light}" }, ports: ["4230:4230"] }

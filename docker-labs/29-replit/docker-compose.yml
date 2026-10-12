@@ -1,0 +1,10 @@
+# docker compose --profile ex1-snapshots up --build   → node tools/snapshots.js
+# ex2, ex3: node tools/agent.js | node tools/forkdb.js (koi server nahi)
+services:
+  workspace:
+    build: .
+    profiles: ["ex1-snapshots"]
+    command: node services/workspace.js
+    environment: { PORT: "5071", DATA: "/data" }
+    ports: ["5071:5071"]
+    tmpfs: ["/data:size=3g"]

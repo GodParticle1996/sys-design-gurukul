@@ -1,0 +1,8 @@
+# docker compose --profile ex1-fencing up --build   → node tools/pause.js | node tools/herd.js
+services:
+  lockd1: { build: ., profiles: ["ex1-fencing"], command: node services/lockd.js, environment: { PORT: "5151" }, ports: ["5151:5151"] }
+  lockd2: { build: ., profiles: ["ex1-fencing"], command: node services/lockd.js, environment: { PORT: "5152" }, ports: ["5152:5152"] }
+  lockd3: { build: ., profiles: ["ex1-fencing"], command: node services/lockd.js, environment: { PORT: "5153" }, ports: ["5153:5153"] }
+  lockd4: { build: ., profiles: ["ex1-fencing"], command: node services/lockd.js, environment: { PORT: "5154" }, ports: ["5154:5154"] }
+  lockd5: { build: ., profiles: ["ex1-fencing"], command: node services/lockd.js, environment: { PORT: "5155" }, ports: ["5155:5155"] }
+  ledger: { build: ., profiles: ["ex1-fencing"], command: node services/ledger.js, environment: { PORT: "5156" }, ports: ["5156:5156"] }

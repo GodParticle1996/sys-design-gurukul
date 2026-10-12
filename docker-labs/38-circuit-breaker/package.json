@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-38-circuit-breaker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Circuit breaker: a hanging dependency exhausting the caller's worker pool (no protection vs timeout vs breaker, with cache fallback), counting 4xx as failures and one breaker per dependency vs per endpoint, and half-open policy (naive reset vs trial calls vs trials + slow-start ramp) against a dependency that is fragile while warming up",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

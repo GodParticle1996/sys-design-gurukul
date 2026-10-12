@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-18-bittorrent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BitTorrent: tracker + real SHA-1 pieces over HTTP (flash crowd origin vs swarm, poisoned pieces banned), rarest-first vs sequential when the seeder leaves, tit-for-tat vs free-riders, Kademlia XOR lookup rounds",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

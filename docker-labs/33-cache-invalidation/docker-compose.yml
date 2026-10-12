@@ -1,0 +1,8 @@
+# docker compose --profile ex1-invalidation up --build   → node tools/staleness.js | node tools/stampede.js
+x-svc: &svc { build: ., profiles: ["ex1-invalidation"], environment: &env { DB_HOST: db, CACHE_HOST: cache } }
+services:
+  db:          { <<: *svc, command: node services/db.js,          environment: { <<: *env, PORT: "5111" }, ports: ["5111:5111"] }
+  cache:       { <<: *svc, command: node services/cache.js,       environment: { <<: *env, PORT: "5112" }, ports: ["5112:5112"] }
+  app1:        { <<: *svc, command: node services/app.js,         environment: { <<: *env, PORT: "5113", NAME: app1 }, ports: ["5113:5113"] }
+  app2:        { <<: *svc, command: node services/app.js,         environment: { <<: *env, PORT: "5114", NAME: app2 }, ports: ["5114:5114"] }
+  invalidator: { <<: *svc, command: node services/invalidator.js, environment: { <<: *env, PORT: "5115" }, ports: ["5115:5115"] }

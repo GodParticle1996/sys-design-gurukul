@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-33-cache-invalidation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cache invalidation: DB change log → CDC invalidator → shared cache + two app servers with L1; staleness with TTL only vs CDC vs CDC + L1 pub/sub, and a hot-key stampede with none vs mutex (single-flight) vs stale-while-revalidate vs probabilistic early refresh",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

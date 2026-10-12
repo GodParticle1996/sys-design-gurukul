@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-12-colab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Google Colab: syscall interception tax (gVisor-style sentry) + GPU pool rationing (idle reclaim, caps, abuse detection)",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

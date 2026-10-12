@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-37-retries",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Retries: 200 clients against a capacity-limited gateway with no backoff, exponential backoff, ±20% (Kafka), full, equal and decorrelated jitter; a fragile server that crashes and restarts cold under a retry storm (immediate retries vs capped backoff vs Retry-After vs retry budget); retry amplification across three layers",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

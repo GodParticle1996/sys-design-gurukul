@@ -1,0 +1,10 @@
+# docker compose --profile ex1-ring up --build   → node tools/rehash.js
+# (Docker ke saath tool ko nodes localhost:5121-5127 par milte hain — ports published hain)
+services:
+  node1: { build: ., profiles: ["ex1-ring"], command: node services/node.js, environment: { PORT: "5121" }, ports: ["5121:5121"] }
+  node2: { build: ., profiles: ["ex1-ring"], command: node services/node.js, environment: { PORT: "5122" }, ports: ["5122:5122"] }
+  node3: { build: ., profiles: ["ex1-ring"], command: node services/node.js, environment: { PORT: "5123" }, ports: ["5123:5123"] }
+  node4: { build: ., profiles: ["ex1-ring"], command: node services/node.js, environment: { PORT: "5124" }, ports: ["5124:5124"] }
+  node5: { build: ., profiles: ["ex1-ring"], command: node services/node.js, environment: { PORT: "5125" }, ports: ["5125:5125"] }
+  node6: { build: ., profiles: ["ex1-ring"], command: node services/node.js, environment: { PORT: "5126" }, ports: ["5126:5126"] }
+  node7: { build: ., profiles: ["ex1-ring"], command: node services/node.js, environment: { PORT: "5127" }, ports: ["5127:5127"] }

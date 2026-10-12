@@ -1,0 +1,8 @@
+# docker compose --profile ex1-dr-tiers up --build     → node tools/dr.js
+# docker compose --profile ex2-sync-async up --build   → node tools/syncrepl.js   (sirf region-a aur region-b)
+# Tools (dr.js, syncrepl.js, slowmo*.js, mini.js) host se chalte hain; slowmo*.js aur mini.js ko koi service nahi chahiye.
+# Pattern se likha gaya hai — chala ke nahi dekha gaya (is machine par Docker nahi hai).
+services:
+  router:   { build: ., profiles: ["ex1-dr-tiers"], command: node services/router.js, environment: { PORT: "5190", S3_PORT: "5193", A_URL: "http://region-a:5191", B_URL: "http://region-b:5192" }, ports: ["5190:5190", "5193:5193"] }
+  region-a: { build: ., profiles: ["ex1-dr-tiers", "ex2-sync-async"], command: node services/region.js, environment: { PORT: "5191", NAME: "A", PEER_URL: "http://region-b:5192", S3_URL: "http://router:5193" }, ports: ["5191:5191"] }
+  region-b: { build: ., profiles: ["ex1-dr-tiers", "ex2-sync-async"], command: node services/region.js, environment: { PORT: "5192", NAME: "B", PEER_URL: "http://region-a:5191", S3_URL: "http://router:5193" }, ports: ["5192:5192"] }

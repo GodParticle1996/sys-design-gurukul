@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-25-whatsapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WhatsApp: 20,000 idle TCP connections on one event loop vs real thread-per-connection memory, one global lock vs partitioned spin locks on real worker_threads, store-and-forward across two chat servers with an offline queue that empties after delivery, pairwise vs sender-key group encryption with real AES-GCM",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,15 @@
+# docker compose --profile ex1-boundary-tax up --build
+# (dusre terminal: node tools/pipeline.js --mode micro --streams 100)
+services:
+  store:
+    build: .
+    profiles: ["ex1-boundary-tax"]
+    command: node services/store.js
+    environment: { PORT: "4861" }
+    ports: ["4861:4861"]
+  orchestrator:
+    build: .
+    profiles: ["ex1-boundary-tax"]
+    command: node services/orchestrator.js
+    environment: { PORT: "4862", LIMIT: "${LIMIT:-200}" }
+    ports: ["4862:4862"]

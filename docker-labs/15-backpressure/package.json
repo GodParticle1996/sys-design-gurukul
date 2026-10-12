@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-15-backpressure",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backpressure: unbounded vs bounded queue policies, 429 + Retry-After propagation up a service chain, Node streams ignoring write() vs drain vs pipeline, and a chat UI flood rendered per message vs per frame vs capped per frame",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

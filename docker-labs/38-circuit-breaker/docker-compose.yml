@@ -1,0 +1,9 @@
+# docker compose --profile ex0-slowmo up --build      → node tools/slowmo.js  (phir: node tools/mini.js)
+# docker compose --profile ex1-cascade up --build     → node tools/cascade.js
+# docker compose --profile ex2-counting up --build    → node tools/counting.js
+# docker compose --profile ex3-half-open up --build   → node tools/halfopen.js
+x-a: &a { build: ., command: node services/a.js, environment: { PORT: "5171", B_URL: "http://b:5172" }, ports: ["5171:5171"] }
+x-b: &b { build: ., command: node services/b.js, environment: { PORT: "5172" }, ports: ["5172:5172"] }
+services:
+  a: { <<: *a, profiles: ["ex0-slowmo", "ex1-cascade", "ex2-counting", "ex3-half-open"] }
+  b: { <<: *b, profiles: ["ex0-slowmo", "ex1-cascade", "ex2-counting", "ex3-half-open"] }

@@ -1,0 +1,16 @@
+# docker compose --profile ex1-flash-crowd up --build
+# (dusre terminal: node tools/flash.js --mode swarm   |   --mode origin   |   --mode swarm --malicious 5)
+# Peers container ke andar ek dusre ko 127.0.0.1:5000+ par milte hain, isliye swarm service ke ports publish nahi karne padte.
+services:
+  tracker:
+    build: .
+    profiles: ["ex1-flash-crowd"]
+    command: node services/tracker.js
+    environment: { PORT: "4881" }
+    ports: ["4881:4881"]
+  swarm:
+    build: .
+    profiles: ["ex1-flash-crowd"]
+    command: node services/swarm.js
+    environment: { PORT: "4882", TRACKER_HOST: "tracker" }
+    ports: ["4882:4882"]

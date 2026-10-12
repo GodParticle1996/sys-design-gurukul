@@ -1,0 +1,47 @@
+# docker compose --profile ex1-constant-work up --build   → node tools/storm.js --sync delta | constant
+# docker compose --profile ex2-shuffle-shard up --build   → node tools/poison.js
+# docker compose --profile ex4-tiny-dbs up --build        → node tools/remirror.js
+# ex3: node tools/srd.js (koi server nahi)
+services:
+  checks:
+    build: .
+    profiles: ["ex1-constant-work"]
+    command: node services/checks.js
+    environment: { PORT: "4921", DNS1_HOST: "dns1", DNS2_HOST: "dns2", DNS3_HOST: "dns3" }
+    ports: ["4921:4921"]
+  dns1:
+    build: .
+    profiles: ["ex1-constant-work"]
+    command: node services/dns.js
+    environment: { PORT: "4922", CHECKS_HOST: "checks" }
+    ports: ["4922:4922"]
+  dns2:
+    build: .
+    profiles: ["ex1-constant-work"]
+    command: node services/dns.js
+    environment: { PORT: "4923", CHECKS_HOST: "checks" }
+    ports: ["4923:4923"]
+  dns3:
+    build: .
+    profiles: ["ex1-constant-work"]
+    command: node services/dns.js
+    environment: { PORT: "4924", CHECKS_HOST: "checks" }
+    ports: ["4924:4924"]
+  fleet:
+    build: .
+    profiles: ["ex2-shuffle-shard"]
+    command: node services/fleet.js
+    environment: { PORT: "4931" }
+    ports: ["4931:4931"]
+  router:
+    build: .
+    profiles: ["ex2-shuffle-shard"]
+    command: node services/router.js
+    environment: { PORT: "4932", FLEET_HOST: "fleet" }
+    ports: ["4932:4932"]
+  meta:
+    build: .
+    profiles: ["ex4-tiny-dbs"]
+    command: node services/meta.js
+    environment: { PORT: "4951" }
+    ports: ["4951:4951"]

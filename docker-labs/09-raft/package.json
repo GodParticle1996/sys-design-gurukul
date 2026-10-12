@@ -1,0 +1,8 @@
+{
+  "name": "docker-lab-09-raft",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Raft (seekhne wala): election, random timeouts, quorum commit, partition + heal",
+  "scripts": { "start": "node start.js" },
+  "engines": { "node": ">=18" }
+}

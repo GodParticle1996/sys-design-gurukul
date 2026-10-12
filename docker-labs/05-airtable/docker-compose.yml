@@ -1,0 +1,20 @@
+# docker compose --profile ex1-in-memory-base up --build
+services:
+  worker:
+    build: .
+    profiles: ["ex1-in-memory-base"]
+    command: node services/worker.js
+    environment: { PORT: "4501", MODE: "${MODE:-disk}", RECORDS: "${RECORDS:-100000}", MAX_BASE_MB: "${MAX_BASE_MB:-4096}" }
+    ports: ["4501:4501"]
+  base-worker:
+    build: .
+    profiles: ["ex2-live-views"]
+    command: node services/base-worker.js
+    environment: { PORT: "4502", VIEWS: "${VIEWS:-rerun}" }
+    ports: ["4502:4502"]
+  dual-api:
+    build: .
+    profiles: ["ex3-dual-run"]
+    command: node services/dual-api.js
+    environment: { PORT: "4503", PRIMARY: "legacy", COMPARE: "on" }
+    ports: ["4503:4503"]

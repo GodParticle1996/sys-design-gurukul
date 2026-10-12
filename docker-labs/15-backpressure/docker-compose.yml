@@ -1,0 +1,25 @@
+# PROPAGATE=0 docker compose --profile ex2-propagation up --build
+# (dusre terminal: node tools/client.js   ·   phir: node tools/hint.js)
+#
+# Sirf tools wale exercises (ex0-slowmo, ex1-bounded-queue, ex3-streams, ex4-chat) — koi service nahi chahiye:
+#   docker compose run --rm tools node tools/slowmo.js
+#   docker compose run --rm tools node tools/mini.js
+#   docker compose run --rm tools node tools/oom.js
+#   docker compose run --rm tools node tools/streams-slowmo.js
+services:
+  c:
+    build: .
+    profiles: ["ex2-propagation"]
+    command: node services/c.js
+    environment: { PORT: "4853" }
+    ports: ["4853:4853"]
+  b:
+    build: .
+    profiles: ["ex2-propagation"]
+    command: node services/b.js
+    environment: { PORT: "4852", PROPAGATE: "${PROPAGATE:-0}", RETRY_AFTER_MS: "${RETRY_AFTER_MS:-250}", C_HOST: "c" }
+    ports: ["4852:4852"]
+  tools:
+    build: .
+    profiles: ["tools"]
+    environment: { B_HOST: "b", C_HOST: "c" }

@@ -1,0 +1,20 @@
+# docker compose --profile ex1-split-compute up --build
+services:
+  storage:
+    build: .
+    profiles: ["ex1-split-compute"]
+    command: node services/storage.js
+    environment: { PORT: "4400" }
+    ports: ["4400:4400"]
+  engine:
+    build: .
+    profiles: ["ex1-split-compute"]
+    command: node services/engine.js
+    environment: { PORT: "4401", MODE: "${MODE:-one}", STORAGE_PORT: "4400" }
+    ports: ["4401:4401"]
+  cluster:
+    build: .
+    profiles: ["ex2-cache-and-resize"]
+    command: node services/cluster.js
+    environment: { PORT: "4402", FILES: "1024", NODES: "4" }
+    ports: ["4402:4402"]

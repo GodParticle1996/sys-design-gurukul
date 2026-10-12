@@ -1,0 +1,11 @@
+# docker compose --profile ex1-leader-election up --build
+services:
+  lock-server: { build: ., profiles: ["ex1-leader-election"], command: node services/lock-server.js, environment: { PORT: "4801" }, ports: ["4801:4801"] }
+  billing: { build: ., profiles: ["ex1-leader-election"], command: node services/billing.js, environment: { PORT: "4802", IDEMP: "${IDEMP:-0}" }, ports: ["4802:4802"] }
+  scheduler-a: { build: ., profiles: ["ex1-leader-election"], command: node services/scheduler.js, environment: { NAME: "a", PORT: "4811", STOP_ON_LOSS: "${STOP_ON_LOSS:-1}" }, ports: ["4811:4811"] }
+  scheduler-b: { build: ., profiles: ["ex1-leader-election"], command: node services/scheduler.js, environment: { NAME: "b", PORT: "4812", STOP_ON_LOSS: "${STOP_ON_LOSS:-1}" }, ports: ["4812:4812"] }
+  scheduler-c: { build: ., profiles: ["ex1-leader-election"], command: node services/scheduler.js, environment: { NAME: "c", PORT: "4813", STOP_ON_LOSS: "${STOP_ON_LOSS:-1}" }, ports: ["4813:4813"] }
+  jobs-db: { build: ., profiles: ["ex2-heartbeat-watchdog"], command: node services/jobs-db.js, environment: { PORT: "4803", QUEUE: "${QUEUE:-priority}" }, ports: ["4803:4803"] }
+  worker-1: { build: ., profiles: ["ex2-heartbeat-watchdog"], command: node services/worker.js, environment: { NAME: "w1", CRASH_AFTER: "3" } }
+  worker-2: { build: ., profiles: ["ex2-heartbeat-watchdog"], command: node services/worker.js, environment: { NAME: "w2" } }
+  worker-3: { build: ., profiles: ["ex2-heartbeat-watchdog"], command: node services/worker.js, environment: { NAME: "w3" } }

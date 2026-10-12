@@ -1,0 +1,12 @@
+# docker compose --profile ex2-shadow-cutover up --build
+# Services ek doosre ko localhost par dhoondhte hain → network_mode: host
+x-svc: &svc
+  build: .
+  network_mode: host
+  volumes: ["./data:/app/data"]
+services:
+  source: { <<: *svc, profiles: ["ex1-dual-write-vs-cdc", "ex2-shadow-cutover"], command: node services/source.js, environment: { PORT: "5001" } }
+  target: { <<: *svc, profiles: ["ex1-dual-write-vs-cdc", "ex2-shadow-cutover"], command: node services/target.js, environment: { PORT: "5002" } }
+  cdc:    { <<: *svc, profiles: ["ex2-shadow-cutover"], command: node services/cdc.js, environment: { MODE: "state", REDELIVER: "0" } }
+  proxy:  { <<: *svc, profiles: ["ex2-shadow-cutover"], command: node services/proxy.js, environment: { PORT: "5000", SHADOW: "1" } }
+  writer: { <<: *svc, profiles: ["ex2-shadow-cutover"], command: node services/writer.js, environment: { RATE: "200" } }
