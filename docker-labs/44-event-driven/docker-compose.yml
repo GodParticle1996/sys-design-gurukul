@@ -1,0 +1,28 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+services:
+  broker:
+    build: .
+    profiles: [ex1-compare]
+    command: node services/broker.js
+    ports: ["5400:5400"]
+  orders:
+    build: .
+    profiles: [ex1-compare]
+    command: node services/orders.js
+    environment:
+      BROKER: http://broker:5400
+      KITCHEN: http://kitchen:5402
+      NOTIFY: http://notify:5403
+    ports: ["5401:5401"]
+  kitchen:
+    build: .
+    profiles: [ex1-compare]
+    command: node services/worker.js
+    environment: {PORT: "5402", NAME: kitchen, BROKER: "http://broker:5400"}
+    ports: ["5402:5402"]
+  notify:
+    build: .
+    profiles: [ex1-compare]
+    command: node services/worker.js
+    environment: {PORT: "5403", NAME: notify, BROKER: "http://broker:5400"}
+    ports: ["5403:5403"]

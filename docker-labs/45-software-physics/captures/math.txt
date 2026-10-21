@@ -1,0 +1,13 @@
+HISAAB: decimal bytes; fixed wait 40 ms; ideal link; no overhead/queue
+1000 B @ 100 Mbps: 40.080 ms
+1000 B @ 1000 Mbps: 40.008 ms
+1000000 B @ 100 Mbps: 120.000 ms
+1000000 B @ 1000 Mbps: 48.000 ms
+HISAAB: maana 3 GHz; 1 cycle ko 1 human second; 365-day year
+1 cycle = 0.333 ns
+100 ns = 300 human seconds
+150 ms = 14.27 human years
+YEH scenario inputs hain; hardware timings measure nahi kiye.
+HISAAB: kalpanik cost units/GiB: origin=1, cache=20; AWS price NAHI
+origin 100 GiB + sabka cache: 2100 units
+origin 100 GiB + hot 5 GiB cache: 200 units

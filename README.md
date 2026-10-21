@@ -35,12 +35,14 @@ node validate.js pool    # sirf ek level ke missions
 
 ## Kya hai isme
 
-**12 tracks · 227 levels · 928 stages · 467 interview Qs · 1000 flashcards · 227 diagrams · 268 interactive labs · 43 docker projects**
-(ginti `node validate.js` ki aakhri line se, 2026-10-10)
+**14 tracks · 244 levels · 1016 stages · 503 interview Qs · 1067 flashcards · 244 diagrams · 330 interactive labs · 45 docker projects**
+(ginti `node validate.js` ki aakhri line se, 2026-10-20)
 
 | Track | Levels | Kya seekhoge |
 |---|---|---|
-| 🛡️ **Playlist · 1 Resilience — samasya se code tak** (hamesha khula, sabse upar) | 29 | System design playlist ka pehla hissa, har topic chaar sawaalon mein — **Kyun** (samasya, slow motion mein) · **Kaise** (ek-ek click) · **Code** (asli code + asli library) · **Kab**: **Circuit Breaker · Retries · Backpressure · Noisy Neighbour · Randomness · Health Checks** |
+| 🧪 **First Principles — machine se system tak** (hamesha khula, free order) | 4 | Alag 15-video course ka pehla topic: **Physics of Software** — remote lookup ka wait · batching vs bounded parallelism · latency/bandwidth aur units · waiting vs service · Little's Law ke averages · warm file-read benchmark ki hadd · hot data aur cost ka hisaab. [Numbered 1→15 roadmap](dev/first-principles-plan.md); abhi sirf pehla topic bana hai. |
+| 📣 **Playlist · 2 EDA Core — ek ghatna, alag kaam** (hamesha khula, free order) | 4 | Pehla topic: **Event-Driven Architecture** — notification se atka order · har consumer ki apni copy · asli publish/read/ack code · Node EventEmitter ka farak · accepted vs completed · duplicates, RAM broker restart aur save/publish gap. Agle topics ka [plan](dev/eda-plan.md). |
+| 🛡️ **Playlist · 1 Resilience — samasya se code tak** (hamesha khula, free order) | 38 | System design playlist ka pehla hissa, har topic chaar sawaalon mein — **Kyun** (samasya, slow motion mein) · **Kaise** (ek-ek click) · **Code** (asli code + asli library) · **Kab**: **Circuit Breaker · Retries · Backpressure · Noisy Neighbour · Randomness · Health Checks · Disaster Recovery · Chaos Engineering** |
 | 🧭 **Foundations — Request ka Safar** | 10 | Ek request ke saare hops, **networking (TCP/UDP, HTTP 1.1→3, L4 vs L7)**, latency & percentiles, **numbers to know**, back-of-envelope estimation, sync vs async, fan-out ka tail tax, service decomposition |
 | 🔌 **API Design & Contracts** | 11 | Resource naming, verbs & status codes, **deep offset ka katl**, **cursor pagination**, bounded query surface, versioning, **auth & identity (IDOR, 401 vs 403, JWT vs session)**, error contracts, idempotency keys, rate limiting |
 | 🗄️ **Data & Storage** | 18 | Access-pattern-first modeling, B-tree, composite & covering index, index types, N+1, **connection pool & Little's Law**, caching, stampede, **eviction policies & hot keys**, **unique IDs at scale**, storage choice, **B-tree vs LSM**, **bloom filters & HLL**, sharding, **consistent hashing**, **zero-downtime migrations** |
@@ -58,7 +60,7 @@ Har track ke aakhir mein ek **BOSS** level hai, aur har track ka apna certificat
 
 ### 🐳 Docker projects — `docker-labs/`
 
-43 chhote **Node.js (zero dependency)** projects (poori list `docker-labs/README.md` mein): har ek mein asli services (HTTP servers) aur tools jo failure khud
+45 chhote **Node.js (zero dependency)** projects (poori list `docker-labs/README.md` mein): har ek mein asli services (HTTP servers) aur tools jo failure khud
 dikhate hain — Reddit ka cache, Cloudflare ka edge filter, Jira ka noisy neighbour, Snowflake ka warehouse, Airtable ki
 live query, Slack ka boot/fan-out/queue, Discord ki hot partition, **job scheduler (lease + zombie + idempotency)**,
 **Raft (election, split vote, quorum)**, **50 TB migration (dual write vs CDC vs shadow)**. Har README mein asli run ke

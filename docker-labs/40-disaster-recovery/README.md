@@ -452,11 +452,11 @@ sync + B 2 s unreachable            542 ms  546 ms           0 / 48             
 
 ## AWS mein (documentation se — is lab mein chalaya nahi gaya)
 
-Neeche ke quote AWS ke official pages se hain (URL aur poora text `FACTS.md` mein). Is lab ka router "0.5 s × 3" lab ka apna chhota roop hai — Route 53 ke number nahi.
+Neeche ke quote AWS ke official pages se hain; source links yahin diye hain (`FACTS.md` wala purana scratch folder ab nahi hai). Sources 2026-10-20 ko dobara check hue. Is lab ka router "0.5 s × 3" lab ka apna chhota roop hai — Route 53 ke number nahi.
 
-- **Chaar strategies** (AWS DR whitepaper): backup & restore · pilot light · warm standby · multi-site active/active.
+- **Chaar strategies** ([AWS DR whitepaper](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html)): backup & restore · pilot light · warm standby · multi-site active/active.
   > Disaster recovery strategies available to you within AWS can be broadly categorized into four approaches, ranging from the low cost and low complexity of making backups to more complex strategies using multiple active Regions.
-  Whitepaper ke **Figure 6** (tasveer) mein har ek ke neeche "RPO / RTO": **Hours** · **10s of minutes** · **Minutes** · **Real-time**. (Lab ke seconds isi kram ko dikhate hain, in numbers ko nahi.)
+  Usi page ke text ke mutabiq: backup & restore mein infrastructure, configuration aur app code recovery Region mein dobara deploy karte hain; failover par backup restore hota hai. Backup kitni baar liya, usse achievable recovery point tay hota hai. Active/active sabse complex aur mehenga tareeka hai; sahi technology aur implementation se recovery time near zero ho sakta hai, async replication se RPO near zero. Corruption ke liye backup phir bhi chahiye. **Figure 6 ki tasveer se koi RTO/RPO number nahi liya.** Lab ke seconds AWS ki performance ka daava nahi hain.
 - **Pilot light vs warm standby** (whitepaper ka note):
   > The distinction is that pilot light cannot process requests without additional action taken first, whereas warm standby can handle traffic (at reduced capacity levels) immediately. The pilot light approach requires you to “turn on” servers, possibly deploy additional (non-core) infrastructure, and scale up, whereas warm standby only requires you to scale up (everything is already deployed and running).
 - **RTO aur RPO ki paribhasha** (whitepaper):
@@ -464,30 +464,34 @@ Neeche ke quote AWS ke official pages se hain (URL aur poora text `FACTS.md` mei
   > Recovery Point Objective (RPO) is the maximum acceptable amount of time since the last data recovery point. This objective determines what is considered an acceptable loss of data between the last recovery point and the interruption of service and is defined by the organization.
 - **RTO mein "pata chalna" bhi hai** (whitepaper, Detection):
   > It is critical to factor in incident detection, notification, escalation, discovery and declaration into your planning and objectives to provide realistic, achievable objectives that provide business value.
-- **Route 53 health check** (API reference): failure threshold ka default 3, request interval ka default 30 s.
+- **Route 53 health check** ([API reference](https://docs.aws.amazon.com/Route53/latest/APIReference/API_HealthCheckConfig.html)): failure threshold ka default 3, request interval ka default 30 s.
   > Otherwise, if you don't specify a value for FailureThreshold, the default value is three health checks.
   > If you don't specify a value for RequestInterval, the default value is 30 seconds.
   > Valid Range: Minimum value of 10. Maximum value of 30.
-- **Failover record ka TTL** (Route 53 Developer Guide) — slow motion 3 isi baat ka model hai:
+  API reference mein FailureThreshold ki range 1–10 hai. [Endpoint health ka guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-determining-health-of-endpoints.html) interval ke do options deta hai: **10 s ya 30 s**, beech ka har number nahi. Har checker apna result banata hai; Route 53 kai checkers ke results jodta hai. [Health check settings](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/health-checks-creating-values.html) ke mutabiq Fast (10 s) ka extra charge hai.
+  **Hisaab:** 30 × 3 = lagbhag 90 s, Fast par 10 × 3 = lagbhag 30 s. Sirf interval × threshold ka rough hisaab: actual detection ka measurement, lower limit ya upper limit nahi. Check ka pal, response ki der aur kai checkers ka combined faisla alag hain; DNS cache bhi failover ko alag se prabhavit karta hai.
+- **Failover record ka TTL** ([Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-failover.html)) — slow motion 3 isi baat ka model hai:
   > However, if you specify a longer value for TTL, it takes longer for changes to the record (for example, a new IP address) to take effect. Recursive resolvers use the values in their cache for longer periods before they ask Route 53 for the latest information.
   > If you're associating this record with a health check, specify a TTL of 60 seconds or less so clients respond quickly to changes in health status.
 - **Automatic failover ke baare mein savdhani** (whitepaper):
   > Automatically initiated failover based on health checks or alarms should be used with caution. Even using the best practices discussed here, recovery time and recovery point will be greater than zero, incurring some loss of availability and data.
-- **Replication backup nahi hai** (whitepaper; slow motion 4):
+- **Replication backup nahi hai** ([whitepaper](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/high-availability-is-not-disaster-recovery.html); slow motion 4):
   > If a file or files are deleted or corrupted on the primary storage device, those destructive changes can be replicated to the secondary storage device. In this scenario, despite high availability, the ability to fail over in case of data deletion or corruption will be compromised. Instead, a point-in-time backup is also required as part of a DR strategy.
   > Continuous data replication protects you against some types of disaster, but it may not protect you against data corruption or destruction unless your strategy also includes versioning of stored data or options for point-in-time recovery.
-- **S3 replication aur delete** — configuration ke version ke hisaab se alag:
+- **S3 replication aur delete** ([replication rules](https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html), [delete markers](https://docs.aws.amazon.com/AmazonS3/latest/userguide/delete-marker-replication.html)) — configuration ke version ke hisaab se alag:
+  Delete-marker page ke mutabiq default mein marker sirf source mein lagta hai; delete marker replication enable ho toh marker destination mein bhi copy hota hai. Purane configuration version ke liye neeche V1 wala rule dekho. Version ID diye bina DELETE par versioning-enabled bucket marker lagata hai, object permanently nahi mitata.
   > If you are using the latest version of the replication configuration (that is, you specify the Filter element in a replication configuration rule), Amazon S3 does not replicate the delete marker by default. However, you can add delete marker replication to non-tag-based rules.
   > If you don't specify the Filter element, Amazon S3 assumes that the replication configuration is version V1, and it replicates delete markers that resulted from user actions. However, if Amazon S3 deletes an object due to a lifecycle action, the delete marker is not replicated to the destination buckets.
   > If you specify an object version ID to delete in a DELETE request, Amazon S3 deletes that object version in the source bucket. But it doesn't replicate the deletion in the destination buckets. In other words, it doesn't delete the same object version from the destination buckets. This protects data from malicious deletions.
-- **S3 Versioning kis cheez se bachata hai**:
+- **S3 Versioning kis cheez se bachata hai** ([S3 Versioning](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html)):
   > Versioning-enabled buckets can help you recover objects from accidental deletion or overwrite. For example, if you delete an object, Amazon S3 inserts a delete marker instead of removing the object permanently.
   > By default, S3 Versioning is disabled on buckets, and you must explicitly enable it.
-- **Ek managed cross-region database — Aurora Global Database** ke documented RTO/RPO:
+- **Ek managed cross-region database — Aurora Global Database** ke documented RTO/RPO ([switchover aur failover](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-disaster-recovery.html)):
   > Recovery time objective (RTO) – The time it takes a system to return to a working state after a disaster or service outage. In other words, RTO measures downtime. For Aurora Global Database, RTO can be in the order of minutes.
   > Recovery point objective (RPO) – The amount of data that can be lost (measured in time) after a disaster or service outage. This data loss is usually due to asynchronous replication lag. For an Aurora global database, RPO is typically measured in seconds.
   > Because this feature synchronizes secondary DB clusters with the primary before making any other changes, RPO is 0 (no data loss).
   (Aakhri quote *planned switchover* ka hai, unplanned failover ka nahi: failover ka RPO "typically a non-zero value measured in seconds".)
+  Usi page ke mutabiq unplanned failover mein data loss failure ke waqt Regions ke beech replication lag par nirbhar hai.
 
 ## ⚠️ Aam galatfehmi
 

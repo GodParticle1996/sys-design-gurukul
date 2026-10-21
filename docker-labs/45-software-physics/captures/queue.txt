@@ -1,0 +1,8 @@
+MODEL: arrivals 0,50,100,150 ms; 1 worker; work 100 ms
+#1: aaya=0 start=0 end=100 wait=0 total=100 ms
+#2: aaya=50 start=100 end=200 wait=50 total=150 ms
+#3: aaya=100 start=200 end=300 wait=100 total=200 ms
+#4: aaya=150 start=300 end=400 wait=150 total=250 ms
+poora window=400 ms; area=700 request-ms; peak=3
+hisaab: lambda=10.00/s W=175.00 ms L=1.75
+check: 1.75 = 1.75 (averages; har pal ki ginti nahi)

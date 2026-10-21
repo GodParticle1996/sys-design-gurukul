@@ -1,0 +1,72 @@
+[
+  {
+    "ms": 0,
+    "text": "MODEL: har request ka fixed wait 40 ms; sequential",
+    "phase": "start",
+    "calls": 0,
+    "ready": 0
+  },
+  {
+    "ms": 0,
+    "text": "bheje: dish-1",
+    "phase": "send",
+    "calls": 1,
+    "ready": 0
+  },
+  {
+    "ms": 40,
+    "text": "mile: dish-1",
+    "phase": "reply",
+    "calls": 1,
+    "ready": 1
+  },
+  {
+    "ms": 40,
+    "text": "bheje: dish-2",
+    "phase": "send",
+    "calls": 2,
+    "ready": 1
+  },
+  {
+    "ms": 80,
+    "text": "mile: dish-2",
+    "phase": "reply",
+    "calls": 2,
+    "ready": 2
+  },
+  {
+    "ms": 80,
+    "text": "bheje: dish-3",
+    "phase": "send",
+    "calls": 3,
+    "ready": 2
+  },
+  {
+    "ms": 120,
+    "text": "mile: dish-3",
+    "phase": "reply",
+    "calls": 3,
+    "ready": 3
+  },
+  {
+    "ms": 120,
+    "text": "bheje: dish-4",
+    "phase": "send",
+    "calls": 4,
+    "ready": 3
+  },
+  {
+    "ms": 160,
+    "text": "mile: dish-4",
+    "phase": "reply",
+    "calls": 4,
+    "ready": 4
+  },
+  {
+    "ms": 160,
+    "text": "Asha ka menu tayyar",
+    "phase": "done",
+    "calls": 4,
+    "ready": 4
+  }
+]

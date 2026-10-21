@@ -1,0 +1,5 @@
+0.00 s  Asha ne order #1 bheja | saved=0 kitchen=0 notify=0 pending=0/0 HTTP=intezaar
+0.00 s  Order #1 save hua | saved=1 kitchen=0 notify=0 pending=0/0 HTTP=intezaar
+0.10 s  Kitchen ne #1 liya | saved=1 kitchen=1 notify=0 pending=0/0 HTTP=intezaar
+1.10 s  Notify ka jawab fail | saved=1 kitchen=1 notify=0 pending=0/0 HTTP=intezaar
+1.10 s  Asha ko jawab: order save tha, par HTTP fail | saved=1 kitchen=1 notify=0 pending=0/0 HTTP=503

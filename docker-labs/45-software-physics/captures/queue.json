@@ -1,0 +1,44 @@
+{
+  "rows": [
+    {
+      "id": 1,
+      "at": 0,
+      "start": 0,
+      "end": 100,
+      "wait": 0,
+      "total": 100
+    },
+    {
+      "id": 2,
+      "at": 50,
+      "start": 100,
+      "end": 200,
+      "wait": 50,
+      "total": 150
+    },
+    {
+      "id": 3,
+      "at": 100,
+      "start": 200,
+      "end": 300,
+      "wait": 100,
+      "total": 200
+    },
+    {
+      "id": 4,
+      "at": 150,
+      "start": 300,
+      "end": 400,
+      "wait": 150,
+      "total": 250
+    }
+  ],
+  "summary": {
+    "duration": 400,
+    "area": 700,
+    "peak": 3,
+    "meanW": 175,
+    "rate": 10,
+    "meanL": 1.75
+  }
+}

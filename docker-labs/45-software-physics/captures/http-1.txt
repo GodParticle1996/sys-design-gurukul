@@ -1,0 +1,4 @@
+ASLI HTTP; server par artificial wait 40 ms/request; 12 items
+sequential: calls=12 items=12 peak=1 elapsed=518.0 ms
+batch4: calls=3 items=12 peak=1 elapsed=129.0 ms
+parallel2: calls=12 items=12 peak=2 elapsed=255.6 ms

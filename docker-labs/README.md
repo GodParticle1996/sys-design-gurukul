@@ -1,6 +1,6 @@
 # 🐳 System Gurukul — Docker Projects
 
-Saare tracks ke hands-on projects (43). Har project **zero-dependency Node.js**
+Saare tracks ke hands-on projects (45). Har project **zero-dependency Node.js**
 hai (sirf `http` aur `fetch`) — chhoti asli services jo failure ko khud dikhati hain. Har README mein **asli run ke
 numbers** hain.
 
@@ -45,10 +45,12 @@ numbers** hain.
 | [37-retries](37-retries/README.md) | Retries: madad bhi, aag mein ghee bhi | Retries |
 | [38-circuit-breaker](38-circuit-breaker/README.md) | Circuit breaker: kisko bachata hai, kya ginta hai, aur khulne ke baad kya | Circuit Breaker |
 | [39-noisy-neighbor](39-noisy-neighbor/README.md) | Noisy neighbour: ek tenant ka shor, sabki neend kharab | Bulkhead |
-| [40-disaster-recovery](40-disaster-recovery/README.md) | Disaster recovery: region gaya, ab kitni der aur kitna data? | Replication har jagah |
+| [40-disaster-recovery](40-disaster-recovery/README.md) | Disaster recovery: region gaya, ab kitni der aur kitna data? | Replication har jagah · Disaster Recovery 1–5 (Playlist · 1 Resilience) |
 | [41-load-balancing](41-load-balancing/README.md) | Load balancing: request kis server par jaaye? | Network |
-| [42-chaos](42-chaos/README.md) | Chaos monkey: jaan-boojh kar todo, taaki kami pehle dikhe | Chaos Engineering |
+| [42-chaos](42-chaos/README.md) | Chaos monkey: jaan-boojh kar todo, taaki kami pehle dikhe | Chaos Engineering · Chaos 1–4 (Playlist · 1 Resilience) |
 | [43-health-checks](43-health-checks/README.md) | Health checks: "sab theek?" poochhne wala hi sab na gira de | Health Checks 1–5 (Playlist · 1 Resilience) |
+| [44-event-driven](44-event-driven/README.md) | Ek order, alag consumers: accepted vs completed, ack, RAM loss aur save/publish gap | EDA 1–4 (Playlist · 2 EDA Core) |
+| [45-software-physics](45-software-physics/README.md) | Remote wait, batch/parallel, units, FIFO averages, warm file reads aur cost ka labelled hisaab | Physics 1–4 (First Principles) |
 
 ```bash
 cd docker-labs/09-raft

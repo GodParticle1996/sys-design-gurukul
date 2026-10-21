@@ -1,0 +1,101 @@
+[
+  {
+    "ms": 0,
+    "text": "Asha ne order #1 bheja",
+    "focus": "app",
+    "saved": 0,
+    "kitchen": 0,
+    "notify": 0,
+    "response": "intezaar",
+    "kitchenPending": 0,
+    "notifyPending": 0
+  },
+  {
+    "ms": 0,
+    "text": "Order #1 save hua",
+    "focus": "db",
+    "saved": 1,
+    "kitchen": 0,
+    "notify": 0,
+    "response": "intezaar",
+    "kitchenPending": 0,
+    "notifyPending": 0
+  },
+  {
+    "ms": 10,
+    "text": "OrderPlaced ki do copies line mein",
+    "focus": "bus",
+    "saved": 1,
+    "kitchen": 0,
+    "notify": 0,
+    "response": "intezaar",
+    "kitchenPending": 1,
+    "notifyPending": 1
+  },
+  {
+    "ms": 10,
+    "text": "Asha ko accepted mila; kitchen/notify abhi baaki",
+    "focus": "app",
+    "saved": 1,
+    "kitchen": 0,
+    "notify": 0,
+    "response": "202",
+    "kitchenPending": 1,
+    "notifyPending": 1
+  },
+  {
+    "ms": 20,
+    "text": "Kitchen ne apni copy padhi; entry abhi line mein",
+    "focus": "kitchen",
+    "saved": 1,
+    "kitchen": 0,
+    "notify": 0,
+    "response": "202",
+    "kitchenPending": 1,
+    "notifyPending": 1
+  },
+  {
+    "ms": 120,
+    "text": "Kitchen ka kaam + ack; sirf kitchen ki copy hati",
+    "focus": "kitchen",
+    "saved": 1,
+    "kitchen": 1,
+    "notify": 0,
+    "response": "202",
+    "kitchenPending": 0,
+    "notifyPending": 1
+  },
+  {
+    "ms": 120,
+    "text": "Notify band hai; notify ki copy line mein ruki",
+    "focus": "notify",
+    "saved": 1,
+    "kitchen": 1,
+    "notify": 0,
+    "response": "202",
+    "kitchenPending": 0,
+    "notifyPending": 1
+  },
+  {
+    "ms": 1500,
+    "text": "Notify wapas; purani copy padhi",
+    "focus": "notify",
+    "saved": 1,
+    "kitchen": 1,
+    "notify": 0,
+    "response": "202",
+    "kitchenPending": 0,
+    "notifyPending": 1
+  },
+  {
+    "ms": 1600,
+    "text": "Notify ka kaam + ack; notify ki copy bhi hati",
+    "focus": "notify",
+    "saved": 1,
+    "kitchen": 1,
+    "notify": 1,
+    "response": "202",
+    "kitchenPending": 0,
+    "notifyPending": 0
+  }
+]

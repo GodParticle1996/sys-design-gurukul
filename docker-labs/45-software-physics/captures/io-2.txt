@@ -1,0 +1,4 @@
+ASLI file reads; warm page cache; 4 MiB; disk hardware benchmark NAHI
+seq4k: reads=1024 bytes=4194304 checksum=125690 elapsed=49.62 ms
+shuffle4k: reads=1024 bytes=4194304 checksum=125690 elapsed=41.92 ms
+seq64k: reads=64 bytes=4194304 checksum=125690 elapsed=3.79 ms

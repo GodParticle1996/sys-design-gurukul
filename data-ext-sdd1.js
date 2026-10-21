@@ -379,14 +379,14 @@ SD.extendLevel('backpressure', {
      raftaar se. Chaar raaste: banane wale ko bolo "ruk ja" (<b>control</b>) · gande cup ka dher lagne do — par jagah limited (<b>buffer</b>) ·
      kuch cup phenk do (<b>drop</b>) · kuch mat karo, jab pata ho ki dher kabhi jagah se bada nahi hoga (<b>ignore</b>).</p>
      <pre>ex3 — tez reader → dheema writer (~16 MB/s), 120 MB:
-write() ka jawab nazarandaaz     writer mein 120 MB jama · extra memory 129 MB · 8.5 s
-pause() / drain par resume()     writer mein   1 MB jama · extra memory  44 MB · 8.0 s
-stream.pipeline()                writer mein   1 MB jama · extra memory  49 MB · 7.9 s
+write() ka jawab nazarandaaz     writer mein 120 MB jama · extra memory 129 MB · 8.0 s
+pause() / drain par resume()     writer mein   1 MB jama · extra memory  45 MB · 8.0 s
+stream.pipeline()                writer mein   1 MB jama · extra memory  49 MB · 8.0 s
 
 ex4 — chat: 5,000 messages/s, ek message 0.2 ms + har DOM update par 1 ms layout, 60 fps:
-har message turant               61 fps · click 1 ms   · chat 4.1 s peeche, 20,892 line mein
+har message turant               61 fps · click 1 ms   · chat 4.1 s peeche, 20,874 line mein
 frame mein ek baar, sab           5 fps · click 341 ms · har frame bhaari → aur bhaari
-frame mein ek baar, naye 20      47 fps · click 7 ms   · 11 ms purana, 80% chhode</pre>
+frame mein ek baar, naye 20      47 fps · click 6 ms   · 11 ms purana, ~81% chhode</pre>
      <ol>
        <li><b>Control:</b> Node mein <code>write()</code> <b>false</b> lautaye toh <code>reader.pause()</code>, writer <code>'drain'</code> kare toh
          <code>resume()</code> — ya seedha <code>pipeline(reader, writer)</code>. Raftaar wahi (sabse dheemi kadi ki), bas RAM nahi bharti.</li>
@@ -410,16 +410,16 @@ frame mein ek baar, naye 20      47 fps · click 7 ms   · 11 ms purana, 80% chh
         { text: 'Streams — teen tareeke.', cmd: 'cd docker-labs/15-backpressure && node tools/streams.js',
           expect: [
             'tareeka                               writer mein sabse zyada jama   process ki extra memory (peak)   kul samay',
-            'write() ka jawab nazarandaaz                120 MB                    129 MB                8.5 s',
-            'pause() / drain par resume()                  1 MB                     44 MB                8.0 s',
-            'stream.pipeline()                             1 MB                     49 MB                7.9 s',
+            'write() ka jawab nazarandaaz                120 MB                    129 MB                8.0 s',
+            'pause() / drain par resume()                  1 MB                     45 MB                8.0 s',
+            'stream.pipeline()                             1 MB                     49 MB                8.0 s',
           ].join('\n') },
         { text: 'Chat — teen tareeke.', cmd: 'node tools/chat.js',
           expect: [
             'tareeka                            fps   sabse lamba frame   click ki der (p99)   message kitna purana dikha (p99)   dikhaye / chhode / abhi line mein',
-            'har message turant (apna layout)    61        18 ms              1 ms              4131 ms                     4098 / 0 / 20892',
-            'frame mein ek baar, sab              5       390 ms            341 ms               406 ms                     23060 / 0 / 0',
-            'frame mein ek baar, naye 20         47        22 ms              7 ms                11 ms                     4720 / 20155 / 100',
+            'har message turant (apna layout)    61        17 ms              1 ms              4131 ms                     4116 / 0 / 20874',
+            'frame mein ek baar, sab              5       393 ms            341 ms               408 ms                     23200 / 0 / 0',
+            'frame mein ek baar, naye 20         47        22 ms              6 ms                11 ms                     4740 / 20230 / 0',
           ].join('\n') },
       ],
       observe: {
@@ -474,7 +474,8 @@ multi-site active-active  poora region, aadha traffic             1.5 s       36
          version rakhti hai; backup account compromise se nahi bachata — woh security ka alag kaam hai.</li>
      </ol>
      <p class="tip">🎯 <b>Asli baat:</b> pehle business se RTO/RPO likhwao, phir sabse sasti strategy chuno jo usme fit ho — aur use saal mein
-     do baar sach mein chala ke dekho (game day). Jo failover kabhi chala nahi, woh chalega bhi nahi.</p>`,
+     do baar sach mein chala ke dekho (game day). Jo failover kabhi chala nahi, woh chalega bhi nahi.</p>
+     <p class="tip">👉 Yahi topic problem se code tak, slow motion mein: <b>🛡️ Playlist · 1 Resilience → 🌋 Disaster Recovery</b> (paanch levels).</p>`,
   ],
   stages: [
     {

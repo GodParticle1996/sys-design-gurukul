@@ -475,7 +475,9 @@ core.js → data-core.js → visuals.js → games.js → perfsim.js → canvas.j
 → data-flow · data-api · data-data · data-resil · data-dist · data-shapes · data-builds · data-feed · data-feed-2
 → data-st-01 … 14 → data-ai-01 … 06 → data-pl-01 … 06
 → data-gaps → data-ext-videos → data-ext-episodes → data-ext-sdd1
-→ data-v2-00-tracks → data-v2-breaker-1-kyun … -5-kab → data-v2-retries-1-kyun … -5-kab → data-v2-backpressure-1-kyun … -5-kab → data-v2-noisy-1-kyun … -5-kab → data-v2-random-1-kyun … -4-kab → data-v2-health-1-kyun … -5-kab
+→ data-v2-00-tracks → data-v2-breaker-1-kyun … -5-kab → data-v2-retries-1-kyun … -5-kab → data-v2-backpressure-1-kyun … -5-kab → data-v2-noisy-1-kyun … -5-kab → data-v2-random-1-kyun … -4-kab → data-v2-health-1-kyun … -5-kab → data-v2-dr-1-kyun … -5-kab → data-v2-chaos-1-kyun … -4-kab
+→ data-v2-eda-1-kyun … -4-kab
+→ data-v2-fp-physics-1-kyun … -4-kab
 → app.js
 ```
 
@@ -625,12 +627,16 @@ topic isi mein banta hai.
 - **Ek hi ghar:** poori playlist System Gurukul mein, theme ke hisaab se alag tracks mein. Tracks `data-v2-00-tracks.js`
   mein register hote hain (`alwaysUnlocked` + `freeOrder`, `SD.tracks.unshift` se sabse upar). Pehla: `sdd-resil`
   ("Playlist · 1 Resilience — samasya se code tak").
+  Doosra: `sdd-eda` ("Playlist · 2 EDA Core — ek ghatna, alag kaam"). Alag playlist ka `fp-core` ("First Principles — machine se system tak") ab sabse upar hai. Core sequential tracks in always-unlocked tracks ko lock ki shart mein chhodte hain.
 - **Files:** `data-v2-<topic>-<n>-<hissa>.js` (ek level ek file, IIFE), `SD.registerLevels('<track id>', [ … ])`.
   Har level par `group: '🔌 Circuit Breaker'` (level map par topic ka heading) aur title `'<Topic> <n> · <Hissa> — …'`.
   Nayi file ko `index.html` aur `validate.js` ke `CONTENT` mein tabhi jodo jab file ban chuki ho.
-- **Bane hue topics:** Circuit Breaker (`data-v2-breaker-1…5`, lab 38) · Retries (`data-v2-retries-1…5`, lab 37) · Backpressure (`data-v2-backpressure-1…5`, lab 15) · Noisy Neighbour (`data-v2-noisy-1…5`, lab 39) · Randomness (`data-v2-random-1…4`, lab 41 + lab 09; chaar levels — yahan "Library" alag level nahi, NGINX / Envoy ke `cards` Code level mein hain) · Health Checks (`data-v2-health-1…5`, lab 43; code pane ek YAML file par bhi: `k8s/orders.yaml`).
+- **Bane hue topics:** Circuit Breaker (`data-v2-breaker-1…5`, lab 38) · Retries (`data-v2-retries-1…5`, lab 37) · Backpressure (`data-v2-backpressure-1…5`, lab 15) · Noisy Neighbour (`data-v2-noisy-1…5`, lab 39) · Randomness (`data-v2-random-1…4`, lab 41 + lab 09; chaar levels — yahan "Library" alag level nahi, NGINX / Envoy ke `cards` Code level mein hain) · Health Checks (`data-v2-health-1…5`, lab 43; code pane ek YAML file par bhi: `k8s/orders.yaml`) · Disaster Recovery (`data-v2-dr-1…5`, lab 40) · Chaos Engineering (`data-v2-chaos-1…4`, lab 42).
   Randomness ka source video load balancing ko randomness ke ek hisse ki tarah padhata hai; playlist ke alag load-balancer videos baad ke theme mein aate hain — tab lab 41 aur `lib/pick.js` dobara kaam aayenge.
   Purane core levels (`breaker`, `retries` — `resil` track) apni jagah hain.
+- **EDA Core ka pehla topic:** Event-Driven Architecture (`data-v2-eda-1…4`, `ed-kyun`, `ed-kaise`, `ed-code`, `ed-kab`; lab 44). Direct wait → per-subscription copies → real order/bus code + Node EventEmitter → measured limits. Poora EDA Core abhi complete nahi; source coverage aur agle topics `dev/eda-plan.md` mein hain.
+  Lab 44 ka `captures/` folder raw fixed-clock traces, actual HTTP ke teen runs aur actual broker-restart ke teen runs repo mein rakhta hai. Purane scratch-folder loss ki tarah in records ko sirf `/tmp` mein mat chhodo.
+- **Alag First Principles course:** FAANG Senior Engineer ki 15-video playlist, numbered 1→15 (source playlist ulte order mein). User ne alag course aur video 1 se shuru karna chuna. Pehla topic Physics of Software (`data-v2-fp-physics-1…4`, `fp-physics-kyun`, `fp-physics-kaise`, `fp-physics-code`, `fp-physics-kab`; lab 45). Same lookup helpers actual HTTP aur model mein; batching/parallel, latency/bandwidth, FIFO averages, warm file-read limits aur labelled cost arithmetic. Roadmap aur source corrections `dev/first-principles-plan.md` mein. Baaki 14 videos abhi planned hain.
 
 **1. Ek topic = kuch chhote level, har level ek sawaal** (owner ki chaar maangein: samasya pehle · andar ka kaam · asli code aur setup · kab / kab nahi). Default chaar: Kyun · Kaise · Code · Kab. Koi level ~20 dry-run steps se lamba ho toh do bana do (dono topics mein Code aur Library alag hue); chhota topic kam levels le sakta hai (kam se kam do).
 

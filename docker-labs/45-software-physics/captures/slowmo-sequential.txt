@@ -1,0 +1,10 @@
+0 ms | MODEL: har request ka fixed wait 40 ms; sequential | calls=0 ready=0/4
+0 ms | bheje: dish-1 | calls=1 ready=0/4
+40 ms | mile: dish-1 | calls=1 ready=1/4
+40 ms | bheje: dish-2 | calls=2 ready=1/4
+80 ms | mile: dish-2 | calls=2 ready=2/4
+80 ms | bheje: dish-3 | calls=3 ready=2/4
+120 ms | mile: dish-3 | calls=3 ready=3/4
+120 ms | bheje: dish-4 | calls=4 ready=3/4
+160 ms | mile: dish-4 | calls=4 ready=4/4
+160 ms | Asha ka menu tayyar | calls=4 ready=4/4

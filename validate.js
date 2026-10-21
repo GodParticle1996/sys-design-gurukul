@@ -49,10 +49,23 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-health-3-code.js',
   'data-v2-health-4-library.js',
   'data-v2-health-5-kab.js',
+  'data-v2-dr-1-kyun.js',
+  'data-v2-dr-2-kaise.js',
+  'data-v2-dr-3-code.js',
+  'data-v2-dr-4-library.js',
+  'data-v2-dr-5-kab.js',
   'data-v2-chaos-1-kyun.js',
   'data-v2-chaos-2-kaise.js',
   'data-v2-chaos-3-code.js',
-  'data-v2-chaos-4-kab.js'];
+  'data-v2-chaos-4-kab.js',
+  'data-v2-eda-1-kyun.js',
+  'data-v2-eda-2-kaise.js',
+  'data-v2-eda-3-code.js',
+  'data-v2-eda-4-kab.js',
+  'data-v2-fp-physics-1-kyun.js',
+  'data-v2-fp-physics-2-kaise.js',
+  'data-v2-fp-physics-3-code.js',
+  'data-v2-fp-physics-4-kab.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */

@@ -1,0 +1,7 @@
+emit se pehle
+listener chala
+emit ke baad
+async emit se pehle
+async listener shuru
+async emit ke baad
+async listener poora

@@ -1,0 +1,23 @@
+# Docker is machine par available nahi; compose abhi untested.
+services:
+  cache:
+    build: .
+    profiles: [ex1-http]
+    command: node services/cache.js
+    ports: ["5500:5500"]
+  slowmo:
+    build: .
+    profiles: [ex0-slowmo]
+    command: node tools/slowmo.js --fast
+  math:
+    build: .
+    profiles: [ex2-math]
+    command: node tools/math.js
+  queue:
+    build: .
+    profiles: [ex3-queue]
+    command: node tools/queue.js
+  io:
+    build: .
+    profiles: [ex4-io]
+    command: node tools/io.js

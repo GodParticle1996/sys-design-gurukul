@@ -1,0 +1,9 @@
+0.00 s  Asha ne order #1 bheja | saved=0 kitchen=0 notify=0 pending=0/0 HTTP=intezaar
+0.00 s  Order #1 save hua | saved=1 kitchen=0 notify=0 pending=0/0 HTTP=intezaar
+0.01 s  OrderPlaced ki do copies line mein | saved=1 kitchen=0 notify=0 pending=1/1 HTTP=intezaar
+0.01 s  Asha ko accepted mila; kitchen/notify abhi baaki | saved=1 kitchen=0 notify=0 pending=1/1 HTTP=202
+0.02 s  Kitchen ne apni copy padhi; entry abhi line mein | saved=1 kitchen=0 notify=0 pending=1/1 HTTP=202
+0.12 s  Kitchen ka kaam + ack; sirf kitchen ki copy hati | saved=1 kitchen=1 notify=0 pending=0/1 HTTP=202
+0.12 s  Notify band hai; notify ki copy line mein ruki | saved=1 kitchen=1 notify=0 pending=0/1 HTTP=202
+1.50 s  Notify wapas; purani copy padhi | saved=1 kitchen=1 notify=0 pending=0/1 HTTP=202
+1.60 s  Notify ka kaam + ack; notify ki copy bhi hati | saved=1 kitchen=1 notify=1 pending=0/0 HTTP=202

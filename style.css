@@ -878,6 +878,7 @@ pre {
   font-size: .78rem; letter-spacing: 1.2px; text-transform: uppercase;
 }
 .lab-goal-text { font-size: .92rem; line-height: 1.5; color: var(--text); }
+.lab-goal a { color: var(--accent); }
 .lab-scenario {
   background: var(--panel2); border: 1px solid var(--border); border-radius: 10px;
   padding: 10px 14px; margin-bottom: 14px; font-size: .9rem; line-height: 1.55; color: var(--muted);
@@ -1211,6 +1212,7 @@ pre {
 .dr-ln.on b { color: var(--gold); }
 .dr-say { margin: 12px 0 4px; padding: 12px 14px; border-radius: 12px; background: #6ea8fe0e; border: 1px solid #6ea8fe40; line-height: 1.65; font-size: 1.02rem; }
 .dr-say p { margin: 6px 0; }
+.dr-say a { color: var(--accent); }
 .dr-say ul { margin: 6px 0; padding-left: 20px; } .dr-say li { margin: 4px 0; }
 .dr-stitle { margin: 0 0 6px; color: var(--accent); font-size: 1.08rem; }
 .dr-say table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: .88rem; }

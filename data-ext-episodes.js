@@ -455,21 +455,22 @@ SD.registerLevelsAfter('resil', 'shedding', [
     `<h3>🧱 Bounded queue — "unbounded queue ek jhooth hai"</h3>
      <p>Bhar gayi toh chaar raaste — aur yeh <b>product</b> ka faisla hai (kiska kaam giraya jaaye), incident ke beech random nahi:</p>
      <pre>lab 15 (ex1) — producer 10,000/s, consumer 2,000/s, cap 20,000:
-unbounded   t=30s queue 2,35,040 · 251 MB (~8 MB/s badhta)   sabse purana 24 s
-block       producer ki raftaar 2,635/s                       (asli backpressure)
-drop-new    2,16,660 giraye                                    (retry-safe kaam)
-drop-oldest 2,16,420 giraye · sabse purana sirf 2 s            (taazgi)
-error       2,16,500 errors producer ko                        (caller tay kare)</pre>
+unbounded   t=30s queue 2,36,000 · 252 MB (~8 MB/s badhta)   sabse purana 24 s
+block       producer ki raftaar 2,638/s                       (asli backpressure)
+drop-new    2,16,740 giraye                                    (retry-safe kaam)
+drop-oldest 2,16,740 giraye · sabse purana sirf 2 s            (taazgi)
+error       2,16,580 errors producer ko                        (caller tay kare)</pre>
      <h3>📣 Signal source tak</h3>
      <p>A → B → C, C dab gaya. Bina propagation: A poori raftaar se, B hamesha shed karta rahe, C "na" bolne mein thake. Propagation: C 503 → B ki line
      badhi → B <b>429 + Retry-After</b> → A ruke. Retry-After ke bina 429 bas "na" — client turant wapas.</p>
      <pre>lab 15 (ex2):
-PROPAGATE=0  A ne 63,716 bheje → 2,600 poore (24.5 tries/success)   C ne 61,116 thukraye
-PROPAGATE=1  A ne  9,225 bheje → 2,875 poore (3.2 tries/success)    C ne 0 thukraye</pre>
+PROPAGATE=0  A ne 72,166 bheje → 2,757 poore (26.2 tries/success)   C ne 69,409 thukraye
+PROPAGATE=1  A ne  9,374 bheje → 2,979 poore (3.1 tries/success)    C ne 0 thukraye</pre>
      <p><b>Pull</b> apne aap backpressure hai (consumer kehta hai "50 do"; Kafka <code>poll()</code>). Kafka mein <code>max.poll.interval.ms</code>
      (default 5 min) se dheema batch → group se bahar → poora group rebalance. Ilaaj: processing line bhari ho toh <code>consumer.pause(partitions)</code>
      (heartbeat chalte rahein), khaali ho toh resume. LinkedIn (roz 7 trillion+ messages): pause/resume + lag monitoring.</p>
-     <p class="tip">🎯 Har woh cheez jo kaam leti hai, jawab de: <b>"jab main na sambhal paun tab kya?"</b> Jawab nahi = slow-motion crash.</p>`,
+     <p class="tip">🎯 Har woh cheez jo kaam leti hai, jawab de: <b>"jab main na sambhal paun tab kya?"</b> Jawab nahi = slow-motion crash.</p>
+     <p class="tip">👉 Yahi topic problem se code tak, slow motion mein: <b>🛡️ Playlist · 1 Resilience → 🌊 Backpressure</b> (paanch levels).</p>`,
   ],
   stages: [
     {
@@ -480,9 +481,9 @@ PROPAGATE=1  A ne  9,225 bheje → 2,875 poore (3.2 tries/success)    C ne 0 thu
       goal: 'Producer 10,000/s, consumer 2,000/s, 30 sec — unbounded aur cap 20,000 ke saath block / drop-new / drop-oldest / error.',
       why: `<code>tools/queue.js</code> ek process mein producer aur consumer chalata hai; har event ~1 KB. Server nahi chahiye.`,
       steps: [
-        { text: 'Unbounded.', cmd: 'cd docker-labs/15-backpressure && node tools/queue.js --policy unbounded', expect: 'policy=unbounded:  producer ki asli raftaar 9679/s, queue mein 232560, dropped 0,      errors 0,      sabse purana event 24 s purana' },
-        { text: 'Drop-oldest (cap 20,000).', cmd: 'node tools/queue.js --policy drop-oldest --cap 20000', expect: 'policy=drop-oldest:producer ki asli raftaar 9841/s, queue mein 19980,  dropped 216420, errors 0,      sabse purana event 2 s purana' },
-        { text: 'Block.', cmd: 'node tools/queue.js --policy block --cap 20000', expect: 'policy=block:      producer ki asli raftaar 2635/s, queue mein 19980,  dropped 0,      errors 0,      sabse purana event 10 s purana' },
+        { text: 'Unbounded.', cmd: 'cd docker-labs/15-backpressure && node tools/queue.js --policy unbounded', expect: "policy=unbounded: producer ki asli raftaar 9832/s, queue mein 236000, dropped 0, errors (producer ko bataya) 0, sabse purana event 24 s purana" },
+        { text: 'Drop-oldest (cap 20,000).', cmd: 'node tools/queue.js --policy drop-oldest --cap 20000', expect: "policy=drop-oldest cap=20000: producer ki asli raftaar 9858/s, queue mein 19980, dropped 216740, errors (producer ko bataya) 0, sabse purana event 2 s purana" },
+        { text: 'Block.', cmd: 'node tools/queue.js --policy block --cap 20000', expect: "policy=block cap=20000: producer ki asli raftaar 2638/s, queue mein 19980, dropped 0, errors (producer ko bataya) 0, sabse purana event 10 s purana" },
       ],
       observe: {
         q: 'Live stock ticker ke liye kaunsi policy?',
@@ -506,13 +507,13 @@ PROPAGATE=1  A ne  9,225 bheje → 2,875 poore (3.2 tries/success)    C ne 0 thu
       why: `<code>services/c.js</code>: 4 kaam ek saath, line 40, bhari → 503. <code>services/b.js</code>: PROPAGATE=1 par C par 44 inflight hone par C ko chhue bina
         429 + Retry-After 250 ms. <code>tools/client.js</code>: 150 workers, jittered retry.`,
       steps: [
-        { text: 'Bina propagation.', cmd: 'cd docker-labs/15-backpressure && PROPAGATE=0 npm start ex2-propagation\nnode tools/client.js', expect: 'A: 63716 requests bheje → 2600 kaam poore (24.5 tries per success) | p50 288 ms p99 6716 ms\nB: C ko 63716 bheje, C ne 61116 thukraye (bekaar kaam), 0 ko 429 bina C chhue | C: 2600 kiye, 61116 rejected' },
-        { text: 'Propagation ke saath.', cmd: 'PROPAGATE=1 npm start ex2-propagation\nnode tools/client.js', expect: 'A: 9225 requests bheje → 2875 kaam poore (3.2 tries per success) | p50 230 ms p99 8576 ms\nB: C ko 2875 bheje, C ne 0 thukraye (bekaar kaam), 6350 ko 429 bina C chhue | C: 2875 kiye, 0 rejected' },
+        { text: 'Bina propagation.', cmd: 'cd docker-labs/15-backpressure && PROPAGATE=0 npm start ex2-propagation\nnode tools/client.js', expect: "A: 72166 requests bheje → 2757 kaam poore (26.2 tries per success) | p50 274 ms p99 6932 ms\nB: C ko 72166 bheje, C ne 69409 thukraye (bekaar kaam), 0 ko 429 bina C chhue | C: 2757 kiye, 69409 rejected\nA ke 150 workers: ek worker ke kaam — sabse kam 1, beech wala 17, sabse zyada 52 | jin workers ka ek bhi kaam poora nahi hua: 0 | ek kaam par sabse lamba intezaar 14.0 s" },
+        { text: 'Propagation ke saath.', cmd: 'PROPAGATE=1 npm start ex2-propagation\nnode tools/client.js', expect: "A: 9374 requests bheje → 2979 kaam poore (3.1 tries per success) | p50 224 ms p99 8236 ms\nB: C ko 2979 bheje, C ne 0 thukraye (bekaar kaam), 6395 ko 429 bina C chhue | C: 2979 kiye, 0 rejected\nA ke 150 workers: ek worker ke kaam — sabse kam 0, beech wala 17, sabse zyada 67 | jin workers ka ek bhi kaam poora nahi hua: 18 | ek kaam par sabse lamba intezaar 15.3 s" },
       ],
       observe: {
-        q: 'Propagation ke saath A ne 7× kam bheja — phir bhi kaam ZYADA hua (2,600 → 2,875). Kaise?',
+        q: 'Propagation ke saath A ne 7× kam bheja — phir bhi kaam ZYADA hua (2,757 → 2,979). Kaise?',
         choices: [
-          'C ka waqt 61,116 "na" bolne mein nahi gaya — woh asli kaam karta raha; source ne raftaar kam ki',
+          'C ka waqt 69,409 "na" bolne mein nahi gaya — woh asli kaam karta raha; source ne raftaar kam ki',
           'C tez ho gaya',
           'B ne cache kiya',
           'Retry kam hue isliye',
@@ -547,7 +548,7 @@ PROPAGATE=1  A ne  9,225 bheje → 2,875 poore (3.2 tries/success)    C ne 0 thu
           'Rate limit hata do',
         ],
         answer: 0,
-        explain: 'Lab: 24.5 → 3.2 tries per success.',
+        explain: 'Lab: 26.2 → 3.1 tries per success.',
       },
     ],
   },
@@ -561,7 +562,7 @@ PROPAGATE=1  A ne  9,225 bheje → 2,875 poore (3.2 tries/success)    C ne 0 thu
   cards: [
     { front: 'Backpressure ke chaar layers?', back: 'Problem (producer > consumer), detection (growth rate, tail, utilization), response (absorb/drop/propagate), propagation (429 + Retry-After source tak).' },
     { front: 'Bounded queue ki 4 policies?', back: 'Block (batch), drop-new (retry-safe), drop-oldest (taazgi), error (caller tay kare). Product ka faisla, pehle se.' },
-    { front: 'Lab 15: propagation?', back: 'Bina: A 63,716 bheje, 2,600 poore, C ne 61,116 thukraye. Saath: 9,225 bheje, 2,875 poore, 0 thukraye.' },
+    { front: 'Lab 15: propagation?', back: 'Bina: A 72,166 bheje, 2,757 poore, C ne 69,409 thukraye. Saath: 9,374 bheje, 2,979 poore, 0 thukraye.' },
   ],
 },
 ]);

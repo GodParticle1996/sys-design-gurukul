@@ -1,0 +1,6 @@
+fanout: kitchen pending 0 · notify pending 1
+kaam ke baad ack na pahunche: same id do baar padha · SMS 2
+id yaad rakhi (isi process mein): SMS 1
+broker ki RAM dobara bani: pending copies 8 → 0 · chaar events ki dono copies gayi
+cap 2: saved 3 · kitchen pending 2 · notify pending 2 · publish fail 1
+save + publish ek transaction nahi: order #3 save hua, event nahi gaya

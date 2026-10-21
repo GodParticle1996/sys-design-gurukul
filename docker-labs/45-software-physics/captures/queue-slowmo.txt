@@ -1,0 +1,14 @@
+MODEL: same queue.js schedule; equal clock par end, arrival, start
+0 ms #1 aaya: wait=[1] active=[] done=0 inside=1
+0 ms #1 shuru: wait=[] active=[1] done=0 inside=1
+50 ms #2 aaya: wait=[2] active=[1] done=0 inside=2
+100 ms #1 poora: wait=[2] active=[] done=1 inside=1
+100 ms #3 aaya: wait=[2,3] active=[] done=1 inside=2
+100 ms #2 shuru: wait=[3] active=[2] done=1 inside=2
+150 ms #4 aaya: wait=[3,4] active=[2] done=1 inside=3
+200 ms #2 poora: wait=[3,4] active=[] done=2 inside=2
+200 ms #3 shuru: wait=[4] active=[3] done=2 inside=2
+300 ms #3 poora: wait=[4] active=[] done=3 inside=1
+300 ms #4 shuru: wait=[] active=[4] done=3 inside=1
+400 ms #4 poora: wait=[] active=[] done=4 inside=0
+poore window ka average=1.75; peak=3; dono alag

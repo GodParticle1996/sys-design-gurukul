@@ -1,0 +1,10 @@
+{
+  "name": "gurukul-software-physics",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node start.js",
+    "test": "node --test test/*.test.js"
+  }
+}
