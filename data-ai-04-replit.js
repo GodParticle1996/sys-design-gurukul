@@ -49,14 +49,7 @@ VISUALS['replit-isolation'] = {
 
 VISUALS['replit-undo'] = {
   t: 'Ek "undo" button, teen parton ke neeche',
-  html: `
-    <div class="dg-stack">
-      <div class="dg-node is-good"><span class="ni">📁</span><span class="nl">File system — copy-on-write</span><span class="ns">snapshot = ek marker, constant time (1 MB ho ya 1 GB). Lab: 200 MB project, 5.7 ms</span></div>
-      <div class="dg-node is-accent"><span class="ni">🌿</span><span class="nl">Code — har kadam par auto git commit</span><span class="ns">immutable backup remote — poora FS mit jaaye tab bhi history</span></div>
-      <div class="dg-node is-gold"><span class="ni">🐘</span><span class="nl">Database — forkable Postgres</span><span class="ns">fork parent se data share karta hai jab tak likha na jaaye; rollback = fork phenko</span></div>
-    </div>
-    <div class="dg-cap">User ko ek button dikhta hai. Neeche: FS blocks wapas, git revert, DB fork discard — milliseconds mein.
-      <b>Reversibility hi autonomy ko mumkin banati hai.</b></div>`,
+  html: "\n    <div class=\"dg-stack\">\n      <div class=\"dg-node is-good\"><span class=\"ni\">📁</span><span class=\"nl\">File system — copy-on-write</span><span class=\"ns\">snapshot = ek marker, constant time (1 MB ho ya 1 GB). Lab: 200 MB project, 5.7 ms</span></div>\n      <div class=\"dg-node is-accent\"><span class=\"ni\">🌿</span><span class=\"nl\">Code — har kadam par auto git commit</span><span class=\"ns\">immutable backup remote — poora FS mit jaaye tab bhi history</span></div>\n      <div class=\"dg-node is-gold\"><span class=\"ni\">🐘</span><span class=\"nl\">Database — forkable Postgres</span><span class=\"ns\">fork parent se data share karta hai jab tak likha na jaaye; rollback = fork phenko</span></div>\n    </div>\n    <div class=\"dg-cap\">User ko ek button dikhta hai. Neeche: FS blocks wapas, git revert, DB fork discard — milliseconds mein.\n      <b>Reversibility hi autonomy ko mumkin banati hai.</b></div>",
 };
 
 SD.registerLevels('ai', [
@@ -137,26 +130,16 @@ SD.registerLevels('ai', [
       questions: [
         {
           q: 'Replit ne agent ke liye naye custom tools banane ki jagah insaan wale tools (shell, files, packages) kyun diye?',
-          choices: [
-            'Model insaanon ke inhi tools par train hua hai, infra ke failure modes pehle se pata hain, aur user har action samajh sakta hai',
-            'Naye tools banana mehenga tha',
-            'Insaan wale tools tez hain',
-            'Google ne kaha tha',
-          ],
+          choices: ["Familiar tools aur observable actions","Familiar tool means safe by default","Human shell has zero attack surface","New API always worse than shell"],
           answer: 0,
           explain: 'Agent = insaan jaisa user. Model ka training, infra ki maturity, aur user ka bharosa — teeno isse aate hain.',
-        },
+         choiceExplanations: ["Agent = insaan jaisa user. Model ka training, infra ki maturity, aur user ka bharosa — teeno isse aate hain.","Familiarity explicit capability restrictions ka replacement nahi.","Shell broad file/process/network capabilities expose kar sakti hai.","Narrow custom APIs useful ho sakti hain; task and risk compare karo."] },
         {
           q: 'Kisi agent system ka design kis sawaal se shuru karna chahiye (video)?',
-          choices: [
-            '"Jab agent galti karega tab kya hoga?" aur "kaunsi isolation guarantee chahiye?"',
-            '"Sabse bada model kaunsa hai?"',
-            '"UI kaisa dikhega?"',
-            '"Kitne tools chahiye?"',
-          ],
+          choices: ["Failure impact aur isolation requirements","Only model benchmark rank se start","Only UI layout ko threat model maano","Only tool count ko risk score banao"],
           answer: 0,
           explain: 'Video ki line: agent = intelligence ki patli layer, isolation + reversibility + ops ke mote stack par.',
-        },
+         choiceExplanations: ["Video ki line: agent = intelligence ki patli layer, isolation + reversibility + ops ke mote stack par.","Higher benchmark score privilege boundaries define nahi karta.","UI design external effects and data exposure ka complete model nahi.","One powerful tool many narrow tools se riskier ho sakta hai."] },
       ],
     },
   ],
@@ -166,26 +149,16 @@ SD.registerLevels('ai', [
     questions: [
       {
         q: 'Interviewer: "Hamara agent sirf code likhta hai, user khud chalata hai. Replit jaisa banana hai. Pehla kadam?"',
-        choices: [
-          'Kaam ki ikaai badlo: agent ko har session ka poora, isolated, reversible environment do — phir loop ko us environment ke hisaab se design karo',
-          'Model ko bada karo',
-          'User ki machine par agent chala do',
-          'Ek shared server par sab users ke agents',
-        ],
+        choices: ["Per-session isolated reversible workspace","One shared privileged shell for all","User host files ko unrestricted access","Only model size ko improve karo"],
         answer: 0,
         explain: 'User ki machine = unki files ka risk; shared server = ek agent doosre ko chhu sakta hai.',
-      },
+       choiceExplanations: ["User ki machine = unki files ka risk; shared server = ek agent doosre ko chhu sakta hai.","Shared privilege cross-user data and execution risk laati hai.","User device par broad writes sensitive data ko affect kar sakti hain.","Model quality runtime isolation aur rollback supply nahi karti."] },
       {
         q: 'Interviewer: "Poore environment ki keemat?"',
-        choices: [
-          'Asli compute (halke sandbox se kahin mehenga), cold start ki nichli hadd, aur surface area — snapshot engine galat = data loss, isolation galat = security incident',
-          'Koi keemat nahi',
-          'Sirf storage',
-          'Sirf network',
-        ],
+        choices: ["Compute aur recovery complexity","Only source code storage ka cost","No operations after one snapshot","Sandbox label se threat surface zero"],
         answer: 0,
         explain: 'Video: powerful capability ka tax roz, hamesha.',
-      },
+       choiceExplanations: ["Video: powerful capability ka tax roz, hamesha.","Running environments CPU, RAM, startup and orchestration demand karte hain.","Snapshots verify, retain and restore karni hoti hain.","Packages, kernels, mounts and tools attack surface rakhte hain."] },
     ],
   },
   success: [
@@ -223,24 +196,13 @@ SD.registerLevels('ai', [
      breakout, host scan, pivot karne ko keh sakta hai. Isliye <b>defense in depth</b>: har environment ek
      Linux container — apna file system, process tree, network namespace, resource limits — plus kernel
      features, hypervisor-level boundaries, hardened syscall boundary. Video: "yeh sirf table stakes hain."</p>
-     <h3>☁️ Sabse mazboot deewar udhaar lo</h3>
-     <p>Deploy ke waqt har customer — free tier bhi — ko <b>apna Google Cloud project</b> milta hai. Bhaari
-     cheez hai (apni billing, apna quota), par yeh GCP ki sabse mazboot tenant boundary hai, jise Google ka
-     infra enforce karta hai — wahi deewar jo Google ko uske customers se alag karti hai aur jis par duniya
-     bhar ke researchers attack karte hain.</p>
-     <p class="tip">🎯 Apni deewar banane se behtar hai woh deewar istemaal karo jiski <b>sabse zyada testing
-     duniya karti hai</b>.</p>`,
-    `<h3>🚧 Dev = aazaadi, Prod = guarantee</h3>
-     <p>Dev environment flexible hai — agent packages install kare, DB fork kare, galti kare, rollback kare.
-     Prod bandh hai — Cloud Run, per-customer project, Google DDoS protection + WAF, autoscale. Beech ki
-     deewar hi woh jagah hai jahan <b>AI ki aazaadi khatam hoti hai aur platform ki guarantee shuru</b>.
-     Agent ka dev ka kachra prod tak nahi pahunchta → isi liye agent ko itni aazaadi di ja sakti hai.</p>
-     <p>Aur database: <b>dev DB production se architecture se alag</b>. Agent kabhi prod data ko chhoota hi
-     nahi. Dev mein bhi DB ek <b>fork</b> hai — lab 29 ka ex3 yahi dikhata hai:</p>
-     <pre>production users table: 500,000 rows
-fork banaya: 0.005 ms, overlay mein 0 rows (kuch copy nahi hua)
-agent (fork mein): DROP TABLE users
-  fork mein users: 0      production mein users: 500,000  ✅</pre>`,
+     <h3>☁️ Managed policy boundaries ka sauda</h3>
+     <p>Case study separate customer projects describe karti hai. Project IAM, quota aur billing ka scope deta hai;
+     identity, networking, runtime isolation aur tenant authorization phir bhi correctly configure karne hain.
+     Project count ka provisioning, lifecycle aur cleanup operational cost bhi hai.</p>
+     <p class="tip">🎯 Boundary ko threat model se chuno aur actual denied operations test karo.
+     Cloud resource label ko complete sandbox proof mat maano.</p>`,
+    "<h3>🚧 Dev = aazaadi, Prod = guarantee</h3>\n     <p>Dev environment flexible hai — agent packages install kare, DB fork kare, galti kare, rollback kare.\n     Prod bandh hai — Cloud Run, per-customer project, Google DDoS protection + WAF, autoscale. Beech ki\n     deewar hi woh jagah hai jahan <b>AI ki aazaadi khatam hoti hai aur platform ki guarantee shuru</b>.\n     Agent ka dev ka kachra prod tak nahi pahunchta → isi liye agent ko itni aazaadi di ja sakti hai.</p>\n     <p>Aur database: <b>dev DB production se architecture se alag</b>. Agent kabhi prod data ko chhoota hi\n     nahi. Dev mein bhi DB ek <b>fork</b> hai — lab 29 ka ex3 yahi dikhata hai:</p>\n     <pre>production users table: 500,000 rows\nfork banaya: 0.005 ms, overlay mein 0 rows (kuch copy nahi hua)\nagent (fork mein): DROP TABLE users\n  fork mein users: 0      production mein users: 500,000  ✅</pre>",
   ],
   stages: [
     {
@@ -259,7 +221,7 @@ agent (fork mein): DROP TABLE users
         { id: 'ui', label: '🪟 Action log', sub: 'har agent action UI mein dikhta hai', row: 2 },
       ],
       flaws: [
-        { id: 'deploy', why: 'Shared namespace = ek customer ka app doosre ke secrets/services tak. Replit har customer ko apna GCP project deta hai — sabse mazboot tenant boundary udhaar lo.' },
+        { id: 'deploy', why: 'Is diagram mein shared privileged identity aur flat networking tenant data expose karte hain. Namespace alone access nahi deta; IAM/RBAC, network policy aur workload isolation configure karo. Separate project ek additional policy boundary ho sakti hai.' },
         { id: 'db', why: 'Agent ko prod DB = uski har galti prod par. Dev DB architecture se alag ho, aur wahan bhi fork (lab: fork mein DROP TABLE, prod 500,000 rows safe).' },
         { id: 'net', why: 'Flat network = ek bigda environment doosron ko scan/attack kar sakta hai. Har environment ka apna network namespace, dusron tak raasta band.' },
         { id: 'snap', why: 'Raat ka ek backup = din bhar ki galti ka koi undo nahi. Agent ko har kadam par snapshot chahiye (CoW se constant-time).' },
@@ -284,16 +246,11 @@ agent (fork mein): DROP TABLE users
         { text: 'Output ka aakhri hissa dekho — DROP TABLE ke baad.', cmd: 'node tools/forkdb.js | tail -4', expect: '  fork mein users: 0      production mein users: 500,000  ✅ asli data ko haath bhi nahi laga' },
       ],
       observe: {
-        q: 'Fork banana 0.005 ms mein kaise hua jab table mein 5 lakh rows hain?',
-        choices: [
-          'Fork kuch copy nahi karta — sirf parent ka reference; sirf badlaav overlay mein likhe jaate hain (copy-on-write)',
-          'Rows compress ho gayin',
-          'Fork background mein copy hua',
-          'Table asli mein chhoti thi',
-        ],
+        q: "Fork banana 0.005 ms mein kaise hua jab table mein 5 lakh rows hain?",
+        choices: ["Reference fork, writes overlay mein","All rows foreground mein copied","All rows hidden compression mein","No durable backing needed for fork"],
         answer: 0,
-        explain: 'CoW ka poora jaadu: jo nahi badla woh share hota hai. Isi liye har agent kaam ke liye fork muft hai.',
-      },
+        explain: "CoW ka poora jaadu: jo nahi badla woh share hota hai. Isliye metadata fork cheap ho sakta hai; overlay writes, retained base versions, cleanup, IO aur storage cost phir bhi hoti hai.",
+       choiceExplanations: ["CoW ka poora jaadu: jo nahi badla woh share hota hai. Isliye metadata fork cheap ho sakta hai; overlay writes, retained base versions, cleanup, IO aur storage cost phir bhi hoti hai.","Measured tiny fork time full eager copy se explain nahi hota.","Compression alone constant-time parent reference model nahi.","Shared parent state durable and retained rehni chahiye."] },
       lesson: 'Agent ko prod ka access nahi, fork do. Fork muft hai, aur sabse buri galti bhi fork tak simit.',
     },
   ],
@@ -303,26 +260,16 @@ agent (fork mein): DROP TABLE users
     questions: [
       {
         q: 'Interviewer: "Har customer ke deploy ke liye alag cloud project — bahut bhaari nahi?"',
-        choices: [
-          'Bhaari hai (provisioning, quota, billing, cleanup automate karna padta hai), par yeh cloud ki sabse mazboot tenant boundary hai jo duniya bhar mein test hoti hai — apni deewar se behtar',
-          'Haan, ek shared cluster behtar hai',
-          'Sirf paid customers ko',
-          'Projects ka koi faayda nahi',
-        ],
+        choices: ["IAM boundary vs project-fleet operations","Project ID automatically secures apps","All cloud boundaries equally strong","Shared project always wrong design"],
         answer: 0,
-        explain: 'Trade-off: operational kharcha vs sabse zyada tested boundary.',
-      },
+        explain: "Separate cloud projects IAM, quota aur billing isolation ko simplify kar sakte hain. Correct identities, network controls aur application isolation still required hain; project boundary automatically strongest universal sandbox nahi.",
+       choiceExplanations: ["Separate cloud projects IAM, quota aur billing isolation ko simplify kar sakte hain. Correct identities, network controls aur application isolation still required hain; project boundary automatically strongest universal sandbox nahi.","IAM, service accounts, networks and deployment policy correctly configure karni hoti hai.","Projects, processes and VMs different threat boundaries hain.","Shared project appropriate controls ke saath valid ho sakta hai."] },
       {
         q: 'Interviewer: "Agent ko production DB kab dena chahiye?"',
-        choices: [
-          'Kabhi seedha nahi — dev DB architecture se alag, wahan bhi fork; prod mein badlaav sirf deploy/migration ke review wale raaste se',
-          'Jab agent trusted ho jaaye',
-          'Read-only de do',
-          'Raat ko',
-        ],
+        choices: ["Scoped access aur reviewed changes","Trusted model ko broad prod writes","Read-only se all data risks solve","Night time ko authorization maano"],
         answer: 0,
-        explain: 'Read-only bhi sensitive data ka leak raasta hai. Dev/prod ki deewar hi autonomy ko mumkin banati hai.',
-      },
+        explain: "Agent ko sirf approved task ke liye minimum permissions do. Unreviewed autonomous production mutations ko isolated dev/fork workflow aur reviewed deployment se constrain karo; even read-only access sensitive data risk rakhta hai.",
+       choiceExplanations: ["Agent ko sirf approved task ke liye minimum permissions do. Unreviewed autonomous production mutations ko isolated dev/fork workflow aur reviewed deployment se constrain karo; even read-only access sensitive data risk rakhta hai.","Model trust permissions and change approvals ka substitute nahi.","Read-only sensitive data expose kar sakta hai.","Time of day authorization ya rollback contract nahi."] },
     ],
   },
   success: [
@@ -335,7 +282,7 @@ agent (fork mein): DROP TABLE users
     kisi mazboot, pehle se tested boundary (alag account/project) se badal sakte ho?</p>`,
   cards: [
     { front: 'Replit ka threat model?', back: 'Hostile: agent ajeeb commands chalayega, user breakout/scan/pivot maang sakta hai. Isliye defense in depth: container + kernel features + hypervisor + hardened syscalls.' },
-    { front: '"Sabse mazboot deewar udhaar lo"?', back: 'Har customer (free bhi) ka apna GCP project — Google ka infra enforce karta hai, duniya bhar mein tested.' },
+    { front: 'Managed project boundary ka tradeoff?', back: 'IAM, quota aur billing scope plus project lifecycle cost. Workload/network/identity isolation separately configure aur test karo; project name alone complete tenant security guarantee nahi.' },
     { front: 'Dev/prod boundary kyun?', back: 'Dev mein AI ki aazaadi (install, fork, galti, rollback); prod bandh (Cloud Run, WAF, autoscale). Dev DB prod se alag — agent prod data chhoota hi nahi.' },
   ],
 },
@@ -355,40 +302,8 @@ agent (fork mein): DROP TABLE users
     'Rollback + retry aur parallel sampling ki keemat',
   ],
   lesson: [
-    `<h3>📉 Galtiyan jud-ti hain</h3>
-     <p>Agent ka ek kadam 95% baar sahi hai. Achha lagta hai. Par 30 kadam ka task? Kahin na kahin kuch
-     tootega — file mitegi, schema bigdega, dependency takrayegi. Bina undo ke, agent us tooti haalat ke
-     upar kaam karta rehta hai: galti ke upar galti. Lab 29 (ex2) mein:</p>
-     <pre>har kadam ka risk   tareeka        poore sahi bane
-      5%           no-undo          38.9%
-      5%           rollback         71.0%
-     15%           no-undo           6.8%
-     15%           rollback         32.0%</pre>
-     <p>Rollback: test fail → saaf haalat par wapas → wahi kadam dobara. Same compute, <b>dugne</b> sahi
-     projects. Jo bachte hain woh wo galtiyan hain jo tests ne pakdi hi nahi — isliye rollback utna hi achha
-     jitna "kuch toota?" batane wala test.</p>
-     <h3>🧩 Teen parton ka snapshot</h3>
-     <ul>
-       <li><b>File system — copy-on-write</b>: snapshot = ek marker; aage ke writes naye blocks mein, purane
-       blocks wahi. Snapshot ka time constant (1 MB ho ya 1 GB) → har kadam par snapshot.</li>
-       <li><b>Code — auto git commit</b> har kaam ke kadam par (user ko git chhoona bhi nahi padta), aur ek
-       <b>immutable backup remote</b> — poora FS mit jaaye tab bhi history.</li>
-       <li><b>Database — forkable Postgres</b>: chalte DB ko CoW karna seedha nahi (live connections, WAL);
-       isliye snapshot = fork jo parent se data share karta hai jab tak likha na jaaye. Rollback = fork phenko.</li>
-     </ul>`,
-    `<h3>📏 Lab 29: asli disk par snapshots</h3>
-     <pre>project   mode   pehla snapshot   10 snapshots ke baad disk   baad ke snapshots (avg)   rollback
- 200 MB  full       324 ms      1973.1 MB                676.4 ms               478 ms, 200 files
- 200 MB  cow     1541.6 ms       202.2 MB                  5.7 ms               187 ms,   5 files</pre>
-     <p>Full copy: har snapshot poora project (676 ms, 10 snapshots = ~2 GB). CoW: pehla mehenga (sab hash),
-     uske baad <b>5.7 ms</b> aur sirf badle blocks. Snapshot itna sasta ho tabhi agent <b>har</b> kadam se
-     pehle le sakta hai.</p>
-     <h3>🍴 Parallel sampling</h3>
-     <p>Fork sasta hai → ek mushkil kadam ke liye 3 alag tareeke ek saath try karo, jo kaam kare woh rakho.
-     Model ka non-determinism faayda ban jaata hai. Lab: retry ka intezaar nahi (rounds kam), par compute
-     <b>~3×</b> — aur chhupi galtiyan wahi ki wahi, kyunki forks bhi tests se behtar nahi dekh sakte.</p>
-     <p class="tip">🎯 Video ki sabse zaroori line: <b>reversibility hi autonomy ko mumkin banati hai.</b>
-     User agent ko tabhi aazaadi deta hai jab use pata ho ki ek button se sab wapas.</p>`,
+    "<h3>📉 Galtiyan jud-ti hain</h3>\n     <p>Agent ka ek kadam 95% baar sahi hai. Achha lagta hai. Par 30 kadam ka task? Kahin na kahin kuch\n     tootega — file mitegi, schema bigdega, dependency takrayegi. Bina undo ke, agent us tooti haalat ke\n     upar kaam karta rehta hai: galti ke upar galti. Lab 29 (ex2) mein:</p>\n     <pre>har kadam ka risk   tareeka        poore sahi bane\n      5%           no-undo          38.9%\n      5%           rollback         71.0%\n     15%           no-undo           6.8%\n     15%           rollback         32.0%</pre>\n     <p>Rollback: test fail → saaf haalat par wapas → wahi kadam dobara. Same compute, <b>dugne</b> sahi\n     projects. Jo bachte hain woh wo galtiyan hain jo tests ne pakdi hi nahi — isliye rollback utna hi achha\n     jitna \"kuch toota?\" batane wala test.</p>\n     <h3>🧩 Teen parton ka snapshot</h3>\n     <ul>\n       <li><b>File system — copy-on-write</b>: snapshot = ek marker; aage ke writes naye blocks mein, purane\n       blocks wahi. Snapshot ka time constant (1 MB ho ya 1 GB) → har kadam par snapshot.</li>\n       <li><b>Code — auto git commit</b> har kaam ke kadam par (user ko git chhoona bhi nahi padta), aur ek\n       <b>immutable backup remote</b> — poora FS mit jaaye tab bhi history.</li>\n       <li><b>Database — forkable Postgres</b>: chalte DB ko CoW karna seedha nahi (live connections, WAL);\n       isliye snapshot = fork jo parent se data share karta hai jab tak likha na jaaye. Rollback = fork phenko.</li>\n     </ul>",
+    "<h3>📏 Lab 29: asli disk par snapshots</h3>\n     <pre>project   mode   pehla snapshot   10 snapshots ke baad disk   baad ke snapshots (avg)   rollback\n 200 MB  full       324 ms      1973.1 MB                676.4 ms               478 ms, 200 files\n 200 MB  cow     1541.6 ms       202.2 MB                  5.7 ms               187 ms,   5 files</pre>\n     <p>Full copy: har snapshot poora project (676 ms, 10 snapshots = ~2 GB). CoW: pehla mehenga (sab hash),\n     uske baad <b>5.7 ms</b> aur sirf badle blocks. Snapshot itna sasta ho tabhi agent <b>har</b> kadam se\n     pehle le sakta hai.</p>\n     <h3>🍴 Parallel sampling</h3>\n     <p>Fork sasta hai → ek mushkil kadam ke liye 3 alag tareeke ek saath try karo, jo kaam kare woh rakho.\n     Model ka non-determinism faayda ban jaata hai. Lab: retry ka intezaar nahi (rounds kam), par compute\n     <b>~3×</b> — aur chhupi galtiyan wahi ki wahi, kyunki forks bhi tests se behtar nahi dekh sakte.</p>\n     <p class=\"tip\">🎯 Video ki sabse zaroori line: <b>reversibility hi autonomy ko mumkin banati hai.</b>\n     User agent ko tabhi aazaadi deta hai jab use pata ho ki ek button se sab wapas.</p>",
   ],
   stages: [
     {
@@ -406,15 +321,10 @@ agent (fork mein): DROP TABLE users
       ],
       observe: {
         q: 'CoW ka PEHLA snapshot full copy se bhi dheema (1541 vs 324 ms). Phir bhi CoW kyun jeeta?',
-        choices: [
-          'Pehla ek baar ka kharcha hai; uske baad har snapshot 5.7 ms aur disk 10× kam — agent har kadam par snapshot le sakta hai',
-          'Pehla snapshot galat naapa gaya',
-          'CoW sirf chhote projects par jeet-ta hai',
-          'Full copy mein data loss hota hai',
-        ],
+        choices: ["Upfront image cost, cheap later deltas","First sample invalid by definition","Full copies inherently lose data","CoW guarantees every workload faster"],
         answer: 0,
         explain: 'Mehenga kaam ek baar, sasta kaam har baar — wahi asymmetry jo YouTube ke transcode mein bhi hai.',
-      },
+       choiceExplanations: ["Mehenga kaam ek baar, sasta kaam har baar — wahi asymmetry jo YouTube ke transcode mein bhi hai.","Observed first snapshot overhead ko amortization ke saath assess karo.","Full copy correctly implemented durable ho sakti hai.","CoW changed bytes, read patterns and metadata overhead par depend karta hai."] },
       lesson: 'Snapshot ki keemat tay karti hai ki woh kitni baar liya ja sakta hai — aur wahi tay karta hai ki undo kitna kaam ka hai.',
     },
     {
@@ -431,16 +341,11 @@ agent (fork mein): DROP TABLE users
         { text: 'Ab 15% risk wali rows — galtiyan kitni tezi se judti hain?', cmd: 'node tools/agent.js | grep "15%"', expect: '     15%           no-undo           6.8%                       33.7                33.7\n     15%           rollback         32.0%                       33.9                33.9\n     15%           rollback+3       35.1%                       30.0                90.1' },
       ],
       observe: {
-        q: '3 parallel forks ne sahi projects sirf 71% → 74.8% kiye, par compute 3× kar diya. Kyun?',
-        choices: [
-          'Bachi hui galtiyan woh hain jo tests pakadte hi nahi — forks bhi unhe nahi dekh sakte. Forks ka asli faayda wall-clock (retry ka intezaar nahi) hai',
-          'Forks mein bug hai',
-          'Forks ek dusre ko overwrite karte hain',
-          '3 bahut kam hain, 30 chahiye',
-        ],
+        q: "3 parallel forks ne sahi projects sirf 71% → 74.8% kiye, par compute 3× kar diya. Kyun?",
+        choices: ["Test oracle ki blind spots persist","Fork count proves independent correctness","Parallel attempts cannot share flaws","More compute fixes missing assertions"],
         answer: 0,
         explain: 'Rollback ki limit test ki limit hai. Behtar tests > zyada forks.',
-      },
+       choiceExplanations: ["Rollback ki limit test ki limit hai. Behtar tests > zyada forks.","More attempts same incomplete tests pass karke same bug ship kar sakte hain.","Correlated models/tests same semantic errors miss kar sakte hain.","Missing correctness checks extra compute se automatically nahi aatin."] },
       lesson: 'Undo galtiyon ko "jama" hone se rokta hai. Par kaunsi galti hai, yeh test batata hai.',
     },
   ],
@@ -450,26 +355,16 @@ agent (fork mein): DROP TABLE users
     questions: [
       {
         q: 'Interviewer: "Agent ke liye undo design karo — files, code, DB."',
-        choices: [
-          'FS: copy-on-write snapshots har kadam par; code: auto git commits + immutable remote; DB: fork per session/kadam, rollback = fork discard — user ko ek button',
-          'Raat ka backup',
-          'Agent se kehna "galti mat karo"',
-          'Har kadam ke baad poora folder zip',
-        ],
+        choices: ["Files/DB snapshots aur safe restore","Night backup per-action undo hai","Prompt se irreversible effects undo","Only local git resets all services"],
         answer: 0,
-        explain: 'Teen alag state, teen alag tareeke, ek button.',
-      },
+        explain: "Files, code aur DB ke versioned restore points ko consistent operation boundary se coordinate karo. Email, payment ya already-published external effects local snapshot se undo nahi hote; idempotency/compensation/reconciliation contract alag chahiye.",
+       choiceExplanations: ["Files, code aur DB ke versioned restore points ko consistent operation boundary se coordinate karo. Email, payment ya already-published external effects local snapshot se undo nahi hote; idempotency/compensation/reconciliation contract alag chahiye.","Night backup intermediate acknowledged changes lose kar sakta hai.","Email/payment/external effects reverse karne ko compensations chahiye.","Git files cover karta hai; DB and external services separate state hain."] },
       {
         q: 'Interviewer: "Snapshot engine mein bug ho toh?"',
-        choices: [
-          'Data loss — isliye snapshot engine ko "perfect" hona padta hai; yeh poore platform ka sabse zaroori, sabse zyada test hone wala hissa',
-          'Koi baat nahi, dobara snapshot le lenge',
-          'User ko pata nahi chalega',
-          'Agent khud theek kar lega',
-        ],
+        choices: ["Verified restore aur independent durability","New snapshot old corruption repair kare","Agent can reconstruct lost state exactly","Snapshot count is recovery proof"],
         answer: 0,
         explain: 'Video: surface area ka kharcha — snapshot galat = data loss, isolation galat = security incident.',
-      },
+       choiceExplanations: ["Video: surface area ka kharcha — snapshot galat = data loss, isolation galat = security incident.","Corrupted parent se later snapshots damage inherit kar sakti hain.","Agent unavailable lost information reliably invent nahi kar sakta.","Recovery proof actual restore and integrity checks se milta hai."] },
     ],
   },
   success: [
@@ -482,8 +377,8 @@ agent (fork mein): DROP TABLE users
     toh ek checkpoint/snapshot kahan lagaoge?</p>`,
   cards: [
     { front: 'Agent ke liye undo ke teen part?', back: 'FS: copy-on-write snapshot (constant time). Code: auto git commit + immutable remote. DB: forkable Postgres (fork discard = rollback).' },
-    { front: 'Lab 29: 200 MB par full vs CoW?', back: 'Full: har snapshot 676 ms, 10 snapshots ~2 GB. CoW: pehla 1.5 s, phir 5.7 ms, disk 202 MB.' },
-    { front: 'Lab 29: 5% risk par no-undo vs rollback?', back: '38.9% vs 71.0% projects poore sahi — same compute. 3 forks: 74.8% par 3× compute.' },
+    { front: 'Lab 29: 200 MB par full vs CoW?', back: "Full: har snapshot 676 ms, 10 snapshots ~2 GB. CoW: pehla 1.5 s, phir 5.7 ms, disk 202 MB." },
+    { front: 'Lab 29: 5% risk par no-undo vs rollback?', back: "38.9% vs 71.0% projects poore sahi — same compute. 3 forks: 74.8% par 3× compute." },
   ],
 },
 ]);

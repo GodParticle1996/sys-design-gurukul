@@ -83,16 +83,11 @@ SD.registerLevels('sdd-resil', [
           vars: { count: four(1), b: 'B#1 → 200 · bache 3' },
           ask: {
             q: '0.2 s par Annapurna 12 requests bhejega. Limiter IP ki ginti kar raha hai, aur A aur B ka IP ek hi hai. Kya hoga?',
-            choices: [
-              'A ki 3 andar jaayengi (jo 3 bache the), 9 ko 429. Aur is second mein Bholu Dhaba ke liye kuch nahi bachega',
-              'A ki 4 andar jaayengi — A ki apni ginti hai',
-              'A ki baarah ki baarah ko 429, kyunki B pehle aaya tha',
-              'A ki baarah ki baarah andar — IP par hadd lagti hi nahi',
-            ],
+            choices: ["A three admit; shared IP budget mein B ke liye zero","A four admit; IP policy tenant identity alag karti hai","A all reject; B first request ne shared bucket exhaust ki","A all admit; same IP ki requests quota mein nahi aati"],
             answer: 0,
             hint: 'Limiter ke liye "A" aur "B" hain hi nahi. Limiter ko sirf ek naam dikhta hai: 127.0.0.1. Us naam ke kitne bache hain?',
             explain: 'Lab ka output: <code>A ke 12 requests → 3 × 200, 9 × 429</code>. Limiter ne A aur B ko <b>ek hi grahak</b> maan liya.',
-          },
+           choiceExplanations: ["Lab ka output: <code>A ke 12 requests → 3 × 200, 9 × 429</code>. Limiter ne A aur B ko <b>ek hi grahak</b> maan liya.","Key IP hai, API tenant nahi. B ki consumed request same shared count se ghati thi.","Limit four hai aur B ne one use kiya; three available hain.","IP selected grouping identity hai; uske liye limit apply hoti hai."] },
         },
         {
           clock: '0.2–0.4 s',
@@ -141,16 +136,11 @@ SD.registerLevels('sdd-resil', [
           vars: { key: 'x-api-key', count: '—', b: '—', a: '8 requests: 1 + 3 + 4' },
           ask: {
             q: 'Library har tenant ki ginti ek second tak rakhti hai, phir zero kar deti hai. Pehli request 0.0 s par aayi thi. 0.9 s par 3 aur 1.1 s par 4 requests mein se library kitni andar aane degi?',
-            choices: [
-              'Saari: 3 + 4. 0.9 s par purane second ke 3 bache the; 1.0 s par ginti zero hui, toh 1.1 s par poore 4 naye',
-              '3 + 1 — ek second mein 4 se zyada kabhi nahi',
-              '0 + 4 — 0.9 s wali mana hongi',
-              '3 + 0 — 1.1 s wali mana hongi',
-            ],
+            choices: ["3 plus 4 admit; fixed-window boundary se burst aa sakta","3 plus 1 admit; any rolling second par four cap hota","0 plus 4 admit; previous window 0.9 s se pehle expire","3 plus 0 admit; window 1.1 s par ab bhi previous hai"],
             answer: 0,
             hint: 'Pehle second ki ginti: 0.0 s par 1, 0.9 s par 3 = 4. Doosra second kab shuru hota hai?',
             explain: 'Lab: library ne <b>1 + 3 + 4 = 8</b> andar aane di — 0.9 s se 1.1 s ke beech 0.2 second mein 7. Hadd "ek second mein 4" thi.',
-          },
+           choiceExplanations: ["Lab: library ne <b>1 + 3 + 4 = 8</b> andar aane di — 0.9 s se 1.1 s ke beech 0.2 second mein 7. Hadd \"ek second mein 4\" thi.","Fixed-window limiter sliding one-second cap nahi deta.","0.9 s first window mein three available requests fit hain.","Counter first one-second boundary par reset hota hai; 1.1 s new budget hai."] },
         },
         {
           clock: 'do hisaab',
@@ -202,16 +192,11 @@ SD.registerLevels('sdd-resil', [
             Container limit tak pahunchta hai toh kernel us container ko rok deta hai (throttle), agle time-slice tak.`,
           ask: {
             q: 'Ek container ka CPU limit 1 core hai. Machine par 8 core khaali pade hain. Container ko achanak 2 core jitna kaam aa gaya. Kya hoga?',
-            choices: [
-              'Container 1 core par hi ruka rahega — limit pakki chhat hai, chaahe machine khaali ho',
-              'Container 2 core le lega, kyunki machine khaali hai',
-              'Container band kar diya jaayega',
-              'Kubernetes use doosri machine par bhej dega',
-            ],
+            choices: ["CPU throttling: quota period mein limit enforce hogi","Unused host cores se quota automatically 2 CPU banega","CPU limit exceed hote hi container OOMKilled hoga","Scheduler running pod ko spare host par move karega"],
             answer: 0,
             hint: 'Yeh level 1 ki hadd jaisa hai. Us hadd ko khaali khidkiyan dikhti thi?',
-            explain: 'CPU limit wahi "har tenant ki hadd" hai: padosi bache rehte hain, par khaali jagah bekaar jaati hai. (Memory ka limit alag chalta hai: memory limit paar karne par container maara ja sakta hai — documentation ise OOM kill kehti hai.)',
-          },
+            explain: "Kubernetes CPU limits runtime/kernel throttling se enforce hoti hain. 1 CPU quota aggregate CPU-time budget hai; pod multiple cores par bursts mein run kar sakta hai par period ke quota tak throttle hoga. Memory-limit exceed aur CPU throttling ko same process-kill behavior mat samjho.",
+           choiceExplanations: ["Kubernetes CPU limits runtime/kernel throttling se enforce hoti hain. 1 CPU quota aggregate CPU-time budget hai; pod multiple cores par bursts mein run kar sakta hai par period ke quota tak throttle hoga. Memory-limit exceed aur CPU throttling ko same process-kill behavior mat samjho.","CPU limit hard quota budget hai; spare host capacity is explicit quota ko double nahi karti.","CPU quota exceed normally throttling hai; memory limit OOM kill se alag behavior.","Scheduler aise quota spike par automatic live pod migration nahi karta."] },
         },
         {
           title: '4. Kubernetes: QoS class kya tay karti hai?',
@@ -253,15 +238,10 @@ SD.registerLevels('sdd-resil', [
       ],
       observe: {
         q: 'Pehle hisse mein B#2 ko 429 mila, doosre mein 200. Dono mein hadd wahi thi: ek second mein 4. Kya badla tha?',
-        choices: [
-          'Ginti kiski: pehle IP ki (A aur B ka ek hi IP), phir x-api-key ki (har tenant ki apni)',
-          'Doosre hisse mein hadd badi thi',
-          'Doosre hisse mein A ne kam requests bheji',
-          'Doosre hisse mein Bholu Dhaba ne pehle bheja',
-        ],
+        choices: ["Identity key IP se authenticated tenant/API key hui","Rate cap four se higher value par change hui","Bulk traffic second run mein entirely band tha","Quiet tenant first arrival se saara quota reserve kar gaya"],
         answer: 0,
         explain: 'Limiter ke teen sawaal: kitne, kitni der mein, kiski ginti. Pehle do dono hisson mein same the. Teesra badla.',
-      },
+       choiceExplanations: ["Limiter ke teen sawaal: kitne, kitni der mein, kiski ginti. Pehle do dono hisson mein same the. Teesra badla.","Given comparison mein numeric limit same hai; grouping identity badli.","Traffic intentionally same rakh kar policy compare hui.","Tenant-key isolation mein quota each tenant ka hai; arrival-first global reservation nahi."] },
       lesson: 'Limiter lagao toh sabse pehle likho: ginti kiski. Phir ek baar khud chala ke dekho ki do alag grahak sach mein alag gine ja rahe hain.',
     },
   ],
@@ -271,37 +251,22 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Humne rate limiter lagaya. Ab kabhi-kabhi ek poore office ke saare users ko ek saath 429 milta hai, jabki har user ne do-chaar requests hi bheji. Kya ho raha hai?"',
-        choices: [
-          'Limiter IP ki ginti kar raha hai, aur poora office (ya load balancer ke peeche ki har request) ek hi IP se aata dikhta hai. Ginti user ya API key ki karo; proxy ke peeche ho toh asli client IP sahi tarah padhne ki setting bhi dekho',
-          'Office ka internet kharab hai',
-          'Hadd bahut kam hai — bas use das guna kar do',
-          'Rate limiter mein bug hai; library badal do',
-        ],
+        choices: ["Shared NAT/proxy IP grouping verify; tenant identity dekho","Network bandwidth badhao; limiter key same rehne do","Rate cap tenfold badhao; shared identity ignore karo","Limiter library replace; auth/proxy settings same rakho"],
         answer: 0,
-        explain: 'Lab: ginti IP ki → A ki 12 requests ke baad B#2 ko 429 (B ne sirf 2 bheji). Ginti x-api-key ki → B#2 ko 200. Library ka default bhi IP hi hai: 1 minute mein 5.',
-      },
+        explain: "Office NAT shared IP ko multiple users ke liye ek budget bana sakta hai. Authenticated tenant/user identity suitable ho toh use karo. Proxy IP headers sirf configured trusted proxy chain se accept karo; arbitrary spoofable client header ko tenant identity mat banao.",
+       choiceExplanations: ["Office NAT shared IP ko multiple users ke liye ek budget bana sakta hai. Authenticated tenant/user identity suitable ho toh use karo. Proxy IP headers sirf configured trusted proxy chain se accept karo; arbitrary spoofable client header ko tenant identity mat banao.","429 admission-policy response hai, direct proof of bandwidth failure nahi.","Higher shared cap symptom postpone karta hai par tenants ek doosre ka budget consume karenge.","Wrong grouping key/proxy trust new library mein bhi same flaw laayega."] },
       {
         q: '"Kubernetes mein CPU request aur CPU limit mein kya farak hai? Noisy neighbour ke liye kaunsa?"',
-        choices: [
-          'Request baari ka wazan hai: kheencha-taani mein bade request wale ko zyada, aur khaali ho toh request se upar bhi le sakta hai. Limit pakki chhat hai: machine khaali ho tab bhi usse upar nahi. Request padosi se bachata hai bina jagah bekaar kiye; limit pakka bachata hai par jagah bekaar jaati hai',
-          'Dono ek hi cheez hain',
-          'Request sirf memory ke liye hota hai',
-          'Limit lagane se pod tez chalta hai',
-        ],
+        choices: ["CPU request scheduling/share; limit CPU-time quota cap","CPU request hard cap; CPU limit idle capacity weight","Request memory reserve; CPU execution par role nahi","Limit CPU reservation; request throttling budget deti"],
         answer: 0,
-        explain: 'Kubernetes documentation: request "defines a weighting"; limit "defines a hard ceiling". (Is lab mein Kubernetes chalaya nahi gaya.) Lab mein wahi do tareeke: baari-baari → A ki 1,046 hui; hadd → 721.',
-      },
+        explain: "CPU requests scheduler placement aur CPU contention ke relative shares/weight mein use hoti hain; exact CPU availability scheduling class/runtime aur other workloads par depend karti hai. Limits quota-time cap se throttle kar sakti hain even with spare host CPU. Neither CPU setting complete memory/network/storage tenant isolation deta hai.",
+       choiceExplanations: ["CPU requests scheduler placement aur CPU contention ke relative shares/weight mein use hoti hain; exact CPU availability scheduling class/runtime aur other workloads par depend karti hai. Limits quota-time cap se throttle kar sakti hain even with spare host CPU. Neither CPU setting complete memory/network/storage tenant isolation deta hai.","Request generally idle CPU borrow karne deta hai; hard runtime ceiling CPU limit ka role hai.","CPU requests scheduling placement aur contention shares dono affect karte hain.","Request scheduling resource demand/share hai, limit quota enforcement; roles ulte nahi."] },
       {
         q: '"Hamara limiter \'ek second mein 4\' kehta hai, par logs mein ek client ki 0.2 second mein 7 requests andar gayi dikh rahi hain. Bug hai?"',
-        choices: [
-          'Zaroori nahi. Agar limiter har second nayi ginti shuru karta hai, toh ek second ke aakhir aur agle ki shuruaat mein hadd se lagbhag dugni requests aa sakti hain. Yeh na chahiye ho toh token bucket jaisa hisaab chahiye',
-          'Haan, pakka bug hai',
-          'Logs galat hain',
-          'Client ne do alag IP use kiye honge',
-        ],
+        choices: ["Fixed-window edge burst possible; chosen algorithm dekho","Seven requests proof hai ki counter arithmetic corrupt hai","Logs discard karo; observed timestamps reliable nahi","Client multiple IP use kare; limiter identity hi badli"],
         answer: 0,
         explain: 'Lab: wahi 8 requests (0.0 s par 1, 0.9 s par 3, 1.1 s par 4). express-rate-limit ne 8 andar aane di; token wali baalti ne 5.',
-      },
+       choiceExplanations: ["Lab: wahi 8 requests (0.0 s par 1, 0.9 s par 3, 1.1 s par 4). express-rate-limit ne 8 andar aane di; token wali baalti ne 5.","Near boundary both windows ke available budgets short elapsed interval mein fit ho sakte hain.","No evidence log corruption ka nahi; algorithm boundary behavior first check karo.","Identity changes possible alag hypothesis hain, par stated same-client burst fixed window se explain ho sakta hai."] },
     ],
   },
   success: [

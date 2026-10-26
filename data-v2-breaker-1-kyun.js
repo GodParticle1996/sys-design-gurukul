@@ -102,16 +102,11 @@ SD.registerLevels('sdd-resil', [
           flows: [{ from: 'phone', to: 'api', label: '/profile', tone: 'acc' }, { from: 'api', to: 'recs', label: '/recs', tone: 'slow', stuck: true }],
           ask: {
             q: 'Asha ke /profile ka kya hoga?',
-            choices: [
-              'Line mein khada rahega — /profile ko bhi ek worker chahiye, aur charon workers recs-service ke intezaar mein atke hain',
-              '5 ms mein jawab mil jaayega — /profile recs-service ko call hi nahi karta',
-              'app-api turant "404 Not Found" dega',
-              'recs-service khud /profile ka jawab de degi',
-            ],
+            choices: ["Profile wait karega; shared workers slow recs mein atke","Profile 5 ms mein aayega; direct recs dependency nahi","Profile naya worker banayega; pool cap sirf home par","Profile cache se aayega; timeout fallback pehle laga hai"],
             answer: 0,
             hint: 'Socho: /profile ko chalane ke liye app-api ke andar kya chahiye? Upar "app-api ke 4 workers" wali line dekho.',
             explain: '<code>/profile</code> aur <code>/home</code> <b>ek hi service</b> (app-api) ke andar hain, isliye dono <b>ek hi worker pool</b> se worker lete hain. Pool mein koi worker khaali nahi → <code>/profile</code> bhi line mein.',
-          },
+           choiceExplanations: ["<code>/profile</code> aur <code>/home</code> <b>ek hi service</b> (app-api) ke andar hain, isliye dono <b>ek hi worker pool</b> se worker lete hain. Pool mein koi worker khaali nahi → <code>/profile</code> bhi line mein.","Direct dependency nahi, par same worker pool indirect coupling hai.","Is lab ka shared pool fixed hai; route-specific automatic worker creation nahi.","Is initial scenario mein cache fallback/timeout protection abhi configured nahi."] },
         },
         {
           clock: '3.5 s',
@@ -175,16 +170,11 @@ SD.registerLevels('sdd-resil', [
           vars: { workers: FREE4, hung: '0', sent: '0', asha: 'abhi kuch nahi' },
           ask: {
             q: 'Sabse seedha pehla ilaaj kya lagaoge?',
-            choices: [
-              'Time limit: recs-service 300 ms mein jawab na de toh worker intezaar chhod de',
-              'Workers 4 se 400 kar do',
-              'Recommendations ka feature hi hata do',
-              'Jab bhi app atke, app-api restart kar do',
-            ],
+            choices: ["Dependency timeout bound karo; worker jaldi release ho","Workers badhao; dependency wait ko unbounded rehne do","Home feature hatao; shared-pool pressure ko skip karo","Periodic restart lagao; pending calls ko clear karte raho"],
             answer: 0,
             hint: 'Worker 5 second kyun khada raha? Kyunki use rokne wala koi niyam nahi tha.',
             explain: 'Is time limit ka naam <b>timeout</b> hai. (400 workers sirf thoda waqt khareedte hain: har second 100 latakti calls aayein toh 400 workers 4 second mein bhar jaayenge.)',
-          },
+           choiceExplanations: ["Is time limit ka naam <b>timeout</b> hai. (400 workers sirf thoda waqt khareedte hain: har second 100 latakti calls aayein toh 400 workers 4 second mein bhar jaayenge.)","Zyada workers temporary headroom denge; unbounded dependency waits phir pool consume kar sakti hain.","Feature disable emergency mitigation ho sakti hai; stated first diagnosis bounded wait ka hai.","Restart cause nahi hataata aur in-flight requests interrupt karta hai."] },
         },
         {
           clock: '1.0 s',
@@ -208,16 +198,11 @@ SD.registerLevels('sdd-resil', [
           vars: { hung: '5', sent: '5', asha: '✅ profile khul gaya (9 ms)' },
           ask: {
             q: 'Workers khaali hain, profile chal raha hai. Phir "recs-service par latki calls" 5 kyun hai?',
-            choices: [
-              'app-api ne sirf intezaar chhoda hai, call wapas nahi li. recs-service un paanchon calls par abhi bhi kaam kar rahi hai — aur app-api har nayi /home par ek aur call bhej deta hai',
-              'Ginti galat hai, asal mein 0 hai',
-              'Yeh Asha ke phone ki calls hain',
-              'Timeout ne recs-service ko theek kar diya, yeh purani ginti hai',
-            ],
+            choices: ["Caller ne wait chhoda; remote work abhi cancel nahi hua","Timeout ne remote processing bhi turant cancel kar di","Five calls stale metrics hain; current work zero hai","Five calls caller ke free workers ki current ginti hai"],
             answer: 0,
             hint: 'Timeout kiske andar chalta hai — app-api ke, ya recs-service ke?',
             explain: 'Timeout sirf <b>bulaane wale</b> (app-api) ko azaad karta hai. Jise bulaya gaya (recs-service), uske liye kaam chalta rehta hai — aur naya kaam aata rehta hai.',
-          },
+           choiceExplanations: ["Timeout sirf <b>bulaane wale</b> (app-api) ko azaad karta hai. Jise bulaya gaya (recs-service), uske liye kaam chalta rehta hai — aur naya kaam aata rehta hai.","Local timeout remote handler ko automatic cancel nahi karta; cooperative cancellation alag path hai.","Lab intentionally remote in-flight work track karta hai; metrics ko evidence bina stale mat maano.","Remote outstanding calls aur available caller workers alag counters hain."] },
         },
         {
           clock: '5.0 s',
@@ -262,16 +247,11 @@ SD.registerLevels('sdd-resil', [
           say: 'Thodi der baad tum MCB uthate ho — <b>ek baar, dekhne ke liye</b>. Geyser abhi bhi kharab → MCB phir gir jaata hai. Geyser theek → bijli chalu.<br><br><b>Ek farq:</b> ghar ka MCB tum haath se uthate ho. Software wala switch <b>timer se khud</b> ek-do "test calls" bhejta hai.',
           ask: {
             q: 'recs-service 10 minute se latki hai, switch gira hua hai. Sahi tareeka kya hai?',
-            choices: [
-              'Har 30 second par ek-do test calls bhejo. Jawab aaya → switch upar. Jawab nahi aaya → 30 second aur ruko',
-              'Har user ki request bhej ke dekho — shayad ab chal jaaye',
-              'Jab tak koi engineer na bole, recs-service ko kabhi call mat karo',
-              'app-api ko restart kar do',
-            ],
+            choices: ["Bounded probes bhejo; successful recovery par reopen karo","Har user request ko recovery probe banakar bhejte raho","Manual reset ka wait karo; automatic probes band rakho","Caller restart karo; fresh breaker se poora load bhejo"],
             answer: 0,
             hint: 'Do cheezein chahiye: bimaar service par bojh na pade, aur service ke theek hote hi pata bhi chal jaaye.',
             explain: 'Har request bhejna = timeout wali purani dikkat. Kabhi na bhejna = recs-service theek hone ke baad bhi users ko purana data. Beech ka raasta: <b>thodi-thodi der mein ek test</b>.',
-          },
+           choiceExplanations: ["Har request bhejna = timeout wali purani dikkat. Kabhi na bhejna = recs-service theek hone ke baad bhi users ko purana data. Beech ka raasta: <b>thodi-thodi der mein ek test</b>.","Unbounded recovery probes sick dependency ko dobara overload kar sakti hain.","Automatic controlled recovery ka goal manual permanent blocking se poora nahi hota.","Fresh state full load wapas bhej kar recovery ko destabilize kar sakti hai."] },
         },
         {
           title: '4. Is switch ke teen haal — aur unke naam',
@@ -308,26 +288,16 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Recommendation service dheemi hui aur hamara login bhi band ho gaya. Login toh recommendations use hi nahi karta. Kaise?"',
-        choices: [
-          'Login aur home ek hi service ke worker pool se chalte hain. Dheemi calls ne saare workers pakad liye, login ko worker mila hi nahi. Ilaaj: timeout + circuit breaker + fallback',
-          'Login ke code mein bug hoga',
-          'Database down ho gaya hoga',
-          'Network slow hoga',
-        ],
+        choices: ["Shared worker exhaustion; timeout aur isolation trace karo","Login query bug maano; healthy home route ka evidence lo","Login DB down maano; shared pool metrics skip karo","Client network fault maano; backend pools ignore karo"],
         answer: 0,
         explain: 'Lab: bina bachav ke <code>/profile</code> (jise dependency se matlab nahi) ki 600 mein se 360 requests fail. Wajah seemit workers ka ek hi pool hai, na ki login ka code.',
-      },
+       choiceExplanations: ["Lab: bina bachav ke <code>/profile</code> (jise dependency se matlab nahi) ki 600 mein se 360 requests fail. Wajah seemit workers ka ek hi pool hai, na ki login ka code.","Possible hypotheses hain, par scenario ka concrete shared-pool evidence slow dependency coupling dikhata hai.","Independent DB hypothesis ko verify karna hoga; exhausted workers ko ignore karna root cause miss karega.","Network issue alone selected backend worker exhaustion explain nahi karta."] },
       {
         q: '"Humne timeout laga diya hai. Circuit breaker ki kya zaroorat?"',
-        choices: [
-          'Timeout sirf caller ko chhudata hai. Caller phir bhi har request par bimaar service ko call karta hai, aur har user timeout jitna waqt khota hai. Breaker un calls ko bhejta hi nahi',
-          'Koi zaroorat nahi — timeout kaafi hai',
-          'Breaker timeout se tez chalta hai',
-          'Breaker ke bina cache nahi chalta',
-        ],
+        choices: ["Timeout wait bound karta; breaker repeated calls rokta","Timeout repeat call rate bhi automatically ghata deta","Breaker remote handler cancel karta; timeout sirf count","Breaker har response cache karta; timeout storage deta"],
         answer: 0,
         explain: 'Lab: sirf timeout → bimaar service par 300 calls, service 3 baar giri. Timeout + breaker → 30 calls, 0 baar giri.',
-      },
+       choiceExplanations: ["Lab: sirf timeout → bimaar service par 300 calls, service 3 baar giri. Timeout + breaker → 30 calls, 0 baar giri.","Nayi incoming requests har baar fresh timed call bhej sakti hain; timeout rate budget nahi.","Breaker normally calls admit/reject karta hai; remote cooperative cancellation alag mechanism hai.","Caching optional fallback design hai; breaker ya timeout ka automatic contract nahi."] },
     ],
   },
   success: [

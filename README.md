@@ -1,12 +1,12 @@
 # 🏛️ System Gurukul
 
-**System design seekho — chalaake.** Hinglish mein, level by level, aur har daava
-terminal mein **prove** hota hai.
+**System design seekho — chalaake.** Hinglish mein, level by level: concepts ko
+interactive models aur runnable local labs mein test karo.
 
 Baaki Gurukul apps mein terminal ek *tool* sikhata hai (kubectl, mysql, kafka-topics).
-Yahan terminal ek **poora system chalata hai**. Tum request bhejte ho, load daalte ho,
-fault inject karte ho — aur simulator batata hai ki kitni rows padhi gayi, p99 kya hua,
-pool kitna bhara, aur replica kitna peeche hai.
+Yahan terminal ek **system ka analytical model chalata hai**. Tum request bhejte ho,
+load daalte ho, fault inject karte ho — aur simulated rows examined, p99, pool occupancy
+aur replica lag compare karte ho. Local Docker projects alag runnable implementations hain.
 
 ```
 $ GET /api/v1/transactions?page=485728&limit=50
@@ -26,9 +26,15 @@ Koi build nahi, koi dependency nahi. Bas file kholo:
 
 ```bash
 xdg-open index.html      # ya browser mein drag karo
-xdg-open gallery.html    # saare 94 concept diagrams ek jagah
+xdg-open gallery.html    # concept diagrams ek jagah
 node validate.js         # structure + missions + render — sab check
 node validate.js pool    # sirf ek level ke missions
+node tools/replay-missions.js    # intended solutions + skip/garbage/state regressions
+node tools/replay-exercises.js   # har interactive stage + interview, right/wrong actions
+node tools/quiz-quality.js --check  # length bias, per-option feedback, shuffled positions
+node tools/tradeoff-test.js      # metric contracts, demand-reduction shortcuts, invalid states
+node dev/state-test.js           # old/corrupt/blocked storage and reload migration
+node dev/progress-test.js        # restart/reload XP farming and single-use review guards
 ```
 
 ---
@@ -36,7 +42,7 @@ node validate.js pool    # sirf ek level ke missions
 ## Kya hai isme
 
 **14 tracks · 244 levels · 1016 stages · 503 interview Qs · 1067 flashcards · 244 diagrams · 330 interactive labs · 45 docker projects**
-(ginti `node validate.js` ki aakhri line se, 2026-10-20)
+(ginti `node validate.js` se, 2026-10-23)
 
 | Track | Levels | Kya seekhoge |
 |---|---|---|
@@ -56,7 +62,8 @@ node validate.js pool    # sirf ek level ke missions
 | 🤖 **AI Companies — Model ke peeche ka system** | 20 | AI ka asli kaam model ke bahar: agent ko band rakhna, muft GPU ka bantwara, 3 swipe mein pehchaan, Replit Agent ka "undo", patli wire par training, AWS ka capex |
 | 🌍 **Planet-scale Infra — Poori duniya ke liye** | 24 | BitTorrent · Starlink · YouTube · Gmail · Google Search · Google Maps — har ek mein physics, numbers aur ek ulta-seedha faisla |
 
-Har track ke aakhir mein ek **BOSS** level hai, aur har track ka apna certificate.
+Core tracks mein **BOSS** levels hain; playlist topics ka apna interview round hai.
+Har track ka apna certificate hai.
 
 ### 🐳 Docker projects — `docker-labs/`
 
@@ -97,7 +104,7 @@ Sab `SD.renderers.<type>` mein register hote hain, aur sabka contract wahi hai:
 | 🔥 `replay` | Asli outage ki timeline scrub karo. Har frame par metrics badalte hain; kuch frames par replay **rukta** hai aur poochta hai "ab kya karoge" — jawab ke bina aage nahi badhta | saare 5 postmortem levels + boss |
 | ⚖️ `tradeoff` | Knob ghumao, number **live compute** hota hai. Recall/latency/RAM, write/read/availability, samples/blast-radius — sab formulas se, hardcode nahi | vectors · multiregion · rollout · blast · pm-regex |
 | 🧮 `estimate` | Pehle **tumhara** andaaza (5k, 2.5M, 1.2 crore — sab parse hote hain), phir asli calculation step-by-step. Sahi ka matlab **sahi order of magnitude** | napkin · unitcost · pm-thread |
-| 🕵️ `archdiff` | Ek design jisme flaws chhupe hain. Click karke pakdo — aur **sahi** box par click bhi apni wajah batata hai | pm-config · pm-spiral · blast · unitcost · boss |
+| 🕵️ `archdiff` | Har component ko explicitly flawed ya safe classify karo; dono choices ka reason dikhta hai | pm-config · pm-spiral · blast · unitcost · boss |
 
 Validator in labs ko sirf padhta nahi — **render karke chalata** hai:
 tradeoff ka poora knob sweep (koi bhi combination goal poora karta hai?),
@@ -173,7 +180,7 @@ OBSERVABILITY
 | Retry storm | error rate se amplification (jitter ho toh nahi) |
 | Breaker | asli state machine — CLOSED → OPEN → HALF-OPEN, khud trip hoti hai |
 
-Isliye teen sabse zaroori demos sach mein chalte hain:
+Yeh deterministic teaching-model examples hain; production benchmarks nahi:
 
 1. **Deep pagination** — bina index 12.8 s → index ke saath page 1 par 8 ms → **wahi index**, page 485728 par 6.8 s → cursor par 8 ms
 2. **Pool exhaustion** — 15 ms asli kaam, 1.01 s `pool.acquire()`, CPU 10%, health green
@@ -202,24 +209,26 @@ tradeoff khulte hain, sirf tumhare chune hue ke nahi. Asli seekh wahi hai.
 index.html · gallery.html · style.css
 
 core.js        state, XP, streak, spaced repetition (SD namespace), level registry
-data-core.js   ranks, 8 tracks, aur SD.sys.* system presets
+data-core.js   ranks, core tracks, aur SD.sys.* system presets
 games.js       quiz · bins · order · match · fill · hotspot · incident
 perfsim.js     cost & load simulator + SD.renderers.terminal
 canvas.js      SD.renderers.design (design canvas)
 labs.js        replay · tradeoff · estimate · archdiff   (IIFE-wrapped!)
 dockerlab.js   SD.renderers.docker — docker-labs/ project ka stage (IIFE)
 explain.js     SD.viz.svg (chhota SVG diagram) + SD.renderers.dryrun / cards — ek click = ek badlaav (IIFE)
-visuals.js     94 concept diagrams (append-safe: har ek alag assignment)
+visuals.js     core concept diagrams; baaki content files apne diagrams register karti hain
 app.js         screens & flow
 
 data-flow.js · data-api.js · data-data.js · data-resil.js
 data-dist.js · data-shapes.js · data-builds.js · data-feed.js
-data-st-01-reddit.js … data-st-08-instagram.js   🏢 Real Company Stories
+data-st-01-reddit.js … data-st-14-notion.js   🏢 Real Company Stories
 data-gaps.js   maujooda tracks ke BEECH ke levels
 data-ext-videos.js   purane levels ko SD.extendLevel se badhaya + Raft levels (data-gaps ke BAAD)
 data-ext-episodes.js · data-ext-sdd1.js   video batches: purane levels badhaye + naye levels (videos ke BAAD, isi kram mein)
 data-v2-00-tracks.js · data-v2-<topic>-<n>-<hissa>.js   🛡️ playlist course: ek level ek file (EXTENDING.md §10.7)
-docker-labs/   43 Node projects (compose + start.js + README numbers ke saath)
+docker-labs/   45 Node projects (compose + start.js + historical README captures)
+data-guidance.js  53 topic guides, all 244 levels ke explicit assignments
+exercise-solutions.json  nonterminal exercises ke intended actions
 validate.js    structure + missions + labs + render
 ```
 
@@ -234,14 +243,34 @@ Naya content? Sirf `data-*.js` aur `visuals.js` chhuo. Details:
 🔎 STRUCTURE  level/stage ki shakl · unsolvable fill · softlock hotspot ·
               toote incident branches · gayab VISUALS · boss-last · script tags ·
               non-Latin script leak (Cyrillic/Devanagari jo typing mein ghus jaata hai)
-🧪 MISSIONS   har terminal mission ke HINTS ko ASLI perfsim par chala ke dekhta hai
-              ki tasks poore hote hain aur success() true hota hai — aur fresh sim
-              par success() FALSE hai (warna mission apne aap complete ho jaayega)
+🧪 MISSIONS   explicit solution commands ko ASLI perfsim par replay karta hai;
+              fresh/partial/omitted steps win nahi karte; final step par live
+              verify + success + poora checklist true hona chahiye
 🖼️ RENDER     app.js ko boot karke har level ka intro render karta hai —
               `undefined` HTML aur render-time crashes pakadta hai
 ```
 
-**2405 checks · 0 error · 0 warning.**
+Interactive solutions `exercise-solutions.json` mein static actions hain. Node replays
+aur `node dev/replay-browser.js` actual Chromium mein wahi fixtures chalate hain,
+wrong options, repeated clicks, missing decisions aur preview shortcuts bhi try karte hain.
+Browser tools existing Playwright/Chromium use karte hain; install ya server start nahi karte.
+
+`data-guidance.js` mein 53 topic guides all 244 levels ko explicit map karte hain:
+why → tiny example → hands-on → use/avoid → comparison → decision tree → common mistake/production.
+Theme Light/Dark topbar se badalti hai. Tap controls Enter/Space se bhi chalte hain.
+Progress v1 storage se migrate hoti hai; resume challenge boundary par hai, partial
+answers ya simulator ke beech ka state persist nahi hota. XP first full level completion
+par award hota hai; boundary par saved pending XP resume ke saath aata hai. Completed
+level replays extra XP nahi dete; pop-quiz question bonus ek din mein ek baar milta hai.
+Browser storage blocked
+ho toh current tab chalta hai aur saving limitation dikhti hai.
+Resume checkpoint poore stage payload ka fingerprint check karta hai; changed questions
+ya predicates ke baad stale checkpoint discard hota hai.
+
+External Docker steps learner ki self-report hain; observation MCQ ka result
+automatically container output verify nahi karta. Laptop preview external lab ko complete
+nahi karta. Simulated costs, timings, quotas aur historical company snapshots current
+provider guarantees nahi. Source review aur validation evidence [dev/AUDIT.md](dev/AUDIT.md) mein hai.
 
 ---
 
@@ -257,5 +286,5 @@ Naya content? Sirf `data-*.js` aur `visuals.js` chhuo. Details:
    aata hai, aur wahi agla sawaal hai
 7. Har pattern ki **keemat** bolo. Keemat na bata sako toh tumne use samjha nahi —
    bas uska naam seekha hai
-8. Aur aakhir mein: **padhna alag hai, banana alag.** Isliye aakhri track mein
-   saat asli systems hain — khaali page se.
+8. Aur aakhir mein: **padhna alag hai, banana alag.** Builds track mein
+   systems ko requirements se design karo.

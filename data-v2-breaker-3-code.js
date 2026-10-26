@@ -139,16 +139,11 @@ docker-labs/38-circuit-breaker/tools/mini.js      ← apni fetch ke aaspaas brea
           },
           ask: {
             q: 'Maan lo line 37 delete ho gayi, aur line 38 se <code>enough &amp;&amp;</code> hat gaya. Breaker abhi shuru hua hai, window khaali hai, aur pehli hi call fail ho gayi. Kya hoga?',
-            choices: [
-              'Window mein ek hi nateeja ✗ hai: 1/1 = 100%, hadd 50% se upar. Breaker ek hi fail par OPEN ho jaayega',
-              'Kuch nahi hoga — ek call se breaker kabhi nahi khulta',
-              'Breaker 6 nateeje aane tak apne aap ruk jaayega',
-              'Code crash ho jaayega — <code>enough</code> ke bina line 38 chalti hi nahi',
-            ],
+            choices: ["Pehli failure 1/1 hogi; ratio se open ho sakta hai","Minimum six samples phir bhi implicit code rule rahega","Enough variable bina JavaScript parse hi nahi hogi","Pehli failure discard hogi; fresh window sample nahi leti"],
             answer: 0,
             hint: 'Line 36 aur 38 ka hisaab khud karo. Window mein 1 nateeja, 1 fail. fails / window.length kitna hua?',
             explain: '<code>enough</code> ka kaam hai: kam data par faisla mat karo. Uske bina 1/1 = 100% ≥ 50% → breaker ek akeli fail call par OPEN. Shuru mein aur CLOSED hone ke baad (window khaali) yahi hota. Isliye ek-do blip par breaker nahi girna chahiye.',
-          },
+           choiceExplanations: ["<code>enough</code> ka kaam hai: kam data par faisla mat karo. Uske bina 1/1 = 100% ≥ 50% → breaker ek akeli fail call par OPEN. Shuru mein aur CLOSED hone ke baad (window khaali) yahi hota. Isliye ek-do blip par breaker nahi girna chahiye.","Minimum sample guard hi delete hui hai, isliye implicit six-call wait bacha nahi.","Variable/condition removal valid syntax hai; statistical behavior change hota hai.","Record path first result ko window mein add karta hai."] },
         },
         {
           clock: '#6 · 1.8 s · phir timeout',
@@ -177,16 +172,11 @@ docker-labs/38-circuit-breaker/tools/mini.js      ← apni fetch ke aaspaas brea
           },
           ask: {
             q: 'Line 38: <code>enough &amp;&amp; fails / this.window.length &gt;= this.failRate</code>. Yahan <code>fails</code> = 3, window.length = 6, <code>failRate</code> = 0.5. Line 38 kya karegi?',
-            choices: [
-              '3/6 = 0.5, aur 0.5 &gt;= 0.5 sach hai (<code>&gt;=</code> barabar par bhi sach hota hai) → <code>this.open()</code> chalegi, breaker OPEN',
-              'Kuch nahi karegi — 0.5 hadd se zyada nahi, barabar hai',
-              'Breaker HALF_OPEN ho jaayega',
-              'Window saaf hogi par breaker CLOSED rahega',
-            ],
+            choices: ["3/6 >= 0.5 true; shown code breaker open karega","3/6 > 0.5 false; shown code closed hi rahega","3/6 == 0.5 par shown code half-open karega","3/6 == 0.5 par shown code window clear karega"],
             answer: 0,
             hint: 'Line 38 mein <code>&gt;=</code> hai, <code>&gt;</code> nahi. 0.5 aur 0.5 barabar hain. Barabar par kya hota hai?',
             explain: 'Hamari class mein <code>&gt;=</code> hai: hadd <b>chhute hi</b> OPEN. (Aage dekhoge: asli library mein yahi jagah <code>&gt;</code> ho sakta hai, aur tab wahi 50% OPEN nahi karta.)',
-          },
+           choiceExplanations: ["Hamari class mein <code>&gt;=</code> hai: hadd <b>chhute hi</b> OPEN. (Aage dekhoge: asli library mein yahi jagah <code>&gt;</code> ho sakta hai, aur tab wahi 50% OPEN nahi karta.)","Code >= compare karta hai; strict > wala interpretation galat hai.","Half-open cooldown/recovery transition hai; threshold crossing direct open hai.","Threshold equality par window clear karne ka branch nahi hai."] },
         },
         {
           clock: '#7 · 2.3 s · line 38 chali',
@@ -330,16 +320,11 @@ async function getRecs() {
           },
           ask: {
             q: 'Maan lo line 11 delete ho gayi. Baaki code wahi. Breaker OPEN hai. Call #8 par kya hoga?',
-            choices: [
-              'Call recs-service tak jaayegi aur 300 ms intezaar karegi. Breaker sirf ginta rahega, rokega nahi — hum phir "sirf timeout" wali dikkat par',
-              'Breaker call ko phir bhi rok dega, line 15 ki wajah se',
-              'Code compile nahi hoga',
-              'Call 0 ms mein cache se aa jaayegi, bas record nahi hoga',
-            ],
+            choices: ["Open guard gaya; dependency call aur timeout phir hoga","Line 15 request se pehle open state rok degi","Open variable unused hone se JavaScript compile fail","Fallback bina remote action ke turant return ho jaaye"],
             answer: 0,
             hint: '<code>allow()</code> ka jawab kaun padhta hai? Sirf line 11. Line 11 gayi toh jawab ka kya fayda?',
             explain: '<code>allow()</code> sirf jawab deta hai: true ya false. Roke kaun? Line 11, jo <code>allow()</code> ke jawab ko padh ke <code>return</code> karti hai. Line 11 ke bina breaker sirf gina karta hai, rokta nahi. Har call recs-service tak jaati hai aur 300 ms khoti hai. Level 1 ki "sirf timeout" wali dikkat wapas.',
-          },
+           choiceExplanations: ["<code>allow()</code> sirf jawab deta hai: true ya false. Roke kaun? Line 11, jo <code>allow()</code> ke jawab ko padh ke <code>return</code> karti hai. Line 11 ke bina breaker sirf gina karta hai, rokta nahi. Har call recs-service tak jaati hai aur 300 ms khoti hai. Level 1 ki \"sirf timeout\" wali dikkat wapas.","Line 15 result record karti hai; deleted pre-action guard ka replacement nahi.","Unused state parse error nahi. Behavioral protection hatna compile failure se alag hai.","Fallback remote action/timeout result ke baad aayega; immediate open short-circuit hat chuka hai."] },
         },
         {
           clock: '#5 · 1.0 s · breaker CLOSED',
@@ -377,16 +362,11 @@ async function getRecs() {
           vars: { rec: 'false  (!sick = !true)' },
           ask: {
             q: 'Ab maan lo recs-service ne jawab diya, par status 404 (<code>res.status</code> = 404). Line 14 ke baad line 15 mein <code>breaker.record</code> ko kya milega?',
-            choices: [
-              '<code>true</code>. 404 par <code>sick</code> false hai (jawab aaya, aur 404 &lt; 500), toh <code>!sick</code> = true. Breaker ke liye recs-service theek hai',
-              '<code>false</code> — koi bhi error status failure hai',
-              'Kuch nahi — 404 par <code>record</code> bulaya hi nahi jaata',
-              'Exception — 404 par code crash ho jaata hai',
-            ],
+            choices: ["True: shown classifier 404 ko dependency sickness nahi ginta","False: shown classifier har HTTP error ko sick ginta","Undefined: HTTP 404 par record call skip hoti hai","Exception: HTTP 404 fetch ko synchronously crash karta"],
             answer: 0,
             hint: 'Pehle line 14 chalao: jawab aaya toh <code>!res</code> kya hai? Aur 404 &gt;= 500?',
             explain: '<code>!res</code> = false (jawab aaya) aur 404 &gt;= 500 = false → <code>sick</code> = false → <code>record(true)</code>. 404 client ki galti hai, recs-service theek hai. Lab ex2: purane app ki 4xx requests ko failure ginne par naye app ki 90 theek requests mein se sirf 3 chali, 87 roki gayi, breaker 3 baar khula. Sirf 5xx + timeout ginne par 90/90 chali.',
-          },
+           choiceExplanations: ["<code>!res</code> = false (jawab aaya) aur 404 &gt;= 500 = false → <code>sick</code> = false → <code>record(true)</code>. 404 client ki galti hai, recs-service theek hai. Lab ex2: purane app ki 4xx requests ko failure ginne par naye app ki 90 theek requests mein se sirf 3 chali, 87 roki gayi, breaker 3 baar khula. Sirf 5xx + timeout ginne par 90/90 chali.","sick classifier timeout/connection/5xx ko count karta hai; 404 us branch mein nahi.","Record call path execute hota hai; !sick true supply hota hai.","Fetch HTTP 404 par Response deta hai; transport rejection se alag hai."] },
         },
         {
           clock: '#5 · 1.3 s · user ko kya mila',
@@ -423,26 +403,16 @@ async function getRecs() {
     questions: [
       {
         q: '"Humare breaker mein 404 failure hai kya?"',
-        choices: [
-          'Nahi. 404 ka matlab maangne wale ne galat cheez maangi, dependency theek hai. Breaker sirf dependency ki bimaari gine: timeout, connection toota, 5xx. 4xx ginne se theek requests bhi ruk jaati hain',
-          'Haan, har error status failure hai',
-          'Haan, 404 matlab service gir gayi',
-          'Breaker status code dekhta hi nahi, sirf latency dekhta hai',
-        ],
+        choices: ["Is classifier mein 404 exclude; API contract se policy chuno","Har 4xx ko dependency outage sample mein include karo","404 ko connection failure jaisa availability loss maano","Status ignore karo; sirf successful-call latency se chalao"],
         answer: 0,
-        explain: 'Lab ex2: purane app ki kharab (4xx) requests ko failure ginne par naye app ki 90 theek requests mein se 87 roki gayi, breaker 3 baar khula. Sirf 5xx + timeout ginne par 90/90 chali.',
-      },
+        explain: "Is lab mein 404 infrastructure failure sample nahi. Production policy endpoint contract par depend kare: expected misses, 429, transient 404 propagation aur business errors ko explicitly classify karo. Har non-2xx ko same dependency outage maanne se unrelated healthy traffic block ho sakta hai.",
+       choiceExplanations: ["Is lab mein 404 infrastructure failure sample nahi. Production policy endpoint contract par depend kare: expected misses, 429, transient 404 propagation aur business errors ko explicitly classify karo. Har non-2xx ko same dependency outage maanne se unrelated healthy traffic block ho sakta hai.","Caller validation/auth errors healthy dependency ke breaker ko false-open kara sakte hain.","404 resource/app semantics hai; transport outage ka automatic proof nahi.","Outcome semantics ko completely hataane se actual 5xx/timeouts detect nahi honge."] },
       {
         q: '"Breaker ka object request handler ke andar banayein, ya bahar?"',
-        choices: [
-          'Bahar, ek baar. Breaker ko calls ke beech yaad rakhna hai (window, state, timer). Handler ke andar banaya toh har request par naya khaali breaker banega — jo kabhi OPEN hi nahi hoga',
-          'Andar — har request ka apna breaker hona chahiye',
-          'Koi farq nahi padta',
-          'Andar, warna memory leak hota hai',
-        ],
+        choices: ["Shared failure domain ke liye long-lived breaker instance","Har request ke andar fresh breaker instance create karo","Har response ke baad breaker window empty kar do","Har user ko unrelated dependency ka same global breaker do"],
         answer: 0,
         explain: 'Lab ki <code>tools/mini.js</code> mein breaker line 7 par banta hai, <code>getRecs()</code> ke bahar. Window mein pichhli calls ke nateeje tabhi jama hote hain jab wahi ek object har call par chale.',
-      },
+       choiceExplanations: ["Lab ki <code>tools/mini.js</code> mein breaker line 7 par banta hai, <code>getRecs()</code> ke bahar. Window mein pichhli calls ke nateeje tabhi jama hote hain jab wahi ek object har call par chale.","Fresh instance history/state bhoolti hai; repeated failure pattern detect nahi hota.","Per-response reset rolling window ka evidence mita dega.","Shared instance scope meaningful dependency/operation failure domain ho; unrelated services ko blanket group mat karo."] },
     ],
   },
   success: [

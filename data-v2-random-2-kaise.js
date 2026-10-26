@@ -94,16 +94,11 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
           vars: { coins: 'S2, S1', went: '?' },
           ask: {
             q: 'Load balancer ko dikh raha hai: S1 2 · S2 1 · S3 0. #3 ke sikke S2 aur S1 nikle hain. #3 kahan jaayegi?',
-            choices: [
-              'S2 par — un do mein S2 par kam dikh raha hai. S3 sabse khaali dikhta hai, par #3 ne S3 ko dekha hi nahi',
-              'S3 par — S3 sabse khaali dikh raha hai',
-              'S1 par — pehla sikka S2 tha, toh doosra jeetega',
-              'Sikke dobara uchhaale jaayenge jab tak S3 na nikle',
-            ],
+            choices: ["S2: sampled pair S2,S1 mein S2 lower advertised load","S3: global minimum ko sample mein bina dekhe chuno","S1: second sample ko comparison bina priority mile","Resample: pair mein global minimum aane tak repeat karo"],
             answer: 0,
             hint: 'Niyam ka doosra hissa padho: "un <b>do</b> mein se". Teesre server ka koi zikr hai?',
             explain: 'Slow motion ki line: <code>#3 → S2 (do sikke: S2, S1 · LB ko dikha: S1 2 · S2 1 · S3 0)</code>. Pichhle level mein #3 bhi S3 par gayi thi. Yahi ek request jhund ko todti hai.',
-          },
+           choiceExplanations: ["Slow motion ki line: <code>#3 → S2 (do sikke: S2, S1 · LB ko dikha: S1 2 · S2 1 · S3 0)</code>. Pichhle level mein #3 bhi S3 par gayi thi. Yahi ek request jhund ko todti hai.","Power-of-two candidate set sampled pair tak limited hai.","Pair ke loads compare karte hain; second draw automatic winner nahi.","Global minimum dhoondhne tak resample karna bounded two-choice policy nahi."] },
         },
         {
           clock: '0.75 s',
@@ -131,16 +126,11 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
           vars: { coins: '—', went: 'S1 7 · S2 9 · S3 8', real: 'ausat 0.89 s · sabse lamba 1.35 s' },
           ask: {
             q: 'Jaankari utni hi purani thi jitni pichhle level mein. Phir chaar-chaar ke dher kyun nahi lage?',
-            choices: [
-              'Har request ne alag do servers dekhe. "Sabse khaali" server tabhi chuna gaya jab "sabse khaali" server un do mein tha; baaki requests kahin aur gayi',
-              'Kyunki do sikkon se jaankari taaza ho jaati hai',
-              'Kyunki requests kam aayi',
-              'Kyunki servers tez ho gaye',
-            ],
+            choices: ["Random pairs badli; same stale minimum sabko nahi mila","Two samples ne server telemetry ko fresh update kar diya","Client arrival rate kam hui; dispatch load unchanged tha","Server work faster hua; sampling se service time ghata"],
             answer: 0,
             hint: 'Pichhle level mein har request ne kitne servers dekhe the? Aur sab ne kise chuna?',
             explain: 'Jhund ke liye do cheezein chahiye: purani jaankari <b>aur</b> sab ka ek hi faisla. Sikkon ne doosri cheez tod di. Jaankari purani hi rahi.',
-          },
+           choiceExplanations: ["Jhund ke liye do cheezein chahiye: purani jaankari <b>aur</b> sab ka ek hi faisla. Sikkon ne doosri cheez tod di. Jaankari purani hi rahi.","Sampling telemetry age ko change nahi karta; correlated selection ko reduce karta hai.","Given experiment same arrival trace compare karta hai.","Routing algorithm server ka per-job processing time nahi badalta."] },
         },
         {
           clock: 'doosra ilaaj',
@@ -149,16 +139,11 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
           vars: { seen: 'apni ginti', coins: '—', went: '—', real: '—' },
           ask: {
             q: 'Load balancer ki apni ginti (bheji − lauti) kitni purani ho sakti hai?',
-            choices: [
-              'Bilkul nahi — har request bhejte hi aur har jawab aate hi ginti badal jaati hai',
-              '1 second — servers ke haal jitni',
-              '0.5 second',
-              'Utni, jitna load balancer chahe',
-            ],
+            choices: ["Local tracked work dispatch/finish par turant update hota","Server CPU table jaise fixed one-second delay se update","One timer tick baad local active-request count update hota","Har other proxy ka outstanding load bhi turant dikhta"],
             answer: 0,
             hint: 'Request kiske haath se guzarti hai? Jawab kiske haath se laut-ta hai?',
-            explain: 'Har request aur har jawab load balancer se hi guzarta hai. Is ginti ke liye kisi se poochhna nahi padta. (Shart: sab requests isi ek load balancer se jaati hon.)',
-          },
+            explain: "Is single-proxy lab mein own in-flight request counter dispatch aur completion events par update hota hai. Yeh global real-time server load nahi: doosre proxies, background CPU, long-lived/multiplexed connections aur lost cleanup signals alag hain. NGINX least_conn active connections ginta hai; lab request count simplified model hai.",
+           choiceExplanations: ["Is single-proxy lab mein own in-flight request counter dispatch aur completion events par update hota hai. Yeh global real-time server load nahi: doosre proxies, background CPU, long-lived/multiplexed connections aur lost cleanup signals alag hain. NGINX least_conn active connections ginta hai; lab request count simplified model hai.","Own counter dispatch/result events se update hota hai; periodic server scrape par dependent nahi.","This implementation local count events par synchronous update karti hai.","Local view other proxies, background tasks ya untracked requests ko cover nahi karta."] },
         },
         {
           clock: 'apni ginti ke saath',
@@ -173,7 +158,7 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
             </table></div>
             Niyam wahi tha jo pichhle level mein sabse bura nikla. Sirf jaankari taaza hui.`,
           nodes: { lb: { tone: 'ok', badge: 'sabse khaali · taaza ginti' }, s1: { tone: 'ok', badge: '7 requests' }, s2: { tone: 'ok', badge: '8 requests' }, s3: { tone: 'ok', badge: '9 requests' } },
-          vars: { seen: 'apni ginti — hamesha taaza', went: 'S1 7 · S2 8 · S3 9', real: 'ausat 0.70 s · sabse lamba 1.05 s' },
+          vars: { seen: 'apni tracked requests — event-updated', went: 'S1 7 · S2 8 · S3 9', real: 'ausat 0.70 s · sabse lamba 1.05 s' },
         },
         {
           clock: 'dheema S3',
@@ -231,16 +216,11 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
           vars: { how: 'sabse kam load wala', first: 'S2 S2 S2 S2 S2 S2 S2 S2 S2 S2 S2 S2', count: '0 / <b>1000</b> / 0' },
           ask: {
             q: 'Ab "do mein se behtar". Teen jodiyan ban sakti hain: (S1, S2) · (S1, S3) · (S2, S3). S1 par sabse zyada (3) dikh raha hai. S1 kitni jodiyon mein jeetega?',
-            choices: [
-              'Kisi mein nahi — S1 jis bhi jodi mein hai, doosra server S1 se khaali dikhta hai',
-              'Ek mein',
-              'Dono mein jisme S1 hai',
-              'Teeno mein',
-            ],
+            choices: ["Zero pairs: unique highest S1 har sampled partner se haare","One pair: S1 first sample ho toh priority se jeete","Two pairs: S1 participate kare toh har baar jeete","Three pairs: global maximum selection rule primary hai"],
             answer: 0,
             hint: '(S1, S2): kaun khaali dikhta hai? (S1, S3): kaun?',
             explain: '(S1, S2) → S2. (S1, S3) → S3. Teesri jodi mein S1 hai hi nahi. "Do mein se behtar" kabhi <b>sabse bhare</b> server ko nahi chunta — aur yeh pakka hai, sikkon par nirbhar nahi.',
-          },
+           choiceExplanations: ["(S1, S2) → S2. (S1, S3) → S3. Teesri jodi mein S1 hai hi nahi. \"Do mein se behtar\" kabhi <b>sabse bhare</b> server ko nahi chunta — aur yeh pakka hai, sikkon par nirbhar nahi.","Ordering load comparison ko override nahi karta; S1 dono candidates se zyada loaded hai.","Selected policy lower load choose karti hai; participating enough nahi.","Algorithm minimum of sampled pair leta hai, maximum nahi."] },
         },
         {
           clock: 'do mein se behtar',
@@ -261,16 +241,11 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
           vars: { how: 'chaaron', first: '—', count: 'upar ki table' },
           ask: {
             q: 'Agar load balancer do ki jagah <b>teeno</b> servers dekh ke sabse khaali chune, toh 1,000 requests kaise bantengi?',
-            choices: [
-              '0 / 1000 / 0 — sab ko dekhna wahi "sabse kam load wala" hai, aur wahi jhund',
-              '333 / 333 / 334',
-              '0 / 500 / 500',
-              '0 / 694 / 306 — kuch nahi badlega',
-            ],
+            choices: ["0/1000/0: unchanged unique global minimum S2 milega","333/333/334: every server once each cycle choose hoga","0/500/500: S2 aur S3 load ko tie assume kiya jaaye","0/694/306: candidate sampling two-choice hi rahega"],
             answer: 0,
             hint: 'Teen servers hain. Teeno ko dekh ke sabse khaali chunna — yeh table ki kaunsi line hai?',
             explain: 'Jitne zyada servers dekhoge, utna "sabse khaali" ke paas pahunchoge — aur utna jhund ke paas. <b>Do</b> itna hai ki sabse bhare se bach jao, aur itna kam ki sab ek hi par na pahunchein.',
-          },
+           choiceExplanations: ["Jitne zyada servers dekhoge, utna \"sabse khaali\" ke paas pahunchoge — aur utna jhund ke paas. <b>Do</b> itna hai ki sabse bhare se bach jao, aur itna kam ki sab ek hi par na pahunchein.","All-node minimum policy unweighted round-robin cycle nahi.","Given loads mein S2 unique minimum hai; tie assumption incorrect hai.","All three inspect karne se old two-candidate policy replace ho gayi."] },
         },
         {
           clock: 'do hi kyun?',
@@ -296,15 +271,10 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
       ],
       observe: {
         q: 'Dono slow motion mein load balancer ko wahi 1 second purani jaankari mili. Pehle mein ausat 1.13 s, doosre mein 0.89 s. Kya badla tha?',
-        choices: [
-          'Faisla: pehle mein har request ne teeno servers dekh ke wahi "sabse khaali" chuna; doosre mein har request ne sirf do random servers dekhe, toh sab ek hi par nahi gayi',
-          'Jaankari: doosre mein jaankari taaza thi',
-          'Servers: doosre mein servers tez the',
-          'Requests: doosre mein requests kam thi',
-        ],
+        choices: ["Selection changed: all-node minimum vs random pair","Telemetry age changed: second case fresh snapshots tha","Hardware changed: second case faster servers laaye","Arrival count changed: second case fewer clients the"],
         answer: 0,
         explain: 'Jaankari utni hi purani thi. Sikkon ne "sab ka ek hi faisla" toda — jhund ke liye wahi zaroori tha.',
-      },
+       choiceExplanations: ["Jaankari utni hi purani thi. Sikkon ne \"sab ka ek hi faisla\" toda — jhund ke liye wahi zaroori tha.","Both comparisons mein snapshot delay same tha.","Same server capacities use ki gayi thi; routing varied.","Stated experiment same request trace use karta hai."] },
       lesson: 'Purani jaankari par "sabse achha" mat chuno. Ya jaankari taaza karo, ya faisle mein thoda random milao.',
     },
   ],
@@ -314,30 +284,20 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
     questions: [
       {
         q: '"Power of two choices kya hai, aur yeh herding se kaise bachata hai?"',
-        choices: [
-          'Har request ke liye do random servers chuno aur un do mein se kam load wale ko bhejo. Sabse bhara server kabhi nahi chuna jaata; aur har request alag do servers dekhti hai, toh purani jaankari par bhi sab ek hi "sabse khaali" server par nahi pahunchte',
-          'Har request do servers ko bheji jaati hai, aur jo server pehle jawab de, usi ka jawab rakha jaata hai',
-          'Servers ko do groups mein baant diya jaata hai',
-          'Load balancer do baar retry karta hai',
-        ],
+        choices: ["Two random candidates; lower observed load ko choose karo","Same request both nodes ko bhejo; first result retain karo","Servers two fixed groups mein; group round robin chalao","Same selected server ko request do baar retry karao"],
         answer: 0,
-        explain: 'Lab ka mini program, haal S1 3 · S2 0 · S3 1: "sabse kam load" → 0 / 1000 / 0. "Do mein se behtar" → 0 / 694 / 306. Asli raftaar, 0.5 s purani jaankari: line 92–106 banaam 29–32.',
-      },
+        explain: "Power of two choices har decision par limited random candidates compare karta hai, jisse deterministic stale-global-minimum herd kam ho sakti hai. Global optimum guarantee nahi. Tied loads, sampling with replacement, heterogeneous request costs aur incomplete proxy view ko separately handle karo.",
+       choiceExplanations: ["Power of two choices har decision par limited random candidates compare karta hai, jisse deterministic stale-global-minimum herd kam ho sakti hai. Global optimum guarantee nahi. Tied loads, sampling with replacement, heterogeneous request costs aur incomplete proxy view ko separately handle karo.","That is request hedging/duplicate dispatch, not power-of-two selection.","Fixed partitioning sample-per-request comparisons ka substitute nahi.","Two choices routing candidates hain; two retry attempts nahi."] },
       {
         q: '"Least connections ke liye load balancer ko servers se load poochhna padta hai?"',
-        choices: [
-          'Nahi. Load balancer khud ginta hai: kis server ko kitni requests bheji aur kitni ka jawab aa chuka. Yeh ginti hamesha taaza hoti hai. (Kai load balancers hon toh har ek ko sirf apni requests dikhti hain — tab do mein se behtar aur kaam aata hai.)',
-          'Haan — har request se pehle sab servers ko ping karna padta hai',
-          'Haan — servers ko har second CPU bhejna padta hai',
-          'Least connections sirf database ke liye hota hai',
-        ],
+        choices: ["NGINX local active connections; lab own requests track karta","Every dispatch sab nodes se synchronous CPU poll karata","Backend shared counter saare proxies ko exact state deta","Periodic health check response exact active count hota hai"],
         answer: 0,
-        explain: 'Lab: "sabse khaali ko" 0.5 s purani jaankari se → line 92–106. Wahi niyam, load balancer ki apni ginti se → line 0. Ek dheeme server ke saath bhi 0–1.',
-      },
+        explain: "NGINX least_conn active connections ko weights ke saath compare karta hai. Lab mein dispatched-minus-completed requests local load proxy hai. HTTP keep-alive/HTTP/2 multiplexing mein connection count aur request work alag ho sakte hain; least_conn ko perfect global server CPU/load mat bolo.",
+       choiceExplanations: ["NGINX least_conn active connections ko weights ke saath compare karta hai. Lab mein dispatched-minus-completed requests local load proxy hai. HTTP keep-alive/HTTP/2 multiplexing mein connection count aur request work alag ho sakte hain; least_conn ko perfect global server CPU/load mat bolo.","Least-connections selection apne maintained connection counters use kar sakti hai; CPU polling necessary nahi.","Without explicit coordination local proxy counters global total guarantee nahi.","Health response availability signal ho sakta hai; exact in-flight concurrency automatically nahi."] },
     ],
   },
   success: [
-    '"Do mein se behtar" ke do kadam bata sakte ho, aur kyun sabse bhara server kabhi nahi chuna jaata',
+    '"Do mein se behtar" ke do kadam bata sakte ho, aur distinct candidates wale is trace mein unique-highest-load server kyun nahi chuna gaya',
     'Samjha sakte ho ki jhund ke liye do cheezein chahiye — aur kaunsa ilaaj kaunsi todta hai',
     'Bata sakte ho ki load balancer ki apni ginti servers ke bheje haal se behtar kyun hai',
   ],

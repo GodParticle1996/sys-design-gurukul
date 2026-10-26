@@ -223,33 +223,33 @@ SD.registerLevels('stories', [
         {
           id: 'store', label: 'Tenant data kahan', icon: '🗄️',
           options: [
-            { id: 'perdb', label: 'Har tenant ka apna database (kai databases ek shared instance par)', score: 4, why: 'Jira ka raasta: isolation database boundary par, blast radius ek customer, migration aur residency tenant-by-tenant. Keemat: laakhon databases chalane ka operational bhaar.' },
-            { id: 'schema', label: 'Har tenant ka apna schema, ek hi database', score: 2, why: 'Beech ka raasta — isolation logic se behtar hai, par connection aur resource pool phir bhi shared; residency ke liye alag database chahiye hi hoga.' },
-            { id: 'shared', label: 'Shared tables + tenant_id column', score: -2, why: 'Sabse sasta aur sabse density wala, par isolation har query ke sahi likhe hone par tikti hai, aur "sirf Europe" wali shart poori karna bahut mushkil.' },
+            { id: 'perdb', label: "Tenant-owned logical database", score: 4, why: 'Jira ka raasta: isolation database boundary par, blast radius ek customer, migration aur residency tenant-by-tenant. Keemat: laakhon databases chalane ka operational bhaar.' },
+            { id: 'schema', label: "Tenant-owned schema in shared DB", score: 2, why: 'Beech ka raasta — isolation logic se behtar hai, par connection aur resource pool phir bhi shared; residency ke liye alag database chahiye hi hoga.' },
+            { id: 'shared', label: "Shared table with enforced tenant scope", score: -2, why: 'Sabse sasta aur sabse density wala, par isolation har query ke sahi likhe hone par tikti hai, aur "sirf Europe" wali shart poori karna bahut mushkil.' },
           ],
         },
         {
           id: 'route', label: 'Request ko tenant ka ghar kaise milega', icon: '🧭',
           options: [
-            { id: 'tcs', label: 'Ek tenant directory service + har service ke paas local copy (sidecar/cache)', score: 4, why: 'TCS model. Directory ek jagah maintain hoti hai par read local hota hai — na network hop, na har request par remote lookup chain.' },
-            { id: 'central', label: 'Har request par central directory ko call karo', score: -1, why: 'Sahi jawab deta hai par har request mein ek round trip aur ek naya failure point. Jira ne isi liye sidecars banaye.' },
-            { id: 'hardcode', label: 'Tenant ka shard uske subdomain se calculate kar lo', score: -3, why: 'Tab tenant kabhi move nahi ho sakta — na rebalancing, na residency migration. Mapping hamesha data honi chahiye, code nahi.' },
+            { id: 'tcs', label: "Tenant directory plus bounded local cache", score: 4, why: 'TCS model. Directory ek jagah maintain hoti hai par read local hota hai — na network hop, na har request par remote lookup chain.' },
+            { id: 'central', label: "Synchronous directory call per request", score: -1, why: 'Sahi jawab deta hai par har request mein ek round trip aur ek naya failure point. Jira ne isi liye sidecars banaye.' },
+            { id: 'hardcode', label: "Derive placement from mutable subdomain", score: -3, why: 'Tab tenant kabhi move nahi ho sakta — na rebalancing, na residency migration. Mapping hamesha data honi chahiye, code nahi.' },
           ],
         },
         {
           id: 'noisy', label: 'Noisy neighbour se bachav', icon: '🔊',
           options: [
-            { id: 'caps', label: 'Har tenant ke connections/resources par sakht limit', score: 3, why: 'Jira ne yahi kiya — per-tenant connection caps. Isolation ka faayda tabhi hai jab ek tenant poora host na kha jaaye.' },
-            { id: 'bigger', label: 'Bade servers le lo', score: -2, why: 'Bada server sirf woh din aage khiskata hai jab sabse bada customer usse bhi bada ho jaayega.' },
-            { id: 'monitor', label: 'Monitoring lagao aur zaroorat par manually move karo', score: 0, why: 'Zaroori hai par kaafi nahi — insaan ke react karne se pehle padosi gir chuke honge.' },
+            { id: 'caps', label: "Per-tenant connection/resource budget", score: 3, why: 'Jira ne yahi kiya — per-tenant connection caps. Isolation ka faayda tabhi hai jab ek tenant poora host na kha jaaye.' },
+            { id: 'bigger', label: "Only larger shared hosts", score: -2, why: 'Bada server sirf woh din aage khiskata hai jab sabse bada customer usse bhi bada ho jaayega.' },
+            { id: 'monitor', label: "Only observe;manual tenant movement", score: 0, why: 'Zaroori hai par kaafi nahi — insaan ke react karne se pehle padosi gir chuke honge.' },
           ],
         },
         {
           id: 'res', label: 'Data residency', icon: '🌏',
           options: [
-            { id: 'realm', label: 'Har tenant ka ek "realm" (allowed regions) centrally store karo, aur routing usse maane', score: 4, why: 'Realms ka model: routing ka jawab "jo nazdeek ho" nahi, "jo realm allow kare" hota hai — aur realm badla toh tenant migrate ho sakta hai.' },
-            { id: 'copy', label: 'Sab data har region mein replicate kar do', score: -3, why: 'Yeh residency ka ulta hai — data un jagah bhi chala jaata hai jahan contract mana karta hai.' },
-            { id: 'later', label: 'Abhi ek region, baad mein sochenge', score: -1, why: 'Enterprise deal aane par yeh sabse mehenga retrofit ban jaata hai, kyunki tab tak data model residency ke bina bana ho chuka hoga.' },
+            { id: 'realm', label: "Enforced allowed-region placement policy", score: 4, why: 'Realms ka model: routing ka jawab "jo nazdeek ho" nahi, "jo realm allow kare" hota hai — aur realm badla toh tenant migrate ho sakta hai.' },
+            { id: 'copy', label: "Replicate every tenant in every region", score: -3, why: 'Yeh residency ka ulta hai — data un jagah bhi chala jaata hai jahan contract mana karta hai.' },
+            { id: 'later', label: "Defer residency until after growth", score: -1, why: 'Enterprise deal aane par yeh sabse mehenga retrofit ban jaata hai, kyunki tab tak data model residency ke bina bana ho chuka hoga.' },
           ],
         },
       ],
@@ -260,10 +260,11 @@ SD.registerLevels('stories', [
       },
     },
     {
+      workload: {"monster":8},
       type: 'tradeoff',
       title: 'Isolation vs density lab',
       instructions: 'Ek host par kitne tenants, aur connection cap kitna — dono ghumao.',
-      goal: 'Aisi setting dhoondho jahan ek bhaari tenant ke hone par baaki tenants ka p99 <b>200 ms se kam</b> rahe aur infra cost <b>60 units se kam</b> ho.',
+      goal: "Monster tenant kam se kam <b>8x traffic</b> bhejta rahe. Baaki tenants ka p99 <b>200 ms ya kam</b>, infra cost <b>60 units ya kam</b>, aur monster ka connection share <b>40/100 ya kam</b> rakho.",
       scenario: `Ek Postgres host par kai tenant databases hain. Un mein se ek "monster"
         tenant hai jo baar-baar bhaari reports chalata hai. Host ke paas <b>100
         connections</b> hain.`,
@@ -305,15 +306,10 @@ SD.registerLevels('stories', [
         isliye per-tenant limits zaroori hain.`,
       quiz: {
         q: 'Per-tenant database hone ke baad bhi noisy neighbour kaise hota hai?',
-        choices: [
-          'Kyunki kai tenant databases ek hi Postgres host par hote hain — connections, CPU aur disk I/O phir bhi shared hain',
-          'Kyunki queries cross-database join karti hain',
-          'Kyunki backup ek saath chalta hai',
-          'Hota hi nahi — alag database matlab poori isolation',
-        ],
+        choices: ["Host CPU, I/O aur connections shared","SQL tables cross-tenant joined hain","Database names physical hosts hain","Har backup apna CPU isolate karta"],
         answer: 0,
         explain: 'Isolation sirf data ki hui, resources ki nahi. Isiliye Atlassian per-tenant connection limits lagata hai.',
-      },
+       choiceExplanations: ["Isolation sirf data ki hui, resources ki nahi. Isiliye Atlassian per-tenant connection limits lagata hai.","Cross-database joins bina bhi host resource contention ho sakta hai.","Logical database physical machine boundary nahi.","Backup resources share kar sakta hai; automatic isolation nahi deta."] },
     },
     {
       type: 'docker',
@@ -333,15 +329,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Per-tenant database par jaane ke baad bhi doosre tenants ka p99 992 ms tha. Cap lagane par 64 ms (aur monster ka p99 12,442 ms). Kyun?',
-        choices: [
-          'Alag database sirf DATA alag karta hai — connections, CPU aur I/O tab bhi shared the; cap ne resource share bandha',
-          'Per-tenant DB mode slow hai',
-          'Cap ne queries ko cache kar diya',
-          'Monster tenant ne traffic kam kar diya',
-        ],
+        choices: ["Tenant cap se resources bound hue","Separate DB ne cache warm kar diya","Monster ne request count kam kiya","New pool ne queries atomic kar di"],
         answer: 0,
         explain: 'Isolation ke do hisse hain: data isolation aur resource isolation. Database boundary pehla deta hai, limits doosra.',
-      },
+       choiceExplanations: ["Isolation ke do hisse hain: data isolation aur resource isolation. Database boundary pehla deta hai, limits doosra.","Cache warmup question ka changed variable nahi.","Question cap lagata hai; lower offered load assume nahi kar sakte.","Connection pool limits transactions ko automatically atomic nahi banatin."] },
       lesson: 'Multi-tenant design mein hamesha do sawaal alag poochho: "kya ek tenant doosre ka data DEKH sakta hai?" aur "kya ek tenant doosre ko DHEEMA kar sakta hai?"',
     },
   ],
@@ -351,37 +342,22 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Shared tables ya database per tenant?"',
-        choices: [
-          'Depends: agar blast radius, per-tenant migration aur data residency chahiye toh per-tenant DB, par tab laakhon databases chalane ka operational bhaar uthana padega',
-          'Hamesha shared tables — simple hai',
-          'Hamesha per-tenant DB — safe hai',
-          'Per-tenant schema hamesha sabse behtar hai',
-        ],
+        choices: ["Isolation vs fleet operations compare","Per-tenant DB se ops cost zero maano","Shared tables se no blast radius maano","Schema per tenant ko universal chuno"],
         answer: 0,
         explain: 'Atlassian ne isolation ko density se upar chuna aur keemat maani. Sahi jawab tumhari shart par nirbhar hai, na ki fashion par.',
-      },
+       choiceExplanations: ["Atlassian ne isolation ko density se upar chuna aur keemat maani. Sahi jawab tumhari shart par nirbhar hai, na ki fashion par.","Bahut databases migrations, connections, backups aur metadata manage karna padta hai.","Shared resources aur shared schema failures multiple tenants ko affect kar sakte hain.","Schema boundary bhi tradeoffs rakhti hai; contract ke bina universal best nahi."] },
       {
         q: 'Interviewer: "Har request ko pehle tenant ka ghar dhoondhna padta hai. Design?"',
-        choices: [
-          'Ek directory service jo read-optimised ho, aur har service ke paas uski local copy (sidecar/cache) — taaki request path mein remote call na ho',
-          'Har request par central directory call, simple rakho',
-          'Tenant id se shard calculate kar lo',
-          'Har service apni copy rakhe aur khud update kare',
-        ],
+        choices: ["Central mapping aur refreshed local reads","Every request par remote lookup","Fixed hash ko placement contract banao","Local mappings ko independent edit karo"],
         answer: 0,
-        explain: 'TCS ka model: central source of truth, local reads. Calculate karna mapping ko code mein jama deta hai — phir tenant kabhi move nahi ho sakta.',
-      },
+        explain: "Tenant-directory indirection placement ko application arithmetic se separate karti hai. Plain tenantId % N mapping moves aur hot-tenant split ko awkward banati hai; alternate deterministic indirection designs bhi possible hain.",
+       choiceExplanations: ["Tenant-directory indirection placement ko application arithmetic se separate karti hai. Plain tenantId % N mapping moves aur hot-tenant split ko awkward banati hai; alternate deterministic indirection designs bhi possible hain.","Remote lookup request path par dependency aur latency add karta hai.","Fixed hash tenant movement ko indirection ke bina mushkil banata hai.","Independent edits placement disagreements la sakte hain."] },
       {
         q: 'Interviewer: "Ek customer contract mein likha hai ki data Europe se bahar nahi jaayega. Kaise nibhaoge?"',
-        choices: [
-          'Har tenant ke saath allowed regions ka set (realm) centrally rakho, aur routing/placement ke har faisle ko usse maanne par majboor karo',
-          'Sab kuch Europe mein rakh do',
-          'Data encrypt kar do, phir kahin bhi rakho',
-          'Sirf backups Europe mein rakho',
-        ],
+        choices: ["Allowed-region placement policy","Encryption ko residency proof maano","Sirf backup region Europe rakho","DNS address ko legal policy maano"],
         answer: 0,
-        explain: 'Realm ko data banao, code ki shart nahi — tabhi tenant migrate bhi ho sakta hai jab regulation ya market badle.',
-      },
+        explain: "Tenant realm placement data/config mein model karo, aur covered data types, replicas, backups/logs aur movement controls contract ke hisaab se verify karo. Directory mapping akeli complete residency compliance prove nahi karti.",
+       choiceExplanations: ["Tenant realm placement data/config mein model karo, aur covered data types, replicas, backups/logs aur movement controls contract ke hisaab se verify karo. Directory mapping akeli complete residency compliance prove nahi karti.","Encryption physical location contract ka substitute nahi.","Live data, replicas, logs aur processing bhi contract scope mein ho sakte hain.","DNS routing storage/replica placement enforce nahi karti."] },
     ],
   },
   success: [
@@ -496,48 +472,33 @@ SD.registerLevels('stories', [
         { t: '09:20', event: 'Ek admin ne naya <b>calculated custom field</b> add kiya jo saare issues par laagu hota hai.', metrics: { drift: 0, p99: 130, tickets: 0 }, note: 'Ek config change — par asar har document par.' },
         { t: '09:24', event: 'Indexing pipeline mein backlog banna shuru — laakhon documents ko naye field ke saath dobara likhna hai.', metrics: { drift: 90, p99: 180, tickets: 2 }, tone: 'warn',
           ask: { q: 'Yahan sabse pehle kya dekhoge?',
-                 choices: [
-                   'Reconciliation ka backlog aur uski rate — kitne documents "hone chahiye" par abhi nahi hain',
-                   'Search cluster ka CPU',
-                   'Kitne users complain kar rahe hain',
-                   'Database ka slow query log',
-                 ], answer: 0,
+                 choices: ["Expected-version backlog aur drain rate","Search CPU ka average only dekho","Complaint count se lag estimate karo","Primary query time ko lag samjho"], answer: 0,
                  explain: 'Database mein har document ka expected version likha hai. Backlog ka size aur drain rate hi asli sawaal ka jawab dete hain: "kitna galat hai aur kab tak theek hoga?"',
                  wrongHints: [
                    'CPU high hoga hi — par woh batata nahi ki kitne documents galat hain.',
                    'Tickets aane mein deri hoti hai; tab tak drift kaafi badh chuki hoti hai.',
                    'Database theek hai — sach wahin hai. Copy peechhe reh gayi hai.',
-                 ] } },
+                 ] , choiceExplanations: ["Database mein har document ka expected version likha hai. Backlog ka size aur drain rate hi asli sawaal ka jawab dete hain: \"kitna galat hai aur kab tak theek hoga?\"","CPU health document freshness guarantee nahi karta.","Complaints noisy aur delayed signal hain; backlog direct evidence hai.","Primary query latency aur indexing delay different measurements hain."] } },
         { t: '09:40', event: 'Ek network blip — kuch index writes gir gaye. Ab drift badh rahi hai aur users ko <b>purane</b> results dikh rahe hain.', metrics: { drift: 240, p99: 260, tickets: 28 }, tone: 'bad' },
         { t: '09:55', event: 'Ek engineer kehta hai: "poora re-index kar dete hain".', metrics: { drift: 320, p99: 900, tickets: 64 }, tone: 'bad',
           ask: { q: 'Full re-index ab kya karega?',
-                 choices: [
-                   'Ghanton lagega aur system par bhaari load daalega, jabki reconciliation job pehle se sirf galat documents theek kar sakta hai',
-                   'Turant sab theek kar dega — sabse safe option hai',
-                   'Kuch nahi karega, index pehle se sahi hai',
-                   'Search band kar dega par data safe rahega',
-                 ], answer: 0,
+                 choices: ["Targeted repair se extra full rebuild cost","Full rebuild ko instant recovery maano","Correct index ko source maan kar chalo","Old serving index turant delete karo"], answer: 0,
                  explain: 'Full re-index purana jawab tha jab yeh pata hi nahi chalta tha ki kaun se documents galat hain. Ab database mein expected versions hain — sirf farq theek karo.',
                  wrongHints: [
                    'Re-index "safe" lagta hai par ghanton ka load aur beech mein fail hone ka khatra saath laata hai.',
                    'Index sahi nahi hai — 3.2 lakh documents galat hain.',
                    'Search band karna dard ko outage bana dega.',
-                 ] } },
+                 ] , choiceExplanations: ["Full re-index purana jawab tha jab yeh pata hi nahi chalta tha ki kaun se documents galat hain. Ab database mein expected versions hain — sirf farq theek karo.","Full rebuild data volume ke saath time/I/O leta hai.","Expected-version mismatch evidence ko ignore nahi karna chahiye.","Serving index delete karna recovery ke dauraan outage badha sakta hai."] } },
         { t: '10:05', event: 'Reconciliation ki concurrency badhayi gayi aur usne missing/stale documents ko pakad kar dobara index karna shuru kiya.', metrics: { drift: 120, p99: 300, tickets: 70 }, tone: 'warn' },
         { t: '10:30', event: 'Drift lagbhag zero. Search results sahi. Poora index kabhi dobara nahi banana pada.', metrics: { drift: 4, p99: 140, tickets: 71 }, tone: 'ok',
           ask: { q: 'Aage aisa dobara na ho — sabse zaroori badlav?',
-                 choices: [
-                   'Har change ke saath expected document + version database mein likho, aur reconciliation ko lagatar chalao — drift ko rokna nahi, pakadna aasan banao',
-                   'Indexing ko synchronous kar do taaki write tabhi complete ho jab index bhi update ho',
-                   'Custom fields par rok laga do',
-                   'Search cluster bada kar do',
-                 ], answer: 0,
-                 explain: 'Synchronous indexing har write ko dheema aur naazuk bana deta hai (index down = writes down). Jira ka jawab reconciliation hai: drift hogi, par usse detect aur repair karna sasta hona chahiye.',
+                 choices: ["Expected versions aur continuous reconcile","Search ack par primary write depend karo","Custom fields ko permanently disable","Capacity badhao, drift ko na maapo"], answer: 0,
+                 explain: "Reconciliation expected versions ko actual index se compare karke targeted repair karti hai. Synchronous downstream indexing write latency/availability couple kar sakti hai; durable change capture aur retries ka contract bhi chahiye.",
                  wrongHints: [
                    'Synchronous karne se search cluster har write ka dependency ban jaata hai — availability girti hai.',
                    'Custom fields product ka feature hain, unhe rokna jawab nahi.',
                    'Bada cluster drift theek nahi karta, sirf tezi se galat jawab deta hai.',
-                 ] } },
+                 ] , choiceExplanations: ["Reconciliation expected versions ko actual index se compare karke targeted repair karti hai. Synchronous downstream indexing write latency/availability couple kar sakti hai; durable change capture aur retries ka contract bhi chahiye.","Sync coupling index outage ko write outage bana sakti hai; atomicity phir bhi design karni hai.","Feature ban common dual-write failure ka root fix nahi.","More capacity missing update ya version mismatch ko automatically repair nahi karti."] } },
       ],
       lesson: `Har derived copy (index, cache, replica, materialized view) drift karegi.
         Sawaal yeh nahi ki drift roki kaise jaaye — sawaal yeh hai ki <b>drift pakadna aur
@@ -559,7 +520,7 @@ SD.registerLevels('stories', [
       type: 'tradeoff',
       title: 'Reconciliation lab — kitni baar, kitni tezi se',
       instructions: 'Reconcile interval aur concurrency badlo. Drift aur load dono dekho.',
-      goal: 'Aisi setting dhoondho jahan sabse zyada drift <b>5,000 documents se kam</b> rahe aur database par reconciliation ka load <b>25% se kam</b> ho.',
+      goal: "Maximum drift <b>5,000 documents ya kam</b> aur DB reconciliation load <b>25% ya kam</b> rakho.",
       scenario: `1 crore documents. Roz lagbhag <b>2%</b> writes index tak nahi pahunchte
         (network blips, restarts, dropped messages). Reconciliation job database se
         expected versions padh kar farq theek karta hai.`,
@@ -600,15 +561,10 @@ SD.registerLevels('stories', [
         naye changes check karo, poora sweep kabhi-kabhi.`,
       quiz: {
         q: 'Reconciliation ke bajaye indexing ko synchronous kar dein toh?',
-        choices: [
-          'Har write ab search cluster par nirbhar ho jaayegi — index down hua toh writes bhi band',
-          'Sab theek ho jaayega, drift hogi hi nahi',
-          'Writes tez ho jaayengi',
-          'Index chhota ho jaayega',
-        ],
+        choices: ["Write availability search se couple hogi","Sync calls se all drift impossible","Write latency automatically ghategi","Index data size automatically ghatega"],
         answer: 0,
-        explain: 'Synchronous indexing drift hatata hai par availability ki keemat par. Isiliye Jira ne "assume drift, reconcile continuously" chuna.',
-      },
+        explain: "Do independent stores ko synchronously call karna atomic commit nahi: DB success aur index failure ke beech drift reh sakti hai. Atomic transaction/coordinator ya durable outbox/CDC plus reconciliation aur idempotent retries design karo.",
+       choiceExplanations: ["Do independent stores ko synchronously call karna atomic commit nahi: DB success aur index failure ke beech drift reh sakti hai. Atomic transaction/coordinator ya durable outbox/CDC plus reconciliation aur idempotent retries design karo.","Separate stores ke calls sync hone se crash-window atomicity guarantee nahi milti.","Write ab additional remote work wait karegi.","Call timing indexed document size decide nahi karti."] },
     },
     {
       type: 'docker',
@@ -628,15 +584,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'In-place rebuild ke dauraan 71 searches galat jawab de rahi thin; shadow + swap mein 0. Asli farq kya tha?',
-        choices: [
-          'Shadow build ke dauraan purana index poori tarah serve karta raha, aur switch ek hi step mein hua',
-          'Shadow build tez tha',
-          'In-place rebuild ne zyada documents banaye',
-          'Atomic switch ne cache kar liya',
-        ],
+        choices: ["Old serve, new index atomic swap","New build mein fewer docs aaye","Cache ne missing docs fill kiye","In-place build ne CPU save kiya"],
         answer: 0,
         explain: 'Zero-downtime ka rahasya "tez banana" nahi, "purane ko chalne dena" hai — aur switch ko ek atomic step rakhna.',
-      },
+       choiceExplanations: ["Zero-downtime ka rahasya \"tez banana\" nahi, \"purane ko chalne dena\" hai — aur switch ko ek atomic step rakhna.","Question atomic cutover aur availability compare karta hai, corpus size nahi.","Cache missing index completeness ka proof nahi.","CPU saving ka evidence nahi; mixed rebuild state observed tha."] },
       lesson: 'Derived data ke do niyam: (1) expected version database mein likho aur reconcile karte raho, (2) rebuild karna ho toh alag banao, replay karo, phir ek hi step mein switch.',
     },
   ],
@@ -646,26 +597,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Tumhara search index database se out of sync ho jaata hai. Kya karoge?"',
-        choices: [
-          'Har change ke saath expected document + version database mein likho, aur ek background job lagatar farq dhoondh kar theek kare',
-          'Har raat poora index dobara bana do',
-          'Indexing synchronous kar do',
-          'Search ke result ko database se verify karo',
-        ],
+        choices: ["Expected-version based repair loop","Nightly rebuild ko freshness maano","Index outage par all writes block","Each search par full DB scan karo"],
         answer: 0,
-        explain: 'Full rebuild mehenga hai aur synchronous indexing availability kha jaata hai. Reconciliation drift ko sasta bana deta hai.',
-      },
+        explain: "Expected-version metadata, backlog age/drain rate aur idempotent targeted repair se drift observable banao. Full rebuild kabhi necessary ho sakta hai; synchronous dual writes alone atomicity prove nahi karti.",
+       choiceExplanations: ["Expected-version metadata, backlog age/drain rate aur idempotent targeted repair se drift observable banao. Full rebuild kabhi necessary ho sakta hai; synchronous dual writes alone atomicity prove nahi karti.","Nightly rebuild beech ki drift aur recovery cost rakhta hai.","Synchronous dependency availability tradeoff hai aur atomicity free nahi.","Full primary validation har query par expensive read path banata hai."] },
       {
         q: 'Interviewer: "Live system par index rebuild karna hai. Plan?"',
-        choices: [
-          'Shadow index alag banao, build ke dauraan hue changes replay karo, phir ek atomic switch — aur purana index rollback ke liye kuch der rakho',
-          'Maintenance window lo aur index rebuild karo',
-          'Index delete karke dobara bana do, thodi der search band rahegi',
-          'Har shard ko ek-ek karke rebuild karo, search wahi rahegi',
-        ],
+        choices: ["Shadow build, catch-up, atomic swap","Old index delete, full rebuild start","Backfill only, concurrent writes chhodo","Swap first, phir data populate karo"],
         answer: 0,
         explain: 'Yahi modern reindex pattern hai, aur yahi database migration mein bhi (dual write + backfill + switch) dikhta hai.',
-      },
+       choiceExplanations: ["Yahi modern reindex pattern hai, aur yahi database migration mein bhi (dual write + backfill + switch) dikhta hai.","Serving index delete karne se search outage hota hai.","Build ke dauraan naye writes miss hue toh new index stale rahega.","Incomplete replacement expose karna correctness todta hai."] },
     ],
   },
   success: [
@@ -681,7 +622,7 @@ SD.registerLevels('stories', [
     { front: 'Jira ka search index source of truth hai?', back: 'Nahi — woh ek COPY hai. Isi wajah se drift hoti hai, aur isi wajah se "full re-index" ka dard paida hua tha.' },
     { front: 'Reconciliation loop kaise kaam karta hai?', back: 'Har change ke saath database mein expected document + version likho. Background job har minute poochhta hai: documents maujood hain? sahi version par? Nahi → dobara index karo. Database index ka checklist ban jaata hai.' },
     { front: 'Zero-downtime reindex ke teen kadam?', back: '(1) naya index purane ke saath banao, (2) build ke dauraan hue changes replay karo, (3) ek atomic switch. Purana index rollback ke liye kuch der rakho.' },
-    { front: 'Synchronous indexing kyun nahi?', back: 'Woh drift toh hata deta hai par har write ko search cluster par nirbhar bana deta hai — index down matlab writes down.' },
+    { front: 'Synchronous indexing kyun nahi?', back: 'Independent DB aur index calls sync hon tab bhi atomicity free nahi. Index response par ACK gated ho toh latency/availability couple hoti hai; durable change capture, retry aur reconciliation socho.' },
   ],
 },
 ]);
@@ -857,15 +798,10 @@ naive tareeka    →  10,00,000 permission checks, sirf 20 rows dikhane ke liye<
       ],
       observe: {
         q: 'PERM=inside mein permission checks 2 lakh se 20 kaise ho gaye?',
-        choices: [
-          'Kyunki user ke visible projects ka set query mein chala gaya — jo issues user dekh hi nahi sakta, engine ne unhe chhua hi nahi',
-          'Kyunki results cache ho gaye',
-          'Kyunki matched issues kam ho gaye',
-          'Kyunki pagination ne kaam kam kar diya',
-        ],
+        choices: ["Visible-project filter search mein push hua","Permission checks result cache mein gaye","Page length ne source scan hata diya","Search CPU ne permission decide ki"],
         answer: 0,
-        explain: 'Sabse tez permission check woh hai jo karna hi na pade. Bache hue 20 checks sirf un issues par the jinme issue-level security thi.',
-      },
+        explain: "Lab query-time permission filters candidates ko sharply reduce karte hain; issue-level authoritative checks baaki hain. Permission freshness, revocation aur fail-closed authorization semantics alag verify karni hoti hain.",
+       choiceExplanations: ["Lab query-time permission filters candidates ko sharply reduce karte hain; issue-level authoritative checks baaki hain. Permission freshness, revocation aur fail-closed authorization semantics alag verify karni hoti hain.","Question filter placement badalta hai, result cache nahi.","Post-filter scan mein pagefill ke liye zyada candidates examine ho sakte hain.","CPU utilization authorization contract nahi hai."] },
       lesson: 'Jab bhi "filter baad mein karenge" sunn-o, poochho: <b>filter se pehle kitna kaam ho chuka hoga?</b>',
     },
   ],
@@ -875,26 +811,16 @@ naive tareeka    →  10,00,000 permission checks, sirf 20 rows dikhane ke liye<
     questions: [
       {
         q: 'Interviewer: "Search results par permissions kaise lagaoge?"',
-        choices: [
-          'User ke visible scopes (projects/teams) index mein rakho aur query ke andar daal do; sirf content-dependent rare cases post-filter karo',
-          'Search ke baad har result par permission service call karo',
-          'Har user ke liye alag index banao',
-          'Frontend par chhupa do',
-        ],
+        choices: ["Indexed scopes aur rare post-checks","Every result par remote auth call","Frontend par forbidden rows hide","User index bina revocation updates"],
         answer: 0,
         explain: 'Post-filtering ka kaam result-set ke size par nirbhar karta hai, page size par nahi — isi wajah se woh scale nahi karta.',
-      },
+       choiceExplanations: ["Post-filtering ka kaam result-set ke size par nirbhar karta hai, page size par nahi — isi wajah se woh scale nahi karta.","Remote per-candidate checks scale aur latency cost add karte hain.","Client hiding unauthorized data disclosure ko prevent nahi karta.","Per-user copies ko permission changes/revocations correctly propagate karna hoga."] },
       {
         q: 'Interviewer: "Index kis hisaab se partition karoge?"',
-        choices: [
-          'Us cheez se jisse zyadatar queries filter karti hain (tenant + project) — taaki ek query kuch shards ko chhoo kar nikal jaaye',
-          'Random hash se, taaki load barabar rahe',
-          'Time se, kyunki naye issues zyada padhe jaate hain',
-          'User se, kyunki har user apna data dekhta hai',
-        ],
+        choices: ["Common tenant/project filters se pruning","Random shard par every query fanout","Only age partition without workload","Every user ka duplicated corpus"],
         answer: 0,
         explain: 'Random hash load to barabar karta hai par har query ko har shard par bhejta hai. "Jo saath query hota hai woh saath rahe" yahan zyada zaroori hai.',
-      },
+       choiceExplanations: ["Random hash load to barabar karta hai par har query ko har shard par bhejta hai. \"Jo saath query hota hai woh saath rahe\" yahan zyada zaroori hai.","Random distribution balances writes par selective queries all shards hit kar sakti hain.","Age useful tab jab queries/retention time-based hon; yahan project filters hain.","User copies high duplication aur permission update cost laati hain."] },
     ],
   },
   success: [

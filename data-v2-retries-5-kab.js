@@ -99,16 +99,11 @@ har ek "Order place" par:               27</pre>
           vars: { bc: '3 → haar maan li', c: '3' },
           ask: {
             q: 'A (app-api) ko B se 503 mila. A ka niyam bhi "3 koshish" hai. A ki teeno koshishein poori hone tak C par kul kitni calls ho chuki hongi?',
-            choices: [
-              '9 — A ki har koshish par B phir se apni 3 koshish karta hai: 3 × 3',
-              '5 — pehli 3, phir A ki 2 aur',
-              '3 — A ki retry C tak pahunchti hi nahi',
-              '6',
-            ],
+            choices: ["9 calls: A ke 3 attempts each B ke 3 attempts chalate","5 calls: B ke 3 plus A ke2 additional attempts","3 calls: A retries lower dependency tak nahi pahunchti","6 calls: A aur B attempts counts sirf jod dete"],
             answer: 0,
             hint: 'A jab B ko dobara call karta hai, toh B ke liye woh ek nayi request hai. B phir se kitni baar C ko call karega?',
             explain: 'B ko yaad nahi ki abhi-abhi usne 3 baar koshish ki thi. A ki har call par B ka poora "3 koshish" phir chalta hai: 3 + 3 + 3 = <b>9</b>.',
-          },
+           choiceExplanations: ["B ko yaad nahi ki abhi-abhi usne 3 baar koshish ki thi. A ki har call par B ka poora \"3 koshish\" phir chalta hai: 3 + 3 + 3 = <b>9</b>.","Each new A attempt B ka full retry loop dobara invoke karti hai.","A retry B ko reexecutes, jisse C fresh attempts dekhta hai.","Nested retries multiply; independent additive counts assumption wrong hai."] },
         },
         {
           clock: 'A ki 3 koshish',
@@ -118,16 +113,11 @@ har ek "Order place" par:               27</pre>
           vars: { ac: '3 → haar maan li', bc: 'har baar 3', c: '9' },
           ask: {
             q: 'Phone ka niyam bhi "3 koshish" hai. Asha ke ek "Order place" par C ko kul kitni calls jaayengi?',
-            choices: [
-              '27 — phone ki har koshish par poore 9: 3 × 9',
-              '11 — 9, phir phone ki 2 aur',
-              '9 — phone ki retry se C par kuch nahi badalta',
-              '12',
-            ],
+            choices: ["27 calls: phone 3 times A3 times B3 attempts","11 calls: inner 9 plus phone 2 extra attempts","9 calls: phone retries inner work ko repeat na kare","12 calls: phone 3 ko inner 9 se sirf add karein"],
             answer: 0,
             hint: 'Phone ki ek koshish = C par 9 calls. Phone kitni koshish karega?',
             explain: 'Har layer apne se neeche wale ke bojh ko <b>guna</b> karti hai, jodti nahi: 3 × 3 × 3 = <b>27</b>.',
-          },
+           choiceExplanations: ["Har layer apne se neeche wale ke bojh ko <b>guna</b> karti hai, jodti nahi: 3 × 3 × 3 = <b>27</b>.","Each phone attempt complete nested nine calls repeat karti hai.","Phone retry same downstream chain ko phir invoke karti hai.","Nested max attempts multiply, layer counts simply add nahi hote."] },
         },
         {
           clock: 'phone ki 3 koshish',
@@ -205,16 +195,11 @@ har ek "Order place" par:               27</pre>
             Budget ne bina kisi intezaar ke storm rok diya. Keemat: us dauraan 1,004 users ko jaldi error mila.`,
           ask: {
             q: 'Budget ke saath 1,004 users ko error mila. Phir bhi budget lagana sahi kyun hai?',
-            choices: [
-              'Budget ke bina service 5 baar giri aur 12 second mein theek hi nahi hui. Kuch users ko jaldi error dena, sabko lamba outage dene se behtar hai',
-              'Sahi nahi hai — users ko error kabhi nahi milna chahiye',
-              'Kyunki error wale users dobara order nahi karte',
-              'Kyunki budget se service tez ho jaati hai',
-            ],
+            choices: ["Budget load bound kare; kuch fast failures recovery bachaye","Every user retry ho; outage duration ko secondary rakho","Budget capacity badha de; service same rate par faster ho","Error users stop forever; future retry traffic zero ho"],
             answer: 0,
             hint: 'Dono lines ka "Crash" khaana dekho. Bina budget ke service kab theek hui?',
             explain: 'Storm ke dauraan retries users ki madad nahi kar rahi hoti — service ko gira rahi hoti hain. Budget unhe rok ke service ko uthne deta hai. AWS ke SDK mein isi ka naam "retry quota" hai, gRPC mein "retry throttling".',
-          },
+           choiceExplanations: ["Storm ke dauraan retries users ki madad nahi kar rahi hoti — service ko gira rahi hoti hain. Budget unhe rok ke service ko uthne deta hai. AWS ke SDK mein isi ka naam \"retry quota\" hai, gRPC mein \"retry throttling\".","Unbounded retries failures ko longer shared outage mein badal sakti hain.","Budget work create karna reduce karta hai, processing capacity upgrade nahi.","Caller future behavior guarantee nahi; budget ko server overload limits ke saath design karo."] },
         },
         {
           title: '3. Retry aur circuit breaker saath kaise chalte hain?',
@@ -235,16 +220,11 @@ har ek "Order place" par:               27</pre>
             </table></div>`,
           ask: {
             q: 'Ek team shikayat karti hai: "Restart ke baad traffic lehron mein aata hai — 1 second par ek deewar, 2 second par doosri, 4 second par teesri." Kaunsi setting galat hai?',
-            choices: [
-              'Random band hai: sab clients ek hi formula se ruk rahe hain, isliye ek hi pal par laut rahe hain',
-              'Koshishein bahut kam hain',
-              'Chhat (cap) bahut chhoti hai',
-              'Base bahut chhota hai',
-            ],
+            choices: ["Jitter absent; same backoff phases request waves banaaye","Maximum attempts low; fewer retries phase align karein","Cap small; fixed 1,2,4 waves cap proof hain","Clock drift large; deterministic clients decorrelate hon"],
             answer: 0,
             hint: 'Lehrein theek 1, 2, 4 second par hain. Clients ke intezaar mein kya ek jaisa hai?',
             explain: 'Theek 1, 2, 4 second par deewar = bina random ka dugna intezaar. Lab mein yahi dikha: 200 clients, har lehar mein 10 jeete, 120 ne haar maan li.',
-          },
+           choiceExplanations: ["Theek 1, 2, 4 second par deewar = bina random ka dugna intezaar. Lab mein yahi dikha: 200 clients, har lehar mein 10 jeete, 120 ne haar maan li.","Attempt count waves ki amplitude change kar sakta, exact common timing ka cause missing jitter hai.","Observed pre-cap exponential phase waves cap value prove nahi karti.","Large independent drift generally spread la sakti; stated aligned formula issue ko explain nahi."] },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> retry ke teen sawaal hain. <b>Kya</b> dobara bhejna hai: jawab nahi aaya / 503 / 429 — aur sirf tab, jab dobara karne mein nuksaan na ho. <b>Kahan:</b> ek hi layer par, sabse bahar. <b>Kab rukna hai:</b> koshish ki hadd, budget, aur breaker OPEN ho toh turant.',
@@ -276,15 +256,10 @@ Retry EK layer par (sabse bahar, jahan user hai) — andar ki har layer par nahi
       ],
       observe: {
         q: 'Doosre hisse (C thodi bimaar) mein "har layer 3 koshish" sabse accha dikhta hai: 100 mein se 100 ko jawab. Phir bhi yeh setup galat kyun hai?',
-        choices: [
-          'Kyunki jis din C poori tarah band hoti hai, yahi setup C par 2700 calls (27×) bhejta hai — theek us waqt jab C sabse kamzor hai',
-          'Kyunki 136 calls bahut zyada hain',
-          'Kyunki users ko jawab nahi milna chahiye',
-          'Galat nahi hai — yahi sabse accha setup hai',
-        ],
+        choices: ["Total outage par nested retries 27x; worst-case bhi test karo","Healthy-day 100% success permanent architecture proof hai","136 calls prove any retry wrong; all retries hatao","Single-layer retry guaranteed 100% result de; compare na karo"],
         answer: 0,
         explain: 'Setup ko uske aam din se nahi, uske sabse bure din se parkho. Sirf-phone wala retry aam din mein lagbhag utna hi accha hai (98/100), aur bure din C par 300 calls bhejta hai, 2700 nahi.',
-      },
+       choiceExplanations: ["Setup ko uske aam din se nahi, uske sabse bure din se parkho. Sirf-phone wala retry aam din mein lagbhag utna hi accha hai (98/100), aur bure din C par 300 calls bhejta hai, 2700 nahi.","Best-day success catastrophic downstream load amplification hide kar sakti hai.","Some safe retries helpful ho sakti; failure-mode budget and layer placement evaluate karo.","Single layer lower amplification deti hai, guaranteed 100% success nahi."] },
       lesson: 'Retry ek hi layer par. Lab: har layer retry → band C par <b>2700</b> calls; sirf sabse bahar → <b>300</b>.',
     },
 
@@ -314,38 +289,23 @@ Retry EK layer par (sabse bahar, jahan user hai) — andar ki har layer par nahi
     instructions: 'Yahan faisla aur uski wajah bolni hai. 🎤',
     questions: [
       {
-        q: '"Hamare paas gateway → service A → service B → database hai. Har hop par 3 retries lagi hain. Koi dikkat?"',
-        choices: [
-          'Haan. Bojh guna hota hai: B band ho toh ek user request par 27 calls. Retry ek hi layer par rakho (sabse bahar), andar ki layers turant fail lautayein, aur budget + breaker lagao',
-          'Nahi — zyada retries ka matlab zyada reliability',
-          'Bas database par retry hata do',
-          'Dikkat sirf tab hai jab retries 5 se zyada hon',
-        ],
+        q: "Gateway → A → B mein har layer maximum3 total attempts leti hai. B ke downstream failure par amplification kitni, aur policy kya?",
+        choices: ["If3 total attempts per layer:27x; one retry owner chuno","Three layers ke 3 attempts add karo; total 9 calls","Three retries means three total calls; terminology same hai","Only DB retry hatao; other layers ko unlimited chalao"],
         answer: 0,
-        explain: 'Lab: 100 user requests. Har layer 3 koshish → band service par 2700 calls (27×). Sirf sabse bahar → 300 (3×).',
-      },
+        explain: "Three layers each 3 total attempts worst-case 27 downstream calls. Agar 3 retries bola ho toh initial+3=4 attempts, same three layers 4^3=64 ho sakti hain. Ek intentional retry owner, aggregate budget/deadline aur safe-operation contract choose karo; blindly har hop par retries mat lagao.",
+       choiceExplanations: ["Three layers each 3 total attempts worst-case 27 downstream calls. Agar 3 retries bola ho toh initial+3=4 attempts, same three layers 4^3=64 ho sakti hain. Ek intentional retry owner, aggregate budget/deadline aur safe-operation contract choose karo; blindly har hop par retries mat lagao.","Nested invocation multiplies attempts.","Three retries normally initial call ke alawa3, yani4 total attempts. Terms explicitly define karo.","Remaining layers bhi amplify kar sakti hain; max attempts/deadline aggregate budget chahiye."] },
       {
         q: '"Payment ki POST request par timeout aaya. Retry karein?"',
-        choices: [
-          'Sirf tab, jab request par Idempotency-Key ho: server pehchaan lega ki yeh wahi request hai aur paisa do baar nahi kaatega. Uske bina pehle payment ka status poochho',
-          'Haan, turant — timeout ka matlab hai paisa nahi kata',
-          'Nahi, kabhi nahi',
-          'Haan, par 10 second ruk ke',
-        ],
+        choices: ["Documented idempotency contract ho; same key/body reuse","Timeout means charge hua nahi; fresh POST/key turant bhejo","Backoff 10 s se duplicate charge impossible ho jaata","POST retries block; existing payment status kabhi na poochho"],
         answer: 0,
-        explain: 'Timeout ka matlab sirf itna hai ki <b>jawab</b> nahi aaya. Kaam hua ya nahi, yeh pata nahi. Padhne wali requests dobara bhejna safe hai; paisa ya order banane wali requests ko pehle pehchaan chahiye.',
-      },
+        explain: "Idempotency-Key header alone enough nahi: endpoint ko durable dedup, scope, retention aur same-payload contract implement karna hota hai. Supported retry mein same logical operation ka same key/body use karo. Unknown commit outcome par documented status/reconciliation path follow karo; invented new key double charge kara sakti hai.",
+       choiceExplanations: ["Idempotency-Key header alone enough nahi: endpoint ko durable dedup, scope, retention aur same-payload contract implement karna hota hai. Supported retry mein same logical operation ka same key/body use karo. Unknown commit outcome par documented status/reconciliation path follow karo; invented new key double charge kara sakti hai.","Timeout missing response batata hai; payment committed bhi ho sakti hai. New key duplicate operation ban sakti hai.","Delay duplicate side effects prevent nahi karta; server-side durable dedup/contract chahiye.","Status/reconciliation unknown outcome resolve kar sakti hai; every POST retry forever forbid necessary nahi."] },
       {
         q: '"Retry aur circuit breaker dono lagane ki kya zaroorat hai?"',
-        choices: [
-          'Retry ek request ki blip ke liye hai; breaker ek service ki lagataar bimaari ke liye. Retry breaker ke andar se guzarta hai: breaker OPEN ho toh retry bhi turant ruk jaata hai, bimaar service tak nahi pahunchta',
-          'Koi zaroorat nahi — dono ek hi kaam karte hain',
-          'Breaker lag jaaye toh retry hata dena chahiye',
-          'Retry lag jaaye toh breaker hata dena chahiye',
-        ],
+        choices: ["Retry per-operation blip; breaker repeated sickness guard","Both same state; retry loop breaker history replace kare","Breaker lagte hi every transient call retry forbid karo","Retry add hote hi dependency breaker always closed rakho"],
         answer: 0,
-        explain: 'Akela retry lagataar bimaar service par bojh badhata hai (lab: har action par 19.5 calls). Akela breaker ek chhoti blip par bhi user ko fallback de deta hai. Saath mein: blip par retry, bimaari par breaker.',
-      },
+        explain: "Retry transient operation failure se recover karne ki bounded koshish hai; breaker dependency/operation failure pattern par further calls short-circuit karta hai. Per-attempt vs whole-operation breaker composition statistics badalti hai. Open rejection ko retry storm na banao; recovery probes aur caller deadline bounded rakho.",
+       choiceExplanations: ["Retry transient operation failure se recover karne ki bounded koshish hai; breaker dependency/operation failure pattern par further calls short-circuit karta hai. Per-attempt vs whole-operation breaker composition statistics badalti hai. Open rejection ko retry storm na banao; recovery probes aur caller deadline bounded rakho.","Retry attempt counter shared health window/state machine ka replacement nahi.","Safe bounded retries aur breaker useful together ho sakte hain; composition and deadlines explicit rakho.","Repeated retries sickness amplify kar sakti hain; breaker open guard ko bypass nahi karna."] },
     ],
   },
   success: [

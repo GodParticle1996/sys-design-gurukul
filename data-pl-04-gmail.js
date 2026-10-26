@@ -9,41 +9,12 @@
 
 VISUALS['gmail-state'] = {
   t: 'Email file nahi, ek state machine hai',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-bad"><span class="bx-label">📁 Folder</span>
-        <div class="dg-cap">Ek mail = ek jagah. Do folders mein chahiye → copy ya reference. Archive = mail ko uthake doosri jagah
-          likho. Lab: 5,000 archive = <b>10.7 MB</b> likha.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">🏷️ Label</span>
-        <div class="dg-cap">Label = metadata. Ek hi record par work + important + travel. Archive = sirf "inbox" label hatao —
-          mail hilta hi nahi. Lab: <b>254 KB</b> (42× kam).</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-flow">
-      <span class="dg-pill">📩 mail aaya</span><span class="dg-arrow">→</span>
-      <span class="dg-pill acc">👀 khola = WRITE (unread → read)</span><span class="dg-arrow">→</span>
-      <span class="dg-pill acc">⭐ star / 🏷️ label / 📦 archive = aur writes</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good">📱💻 har device par wahi sach</span>
-    </div>`,
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">📁 Folder</span>\n        <div class=\"dg-cap\">Ek mail = ek jagah. Do folders mein chahiye → copy ya reference. Archive = mail ko uthake doosri jagah\n          likho. Lab: 5,000 archive = <b>10.7 MB</b> likha.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🏷️ Label</span>\n        <div class=\"dg-cap\">Label = metadata. Ek hi record par work + important + travel. Archive = sirf \"inbox\" label hatao —\n          mail hilta hi nahi. Lab: <b>254 KB</b> (42× kam).</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📩 mail aaya</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">👀 khola = WRITE (unread → read)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">⭐ star / 🏷️ label / 📦 archive = aur writes</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">📱💻 har device par wahi sach</span>\n    </div>",
 };
 
 VISUALS['gmail-consistency'] = {
   t: '"Delivered" kab bolein?',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-bad"><span class="bx-label">⚡ Ack pehle, replicate baad mein</span>
-        <div class="dg-cap">Ek copy likhi → "delivered" → background mein doosri site. Beech mein site giri → mail gaya,
-          bhejne wale ko lagta hai pahunch gaya. Lab: <b>20 mails kho gaye</b>.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">🛡️ Kai sites par commit, phir ack</span>
-        <div class="dg-cap">Dono sites par likha → tab "delivered". Lab: <b>0 khoye</b>, keemat ~1.2 ms (localhost; asli mein ek
-          cross-region round trip).</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-ladder">
-      <div class="dg-rung"><span class="lv">🌍</span><span class="cmd">Spanner</span><span class="q">globally distributed + strongly consistent + ACID + scale</span></div>
-      <div class="dg-rung a"><span class="lv">⏱️</span><span class="cmd">TrueTime + commit wait</span><span class="q">bina central referee ke order par sehmati</span></div>
-      <div class="dg-rung g"><span class="lv">👤</span><span class="cmd">Partition by user</span><span class="q">tumhara mailbox = ek shard; ek request, ek jagah</span></div>
-    </div>`,
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">⚡ Ack pehle, replicate baad mein</span>\n        <div class=\"dg-cap\">Ek copy likhi → \"delivered\" → background mein doosri site. Beech mein site giri → mail gaya,\n          bhejne wale ko lagta hai pahunch gaya. Lab: <b>20 mails kho gaye</b>.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🛡️ Kai sites par commit, phir ack</span>\n        <div class=\"dg-cap\">Dono sites par likha → tab \"delivered\". Lab: <b>0 khoye</b>, keemat ~1.2 ms (localhost; asli mein ek\n          cross-region round trip).</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-ladder\">\n      <div class=\"dg-rung\"><span class=\"lv\">🌍</span><span class=\"cmd\">Spanner</span><span class=\"q\">globally distributed + strongly consistent + ACID + scale</span></div>\n      <div class=\"dg-rung a\"><span class=\"lv\">⏱️</span><span class=\"cmd\">TrueTime + commit wait</span><span class=\"q\">bina central referee ke order par sehmati</span></div>\n      <div class=\"dg-rung g\"><span class=\"lv\">👤</span><span class=\"cmd\">Partition by user</span><span class=\"q\">tumhara mailbox = ek shard; ek request, ek jagah</span></div>\n    </div>",
 };
 
 VISUALS['gmail-search-hot'] = {
@@ -64,19 +35,7 @@ VISUALS['gmail-search-hot'] = {
 
 VISUALS['gmail-delivery'] = {
   t: 'SMTP retry karta hai — receiver yaad rakhta hai',
-  html: `
-    <div class="dg-flow">
-      <span class="dg-pill">📤 sender MTA</span><span class="dg-arrow">→ mail →</span>
-      <span class="dg-pill acc">📥 Gmail: durable write + spam check + filters + index + push</span><span class="dg-arrow">→ "250 OK" →</span>
-      <span class="dg-pill bad">❓ ACK raaste mein gum</span><span class="dg-arrow">→</span>
-      <span class="dg-pill">📤 dobara bhejo</span>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-grid">
-      <div class="dg-node is-good"><span class="ni">🆔</span><span class="nl">Message-ID se dedup</span><span class="ns">lab: 114 duplicates → 0</span></div>
-      <div class="dg-node is-good"><span class="ni">📎</span><span class="nl">Attachment fingerprint</span><span class="ns">10,000 × 5 MB = 48.83 GB → ek 5 MB object + refcount</span></div>
-      <div class="dg-node is-gold"><span class="ni">🗑️</span><span class="nl">Delete ≠ jagah khaali</span><span class="ns">aakhri reference jaane par hi bytes free</span></div>
-    </div>`,
+  html: "\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📤 sender MTA</span><span class=\"dg-arrow\">→ mail →</span>\n      <span class=\"dg-pill acc\">📥 Gmail: durable write + spam check + filters + index + push</span><span class=\"dg-arrow\">→ \"250 OK\" →</span>\n      <span class=\"dg-pill bad\">❓ ACK raaste mein gum</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill\">📤 dobara bhejo</span>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-grid\">\n      <div class=\"dg-node is-good\"><span class=\"ni\">🆔</span><span class=\"nl\">Message-ID se dedup</span><span class=\"ns\">lab: 114 duplicates → 0</span></div>\n      <div class=\"dg-node is-good\"><span class=\"ni\">📎</span><span class=\"nl\">Attachment fingerprint</span><span class=\"ns\">10,000 × 5 MB = 48.83 GB → ek 5 MB object + refcount</span></div>\n      <div class=\"dg-node is-gold\"><span class=\"ni\">🗑️</span><span class=\"nl\">Delete ≠ jagah khaali</span><span class=\"ns\">aakhri reference jaane par hi bytes free</span></div>\n    </div>",
 };
 
 SD.registerLevels('planet', [
@@ -95,23 +54,7 @@ SD.registerLevels('planet', [
     'Lab: folder-move vs label ka kharcha',
   ],
   lesson: [
-    `<h3>🎁 1 April 2004 — mazaak jaisa vaada</h3>
-     <p>Gmail ne 1 GB muft diya (us waqt Hotmail se ~500× zyada) — log April Fool samjhe. Vaada: har mail hamesha
-     rakho, kabhi delete/sort na karna pade, kuch bhi turant dhoondh lo — 1.8 arab logon ke liye, exabytes mein,
-     ek byte bhi na khoye, do devices kabhi alag sach na dikhayein.</p>
-     <p>Pehla version ek engineer ne ek din mein banaya tha: Google Groups ka search code ek mailbox par laga diya.
-     Yaani Gmail "email jisme search jodi gayi" nahi, <b>"tumhare email par lagi search"</b> tha. Isse teen mushkil
-     kaam nikle:</p>
-     <ul>
-       <li>Hamesha badhta storage</li>
-       <li>Har user ka apna private index, real time mein taaza</li>
-       <li>Mailbox ek zinda database — state kabhi na khoye, kabhi alag na dikhe</li>
-     </ul>
-     <h3>🔄 Text rakhna aasaan, STATE mushkil</h3>
-     <p>Read/unread, starred, archived, labels, thread, draft. Mail <b>kholna</b> bhi ek write hai (unread flag). Aur
-     yeh writes laptop, phone, tablet, browser se ek saath aati hain — sab jagah wahi sach dikhna chahiye. Video:
-     <b>"files passive hain, email active hai."</b> Har mail ek record, har action ek transaction. Do cheezein par
-     koi samjhauta nahi: <b>durability</b> (log dheemapan maaf karte hain, gayab mail nahi) aur <b>consistency</b>.</p>`,
+    "<h3>🎁 1 April 2004 — mazaak jaisa vaada</h3>\n     <p>Gmail ne 1 GB muft diya (us waqt Hotmail se ~500× zyada) — log April Fool samjhe. Vaada: har mail hamesha\n     rakho, kabhi delete/sort na karna pade, kuch bhi turant dhoondh lo — 1.8 arab logon ke liye, exabytes mein,\n     ek byte bhi na khoye, do devices kabhi alag sach na dikhayein.</p>\n     <p>Pehla version ek engineer ne ek din mein banaya tha: Google Groups ka search code ek mailbox par laga diya.\n     Yaani Gmail \"email jisme search jodi gayi\" nahi, <b>\"tumhare email par lagi search\"</b> tha. Isse teen mushkil\n     kaam nikle:</p>\n     <ul>\n       <li>Hamesha badhta storage</li>\n       <li>Har user ka apna private index, real time mein taaza</li>\n       <li>Mailbox ek zinda database — state kabhi na khoye, kabhi alag na dikhe</li>\n     </ul>\n     <h3>🔄 Text rakhna aasaan, STATE mushkil</h3>\n     <p>Read/unread, starred, archived, labels, thread, draft. Mail <b>kholna</b> bhi ek write hai (unread flag). Aur\n     yeh writes laptop, phone, tablet, browser se ek saath aati hain — sab jagah wahi sach dikhna chahiye. Video:\n     <b>\"files passive hain, email active hai.\"</b> Har mail ek record, har action ek transaction. Do cheezein par\n     koi samjhauta nahi: <b>durability</b> (log dheemapan maaf karte hain, gayab mail nahi) aur <b>consistency</b>.</p>",
     `<h3>🏷️ Folders nahi, labels</h3>
      <p>Folder ek jagah hai — ek mail ek folder mein; do mein chahiye toh copy. Label <b>metadata</b> hai — ek hi record
      par work + important + receipts + travel. Many-to-many.</p>
@@ -160,15 +103,10 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
       ],
       observe: {
         q: 'Rows dono mein 5,000 — phir bhi bytes 42× alag kyun?',
-        choices: [
-          'Folder-move poora record (headers + body) dobara likhta hai; label sirf chhota metadata badalta hai — mail apni jagah se hilta hi nahi',
-          'Label compressed hai',
-          'Folder mein duplicate rows bani',
-          'Label ne kuch likha hi nahi',
-        ],
+        choices: ["Toy move rewrites body; label updates metadata","Labels eliminate every storage write","Folder semantics require full body rewrite","Compression alone explains changed writes"],
         answer: 0,
-        explain: 'Storage aur organization alag kar do — organization sasta ho jaata hai.',
-      },
+        explain: "Is lab ka naive folder-move implementation full body rewrites karta hai. Labels lightweight references change karti hain. Efficient folder design bhi metadata references move kar sakta hai; 42x is toy comparison, universal folder law nahi.",
+       choiceExplanations: ["Is lab ka naive folder-move implementation full body rewrites karta hai. Labels lightweight references change karti hain. Efficient folder design bhi metadata references move kar sakta hai; 42x is toy comparison, universal folder law nahi.","Label changes still metadata write karti hain.","Efficient folder implementation references update kar sakti hai.","Question changed data model/write path compare karta hai."] },
       lesson: 'Jo cheez baar-baar badalti hai (organization), use us cheez se alag rakho jo nahi badalti (content).',
     },
   ],
@@ -178,26 +116,16 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
     questions: [
       {
         q: 'Interviewer: "Email app ka data model — folders ya labels?"',
-        choices: [
-          'Labels (many-to-many metadata) — archive/move sirf label update; har view (inbox, starred, work) ek query; content ek baar store',
-          'Folders — simple hai',
-          'Har folder ki alag table',
-          'Har mail ki copy har view mein',
-        ],
+        choices: ["Many labels, shared immutable content","Every folder must copy full body","Labels make all permission rules free","One table per view always required"],
         answer: 0,
         explain: 'Lab: 42× kam writes, aur ek mail kai jagah bina copy.',
-      },
+       choiceExplanations: ["Lab: 42× kam writes, aur ek mail kai jagah bina copy.","Folders references se model ho sakte hain; payload copying required nahi.","Label visibility/ownership still explicit permissions maangti hai.","Views metadata/query model se derive ho sakti hain."] },
       {
         q: 'Interviewer: "Mail kholna write kyun maante ho? Read hi toh hai."',
-        choices: [
-          'Read/unread state badalti hai aur doosre devices par dikhni chahiye — isliye yeh ek transaction hai jiska durability/consistency ka dhyan rakhna padega',
-          'Nahi, kholna read hai',
-          'Sirf analytics ke liye',
-          'Cache ke liye',
-        ],
+        choices: ["Read flag ki persistent mutation","GET payload means no side effect ever","Only analytics count can change","Flags need no cross-device contract"],
         answer: 0,
         explain: '"Email active hai" — har action state machine ka ek kadam.',
-      },
+       choiceExplanations: ["\"Email active hai\" — har action state machine ka ek kadam.","UI open action additional mutation invoke kar sakta hai.","Product read/unread state user-visible behavior hai.","Other devices need chosen consistency and durable update behavior."] },
     ],
   },
   success: [
@@ -209,7 +137,7 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
     (metadata + query) banane se move/copy ke writes bachenge? Aur kya ek cheez ko kai jagah dikhana aasaan hoga?</p>`,
   cards: [
     { front: 'Gmail ke teen mushkil kaam?', back: 'Hamesha badhta storage; har user ka private real-time index; mailbox ek zinda DB jiska state kabhi na khoye, kabhi alag na dikhe.' },
-    { front: 'Labels vs folders?', back: 'Label = metadata (many-to-many); archive = inbox label hatao, mail hilta nahi; Inbox ek query. Lab: 10.7 MB vs 254 KB (42×).' },
+    { front: 'Labels vs folders?', back: "Label = metadata (many-to-many); archive = inbox label hatao, mail hilta nahi; Inbox ek query. Lab: 10.7 MB vs 254 KB (42×)." },
     { front: '"Files passive, email active"?', back: 'Mail kholna, star, label, archive, draft — sab writes, kai devices se ek saath. Har action ek transaction.' },
   ],
 },
@@ -229,20 +157,7 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
     'CAP mein Gmail consistency chunta hai',
   ],
   lesson: [
-    `<h3>✉️ "Delivered" bol diya, phir mail gaya</h3>
-     <p>Laakhon disks — kuch har ghante marti hain. Replication toh chahiye, par sawaal: <b>write kab poora maana
-     jaaye?</b> Agar ek copy likh ke "delivered" bol diya aur doosri copy background mein bhej rahe ho, toh beech mein ek
-     pal hai jab sirf ek copy hai. Us pal site giri → bhejne wale ko "pahunch gaya" dikha, aur mail <b>kabhi nahi
-     milega</b>. Email ka sabse bura failure.</p>
-     <p>Durable raasta: kai machines (behtar ho alag jagah) par commit, <b>phir</b> ack. Keemat: latency.</p>
-     <pre>lab 22 (ex1-ack) — 200 mails, mail #120 ke baad site A giri:
-ack mode   "delivered" bola   site B par   KHO GAYE   ack latency
-before          120               100          20       4.85 ms
-after           120               120           0       6.09 ms</pre>
-     <h3>🔁 Eventual consistency yahan kyun nahi?</h3>
-     <p>Phone par padha → 2 sec baad laptop par bhi "read" dikhna chahiye. Desktop par label lagaya → phone par. Eventual
-     consistency ka matlab: delete kiya mail 30 sec ke liye wapas dikhe, unread count ooper-neeche. Mail ke liye
-     manzoor nahi → <b>strong consistency</b>.</p>`,
+    "<h3>✉️ \"Delivered\" bol diya, phir mail gaya</h3>\n     <p>Laakhon disks — kuch har ghante marti hain. Replication toh chahiye, par sawaal: <b>write kab poora maana\n     jaaye?</b> Agar ek copy likh ke \"delivered\" bol diya aur doosri copy background mein bhej rahe ho, toh beech mein ek\n     pal hai jab sirf ek copy hai. Us pal site giri → bhejne wale ko \"pahunch gaya\" dikha, aur mail <b>kabhi nahi\n     milega</b>. Email ka sabse bura failure.</p>\n     <p>Durable raasta: kai machines (behtar ho alag jagah) par commit, <b>phir</b> ack. Keemat: latency.</p>\n     <pre>lab 22 (ex1-ack) — 200 mails, mail #120 ke baad site A giri:\nack mode   \"delivered\" bola   site B par   KHO GAYE   ack latency\nbefore          120               100          20       4.85 ms\nafter           120               120           0       6.09 ms</pre>\n     <h3>🔁 Eventual consistency yahan kyun nahi?</h3>\n     <p>Phone par padha → 2 sec baad laptop par bhi \"read\" dikhna chahiye. Desktop par label lagaya → phone par. Eventual\n     consistency ka matlab: delete kiya mail 30 sec ke liye wapas dikhe, unread count ooper-neeche. Mail ke liye\n     manzoor nahi → <b>strong consistency</b>.</p>",
     `<h3>🌍 Spanner — "teen mein se do" ko toda</h3>
      <p>Purani kahawat: strong consistency, global distribution, scale — teen mein se do chuno. <b>Spanner</b> (Gmail
      isi par, exabytes) ne teeno diye: globally distributed, strongly consistent, poore ACID transactions. Order ke liye
@@ -272,15 +187,10 @@ after           120               120           0       6.09 ms</pre>
       ],
       observe: {
         q: '"before" mode mein 20 mails kho gaye, par sender ko error kyun nahi mila?',
-        choices: [
-          'Sender ko "delivered" pehle hi bol diya tha — mail sirf site A par thi aur background replication poora hone se pehle site gir gayi',
-          'Sender ne dobara bheja',
-          'Site B ne reject kiya',
-          'Network ne mail gira diya',
-        ],
+        choices: ["Ack se pehle remote durability missing","Sender retry necessarily caused loss","Remote site confirmed every write","Network reorder deleted durable copies"],
         answer: 0,
         explain: 'Ack ek vaada hai. Jo vaada tum nibha nahi sakte (sirf ek copy), woh mat karo.',
-      },
+       choiceExplanations: ["Ack ek vaada hai. Jo vaada tum nibha nahi sakte (sirf ek copy), woh mat karo.","Retry duplicate risk ho sakta hai; given loss crash window se hai.","Remote durable ack hota toh described failure scope mein loss contract different hota.","Network ordering alone already durable data delete nahi karti."] },
       lesson: '"Delivered" tabhi bolo jab durability ki shart poori ho — ~1 ms ki keemat 20 khoye mails se sasti hai.',
     },
     {
@@ -288,27 +198,17 @@ after           120               120           0       6.09 ms</pre>
       title: 'Consistency ki samajh',
       questions: [
         {
-          q: 'Gmail ke liye eventual consistency ka sabse bura dikhne wala asar?',
-          choices: [
-            'Delete kiya mail thodi der ke liye wapas dikhe, unread count ooper-neeche — user ko lage system jhooth bol raha hai',
-            'Search dheemi',
-            'Storage zyada',
-            'Kuch nahi',
-          ],
+          q: "Is mailbox lab ke eventual-consistency mode mein user-visible problem kya hai?",
+          choices: ["Stale deletes and unread-state reversals","Only more disk space use hota","Only slower text rendering issue","Every operation must share one model"],
           answer: 0,
-          explain: 'Isi liye Gmail strong consistency ki keemat (latency) chukata hai.',
-        },
+          explain: "Stale deletion/read-state replicas contradictory UI de sakti hain. Required consistency per operation define karo; entire current Gmail service ke every subsystem ko one universal strong-consistency contract assign mat karo.",
+         choiceExplanations: ["Stale deletion/read-state replicas contradictory UI de sakti hain. Required consistency per operation define karo; entire current Gmail service ke every subsystem ko one universal strong-consistency contract assign mat karo.","Consistency user-visible mailbox state affect kar sakti hai.","Rendering speed and stale state semantics separate hain.","Search, counters and message mutations different contracts choose kar sakte hain."] },
         {
           q: 'Partition by user ka sabse bada faayda?',
-          choices: [
-            'Tumhare mailbox ki request ek hi shard par — cross-shard kaam aur fan-out nahi',
-            'Storage kam',
-            'Security',
-            'Backups tez',
-          ],
+          choices: ["Mailbox locality limits common read fanout","All global queries become single-shard","User key guarantees equal-sized tenants","Same shard guarantees authorization"],
           answer: 0,
           explain: 'Jo data saath padha jaata hai, woh saath rakho.',
-        },
+         choiceExplanations: ["Jo data saath padha jaata hai, woh saath rakho.","Cross-user/admin queries still multiple shards touch kar sakti hain.","Large or hot mailboxes skew create kar sakte hain.","Colocation access control enforce nahi karti."] },
       ],
     },
   ],
@@ -318,26 +218,16 @@ after           120               120           0       6.09 ms</pre>
     questions: [
       {
         q: 'Interviewer: "Payment/mail jaisi cheez — client ko success kab bhejein?"',
-        choices: [
-          'Jab write kai failure domains (alag machine/site) par durable ho chuka ho — us se pehle nahi; latency ki keemat chukao',
-          'Primary par likhte hi',
-          'Queue mein daalte hi',
-          'Response bhejo, background mein likho',
-        ],
+        choices: ["Ack matches declared durability contract","Queue acceptance means workflow complete","Async write before durability is final","All workloads need same replication count"],
         answer: 0,
-        explain: 'Lab: ack-before = 20 kho gaye; ack-after = 0, +1.2 ms.',
-      },
+        explain: "Success acknowledgement chosen durability/failure-domain contract se match honi chahiye. Accepted queue work and completed payment/mail delivery different promises hain. Replication count, recovery objectives and latency budget explicit specify karo.",
+       choiceExplanations: ["Success acknowledgement chosen durability/failure-domain contract se match honi chahiye. Accepted queue work and completed payment/mail delivery different promises hain. Replication count, recovery objectives and latency budget explicit specify karo.","Accepted request aur completed business operation alag states ho sakti hain.","Failure before durable write acknowledged data lose kar sakti hai.","Required failure domains and recovery objectives vary karte hain."] },
       {
-        q: 'Interviewer: "Network partition mein mailbox read-only/unavailable ho jaaye — theek hai?"',
-        choices: [
-          'Gmail ke liye haan — kuch mailboxes thodi der unavailable, galat ya gayab mail dikhane se behtar (CP choice)',
-          'Nahi, hamesha available',
-          'Purana data dikha do',
-          'Dono sides par writes lo',
-        ],
+        q: "Is lab mein strict mailbox mutation consistency required hai aur replicas partitioned hain. Kya tradeoff acceptable hai?",
+        choices: ["Strict operation may wait or reject partition","Both sides write, strict single order free","Any stale reply satisfies strict freshness","Read-only label means network healed"],
         answer: 0,
-        explain: 'Jahan galat hona maaf nahi, wahan consistency ki keemat do.',
-      },
+        explain: "Strict operation ko quorum/authority unavailable hone par wait ya reject karna pad sakta hai. Product can separately offer clearly stale read-only behavior; CAP choice entire service ke every operation ka universal label nahi.",
+       choiceExplanations: ["Strict operation ko quorum/authority unavailable hone par wait ya reject karna pad sakta hai. Product can separately offer clearly stale read-only behavior; CAP choice entire service ke every operation ka universal label nahi.","Partitioned independent writes strict invariant/order conflict kar sakti hain.","Stale data chosen freshness contract violate kar sakta hai.","Read-only serving degraded availability choice hai, healing proof nahi."] },
     ],
   },
   success: [
@@ -400,8 +290,7 @@ after           120               120           0       6.09 ms</pre>
       title: 'Garam-thanda batwara',
       instructions: 'Kitna data tez tier mein rakho, body kab laao — kharcha aur inbox ki speed dekho.',
       goal: 'Inbox load <b>200 ms se kam</b>, storage kharcha <b>₹40 per user/saal se kam</b>, aur mail kholne par body <b>1 sec se kam</b> mein.',
-      scenario: `Ek average mailbox: 15 GB (99% bodies/attachments, 1% metadata). Tez tier ₹20/GB/saal, sasta tier ₹1.5/GB/saal.
-        Tum tay karo kya tez tier mein jaata hai.`,
+      scenario: "Ek average mailbox: 15 GB (99% bodies/attachments, 1% metadata). Tez tier ₹20/GB/saal, sasta tier ₹1.5/GB/saal.\n        Tum tay karo kya tez tier mein jaata hai.",
       knobs: [
         { id: 'hotpct', label: 'Data ka kitna % tez tier mein', min: 1, max: 100, step: 1, value: 100, unit: '%', note: '1% = sirf metadata; 100% = sab kuch.' },
         { id: 'lazy', label: 'Body kab laao (0 = inbox ke saath, 1 = mail kholne par)', min: 0, max: 1, step: 1, value: 0, unit: '', note: 'Lazy fetch.' },
@@ -434,15 +323,10 @@ after           120               120           0       6.09 ms</pre>
         <b>haal ke mails</b> kholne ki speed. Use ke hisaab se batwara.`,
       quiz: {
         q: 'Sab kuch tez tier mein rakhna (100%) kyun galat hai jab speed sabse achhi hai?',
-        choices: [
-          'Zyadatar bodies kabhi dobara nahi khulti — unke liye mehenga storage 1.8 arab users par pahaad jaisa kharcha',
-          'Tez tier dheema hota hai',
-          'Consistency toot-ti hai',
-          'Search kaam nahi karti',
-        ],
+        choices: ["Cold bodies ka low reuse vs premium cost","Fast tier violates message consistency","Search requires every body in RAM","More storage always lowers latency"],
         answer: 0,
         explain: 'Storage ko use se milao — "sab hamesha" ke vaade ke saath yeh zaroori hai.',
-      },
+       choiceExplanations: ["Storage ko use se milao — \"sab hamesha\" ke vaade ke saath yeh zaroori hai.","Storage temperature consistency protocol ka direct definition nahi.","Indexes and selective fetch bodies ko separate kar sakte hain.","Capacity, cache locality and latency economics independently measure karo."] },
     },
     {
       type: 'quiz',
@@ -450,26 +334,16 @@ after           120               120           0       6.09 ms</pre>
       questions: [
         {
           q: 'Gmail search web search se mushkil kyun?',
-          choices: [
-            'Arabon alag private indexes, har ek real-time taaza — ek bada shared index nahi jise ek baar banao',
-            'Emails lambi hoti hain',
-            'Gmail purana hai',
-            'Web search aasaan hai',
-          ],
+          choices: ["Private scope and fresh mutable indexes","Email must be longer than web pages","Web search needs no access control","One global index is always impossible"],
           answer: 0,
           explain: 'Isolation + freshness + scale ek saath.',
-        },
+         choiceExplanations: ["Isolation + freshness + scale ek saath.","Document length alone indexing difficulty explain nahi karti.","Public/private search products authorization constraints vary karte hain.","Global filtered index valid architecture ho sakti hai; tradeoffs evaluate karo."] },
         {
           q: 'Mail aate hi searchable kyun hona chahiye?',
-          choices: [
-            'Log OTP, tickets, confirmation turant dhoondhte hain — 5 minute ka lag yahan bug hai',
-            'Kanoon hai',
-            'Spam ke liye',
-            'Backup ke liye',
-          ],
+          choices: ["OTP/ticket workflow needs fresh search","Backup policy requires instant indexing","Spam filter cannot operate without search","Every search product needs zero lag"],
           answer: 0,
           explain: 'Freshness product ki zaroorat se tay hoti hai.',
-        },
+         choiceExplanations: ["Freshness product ki zaroorat se tay hoti hai.","Backup recovery and search visibility separate contracts hain.","Spam classification and user search independent pipelines ho sakte hain.","Freshness requirement actual user task se derive karo."] },
       ],
     },
   ],
@@ -479,26 +353,16 @@ after           120               120           0       6.09 ms</pre>
     questions: [
       {
         q: 'Interviewer: "Hamara chat app har message ke attachments bhi primary DB mein rakhta hai. DB bahut mehenga ho gaya."',
-        choices: [
-          'Hot metadata (sender, time, flags, pointer) DB mein; attachments/bodies object storage mein, content-addressed; kholne par lazy fetch; haal wale cache mein',
-          'DB ko bada karo',
-          'Purane messages delete karo',
-          'Attachments compress karo',
-        ],
+        choices: ["Hot metadata, durable blob pointer, lazy fetch","Only enlarge primary DB indefinitely","Delete attachments without retention policy","Compress bodies, ignore storage access shape"],
         answer: 0,
         explain: 'Gmail/Dropbox ka garam-thanda pattern.',
-      },
+       choiceExplanations: ["Gmail/Dropbox ka garam-thanda pattern.","Vertical capacity can buy time; large blobs and small metadata differ in access needs.","Retention/ownership policy preserve karni hogi.","Compression useful hai; transactional hot-set isolation still assess karo."] },
       {
-        q: 'Interviewer: "Har user ka private index — 2 arab indexes kaise chalayein?"',
-        choices: [
-          'User se partition (mailbox ke saath index), incremental real-time updates, active users cache mein, inactive thande storage mein; index size ko bodies se alag',
-          'Ek global index with user filter',
-          'Raat ko batch',
-          'Search band karo inactive users ke liye',
-        ],
+        q: "Mailbox-local access dominant aur fresh search required hai. Private indexes ko scale karne ka is design mein locality-focused option?",
+        choices: ["Mailbox-local index with incremental updates","Global filter index has zero tradeoffs","Night batch meets instant-search target","Inactive mailbox search permanently off"],
         answer: 0,
-        explain: 'Global index + filter = privacy aur scale dono mein dard.',
-      },
+        explain: "Mailbox-local partitions co-locate state and index. Global index with strict authorization is also possible; partition locality, freshness, hot-user skew and operational overhead compare karo, global filter ko automatically privacy leak mat maano.",
+       choiceExplanations: ["Mailbox-local partitions co-locate state and index. Global index with strict authorization is also possible; partition locality, freshness, hot-user skew and operational overhead compare karo, global filter ko automatically privacy leak mat maano.","Global design can work but isolation, locality and fanout need explicit analysis.","Batch refresh required freshness miss kar sakti hai.","Cold storage slower ho sakti hai; data/search availability contract preserve karo."] },
     ],
   },
   success: [
@@ -540,30 +404,8 @@ after           120               120           0       6.09 ms</pre>
 Message-ID check   retry hue   inbox mein   DUPLICATE
 nahi                  114         614          114
 haan                  146         500            0</pre>
-     <p class="tip">🎯 SMTP sirf <b>at least once</b> deta hai. "Exactly once" <b>receiver</b> banata hai — yaad rakh ke.</p>`,
-    `<h3>📎 5 MB PDF, 10,000 logon ko</h3>
-     <p>HR ne 10,000 employees ko 5 MB PDF bheja; newsletter crore logon ko. Content ka <b>fingerprint</b> (hash) lo,
-     ek baar store karo, har mailbox usi saajhi copy ka reference rakhe (WhatsApp videos jaisa). "Sab hamesha rakho" ke
-     vaade ke saath yeh zaroorat hai, luxury nahi.</p>
-     <pre>lab 22 (ex3-attachments):
-dedup   10,000 logon ke baad   1 delete → chhoota   baaki 9,999 delete → chhoota
-nahi         48.83 GB                5 MB               48.82 GB
-haan          5 MB                   0 MB                5 MB</pre>
-     <p>Isi liye bada mail delete karne par storage turant nahi chhoot-ta — jagah <b>aakhri reference</b> jaane par hi
-     khaali hoti hai.</p>
-     <h3>⚖️ Gmail vs WhatsApp — mushkil hissa kahan?</h3>
-     <p>WhatsApp lagbhag kuch nahi rakhta → chhote sasta simple servers, mushkil hissa arab phones par. Gmail sab rakhta
-     hai → hamesha chadhta data pahaad (zyadatar kabhi nahi khulta), strong consistency ki latency, aur hamesha ki
-     complexity (global DB, atomic clocks, per-user real-time indexes, failover). Video ka sawaal: <b>"mushkil hissa
-     kahan rehna chahiye?"</b></p>
-     <h3>📋 Paanch sabak</h3>
-     <ol>
-       <li>Product faisla = bhes badla architecture faisla.</li>
-       <li>"Sab rakho" ya "kuch mat rakho" — jaldi tay karo.</li>
-       <li>Storage ko use se milao (hot/cold).</li>
-       <li>Galat hona maaf nahi → strong consistency ki keemat do.</li>
-       <li>Boring guarantees sabse zaroori — sirf tootne par dikhti hain.</li>
-     </ol>`,
+     <p class="tip">🎯 SMTP mein uncertain acknowledgement ke baad retry duplicates la sakti hai; retries finite hote hain, universal delivery guarantee nahi. Receiver ka dedup/effect atomic contract repeated processing ko control karta hai.</p>`,
+    "<h3>📎 5 MB PDF, 10,000 logon ko</h3>\n     <p>HR ne 10,000 employees ko 5 MB PDF bheja; newsletter crore logon ko. Content ka <b>fingerprint</b> (hash) lo,\n     ek baar store karo, har mailbox usi saajhi copy ka reference rakhe (WhatsApp videos jaisa). \"Sab hamesha rakho\" ke\n     vaade ke saath yeh zaroorat hai, luxury nahi.</p>\n     <pre>lab 22 (ex3-attachments):\ndedup   10,000 logon ke baad   1 delete → chhoota   baaki 9,999 delete → chhoota\nnahi         48.83 GB                5 MB               48.82 GB\nhaan          5 MB                   0 MB                5 MB</pre>\n     <p>Isi liye bada mail delete karne par storage turant nahi chhoot-ta — jagah <b>aakhri reference</b> jaane par hi\n     khaali hoti hai.</p>\n     <h3>⚖️ Gmail vs WhatsApp — mushkil hissa kahan?</h3>\n     <p>WhatsApp lagbhag kuch nahi rakhta → chhote sasta simple servers, mushkil hissa arab phones par. Gmail sab rakhta\n     hai → hamesha chadhta data pahaad (zyadatar kabhi nahi khulta), strong consistency ki latency, aur hamesha ki\n     complexity (global DB, atomic clocks, per-user real-time indexes, failover). Video ka sawaal: <b>\"mushkil hissa\n     kahan rehna chahiye?\"</b></p>\n     <h3>📋 Paanch sabak</h3>\n     <ol>\n       <li>Product faisla = bhes badla architecture faisla.</li>\n       <li>\"Sab rakho\" ya \"kuch mat rakho\" — jaldi tay karo.</li>\n       <li>Storage ko use se milao (hot/cold).</li>\n       <li>Galat hona maaf nahi → strong consistency ki keemat do.</li>\n       <li>Boring guarantees sabse zaroori — sirf tootne par dikhti hain.</li>\n     </ol>",
   ],
   stages: [
     {
@@ -580,15 +422,10 @@ haan          5 MB                   0 MB                5 MB</pre>
       ],
       observe: {
         q: 'Mail toh pahunch gaya tha, phir sender ne dobara kyun bheja?',
-        choices: [
-          'Use "250 OK" nahi mila — SMTP ka niyam: pakka nahi pata toh dobara bhejo. Sender ke paas jaanne ka koi aur raasta nahi',
-          'Sender mein bug',
-          'Mail kharab tha',
-          'Receiver ne dobara maanga',
-        ],
+        choices: ["Lost final ack left sender uncertain","SMTP transport guarantees no duplicates","Received bytes prove final sender ack","Retry means sender implementation broken"],
         answer: 0,
         explain: 'At-least-once ka yahi matlab hai. Dedup receiver ka kaam.',
-      },
+       choiceExplanations: ["At-least-once ka yahi matlab hai. Dedup receiver ka kaam.","Final reply loss ke baad retry duplicate delivery create kar sakta hai.","Receiver processing and sender observing success different events hain.","Uncertain outcome retry protocol behavior ka part hai."] },
       lesson: 'Retry wale duniya mein har receiver ko idempotent hona chahiye — ek pehchaan (Message-ID) se.',
     },
     {
@@ -605,15 +442,10 @@ haan          5 MB                   0 MB                5 MB</pre>
       ],
       observe: {
         q: 'Dedup mode mein ek banda delete kare toh 0 MB kyun chhoota?',
-        choices: [
-          'Wahi 5 MB object 9,999 aur mailboxes ka hai — refcount 0 hone par hi bytes free hote hain',
-          'Delete fail hua',
-          'Bytes trash mein gaye',
-          'Bug hai',
-        ],
+        choices: ["Other references still retain shared blob","Delete necessarily failed silently","Every ref deletion frees full object","Logical quota equals physical bytes always"],
         answer: 0,
         explain: 'Saajhi copy ka matlab: kisi ek ka delete sirf uska reference hataata hai.',
-      },
+       choiceExplanations: ["Saajhi copy ka matlab: kisi ek ka delete sirf uska reference hataata hai.","Reference removal successful ho sakta hai without deleting shared bytes.","Remaining references object alive rakhte hain.","Logical ownership and physical dedup accounting separate hain."] },
       lesson: 'Content-addressed dedup: storage 10,000× kam — aur "delete = jagah khaali" ki maanyata toot jaati hai.',
     },
   ],
@@ -623,26 +455,16 @@ haan          5 MB                   0 MB                5 MB</pre>
     questions: [
       {
         q: 'Interviewer: "Webhook provider same event 2–3 baar bhejta hai. Kaise sambhaloge?"',
-        choices: [
-          'Event ID ko ek unique constraint/dedup table mein yaad rakho; dobara aaye toh 200 lautao par kaam mat karo — receiver idempotent',
-          'Provider ko bolo ek hi baar bheje',
-          'Pehla event process karo, baaki ignore by time',
-          'Queue mein daal do',
-        ],
+        choices: ["Atomic dedup plus business effect contract","Mark seen before effect, no recovery","Only timestamp window deduplicates","Queue name prevents duplicate processing"],
         answer: 0,
-        explain: 'At-least-once + idempotent receiver = effectively once.',
-      },
+        explain: "Dedup identity check and same-store effect ko one atomic transaction mein commit karo. External effects ke liye idempotency contract/outbox/recovery use karo. Pehle mark-seen aur baad mein unprotected effect crash par work lose kar sakta hai.",
+       choiceExplanations: ["Dedup identity check and same-store effect ko one atomic transaction mein commit karo. External effects ke liye idempotency contract/outbox/recovery use karo. Pehle mark-seen aur baad mein unprotected effect crash par work lose kar sakta hai.","Crash after mark-seen before effect permanently work skip kar sakta hai.","Different events same window mein aa sakte hain; retries late bhi ho sakti hain.","Queue redelivery possible hai; consumer transaction/idempotency chahiye."] },
       {
         q: 'Interviewer: "Users complain karte hain ki bade mails delete karne par storage quota kam nahi hota."',
-        choices: [
-          'Dedup ke saath shared objects refcounted hain — quota user ke references par gino (logical size), physical bytes aakhri reference par free',
-          'Bug hai, turant delete karo',
-          'Dedup band karo',
-          'Quota hata do',
-        ],
+        choices: ["Logical quota, shared physical refcounts","User quota only final ref par reduce","Delete every shared blob immediately","Quota and storage must match exactly"],
         answer: 0,
         explain: 'Logical (user ka) aur physical (disk ka) size alag cheezein hain.',
-      },
+       choiceExplanations: ["Logical (user ka) aur physical (disk ka) size alag cheezein hain.","User-visible accounting per-user references se policy ke mutabik update ho sakti hai.","Immediate shared deletion other users ka content lose kar sakti hai.","Dedup and retention logical/physical byte counts separate banate hain."] },
     ],
   },
   success: [
@@ -654,7 +476,7 @@ haan          5 MB                   0 MB                5 MB</pre>
     request/event ID hai? Agar same request 3 baar aaye toh kya 3 baar kaam hoga? Idempotency key ka design likho.</p>`,
   cards: [
     { front: 'SMTP duplicates kyun?', back: 'ACK raaste mein khoya → sender poora mail dobara bhejta hai (at-least-once). Lab: 20% ACK loss → 114 duplicates; Message-ID dedup → 0.' },
-    { front: 'Attachment dedup?', back: 'Content hash = naam; same file dobara → refcount++. Lab: 10,000 × 5 MB = 48.83 GB → 5 MB. Delete par jagah aakhri reference par hi.' },
+    { front: 'Attachment dedup?', back: "Content hash = naam; same file dobara → refcount++. Lab: 10,000 × 5 MB = 48.83 GB → 5 MB. Delete par jagah aakhri reference par hi." },
     { front: 'Gmail vs WhatsApp?', back: 'WhatsApp kuch nahi rakhta → server sasta, mushkil phones par. Gmail sab rakhta → data pahaad, strong consistency, global DB. "Mushkil hissa kahan rahe?"' },
   ],
 },

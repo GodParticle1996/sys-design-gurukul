@@ -41,12 +41,13 @@ const FONTS = ARGS.fonts || 'liberation';
 const TRACK = String(ARGS.track || 'sdd-resil');     /* which track to play (its levels, in order) */
 
 const ALL_VIEWPORTS = [
+  { name: '360', width: 360, height: 800, dsf: 2, mobile: true },
   { name: '390', width: 390, height: 844, dsf: 2, mobile: true },
   { name: '1280', width: 1280, height: 900, dsf: 1, mobile: false },
 ];
 const VIEWPORTS = ARGS.viewports
   ? ALL_VIEWPORTS.filter(v => String(ARGS.viewports).split(',').includes(v.name))
-  : ALL_VIEWPORTS;
+  : ALL_VIEWPORTS.filter(v => v.name !== '360');
 
 /* ------------------------------------------------------- find playwright */
 function dataFileStamps() {
@@ -564,7 +565,7 @@ async function runLevel(browser, vp, meta, li, S) {
         await sleep(80);
         await snap(env, Object.assign({ tag: 'initial' }, base), { shot: true });
         if (si < nStages - 1) {
-          await page.evaluate(() => { SD.session.stageIdx++; runStage(); });
+          await page.evaluate(() => { SD.session.stageIdx++; SD.ui.runStage(); });
           await page.waitForSelector('.stage-h');
         }
       }

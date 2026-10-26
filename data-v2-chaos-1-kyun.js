@@ -87,16 +87,11 @@ SD.registerLevels('sdd-resil', [
           vars: { i2: '💥 mar gaya (1.00 s par)' },
           ask: {
             q: 'Agli request #5 hai, aur baari instance 2 ki hai. Kya hoga?',
-            choices: [
-              'Load balancer #5 ko instance 2 par hi bhejega — list mein instance 2 abhi bhi hai. Connection toot jaayega: #5 fail',
-              'Load balancer #5 ko apne aap instance 3 par bhej dega',
-              'Load balancer tab tak rukega jab tak instance 2 wapas na aa jaaye',
-              'Instance 1 dono ka kaam kar lega',
-            ],
+            choices: ["Instance 2 par route hogi; connection fail hogi","Instance 3 par route hogi; balancer retry karega","Request queue hogi; instance 2 ka wait chalega","Instance 1 par route hogi; list khud badlegi"],
             answer: 0,
             hint: 'Load balancer ki list ko kaun badalta hai? Is setup mein koi hai?',
-            explain: 'Slow motion ki line: <code>1.05 s #5 → instance 2 ✗ (connection toota)</code>. Load balancer ko pata hi nahi ki instance 2 mar gaya.',
-          },
+            explain: "Is static round-robin list mein instance 2 abhi member hai; assigned request usi dead endpoint par jaati hai. Is setup mein retry configured nahi hai. Balancer recovery ka intezaar karne wali queue nahi chalata. Instance ki death se static membership apne aap nahi badalti.",
+           choiceExplanations: ["Is static round-robin list mein instance 2 abhi member hai; assigned request usi dead endpoint par jaati hai.","Is setup mein retry configured nahi hai.","Balancer recovery ka intezaar karne wali queue nahi chalata.","Instance ki death se static membership apne aap nahi badalti."] },
         },
         {
           clock: '1.05–1.45 s',
@@ -112,16 +107,11 @@ SD.registerLevels('sdd-resil', [
           vars: { req: '#8 ✗', fail: '2' },
           ask: {
             q: 'Load balancer ko kab pata chalega ki instance 2 mar gaya hai?',
-            choices: [
-              'Kabhi nahi. Is setup mein load balancer kisi instance se poochhta hi nahi. Jab tak instance 2 khud wapas na aaye, har teesri request girti rahegi',
-              'Do fail ke baad — load balancer ginta rehta hai',
-              '1 second baad',
-              'Jaise hi koi grahak shikayat karega',
-            ],
+            choices: ["Is setup mein health signal nahi; list wahi rahegi","Do failures ki automatic ginti list badal degi","Agli polling interval par instance nikal jaayega","TCP reset par balancer poori list refresh karega"],
             answer: 0,
             hint: 'Pehle step mein likha tha: load balancer kya nahi karta?',
-            explain: 'Slow motion: #11 aur #14 bhi instance 2 par gayi aur giri. Nateeje ki line: <code>health check nahi hai — mara hua bhi rotation mein hi raha</code>.',
-          },
+            explain: "Yahan active health check aur passive ejection dono absent hain, isliye membership stale rehti hai. Consecutive-failure ejection alag configuration hai. Health polling is setup mein enabled nahi hai. TCP reset ek request fail karta hai; configured ejection ke bina membership nahi badalta.",
+           choiceExplanations: ["Yahan active health check aur passive ejection dono absent hain, isliye membership stale rehti hai.","Consecutive-failure ejection alag configuration hai.","Health polling is setup mein enabled nahi hai.","TCP reset ek request fail karta hai; configured ejection ke bina membership nahi badalta."] },
         },
         {
           clock: '3.00 s',
@@ -182,16 +172,11 @@ SD.registerLevels('sdd-resil', [
           vars: { hc: '1 ✓ · 2 ✓ · 3 ✓', list: '1 · 2 · 3', req: '—', fail: '?' },
           ask: {
             q: 'Is sawaal (health check) se kya badlega?',
-            choices: [
-              'Instance 2 marne ke thodi der baad list se hat jaayega, aur uske baad ki requests bach jaayengi. Par hatne se pehle jo request instance 2 par ja chuki, yeh request phir bhi giregi',
-              'Ab ek bhi request nahi giregi',
-              'Kuch nahi badlega',
-              'Instance 2 marega hi nahi',
-            ],
+            choices: ["Detection ke baad naya traffic bachega; pehle wala nahi","Detection se pehle in-flight requests bhi recover hongi","Probe instance ko revive karega; routing wahi rahegi","List turant update hogi; detection window nahi hogi"],
             answer: 0,
             hint: 'Load balancer ko pata chalne mein kitna waqt lagega: turant, ya do sawaalon ke baad?',
-            explain: 'Pata chalne mein waqt lagta hai: do lagataar "jawab nahi". Us beech jo requests instance 2 ki baari par aayi, yahi requests giri.',
-          },
+            explain: "Probe detection ke baad dead endpoint remove kar sakta hai; pehle bheji request ke liye alag recovery chahiye. Health check failed request ko replay nahi karta. Probe process restart karne ka mechanism nahi hai. Polling, timeout aur threshold detection delay banate hain.",
+           choiceExplanations: ["Probe detection ke baad dead endpoint remove kar sakta hai; pehle bheji request ke liye alag recovery chahiye.","Health check failed request ko replay nahi karta.","Probe process restart karne ka mechanism nahi hai.","Polling, timeout aur threshold detection delay banate hain."] },
         },
         {
           clock: '1.00–1.40 s',
@@ -222,16 +207,11 @@ SD.registerLevels('sdd-resil', [
           vars: { req: '25 mein se 1 fail', fail: '1 (pehle 4)' },
           ask: {
             q: 'Health check lag gaya. Phir bhi #5 kyun giri?',
-            choices: [
-              'Instance 2 1.00 s par mara, par list se 1.40 s par hata. #5 is beech (1.05 s par) instance 2 par ja chuki thi',
-              'Health check galat instance se pooch raha tha',
-              '#5 ek kharab request thi',
-              'Instance 3 bhi mar gaya tha',
-            ],
+            choices: ["Request 1.05 s par gayi; removal 1.40 s par hua","Removal 1.00 s par hua; request baad mein queued thi","Probe ne instance 3 hataya; request galat route hui","Request ne retry ki; doosra instance bhi dead tha"],
             answer: 0,
             hint: 'Instance 2 kab mara? List se kab hata? #5 kab aayi?',
-            explain: 'Marne aur pata chalne ke beech hamesha ek khidki hoti hai. Yahan khidki 0.40 s ki thi (do sawaal, har 0.3 s par). Is khidki ki requests ko health check nahi bacha sakta.',
-          },
+            explain: "Timeline mein crash aur routing update ke beech request dead instance tak pahunch chuki thi. Given removal time 1.40 s hai, 1.00 s nahi. Trace mein instance 2 ki stale membership dikh rahi hai. Is run mein retry aur doosre instance ki death nahi dikhayi gayi.",
+           choiceExplanations: ["Timeline mein crash aur routing update ke beech request dead instance tak pahunch chuki thi.","Given removal time 1.40 s hai, 1.00 s nahi.","Trace mein instance 2 ki stale membership dikh rahi hai.","Is run mein retry aur doosre instance ki death nahi dikhayi gayi."] },
         },
         {
           clock: 'ek aur cheez: dobara koshish',
@@ -291,16 +271,11 @@ SD.registerLevels('sdd-resil', [
           say: 'Socho tum maalik ho.',
           ask: {
             q: 'Generator ka test kab karoge?',
-            choices: [
-              'Din mein, jab main khud saamne hoon, thodi der ke liye — aur switch wapas karne ka tareeka haath mein ho',
-              'Kabhi nahi — generator naya hai, chalega hi',
-              'Jab asli mein bijli jaayegi, tab dekh lenge',
-              'Raat ko, jab clinic band ho aur koi dekh na raha ho',
-            ],
+            choices: ["Nigrani mein chhota test; rollback pehle verify karo","Poora clinic load laga kar seedha stress test karo","Night shift mein test; monitoring baad mein jodo","Maintenance ke bina test ko outage tak taal do"],
             answer: 0,
             hint: 'Agar test mein generator na chale, toh generator ko turant kaun sambhalega? Raat ko koi hoga?',
-            explain: 'Kami tab dhoondho jab tum tayyar ho: din mein, saamne khade hokar, chhoti der ke liye. Warna kami tumhe dhoondh legi — raat 2 baje.',
-          },
+            explain: "Controlled test mein observer, limited exposure aur pehle se workable recovery chahiye. Full exposure initial hypothesis test ke liye zaroori nahi. Kam traffic rollback aur observation ka substitute nahi hai. Real outage par pehli recovery practice karna avoidable uncertainty chhodta hai.",
+           choiceExplanations: ["Controlled test mein observer, limited exposure aur pehle se workable recovery chahiye.","Full exposure initial hypothesis test ke liye zaroori nahi.","Kam traffic rollback aur observation ka substitute nahi hai.","Real outage par pehli recovery practice karna avoidable uncertainty chhodta hai."] },
         },
         {
           title: '4. In cheezon ke naam',
@@ -341,26 +316,16 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Humare paas har service ke 3 instances hain. Phir chaos testing ki kya zaroorat?"',
-        choices: [
-          '3 instances ek daava hain ki ek ke jaane se kuch nahi hoga. Yeh daava tabhi sach hai jab load balancer mare hue instance ko pehchaan le (health check) aur giri hui request dobara bheji jaaye (retry). In mein se kuch na ho, toh pata incident mein chalta hai. Chaos testing isi daave ko pehle se, chhote daayre mein, parakh leti hai',
-          'Koi zaroorat nahi — 3 instances kaafi hain',
-          'Chaos testing sirf Netflix jaisi badi companies ke liye hai',
-          'Chaos testing se instances aur mazboot ho jaate hain',
-        ],
+        choices: ["Replica count ke saath failover path bhi parakho","Teen replicas ko failover ka complete proof maano","Health endpoint pass ho toh fault test chhod do","Extra replica jodo; recovery behavior wahi chhodo"],
         answer: 0,
-        explain: 'Lab: 3 instances, health check nahi → 201 fail (87.44% safal). Health check ke saath → 44–46 fail. Health check + retry → 0 fail.',
-      },
+        explain: "Redundancy tab kaam aati hai jab detection, routing, capacity aur safe retry behavior failure mein sahi chalein. Replica count behavior ka evidence nahi hai. Probe success business request recovery prove nahi karta. Capacity badhana stale routing ya unsafe retry ko solve nahi karta.",
+       choiceExplanations: ["Redundancy tab kaam aati hai jab detection, routing, capacity aur safe retry behavior failure mein sahi chalein.","Replica count behavior ka evidence nahi hai.","Probe success business request recovery prove nahi karta.","Capacity badhana stale routing ya unsafe retry ko solve nahi karta."] },
       {
         q: '"Chaos Monkey kya karta hai — aur production mein kyun?"',
-        choices: [
-          'Chaos Monkey production mein chalte instances ko random tareeke se band karta hai. Maqsad: instance ka jaana itni aam baat ban jaaye ki har team apni service aisi banaye jo instance ke jaane ko seh le. Production mein isliye, kyunki asli traffic, asli settings aur asli dependencies wahin hoti hain',
-          'Yeh ek monitoring tool hai jo errors ginta hai',
-          'Yeh hackers ko rokta hai',
-          'Yeh servers ko tez karta hai',
-        ],
+        choices: ["Random instance termination se recovery parakhna","Request traces se latency bottleneck nikaalna","Error thresholds par traffic ko rate-limit karna","Dependency responses mein latency inject karna"],
         answer: 0,
-        explain: 'Chaos Monkey ke README ke mutabiq yeh production ke instances ko random tareeke se terminate karta hai. Shuruaat phir bhi staging se, aur chhote daayre se karo (level 4).',
-      },
+        explain: "Netflix Chaos Monkey ka documented scope production instances ko randomly terminate karna hai; experiment controls alag chahiye. Tracing observation hai, instance termination nahi. Rate limiting overload control hai. Latency injection useful fault hai, par Chaos Monkey termination se alag capability hai.",
+       choiceExplanations: ["Netflix Chaos Monkey ka documented scope production instances ko randomly terminate karna hai; experiment controls alag chahiye.","Tracing observation hai, instance termination nahi.","Rate limiting overload control hai.","Latency injection useful fault hai, par Chaos Monkey termination se alag capability hai."] },
     ],
   },
   success: [

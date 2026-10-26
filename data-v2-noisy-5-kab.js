@@ -97,16 +97,11 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
             (Teen run mein pehli line ke fail: 354–377 (472 mein se).) Baari-baari ke saath autoscaling ka kaam sirf yeh reh gaya ki A ko zyada mile: A ki 2,162 ki jagah 3,058 requests hui.`,
           ask: {
             q: 'Bheed 2 s par aayi. Autoscaler 3 second dekhta hai, phir machine 5 second mein uthti hai. Us 8 second mein shaant tenants ko kaun bachayega?',
-            choices: [
-              'Isolation — hadd, baari ya alag khidki. Yeh usi pal kaam karti hai jab bheed aati hai. Autoscaling uske baad jagah badhata hai',
-              'Koi nahi — 8 second sehna hi padega',
-              'Autoscaler ko 0 second par set kar do',
-              'Shaant tenants ko retry karne ko bol do',
-            ],
+            choices: ["Immediate admission/isolation; scale capacity baad mein aayegi","Scale metrics polling zero karo; boot delay bhi zero hoga","Quiet clients retries badhaayein; queue apne aap fair hogi","Caller deadline badhao; competing backlog same rakho"],
             answer: 0,
             hint: 'Table ki doosri line dekho: wahan autoscaling thi hi nahi. Shaant tenants ke kitne fail hue?',
             explain: 'Isolation <b>abhi</b> bachati hai; autoscaling <b>thodi der baad</b> jagah banata hai. Pehle isolation, uske upar autoscaling — uske badle nahi.',
-          },
+           choiceExplanations: ["Isolation <b>abhi</b> bachati hai; autoscaling <b>thodi der baad</b> jagah banata hai. Pehle isolation, uske upar autoscaling — uske badle nahi.","Detection interval hataane se machine/application startup time vanish nahi hota.","More retries overloaded shared queue ko aur pressure deti hain.","Longer deadlines retained work badha sakti hain; tenant service share isolate nahi karti."] },
         },
         {
           title: '3. Jab koi shor nahi kar raha',
@@ -168,15 +163,10 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
       ],
       observe: {
         q: 'Pehli line mein autoscaling thi, aur scale ke baad B aur C ka ek bhi error nahi aaya. Phir scale se pehle 472 mein se 354 kyun fail hue?',
-        choices: [
-          'Bheed 2 s par aayi aur naye workers 10.1 s par. Us beech sab ek hi line mein the, aur line A ki bheed se bhari thi',
-          'Autoscaler kharab tha',
-          'B aur C ne apni hadd tod di',
-          'Naye workers purane workers se dheeme the',
-        ],
+        choices: ["Scale-up se pehle shared backlog ne quiet requests delay ki","Autoscaler ne steady capacity ko permanently kam kiya","Quiet tenants ne own admission budget cross kiya tha","New workers slow the; post-scale success ignore karo"],
         answer: 0,
         explain: 'Autoscaling hamesha thodi der se aata hai. Doosri line dekho: baari-baari ke saath, bina kisi nayi machine ke, B aur C ka ek bhi error nahi.',
-      },
+       choiceExplanations: ["Autoscaling hamesha thodi der se aata hai. Doosri line dekho: baari-baari ke saath, bina kisi nayi machine ke, B aur C ka ek bhi error nahi.","Post-scale all quiet requests successful hona permanent capacity reduction hypothesis support nahi karta.","Stated quiet traffic burst origin nahi; shared noisy FIFO delay cause hai.","Failures pre-scale window mein thi; post-scale worker slowness timing match nahi."] },
       lesson: 'Autoscaling jagah ka ilaaj hai, padosi ka nahi. Pehle tenants ko alag karo; phir autoscaling ko jagah badhane do.',
     },
 
@@ -194,15 +184,10 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
       ],
       observe: {
         q: '"Kam zaroori" karne par users ka jawab 141 ms se 42 ms ho gaya — par 22 ms nahi. Baaki farak kahan se aa raha hai?',
-        choices: [
-          'Job ka jo tukda worker par chadh chuka hai, us tukde ko beech mein roka nahi ja sakta. User ko us tukde ke 100 ms khatam hone tak rukna padta hai. 1 worker ki hadd se baaki 3 workers hamesha users ke liye khaali rehte hain',
-          '"Kam zaroori" wali setting kaam hi nahi karti',
-          'Users zyada requests bhejne lage',
-          'Database dheema ho gaya',
-        ],
+        choices: ["Running job chunk nonpreemptive; priority sirf next pick hai","Low priority label ignored; scheduler ne ranking nahi badli","User arrival rate suddenly job duration se double hua","Database latency rose; worker scheduling ka role nahi"],
         answer: 0,
         explain: '"Pehle kaun" (priority) sirf yeh tay karta hai ki agla kaam kaunsa uthega. Chalte kaam ko priority nahi rokti. Isliye lambe kaam ko "kam zaroori" ke saath <b>workers ki hadd</b> bhi chahiye.',
-      },
+       choiceExplanations: ["\"Pehle kaun\" (priority) sirf yeh tay karta hai ki agla kaam kaunsa uthega. Chalte kaam ko priority nahi rokti. Isliye lambe kaam ko \"kam zaroori\" ke saath <b>workers ki hadd</b> bhi chahiye.","Priority effective ho sakti hai phir bhi running chunk interrupt na ho.","Given comparison same input load use karta hai; unexplained traffic change assume mat karo.","Measured delay shared nonpreemptive worker chunk se explain hai; DB slowdown evidence nahi."] },
       lesson: 'Background job ke liye do cheezein saath: kam zaroori, aur workers ki hadd. Raat ko chalana madad karta hai — par "raat" bhi kisi ka din hota hai.',
     },
 
@@ -234,37 +219,22 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
     questions: [
       {
         q: '"Multi-tenant SaaS hai. Ek tenant ke bulk import se doosre tenants ke requests timeout ho jaate hain. Tum autoscaling ka sujhaav doge?"',
-        choices: [
-          'Akela autoscaling nahi. Nayi machines pehchaan + boot ke baad aati hain; us beech sab ek hi line mein hain. Pehle tenants ko alag karo (har tenant ki apni line, baari-baari; upar se ek hadd), phir autoscaling ko jagah badhane do',
-          'Haan — bas autoscaling ka threshold kam kar do',
-          'Us tenant ko block kar do',
-          'Timeout badha do',
-        ],
+        choices: ["Bound tenant queues/concurrency; scale for sustained demand","Autoscaler threshold lower; queue sharing unchanged rakho","Bulk tenant permanent block; imports support hata do","Caller timeout badhao; global FIFO intact rehne do"],
         answer: 0,
         explain: 'Lab: ek line + autoscaling → naye workers 10.1 s par, us se pehle shaant tenants ki 472 mein se 354 fail. Baari-baari (autoscaling ke bina) → 814 mein se 0.',
-      },
+       choiceExplanations: ["Lab: ek line + autoscaling → naye workers 10.1 s par, us se pehle shaant tenants ki 472 mein se 354 fail. Baari-baari (autoscaling ke bina) → 814 mein se 0.","Detection/boot gap phir bhi rehta hai; immediate isolation ka replacement nahi.","Temporary emergency block ho sakta hai, par legitimate tenant workload ko fair capacity chahiye.","Longer timeout quiet tenant ki service share nahi badhaata."] },
       {
         q: '"Dashboard par har tenant apni hadd ke andar hai, phir bhi sabko latency badhi hui dikh rahi hai. Kaunsa tenant noisy hai?"',
-        choices: [
-          'Shayad koi nahi. Agar sabka jod service ki chhat se upar hai, toh yeh capacity ki samasya hai. Isolation takleef baant sakti hai, jagah nahi bana sakti — jagah badhani padegi (ya kam zaroori kaam girana)',
-          'Jo tenant sabse zyada bhej raha hai, wahi noisy hai — use block karo',
-          'Hadd aadhi kar do',
-          'Latency ka metric galat hoga',
-        ],
+        choices: ["Total admitted demand vs effective shared capacity maapo","Largest tenant block; allowed traffic ko abuse maan lo","All per-tenant budgets halve; cause diagnose mat karo","Latency panel ignore; within-limit users slow nahi ho sakte"],
         answer: 0,
         explain: 'Lab: teen tenants, har ek 80/s (hadd 80), jod 240, chhat 200. Har niyam mein aadhi requests ko ~846 ms lage; baari-baari ne fail barabar kiye (2% har ek), ghataye nahi.',
-      },
+       choiceExplanations: ["Lab: teen tenants, har ek 80/s (hadd 80), jod 240, chhat 200. Har niyam mein aadhi requests ko ~846 ms lage; baari-baari ne fail barabar kiye (2% har ek), ghataye nahi.","Individually valid budgets ka sum capacity se zyada ho sakta; largest tenant abusive zaroori nahi.","Admission reduction temporary relief de sakti hai, but total demand/cost diagnose aur budgets justify karo.","Rate per tenant allowed hona latency/capacity sufficient hone ka proof nahi."] },
       {
         q: '"Ek maintenance job ko humne low priority kar diya, phir bhi users ko latency spike dikhte hain. Kyun?"',
-        choices: [
-          'Priority sirf agla kaam chunti hai; chalte hue lambe kaam ko nahi rokti. Job ke workers par hadd lagao (jaise zyada se zyada 1), ya job ke tukde chhote karo, ya job ko kam bheed wale waqt par le jao',
-          'Low priority kaam nahi karti',
-          'Users ki priority aur badha do',
-          'Job ko aur workers de do taaki jaldi khatam ho',
-        ],
+        choices: ["Long running chunks bound karo; job concurrency isolate","User priority higher; running chunks ko same rehne do","Job workers badhao; shared resources pehle jaise rakho","Background retries badhao; pending work jaldi refill karo"],
         answer: 0,
         explain: 'Lab: users ki line mein → 141 ms. Kam zaroori → 42 ms. Kam zaroori + 1 worker → 22 ms (job aadhi raftaar par).',
-      },
+       choiceExplanations: ["Lab: users ki line mein → 141 ms. Kam zaroori → 42 ms. Kam zaroori + 1 worker → 22 ms (job aadhi raftaar par).","Next-pick priority nonpreemptive running work interrupt nahi kar sakti.","More concurrent jobs quiet-user reserved capacity aur ghata sakte hain.","Retry concurrency contention aur queue pressure badha sakti hai."] },
     ],
   },
   success: [

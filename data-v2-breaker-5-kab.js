@@ -81,7 +81,7 @@ SD.registerLevels('sdd-resil', [
         {
           text: 'Purane mobile app ki requests recs-service par 400 Bad Request laa rahi hain.',
           bin: 'other',
-          explain: 'Dependency bimaar nahi hai. Client ki galti hai. Client theek karo, ya app-api par request pehle validate karo. 4xx ko kabhi failure mat gino — lab mein gina toh 90 theek requests mein se 87 roki gayi.',
+          explain: 'Dependency bimaar nahi hai. Client ki galti hai. Client theek karo, ya app-api par request pehle validate karo. Is lab ke expected client 4xx ko dependency failure mat gino; production classifier endpoint contract se chuno — lab mein gina toh 90 theek requests mein se 87 roki gayi.',
         },
         {
           text: 'Apne hi process ke andar ek function call exception phenkta hai.',
@@ -120,16 +120,11 @@ SD.registerLevels('sdd-resil', [
             </table></div>`,
           ask: {
             q: 'recs-service par sirf retry laga hai, breaker nahi. recs-service kai minute se bimaar hai. Retry kya karega?',
-            choices: [
-              'Har request bimaar recs-service ko ek ke bajay kai baar poochhegi. Bimaar service par bojh aur badhega',
-              'Retry recs-service ko theek kar dega',
-              'Bojh kam hoga, kyunki retry ruk-ruk ke bhejta hai',
-              'Retry apne aap breaker ban jaata hai',
-            ],
+            choices: ["Multiple attempts sick dependency ka load badha sakti hain","Backoff dependency ki processing capacity badha deta hai","Retry failures dekh kar shared circuit automatically kholta","Retry har caller ko queue se pehle reject kar deta hai"],
             answer: 0,
             hint: 'Retry har fail hui request ko dobara bhejta hai. Agar har request fail ho rahi ho, toh calls ki ginti kya hogi?',
             explain: 'Retry <b>ek blip</b> ke liye hai: wahi request dobara bhejo, chal jaayegi. Dependency lagataar bimaar ho toh har request kai baar jaati hai, aur bimaar service par bojh badhta hai. Aise haal mein breaker chahiye: pichhli calls dekh ke poochhna hi band kar do.',
-          },
+           choiceExplanations: ["Retry <b>ek blip</b> ke liye hai: wahi request dobara bhejo, chal jaayegi. Dependency lagataar bimaar ho toh har request kai baar jaati hai, aur bimaar service par bojh badhta hai. Aise haal mein breaker chahiye: pichhli calls dekh ke poochhna hi band kar do.","Backoff attempts ko space karta hai, dependency ki capacity nahi badhata.","Retry loop aur shared breaker state alag mechanisms hain.","Local retry admission control ya global load shedding nahi."] },
         },
         {
           title: '2. Breaker kab NAHI lagana?',
@@ -137,7 +132,7 @@ SD.registerLevels('sdd-resil', [
             <div class="dr-scroll"><table>
               <tr><th>Situation</th><th>Breaker kyun nahi</th><th>Kya karein</th></tr>
               <tr><td>Kabhi-kabhi ek random blip</td><td>Fail ka hissa bahut chhota — breaker girega hi nahi</td><td>Retry + jitter</td></tr>
-              <tr><td>Client 400 bhej raha hai</td><td>Dependency bimaar nahi, client ki galti hai</td><td>Client theek karo ya request validate karo. 4xx kabhi mat gino</td></tr>
+              <tr><td>Client 400 bhej raha hai</td><td>Dependency bimaar nahi, client ki galti hai</td><td>Client theek karo ya request validate karo. Is lab ke expected client 4xx exclude karo</td></tr>
               <tr><td>Apne process ka function exception de raha hai</td><td>Remote dependency nahi hai, exception ek bug hai</td><td>Code theek karo</td></tr>
               <tr><td>Endpoint din mein bahut kam baar chalta hai</td><td>Faisla karne jitne nateeje hi nahi aate</td><td>Timeout kaafi hai</td></tr>
               <tr><td>Tumhari apni service overload hai</td><td>Dependency theek hai, dikkat tumhari service mein hai</td><td>Rate limiting, load shedding ya scaling</td></tr>
@@ -161,16 +156,11 @@ SD.registerLevels('sdd-resil', [
           say: 'Ek scenario. recs-service har roz deploy ke dauraan kuch minute 503 deti hai. Breaker theek samay par khulta hai aur users ko cache milta hai.<br><br>Dikkat: deploy khatam ho jaata hai, recs-service theek ho jaati hai, phir bhi breaker der tak OPEN rehta hai. Users ko purana cache milta rehta hai.',
           ask: {
             q: 'Kaunsi setting ghatani chahiye?',
-            choices: [
-              'OPEN kitni der — kam karo, taaki trial calls jaldi jaayein',
-              'Fail limit (%) — badha do',
-              'Kam se kam calls — badha do',
-              'Timeout — badha do',
-            ],
+            choices: ["Open cooldown ghatao; controlled probes jaldi allow karo","Failure threshold badhao; current cooldown same rakho","Minimum sample count badhao; current cooldown same rakho","Dependency timeout badhao; current cooldown same rakho"],
             answer: 0,
             hint: 'Dikkat girne mein nahi hai, wapas uthne mein hai. Wapas uthne ka waqt kaunsa timer tay karta hai?',
             explain: 'OPEN ka timer. Jab tak timer poora nahi hota, trial call jaati hi nahi. Isliye breaker ko service ke theek hone ki khabar nahi milti. Lab mein yahi dikha: service 5.6 s par theek, pehla live jawab 7.0 s par. (Bahut chhota bhi mat karo: bimaar service ko saans chahiye.)',
-          },
+           choiceExplanations: ["OPEN ka timer. Jab tak timer poora nahi hota, trial call jaati hi nahi. Isliye breaker ko service ke theek hone ki khabar nahi milti. Lab mein yahi dikha: service 5.6 s par theek, pehla live jawab 7.0 s par. (Bahut chhota bhi mat karo: bimaar service ko saans chahiye.)","Failure threshold closed-to-open decision ko affect karta hai, already-open wait ko nahi.","Sample gate startup/statistical decision ke liye hai; open cooldown nahi badalta.","Longer dependency wait probe scheduling ko earlier nahi karegi."] },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> breaker sirf ek dikkat ka ilaaj hai — saamne wali service <b>kuch der tak lagataar</b> bimaar hai.<br>Ek blip ke liye retry. Ek dheemi call ke liye timeout. Apni overload ke liye rate limiting. Aur breaker ke saath hamesha timeout aur fallback.',
@@ -198,16 +188,11 @@ har endpoint ka alag breaker              150        150            0           
       ],
       observe: {
         q: 'Hisse (b): /recs band tha, /price bilkul theek. "poore B ka ek breaker" wali line mein 150 mein se 144 /price requests kyun roki gayi?',
-        choices: [
-          '/recs ki failures ne us ek breaker ko OPEN kar diya. OPEN breaker recs-service (B) ko jaane wali har call rokta hai — /price ki bhi, jo bilkul theek thi',
-          '/price bhi chupke se bimaar ho gaya tha',
-          'Fallback cache mein /price ka jawab nahi tha',
-          'Breaker ki window chhoti thi, isliye ginti galat ho gayi',
-        ],
+        choices: ["Shared breaker ko recs ne khola; healthy price bhi block hua","Price dependency bhi down thi; recs se scope alag tha","Cache miss hi breaker open karne ka configured signal tha","Short window ne successful price calls ko failures bana diya"],
         answer: 0,
         explain: 'Ek breaker = ek ginti. /recs ki failures ne breaker ki window bhar di, breaker OPEN hua, aur OPEN mein <b>recs-service ki har call</b> ruki. Har endpoint ka alag breaker lagane par /price ka apna breaker CLOSED raha: 150 mein se 150 safal.',
-      },
-      lesson: 'Sirf dependency ki bimaari gino: <b>5xx, timeout, connection error</b> — 4xx nahi (warna 90 mein se 87 theek requests roki). Aur breaker <b>har endpoint / operation ka alag</b> rakho — poori service ka ek nahi (warna 150 mein se 144 roki).',
+       choiceExplanations: ["Ek breaker = ek ginti. /recs ki failures ne breaker ki window bhar di, breaker OPEN hua, aur OPEN mein <b>recs-service ki har call</b> ruki. Har endpoint ka alag breaker lagane par /price ka apna breaker CLOSED raha: 150 mein se 150 safal.","Stated price endpoint healthy tha; grouped guard ne request us tak pahunchne hi nahi di.","Fallback cache miss failure-domain grouping ka root cause nahi.","Window age responses ke success flags ko invert nahi karti."] },
+      lesson: 'Is lab mein dependency ki bimaari <b>5xx, timeout, connection error</b> se classify hui; expected client 4xx include karne se healthy traffic block hua. Production mein status semantics endpoint contract se chuno. Breaker ka scope <b>shared failure domain</b> ho: independent endpoints ko isolate karo; same infrastructure failure share karein toh grouping bhi valid ho sakti hai. Har URL ko mandatory separate breaker dena universal rule nahi.',
     },
 
     /* ---------------- 4. galti 3: khulne ke baad poora traffic ek saath ---------------- */
@@ -231,15 +216,10 @@ Sirf ek (forced) outage ho toh B t=7 s par poora theek (3 s band + 3 s thanda).`
       ],
       observe: {
         q: '"half-open: 3 trial calls" wali line dekho. Teeno trial calls safal hui aur breaker CLOSED hua. Phir bhi recs-service (B) 3 baar phir giri — naive jitna hi. Kyun?',
-        choices: [
-          'Trial calls sirf poochhti hain "recs-service zinda hai?". CLOSED hote hi poore 200 requests/second ek saath gaye, aur recs-service abhi thandi thi — itna bojh nahi utha saki',
-          'Trial calls ki ginti kam thi — zyada rakhte toh recs-service nahi giri',
-          'recs-service mein koi naya bug aa gaya tha',
-          'Breaker ne trial calls ginna hi chhod diya',
-        ],
+        choices: ["Few probes health dikhate; full-load readiness prove nahi","Three probes threshold se kam; healthy result ignore hua","Probe success cache tha; remote service execute nahi hui","Half-open ne result count na kiya; state open hi rahi"],
         answer: 0,
         explain: 'Trial calls "zinda hai?" ki jaanch hain, "poora bojh utha sakti hai?" ki nahi. Is run mein naive aur 3 trial calls ek jaise bure the: 3 baar giri, 19.6 s aur 19.9 s, dono mein breaker 7 baar khula. Sirf slow start ne recs-service ko garam hone ka waqt diya: 0 baar giri, 7.0 s. (Is lab mein trial calls ki ginti badal ke nahi dekha. Par dikkat ginti ki nahi hai: trials bojh ki jaanch hain hi nahi.)',
-      },
+       choiceExplanations: ["Trial calls \"zinda hai?\" ki jaanch hain, \"poora bojh utha sakti hai?\" ki nahi. Is run mein naive aur 3 trial calls ek jaise bure the: 3 baar giri, 19.6 s aur 19.9 s, dono mein breaker 7 baar khula. Sirf slow start ne recs-service ko garam hone ka waqt diya: 0 baar giri, 7.0 s. (Is lab mein trial calls ki ginti badal ke nahi dekha. Par dikkat ginti ki nahi hai: trials bojh ki jaanch hain hi nahi.)","Three configured probes successful thi aur closed transition hua; failure later surge par aayi.","Lab remote successful trial calls record karta hai; cache-hit evidence nahi.","Stated breaker closed hua; issue recovery ramp, dropped probe records nahi."] },
       lesson: 'Breaker CLOSED hone par poora traffic ek saath mat bhejo. Trial calls "zinda hai?" poochhti hain; <b>slow start</b> (3 second mein 10% se 100%) service ko garam hone deta hai. Lab: 3 trial calls akele — recs-service 3 baar phir giri, 283 live jawab. Trials + slow start — 0 baar giri, 1666 live jawab. (Istio ka <code>loadBalancer.warmup</code> naye endpoints ke liye yahi slow start hai.)',
     },
 
@@ -302,37 +282,22 @@ Sirf ek (forced) outage ho toh B t=7 s par poora theek (3 s band + 3 s thanda).`
     questions: [
       {
         q: '"Ek purane mobile app version ne 400 bhejna shuru kiya, aur usi din hamara breaker sabke liye khul gaya. Kaise?"',
-        choices: [
-          'Breaker 4xx ko bhi failure gin raha tha. Purane app ki 400s ne fail ka hissa hadd ke upar pahuncha diya, breaker OPEN hua, aur naye app ke users ki theek requests bhi ruk gayi. Ilaaj: sirf 5xx, timeout aur connection error gino',
-          'Dependency down thi, 400 sirf dikhawa tha',
-          'Breaker ka OPEN timer bahut chhota tha',
-          'Naye app mein bug hoga',
-        ],
+        choices: ["Caller 400s ko outages gina; healthy traffic bhi block hua","400s transport failures hain; dependency restart zaroori","Cooldown chhota tha; 400 response code ka role nahi","New clients slow the; breaker sirf latency sample leta"],
         answer: 0,
         explain: 'Lab: 4xx bhi failure gino toh 90 theek requests mein se sirf 3 safal, 87 roki, breaker 3 baar khula. Sirf 5xx + timeout gino toh 90 / 90 safal. 400 client ki galti hai, dependency ki bimaari nahi.',
-      },
+       choiceExplanations: ["Lab: 4xx bhi failure gino toh 90 theek requests mein se sirf 3 safal, 87 roki, breaker 3 baar khula. Sirf 5xx + timeout gino toh 90 / 90 safal. 400 client ki galti hai, dependency ki bimaari nahi.","400 malformed/client-request semantics ho sakti hain; server outage automatically prove nahi.","Failure ratio mein inappropriate 4xx inclusion hi shown trigger hai.","This scenario outcomes count karta hai; new clients ki latency stated cause nahi."] },
       {
         q: '"Retry aur circuit breaker saath kaise chalte hain?"',
-        choices: [
-          'Retry ek request ke blip ke liye hai: jitter ke saath, do-teen koshish. Breaker lagataar bimaar dependency ke liye hai. Breaker OPEN ho toh retry bhi band, warna bimaar service par bojh phir badhega',
-          'Dono ek hi kaam karte hain, ek kaafi hai',
-          'Breaker OPEN ho tab bhi retry chalte rehne chahiye, taaki jaldi pata chale',
-          'Retry breaker ko CLOSED rakhta hai',
-        ],
+        choices: ["Retry bounded rakho; open breaker par attempts stop karo","Retry open breaker ke across chalao; har retry probe ho","Retry ko breaker state reset karne ka access de do","Breaker lagte hi transient errors par retry hata do"],
         answer: 0,
-        explain: 'Retry ek blip bacha leta hai (Retries level). Dependency lagataar bimaar ho toh har request kai baar jaati hai. Breaker ke saath bimaar service ko calls 300 se 30 reh gayi.',
-      },
+        explain: "Retry request-level transient failure ke liye, breaker repeated dependency failure ke liye. Composition semantics explicit rakho: per-attempt breaker ya whole-operation breaker alag statistics dete hain. Open-circuit rejection ko blindly retry na karo; attempts, deadlines aur recovery probes bounded rakho.",
+       choiceExplanations: ["Retry request-level transient failure ke liye, breaker repeated dependency failure ke liye. Composition semantics explicit rakho: per-attempt breaker ya whole-operation breaker alag statistics dete hain. Open-circuit rejection ko blindly retry na karo; attempts, deadlines aur recovery probes bounded rakho.","Uncontrolled retries open protection bypass kar sakti hain; half-open probes bounded state machine se hon.","Client attempts ko shared breaker healthy state assume karne ka adhikaar nahi.","Bounded safe retries blips mein useful reh sakti hain; composition carefully choose karo."] },
       {
         q: '"payment-service ke saare endpoints (charge, refund, status) ke liye ek hi breaker rakhein?"',
-        choices: [
-          'Nahi. Har endpoint / operation ka alag breaker. Ek endpoint ki failures poore breaker ko OPEN kar dengi, aur theek endpoints bhi ruk jaayenge',
-          'Haan, ek hi — settings kam rehti hain',
-          'Haan, bas fail limit bahut upar rakho',
-          'Nahi, har user ka alag breaker',
-        ],
+        choices: ["Shared failure domains ke hisaab se operation groups chuno","Settings kam rakhne ke liye poori service ek group rakho","High threshold lagao; operation coupling ignore kar do","Har customer ka breaker rakho; dependency scope ignore karo"],
         answer: 0,
-        explain: 'Lab: /recs band tha, /price theek. Poore B ka ek breaker → 150 theek /price requests mein se 144 roki gayi. Har endpoint ka alag breaker → 0 roki.',
-      },
+        explain: "Har endpoint ko mandatory alag breaker dena universal rule nahi. Charge, refund, status ke failure modes/capacity dependencies dekho; independent operation ko unhealthy neighbor se isolate karo. Instance count, sample sufficiency aur shared infrastructure coupling bhi decide karo.",
+       choiceExplanations: ["Har endpoint ko mandatory alag breaker dena universal rule nahi. Charge, refund, status ke failure modes/capacity dependencies dekho; independent operation ko unhealthy neighbor se isolate karo. Instance count, sample sufficiency aur shared infrastructure coupling bhi decide karo.","Single breaker suitable ho sakta hai jab operations same failure domain share karein; independent failure modes par healthy operations block honge.","High threshold grouping ka coupling nahi hataata aur real outage detection delay kar sakta hai.","Per-user history sparse/high-cardinality ho sakti hai; dependency capacity protection se scope match karo."] },
     ],
   },
   success: [
@@ -343,7 +308,7 @@ Sirf ek (forced) outage ho toh B t=7 s par poora theek (3 s band + 3 s thanda).`
   cards: [
     { front: 'Breaker, retry ya timeout — kaunsa kab?', back: 'Ek call dheemi → <b>timeout</b>. Kabhi-kabhi ek blip → <b>retry</b> (jitter ke saath). Dependency lagataar bimaar → <b>breaker</b> (timeout aur fallback ke saath). Lab: timeout se /profile 360 → 0 fail; breaker se bimaar service ko calls 300 → 30.' },
     { front: 'Breaker kab NAHI lagate?', back: 'Random blip (retry) · 4xx (client theek karo) · apne process ka function (bug) · bahut kam calls wala endpoint (timeout) · apni service overload (rate limiting / load shedding / scaling).' },
-    { front: 'Kaunsi teen galtiyan breaker ko hi outage bana deti hain?', back: '1) 4xx ginna: 90 theek requests mein se 87 roki. 2) Poori service ka ek breaker: 150 mein se 144 roki. 3) Khulte hi poora traffic: service 3 baar phir giri. Ilaaj: sirf 5xx / timeout / connection error gino · har endpoint ka alag breaker · trials + slow start.' },
+    { front: 'Kaunsi teen galtiyan breaker ko hi outage bana deti hain?', back: '1) 4xx ginna: 90 theek requests mein se 87 roki. 2) Poori service ka ek breaker: 150 mein se 144 roki. 3) Khulte hi poora traffic: service 3 baar phir giri. Ilaaj: sirf 5xx / timeout / connection error gino · independent failure domains ke separate breakers · bounded trials + recovery ramp.' },
     { front: 'Trial calls kaafi kyun nahi?', back: 'Trial calls poochhti hain "zinda hai?", "poora bojh utha sakti hai?" nahi. Lab: naive mein recs-service 3 baar giri (19.6 s), 3 trial calls mein bhi 3 baar (19.9 s). Trials + slow start: 0 baar, 7.0 s, 1666 live jawab.' },
     { front: 'States ka asli kram?', back: 'CLOSED → OPEN → HALF-OPEN (phir CLOSED, ya ek trial fail toh phir OPEN). HALF-OPEN = aadhi requests nahi, sirf kuch trial calls. OPEN = calls band.' },
   ],

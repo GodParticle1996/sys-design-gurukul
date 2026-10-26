@@ -78,16 +78,11 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
           vars: { setup: 'dono sawaal DB ko chhute hi nahi', ready: '—', eps: 'pod-1 · pod-2 · pod-3', home: '—', orders: '—' },
           ask: {
             q: 'DB band hai. Ek /orders request pod-2 par pahunchti hai, aur ek /home request pod-1 par. Naye setup mein kya hoga?',
-            choices: [
-              '/orders ko pod-2 khud 503 dega (DB nahi mila). /home ko jawab milega: pod-1 theek hai aur traffic paa raha hai',
-              'Dono fail hongi — DB band hai',
-              'Dono safal hongi',
-              'Checker pod-2 ko restart kar dega',
-            ],
+            choices: ["/orders ko 503; /home ko healthy pod response","Dono 503; shared DB se readiness ab bhi fail hai","Dono 200; local probe DB outage ko fix karta hai","Pod-2 restart; request status liveness trigger hai"],
             answer: 0,
             hint: '/home ko kya chahiye? Aur naye setup mein pods "traffic bhejein?" par kya keh rahe hain?',
-            explain: 'Slow motion: <code>3.25 s /home ✓ (pod-1) /orders ✗ (pod-2: DB nahi mila)</code>. Jis page ko DB chahiye, sirf wahi page fail hua.',
-          },
+            explain: "Pod-local readiness traffic allow karti hai; DB-dependent handler failure apne request scope mein report karta hai. New setup readiness ko shared DB se decouple karta hai. Probe DB ko repair ya failed business work complete nahi karta. Business response status directly liveness restart count nahi hai.",
+           choiceExplanations: ["Pod-local readiness traffic allow karti hai; DB-dependent handler failure apne request scope mein report karta hai.","New setup readiness ko shared DB se decouple karta hai.","Probe DB ko repair ya failed business work complete nahi karta.","Business response status directly liveness restart count nahi hai."] },
         },
         {
           clock: '2.50–7.25 s',
@@ -116,16 +111,11 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
           vars: { setup: '/readyz DB se poochh ke + load balancer ka naya niyam', ready: '—', home: '—', orders: '—' },
           ask: {
             q: 'DB band hua. Teeno pods NOT READY. Ek /home request aayi. Naye niyam ke saath kya hoga?',
-            choices: [
-              'Load balancer /home request ko kisi bhi pod par bhej dega (koi READY nahi → sab ko bhejo). Pod theek hai, toh /home ✓',
-              '503 — koi READY pod nahi',
-              'Load balancer request ko DB ke theek hone tak rok ke rakhega',
-              'Teeno pods restart honge',
-            ],
+            choices: ["Lab fail-open rule se /home kisi pod par jaayegi","No-ready rule se lab router turant 503 dega","Router DB recovery tak request durably queue karega","Router teeno processes restart karke retry karega"],
             answer: 0,
             hint: 'Niyam dobara padho. Kitne pods READY hain? Tab load balancer kya karta hai?',
-            explain: 'Slow motion: <code>3.25 s /home ✓ (pod-1, fail open) /orders ✗ (pod-2, fail open: DB nahi mila)</code>. Is niyam ka naam: <b>fail open</b>.',
-          },
+            explain: "Configured lab fail-open all-unhealthy case mein endpoints use karta hai; DB-free /home still work kar sakti hai. Yeh fail-closed behavior hai, given new rule nahi. Lab router durable queue implement nahi karta. Balancer endpoint eligibility process restart nahi.",
+           choiceExplanations: ["Configured lab fail-open all-unhealthy case mein endpoints use karta hai; DB-free /home still work kar sakti hai.","Yeh fail-closed behavior hai, given new rule nahi.","Lab router durable queue implement nahi karta.","Balancer endpoint eligibility process restart nahi."] },
         },
         {
           clock: 'fail open',
@@ -156,16 +146,11 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
           vars: { setup: '/readyz yaad se (app har 2 s par DB se poochhta hai)', ready: '✗ ✗ ✗ (5.00 s se 9.00 s)', eps: 'koi nahi', home: '26 mein se 18 safal', orders: '26 mein se 13 safal' },
           ask: {
             q: 'DB 2.50 s par band hua, par pods 5.00 s par traffic se bahar hue. DB 7.50 s par aaya, par pods 9.00 s par wapas aaye. Der kahan se aayi?',
-            choices: [
-              'Yaad rakha jawab purana hota hai. App ne DB se 4.20 s par poochha, phir 8.20 s par. Beech mein /readyz wahi purana jawab deta raha, chahe DB ka haal badal chuka tha',
-              'Checker so gaya tha',
-              'DB dheere-dheere band hota hai',
-              'Load balancer ne jaan-boojh ke intezaar kiya',
-            ],
+            choices: ["Cached dependency sample purana serve ho raha tha","DB lifecycle fixed poll boundaries par hi badalti hai","Readiness responses ko TCP ne sequence mein roka","Checker ne app ka sampling interval khud badla"],
             answer: 0,
             hint: 'App DB se kab-kab poochhta hai? Aur beech ke waqt mein /readyz kya jawab deta hai?',
-            explain: 'Yaad 0 se 2 second purani ho sakti hai, aur checker ko agla sawaal poochhne mein 1 second tak aur lagta hai. Gadbad ka pata der se chalta hai — aur theek hone ka bhi. "Saare pods ek saath bahar" wali baat wahi rahi.',
-          },
+            explain: "refresh aur probe schedules alag hain; cached health state source change aur observed result mein delay laati hai. DB actual stop/recovery timestamps prompt mein fixed hain. No evidence transport ordering blockage ka hai. Application refresh schedule configured hai, checker override nahi.",
+           choiceExplanations: ["refresh aur probe schedules alag hain; cached health state source change aur observed result mein delay laati hai.","DB actual stop/recovery timestamps prompt mein fixed hain.","No evidence transport ordering blockage ka hai.","Application refresh schedule configured hai, checker override nahi."] },
         },
         {
           clock: 'paanchon setup',
@@ -217,16 +202,11 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
           vars: { when: 'pod shuru hone ke 5 s baad', boot: '8 s', restarts: '0', ready: '—' },
           ask: {
             q: '5.00 s par checker pehli baar poochhega "zinda ho?". App 8.00 s par khulega. Kya hoga?',
-            choices: [
-              'Port band hai → jawab nahi aayega → checker pod ko restart karega. Naya pod phir 8 second lega, aur 5 second baad phir yahi hoga',
-              'Checker 3 second aur intezaar karega',
-              'App jaldi khul jaayega',
-              'Kuch nahi — pehla sawaal maaf hota hai',
-            ],
+            choices: ["5 s par failed liveness; boot reset ho jaayega","Port pending ho toh checker automatically wait badhaayega","Initial failure startup ka success maana jaayega","Readiness liveness restart ko veto kar degi"],
             answer: 0,
             hint: 'Checker ko bahar se kya dikhta hai: "boot ho raha hai", ya bas "jawab nahi aaya"?',
-            explain: 'Slow motion: <code>5.00 s 🩺 zinda ho? ✗ (port band) → RESTART #1</code>. Checker ke liye "abhi khul raha hai" aur "atak gaya hai" ek jaise dikhte hain: dono mein jawab nahi aata.',
-          },
+            explain: "Given threshold/run mein first liveness failure boot se pehle restart karta hai; startup protection chahiye. Checker boot duration infer karke deadline extend nahi karta. Port closed response success nahi. Readiness liveness action ka veto nahi.",
+           choiceExplanations: ["Given threshold/run mein first liveness failure boot se pehle restart karta hai; startup protection chahiye.","Checker boot duration infer karke deadline extend nahi karta.","Port closed response success nahi.","Readiness liveness action ka veto nahi."] },
         },
         {
           clock: '0–25 s',
@@ -243,16 +223,11 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
           vars: { when: 'pod shuru hone ke 10 s baad', restarts: '0', ready: '8.00 s' },
           ask: {
             q: 'Ek din boot mein 12 second lage (DB migration, thandi cache, bhari machine). Setting wahi hai: 10 second baad se poochho. Kya hoga?',
-            choices: [
-              'Phir wahi loop: 10.00 s par port band → restart. Naya pod phir 12 second lega, aur 10 second baad phir restart',
-              'Checker khud 12 second tak ruk jaayega',
-              'Kuch nahi — 10 second kaafi hain',
-              'Pod READY ho jaayega, bas der se',
-            ],
+            choices: ["12 s boot se pehle 10 s probe; restart loop","10 s delay automatically 12 s adapt ho jaayegi","10 s par readiness true; boot background mein chalega","Initial delay har failed attempt par double hogi"],
             answer: 0,
             hint: '10.00 s par port khula hoga ya band? Aur checker ka niyam kya hai: kitne "nahi" par restart?',
-            explain: 'Slow motion: <code>10.00 s zinda ho? ✗ (port band) → RESTART #1</code>, <code>20.00 s → RESTART #2</code>. 25 s par pod abhi bhi boot ho raha hai. "Kitne second baad" ek andaaza hai — aur andaaza ek din galat hota hai.',
-          },
+            explain: "Fixed initial delay worst-case startup cover nahi karti; threshold/time budget ka adequate startupProbe use karo. InitialDelaySeconds adaptive setting nahi. App port unavailable par readiness magically pass nahi. Code/Kubernetes aisi exponential initial-delay policy nahi deta.",
+           choiceExplanations: ["Fixed initial delay worst-case startup cover nahi karti; threshold/time budget ka adequate startupProbe use karo.","InitialDelaySeconds adaptive setting nahi.","App port unavailable par readiness magically pass nahi.","Code/Kubernetes aisi exponential initial-delay policy nahi deta."] },
         },
         {
           clock: 'teesra sawaal',
@@ -314,16 +289,11 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
           vars: { app: 'turant band', lb: 'SIGTERM ke 1 s baad (2.00 s par)', old: '1.00 s par', fail: '?' },
           ask: {
             q: '1.00 s par SIGTERM aaya, aur pod-old usi pal band ho gaya. Load balancer ko khabar 2.00 s par milegi. Is beech pod-old ki baari wali requests ka kya hoga?',
-            choices: [
-              'Load balancer in requests ko pod-old par hi bhejega — load balancer ko abhi pata nahi. pod-old ka port band hai, toh requests fail hongi',
-              'Load balancer in requests ko khud pod-new par bhej dega',
-              'Requests 2.00 s tak ruki rahengi',
-              'pod-old dobara chalu ho jaayega',
-            ],
+            choices: ["Stale old endpoint par requests fail hongi","Signal aate hi LB cache synchronously purge hogi","Balancer har failed request new pod par replay karega","Endpoint update tak requests client par pause hongi"],
             answer: 0,
             hint: 'Load balancer ke hisaab se 1.00 s aur 2.00 s ke beech kitne pods hain?',
-            explain: 'Slow motion: <code>1.10 s #5 → pod-old ✗ (port band: connection refused)</code> aur <code>1.60 s #7 → pod-old ✗</code>. 14 requests mein se 2 fail.',
-          },
+            explain: "Signal receipt aur endpoint propagation simultaneous nahi; old process early exit race banata hai. Control-plane propagation time prompt mein 1 second hai. Automatic retry separate policy aur operation safety par depend hai. Client buffering is setup ka described behavior nahi.",
+           choiceExplanations: ["Signal receipt aur endpoint propagation simultaneous nahi; old process early exit race banata hai.","Control-plane propagation time prompt mein 1 second hai.","Automatic retry separate policy aur operation safety par depend hai.","Client buffering is setup ka described behavior nahi."] },
         },
         {
           clock: 'thoda ruk ke',
@@ -342,16 +312,11 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
           vars: { app: '2 s tak jawab, phir band', old: '3.00 s par', fail: '0' },
           ask: {
             q: 'SIGTERM ke baad kitni der tak jawab dete rehna kaafi hai?',
-            choices: [
-              'Us der se zyada, jitni der mein load balancer ko khabar pahunchti hai. Yahan khabar 1 second mein pahunchi: 0.5 second kam pada, 2 second kaafi tha',
-              'Hamesha 0.5 second',
-              'Jitna zyada utna achha — 10 minute',
-              'Der se farak nahi padta',
-            ],
+            choices: ["Measured propagation plus in-flight drain budget","Fixed 0.5 s; har platform same timing deta hai","Sirf DB timeout; endpoint propagation count na karo","Sirf process exit speed; slow shutdown bekaar hai"],
             answer: 0,
             hint: 'Table mein "pod-old band" aur "khabar pahunchi" ke samay milao. Kis row mein port khabar se pehle band hua?',
-            explain: 'Requests tab girti hain jab port khabar pahunchne se <b>pehle</b> band ho jaaye. Bahut lamba rukna bhi theek nahi: har deploy utna dheema ho jaata hai.',
-          },
+            explain: "Delay observed endpoint removal se lamba ho aur total grace window active work drain cover kare; universal number nahi. Lab mein 0.5 s removal delay se chhota tha. Endpoint updates aur request completion separate timing axes hain. Immediate exit stale traffic ko failed port tak bhej sakta hai.",
+           choiceExplanations: ["Delay observed endpoint removal se lamba ho aur total grace window active work drain cover kare; universal number nahi.","Lab mein 0.5 s removal delay se chhota tha.","Endpoint updates aur request completion separate timing axes hain.","Immediate exit stale traffic ko failed port tak bhej sakta hai."] },
         },
         {
           clock: 'asli raftaar',
@@ -384,15 +349,10 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
       ],
       observe: {
         q: 'Pehle do slow motion mein DB utni hi der band tha (2.50 s se 7.50 s). Pehle mein /home 26 mein se 10 baar safal hui, doosre mein 26 baar. Kya badla tha?',
-        choices: [
-          'Health ka jawab. Pehle mein dono sawaalon ka jawab DB se poochh ke aaya, toh DB ke saath teeno pods bahar gaye aur restart hue. Doosre mein jawab sirf pod ke apne haal se aaya, toh pods traffic paate rahe',
-          'Doosre mein DB tez tha',
-          'Doosre mein pods zyada the',
-          'Doosre mein requests kam thi',
-        ],
+        choices: ["Health handler local hua; DB outage ne pods nahi hataye","DB outage chhoti hui; app health handler same tha","Replica count badha; per-pod outage unchanged thi","Client retries badhi; probe state unchanged rahi"],
         answer: 0,
-        explain: 'DB dono mein 5 second band tha, aur /orders dono mein us dauraan fail hui. Farak sirf yeh tha ki DB ki gadbad health ke jawab mein thi ya nahi.',
-      },
+        explain: "Compared second run ka changed decision health dependencies hai; local health /home availability preserve karti hai. Outage duration same di gayi hai. Replica count is comparison mein same hai. Prompt health-policy difference highlight karta hai, retries nahi.",
+       choiceExplanations: ["Compared second run ka changed decision health dependencies hai; local health /home availability preserve karti hai.","Outage duration same di gayi hai.","Replica count is comparison mein same hai.","Prompt health-policy difference highlight karta hai, retries nahi."] },
       lesson: 'Health ka jawab pod ke apne haal se do. Shuruaat ke liye alag sawaal rakho. Band hote waqt khabar pahunchne tak jawab dete raho.',
     },
   ],
@@ -402,26 +362,16 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
     questions: [
       {
         q: '"Readiness probe mein database ka check rakhna chahiye ya nahi?"',
-        choices: [
-          'Yeh soch-samajh ke lene wala faisla hai. Agar DB saare pods ke liye ek hi hai, toh DB ki gadbad par saare pods ek saath traffic se bahar ho jaate hain — un pages ke liye bhi jinhe DB nahi chahiye. Behtar: readiness pod ka apna haal bataye, aur DB ki gadbad request ke jawab mein dikhe (503, ya circuit breaker). DB tabhi rakho jab DB ke bina app sirf error hi de sakta ho',
-          'Hamesha rakho — jitna zyada check, utna achha',
-          'Kabhi nahi — readiness probe hona hi nahi chahiye',
-          'Sirf liveness mein rakho',
-        ],
+        choices: ["Shared failure aur degraded routes dekhkar decide karo","Har shared dependency readiness mein jodte chalo","DB ko readiness se hata kar liveness mein rakho","Probe fast ho toh route-level semantics ignore karo"],
         answer: 0,
-        explain: 'Lab, DB band ke dauraan /home: readiness mein DB → 17.5–19.5% safal; dono shallow → 100%. Spring Boot ki documentation bhi yahi kehti hai: shared system ko readiness mein rakhna ek "judgement call" hai, aur liveness mein bilkul nahi.',
-      },
+        explain: "DB readiness useful ho sakti hai jab app DB ke bina kuch serve nahi karti; mixed routes mein correlated exclusion assess karo. More checks automatically safer traffic decisions nahi. Restart shared dependency ko repair nahi karta. Probe speed meaningful health contract ka substitute nahi.",
+       choiceExplanations: ["DB readiness useful ho sakti hai jab app DB ke bina kuch serve nahi karti; mixed routes mein correlated exclusion assess karo.","More checks automatically safer traffic decisions nahi.","Restart shared dependency ko repair nahi karta.","Probe speed meaningful health contract ka substitute nahi."] },
       {
         q: '"initialDelaySeconds se kaam chal jaata hai. Startup probe kyun chahiye?"',
-        choices: [
-          'initialDelaySeconds ek andaaza hai: jis din boot us andaaze se lamba chala, checker app ko khulne se pehle maar deta hai — baar-baar. Startup probe andaaza nahi lagata: app ke khulne tak poochhta rehta hai (failureThreshold × periodSeconds tak), aur pehle "haan" ke baad liveness apne tez niyam se shuru ho jaata hai',
-          'Startup probe tez hota hai',
-          'Startup probe ke bina pod chal hi nahi sakta',
-          'Dono ek hi cheez hain',
-        ],
+        choices: ["Bounded startup budget; pass ke baad normal probes","Adaptive unlimited boot wait; failure count optional","Fast liveness sampling; startup budget same rehta","Readiness bypass; app start se pehle traffic milta"],
         answer: 0,
-        explain: 'Lab: delay 10 s, boot 8 s → 0 restart. Wahi delay, boot 12 s → 2 restart, READY kabhi nahi. startupProbe (1 s × 30), boot 12 s → 0 restart, READY 12.1 s.',
-      },
+        explain: "StartupProbe success tak liveness/readiness gate karta hai, configured threshold-period budget ke andar. Startup budget finite hai; timeout/restart still possible hain. Startup protection sirf sampling speed change nahi. Startup ke pehle readiness gated hoti hai.",
+       choiceExplanations: ["StartupProbe success tak liveness/readiness gate karta hai, configured threshold-period budget ke andar.","Startup budget finite hai; timeout/restart still possible hain.","Startup protection sirf sampling speed change nahi.","Startup ke pehle readiness gated hoti hai."] },
     ],
   },
   success: [

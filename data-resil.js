@@ -1,3 +1,4 @@
+(() => {
 /* =====================================================================
    TRACK 4 — Scale & Resilience
    timeouts · retries · breaker · bulkhead · dlq · degrade · shedding ·
@@ -13,9 +14,9 @@ const T_TIMEOUT = [
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 > 5000) },
   { text: 'Timeout lagao — apne SLO se KAM',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.ms <= 200) },
-  { text: 'Ab p99 bounded hona chahiye',
+  { text: 'Ab HTTP 504 bounded ho — p99 600ms se kam',
     check: s => { const i = s.records.findIndex(r => r.kind === 'sim' && r.what === 'timeout');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'http' && r.status === 200 && r.p99 < 600); } },
+      return i > -1 && s.records.slice(i).some(r => r.kind === 'http' && r.status === 504 && r.p99 < 600); } },
 ];
 
 const T_RETRY = [
@@ -27,13 +28,14 @@ const T_RETRY = [
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'retry' && (!r.cfg.jitter || r.cfg.jitter === 'none')) },
   { text: 'Dekho ki retry ne p99 BADHA diya',
     check: s => { const i = s.records.findIndex(r => r.kind === 'sim' && r.what === 'retry');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'http' && r.p99 > 1000); } },
+      const fixed = s.records.findIndex(r => r.kind === 'sim' && r.what === 'retry' && r.cfg.jitter === 'full');
+      return i > -1 && s.records.slice(i, fixed < 0 ? undefined : fixed).some(r => r.kind === 'http' && r.status === 504 && r.p99 > 1000); } },
   { text: 'Ab jitter ke saath lagao',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'retry' && r.cfg.jitter && r.cfg.jitter !== 'none') },
 ];
 
 const T_BREAKER = [
-  { text: 'Downstream down + timeout + retry — halat kharab karo',
+  { text: 'Downstream down + timeout — halat kharab karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'down') },
   { text: 'Circuit breaker lagao',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'breaker') },
@@ -49,7 +51,7 @@ const T_BULKHEAD = [
   { text: 'Downstream ko dheema karo', check: s => s.records.some(r => r.kind === 'sim' && r.what === 'latency') },
   { text: 'Timeout lagao', check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout') },
   { text: 'Us dependency ke liye bulkhead lagao', check: s => s.records.some(r => r.kind === 'sim' && r.what === 'bulkhead') },
-  { text: 'Request bhej ke asar dekho', check: s => s.records.some(r => r.kind === 'http' && r.status === 200) },
+  { text: 'Request bhejo: timeout par HTTP 504, bulkhead cap live state mein 20', check: s => s.records.some(r => r.kind === 'http' && r.status === 504) && s.sys.app.bulkheads?.ledger === 20 },
 ];
 
 const T_SHED = [
@@ -59,7 +61,7 @@ const T_SHED = [
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'admission') },
   { text: 'Wahi load dobara — ab kuch to bach jaayenge',
     check: s => { const i = s.records.findIndex(r => r.kind === 'sim' && r.what === 'admission');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'load'); } },
+      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && !r.saturated && r.queuedRps > 0); } },
 ];
 
 const T_FLASH = [
@@ -173,18 +175,24 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
       goal: 'Ek downstream service dheemi ho jaayegi. Dekho ki uski latency seedha tumhare p99 mein judti hai — phir timeout laga ke damage baandho.',
       sys: SD.sys.orders(),
       tasks: T_TIMEOUT,
-      success: allOf(T_TIMEOUT),
+      success: SD.allTasks(T_TIMEOUT),
       successText: `Dhyaan do: timeout ne latency <b>theek nahi ki</b> — usne use <b>bounded</b> kiya.
         <br><br>Yeh farak zaroori hai. Downstream abhi bhi dheema hai. Par ab tumhara p99
         uski marzi par nahi, <b>tumhare faisle</b> par tika hai.
         <br><br>Niyam: har remote call par timeout — <b>default</b>, opt-in nahi — aur woh
         timeout tumhare apne SLO se <b>kam</b> hona chahiye.`,
+      solution: [
+        "GET /api/v1/orders?page=1&limit=50",
+        "sim inject latency ledger 8000",
+        "GET /api/v1/orders?page=1&limit=50",
+        "sim add timeout ledger 150",
+        "GET /api/v1/orders?page=1&limit=50",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 150 && m.current(s, 'http', r => r.status === 504 && r.p99 < 600); },
       hints: [
-        'Baseline: GET /api/v1/orders?page=1&limit=50',
-        'Downstream dheema karo: sim inject latency ledger 8000',
-        'Wahi request dobara: GET /api/v1/orders?page=1&limit=50',
-        'Timeout lagao: sim add timeout ledger 150',
-        'Aur phir se dekho: GET /api/v1/orders?page=1&limit=50',
+        "Pehle observation: Baseline dekho — p99 SLO ke andar. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab HTTP 504 bounded ho — p99 600ms se kam. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/orders?page=1&limit=50\nsim inject latency ledger 8000\nGET /api/v1/orders?page=1&limit=50\nsim add timeout ledger 150\nGET /api/v1/orders?page=1&limit=50",
       ],
     },
     {
@@ -204,26 +212,16 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
       questions: [
         {
           q: 'Dheemi dependency down dependency se zyada khatarnak kyun hai?',
-          choices: [
-            'Down par connection turant refuse hota hai aur tum aage badh jaate ho. Dheemi par har request thread + connection pakde rehti hai — aur pool khatam ho ke SAARE endpoints gir jaate hain',
-            'Dheemi dependency zyada errors deti hai',
-            'Down dependency zyada khatarnak hai',
-            'Dono barabar hain',
-          ],
+          choices: ["Slow calls resources ko der tak hold karti","Har down dependency turant refuse karti","Slow call se failures count kam rehta","Fast refusal worker ko permanently roke"],
           answer: 0,
-          explain: 'Yeh counterintuitive hai par production ka sach hai. <b>Fail fast is a feature.</b> Ek service jo turant "nahi" bolti hai, usse deal karna aasan hai. Jo latakti hai woh tumhare resources bandhak bana leti hai — aur woh resources baaki sab kaamon ke liye bhi the.',
-        },
+          explain: "Slow/hung calls resources ko bounded timeout tak hold karti hain; immediate refusal se waits jaldi end ho sakti hain. Down server bhi packet-drop/connection timeout kar sakta hai, so down always fast theorem nahi. Shared pools par slow waits cascade kar sakte hain.",
+         choiceExplanations: ["Slow/hung calls resources ko bounded timeout tak hold karti hain; immediate refusal se waits jaldi end ho sakti hain. Down server bhi packet-drop/connection timeout kar sakta hai, so down always fast theorem nahi. Shared pools par slow waits cascade kar sakte hain.","Down dependency timeout bhi kar sakti hai; immediate refusal guaranteed nahi.","Low error count ke bawajood waits pools exhaust kar sakte hain.","Immediate refusal usually resources jaldi release karti hai."] },
         {
           q: 'Deadline propagation kya karta hai?',
-          choices: [
-            'Har downstream call ko BACHA HUA budget bhejta hai, aur deadline nikal chuka ho toh call karta hi nahi — kyunki client toh ja chuka hai',
-            'Timeout ko double kar deta hai',
-            'Retries ko manage karta hai',
-            'Latency kam karta hai',
-          ],
+          choices: ["Remaining deadline budget forward kare","Har hop ko poora original timeout de","Client chala jaaye toh retries badha de","Deadline ko per hop reset karta rahe"],
           answer: 0,
           explain: 'Fixed timeouts har call ko poora budget dete hain, isliye total budget se aage nikal jaata hai. Deadline propagation ek absolute deadline bhejta hai. Aur uska sabse bada faayda woh aakhri baat hai: <b>jo kaam ab kisi ke liye nahi hai, woh karo hi mat</b> — overload ke waqt yeh bahut load bacha deta hai.',
-        },
+         choiceExplanations: ["Fixed timeouts har call ko poora budget dete hain, isliye total budget se aage nikal jaata hai. Deadline propagation ek absolute deadline bhejta hai. Aur uska sabse bada faayda woh aakhri baat hai: <b>jo kaam ab kisi ke liye nahi hai, woh karo hi mat</b> — overload ke waqt yeh bahut load bacha deta hai.","Har hop ko full budget dene se end-to-end deadline exceed ho sakti hai.","Client ke baad unnecessary work cancellation/deadline se bound karo.","Resetting deadline propagation ka purpose tod deta hai."] },
       ],
     },
   ],
@@ -233,26 +231,16 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
     questions: [
       {
         q: '"Timeout kitna rakhoge?"',
-        choices: [
-          'Apne SLO se kam, aur downstream ke p99 se thoda upar. Agar SLO 200ms hai aur unka p99 60ms hai toh ~100ms — taaki normal requests na kate par latki hui requests jaldi chhoot jaayein',
-          '30 second, safe rahega',
-          'Downstream ke average latency ke barabar',
-          'Jitna zyada ho sake, taaki request fail na ho',
-        ],
+        choices: ["Remaining budget aur latency tails se chuno","Average latency ko exact timeout banao","Every dependency ko fixed 30 seconds do","Failure avoid karne ko timeout hata do"],
         answer: 0,
-        explain: '"Jitna zyada ho sake" sabse aam galti hai — woh sochta hai ki timeout ek <b>failure</b> hai. Timeout ek <b>faisla</b> hai: "itne der baad yeh jawab ab kisi kaam ka nahi". 30s timeout ka matlab hai 30s tak resources bandhak.',
-      },
+        explain: "Caller deadline ke remaining budget se per-attempt timeout choose karo; downstream latency distribution aur acceptable false-timeout rate se validate karo. Retries, connection setup aur cleanup ka budget include karo; p99-plus-fixed-margin universal recipe nahi.",
+       choiceExplanations: ["Caller deadline ke remaining budget se per-attempt timeout choose karo; downstream latency distribution aur acceptable false-timeout rate se validate karo. Retries, connection setup aur cleanup ka budget include karo; p99-plus-fixed-margin universal recipe nahi.","Average se tail percentage nahi pata; excessive false timeouts ho sakte hain.","Fixed 30s caller SLO aur downstream latency budget ignore karta hai.","Unlimited waits threads/connections aur user deadline exhaust kar sakte hain."] },
       {
         q: '"Ek dependency dheemi ho gayi aur poora service down ho gaya. Kaise roka ja sakta tha?"',
-        choices: [
-          'Total timeout (SLO se kam) + us dependency ke liye bulkhead + baar-baar fail ho toh circuit breaker. Timeout intezaar baandhta hai, bulkhead blast radius baandhta hai',
-          'Dependency ko scale kar dete',
-          'Retry laga dete',
-          'Aur instances add kar dete',
-        ],
+        choices: ["Bounded wait plus dependency isolation","Only retries se stuck resource chhodo","Only instances se dependency fix karo","Only provider scale ki request bhejo"],
         answer: 0,
         explain: 'Sahi jawab <b>do alag</b> guards deta hai kyunki woh do alag cheezein karte hain: timeout ek call ka <b>intezaar</b> baandhta hai; bulkhead us dependency ka <b>blast radius</b> baandhta hai. Retry yahan bilkul ulta hota — dheemi service ko aur maarna.',
-      },
+       choiceExplanations: ["Sahi jawab <b>do alag</b> guards deta hai kyunki woh do alag cheezein karte hain: timeout ek call ka <b>intezaar</b> baandhta hai; bulkhead us dependency ka <b>blast radius</b> baandhta hai. Retry yahan bilkul ulta hota — dheemi service ko aur maarna.","Retries hung calls ke saath aur concurrency consume kar sakti hain.","More app instances slow dependency par aur load bhej sakti hain.","Provider fix useful hai; caller ko failure containment khud chahiye."] },
     ],
   },
   success: [
@@ -339,7 +327,7 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
       goal: 'Downstream down hai. Timeout lagao, phir bina jitter ke retry lagao — aur dekho ki retry ne p99 aur BADHA diya. Phir jitter lagao.',
       sys: SD.sys.orders(),
       tasks: T_RETRY,
-      success: allOf(T_RETRY),
+      success: SD.allTasks(T_RETRY),
       successText: `Yeh sabse zaroori seekh hai: <b>retry ne p99 theek nahi kiya — usne
         badha diya.</b> 3 attempts × timeout + backoff waits = kai second.
         <br><br>Retry tab kaam karta hai jab failure <b>transient</b> ho (ek blip). Jab
@@ -348,12 +336,19 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
         <br>• downstream par load multiply karta hai
         <br>• aur tumhare threads lambe samay tak bandhak rakhta hai
         <br><br>Isi khaali jagah ko bharne ke liye <b>circuit breaker</b> banta hai — agla level.`,
+      solution: [
+        "sim inject down ledger",
+        "sim add timeout ledger 500",
+        "sim add retry ledger --max 3 --backoff exp",
+        "GET /api/v1/orders?page=1&limit=50",
+        "sim add retry ledger --max 3 --backoff exp --jitter full",
+        "GET /api/v1/orders?page=2&limit=50",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.deps.ledger?.retry?.jitter === 'full' && s.sys.deps.ledger.retry.max === 3 && s.sys.deps.ledger.timeoutMs === 500 && m.current(s, 'http', r => r.status === 504 && r.p99 > 1000); },
       hints: [
-        'Downstream down karo: sim inject down ledger',
-        'Timeout lagao: sim add timeout ledger 500',
-        'Bina jitter ke retry: sim add retry ledger --max 3 --backoff exp',
-        'Ab dekho kya hua: GET /api/v1/orders?page=1&limit=50',
-        'Aur jitter lagao: sim add retry ledger --max 3 --backoff exp --jitter full',
+        "Pehle observation: Downstream down karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab jitter ke saath lagao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nsim inject down ledger\nsim add timeout ledger 500\nsim add retry ledger --max 3 --backoff exp\nGET /api/v1/orders?page=1&limit=50\nsim add retry ledger --max 3 --backoff exp --jitter full\nGET /api/v1/orders?page=2&limit=50",
       ],
     },
     {
@@ -392,26 +387,16 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
       questions: [
         {
           q: 'Exponential backoff lagane ke baad bhi storm kyun banta hai?',
-          choices: [
-            'Kyunki sab clients ne ek saath failure dekha — sab ek saath wait karte hain aur ek saath dobara maarte hain. Backoff ne storm ko synchronize kar diya',
-            'Backoff ka base bahut chhota tha',
-            'Retry count zyada tha',
-            'Backoff kaam karta hai, storm nahi banta',
-          ],
+          choices: ["Same schedule retries synchronize karta","Backoff random jitter khud add karta","Attempt limit se retry timing random hoti","Low traffic mein synchronization impossible"],
           answer: 0,
           explain: 'Yeh jawab dikhata hai ki tumne yeh sach mein dekha hai. Backoff har <b>ek</b> client ke liye sahi kaam karta hai, par saare clients milkar ek <b>coordinated</b> wave banate hain. <b>Jitter</b> hi woh cheez hai jo unhe alag karti hai.',
-        },
+         choiceExplanations: ["Yeh jawab dikhata hai ki tumne yeh sach mein dekha hai. Backoff har <b>ek</b> client ke liye sahi kaam karta hai, par saare clients milkar ek <b>coordinated</b> wave banate hain. <b>Jitter</b> hi woh cheez hai jo unhe alag karti hai.","Deterministic exponential schedule same failure par same retry times deta hai.","Attempt count bound aur timing randomness alag controls hain.","Even small cohort common failure se synchronized ho sakta hai."] },
         {
           q: 'Downstream sach mein DOWN hai. Retry se kya hoga?',
-          choices: [
-            'p99 badhega (N attempts × timeout), downstream par load multiply hoga, aur threads lambe samay bandhak rahenge — retry sirf TRANSIENT failures ke liye hai',
-            'Request safal ho jaayegi',
-            'Kuch nahi hoga',
-            'Latency kam ho jaayegi',
-          ],
+          choices: ["Extra attempts cost aur delay badha sakti","Retry unavailable server ko repair kare","Retry timeout ko automatically chhota kare","Retry original operation ko cancel kare"],
           answer: 0,
           explain: 'Retry ek <b>shart</b> par kaam karta hai: failure transient ho. Jab woh sach mein down hai, har retry sirf nuksaan hai. Isi khaali jagah ko <b>circuit breaker</b> bharta hai — woh pehchaan leta hai ki "yeh transient nahi hai" aur retry karna hi band kar deta hai.',
-        },
+         choiceExplanations: ["Retry ek <b>shart</b> par kaam karta hai: failure transient ho. Jab woh sach mein down hai, har retry sirf nuksaan hai. Isi khaali jagah ko <b>circuit breaker</b> bharta hai — woh pehchaan leta hai ki \"yeh transient nahi hai\" aur retry karna hi band kar deta hai.","Retry repair action nahi; recovery chance aur safety assess karo.","Per-attempt timeout separately configure hota hai.","Original timed-out operation remote side par chal sakti hai."] },
       ],
     },
   ],
@@ -421,26 +406,16 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
     questions: [
       {
         q: '"Retry policy design karo."',
-        choices: [
-          'Sirf idempotent ops par (ya Idempotency-Key ke saath), sirf transient errors par (429/503/504/timeout), exponential backoff + FULL JITTER, max 2-3 attempts, ek hi layer par, aur ek retry budget (kul load ka 10%)',
-          'Har error par 3 retries, exponential backoff',
-          'Jab tak safal na ho, retry karte raho',
-          'Har error par ek retry',
-        ],
+        choices: ["Safe errors; budget; jitter; bounded attempts","Every failure par same 3 retry lagao","Each service layer independently retry kare","Success tak deadline bina retry chalao"],
         answer: 0,
-        explain: 'Paanch cheezein paanch alag khatre rokti hain: <b>idempotency</b> (duplicate), <b>error selection</b> (bekaar load), <b>jitter</b> (synchronized storm), <b>ek layer</b> (27x multiplication), <b>budget</b> (system-wide amplification).',
-      },
+        explain: "Retry sirf safe/idempotent intent aur retryable failure par, bounded attempts/deadline/retry budget ke andar. Backoff+jitter add karo; Retry-After honor karo. Retry layer/order explicit rakho.2-3 attempts ya10%budget examples hain, universal defaults nahi.",
+       choiceExplanations: ["Retry sirf safe/idempotent intent aur retryable failure par, bounded attempts/deadline/retry budget ke andar. Backoff+jitter add karo; Retry-After honor karo. Retry layer/order explicit rakho.2-3 attempts ya10%budget examples hain, universal defaults nahi.","Permanent validation/auth errors retry se solve nahi hote.","Nested retries offered load multiply kar sakti hain.","Unlimited retry deadline aur recovery resources consume karti hai."] },
       {
-        q: '"Tumhara service down ho gaya aur logs mein normal se 4x traffic dikh raha hai. Kya hua?"',
-        choices: [
-          'Retry amplification — errors dekh ke clients (aur shayad kai layers) retry kar rahe hain, jisse load guna ho gaya aur service ko theek hone ka mauka nahi mil raha',
-          'DDoS attack',
-          'Traffic sach mein badh gaya',
-          'Load balancer mein bug hai',
-        ],
+        q: "Incident mein traffic 4x hai. Retry amplification hypothesis kaise check karoge?",
+        choices: ["Attempt rate vs unique request rate dekho","4x traffic se DDoS proven maan lo","4x traffic se user growth proven maan lo","Retry metric ke bina LB ko blame karo"],
         answer: 0,
-        explain: 'Achha jawab pehle <b>self-inflicted</b> wajah dekhta hai. Retry amplification ka signature yahi hai: traffic tab badha jab errors shuru hue, uske pehle nahi. Aur ilaaj bhi ulta hai — <b>load kam karo</b> (breaker, shed) taaki service theek ho sake.',
-      },
+        explain: "Retry amplification hypothesis ko attempt counts, unique request IDs, error timing aur client/service retry policies se verify karo. Four-times traffic alone DDoS, user growth ya LB issue exclude nahi karta.",
+       choiceExplanations: ["Retry amplification hypothesis ko attempt counts, unique request IDs, error timing aur client/service retry policies se verify karo. Four-times traffic alone DDoS, user growth ya LB issue exclude nahi karta.","Attack possible hai; retry correlation/unique IDs se distinguish karo.","Same user request multiple attempts ho sakti hai.","LB fault hypothesis ko logs/traces se verify karna hoga."] },
     ],
   },
   success: [
@@ -522,24 +497,29 @@ Breaker ke saath: 1 ms mein fail + fallback
       goal: 'Downstream down hai aur retries halat bigaad rahi hain. Breaker + fallback lagao, phir requests bhejte raho aur breaker ko apne aap trip hote dekho.',
       sys: SD.sys.orders(),
       tasks: T_BREAKER,
-      success: allOf(T_BREAKER),
+      success: SD.allTasks(T_BREAKER),
       successText: `Dekha kya hua? Chaar failures ke baad breaker <b>khud</b> khul gaya —
         aur p99 seedha gir gaya, kyunki ab calls 1 ms mein fail hoti hain.
         <br><br>Yaad rakho:
         <br>• Breaker ka pehla maqsad <b>tumhe</b> bachana hai — tumhare threads uske intezaar mein nahi mar rahe
         <br>• <b>Fallback ke bina</b> breaker sirf "tez failure" hai
         <br>• <b>Minimum calls</b> zaroori hai — 2 mein se 1 fail 50% hai par woh data nahi hai`,
+      solution: [
+        "sim inject down ledger",
+        "sim add timeout ledger 500",
+        "sim add breaker ledger --threshold 0.5 --window 20",
+        "sim add fallback ledger 'last known balance'",
+        "GET /api/v1/orders?page=1&limit=50 -n 1",
+        "GET /api/v1/orders?page=2&limit=50",
+        "GET /api/v1/orders?page=3&limit=50",
+        "GET /api/v1/orders?page=4&limit=50",
+        "GET /api/v1/orders?page=5&limit=50",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 500 && s.sys.deps.ledger?.breakerState === 'open' && !!s.sys.deps.ledger.fallback && m.current(s, 'http', r => r.status === 200 && r.p99 < 100); },
       hints: [
-        'Downstream down: sim inject down ledger',
-        'Timeout lagao: sim add timeout ledger 500',
-        'Breaker lagao: sim add breaker ledger --threshold 0.5 --window 20',
-        "Fallback do: sim add fallback ledger 'last known balance'",
-        'Ab requests bhejo: GET /api/v1/orders?page=1&limit=50 -n 1',
-        'Aur bhejo: GET /api/v1/orders?page=2&limit=50',
-        'Aur: GET /api/v1/orders?page=3&limit=50',
-        'Aur: GET /api/v1/orders?page=4&limit=50',
-        'Aur: GET /api/v1/orders?page=5&limit=50',
-        'Ab breaker khul chuka hoga: GET /api/v1/orders?page=6&limit=50',
+        "Pehle observation: Downstream down + timeout — halat kharab karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Trip hone ke baad p99 gir jaana chahiye (fail fast). Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nsim inject down ledger\nsim add timeout ledger 500\nsim add breaker ledger --threshold 0.5 --window 20\nsim add fallback ledger 'last known balance'\nGET /api/v1/orders?page=1&limit=50 -n 1\nGET /api/v1/orders?page=2&limit=50\nGET /api/v1/orders?page=3&limit=50\nGET /api/v1/orders?page=4&limit=50\nGET /api/v1/orders?page=5&limit=50",
       ],
     },
     {
@@ -572,37 +552,22 @@ Breaker ke saath: 1 ms mein fail + fallback
       questions: [
         {
           q: 'Circuit breaker ka PEHLA maqsad kya hai?',
-          choices: [
-            'Apne resources bachana — threads/connections downstream ke intezaar mein na marein, taaki BAAKI endpoints chalte rahein',
-            'Downstream service ko bachana',
-            'Latency kam karna',
-            'Errors chhupana',
-          ],
+          choices: ["Repeated failing calls se resources bachao","Breaker khud dependency repair kare","Breaker every failed payment retry kare","Breaker success payload fabricate kare"],
           answer: 0,
           explain: 'Downstream ko bachana ek achha <b>side effect</b> hai. Asli problem yeh hai: bina breaker ke ek dheemi dependency tumhare saare threads kha leti hai aur tumhara <b>poora</b> service down ho jaata hai — un endpoints ke liye bhi jinka us dependency se koi lena-dena nahi.',
-        },
+         choiceExplanations: ["Downstream ko bachana ek achha <b>side effect</b> hai. Asli problem yeh hai: bina breaker ke ek dheemi dependency tumhare saare threads kha leti hai aur tumhara <b>poora</b> service down ho jaata hai — un endpoints ke liye bhi jinka us dependency se koi lena-dena nahi.","Breaker admission decisions leta hai; downstream defect fix nahi karta.","Retry alag policy hai aur side-effect safety require karti hai.","Fallback explicit product contract hai; breaker data invent nahi karta."] },
         {
           q: 'Breaker mein "minimum calls" setting kyun zaroori hai?',
-          choices: [
-            'Kyunki 2 requests mein se 1 fail = 50% failure rate — par woh statistically kuch nahi hai. Bina minimum ke breaker random noise par trip karta rahega',
-            'Performance ke liye',
-            'Memory bachane ke liye',
-            'Zaroori nahi hai, optional hai',
-          ],
+          choices: ["Tiny samples ke noisy trips se bachao","Minimum calls failure rate ko zero kare","Minimum calls memory leaks repair kare","Threshold se every call successful bane"],
           answer: 0,
           explain: 'Yeh detail production mein bahut matter karta hai. Kam traffic wale endpoints par ek-do random failures hamesha hote hain. Bina minimum-calls ke breaker baar-baar khulta-bandh hota rahega aur healthy requests block karega. <b>Min 20 calls</b> ek achha starting point hai.',
-        },
+         choiceExplanations: ["Yeh detail production mein bahut matter karta hai. Kam traffic wale endpoints par ek-do random failures hamesha hote hain. Bina minimum-calls ke breaker baar-baar khulta-bandh hota rahega aur healthy requests block karega. <b>Min 20 calls</b> ek achha starting point hai.","Threshold enough samples lene deta hai; actual failures remain.","Sampling setting leaked memory/resource release nahi karti.","Breaker correctness success guarantee nahi; request reject bhi ho sakti hai."] },
         {
           q: 'Breaker khul gaya par koi fallback nahi hai. Kya mila?',
-          choices: [
-            'Sirf TEZ failure — user ko abhi bhi error mil raha hai. Breaker ne tumhare threads bachaye (jo bada faayda hai), par user experience waisa hi hai',
-            'Sab theek ho gaya',
-            'Kuch faayda nahi hua',
-            'User ko purana data mil jaayega',
-          ],
+          choices: ["Fast failure aur resource relief mile","Fallback data automatically mil jaaye","User request guaranteed successful bane","No fallback se resource benefit bhi zero"],
           answer: 0,
           explain: 'Thread bachana asli faayda hai — baaki endpoints zinda rahenge. Par user ke liye kuch nahi badla. Isliye breaker aur fallback <b>jodi</b> mein aate hain: breaker <i>tumhe</i> bachata hai, fallback <i>user</i> ko.',
-        },
+         choiceExplanations: ["Thread bachana asli faayda hai — baaki endpoints zinda rahenge. Par user ke liye kuch nahi badla. Isliye breaker aur fallback <b>jodi</b> mein aate hain: breaker <i>tumhe</i> bachata hai, fallback <i>user</i> ko.","Fallback alag implement/configure karni hoti hai.","Open breaker rejected calls errors hi return kar sakti hain.","Fast failure waiting resources aur cascading risk reduce kar sakti hai."] },
       ],
     },
   ],
@@ -612,26 +577,16 @@ Breaker ke saath: 1 ms mein fail + fallback
     questions: [
       {
         q: '"Circuit breaker kya karta hai aur kab lagaoge?"',
-        choices: [
-          'Baar-baar fail hone wali dependency par calls rok deta hai taaki mere threads uske intezaar mein na marein. Har remote dependency par lagaunga — fallback ke saath, per-dependency, aur minimum-calls threshold ke saath',
-          'Errors ko catch karta hai aur retry karta hai',
-          'Downstream service ko bachata hai overload se',
-          'Load balancing karta hai',
-        ],
+        choices: ["Failures par admission stop; probe recovery","Every exception par immediate retry karo","Traffic ko random service par route karo","Har remote call par breaker mandatory"],
         answer: 0,
-        explain: 'Sahi jawab do cheezein karta hai: <b>maqsad</b> theek batata hai ("mere threads") aur <b>configuration</b> ki baat karta hai (fallback, per-dependency, minimum calls). "Errors catch karke retry" toh breaker ka ulta hai — breaker retry <b>rokta</b> hai.',
-      },
+        explain: "Breaker repeated failure/slow-call evidence par new attempts reject karta hai; half-open probes recovery assess karte hain. Per-dependency thresholds, timeouts, isolation aur fallback contract define karo; every remote call par breaker mandatory nahi.",
+       choiceExplanations: ["Breaker repeated failure/slow-call evidence par new attempts reject karta hai; half-open probes recovery assess karte hain. Per-dependency thresholds, timeouts, isolation aur fallback contract define karo; every remote call par breaker mandatory nahi.","Retry transient-safe attempts ke liye alag mechanism hai.","Load balancing aur breaker admission alag functions hain.","Timeouts/isolation enough cases mein breaker state complexity unnecessary ho sakti hai."] },
       {
         q: '"Breaker aur retry ek saath kaise kaam karte hain?"',
-        choices: [
-          'Retry transient blips ke liye (ek-do attempts, jitter ke saath); breaker tab kick karta hai jab failures transient nahi rahe — aur phir retries bhi ruk jaati hain. Retry chhoti timescale, breaker badi',
-          'Dono ek hi cheez hain',
-          'Breaker ke saath retry nahi lagana chahiye',
-          'Retry breaker ke andar hona chahiye',
-        ],
+        choices: ["Retry safety aur breaker order define karo","Dono mechanisms same state machine hain","Breaker kabhi overload mein useful nahi","Retry breaker order universal fixed hai"],
         answer: 0,
-        explain: 'Yeh jawab dikhata hai ki tum unhe <b>alag timescales</b> par dekhte ho. Retry ek request ke liye hai ("shayad yeh blip tha"). Breaker ek dependency ke liye hai ("yeh service abhi kaam nahi kar rahi"). Breaker khulne par retries apne aap ruk jaati hain — jo bilkul sahi hai.',
-      },
+        explain: "Retry transient safe attempts ke liye; breaker admission repeated failure/slow-calls par controls karta hai. Composition order determines failure counting and whether open-breaker errors retry honge. Library semantics, deadlines aur probes test karo; one universal nesting order nahi.",
+       choiceExplanations: ["Retry transient safe attempts ke liye; breaker admission repeated failure/slow-calls par controls karta hai. Composition order determines failure counting and whether open-breaker errors retry honge. Library semantics, deadlines aur probes test karo; one universal nesting order nahi.","Retry attempts aur breaker admission different state/policies hain.","Failing overloaded dependency ko suppressed attempts relief de sakte hain.","Order changes counted attempts and probes; library semantics decide karo."] },
     ],
   },
   success: [
@@ -742,16 +697,22 @@ recommendations poori tarah mar jaaye?
       goal: 'Ek optional dependency dheemi hai. Uske liye bulkhead lagao taaki woh baaki service ke threads na khaaye.',
       sys: SD.sys.orders(),
       tasks: T_BULKHEAD,
-      success: allOf(T_BULKHEAD),
-      successText: `Bulkhead ne latency theek nahi ki — usne <b>blast radius</b> theek kiya.
+      success: SD.allTasks(T_BULKHEAD),
+      successText: `Live config mein ledger ka bulkhead cap <b>20</b> hai; timeout par request <b>504</b> deti hai. Yeh simulator parallel worker isolation ko load-test nahi karta; production mein alag pool aur healthy-route latency ka concurrent test chahiye.
         <br><br>Yeh timeout se alag cheez hai: timeout <b>ek call</b> ka intezaar baandhta hai,
         bulkhead us dependency ka <b>hissa</b> baandhta hai. Dono chahiye —
         timeout ke bina 20 threads bhi 30 second latak sakte hain.`,
+      solution: [
+        "sim inject latency ledger 5000",
+        "sim add timeout ledger 200",
+        "sim add bulkhead ledger --max 20",
+        "GET /api/v1/orders?page=1&limit=50",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.app.bulkheads?.ledger === 20 && s.sys.deps.ledger?.timeoutMs === 200 && m.current(s, 'http', r => r.status === 504 && r.p99 < 600); },
       hints: [
-        'Downstream dheema karo: sim inject latency ledger 5000',
-        'Timeout lagao: sim add timeout ledger 200',
-        'Aur bulkhead: sim add bulkhead ledger --max 20',
-        'Ab dekho: GET /api/v1/orders?page=1&limit=50',
+        "Pehle observation: Downstream ko dheema karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Request bhej ke asar dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nsim inject latency ledger 5000\nsim add timeout ledger 200\nsim add bulkhead ledger --max 20\nGET /api/v1/orders?page=1&limit=50",
       ],
     },
     {
@@ -760,26 +721,16 @@ recommendations poori tarah mar jaaye?
       questions: [
         {
           q: 'Bulkhead aur timeout mein farak?',
-          choices: [
-            'Timeout EK call ka intezaar baandhta hai; bulkhead us dependency ka HISSA (threads/connections) baandhta hai. Dono chahiye',
-            'Dono ek hi cheez hain',
-            'Bulkhead timeout ka naya naam hai',
-            'Timeout better hai, bulkhead purana concept hai',
-          ],
+          choices: ["Timeout wait; bulkhead concurrency bound kare","Timeout se every endpoint isolated bane","Bulkhead se every call fast complete ho","Dono controls failure ko retry karte hain"],
           answer: 0,
           explain: 'Sirf timeout kaafi nahi: agar 200 threads sab 5 second ke timeout par latak rahe hain, toh service phir bhi down hai — bas 5 second ke chunks mein. Bulkhead kehta hai "us dependency ko max 20 threads milenge, chahe kuch bhi ho".',
-        },
+         choiceExplanations: ["Sirf timeout kaafi nahi: agar 200 threads sab 5 second ke timeout par latak rahe hain, toh service phir bhi down hai — bas 5 second ke chunks mein. Bulkhead kehta hai \"us dependency ko max 20 threads milenge, chahe kuch bhi ho\".","Shared pool par many bounded waits bhi saare slots occupy kar sakti hain.","Concurrency bound per-call completion deadline nahi deta.","Retries separate mechanism hain; dono primarily containment controls hain."] },
         {
           q: 'Bulkhead ki asli keemat kya hai?',
-          choices: [
-            'Kam sharing — kuch threads khaali baith sakte hain jabki doosre pool ko unki zaroorat thi. Thodi efficiency ke badle isolation',
-            'Zyada memory lagti hai',
-            'Code complex ho jaata hai',
-            'Koi keemat nahi hai',
-          ],
+          choices: ["Reserved capacity kabhi idle reh sakti","Isolation se all capacity always share ho","Bulkheads throughput free mein badhaate","Pool split se every queue disappear ho"],
           answer: 0,
           explain: 'Aur yeh sauda lagbhag hamesha sahi hai: efficiency ka nuksaan <b>lagataar aur chhota</b> hai, isolation ka faayda <b>kabhi-kabhi aur bahut bada</b>. Ek outage ki keemat mahino ki thodi extra capacity se zyada hoti hai.',
-        },
+         choiceExplanations: ["Aur yeh sauda lagbhag hamesha sahi hai: efficiency ka nuksaan <b>lagataar aur chhota</b> hai, isolation ka faayda <b>kabhi-kabhi aur bahut bada</b>. Ek outage ki keemat mahino ki thodi extra capacity se zyada hoti hai.","Separate capacity boundaries borrowing limit karti hain.","Isolation resource efficiency aur complexity cost rakhti hai.","Each bounded pool overload par queue/reject kar sakta hai."] },
       ],
     },
   ],
@@ -789,15 +740,10 @@ recommendations poori tarah mar jaaye?
     questions: [
       {
         q: '"Ek optional feature ki dependency dheemi ho gayi aur poora service down ho gaya. Design mein kya galat tha?"',
-        choices: [
-          'Koi isolation nahi thi — sab ek shared thread pool se le rahe the. Fix: per-dependency bulkhead + timeout + fallback, aur features ko CORE/OPTIONAL mein baant ke unhe alag resources dena',
-          'Dependency ko scale karna chahiye tha',
-          'Aur threads chahiye the',
-          'Retry lagana chahiye tha',
-        ],
+        choices: ["Optional work ko core se isolate karo","Only optional timeout ko aur badhao","Only common pool ko unlimited karo","Only failed dependency ko retry karo"],
         answer: 0,
         explain: '"Aur threads" sirf failure ko thoda der se laata hai — dheemi dependency woh bhi kha jaayegi. Sahi jawab problem ko <b>architectural</b> batata hai (koi isolation nahi), capacity ka nahi. Aur "features ko tier mein baanto" wali baat dikhati hai ki tumne yeh pehle se socha hai.',
-      },
+       choiceExplanations: ["\"Aur threads\" sirf failure ko thoda der se laata hai — dheemi dependency woh bhi kha jaayegi. Sahi jawab problem ko <b>architectural</b> batata hai (koi isolation nahi), capacity ka nahi. Aur \"features ko tier mein baanto\" wali baat dikhati hai ki tumne yeh pehle se socha hai.","Longer waits optional work ko more resources hold karwati hain.","Unbounded concurrency memory/downstream saturation badha sakti hai.","Retry load badhata hai; isolation aur safe fallback pehle."] },
     ],
   },
   success: [
@@ -887,27 +833,27 @@ recommendations poori tarah mar jaaye?
         first: {
           text: 'Pehla kadam?',
           choices: [
-            { t: 'Message 4471 ko skip/DLQ karo taaki consumer aage badh sake — phir usko alag se dekho', good: true, next: 'why', explain: 'Bleeding pehle roko. Ek message 2.1 lakh ko rok raha hai — pehle baaki traffic chalao, phir root cause.' },
-            { t: 'Aur consumers add karo', good: false, explain: 'Har naya consumer bhi usi message par atkega. Yeh capacity ka masla nahi hai — ek stuck message hai.' },
-            { t: 'Queue purge kar do', good: false, explain: '2.1 lakh asli notifications delete ho jaayenge. Yeh sabse mehenga "fix" hai.' },
-            { t: 'Consumer restart karo', good: false, explain: 'Restart ke baad woh usi message se shuru karega aur phir crash hoga. Yeh loop hai.' },
+            { t: "Quarantine poison;preserve replay context", good: true, next: 'why', explain: 'Bleeding pehle roko. Ek message 2.1 lakh ko rok raha hai — pehle baaki traffic chalao, phir root cause.' },
+            { t: "Add consumers to same blocked partition", good: false, explain: 'Har naya consumer bhi usi message par atkega. Yeh capacity ka masla nahi hai — ek stuck message hai.' },
+            { t: "Purge all accepted pending messages", good: false, explain: '2.1 lakh asli notifications delete ho jaayenge. Yeh sabse mehenga "fix" hai.' },
+            { t: "Restart without fixing invalid payload", good: false, explain: 'Restart ke baad woh usi message se shuru karega aur phir crash hoga. Yeh loop hai.' },
           ],
         },
         why: {
           sitrep: '✅ Message 4471 DLQ mein gaya. Consumer aage badha — queue depth 2.1 lakh se girna shuru.',
           text: 'Ab root cause: yeh 4 ghante tak kaise chala?',
           choices: [
-            { t: 'Koi DLQ policy hi nahi thi — infinite retry ho raha tha, aur queue depth par koi alert bhi nahi tha', good: true, next: 'fix', explain: 'Do galtiyan: koi max-retries/DLQ nahi, aur koi alert nahi. Alert hota toh 4 ghante ki jagah 4 minute mein pata chalta.' },
-            { t: 'Producer ne galat message bheja', good: false, explain: 'Woh trigger tha, wajah nahi. Galat messages hamesha aayenge — sawaal yeh hai ki system unhe handle karta hai ya nahi.' },
-            { t: 'Consumer mein bug tha', good: false, explain: 'Malformed input par crash karna theek hai. Galat yeh hai ki uske baad system aage nahi badh saka.' },
+            { t: "Infinite retry;no progress alert", good: true, next: 'fix', explain: 'Do galtiyan: koi max-retries/DLQ nahi, aur koi alert nahi. Alert hota toh 4 ghante ki jagah 4 minute mein pata chalta.' },
+            { t: "Only producer mistake;consumer safe", good: false, explain: 'Woh trigger tha, wajah nahi. Galat messages hamesha aayenge — sawaal yeh hai ki system unhe handle karta hai ya nahi.' },
+            { t: "Only consumer bug;retry policy safe", good: false, explain: 'Malformed input par crash karna theek hai. Galat yeh hai ki uske baad system aage nahi badh saka.' },
           ],
         },
         fix: {
           text: 'Aage ke liye kya lagaoge?',
           choices: [
-            { t: 'Max retries + backoff → DLQ, DLQ depth par alert, DLQ message mein poora context, replay tool, aur consumer ko idempotent banao', good: true, next: 'end', explain: 'Poora set. Har ek alag khatra rokta hai: DLQ jam, alert andhapan, debugging, recovery, aur replay ke duplicates.' },
-            { t: 'Producer par validation laga do', good: false, explain: 'Achha hai par kaafi nahi — koi na koi message kabhi na kabhi kharab hoga (schema change, encoding, truncation). System ko uske saath jeena aana chahiye.' },
-            { t: 'Consumer mein try/catch laga ke errors ignore kar do', good: false, explain: 'Ab messages chup-chaap gum honge. Yeh DLQ se bhi bura hai — kam se kam DLQ mein woh dikhte toh hain.' },
+            { t: "Bound retries;DLQ alert and safe replay", good: true, next: 'end', explain: 'Poora set. Har ek alag khatra rokta hai: DLQ jam, alert andhapan, debugging, recovery, aur replay ke duplicates.' },
+            { t: "Producer validation as only defense", good: false, explain: 'Achha hai par kaafi nahi — koi na koi message kabhi na kabhi kharab hoga (schema change, encoding, truncation). System ko uske saath jeena aana chahiye.' },
+            { t: "Catch every error;silently continue", good: false, explain: 'Ab messages chup-chaap gum honge. Yeh DLQ se bhi bura hai — kam se kam DLQ mein woh dikhte toh hain.' },
           ],
         },
         end: {
@@ -938,27 +884,17 @@ recommendations poori tarah mar jaaye?
       title: 'DLQ ki samajh',
       questions: [
         {
-          q: 'Bina DLQ ke poison message kya karta hai?',
-          choices: [
-            'Infinite retry loop — consumer ka offset aage badhta hi nahi, isliye uske PEECHE ki poori queue ruk jaati hai',
-            'Woh skip ho jaata hai',
-            'Woh log mein chala jaata hai',
-            'Consumer crash ho ke restart ho jaata hai aur aage badh jaata hai',
-          ],
+          q: "Consumer same poison message in-place indefinitely retry karta hai. Risk?",
+          choices: ["Retry-in-place poison partition rok sakta","Every broker automatically skip karega","Restart se invalid payload valid banega","DLQ bina errors durably solve ho jaayen"],
           answer: 0,
-          explain: 'Yahi ek message ko ek <b>outage</b> banata hai. Aur system ne kuch galat nahi kiya — usne at-least-once delivery ka vachan nibhaya. Bug yeh hai ki tumne use us message ko <b>chhodne</b> ka rasta nahi diya.',
-        },
+          explain: "Given consumer poison message ko indefinitely in-place retry karta hai, toh partition/head-of-line progress stop ho sakti hai. Broker/consumer retry policy, quarantine/DLQ aur replay semantics explicit honi chahiye; DLQ absence alone every broker behavior determine nahi karti.",
+         choiceExplanations: ["Given consumer poison message ko indefinitely in-place retry karta hai, toh partition/head-of-line progress stop ho sakti hai. Broker/consumer retry policy, quarantine/DLQ aur replay semantics explicit honi chahiye; DLQ absence alone every broker behavior determine nahi karti.","Skip/redrive policy explicitly configure karni padti hai.","Same invalid message restart ke baad phir fail ho sakta hai.","Failure classify/retain/replay karna consumer/broker contract hai."] },
         {
-          q: 'Downstream down hai aur saare messages DLQ mein ja rahe hain. Kya galat hai?',
-          choices: [
-            'Retry policy transient failures ko permanent maan rahi hai — downstream down par lamba backoff chahiye, DLQ nahi. Warna 5 lakh bilkul theek messages "poison" ban jaayenge',
-            'DLQ sahi kaam kar raha hai',
-            'Consumers kam hain',
-            'DLQ ka size badha do',
-          ],
+          q: "Downstream outage se all valid messages fail ho rahe hain. Retry/DLQ policy kya dekhe?",
+          choices: ["Systemic outage ko isolated poison mat maano","DLQ size badhao; outage solve ho jaayega","Every valid message ko forever retry karo","Downstream outage means all payload corrupt"],
           answer: 0,
-          explain: 'Yeh ek chhupa hua jaal hai. DLQ <b>permanent</b> failures ke liye hai (malformed message, unknown type). Transient failures (downstream down) par lamba backoff chahiye — ya breaker, jo consumption hi rok de jab tak downstream wapas na aaye.',
-        },
+          explain: "Systemic dependency outage aur isolated malformed message distinguish karo. Pause/backpressure/bounded delayed retries or a documented parking/redrive strategy use karo. DLQ outage messages rakh sakti hai if intentional/replayable; universal never-DLQ rule nahi.",
+         choiceExplanations: ["Systemic dependency outage aur isolated malformed message distinguish karo. Pause/backpressure/bounded delayed retries or a documented parking/redrive strategy use karo. DLQ outage messages rakh sakti hai if intentional/replayable; universal never-DLQ rule nahi.","Larger DLQ cause fix nahi; recovery/replay capacity bhi chahiye.","Retention/deadline aur recovery budgets bound retries.","Payload valid hote hue dependency unavailable ho sakti hai."] },
       ],
     },
   ],
@@ -968,15 +904,10 @@ recommendations poori tarah mar jaaye?
     questions: [
       {
         q: '"Ek message baar-baar fail ho raha hai. Kya karoge?"',
-        choices: [
-          'N retries backoff ke saath, phir DLQ mein — taaki consumer aage badh sake. DLQ par alert, message mein poora context, replay tool, aur consumer idempotent',
-          'Infinite retry — kabhi na kabhi chal jaayega',
-          'Message drop kar dunga',
-          'Consumer restart kar dunga',
-        ],
+        choices: ["Classify; bounded retry; quarantine and replay","Permanent parse error ko infinite retry do","First failure par quietly message drop karo","Restart se schema mismatch theek maan lo"],
         answer: 0,
         explain: '"Infinite retry" queue jam karta hai. "Drop kar dunga" data chup-chaap khota hai. Sahi jawab ek <b>poora system</b> deta hai — sirf DLQ bolna aadha jawab hai, kyunki bina alert ke DLQ ek data graveyard hai.',
-      },
+       choiceExplanations: ["\"Infinite retry\" queue jam karta hai. \"Drop kar dunga\" data chup-chaap khota hai. Sahi jawab ek <b>poora system</b> deta hai — sirf DLQ bolna aadha jawab hai, kyunki bina alert ke DLQ ek data graveyard hai.","Same malformed payload repeated retry se valid nahi banta.","Silent drop data loss aur debugging context hata deta hai.","Consumer/payload compatibility fix ya quarantine chahiye."] },
     ],
   },
   success: [
@@ -1091,27 +1022,17 @@ recommendations poori tarah mar jaaye?
       title: 'Degradation ki samajh',
       questions: [
         {
-          q: 'Balance service down hai. Kya dikhaoge?',
-          choices: [
-            '"Balance abhi load nahi ho paa raha" — ₹0 ya stale balance dikhana khatarnak hai, user galat faisle lega',
-            '₹0 dikha do',
-            'Purana cached balance dikha do, chup-chaap',
-            'Poora page error kar do',
-          ],
+          q: "Balance source unavailable hai aur current amount unknown. Safe default UI?",
+          choices: ["Unavailable status; balance invent mat karo","Known balance bina 0 current dikha do","Old balance ko silently current dikha do","Balance error se every page crash karo"],
           answer: 0,
-          explain: 'Paisa, stock aur permissions par <b>kabhi</b> chup-chaap fallback mat do. ₹0 dekh ke user ghabra jaayega; stale balance dekh ke woh aisa kharch karega jo shayad ho hi na sake. Yahan imaandaar error hi sabse achha UX hai.',
-        },
+          explain: "Unknown balance ko 0 ya silently stale current balance mat banao. Explicit unavailable state do. Approved last-known balance timestamp/stale label ke saath useful ho sakta hai; business risk decides. Other safe page sections isolated reh sakte hain.",
+         choiceExplanations: ["Unknown balance ko 0 ya silently stale current balance mat banao. Explicit unavailable state do. Approved last-known balance timestamp/stale label ke saath useful ho sakta hai; business risk decides. Other safe page sections isolated reh sakte hain.","0 real financial fact hai; unknown ko zero dikhana misleading hai.","Stale balance clearly timestamp/status ke saath only approved contract mein.","Optional UI isolation se baaki safe information available reh sakti hai."] },
         {
           q: 'Feature tiers kab decide karne chahiye?',
-          choices: [
-            'Pehle se — aur woh code mein dikhne chahiye (timeout, bulkhead, fallback), sirf ek document mein nahi',
-            'Incident ke waqt, situation dekh ke',
-            'Product team decide karegi jab zaroorat padegi',
-            'Zaroori nahi, sab features barabar hain',
-          ],
+          choices: ["Criticality tiers pehle implement/test karo","Incident ke beech first time tiers chuno","Document enough; runtime policy na rakho","Every feature ko equal fallback de do"],
           answer: 0,
           explain: 'Incident ke beech mein yeh faisla karna matlab dabav mein architecture design karna. Aur agar tier sirf ek doc mein hai toh woh asal mein exist hi nahi karta — <b>code mein</b> dikhna chahiye: optional dependency ka apna chhota bulkhead, chhota timeout, aur ek likha hua fallback.',
-        },
+         choiceExplanations: ["Incident ke beech mein yeh faisla karna matlab dabav mein architecture design karna. Aur agar tier sirf ek doc mein hai toh woh asal mein exist hi nahi karta — <b>code mein</b> dikhna chahiye: optional dependency ka apna chhota bulkhead, chhota timeout, aur ek likha hua fallback.","Stress mein ad-hoc decisions inconsistent aur slow ho sakte hain.","Document timeouts, capacity and fallback runtime mein enforce nahi karta.","Payment/auth versus recommendations ka failure risk alag ho sakta hai."] },
       ],
     },
   ],
@@ -1121,15 +1042,10 @@ recommendations poori tarah mar jaaye?
     questions: [
       {
         q: '"Recommendation service down hai. Product page ka kya karoge?"',
-        choices: [
-          'Section chhupa dunga aur baaki page normal serve karunga — recommendations OPTIONAL tier mein hai. Uspar chhota timeout, apna bulkhead aur ek khaali-list fallback pehle se hona chahiye',
-          'Poora page error kar dunga',
-          'Retry karta rahunga jab tak na aaye',
-          'Cached recommendations dikha dunga, chahe kitne purane hon',
-        ],
+        choices: ["Optional section bounded fallback se do","Complete checkout page failure return karo","Recommendations success tak wait karo","Any age ki cached result current bolo"],
         answer: 0,
         explain: 'Sabse achha jawab <b>tier</b> ka naam leta hai aur batata hai ki guards <b>pehle se</b> hone chahiye. Purane recommendations dikhana bhi theek hai (woh nuksaandeh nahi hai) — par asli baat yeh hai ki us ek section ki wajah se revenue path kabhi na ruke.',
-      },
+       choiceExplanations: ["Sabse achha jawab <b>tier</b> ka naam leta hai aur batata hai ki guards <b>pehle se</b> hone chahiye. Purane recommendations dikhana bhi theek hai (woh nuksaandeh nahi hai) — par asli baat yeh hai ki us ek section ki wajah se revenue path kabhi na ruke.","Optional dependency ko whole-page hard requirement banana blast radius badhata hai.","Unbounded wait page deadline aur worker capacity consume karta hai.","Freshness/privacy contract stale fallback ko bound karta hai."] },
     ],
   },
   success: [
@@ -1209,20 +1125,26 @@ TCP   → yeh already karta hai (receive window)</pre>
     {
       type: 'terminal',
       title: '🌊 Shed karke kuch ko bachao',
-      goal: 'Capacity se bahut zyada load aa raha hai aur sab mar rahe hain. Admission control lagao aur dekho ki kuch requests bach jaati hain.',
+      goal: '50,000 rps par capacity panel padho: is model mein lagbhag 278 rps capacity hai. Admission 200 rps par rakho, phir wahi load dobara chalao. Admitted load capacity ke neeche, saturation false aur baaki waiting-room traffic dikhna chahiye.',
       sys: SD.sys.results(),
       tasks: T_SHED,
-      success: allOf(T_SHED),
+      success: SD.allTasks(T_SHED),
       successText: `Admission control ne kuch nahi "theek" kiya — usne <b>faisla</b> kiya.
         <br><br>Pehle: sab andar aaye, queue badhi, sab mare — <b>0% safal</b>.
         <br>Ab: kuch andar, poori speed se serve — <b>kuch % safal</b>.
         <br><br>Aur ek chhupa hua faayda: waiting room <b>retries bhi rokta hai</b>.
         503 dekh ke log refresh dabate hain (12 lakh requests 30 lakh ban jaati hain);
         "Aapka result load ho raha hai" dekh ke woh ruk jaate hain.`,
+      solution: [
+        "load --rps 50000 --duration 5 --pattern detail",
+        "sim add admission --max-concurrent 200 --queue 8",
+        "load --rps 50000 --duration 5 --pattern detail",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.admission?.maxConcurrent === 200 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated && r.queuedRps > 0); },
       hints: [
-        'Pehle bina guard ke: load --rps 50000 --duration 5 --pattern detail',
-        'Admission control lagao: sim add admission --max-concurrent 5000 --queue 8',
-        'Ab wahi load: load --rps 50000 --duration 5 --pattern detail',
+        "Pehle observation: Capacity se zyada load daalo — sab mar jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Wahi load dobara — ab kuch to bach jaayenge. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 50000 --duration 5 --pattern detail\nsim add admission --max-concurrent 200 --queue 8\nload --rps 50000 --duration 5 --pattern detail",
       ],
     },
     {
@@ -1254,27 +1176,17 @@ TCP   → yeh already karta hai (receive window)</pre>
       title: 'Shedding ki samajh',
       questions: [
         {
-          q: 'Capacity 2,000 rps, aa rahi 10,000. Sabko andar aane dene ka nateeja?',
-          choices: [
-            'Queue badhegi, p99 30s hoga, clients timeout ho ke retry karenge, load double hoga — aur 0% requests safal hongi',
-            '2,000 safal honge, baaki fail',
-            'Sab dheere-dheere serve ho jaayenge',
-            'Auto-scaling handle kar legi',
-          ],
+          q: "Capacity 2000 rps; offered 10000 rps; unbounded admission. Defensible outcome?",
+          choices: ["Offered load se unbounded waits badhenge","Exactly 0% success har case guaranteed","Queue automatically 2000 rps se tez hogi","Autoscale burst se pehle always ready"],
           answer: 0,
-          explain: 'Yeh sabse bura nateeja hai: <b>koi bhi</b> serve nahi hua, jabki 2,000 rps toh ho hi sakte the. Kyunki tum har request par thoda-thoda kaam kar rahe ho aur koi bhi apne timeout se pehle poora nahi hota. <b>Jaldi reject karna ek feature hai.</b>',
-        },
+          explain: "Arrival 10000/s aur sustainable 2000/s mein unbounded admission se queues/waits grow karte hain, deadlines expire aur retries pressure badha sakti hain. Exactp 99 or0%success given numbers se derive nahi; admission control useful capacity preserve kar sakta hai.",
+         choiceExplanations: ["Arrival 10000/s aur sustainable 2000/s mein unbounded admission se queues/waits grow karte hain, deadlines expire aur retries pressure badha sakti hain. Exactp 99 or0%success given numbers se derive nahi; admission control useful capacity preserve kar sakta hai.","Success fraction capacity, deadlines, queues aur retries par depend hai.","Buffering service rate create nahi karti.","Reactive scaling observation, provisioning, warm-up delay rakhti hai."] },
         {
           q: 'Backpressure aur load shedding mein farak?',
-          choices: [
-            'Shedding = requests reject karna (defensive). Backpressure = "bhara hoon" ka signal UPSTREAM bhejna taaki woh bhejna kam kare (cooperative)',
-            'Dono ek hi cheez hain',
-            'Backpressure sirf queues mein hota hai',
-            'Shedding better hai, backpressure purana concept hai',
-          ],
+          choices: ["Shed reject; backpressure sender ko slow kare","Backpressure only database feature hai","Reject se client rate automatically gire","Backpressure message durable store kare"],
           answer: 0,
           explain: 'Shedding sirf tumhe bachati hai. Backpressure <b>poore system</b> ko bachati hai — producer sach mein dheere bhejta hai, isliye kaam banta hi nahi. 503 + Retry-After dono ek saath karta hai: reject bhi, aur signal bhi.',
-        },
+         choiceExplanations: ["Shedding sirf tumhe bachati hai. Backpressure <b>poore system</b> ko bachati hai — producer sach mein dheere bhejta hai, isliye kaam banta hi nahi. 503 + Retry-After dono ek saath karta hai: reject bhi, aur signal bhi.","HTTP/streams/queues mein cooperative demand signaling possible hai.","Clients signal ignore/retry kar sakte hain; retry policy chahiye.","Backpressure flow control hai; durability separate contract hai."] },
       ],
     },
   ],
@@ -1284,15 +1196,10 @@ TCP   → yeh already karta hai (receive window)</pre>
     questions: [
       {
         q: '"Traffic capacity se 5x zyada hai. Kya karoge?"',
-        choices: [
-          'Load shed karunga — capacity ke barabar andar lunga aur baaki ko 503 + Retry-After. Priority se shed karunga (analytics pehle, checkout aakhir mein), aur queue mein deadline nikal chuki requests phenk dunga',
-          'Auto-scale kar dunga',
-          'Queue size badha dunga taaki koi request na khoye',
-          'Timeout badha dunga',
-        ],
+        choices: ["Bound admission; shed by priority","Queue unlimited karo taaki loss zero ho","All requests ka timeout 10x kar do","Only autoscale ka wait bina cap karo"],
         answer: 0,
         explain: 'Auto-scaling minutes leti hai — spike seconds mein hota hai. Queue badhana sabse ulta jawab hai: woh latency badhata hai aur failure ko badi banata hai. Sahi jawab <b>kam kaam karna</b> chunta hai, taaki jo kaam ho woh sach mein poora ho.',
-      },
+       choiceExplanations: ["Auto-scaling minutes leti hai — spike seconds mein hota hai. Queue badhana sabse ulta jawab hai: woh latency badhata hai aur failure ko badi banata hai. Sahi jawab <b>kam kaam karna</b> chunta hai, taaki jo kaam ho woh sach mein poora ho.","Unbounded queue expired work, memory pressure aur delay accumulate karti hai.","Longer wait new service capacity nahi create karta.","Scale-up lag ke dauraan overload existing capacity gira sakta hai."] },
     ],
   },
   success: [
@@ -1377,7 +1284,7 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
       goal: 'Kal 5 baje 12 lakh students result dekhenge. Abhi system 1.2 lakh rps par gir jaata hai. Precompute, pre-scale aur admission control lagao — phir load test karke prove karo.',
       sys: SD.sys.results(),
       tasks: T_FLASH,
-      success: allOf(T_FLASH),
+      success: SD.allTasks(T_FLASH),
       successText: `Teen kadam, teen alag problem:
         <br><br><b>1. Precompute</b> — service time 180 ms se 2 ms.
         Little's Law se capacity seedha 90x badh gayi. <b>Yeh sabse bada single faayda tha.</b>
@@ -1387,12 +1294,18 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
         (12 lakh → 30 lakh) hone hi nahi diya.
         <br><br>Aur read path ab embarrassingly simple hai: ek key lookup, immutable data,
         jitna chaaho replicate karo.`,
+      solution: [
+        "load --rps 120000 --duration 4 --pattern detail",
+        "sim precompute results",
+        "sim scale pool 400",
+        "sim add admission --max-concurrent 150000 --queue 8",
+        "load --rps 120000 --duration 4 --pattern detail",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.precomputed === true && s.sys.pool.size === 400 && s.sys.api.admission?.maxConcurrent === 150000 && m.current(s, 'load', r => r.rps === 120000 && !r.saturated); },
       hints: [
-        'Pehle as-is test: load --rps 120000 --duration 4 --pattern detail',
-        'Results pehle se banao: sim precompute results',
-        'Pre-scale karo: sim scale pool 400',
-        'Waiting room lagao: sim add admission --max-concurrent 150000 --queue 8',
-        'Ab dobara test: load --rps 120000 --duration 4 --pattern detail',
+        "Pehle observation: As-is 1.2 lakh rps daalo — system gir jaayega. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab dobara load test karo — survive karna chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 120000 --duration 4 --pattern detail\nsim precompute results\nsim scale pool 400\nsim add admission --max-concurrent 150000 --queue 8\nload --rps 120000 --duration 4 --pattern detail",
       ],
     },
     {
@@ -1427,37 +1340,22 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
       questions: [
         {
           q: 'Predictable flash crowd normal scaling problem se kaise alag hai?',
-          choices: [
-            'Tumhe PEHLE se pata hai — isliye tum precompute, pre-scale aur load test kar sakte ho. Normal scaling reactive hoti hai, yeh poori tarah proactive ho sakti hai',
-            'Traffic zyada hota hai',
-            'Users alag hote hain',
-            'Koi farak nahi, dono scaling hai',
-          ],
+          choices: ["Known event allows preparation and rehearsal","Only average daily load estimate kaafi hai","Publish instant par scale signal pehla lo","Predictable event mein admission optional"],
           answer: 0,
           explain: 'Yeh framing hi sabse zaroori insight hai. "Hume scale karna hai" ek reactive problem hai. "5 baje 12 lakh log aayenge" ek <b>planning</b> problem hai — aur usme tumhare paas hafton ka waqt hai, seconds ka nahi.',
-        },
+         choiceExplanations: ["Yeh framing hi sabse zaroori insight hai. \"Hume scale karna hai\" ek reactive problem hai. \"5 baje 12 lakh log aayenge\" ek <b>planning</b> problem hai — aur usme tumhare paas hafton ka waqt hai, seconds ka nahi.","Correlated burst average se much higher ho sakta hai.","Known timing se pehle warmup/pre scale/precompute possible hai.","Finite capacity ke liye admission still useful hai."] },
         {
-          q: 'Autoscaling flash crowd mein kyun kaam nahi karti?',
-          choices: [
-            'Woh traffic dekhne ke BAAD react karti hai — metric + decision + boot + warm-up = 2-3 minute. Flash crowd 60 second ka hota hai, isliye woh der se pahunchti hai',
-            'Autoscaling mahengi hai',
-            'Autoscaling reliable nahi hai',
-            'Woh kaam karti hai, bas thodi der lagti hai',
-          ],
+          q: "Short sharp flash crowd mein reactive autoscaling ka risk?",
+          choices: ["Reactive scaling burst se late ho sakti","Autoscale kabhi any burst handle nahi karti","Autoscale always exactly 3 minutes leti","Scale target se cold cache bhi warm hoti"],
           answer: 0,
-          explain: 'Aur us 2-3 minute mein system already gir chuka hota hai — aur girne ke baad retries load ko aur badha deti hain, jisse naye instances bhi turant bhar jaate hain. <b>Predictable event ke liye pre-scale hi ek raasta hai.</b>',
-        },
+          explain: "Reactive autoscaling detection, decision, provisioning aur warmup time leti hai; short sharp burst se late ho sakti hai. Exact 2-3 minutes/60 seconds universal nahi; warm minimum capacity, predictive/scheduled scaling aur admission complement hain.",
+         choiceExplanations: ["Reactive autoscaling detection, decision, provisioning aur warmup time leti hai; short sharp burst se late ho sakti hai. Exact 2-3 minutes/60 seconds universal nahi; warm minimum capacity, predictive/scheduled scaling aur admission complement hain.","Small/long bursts aur warm capacity scaling successfully handle kar sakte hain.","Timing infrastructure, metrics aur instance readiness specific hai.","New capacity ko app/cache warmup separately lag sakta hai."] },
         {
-          q: '8 second ka waiting room sabko 503 dene se behtar kyun hai?',
-          choices: [
-            'User ruk ke result le leta hai; aur 503 dekh ke log refresh dabate hain jisse 12 lakh requests 30 lakh ban jaati hain',
-            'Waiting room dikhne mein achha lagta hai',
-            '503 se logs bharte hain',
-            'Dono barabar hain',
-          ],
+          q: "Bounded waiting room admission control se kya faayda ho sakta hai?",
+          choices: ["Bounded waiting room load smooth kar sakta","Waiting room ki queue unlimited rakho","Refresh ko unlimited new ticket bana do","Waiting room se capacity infinite hoti"],
           answer: 0,
-          explain: 'Do alag faayde: <b>UX</b> (8 second ka intezaar failure nahi hai) aur <b>load</b> (retry amplification ruk jaati hai). Doosra faayda aksar bada hota hai — retries hi woh cheez hai jo ek bade spike ko ek outage banati hai.',
-        },
+          explain: "A bounded waiting room stable queue token, backoff, predictable wait aur admission limit ke saath refresh amplification ghata sakta hai.8 seconds merely scenario assumption; queue abandonment, expiry, fairness aur capacity measure karo.",
+         choiceExplanations: ["A bounded waiting room stable queue token, backoff, predictable wait aur admission limit ke saath refresh amplification ghata sakta hai.8 seconds merely scenario assumption; queue abandonment, expiry, fairness aur capacity measure karo.","Capacity/backlog deadlines ke bina waiting time unbounded ho sakta hai.","Stable queue token and rate controls refresh amplification prevent karte hain.","Admission arrivals smooth karta hai; backend throughput finite rehta hai."] },
       ],
     },
   ],
@@ -1467,26 +1365,16 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
     questions: [
       {
         q: '"Board result 5 baje publish hoga, 12 lakh students dekhenge. Design karo."',
-        choices: [
-          'Yeh predictable flash crowd hai, normal scaling nahi. 4:59:59 tak har result materialized ho (roll_no → object), read path ek KV lookup ho, pre-scale karo (autoscaling der se aati hai), admission control se backend bachao, aur asli traffic shape par load test karo',
-          'Auto-scaling laga dunga aur CDN use karunga',
-          'Bade servers le lunga',
-          'Queue laga ke requests dheere-dheere process karunga',
-        ],
+        choices: ["Precompute; warm; admit; real burst test karo","Only CDN se private results safely share","Only reactive scale pe result publish karo","Only unlimited worker queue deploy karo"],
         answer: 0,
         explain: 'Sabse achha jawab pehle problem ko <b>naam</b> deta hai (predictable flash crowd), phir sabse bade lever se shuru karta hai (precompute — 90x capacity). Aur "load test with real traffic shape" bolna dikhata hai ki tumne yeh sach mein kiya hai.',
-      },
+       choiceExplanations: ["Sabse achha jawab pehle problem ko <b>naam</b> deta hai (predictable flash crowd), phir sabse bade lever se shuru karta hai (precompute — 90x capacity). Aur \"load test with real traffic shape\" bolna dikhata hai ki tumne yeh sach mein kiya hai.","Private roll-number data auth/cache-key policy require karta hai.","First burst provisioning aur warmup se pehle hit kar sakta hai.","Queue deadlines, limits aur replay/idempotency needed hain."] },
       {
-        q: '"Sab kuch pre-scale kar diya, phir bhi pehle 10 second mein gir gaya. Kya chhoot gaya?"',
-        choices: [
-          'Admission control — pre-scaling ke baad bhi unlimited requests andar aa rahi thi, aur pehle failures ne retries trigger ki jisse load 2-3x ho gaya',
-          'Aur zyada pre-scale karna chahiye tha',
-          'CDN nahi laga tha',
-          'Database chhota tha',
-        ],
+        q: "Pre scale ke baad first 10 seconds failure. Agla diagnostic approach?",
+        choices: ["Trace limits, retries and cold paths","Pre scale se every resource limit removed","First 10 seconds proves DB too small","A CDN alone makes every path bounded"],
         answer: 0,
-        explain: 'Pre-scaling ek <b>ceiling</b> deta hai, protection nahi. Bina admission control ke tum us ceiling se upar ja sakte ho — aur wahan se retry amplification shuru ho jaati hai. "Aur zyada scale karo" ek anant seedhi hai; <b>bounded admission</b> ek design hai.',
-      },
+        explain: "Prescaling ke bawajood offered load/retries, DBpool, cachecoldness, provider limits or ingress saturation remain ho sakte hain. Admission and retry evidence inspect karo; ten-second failure alone one cause prove nahi karta.",
+       choiceExplanations: ["Prescaling ke bawajood offered load/retries, DBpool, cachecoldness, provider limits or ingress saturation remain ho sakte hain. Admission and retry evidence inspect karo; ten-second failure alone one cause prove nahi karta.","Capacity limit may be DB, pool, provider, network or request amplification.","Measure trace and saturation; timing alone does not name resource.","Dynamic/private routes and origins can still saturate."] },
     ],
   },
   success: [
@@ -1577,7 +1465,7 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
       goal: 'Ek system dheema chal raha hai. Chaaron signals use karo — health check, metrics, trace aur error budget — aur samjho ki har ek kya batata hai.',
       sys: SD.sys.orders({ db: { longTxHolding: 44 } }),
       tasks: T_OBS,
-      success: allOf(T_OBS),
+      success: SD.allTasks(T_OBS),
       successText: `Chaar signals, chaar alag sawaal:
         <br><br>• <b>/health</b> → "process zinda hai" — <b>aur kuch nahi</b>. Usne pool chhua hi nahi.
         <br>• <b>metrics</b> → CPU 10% (utilization theek) par pool wait aasman par (saturation 🔥)
@@ -1586,12 +1474,18 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
         <br><br>Yaad rakho: <b>utilization</b> batata hai "kitna use ho raha hai",
         <b>saturation</b> batata hai "kitna intezaar ho raha hai" — aur outage hamesha
         doosre se aata hai.`,
+      solution: [
+        "load --rps 400 --duration 6",
+        "GET /health",
+        "metrics",
+        "trace GET /api/v1/orders",
+        "slo --availability 99.9",
+      ],
+      verify: s => { const m = SD.mission; return m.current(s, 'load') && m.current(s, 'metrics') && m.current(s, 'trace') && m.latest(s, 'slo')?.avail === 99.9; },
       hints: [
-        'Load daalo: load --rps 400 --duration 6',
-        'Health check dekho: GET /health',
-        'Metrics dekho: metrics',
-        'Trace karo: trace GET /api/v1/orders',
-        'Aur budget: slo --availability 99.9',
+        "Pehle observation: Load daalo taaki kuch dekhne laayak ho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Error budget nikalo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 400 --duration 6\nGET /health\nmetrics\ntrace GET /api/v1/orders\nslo --availability 99.9",
       ],
     },
     {
@@ -1631,38 +1525,23 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
       title: 'Observability ki samajh',
       questions: [
         {
-          q: 'Liveness aur readiness ek hi endpoint banane se kya hota hai?',
-          choices: [
-            'Ek dheemi dependency par liveness fail hoga aur orchestrator HEALTHY pods restart karta rahega — jisse capacity aur kam ho jaayegi',
-            'Kuch nahi, dono ek hi cheez hain',
-            'Health check dheema ho jaayega',
-            'Load balancer confuse ho jaayega',
-          ],
+          q: "Liveness+readiness dono blocked dependency test use karte hain. Risk?",
+          choices: ["Dependency liveness can cause restart cascade","Same endpoint is always invalid design","Readiness failure always restarts process","Liveness probe should check every provider"],
           answer: 0,
-          explain: 'Yeh ek asli outage pattern hai. Liveness ka matlab hai "restart se theek ho jaayega". Ek dheemi downstream dependency restart se theek nahi hoti — par ab tum apne healthy pods ko maar rahe ho aur capacity ghata rahe ho, jisse haalat aur bigadti hai.',
-        },
+          explain: "If liveness/readiness endpoint blocked dependency test share kare, toh dependency outage readiness removal ke saath unnecessary local restarts trigger kar sakti hai. A shared cheap endpoint always wrong nahi; probe purpose and failover behavior explicit rakho.",
+         choiceExplanations: ["If liveness/readiness endpoint blocked dependency test share kare, toh dependency outage readiness removal ke saath unnecessary local restarts trigger kar sakti hai. A shared cheap endpoint always wrong nahi; probe purpose and failover behavior explicit rakho.","Same simple endpoint possible; danger depends on meaning/check dependencies.","Readiness removes traffic; restart behavior belongs to liveness/startup failure.","External outage should not automatically kill a functioning local process."] },
         {
           q: '"CPU > 80%" par alert kyun bura hai?',
-          choices: [
-            'Woh ek CAUSE hai, symptom nahi — CPU 80% par shayad sab theek ho. Alert us cheez par karo jo user ko dard de rahi hai: error rate, p99, ya ruka hua kaam',
-            'CPU metric reliable nahi hai',
-            '80% bahut kam threshold hai',
-            'CPU alerts dheeme hote hain',
-          ],
+          choices: ["Page on user impact; CPU informs diagnosis","CPU 80% proves every user is failing","CPU metric cannot ever be measured","Resource metrics cannot guide capacity"],
           answer: 0,
           explain: 'Cause-based alerts ka nateeja <b>alert fatigue</b> hota hai — log unhe ignore karna seekh jaate hain, aur phir asli alert bhi ignore ho jaata hai. Symptom-based alerts hamesha actionable hote hain: agar user ko dard nahi ho raha, toh raat ko uthne ki koi wajah nahi.',
-        },
+         choiceExplanations: ["Cause-based alerts ka nateeja <b>alert fatigue</b> hota hai — log unhe ignore karna seekh jaate hain, aur phir asli alert bhi ignore ho jaata hai. Symptom-based alerts hamesha actionable hote hain: agar user ko dard nahi ho raha, toh raat ko uthne ki koi wajah nahi.","CPU usage needs correlation with saturation, user SLO and headroom.","CPU metrics are useful signals; not every threshold warrants page.","Capacity planning often uses utilization and saturation trends."] },
         {
           q: 'Burn-rate alert kya karta hai?',
-          choices: [
-            'Batata hai ki error budget kitni tez jal raha hai — isse chhota spike jise budget jhel sakta hai woh page nahi karta, par sach mein khatarnak burn karta hai',
-            'CPU burn measure karta hai',
-            'Cost track karta hai',
-            'Memory leak detect karta hai',
-          ],
+          choices: ["Error budget consumption speed measure kare","Server temperature burn ko alert kare","CPU utilization ko error budget maan le","Only monthly SLA refund sum karta"],
           answer: 0,
           explain: 'Yeh "error rate > 1%" se behtar hai kyunki woh <b>asar ko time se jodta</b> hai. 2 minute ka 5% error spike shayad budget ka 1% hai — usse kisi ko nahi jagana chahiye. Par 2% error jo 6 ghante chale, woh poora mahina kha jaayega.',
-        },
+         choiceExplanations: ["Yeh \"error rate > 1%\" se behtar hai kyunki woh <b>asar ko time se jodta</b> hai. 2 minute ka 5% error spike shayad budget ka 1% hai — usse kisi ko nahi jagana chahiye. Par 2% error jo 6 ghante chale, woh poora mahina kha jaayega.","Burn rate is SLO budget usage, not hardware temperature.","Budget is defined by chosen SLI, error fraction/time objectives.","Multi window burn alerts can react much sooner than monthly accounting."] },
       ],
     },
   ],
@@ -1672,15 +1551,10 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
     questions: [
       {
         q: '"Ek naye service ke liye kya monitor karoge?"',
-        choices: [
-          'RED har endpoint ke liye (rate, errors, duration p50/p95/p99), USE har resource ke liye — khaas kar SATURATION (pool wait, queue depth), distributed tracing, aur alerts sirf symptoms par with runbooks',
-          'CPU, memory, disk aur network',
-          'Errors aur latency',
-          'APM tool laga dunga, woh sab kar lega',
-        ],
+        choices: ["Outcome SLI plus resource saturation dekho","Only machine averages ko service SLO bolo","Only tool install se all alerts useful","Every CPU change pe urgent page bhejo"],
         answer: 0,
         explain: 'Sabse achha jawab do frameworks ka naam leta hai aur <b>saturation</b> ko alag se highlight karta hai — kyunki wahi aksar chhoot jaata hai aur wahi outage laata hai. "Alerts sirf symptoms par with runbooks" wali line dikhati hai ki tum on-call rahe ho.',
-      },
+       choiceExplanations: ["Sabse achha jawab do frameworks ka naam leta hai aur <b>saturation</b> ko alag se highlight karta hai — kyunki wahi aksar chhoot jaata hai aur wahi outage laata hai. \"Alerts sirf symptoms par with runbooks\" wali line dikhati hai ki tum on-call rahe ho.","User outcomes may fail while machines appear healthy.","Telemetry instrumentation, contracts and actionable policy still needed.","High-volume noisy alerts obscure urgent user-impacting symptoms."] },
     ],
   },
   success: [
@@ -1820,37 +1694,22 @@ Agar SLO 99.99% hota:
       questions: [
         {
           q: 'Error budget ka asli maqsad kya hai?',
-          choices: [
-            '"Product velocity vs reliability" ki behes ko ek NUMBER mein badalna — budget bacha hai toh tez chalo, khatam hai toh reliability par kaam karo',
-            'Downtime track karna',
-            'Team ko downtime ke liye blame karna',
-            'SLA compliance report banana',
-          ],
+          choices: ["Reliability-risk and change pace agree karo","Budget use se users ko blame karo","Budget means SLA penalties only count","Budget fixed ho toh business irrelevant"],
           answer: 0,
           explain: 'Yeh ek <b>organizational</b> tool hai, technical nahi. Uske bina yeh behes feelings par hoti hai ("mujhe lagta hai system stable nahi hai") aur woh kabhi khatam nahi hoti. Budget usse ek objective faisle mein badal deta hai.',
-        },
+         choiceExplanations: ["Yeh ek <b>organizational</b> tool hai, technical nahi. Uske bina yeh behes feelings par hoti hai (\"mujhe lagta hai system stable nahi hai\") aur woh kabhi khatam nahi hoti. Budget usse ek objective faisle mein badal deta hai.","Budget policy is service/team decision support, not customer blame.","Internal reliability decision-making can exist without financial SLA.","Business risk and user expectations guide SLO and budget policy."] },
         {
-          q: 'SLO 100% kyun nahi rakhna chahiye?',
-          choices: [
-            'Budget zero ho jaata hai — matlab koi deploy nahi, koi risk nahi, koi progress nahi. Budget ka ISTEMAL karna chahiye',
-            'Kyunki woh mushkil hai',
-            'Kyunki customers ko farak nahi padta',
-            '100% rakhna chahiye, woh best hai',
-          ],
+          q: "100%internalSLO ka practical tradeoff?",
+          choices: ["Zero budget tradeoff usually impractical","100% target means code deploy forbidden","100% target makes failures impossible","Customers never need high reliability"],
           answer: 0,
-          explain: 'Yeh counterintuitive insight hi SLO thinking ka dil hai. Budget kharch karne ke liye hai. Jo team apna poora budget mahine ke aakhir tak bacha ke rakhti hai, woh <b>bahut dheere chal rahi hai</b> — usne reliability par zaroorat se zyada invest kiya.',
-        },
+          explain: "100%SLO zero error budget define karta hai, usually cost/velocity tradeoffs impractical banata hai. Target deploys ko physically prohibit nahi karta, nor failures impossible banata. User/business needs aur measured failure model se realistic internal target choose karo.",
+         choiceExplanations: ["100%SLO zero error budget define karta hai, usually cost/velocity tradeoffs impractical banata hai. Target deploys ko physically prohibit nahi karta, nor failures impossible banata. User/business needs aur measured failure model se realistic internal target choose karo.","A target is not a mathematical ban; zero tolerable error complicates tradeoffs.","Targets do not change networks, dependencies or operational failure probabilities.","Some workflows need very high reliability; requirements and cost matter."] },
         {
-          q: 'SLA ko SLO se dheela kyun rakhte hain?',
-          choices: [
-            'Taaki tumhara internal alarm customer ke refund se PEHLE baje — SLO todne par tumhare paas theek karne ka waqt ho',
-            'Legal reason se',
-            'Customers ko kam expect karana chahiye',
-            'Dono barabar hone chahiye',
-          ],
+          q: "InternalSLO contractualSLA se tighter rakhne ka common reason?",
+          choices: ["Tighter internal target can give margin","Every SLA is automatically below SLO","SLA and SLO always use same SLI","Refund threshold fixes incident severity"],
           answer: 0,
-          explain: 'SLO (99.9%) internal target hai, SLA (99.5%) contract. Beech ka gap tumhara <b>buffer</b> hai: jab SLO tootna shuru ho tab tumhe pata chal jaata hai aur theek karne ka waqt milta hai — refund dene se pehle.',
-        },
+          explain: "Common design mein internal SLO contractual SLA se tighter hota hai taaki contractual breach se pehle corrective room ho. Yeh universal requirement nahi; windows, SLIs, exclusions aur commercial commitments explicitly compare karo.",
+         choiceExplanations: ["Common design mein internal SLO contractual SLA se tighter hota hai taaki contractual breach se pehle corrective room ho. Yeh universal requirement nahi; windows, SLIs, exclusions aur commercial commitments explicitly compare karo.","SLO/SLA relationship is explicit policy; universal ordering not guaranteed.","Contracts may define different windows, exclusions and indicators.","User impact and operational risk matter before any refund threshold."] },
       ],
     },
   ],
@@ -1860,26 +1719,16 @@ Agar SLO 99.99% hota:
     questions: [
       {
         q: '"Naye service ke liye SLO kaise set karoge?"',
-        choices: [
-          'User-facing outcomes par ("checkout 500ms mein safal"), business zaroorat ke hisaab se — sab kuch 99.99% nahi. Phir error budget se decide karunga kab feature ship karna hai aur kab reliability par kaam',
-          '99.99% availability, woh industry standard hai',
-          'Jo current performance hai wahi SLO bana dunga',
-          '100% target rakhunga',
-        ],
+        choices: ["User outcomes and business tolerance se set","99.99% is correct for every endpoint","Current poor latency automatically target","SLO without measurement publish kar do"],
         answer: 0,
         explain: 'Do cheezein dikhti hain: SLO <b>user outcomes</b> par hona chahiye (CPU par nahi), aur <b>har feature ka alag</b> — search ke liye 99% theek hai, payments ke liye nahi. Har extra 9 ki keemat 10x hai, isliye use sirf wahan kharch karo jahan matter karta hai.',
-      },
+       choiceExplanations: ["Do cheezein dikhti hain: SLO <b>user outcomes</b> par hona chahiye (CPU par nahi), aur <b>har feature ka alag</b> — search ke liye 99% theek hai, payments ke liye nahi. Har extra 9 ki keemat 10x hai, isliye use sirf wahan kharch karo jahan matter karta hai.","Different user journeys have different value, cost and reliability needs.","Baseline informs feasibility; business needs decide acceptable outcome.","SLI measurement/window/error budget policy must be defined and validated."] },
       {
         q: '"Error budget khatam ho gaya. Ab kya?"',
-        choices: [
-          'Feature freeze — sirf reliability kaam. Yeh saza nahi, ek pehle se tay kiya gaya samjhauta hai jo behes ko rokta hai. Aur incident review se pata karo ki budget gaya kahan',
-          'SLO badha dunga',
-          'Ignore karke ship karta rahunga',
-          'Team ko blame karunga',
-        ],
+        choices: ["Agreed budget policy plus cause review","Missed budget hide by loosening target","Budget breach ignore; all features ship","One engineer ko blame karke close karo"],
         answer: 0,
-        explain: '"SLO badha dunga" sabse aam (aur sabse buri) reaction hai — usse SLO ka poora maqsad khatam ho jaata hai. Sahi jawab yeh batata hai ki freeze ek <b>pehle se tay samjhauta</b> hai, taaki us waqt behes na karni pade jab sab pareshan hon.',
-      },
+        explain: "Pre-agreed error-budget policy follow karo:feature risk limit, reliability fixes, exceptions with explicit ownership aur incident learnings. Universal all-service freeze mandatory nahi; policy business/user risk se define hoti hai.",
+       choiceExplanations: ["Pre-agreed error-budget policy follow karo:feature risk limit, reliability fixes, exceptions with explicit ownership aur incident learnings. Universal all-service freeze mandatory nahi; policy business/user risk se define hoti hai.","Retargeting needs justified reviewed user/business requirements, not hiding incidents.","Explicit policy should govern risk acceptance after breach.","Systemic causes and safeguards require learning beyond individual blame."] },
     ],
   },
   success: [
@@ -1937,7 +1786,7 @@ ek hi thread pool sab ke liye</pre>
       goal: 'Payment provider dheema ho gaya hai aur checkout mar raha hai. Poore track ke guards lagao aur prove karo ki p99 wapas SLO ke andar aa gaya.',
       sys: SD.sys.orders(),
       tasks: T_BOSS_RESIL,
-      success: allOf(T_BOSS_RESIL),
+      success: SD.allTasks(T_BOSS_RESIL),
       successText: `Chhe guards, chhe alag khatre:
         <br><br><b>Timeout</b> — ek call ka intezaar baandha (aur SLO se kam rakha)
         <br><b>Jitter</b> — retry storm ka synchronization toda
@@ -1946,19 +1795,24 @@ ek hi thread pool sab ke liye</pre>
         <br><b>Bulkhead</b> — blast radius baandha
         <br><br>Ek line mein poora track: <b>har remote call ek din fail hogi. Sawaal yeh hai —
         tab tumhara system kya karega?</b>`,
+      solution: [
+        "sim inject latency ledger 8000",
+        "sim add timeout ledger 150",
+        "sim add retry ledger --max 2 --backoff exp --jitter full",
+        "sim add breaker ledger --threshold 0.5 --window 20",
+        "sim add fallback ledger 'last known status'",
+        "sim add bulkhead ledger --max 20",
+        "GET /api/v1/orders?page=1&limit=50",
+        "GET /api/v1/orders?page=2&limit=50",
+        "GET /api/v1/orders?page=3&limit=50",
+        "GET /api/v1/orders?page=4&limit=50",
+        "GET /api/v1/orders?page=5&limit=50",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 150 && s.sys.deps.ledger.retry?.jitter === 'full' && !!s.sys.deps.ledger.breaker && !!s.sys.deps.ledger.fallback && s.sys.app.bulkheads?.ledger === 20 && m.current(s, 'http', r => r.status === 200 && r.p99 < 200); },
       hints: [
-        'Incident recreate karo: sim inject latency ledger 8000',
-        'Timeout lagao (SLO se kam): sim add timeout ledger 150',
-        'Jitter wala retry: sim add retry ledger --max 2 --backoff exp --jitter full',
-        'Breaker: sim add breaker ledger --threshold 0.5 --window 20',
-        "Fallback: sim add fallback ledger 'last known status'",
-        'Bulkhead: sim add bulkhead ledger --max 20',
-        'Ab requests bhejo: GET /api/v1/orders?page=1&limit=50',
-        'Aur: GET /api/v1/orders?page=2&limit=50',
-        'Aur: GET /api/v1/orders?page=3&limit=50',
-        'Aur: GET /api/v1/orders?page=4&limit=50',
-        'Aur: GET /api/v1/orders?page=5&limit=50',
-        'Aur ab dekho: GET /api/v1/orders?page=6&limit=50',
+        "Pehle observation: Incident recreate karo — downstream dheema. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Prove karo — p99 wapas SLO ke andar. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nsim inject latency ledger 8000\nsim add timeout ledger 150\nsim add retry ledger --max 2 --backoff exp --jitter full\nsim add breaker ledger --threshold 0.5 --window 20\nsim add fallback ledger 'last known status'\nsim add bulkhead ledger --max 20\nGET /api/v1/orders?page=1&limit=50\nGET /api/v1/orders?page=2&limit=50\nGET /api/v1/orders?page=3&limit=50\nGET /api/v1/orders?page=4&limit=50\nGET /api/v1/orders?page=5&limit=50",
       ],
     },
     {
@@ -1975,28 +1829,28 @@ ek hi thread pool sab ke liye</pre>
         first: {
           text: 'Sabse pehle kya?',
           choices: [
-            { t: 'Bleeding roko — payment call par timeout lagao aur breaker chalu karo, taaki threads free hon', good: true, next: 'traffic', explain: 'Sahi. 3 baje raat ko pehla kaam damage rokna hai, root cause baad mein. Timeout + breaker turant threads free karenge.' },
-            { t: 'Payment provider ko email karo', good: false, explain: 'Karna chahiye — par woh abhi tumhare users ki madad nahi karega. Pehle apne system ko bachao.' },
-            { t: 'Aur instances add karo', good: false, explain: 'CPU 12% hai. Naye instances bhi usi dheemi dependency par latkenge — aur woh uspar aur load daalenge.' },
-            { t: 'Rollback karo', good: false, explain: 'Tumhara code nahi badla — provider dheema hua hai. Rollback se kuch nahi hoga.' },
+            { t: "Bound failing calls;preserve useful capacity", good: true, next: 'traffic', explain: 'Sahi. 3 baje raat ko pehla kaam damage rokna hai, root cause baad mein. Timeout + breaker turant threads free karenge.' },
+            { t: "Only email the provider team", good: false, explain: 'Karna chahiye — par woh abhi tumhare users ki madad nahi karega. Pehle apne system ko bachao.' },
+            { t: "Only increase caller instances", good: false, explain: 'CPU 12% hai. Naye instances bhi usi dheemi dependency par latkenge — aur woh uspar aur load daalenge.' },
+            { t: "Rollback without recent-change evidence", good: false, explain: 'Tumhara code nahi badla — provider dheema hua hai. Rollback se kuch nahi hoga.' },
           ],
         },
         traffic: {
           sitrep: '✅ Timeout 150ms + breaker laga. Error rate 60% se 15% par. Par traffic abhi bhi <b>4x</b> dikh raha hai.',
           text: '4x traffic kahan se aa raha hai? Marketing campaign toh nahi tha.',
           choices: [
-            { t: 'Retry amplification — clients aur SDK errors par retry kar rahe hain, aur retries bina jitter ke synchronized hain', good: true, next: 'fix', explain: 'Bilkul. Traffic tab badha jab errors shuru hue — yeh retry amplification ka signature hai. Jitter aur retry budget chahiye.' },
-            { t: 'DDoS attack ho raha hai', good: false, explain: 'Timing dekho — traffic tab badha jab errors shuru hue, pehle nahi. Yeh self-inflicted hai.' },
-            { t: 'Sach mein zyada users aa gaye', good: false, explain: '3 baje raat ko? Aur theek us waqt jab errors shuru hue? Yeh sanyog nahi hai.' },
+            { t: "Compare attempts and unique requests", good: true, next: 'fix', explain: 'Bilkul. Traffic tab badha jab errors shuru hue — yeh retry amplification ka signature hai. Jitter aur retry budget chahiye.' },
+            { t: "Declare attack without traffic evidence", good: false, explain: 'Timing dekho — traffic tab badha jab errors shuru hue, pehle nahi. Yeh self-inflicted hai.' },
+            { t: "Declare user growth without intent counts", good: false, explain: '3 baje raat ko? Aur theek us waqt jab errors shuru hue? Yeh sanyog nahi hai.' },
           ],
         },
         fix: {
           sitrep: '✅ Jitter laga, retry max 2 kiya, aur ek retry budget (kul load ka 10%). Traffic normal. Error rate 2%.',
           text: 'Ab tak checkout kaam kar raha hai par payment abhi bhi dheema hai. Aage?',
           choices: [
-            { t: 'Fallback do — order "pending payment" mein accept karo aur baad mein process karo, user ko batate hue', good: true, next: 'end', explain: 'Graceful degradation. Order kho nahi raha, user ko imaandaari se bataya ja raha hai, aur revenue path zinda hai.' },
-            { t: 'Checkout band kar do jab tak provider theek na ho', good: false, explain: 'Yeh haar maanna hai. Order queue mein le ke baad mein process kiya ja sakta hai — revenue kyun chhodna?' },
-            { t: 'Chup-chaap "payment successful" dikha do', good: false, explain: 'Kabhi nahi. Paise se judi cheez par jhooth bolna sabse bura fallback hai — aur woh ek compliance problem bhi hai.' },
+            { t: "Explicit pending-payment recovery state", good: true, next: 'end', explain: 'Graceful degradation. Order kho nahi raha, user ko imaandaari se bataya ja raha hai, aur revenue path zinda hai.' },
+            { t: "Deny all checkout despite safe pending flow", good: false, explain: 'Yeh haar maanna hai. Order queue mein le ke baad mein process kiya ja sakta hai — revenue kyun chhodna?' },
+            { t: "Claim success before payment confirmation", good: false, explain: 'Kabhi nahi. Paise se judi cheez par jhooth bolna sabse bura fallback hai — aur woh ek compliance problem bhi hai.' },
           ],
         },
         end: {
@@ -2034,26 +1888,16 @@ ek hi thread pool sab ke liye</pre>
     questions: [
       {
         q: '"Ek downstream dependency dheemi ho gayi. Poora playbook batao."',
-        choices: [
-          'Timeout (SLO se kam) taaki intezaar bandhe · jitter wala retry sirf transient errors par · breaker jab failures transient na rahein · fallback taaki user ko kuch mile · bulkhead taaki blast radius bandhe · aur overload par shed karo',
-          'Retry laga dunga aur monitoring badha dunga',
-          'Dependency ko scale karne bolunga',
-          'Circuit breaker laga dunga',
-        ],
+        choices: ["Budgeted waits and isolated fallback","Only retries fix all downstream failures","Only breaker guarantees useful response","Only provider team owns caller SLO"],
         answer: 0,
         explain: 'Sabse achha jawab har guard ka <b>alag kaam</b> batata hai, sirf naam nahi ginta. Yeh dikhata hai ki tum jaante ho ki sirf breaker kaafi nahi (bina fallback ke woh tez failure hai) aur sirf retry ulta padta hai.',
-      },
+       choiceExplanations: ["Sabse achha jawab har guard ka <b>alag kaam</b> batata hai, sirf naam nahi ginta. Yeh dikhata hai ki tum jaante ho ki sirf breaker kaafi nahi (bina fallback ke woh tez failure hai) aur sirf retry ulta padta hai.","Unsafe or overloaded dependency retries amplify harm.","Breaker fast-fails; safe fallback needs separate design.","Caller controls timeout, admission, isolation and user-facing contract."] },
       {
         q: '"Incident ke waqt sabse pehla kaam kya hai?"',
-        choices: [
-          'Bleeding rokna — damage kam karo (timeout, breaker, shed, rollback). Root cause baad mein; abhi users ko bachao',
-          'Root cause dhoondhna',
-          'Team ko batana',
-          'Logs padhna',
-        ],
+        choices: ["Assess harm; coordinate and mitigate safely","Find complete root cause before any action","Restart all services without impact check","Delete all queues to make graph green"],
         answer: 0,
         explain: 'Root cause zaroori hai — par <b>baad mein</b>. 3 baje raat ko har minute users ko dard de raha hai. Mitigate pehle, understand baad mein. (Aur mitigation ke doraan jo dekha, woh aksar root cause ka sabse bada clue hota hai.)',
-      },
+       choiceExplanations: ["Root cause zaroori hai — par <b>baad mein</b>. 3 baje raat ko har minute users ko dard de raha hai. Mitigate pehle, understand baad mein. (Aur mitigation ke doraan jo dekha, woh aksar root cause ka sabse bada clue hota hai.)","Evidence collection helps, but urgent safe mitigation can precede full cause.","Uncoordinated restarts may erase evidence and worsen availability.","Deleting pending work hides impact and creates data loss."] },
     ],
   },
   success: [
@@ -2073,3 +1917,5 @@ ek hi thread pool sab ke liye</pre>
   ],
 },
 ]);
+
+})();

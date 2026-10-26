@@ -1,3 +1,4 @@
+(() => {
 /* =====================================================================
    TRACK 5 — Distributed Data & Consistency
    cap · eventual · dbperservice · querying · saga · outbox ·
@@ -125,26 +126,16 @@ Primary se padhun?   sahi par dheema, aur primary par load</pre>
       questions: [
         {
           q: '"Teen mein se do chuno" wali baat mein kya galat hai?',
-          choices: [
-            'P optional nahi hai — network toot-ta hai chahe tum chuno ya na chuno. Asli sawaal hai: partition ke waqt C chunoge ya A',
-            'Kuch galat nahi, yahi CAP theorem hai',
-            'Actually chaar cheezein hain',
-            'Teenon ek saath mil sakti hain',
-          ],
+          choices: ["Partition: linearizability vs availability","P ko ignore karne se network safe","CAP every normal request latency bataye","C, A, P teen independent product toggles"],
           answer: 0,
-          explain: 'Distributed system mein tum partition ko "opt out" nahi kar sakte — woh physics hai. Isliye practical CAP hamesha ek binary faisla hai: <b>partition ke doraan galat jawab dena hai ya koi jawab nahi dena hai.</b>',
-        },
+          explain: "CAP partitions ke dauraan linearizable consistency aur every non failed-node request availability ki tension define karta hai. Partition occurrence optional product feature nahi. Normal operation mein latency/consistency tradeoffs separate hain.",
+         choiceExplanations: ["CAP partitions ke dauraan linearizable consistency aur every non failed-node request availability ki tension define karta hai. Partition occurrence optional product feature nahi. Normal operation mein latency/consistency tradeoffs separate hain.","Distributed network partition possibility product checkbox se remove nahi hoti.","CAP partition behavior theorem hai; normal-operation latency separate tradeoff.","P event ke dauraan linearizability aur total availability simultaneously guarantee impossible."] },
         {
           q: '"Hum ek AP system hain" — is baat mein kya adhoora hai?',
-          choices: [
-            'Faisla per-operation hota hai — ek hi app mein balance CP hona chahiye aur catalog AP',
-            'AP systems hote hi nahi',
-            'Sahi baat hai, kuch adhoora nahi',
-            'AP se pehle CP chunna chahiye',
-          ],
+          choices: ["Operation and failure scope define karo","AP means every read permanently wrong","AP proves every business invariant safe","One app ka every endpoint same policy"],
           answer: 0,
-          explain: 'System-level label lagbhag hamesha adhoora hota hai. Amazon ka catalog AP hai aur uska checkout/inventory CP-jaisa. Sahi soch hai: <b>har operation ke liye poochho ki partition mein stale data khatarnak hai ya na-dena khatarnak hai.</b>',
-        },
+          explain: "AP label alone operation/invariant/failure model specify nahi karta. Catalog staleness acceptable ho sakti hai; money operations coordination, reservations or other protocols require kar sakti hain. Whole app ek uniform consistency checkbox nahi.",
+         choiceExplanations: ["AP label alone operation/invariant/failure model specify nahi karta. Catalog staleness acceptable ho sakti hai; money operations coordination, reservations or other protocols require kar sakti hain. Whole app ek uniform consistency checkbox nahi.","Availability-oriented operation eventual convergence support kar sakti hai.","Some invariants coordination require karte hain; AP label enough nahi.","Different operations risk/consistency requirements alag rakh sakti hain."] },
       ],
     },
   ],
@@ -154,15 +145,10 @@ Primary se padhun?   sahi par dheema, aur primary par load</pre>
     questions: [
       {
         q: '"CAP theorem samjhao aur batao apne system mein kya chunoge."',
-        choices: [
-          'Partition tolerance optional nahi hai, toh sawaal C vs A ka hai — aur woh per-operation hai. Checkout/inventory CP, catalog/recommendations AP. Aur PACELC ka else-branch (latency vs consistency) roz kaam aata hai — jaise replica se padhun ya primary se',
-          'Teen mein se do chun sakte ho — main CA chunuunga',
-          'AP chunuunga, availability sabse zaroori hai',
-          'CP chunuunga, data sahi hona chahiye',
-        ],
+        choices: ["Partition behavior aur operation contract bolo","Always choose CA by buying better network","Always choose AP for all money operations","Always choose CP for all catalog reads"],
         answer: 0,
-        explain: '"CA chunuunga" sabse bada red flag hai — distributed system mein woh option hai hi nahi. Sabse achha jawab framing theek karta hai, <b>per-operation</b> examples deta hai, aur PACELC laata hai (jo dikhata hai ki tumne isse sirf padha nahi, use kiya hai).',
-      },
+        explain: "Partition ke waqt CAP consistency vs availability contract explain karo. Normal operation mein latency/consistency bhi tradeoff ho sakti hai(PACELC). Checkout automatically CP and catalog automatically AP universal rule nahi; business invariants and operation guarantees specify karo.",
+       choiceExplanations: ["Partition ke waqt CAP consistency vs availability contract explain karo. Normal operation mein latency/consistency bhi tradeoff ho sakti hai(PACELC). Checkout automatically CP and catalog automatically AP universal rule nahi; business invariants and operation guarantees specify karo.","Better network partition probability reduce karta hai; theorem waive nahi karta.","Money invariants may need coordination/reservations/escrow contract.","Catalog reads may tolerate stale results; universal CP mandate nahi."] },
     ],
   },
   success: [
@@ -260,26 +246,16 @@ t3  2 second baad sab sync           → par user ja chuka hai</pre>
       questions: [
         {
           q: 'Eventual consistency chalegi ya nahi — sabse achha test kya hai?',
-          choices: [
-            '"Agar do jagah alag jawab mila, toh usse theek karna kitna mehenga hoga?" Sasta = eventual chalega. Mehenga/namumkin = strong chahiye',
-            'Data kitna bada hai',
-            'Kitne users hain',
-            'Latency requirement kya hai',
-          ],
+          choices: ["Staleness/conflict ka user cost assess karo","Only dataset size se consistency chuno","Only client count se consistency chuno","Only fastest response ko correctness bolo"],
           answer: 0,
           explain: 'Yeh test har case mein kaam karta hai. View count galat? Kisi ko farak nahi. Double booking? Refund + apology + reputation. Overdraft? Asli paisa. <b>Reconciliation ki keemat</b> hi batati hai ki consistency kitni strong chahiye.',
-        },
+         choiceExplanations: ["Yeh test har case mein kaam karta hai. View count galat? Kisi ko farak nahi. Double booking? Refund + apology + reputation. Overdraft? Asli paisa. <b>Reconciliation ki keemat</b> hi batati hai ki consistency kitni strong chahiye.","Large and small datasets dono stronger/weaker contracts need kar sakte hain.","User count topology influence karta hai; invariant risk separate hai.","Low latency wrong financial outcome ko acceptable nahi banati."] },
         {
           q: 'Read-your-own-writes kyun sabse zaroori pattern hai?',
-          choices: [
-            'Kyunki user apne action ka nateeja turant dekhna chahta hai — apna data purana dikhe toh use lagta hai system TOOT gaya hai',
-            'Kyunki woh sabse aasan hai',
-            'Kyunki performance behtar hoti hai',
-            'Kyunki database usse support karta hai',
-          ],
+          choices: ["Apna saved change user ko visible ho","It makes every other user linearizable","It guarantees fastest replica every time","It removes need for conflict handling"],
           answer: 0,
           explain: 'Doosron ka data 2 second purana ho toh user ko pata bhi nahi chalega. Par <b>apna</b> data purana dikhna ek saaf "bug" jaisa lagta hai — aur user woh action dobara karega, jisse duplicate ban jaayenge. Yahi woh ek pattern hai jo lagbhag har eventual-consistency complaint ko khatam kar deta hai.',
-        },
+         choiceExplanations: ["Doosron ka data 2 second purana ho toh user ko pata bhi nahi chalega. Par <b>apna</b> data purana dikhna ek saaf \"bug\" jaisa lagta hai — aur user woh action dobara karega, jisse duplicate ban jaayenge. Yahi woh ek pattern hai jo lagbhag har eventual-consistency complaint ko khatam kar deta hai.","Read-your-writes session guarantee global linearizability nahi.","Freshness preserve karne ko primary/wait routing latency add kar sakti hai.","Concurrent writers/conflicts phir bhi possible hain."] },
       ],
     },
   ],
@@ -288,27 +264,17 @@ t3  2 second baad sab sync           → par user ja chuka hai</pre>
     instructions: 'Yahan UX ki baat karna bada plus hai. 🎤',
     questions: [
       {
-        q: '"Users bol rahe hain ki unka data save nahi ho raha, par DB mein hai. Kya hua?"',
-        choices: [
-          'Read-after-write — write primary par gaya, read replica se aaya jo peeche hai. Fix: us user ke reads kuch second primary se (sticky), ya session mein write timestamp rakho',
-          'Cache stale hai',
-          'Frontend bug hai',
-          'Transaction commit nahi hua',
-        ],
+        q: "Primary write committed; user next read par old value dekhta hai. Kaise distinguish karoge?",
+        choices: ["Trace replica lag and cache freshness","Committed DB row rules out stale reads","Refresh always guarantees current replica","Low DB CPU proves client UI bug"],
         answer: 0,
-        explain: 'Yeh replica-based systems ka sabse aam user-facing bug hai — aur woh <b>intermittent</b> hota hai (lag kabhi zyada, kabhi kam), isliye reproduce karna mushkil hai aur log ise frontend bug samajh lete hain.',
-      },
+        explain: "Primary commit ke baad lagging replica or cache stale data serve kar sakta hai. Read source/version/trace verify karo. Primary read or causal replication position proof stronger session freshness dega; fixed sticky seconds strict guarantee nahi.",
+       choiceExplanations: ["Primary commit ke baad lagging replica or cache stale data serve kar sakta hai. Read source/version/trace verify karo. Primary read or causal replication position proof stronger session freshness dega; fixed sticky seconds strict guarantee nahi.","Primary commit asynchronous replica visibility prove nahi karta.","Refresh same lagging replica/cache se serve ho sakta hai.","CPU metric read version/source identify nahi karta."] },
       {
         q: '"Eventual consistency use karoge? Uska UX kaise handle karoge?"',
-        choices: [
-          'Read-your-own-writes zaroori hai; optimistic UI se turant feedback; pending state saaf dikhao; aur conflicts par version check karke 409 — last-write-wins se data chup-chaap khota hai',
-          'User ko bata denge ki data thoda purana ho sakta hai',
-          'Refresh button de denge',
-          'Polling kar lenge har 5 second',
-        ],
+        choices: ["Pending state; session freshness; conflict policy","Only hide all status until data appears","Every conflict silently last-write wins","Optimistic UI means server need not validate"],
         answer: 0,
-        explain: 'Sabse achha jawab dikhata hai ki eventual consistency ek <b>product</b> problem hai, sirf infra ki nahi. Chaaron patterns alag failure mode handle karte hain — aur last-write-wins ki alochana dikhati hai ki tumne conflicts sach mein dekhe hain.',
-      },
+        explain: "Pending/completed state explicit do, session freshness if required design karo, and concurrent updates ke conflict/merge policy define karo. OptimisticUI useful but server authority replace nahi.409 version conflict common contract hai, LWWkabhi valid ho sakta hai if business accepts.",
+       choiceExplanations: ["Pending/completed state explicit do, session freshness if required design karo, and concurrent updates ke conflict/merge policy define karo. OptimisticUI useful but server authority replace nahi.409 version conflict common contract hai, LWWkabhi valid ho sakta hai if business accepts.","Invisible pending state users ko repeated actions/duplicates ki taraf le jaati hai.","LWW business-important updates discard kar sakta hai; explicit policy needed.","Optimistic feedback server correctness/authorization replace nahi karta."] },
     ],
   },
   success: [
@@ -415,26 +381,16 @@ order-service ne column rename kiya
       questions: [
         {
           q: 'Do services ek hi table mein likhti hain. Sabse bada nuksaan?',
-          choices: [
-            'Independent deploy khatam — ek migration ke liye sab services ka coordination chahiye, aur ek slow query sabko girati hai',
-            'Performance kharab hoti hai',
-            'Storage zyada lagti hai',
-            'Code duplicate hota hai',
-          ],
+          choices: ["Schema and resource coupling badh sakti","Shared table guarantees no API latency","Shared schema prevents any write race","Separate apps guarantee independent deploy"],
           answer: 0,
-          explain: 'Microservices ka <b>poora</b> point independent deploy hai. Woh gaya toh tumhare paas sirf network latency, partial failures aur operational complexity bachi — <b>saare nuksaan, koi faayda nahi</b>.',
-        },
+          explain: "Shared writable schema migration ownership and resource coupling create kar sakta hai. Every migration all services block kare or guaranteed every query cascade universal nahi; backward compatible changes and ownership policy can manage risk.",
+         choiceExplanations: ["Shared writable schema migration ownership and resource coupling create kar sakta hai. Every migration all services block kare or guaranteed every query cascade universal nahi; backward compatible changes and ownership policy can manage risk.","Network calls may remain; shared DB adds own shared-resource path.","Concurrent writes still need constraints and transaction discipline.","Shared writable schema changes affect multiple applications."] },
         {
-          q: 'Doosri service ka data chahiye. Sabse achha tareeka?',
-          choices: [
-            'API se poochho, ya events se apni copy (read model) banao — apne schema mein, apne control mein',
-            'Uski table se seedha SELECT karo, read-only toh safe hai',
-            'Uska DB replica bana lo',
-            'Shared library bana ke dono use karein',
-          ],
+          q: "Doosri service ka privately owned data consume karna hai. Boundary-preserving default?",
+          choices: ["Owned API or documented event read model","Read-only SQL cannot couple schema","Replica grants service schema ownership","Shared library defines data freshness"],
           answer: 0,
           explain: 'Read-only access aur DB replica dono <b>chhupe hue contracts</b> hain — tum uske internal schema par depend kar gaye. Event se apni copy banane ka faayda yeh hai ki <b>tumhara schema tumhara hai</b>: use apne query patterns ke hisaab se shape kar sakte ho.',
-        },
+         choiceExplanations: ["Read-only access aur DB replica dono <b>chhupe hue contracts</b> hain — tum uske internal schema par depend kar gaye. Event se apni copy banane ka faayda yeh hai ki <b>tumhara schema tumhara hai</b>: use apne query patterns ke hisaab se shape kar sakte ho.","Private schema can change; readers become hidden consumers.","Replica copy ownership/authorization contract automatically nahi deta.","Code reuse transport/consistency/ownership decide nahi karta."] },
       ],
     },
   ],
@@ -444,15 +400,10 @@ order-service ne column rename kiya
     questions: [
       {
         q: '"Har service ka apna DB kyun hona chahiye?"',
-        choices: [
-          'Independent deploy aur migration ke liye, aur blast radius baandhne ke liye. Shared writable DB = distributed monolith — network latency aur partial failure mil gaye, aazadi nahi. Keemat: JOIN aur ACID transaction chale jaate hain',
-          'Performance ke liye',
-          'Kyunki microservices best practice hai',
-          'Scaling ke liye',
-        ],
+        choices: ["Ownership isolation vs distributed costs","Separate DB makes cross-service ACID free","Separate DB guarantees higher throughput","Entity count alone defines service DBs"],
         answer: 0,
-        explain: 'Sabse achha jawab <b>keemat bhi</b> batata hai. Jo candidate sirf faayde ginata hai usne yeh production mein nahi kiya — kyunki JOIN aur transaction khona sach mein dard deta hai, aur uske liye saga aur read models likhne padte hain.',
-      },
+        explain: "Database-per-service ownership, deployment autonomy and blast-radius goals serve kar sakta hai. Shared DB transitional or intentional valid ho sakta hai withdiscipline. SeparateDB cross-service joins/transactions ko additional coordination/read model problem banata hai; local ACID still available.",
+       choiceExplanations: ["Database-per-service ownership, deployment autonomy and blast-radius goals serve kar sakta hai. Shared DB transitional or intentional valid ho sakta hai withdiscipline. SeparateDB cross-service joins/transactions ko additional coordination/read model problem banata hai; local ACID still available.","Independent local transactions do not make one cross-service transaction automatic.","Workload, resources and query distribution decide throughput.","Boundaries ownership/invariants/team scaling se justify hoti hain."] },
     ],
   },
   success: [
@@ -562,7 +513,7 @@ arbitrary search + facets + typo tolerance       → search index</pre>
       title: 'Read model banane ke kadam',
       instructions: 'Ek CQRS read model banane ka sahi kram.',
       steps: [
-        { text: 'Query likho jo tumhe chahiye — pehle sawaal, phir schema', explain: 'Read model poori tarah query-driven hota hai. "Delhi ke pending orders" — bas isi ke liye table banao.' },
+        { text: 'Query likho jo tumhe chahiye — pehle sawaal, phir schema', explain: 'Read model poori tarah query-driven hota hai. "Delhi ke pending orders" — basisi ke liye table banao.' },
         { text: 'Denormalized table design karo — jo columns query mein chahiye', explain: 'Yahan normalization ka koi matlab nahi. Yeh table ek query ka jawab hai, sach ka source nahi.' },
         { text: 'Source services se zaroori events subscribe karo', explain: 'OrderCreated, OrderShipped, UserMoved. Har event ek update banega.' },
         { text: 'Consumer likho — idempotent, kyunki at-least-once', explain: 'Events dobara aayenge. Upsert use karo (INSERT ... ON CONFLICT UPDATE), blind INSERT nahi.' },
@@ -577,26 +528,16 @@ arbitrary search + facets + typo tolerance       → search index</pre>
       questions: [
         {
           q: 'API composition kab tootegi?',
-          choices: [
-            'Jab calls ki sankhya badhe (fan-out tail latency) ya jab dataset bada ho — 50,000 users ke liye 50,000 calls namumkin hain',
-            'Jab services alag languages mein hon',
-            'Jab data bada ho',
-            'Woh kabhi nahi tootegi',
-          ],
+          choices: ["Fanout and data volume exceed budget","Different languages prevent API calls","Three calls always break any page","API composition needs no partial failures"],
           answer: 0,
           explain: 'Do alag limits: <b>tail latency</b> (har extra call p99 badhati hai — Foundations track yaad hai?) aur <b>cardinality</b> (bade result set ke liye per-item call namumkin hai). Composition 2-3 calls aur ek record ke liye hai.',
-        },
+         choiceExplanations: ["Do alag limits: <b>tail latency</b> (har extra call p99 badhati hai — Foundations track yaad hai?) aur <b>cardinality</b> (bade result set ke liye per-item call namumkin hai). Composition 2-3 calls aur ek record ke liye hai.","Wire contract languages ko decouple karta hai.","Small bounded fanout can fit SLO; budget and dependency behavior matter.","Every remote call can fail/timeout independently."] },
         {
           q: 'Read model consumer ko idempotent kyun hona chahiye?',
-          choices: [
-            'Kyunki event delivery at-least-once hai — wahi event dobara aayega. Upsert use karo, blind INSERT nahi',
-            'Performance ke liye',
-            'Kyunki events out-of-order aate hain',
-            'Zaroori nahi hai',
-          ],
+          choices: ["Redelivery must not repeat state effects","Idempotency fixes stale-event ordering","Upsert always means increment safely deduped","Broker redelivery changes event identity"],
           answer: 0,
-          explain: 'At-least-once delivery ka matlab hai duplicates <b>hongi</b> — yeh "agar" nahi, "kab" hai. <code>INSERT ... ON CONFLICT DO UPDATE</code> se woh apne aap handle ho jaati hain. (Out-of-order bhi ek asli problem hai — uske liye event mein version/timestamp rakho.)',
-        },
+          explain: "At-least-once delivery same event redeliver kar sakti hai. Consumer eventID/conditional state/natural idempotency se duplicate effect avoid kare. Blindupsert alone increment/ordering problem solve nahi; stale event version check alag chahiye.",
+         choiceExplanations: ["At-least-once delivery same event redeliver kar sakti hai. Consumer eventID/conditional state/natural idempotency se duplicate effect avoid kare. Blindupsert alone increment/ordering problem solve nahi; stale event version check alag chahiye.","Duplicate and out-of-order handling separate concerns hain.","Increment-on-upsert duplicate event par twice increment kar sakta hai.","Stable event ID same logical delivery identify kare; new ID dedupe todti hai."] },
       ],
     },
   ],
@@ -605,16 +546,11 @@ arbitrary search + facets + typo tolerance       → search index</pre>
     instructions: 'Microservices ka sabse practical sawaal. 🎤',
     questions: [
       {
-        q: '"Microservices mein JOIN kaise karoge?"',
-        choices: [
-          'JOIN nahi hoga — pattern chunna padega. 2-3 services aur ek record: API composition. Baar-baar chalne wali query: CQRS read model events se. Sirf 2-3 fields: local copy. Arbitrary search: search index',
-          'Ek shared database bana dunga',
-          'Sab services ka data ek jagah replicate kar dunga',
-          'API composition, hamesha',
-        ],
+        q: "Microservices mein cross-domain data join kaise design karoge?",
+        choices: ["Join location freshness and ownership choose","Every cross-service join inherently impossible","Replicate all fields before any query need","Always call one API per returned row"],
         answer: 0,
-        explain: 'Sabse achha jawab pehle <b>swikaar</b> karta hai ki JOIN gaya (yeh microservices ki asli keemat hai), phir situation ke hisaab se pattern deta hai. "API composition hamesha" wala jawab 50,000 calls wale case mein toot jaayega.',
-      },
+        explain: "Cross-service JOIN impossible nahi; data ownership and freshness preserve karne ke liye API composition, owned read model, query federation or local projection choose karo. Fanout, staleness, authorization and operational cost define karo.",
+       choiceExplanations: ["Cross-service JOIN impossible nahi; data ownership and freshness preserve karne ke liye API composition, owned read model, query federation or local projection choose karo. Fanout, staleness, authorization and operational cost define karo.","Composition/read-model/query engines valid join strategies hain.","Unneeded replication adds lag, schema and access-management burden.","Per-row callsN+1 latency/load laati hain; bounded batch/projection evaluate karo."] },
     ],
   },
   success: [
@@ -741,37 +677,22 @@ arbitrary search + facets + typo tolerance       → search index</pre>
       questions: [
         {
           q: 'Saga mein "isolation nahi hai" ka kya matlab hai?',
-          choices: [
-            'Beech ki halat doosron ko DIKHTI hai — order ban chuka hai par payment nahi hua, aur yeh state duniya ko dikh rahi hai',
-            'Services ek doosre se isolated nahi hain',
-            'Data encrypt nahi hota',
-            'Transactions kaam nahi karte',
-          ],
+          choices: ["Intermediate committed states visible ho sakti","Saga local transactions cannot be atomic","Saga encrypt nahi karta isliye no isolation","Compensation hides all intermediate state"],
           answer: 0,
           explain: 'ACID ka "I" ka matlab hai beech ki halat kisi ko nahi dikhti. Saga mein har step commit ho jaata hai, isliye adhoori state <b>public</b> hai. Isliye state explicit rakhna (pending/confirmed/cancelled) aur UI mein dikhana zaroori hai.',
-        },
+         choiceExplanations: ["ACID ka \"I\" ka matlab hai beech ki halat kisi ko nahi dikhti. Saga mein har step commit ho jaata hai, isliye adhoori state <b>public</b> hai. Isliye state explicit rakhna (pending/confirmed/cancelled) aur UI mein dikhana zaroori hai.","Each step localACID transaction use kar sakti hai.","Isolation concerns concurrent visibility, not encryption.","Compensation later action hai; already observed intermediate states undo nahi hoti."] },
         {
           q: 'Compensating action aur rollback mein farak?',
-          choices: [
-            'Rollback DB ko waise kar deta hai jaise kuch hua hi nahi. Compensation ek NAYA action hai jo asar ko ulta karta hai — aur kuch cheezein (bheja hua email) sach mein ulti nahi hoti',
-            'Dono ek hi cheez hain',
-            'Compensation tez hota hai',
-            'Rollback sirf SQL mein hota hai',
-          ],
+          choices: ["Compensation new semantic reversal action","Compensation time ko literally rewind kare","Both automatically undo sent emails","Rollback only one specific DB brand kare"],
           answer: 0,
           explain: 'Yeh farak bahut practical hai. Refund <b>charge ka rollback nahi</b> hai — woh ek naya transaction hai jo statement par dikhta hai. Aur bheja hua email wapas nahi aata; uska "compensation" ek doosra email hai. Saga design karte waqt yeh soch bahut zaroori hai.',
-        },
+         choiceExplanations: ["Yeh farak bahut practical hai. Refund <b>charge ka rollback nahi</b> hai — woh ek naya transaction hai jo statement par dikhta hai. Aur bheja hua email wapas nahi aata; uska \"compensation\" ek doosra email hai. Saga design karte waqt yeh soch bahut zaroori hai.","New action ke own failures/audit history exist hain.","External email received ho chuki toh physically unsend guaranteed nahi.","Rollback transaction mechanism many storage engines mein milta hai."] },
         {
-          q: '3 se zyada steps wale saga ke liye kya chunoge?',
-          choices: [
-            'Orchestration — kyunki choreography mein poora flow kahin likha hi nahi hota aur debugging 6 services ke logs mein karni padti hai',
-            'Choreography — woh zyada decoupled hai',
-            'Dono ka mix',
-            'Farak nahi padta',
-          ],
+          q: "Manybranches, retries and compensations wala saga. Kaunsa coordination decision useful?",
+          choices: ["Complex coordination favors explicit workflow","Four steps makes choreography invalid","Orchestrator removes all partial failures","Choreography has zero operational tracing"],
           answer: 0,
-          explain: 'Choreography ka faayda (decoupling) chhote flows mein asli hai. Bade flows mein woh <b>"koi nahi jaanta poora flow kya hai"</b> ban jaata hai — aur jab kuch atak jaata hai toh koi nahi bata sakta ki woh kahan atka hai.',
-        },
+          explain: "Orchestration complex branching, recovery and explicit global workflow mein helpful hai. Choreography decoupled events ke liye valid hai if ownership/tracing/recovery clear. Three/four steps universal cutoff nahi.",
+         choiceExplanations: ["Orchestration complex branching, recovery and explicit global workflow mein helpful hai. Choreography decoupled events ke liye valid hai if ownership/tracing/recovery clear. Three/four steps universal cutoff nahi.","Step count heuristic hai; ownership/dependencies/observability matter karte hain.","Coordinator bhi fail/retry/recover karega; durable state needed.","Choreography tracing possible hai, par global flow reconstruct/manage harder ho sakta hai."] },
       ],
     },
   ],
@@ -781,26 +702,16 @@ arbitrary search + facets + typo tolerance       → search index</pre>
     questions: [
       {
         q: '"Order flow mein 4 services hain. Transaction kaise handle karoge?"',
-        choices: [
-          'Saga — har service ka local transaction + compensating action. Orchestrator se (4 steps hain), har step idempotent, state explicit (pending/confirmed/cancelled), aur UI mein dikhao kyunki saga mein isolation nahi hai',
-          '2PC use karunga taaki sab atomic rahe',
-          'Sab kuch ek service mein daal dunga',
-          'Har service mein try-catch laga dunga',
-        ],
+        choices: ["Local transactions plus durable saga policy","Try-catch across RPC makes one transaction","Any 4 services must use same orchestrator","2PC always works across every provider"],
         answer: 0,
         explain: 'Poore jawab mein chaar cheezein hain: <b>saga</b> (pattern), <b>orchestration + kyun</b> (4 steps), <b>idempotent steps</b> (retries hongi), aur <b>isolation nahi hai</b> (isliye state dikhao). Aakhri wali baat sabse kam log bolte hain aur sabse zyada matter karti hai.',
-      },
+       choiceExplanations: ["Poore jawab mein chaar cheezein hain: <b>saga</b> (pattern), <b>orchestration + kyun</b> (4 steps), <b>idempotent steps</b> (retries hongi), aur <b>isolation nahi hai</b> (isliye state dikhao). Aakhri wali baat sabse kam log bolte hain aur sabse zyada matter karti hai.","In-memory exception handling committed remote effects rollback nahi karti.","Orchestration common option hai; fixed service count mandatory decision nahi.","Participants/protocol support and availability constraints matter karte hain."] },
       {
         q: '"Compensating action likha nahi ja sakta toh?"',
-        choices: [
-          'Us step ko saga mein AAKHIR mein rakho (jaise email), ya use async kar do taaki woh saga ka hissa hi na ho. Aur jahan sach mein ulta nahi ho sakta, wahan ek "correction" action do — jaise "hamari galti" wala email',
-          'Phir saga use nahi kar sakte',
-          '2PC use karo',
-          'Us step ko skip kar do',
-        ],
+        choices: ["Order irreversible effects; plan recovery","2PC makes sent email fully reversible","Async effect loses all recovery needs","Skip business-required irreversible step"],
         answer: 0,
         explain: 'Yeh practical soch dikhati hai. <b>Irreversible steps ko aakhir mein rakhna</b> ek classic saga design technique hai — agar email aakhri step hai toh uske baad kuch fail hi nahi ho sakta. Aur jo sach mein irreversible hai (email chala gaya), uska ilaaj ek naya action hai, undo nahi.',
-      },
+       choiceExplanations: ["Yeh practical soch dikhati hai. <b>Irreversible steps ko aakhir mein rakhna</b> ek classic saga design technique hai — agar email aakhri step hai toh uske baad kuch fail hi nahi ho sakta. Aur jo sach mein irreversible hai (email chala gaya), uska ilaaj ek naya action hai, undo nahi.","Email delivery external side effect hai;2PC universal reversal tool nahi.","Async jobs need durable handoff, status, retry and compensation/correction policy.","Product requirements satisfy karne ko workflow redesign/recovery chahiye."] },
     ],
   },
   success: [
@@ -910,7 +821,7 @@ UPDATE sent=true  ← nahi hua
       visual: 'outbox',
       questions: [
         { q: 'Outbox ka asli jaadu kahan hai?', target: 'tx', explain: 'Order aur outbox row EK transaction mein — kyunki dono USI DB mein hain. Ab koi distributed transaction chahiye hi nahi.' },
-        { q: 'Outbox kya guarantee deta hai?', target: 'atleast', explain: 'At-least-once — "event kabhi kho nahi sakta". Exactly-once NAHI: publish ke baad, mark se pehle crash ho toh event dobara jaayega.' },
+        { q: 'Outbox kya guarantee deta hai?', target: 'atleast', explain: "Atomic durable outbox committed intent preserve karti hai. Retrying relay recovery/retention assumptions ke andar at-least-once handoff de sakta hai; publish ke baad mark se pehle crash redelivery la sakta hai. Consumer idempotency aur backlog monitoring chahiye." },
         { q: 'Polling ki jagah kam-latency ka option?', target: 'cdc', explain: 'CDC (Debezium) — DB ka transaction log padhta hai. Kam latency, DB par kam load, par ek aur system chalana padega.' },
       ],
     },
@@ -920,37 +831,22 @@ UPDATE sent=true  ← nahi hua
       questions: [
         {
           q: 'db.save() ke baad kafka.publish() karne mein kya problem hai?',
-          choices: [
-            'Dono ek atomic unit nahi hain — beech mein crash ho toh data DB mein hai par event kabhi nahi gaya, aur koi error bhi nahi milta (silent inconsistency)',
-            'Performance kharab hoti hai',
-            'Kafka slow hai',
-            'Order galat ho jaata hai',
-          ],
+          choices: ["DB commit and publish can diverge","Kafka publish failure rolls DB back","Try-catch survives crash between operations","Publishing first makes both automatically atomic"],
           answer: 0,
           explain: 'Sabse khatarnak baat yeh hai ki isme <b>koi error nahi</b> aata. Order safal dikhta hai, user ko confirmation milta hai, aur inventory/warehouse ko kabhi pata nahi chalta. Yeh bug mahino chup-chaap chal sakta hai.',
-        },
+         choiceExplanations: ["Sabse khatarnak baat yeh hai ki isme <b>koi error nahi</b> aata. Order safal dikhta hai, user ko confirmation milta hai, aur inventory/warehouse ko kabhi pata nahi chalta. Yeh bug mahino chup-chaap chal sakta hai.","CommittedDB transaction independent broker failure se undo nahi hoti.","Process crash exception handler run hi nahi karta.","Publish first opposite inconsistency create kar sakta hai."] },
         {
-          q: 'Outbox kya guarantee deta hai?',
-          choices: [
-            'At-least-once — event KABHI KHO nahi sakta. Par woh dobara ja sakta hai, isliye consumers ko idempotent hona chahiye',
-            'Exactly-once delivery',
-            'Ordered delivery',
-            'Event kabhi duplicate nahi hoga',
-          ],
+          q: "Outbox pattern actually kis boundary ko durable banata hai?",
+          choices: ["Durable handoff; relay may redeliver","Exactly one network delivery guaranteed","All event types globally ordered forever","Disk loss impossible by outbox design"],
           answer: 0,
-          explain: 'Yeh farak zaroori hai. Publish ke baad aur "sent" mark karne se pehle crash ho toh event dobara jaayega. Outbox <b>data loss</b> ka problem solve karta hai, <b>duplicate</b> ka nahi — woh idempotent consumers ka kaam hai.',
-        },
+          explain: "Outbox domain write and intent row ko one DB transaction mein durable banata hai. Relay/recovery assumptions ke andar publish retryable hai; duplicates possible. Database/backup loss, retention bugs and relay permanent failure se absolute event never lost theorem nahi.",
+         choiceExplanations: ["Outbox domain write and intent row ko one DB transaction mein durable banata hai. Relay/recovery assumptions ke andar publish retryable hai; duplicates possible. Database/backup loss, retention bugs and relay permanent failure se absolute event never lost theorem nahi.","Relay publish/mark crash window duplicatesla sakti hai.","Ordering requires aggregate sequence, relay and partition contracts.","DB durability, backups and relay liveness operational assumptions hain."] },
         {
           q: 'Outbox table ke saath ek zaroori maintenance kaam?',
-          choices: [
-            'Purane sent rows regularly delete karo — warna table anant badhegi aur uska index bhi',
-            'Roz backup lo',
-            'Har din reindex karo',
-            'Kuch nahi, woh apne aap manage hoti hai',
-          ],
+          choices: ["Sent-row retention and backlog monitor","Every day reindex without bloat evidence","Delete unsent rows to shrink backlog","Outbox rows auto expire in every DB"],
           answer: 0,
           explain: 'Outbox ek <b>high-write</b> table hai — har business write ke saath ek row. Bina cleanup ke woh mahino mein crore rows tak pahunch jaati hai, aur woh relay ki query ko bhi dheema karti hai. Ek retention job (jaise 7 din) zaroori hai.',
-        },
+         choiceExplanations: ["Outbox ek <b>high-write</b> table hai — har business write ke saath ek row. Bina cleanup ke woh mahino mein crore rows tak pahunch jaati hai, aur woh relay ki query ko bhi dheema karti hai. Ek retention job (jaise 7 din) zaroori hai.","Reindex frequency measuredbloat/engine behavior se justify karo.","Unsent rows delete karna event loss hai; investigate delivery backlog.","Cleanup/retention explicit job orDBpolicy se configure hoti hai."] },
       ],
     },
   ],
@@ -960,15 +856,10 @@ UPDATE sent=true  ← nahi hua
     questions: [
       {
         q: '"Order save karke Kafka par event bhejna hai. Atomic kaise banaoge?"',
-        choices: [
-          'Outbox pattern — order aur outbox row ek hi DB transaction mein likho, phir ek alag relay (polling ya CDC) usse publish kare. Yeh at-least-once deta hai, isliye consumers idempotent hone chahiye',
-          'Distributed transaction (2PC) use karunga',
-          'Pehle Kafka par bhejunga phir DB mein likhunga',
-          'Try-catch laga ke retry karunga',
-        ],
+        choices: ["Order plus outbox same DB transaction","Publish first then hope order commit","Try-catch guarantees atomic broker handoff","Local transaction spans broker by default"],
         answer: 0,
         explain: 'Sahi jawab mein teen hisse hain: <b>pattern</b> (outbox), <b>mechanism</b> (relay), aur <b>guarantee ki imaandaar baat</b> (at-least-once, isliye idempotent consumers). Aakhri hissa hi seniority dikhata hai — kyunki bahut log sochte hain ki outbox exactly-once de deta hai.',
-      },
+       choiceExplanations: ["Sahi jawab mein teen hisse hain: <b>pattern</b> (outbox), <b>mechanism</b> (relay), aur <b>guarantee ki imaandaar baat</b> (at-least-once, isliye idempotent consumers). Aakhri hissa hi seniority dikhata hai — kyunki bahut log sochte hain ki outbox exactly-once de deta hai.","FailedDBcommit event for nonexistent order leave kar sakta hai.","Crash window and network ambiguity handler se eliminate nahi hote.","Different systems coordinated protocol bina one local transaction nahi share karte."] },
     ],
   },
   success: [
@@ -983,7 +874,7 @@ UPDATE sent=true  ← nahi hua
   cards: [
     { front: 'Dual write ka problem?', back: '<code>db.save()</code> + <code>kafka.publish()</code> ek atomic unit nahi hain. Beech mein crash = data hai par event nahi gaya — <b>aur koi error bhi nahi milta</b>.' },
     { front: 'Outbox pattern?', back: 'Business data aur event row <b>USI DB</b> mein, <b>ek transaction</b> mein. Phir ek alag relay outbox se publish kare. Doosra system hi nahi raha, isliye atomicity mil gayi.' },
-    { front: 'Outbox kya guarantee deta hai?', back: '<b>At-least-once</b> — "event kabhi kho nahi sakta". Exactly-once NAHI: publish ke baad, mark se pehle crash = event dobara. Consumers idempotent hone chahiye.' },
+    { front: 'Outbox kya guarantee deta hai?', back: "<b>Durable intent + retrying relay.</b> Eventual handoff relay recovery, retention aur durable DB par depend hai. Publish ke baad mark se pehle crash redelivery kar sakta hai; consumers idempotent aur lag/retention monitored ho." },
     { front: 'Polling vs CDC?', back: '<b>Polling</b>: simple, latency = interval. <b>CDC</b> (Debezium): DB ka transaction log, kam latency, par ek aur system. <b>Polling se shuru karo.</b>' },
     { front: 'Outbox ka maintenance?', back: 'Purane sent rows <b>regularly delete</b> karo — woh ek high-write table hai aur bina cleanup ke crore rows tak pahunch jaati hai.' },
   ],
@@ -993,11 +884,11 @@ UPDATE sent=true  ← nahi hua
 {
   id: 'exactlyonce',
   icon: '♻️',
-  title: 'Exactly-Once ka Jhooth — At-Least-Once + Idempotent',
+  title: 'Exactly-Once ka Scope — Delivery aur Business Effects',
   badge: 'Dedupe Master',
   objectives: [
-    'Crash ke baad "hua ya nahi" pata karna namumkin hai',
-    'At-least-once vs at-most-once — teesra option nahi',
+    "ACK missing ho toh broker ko effect ambiguous ho sakta hai;cooperating durable state se resolve karo",
+    'Delivery vsprocessing scope;transactional exactly-once ki boundaries',
     'Idempotent consumer: unique key + ek transaction',
     'Naturally idempotent operations design karna',
   ],
@@ -1010,9 +901,7 @@ UPDATE sent=true  ← nahi hua
      "message bheja, ack nahi mila". Uske paas do hi vikalp hain:</p>
      <pre>Dobara bhejo  → at-least-once → DUPLICATES
 Mat bhejo     → at-most-once  → DATA LOSS</pre>
-     <p>Teesra vikalp <b>hai hi nahi</b>. Yeh koi implementation ki kami
-     nahi — yeh distributed systems ka basic sach hai
-     (Two Generals Problem).</p>
+     <p>Sirf broker ACK ke basis par effect ambiguous hai.<b>Scoped transactional processing</b> additional shared durable state aur cooperating sink se stronger outcome de sakti hai. Two Generals ko every exactly-once implementation impossible proof mat banao.</p>
      <h3>✅ Toh log "exactly-once" kaise karte hain?</h3>
      <pre>at-least-once delivery + idempotent processing = effectively-once</pre>
      <p>Duplicates <b>aayenge</b>. Bas unka koi asar nahi hoga.</p>`,
@@ -1039,13 +928,9 @@ COMMIT;</pre>
 ✅ SET balance = 5000          absolute
 ❌ balance = balance - 100     relative</pre>
      <p class="tip">🎯 Jahan ho sake, operation ko <b>"value SET karo"</b>
-     banao, <b>"value BADHAO"</b> nahi. Yeh sabse sasti idempotency hai —
-     usme koi extra table, koi extra constraint nahi lagti.</p>
+     banao, <b>"value BADHAO"</b> nahi. Pure desired-state SET ko repeat karne par same state mil sakti hai. Concurrent newer updates, preconditions aur triggers/external effects ko still guard karo; SET alone every business workflow idempotent nahi banata.</p>
      <h3>⚠️ "Hamara broker exactly-once deta hai"</h3>
-     <p>Woh apne <b>andar</b> deta hai — read → process → write, ek hi
-     cluster ke andar, ek transaction mein. Jaise hi tum <b>bahar</b> kuch
-     karte ho (payment API call, email bhejna, doosri DB mein likhna),
-     woh guarantee khatm. <b>Idempotency phir bhi tumhe hi likhni hai.</b></p>`,
+     <p>Supported Kafka transactions read-process-write boundary protect karti hain. External sink/payment/email ko offsets aur effects ke atomic commit, provider idempotency ya recoverable reconciliation mein cooperate karna hoga. Broker toggle alone external once-only effect prove nahi karta.</p>`,
   ],
   stages: [
     {
@@ -1054,17 +939,23 @@ COMMIT;</pre>
       goal: 'Ek message consumer hai jo payments process karta hai. Idempotency on karo aur prove karo ki wahi message dobara aane par duplicate nahi banta.',
       sys: SD.sys.payments(),
       tasks: T_ONCE,
-      success: allOf(T_ONCE),
+      success: SD.allTasks(T_ONCE),
       successText: `Yahi <b>effectively-once</b> hai: delivery at-least-once rahi
         (message dobara aaya), par <b>processing idempotent</b> thi, isliye asar ek hi baar hua.
         <br><br>Teen cheezein zaroori hain:
         <br>• Message mein ek <b>unique id</b> ho (producer deta hai)
         <br>• <code>processed_ids</code> par <b>UNIQUE constraint</b> — app check race condition hai
         <br>• Side-effect aur id <b>ek hi transaction</b> mein — warna tumne dual write dobara bana diya`,
+      solution: [
+        "sim set api.idempotency true",
+        "POST /v1/payments -H 'Idempotency-Key: msg-9001'",
+        "POST /v1/payments -H 'Idempotency-Key: msg-9001'",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.idempotency === true && !!s.sys.seenKeys['msg-9001'] && m.current(s, 'http', r => r.idem === 'replay' && r.key === 'msg-9001'); },
       hints: [
-        'Idempotency on karo: sim set api.idempotency true',
-        "Ek message process karo: POST /v1/payments -H 'Idempotency-Key: msg-9001'",
-        "Wahi message dobara aaya: POST /v1/payments -H 'Idempotency-Key: msg-9001'",
+        "Pehle observation: Idempotency on karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Wahi message dobara aaya — duplicate NAHI banna chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nsim set api.idempotency true\nPOST /v1/payments -H 'Idempotency-Key: msg-9001'\nPOST /v1/payments -H 'Idempotency-Key: msg-9001'",
       ],
     },
     {
@@ -1094,7 +985,7 @@ COMMIT;</pre>
         { q: 'Asli formula kya hai?', target: 'formula', explain: 'at-least-once delivery + idempotent processing = effectively-once. "Exactly-once" delivery hoti hi nahi.' },
         { q: 'Dedupe key ko kaise store karein?', target: 'unique', explain: 'DB UNIQUE constraint par — app-level "pehle check karo" ek race condition hai, aur concurrency hi asli scenario hai.' },
         { q: 'Side-effect aur dedupe id kahan hone chahiye?', target: 'same', explain: 'EK hi transaction mein. Alag karoge toh dual write ka problem dobara bana doge — kaam ho gaya par id nahi likhi.' },
-        { q: '"Hamara broker exactly-once deta hai" — isme kya adhoora hai?', target: 'claim', explain: 'Woh apne ANDAR deta hai (read-process-write, ek cluster). Bahar kuch bhi karte hi (payment API, email) woh guarantee khatm.' },
+        { q: '"Hamara broker exactly-once deta hai" — isme kya adhoora hai?', target: 'claim', explain: "Supported Kafka transactional read-process-write path ka scope inspect karo. External sink ko offsets/effect atomicity ya idempotent recovery mein cooperate karna hoga; broker setting alone payment/email effect protect nahi karti." },
       ],
     },
     {
@@ -1102,38 +993,23 @@ COMMIT;</pre>
       title: 'Exactly-once ki samajh',
       questions: [
         {
-          q: 'Exactly-once delivery kyun namumkin hai?',
-          choices: [
-            'Crash ke baad "kaam hua ya nahi" pata karna namumkin hai — broker ke liye dono halat ek jaisi dikhti hain. Do hi vikalp hain: dobara bhejo (duplicates) ya mat bhejo (data loss)',
-            'Kyunki networks slow hain',
-            'Kyunki brokers mein bug hai',
-            'Woh mumkin hai, Kafka deta hai',
-          ],
+          q: "Exactly-once guarantee evaluate karne ka correct approach?",
+          choices: ["Exactly-once claim ka boundary inspect karo","Kafka transaction controls any external email","Network retries prove processing twice always","Every broker guarantee inherently useless"],
           answer: 0,
-          explain: 'Yeh Two Generals Problem hai — ek theoretical result, koi engineering limitation nahi. Isliye practical jawab hamesha: <b>at-least-once bhejo, idempotent bano</b>.',
-        },
+          explain: "Exactly-once processing guarantees boundary specific hain. Kafka transactions supported Kafka read-process-write paths protect kar sakti hain; external payment/email effects automatically included nahi. Ambiguous remote effects ke liye stable IDs, cooperation and dedupe/reconciliation needed.",
+         choiceExplanations: ["Exactly-once processing guarantees boundary specific hain. Kafka transactions supported Kafka read-process-write paths protect kar sakti hain; external payment/email effects automatically included nahi. Ambiguous remote effects ke liye stable IDs, cooperation and dedupe/reconciliation needed.","Kafka transactional guarantees external effects automatically include nahi karti.","Duplicates possible hain; idempotency effect duplicate hone se bacha sakti hai.","Scoped transactions/durability/order valuable contracts provide karte hain."] },
         {
           q: 'Side-effect aur dedupe id alag-alag likhne mein kya problem hai?',
-          choices: [
-            'Tumne dual write ka problem dobara bana diya — beech mein crash ho toh kaam ho chuka hai par id nahi likhi, aur agli baar woh DOBARA hoga',
-            'Performance kharab hoti hai',
-            'Do queries lagti hain',
-            'Koi problem nahi',
-          ],
+          choices: ["Crash can leave effect without dedupe record","Two writes same code means atomic","Persist dedupe later always safe hota","Broker ACK repairs missing dedupe record"],
           answer: 0,
           explain: 'Yeh sabse aam implementation bug hai. Log dedupe table bana lete hain par use side-effect se alag transaction mein likhte hain — aur phir sochte hain ki woh protected hain. <b>Dono ek transaction mein hone chahiye.</b>',
-        },
+         choiceExplanations: ["Yeh sabse aam implementation bug hai. Log dedupe table bana lete hain par use side-effect se alag transaction mein likhte hain — aur phir sochte hain ki woh protected hain. <b>Dono ek transaction mein hone chahiye.</b>","Code proximity atomic durability boundary nahi.","Effect ke baad crash redelivery par duplicate effect karwa sakta hai.","ACK state aur consumer business DB automatically one commit nahi."] },
         {
-          q: 'Sabse sasti idempotency kaunsi hai?',
-          choices: [
-            'Operation ko design se idempotent banana — "value SET karo" (SET status = shipped), "value BADHAO" nahi. Isme koi extra table ya constraint nahi lagti',
-            'Redis mein dedupe keys rakhna',
-            'DB unique constraint',
-            'Message id check karna',
-          ],
+          q: "Repeated delivery par state effect idempotent banane ka simple pattern?",
+          choices: ["Desired-state SET repeat effect ko limit kare","Increment naturally idempotent hota hai","SET guarantees every external action once","No-op retry means authorization optional"],
           answer: 0,
-          explain: 'Baaki sab tareeke <b>kaam</b> maangte hain: ek table, ek constraint, ek transaction. Agar operation khud hi absolute hai (<code>SET status = \'shipped\'</code>) toh duplicate ka koi asar hi nahi hota — muft mein idempotency.',
-        },
+          explain: "Pure desired state SET repeat operation effect idempotent bana sakta hai; increment generally nahi. Version/preconditions and external triggers still need guarding. Most cheap strategy workload/invariant par depend karti hai; one universal winner nahi.",
+         choiceExplanations: ["Pure desired state SET repeat operation effect idempotent bana sakta hai; increment generally nahi. Version/preconditions and external triggers still need guarding. Most cheap strategy workload/invariant par depend karti hai; one universal winner nahi.","Repeated increment state change har attempt mein repeat karta hai.","Repeated SET ke triggers/external effects separate guard require kar sakte hain.","Every attempt ko applicable auth and preconditions enforce karne honge."] },
       ],
     },
   ],
@@ -1142,31 +1018,21 @@ COMMIT;</pre>
     instructions: 'Yeh sawaal bahut se strong engineers ko fansaata hai. 🎤',
     questions: [
       {
-        q: '"Exactly-once delivery kaise implement karoge?"',
-        choices: [
-          'Woh hoti hi nahi — crash ke baad "hua ya nahi" pata karna namumkin hai. Main at-least-once + idempotent processing karunga: message id, unique constraint, aur side-effect + id ek hi transaction mein',
-          'Kafka ka exactly-once mode use karunga',
-          'Transactions use karunga',
-          'Har message ko ack ke baad delete kar dunga',
-        ],
+        q: "External business effects ke liye exactly-once outcome kaise assess karoge?",
+        choices: ["Define effect boundary; dedupe atomically","Only broker toggle external effects once","ACK before write guarantees no data loss","Write effect then async dedupe sufficient"],
         answer: 0,
-        explain: 'Sabse achha jawab premise ko hi <b>challenge</b> karta hai — aur woh sahi hai. Kafka ka exactly-once uske <b>andar</b> hai (read-process-write ek cluster mein); jaise hi tum bahar payment API call karte ho, woh guarantee khatm.',
-      },
+        explain: "Define exactly-once effect and failure boundary. Supported broker transactions useful hain; external store effect+dedupe record atomic transaction or provider idempotency/recovery protocol chahiye. Delivery count aur business effect count different claims hain.",
+       choiceExplanations: ["Define exactly-once effect and failure boundary. Supported broker transactions useful hain; external store effect+dedupe record atomic transaction or provider idempotency/recovery protocol chahiye. Delivery count aur business effect count different claims hain.","External store/provider integration atomicity/cooperation require karti hai.","Crash after ACK before write business work lose kar sakta hai.","Crash between effect and dedupe duplicate effect cause kar sakta hai."] },
       {
-        q: '"Consumer crash hua aur message dobara aaya. User ko double charge se kaise bachaoge?"',
-        choices: [
-          'Message id par unique constraint, aur charge + id ek hi DB transaction mein. Duplicate par insert fail hoga aur main skip kar dunga',
-          'Try-catch laga dunga',
-          'Charge se pehle check karunga ki pehle to nahi hua',
-          'Broker ki exactly-once setting on kar dunga',
-        ],
+        q: "Consumer payment provider ko charge karte waqt crash hua; message redeliver hua. Safe design?",
+        choices: ["Provider idempotency or recoverable payment ID","Local DB row makes remote charge atomic","SELECT then charge prevents all races","Broker guarantee includes payment provider"],
         answer: 0,
-        explain: '"Pehle check karunga" ek race condition hai — do retries ek saath aa sakti hain (aur aksar aati hain, jab network wapas aata hai). Sirf <b>DB constraint</b> atomic hai. Aur "ek transaction mein" wali baat hi ise sach mein safe banati hai.',
-      },
+        explain: "External payment ke liye stable provider idempotency key/payment intent aur durable recovery state design karo. Local DB dedupe record with local ledger transaction local duplicates protect kar sakta hai; remote charge automatically atomic nahi. Ambiguous timeout reconcile karo.",
+       choiceExplanations: ["External payment ke liye stable provider idempotency key/payment intent aur durable recovery state design karo. Local DB dedupe record with local ledger transaction local duplicates protect kar sakta hai; remote charge automatically atomic nahi. Ambiguous timeout reconcile karo.","Local transaction external provider charge automatically enlist nahi karti.","Concurrent workers dono absent dekhkar charge kar sakte hain.","Broker cannot enforce provider effect without cooperating contract."] },
     ],
   },
   success: [
-    'Bata sakte ho ki exactly-once kyun namumkin hai',
+    'Delivery count vsbusiness effect aur transactional guarantee ka scope samjha sakte ho',
     'Idempotent consumer ke teen kadam implement kar sakte ho',
     'Naturally idempotent operations design kar sakte ho',
     'Broker ke exactly-once claim ki seema jaante ho',
@@ -1179,7 +1045,7 @@ COMMIT;</pre>
     { front: 'Asli formula?', back: '<b>at-least-once delivery + idempotent processing = effectively-once.</b> Duplicates aayenge — bas unka koi asar nahi hoga.' },
     { front: 'Idempotent consumer ke 3 kadam?', back: '<b>1.</b> Message mein unique id <b>2.</b> <code>processed_ids</code> par UNIQUE constraint <b>3.</b> side-effect + id <b>ek hi transaction</b> mein (warna dual write dobara).' },
     { front: 'Sabse sasti idempotency?', back: 'Design se: <b>"value SET karo"</b> (<code>SET status = shipped</code>), "value BADHAO" nahi. Koi extra table, koi constraint nahi lagti.' },
-    { front: '"Broker exactly-once deta hai"?', back: 'Woh apne <b>andar</b> deta hai (read-process-write, ek cluster). Bahar kuch bhi karte hi — payment API, email — woh guarantee khatm.' },
+    { front: '"Broker exactly-once deta hai"?', back: 'Kafka transactions supported Kafka read-process-write boundary protect karti hain.External sink/payment/email ko cooperating transaction,idempotency ya reconciliation contract chahiye.' },
   ],
 },
 
@@ -1263,17 +1129,23 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
       goal: '2 crore cards wali table hai. Pehle polling wali query ka plan dekho, phir reminder_at par index banao aur dikhao ki ab kitni kam rows chhuni padti hain.',
       sys: SD.sys.reminders(),
       tasks: T_SCHED,
-      success: allOf(T_SCHED),
+      success: SD.allTasks(T_SCHED),
       successText: `<b>2 crore rows scan → ek index seek.</b>
         <br><br>Aur dhyaan do ki yeh <b>bilkul wahi</b> insight hai jo pagination level mein tha:
         <br>• Deep offset: "2.4 crore rows skip mat karo — jahan chhoda tha wahin se lo"
         <br>• Scheduling: "2 crore cards scan mat karo — jo due hain unhe seedha uthao"
         <br><br>Dono mein galti <b>data ke size</b> mein nahi, <b>access pattern</b> mein thi.
         Technology (delayed queue, sorted set, timer wheel) uske baad ki baat hai.`,
+      solution: [
+        "EXPLAIN SELECT * FROM cards WHERE due_date > 2026",
+        "CREATE INDEX ix_reminder ON cards(reminder_at)",
+        "EXPLAIN SELECT * FROM cards WHERE reminder_at < 2026 ORDER BY reminder_at LIMIT 1000",
+      ],
+      verify: s => { const m = SD.mission; return m.index(s, 'cards', ['reminder_at']) && m.current(s, 'explain', r => r.table === 'cards' && r.indexUsed && r.rowsExamined < 5000); },
       hints: [
-        'Polling wali query ka plan: EXPLAIN SELECT * FROM cards WHERE due_date > 2026',
-        'Ab index banao: CREATE INDEX ix_reminder ON cards(reminder_at)',
-        'Aur scheduled-event wali query: EXPLAIN SELECT * FROM cards WHERE reminder_at < 2026 ORDER BY reminder_at LIMIT 1000',
+        "Pehle observation: Polling wali query ka plan dekho — poori table scan. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Due reminders uthao — 5000 se kam rows chhuni chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nEXPLAIN SELECT * FROM cards WHERE due_date > 2026\nCREATE INDEX ix_reminder ON cards(reminder_at)\nEXPLAIN SELECT * FROM cards WHERE reminder_at < 2026 ORDER BY reminder_at LIMIT 1000",
       ],
     },
     {
@@ -1309,37 +1181,22 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
       questions: [
         {
           q: 'Har ghante 2 crore rows scan karne mein asli galti kya hai?',
-          choices: [
-            'Access pattern — jawab ke liye poora dataset chhu rahe ho. Ek baar reminder_at calculate karke store karo, phir due rows par seedha seek karo',
-            'Table bahut badi hai, shard karna chahiye',
-            'Query har ghante chal rahi hai, use kam karo',
-            'Index nahi hai',
-          ],
+          choices: ["Index scheduled due jobs instead of scan","Only changing cron frequency fixes cost","Sharding makes every full scan cheap","More columns in SELECT remove scan work"],
           answer: 0,
           explain: 'Index lagana <b>madad</b> karta hai par asli fix nahi hai — kyunki query abhi bhi "sab se poochh rahi hai" ki tera waqt aa gaya. Sahi design mein jawab <b>pehle se likha hua</b> hai (<code>reminder_at</code>) aur worker sirf due rows uthata hai. Yeh bilkul deep pagination wali seekh hai.',
-        },
+         choiceExplanations: ["Index lagana <b>madad</b> karta hai par asli fix nahi hai — kyunki query abhi bhi \"sab se poochh rahi hai\" ki tera waqt aa gaya. Sahi design mein jawab <b>pehle se likha hua</b> hai (<code>reminder_at</code>) aur worker sirf due rows uthata hai. Yeh bilkul deep pagination wali seekh hai.","Frequency reduce delay badha sakti hai; per run full scan cost remains.","Scatter gather full scan can still expensive shared work ho sakta hai.","Projection bytes ghata sakti hai; due rows access path phir bhi chahiye."] },
         {
           q: 'Scheduled system ko cron se kya alag banata hai?',
-          choices: [
-            'Reality badalti hai — user pehle pay kar sakta hai, due date badal sakti hai, user reminders band kar sakta hai. Schedule ko update, cancel aur recompute hona aana chahiye',
-            'Cron reliable nahi hai',
-            'Cron distributed nahi hota',
-            'Kuch alag nahi, dono ek hi hain',
-          ],
+          choices: ["Schedules need update, cancel and recovery","Cron cannot reliably start any process","Schedule records never need timezone","Timer creation alone guarantees once-only"],
           answer: 0,
           explain: 'Cron ek <b>fixed</b> shell hai: "roz 9 baje yeh chalao". Scheduled work <b>per-entity</b> aur <b>mutable</b> hai: "is bill ko 25 tareekh ko dhyaan chahiye — jab tak kuch badal na jaaye". Yeh farak poora design badal deta hai.',
-        },
+         choiceExplanations: ["Cron ek <b>fixed</b> shell hai: \"roz 9 baje yeh chalao\". Scheduled work <b>per-entity</b> aur <b>mutable</b> hai: \"is bill ko 25 tareekh ko dhyaan chahiye — jab tak kuch badal na jaaye\". Yeh farak poora design badal deta hai.","Cron execution useful hai; business scheduling semantics separate hain.","Business due dates timezone/calendar changes se affected ho sakti hain.","Crashes, retries and cancel races require durable state/idempotency."] },
         {
           q: '50 lakh notifications theek 9:00 AM par bhejne ka nateeja?',
-          choices: [
-            'Tumne apne liye flash crowd bana liya — apna system, provider ki rate limit, aur users ke devices sab ek saath hit honge',
-            'Kuch nahi, woh normal hai',
-            'Notifications late ho jaayengi',
-            'Users khush honge',
-          ],
+          choices: ["Synchronized sends can overload shared quota","All notifications are free because async","Queueing makes provider quota infinite","Identical send time randomizes all traffic"],
           answer: 0,
           explain: 'Yeh <b>self-inflicted</b> flash crowd hai — aur woh sabse bewakoofi wala type hai kyunki woh poori tarah tumhare control mein tha. 30 minute mein stagger karne se kisi user ko koi farak nahi padta aur tumhara system aaram se chalta hai.',
-        },
+         choiceExplanations: ["Yeh <b>self-inflicted</b> flash crowd hai — aur woh sabse bewakoofi wala type hai kyunki woh poori tarah tumhare control mein tha. 30 minute mein stagger karne se kisi user ko koi farak nahi padta aur tumhara system aaram se chalta hai.","Async work still CPU, provider quota and network consume karta hai.","Queue buffer throughput limit replace nahi karti.","Same send time correlated burst banata hai; stagger with business constraints."] },
       ],
     },
   ],
@@ -1349,26 +1206,16 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
     questions: [
       {
         q: '"2 crore credit cards hain, har ek par due date se 5 din pehle reminder bhejna hai. Design karo."',
-        choices: [
-          'Har bill ko ek scheduled event banaunga — reminder_at ek baar calculate karke store karunga (timezone ke saath). Worker WHERE reminder_at <= now() se due jobs uthayega (index par seek). Partition user_id se, stagger 30 min mein, aur send idempotent',
-          'Har ghante ek cron job saari cards scan karega',
-          'Har card ke liye ek timer set karunga',
-          'Kafka mein delayed messages daal dunga',
-        ],
+        choices: ["Durable due-index jobs; claim and dedupe","Every card owns a non persistent timer","Hourly all-row scan has bounded constant cost","Kafka standard topics provide arbitrary delay"],
         answer: 0,
         explain: 'Sabse achha jawab <b>access pattern</b> se shuru hota hai ("dobara mat dhoondo, likh lo"), phir scale ki baatein (partition, stagger) aur correctness (idempotent) jodta hai. Aur woh kisi ek technology par nahi tikta — jo sahi hai, kyunki yeh pattern ka sawaal hai.',
-      },
+       choiceExplanations: ["Sabse achha jawab <b>access pattern</b> se shuru hota hai (\"dobara mat dhoondo, likh lo\"), phir scale ki baatein (partition, stagger) aur correctness (idempotent) jodta hai. Aur woh kisi ek technology par nahi tikta — jo sahi hai, kyunki yeh pattern ka sawaal hai.","Process restart timers lose kar sakta hai; durable recovery chahiye.","Full scan cardinality ke saath work grow karta hai.","Kafka alone generic per message scheduled delivery API nahi; stream/scheduler design needed."] },
       {
-        q: '"User ne bill pehle pay kar diya. Ab kya?"',
-        choices: [
-          'Pending reminder cancel karo — schedule ek jeeti-jaagti cheez hai, ek baar likh ke bhool jaane wali nahi. Payment event par reminder ko cancelled mark karo',
-          'Reminder chala jaayega, koi baat nahi',
-          'Send ke waqt check karenge ki bill paid hai ya nahi',
-          'Reminder delete kar dunga',
-        ],
+        q: "Payment event reminder send ke saath race kar sakta hai. Kya karoge?",
+        choices: ["Cancel pending; recheck eligibility at send","Only cancellation event removes every race","Already paid means notification still valid","Delete schedule then skip every audit log"],
         answer: 0,
-        explain: 'Teesra option bhi kaam karta hai (send se pehle validate karo) aur woh ek achha <b>safety net</b> hai — par akela kaafi nahi, kyunki tumne phir bhi ek bekaar job schedule kar rakhi hai. <b>Dono</b> karna sabse achha hai: event par cancel, aur send se pehle ek final check.',
-      },
+        explain: "Payment event pending reminder cancel kare; sender eligibility/version last safe check bhi rakho. Cancel and send race already inflight notification allow kar sakti hai; business contract define karo. Deletion versus state change audit/retention requirement se choose karo.",
+       choiceExplanations: ["Payment event pending reminder cancel kare; sender eligibility/version last safe check bhi rakho. Cancel and send race already inflight notification allow kar sakti hai; business contract define karo. Deletion versus state change audit/retention requirement se choose karo.","Send already inflight ho sakta hai; last safe check/version guard chahiye.","Reminder business meaning payment state se tied hai.","Deletion may erase recovery/evidence; state transition retention plan needed."] },
     ],
   },
   success: [
@@ -1440,7 +1287,7 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
      conditional update — sabse simple aur sabse strong. <b>(2)</b> Partition
      — lock ki zaroorat khatam. <b>(3)</b> etcd/ZooKeeper — jab sach mein
      leader chahiye. <b>(4)</b> Redis lock — sirf "best effort" kaam ke liye
-     (cache warming, duplicate email se bachna), correctness ke liye kabhi nahi.</p>`,
+     (cache warming, duplicate work kam karna).Strong correctness claim mein stale holder,failure model aur resource fencing test karo.</p>`,
   ],
   stages: [
     {
@@ -1453,12 +1300,12 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
         { id: 'lock', label: '🔒 Sach mein distributed lock' },
       ],
       items: [
-        { text: 'Ek order sirf ek baar ship ho', bin: 'db', explain: "Conditional update: <code>UPDATE orders SET status='shipped' WHERE id=? AND status='paid'</code>. 0 rows mile toh kisi aur ne kar diya. Atomic aur simple." },
+        { text: 'Ek order sirf ek baar ship ho', bin: 'db', explain: "Atomic conditional claim ek worker ko order own karne deta hai. Actual carrier shipment alag effect hai: stable shipment ID, durable outbox, idempotency aur reconciliation chahiye; status update alone physical once-only shipping prove nahi karta." },
         { text: '10 workers, 2 crore reminders process karne hain', bin: 'part', explain: 'user_id ya date se partition karo — har worker apna hissa lega. Do worker same reminder chhuenge hi nahi, isliye lock ki zaroorat khatam.' },
-        { text: 'Ek username sirf ek user ko mile', bin: 'db', explain: 'UNIQUE constraint. Yeh sabse strong guarantee hai aur bilkul muft — koi lock, koi coordination nahi.' },
+        { text: 'Ek username sirf ek user ko mile', bin: 'db', explain: "UNIQUE constraint chosen DB scope mein concurrent duplicate writes reject karti hai. Index maintenance, locking aur replicated commit ka cost hota hai; application-side check race se stronger invariant milta hai." },
         { text: 'Cluster mein sirf ek node nightly job chalaye', bin: 'lock', explain: 'Yeh sach mein leader election hai. Quorum-based (etcd/ZooKeeper) chahiye — warna split-brain mein do node job chala denge.' },
         { text: 'Ek cache key sirf ek baar refresh ho (stampede)', bin: 'lock', explain: 'Best-effort lock bilkul theek hai. Do baar refresh ho bhi jaaye toh sirf thodi extra query hai — correctness par koi asar nahi.' },
-        { text: 'Ek payment sirf ek baar charge ho', bin: 'db', explain: 'Idempotency key par unique constraint. Lock se yeh mat karo — lock toot sakta hai, constraint nahi.' },
+        { text: 'Ek payment sirf ek baar charge ho', bin: 'db', explain: "Local ledger effect aur idempotency record ek atomic transaction mein rakho. External payment provider ke liye stable operation ID, provider idempotency aur uncertain-outcome reconciliation chahiye; local UNIQUE alone remote charge ko atomic nahi banati." },
       ],
     },
     {
@@ -1478,37 +1325,22 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
       questions: [
         {
           q: 'Distributed lock "toota hua" kyun kehte hain?',
-          choices: [
-            'Process ko nahi pata ki woh kitni der ruka tha (GC pause, network freeze) — uska lock expire ho chuka ho sakta hai aur usse pata bhi nahi chalega',
-            'Redis reliable nahi hai',
-            'Network slow hota hai',
-            'Lock implementations mein bugs hote hain',
-          ],
+          choices: ["Expired holder can resume stale writes","Redis speed makes leases never expire","GC pause automatically releases remote work","Clock timeout proves resource ownership"],
           answer: 0,
           explain: 'Yeh kisi implementation ka bug nahi — <b>koi bhi</b> TTL-based lock isse nahi bach sakta. Process apne aap ko "abhi bhi lock holder" maanta rahega. Isi liye fencing token chahiye: storage ko decide karne do, process ko nahi.',
-        },
+         choiceExplanations: ["Yeh kisi implementation ka bug nahi — <b>koi bhi</b> TTL-based lock isse nahi bach sakta. Process apne aap ko \"abhi bhi lock holder\" maanta rahega. Isi liye fencing token chahiye: storage ko decide karne do, process ko nahi.","Finite lease expires even ifholder process paused.","Pausedprocess resume old critical section execute kar sakta hai.","Timeout/ownership knowledge need fencing/versionchecked at resource."] },
         {
-          q: 'Ek order sirf ek baar ship ho — sabse achha tareeka?',
-          choices: [
-            "Conditional update: UPDATE ... WHERE id = ? AND status = 'paid'. 0 rows mile toh kisi aur ne kar diya — atomic, simple, aur lock se zyada bharosemand",
-            'Redis lock lo',
-            'Application mein flag rakho',
-            'Queue mein sirf ek consumer rakho',
-          ],
+          q: "Multiple workers one order ship kar sakte hain. Safe durable claim/effect design?",
+          choices: ["Atomic claim plus idempotent shipment intent","One DB update proves external package once","One queue consumer can never crash","App memory flag survives every restart"],
           answer: 0,
-          explain: 'Conditional update <b>DB ke andar</b> atomic hai — koi lock, koi TTL, koi clock skew nahi. "0 rows affected" hi tumhara "kisi aur ne pehle kar diya" ka jawab hai. Yeh distributed lock se hamesha behtar hai jab ho sake.',
-        },
+          explain: "Atomic conditional update multiple workers se one winner choose kar sakta hai. Physical shipment external side effect hai; shipment intent outbox, stable carrierID/idempotency and reconciliation chahiye. Database claim alone every package once guarantee nahi.",
+         choiceExplanations: ["Atomic conditional update multiple workers se one winner choose kar sakta hai. Physical shipment external side effect hai; shipment intent outbox, stable carrierID/idempotency and reconciliation chahiye. Database claim alone every package once guarantee nahi.","Carrier/shipping side effect own durableIDand recovery need karta hai.","Single consumer crash/retry can repeat side effect.","Process memory restart par lost ho sakti hai."] },
         {
-          q: 'Redis-based lock kahan theek hai?',
-          choices: [
-            'Best-effort kaam ke liye jahan do baar chal jaana bhi theek ho — cache warming, duplicate email se bachna. Correctness ke liye kabhi nahi',
-            'Har jagah, woh tez hai',
-            'Payment processing ke liye',
-            'Kahin bhi nahi, use kabhi mat karo',
-          ],
+          q: "RedisTTLlease ko duplicate suppression ke liye kab evaluate karoge?",
+          choices: ["Best-effort duplicate suppression tolerates overlap","Every leased lock guarantees linearizable writes","TTL alone fences expired holders forever","Any Redis use is inherently incorrect"],
           answer: 0,
-          explain: 'Yeh nuance zaroori hai. Redis lock bekaar nahi hai — woh <b>duplicate kaam</b> kam karne mein bahut achha hai. Bas uspar <b>correctness</b> mat tikao. "Do baar ho gaya toh kya hoga?" — agar jawab "kuch khaas nahi" hai toh Redis lock bilkul theek hai.',
-        },
+          explain: "Lease based duplicate suppression best-effort work mein useful ho sakta hai. Strong correctness requirements ke liye resource-level fencing/atomic guards, failover and clock/pause assumptions analyze karo. Redis universal always/never rule se better guarantee explicit hai.",
+         choiceExplanations: ["Lease based duplicate suppression best-effort work mein useful ho sakta hai. Strong correctness requirements ke liye resource-level fencing/atomic guards, failover and clock/pause assumptions analyze karo. Redis universal always/never rule se better guarantee explicit hai.","Correctness depends on failure model, resource guard and protocol.","TTL expiration oldholder ko external resource write se nahi rokta.","Redis useful cache/coordination tool hai; required guarantee specify karo."] },
       ],
     },
   ],
@@ -1518,15 +1350,10 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
     questions: [
       {
         q: '"Distributed lock kaise implement karoge?"',
-        choices: [
-          'Pehle poochhunga ki lock ki zaroorat hai bhi ya nahi — aksar DB unique constraint, conditional update ya partitioning se kaam ho jaata hai. Sach mein chahiye toh fencing token ke saath, aur leader election ke liye quorum-based (etcd/ZooKeeper)',
-          'Redis SETNX with TTL',
-          'DB mein ek locks table banaunga',
-          'ZooKeeper use karunga',
-        ],
+        choices: ["First invariant; then atomicity or fencing","SETNX TTL alone proves every invariant","Quorum lease removes need for stale fencing","Choosing library removes all failure analysis"],
         answer: 0,
         explain: 'Sabse achha jawab pehle <b>sawaal ko challenge</b> karta hai. "Redis SETNX" bina fencing token ke ek toota hua lock hai — aur us par correctness tikana ek asli production bug hai jo bahut companies ne dekha hai.',
-      },
+       choiceExplanations: ["Sabse achha jawab pehle <b>sawaal ko challenge</b> karta hai. \"Redis SETNX\" bina fencing token ke ek toota hua lock hai — aur us par correctness tikana ek asli production bug hai jo bahut companies ne dekha hai.","Expired holder resume aur failover cases resource guard require karte hain.","Paused old holder ko external resource fence/version reject kare.","Library assumptions and participant failure behavior still understand/test karo."] },
     ],
   },
   success: [
@@ -1544,7 +1371,7 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
     { front: 'Fencing token?', back: 'Har lock ke saath ek <b>badhta hua number</b>. Storage purane token wale write ko <b>reject</b> kare. Bina iske lock sirf best-effort hai.' },
     { front: 'Lock ki jagah kya?', back: '<b>DB unique constraint</b> · <b>conditional update</b> (<code>WHERE status=\'pending\'</code>) · <b>partition</b> (ek key, ek worker) · <b>idempotency</b>. Sabse achha lock woh jiski zaroorat na pade.' },
     { front: 'Split-brain?', back: 'Network partition mein <b>do leader</b> ban jaate hain. Isliye leader election ke liye <b>quorum</b> (etcd/ZooKeeper) chahiye — ek simple Redis key nahi.' },
-    { front: 'Redis lock kahan theek hai?', back: '<b>Best-effort</b> kaam mein — cache warming, duplicate email kam karna. Poochho: "do baar ho gaya toh kya?" Jawab "kuch khaas nahi" hai toh theek hai. <b>Correctness ke liye kabhi nahi.</b>' },
+    { front: 'Redis lock kahan theek hai?', back: '<b>Best-effort</b> kaam mein — cache warming, duplicate email kam karna. Poochho: "do baar ho gaya toh kya?" Jawab "kuch khaas nahi" hai toh theek hai. Strong correctness ke liye lease/failure assumptions aur resource-enforced fencing/atomic guards verify karo.' },
   ],
 },
 
@@ -1591,11 +1418,11 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
           id: 'submit', label: 'Order submit', icon: '📱',
           note: 'Mobile network drop par retry karta hai',
           options: [
-            { id: 'plain', label: 'POST /orders — plain', score: -3,
+            { id: 'plain', label: "POST without stable operation ID", score: -3,
               why: 'Retry par duplicate order aur duplicate charge. Client jaan hi nahi sakta ki request pahunchi thi ya jawab kho gaya.' },
-            { id: 'idem', label: 'POST + Idempotency-Key (client-generated)', score: 3,
+            { id: 'idem', label: "POST with stable operation ID", score: 3,
               why: 'Sahi. Key unique constraint ke saath, response ke SAATH store karo, aur dobara aane par wahi response lauta do.' },
-            { id: 'dedupe', label: 'Server body hash se dedupe kare', score: -1,
+            { id: 'dedupe', label: "Body hash treats equal intents same", score: -1,
               why: 'Toota hua — do alag users theek same order de sakte hain. Woh do jaayaz orders hain, duplicate nahi.' },
           ],
         },
@@ -1603,11 +1430,11 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
           id: 'event', label: 'Event publish', icon: '📤',
           note: 'Order bana, ab baaki services ko batana hai',
           options: [
-            { id: 'dual', label: 'DB save, phir kafka.publish()', score: -3,
+            { id: 'dual', label: "Commit DB then publish separately", score: -3,
               why: 'Dual write. Beech mein crash = order DB mein hai par event kabhi nahi gaya. Silent inconsistency, koi error nahi.' },
-            { id: 'outbox', label: 'Outbox — order + event ek transaction mein', score: 3,
-              why: 'Sahi. Dono ek hi DB mein, ek hi transaction mein. Relay baad mein publish karega — event kabhi kho nahi sakta.' },
-            { id: 'sync', label: 'Sync HTTP calls sabhi services ko', score: -2,
+            { id: 'outbox', label: "Domain and outbox in one commit", score: 3,
+              why: "Dono rows ek durable DB transaction mein commit hoti hain. Relay recover karke retry kare aur retention preserve ho toh pending event publish ho sakta hai; relay lag, retries aur dedupe monitor karo." },
+            { id: 'sync', label: "Sync RPC fanout after local save", score: -2,
               why: 'Order ki availability sabhi services ka GUNA ban jaayegi. Ek service down = order fail, jabki order toh ban sakta tha.' },
           ],
         },
@@ -1615,11 +1442,11 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
           id: 'flow', label: 'Multi-service flow', icon: '🧩',
           note: 'order → inventory → payment → shipping',
           options: [
-            { id: '2pc', label: '2PC — sab atomic', score: -3,
+            { id: '2pc', label: "Cross-system2PC required everywhere", score: -3,
               why: 'Blocking. Coordinator prepare ke baad mare toh sab locks pakde latke rehte hain. Availability sabse kamzor participant jaisi.' },
-            { id: 'orch', label: 'Saga (orchestration) + compensating actions', score: 3,
+            { id: 'orch', label: "Durable orchestrated saga policy", score: 3,
               why: 'Sahi. 4 steps hain, isliye orchestration — flow ek jagah dikhega, state/retry/timeout sab wahin. Har step ka compensation likha hua.' },
-            { id: 'choreo', label: 'Saga (choreography) — sab events sunein', score: 1,
+            { id: 'choreo', label: "Event choreography with recovery", score: 1,
               why: 'Chalega, par 4 steps par flow kahin likha hi nahi hoga. "Order kis step par atka hai?" ka jawab dena bahut mushkil ho jaayega.' },
           ],
         },
@@ -1627,11 +1454,11 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
           id: 'consumer', label: 'Consumers', icon: '♻️',
           note: 'Broker at-least-once deliver karta hai',
           options: [
-            { id: 'plain2', label: 'Bas process kar do', score: -3,
+            { id: 'plain2', label: "Process each delivery blindly", score: -3,
               why: 'Duplicate delivery par double stock reservation aur double charge. At-least-once ka matlab hai duplicates AAYENGI — yeh "agar" nahi, "kab" hai.' },
-            { id: 'idem2', label: 'Idempotent — msg id par unique constraint, side-effect ke SAATH ek transaction mein', score: 3,
+            { id: 'idem2', label: "Atomic dedupe and local effect", score: 3,
               why: 'Sahi, aur "ek transaction mein" wala hissa zaroori hai — warna tumne dual write dobara bana diya.' },
-            { id: 'check', label: 'Process se pehle check karo ki pehle to nahi hua', score: -1,
+            { id: 'check', label: "Read-before-effect without guard", score: -1,
               why: 'Check-then-act race condition. Do retries ek saath aa sakti hain (aur aksar aati hain). Sirf DB constraint atomic hai.' },
           ],
         },
@@ -1639,11 +1466,11 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
           id: 'query', label: '"Delhi ke pending orders"', icon: '🔎',
           note: 'Roz 10,000 baar, cross-service data',
           options: [
-            { id: 'compose', label: 'API composition — user-service se users, phir orders', score: -2,
+            { id: 'compose', label: "Per-user fanout composition", score: -2,
               why: 'Delhi mein 50,000 users hain → 50,000 calls. Yeh N+1 ka distributed roop hai. Composition 2-3 calls tak theek hai.' },
-            { id: 'cqrs', label: 'CQRS read model — events se denormalized table', score: 3,
+            { id: 'cqrs', label: "Owned event-derived read model", score: 3,
               why: 'Sahi. order_summary (order_id, user_city, status) — ek query, 5 ms. Freshness bech ke query speed khareedi.' },
-            { id: 'shared', label: 'Users table ko seedha JOIN karo', score: -3,
+            { id: 'shared', label: "Direct JOIN on private user schema", score: -3,
               why: 'Cross-service DB access. Distributed monolith — user-service ka schema badla toh tum chup-chaap tootoge.' },
           ],
         },
@@ -1651,17 +1478,17 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
           id: 'payfail', label: 'Payment service dheemi hai', icon: '🛡️',
           note: 'Down nahi — p99 8 second',
           options: [
-            { id: 'wait', label: 'Intezaar karo, woh theek ho jaayegi', score: -3,
+            { id: 'wait', label: "Unbounded wait on payment API", score: -3,
               why: 'Har request 8 s thread + connection pakde rahegi. Thread pool khatam, aur poora order service down — jabki payment sirf DHEEMI thi.' },
-            { id: 'guards', label: 'Timeout + jitter retry + breaker + bulkhead, order "pending payment" mein rakho', score: 3,
+            { id: 'guards', label: "Budgeted attempts;durable pending state", score: 3,
               why: 'Sahi. Timeout intezaar baandhta hai, breaker koshish rokta hai, bulkhead blast radius baandhta hai — aur order kho nahi raha, baad mein process hoga.' },
-            { id: 'retry', label: 'Retry lagao jab tak safal na ho', score: -3,
+            { id: 'retry', label: "Unlimited retries until payment succeeds", score: -3,
               why: 'Retry storm. Dheemi service ko aur maaroge, apna p99 badhaoge, aur threads lambe samay bandhak rakhoge.' },
           ],
         },
       ],
       verdicts: {
-        great: 'Har decision production-grade hai. Yeh system order kabhi nahi khoyega, double charge kabhi nahi karega, aur ek service girne par bhi chalta rahega.',
+        great: 'Har decision production-grade hai. Patterns defined failure cases mein recovery improve karte hain;durability,external idempotency,reconciliation aur failure drills se actual guarantees verify karo.',
         ok: 'Design chal jaayega, par upar dekho — ek-do jagah tumne apne aap ko future incident de diya hai.',
         bad: 'Yeh system pehle bade spike ya pehli dheemi dependency par toot jaayega. Har option ka "why" padho — asli seekh wahi hai.',
       },
@@ -1679,7 +1506,7 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
         api: { primaryTable: 'order_summary', countTotal: false },
       }),
       tasks: T_BOSS_DIST,
-      success: allOf(T_BOSS_DIST),
+      success: SD.allTasks(T_BOSS_DIST),
       successText: `🎉 <b>Poora app khatam.</b>
         <br><br>Tumne abhi do sabse zaroori cheezein saath mein kar li:
         <br>• <b>Idempotency</b> — mobile retry par double charge nahi
@@ -1691,12 +1518,18 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
         <br><b>4.</b> Har remote call ek din fail hogi — <b>timeout, jitter, breaker, fallback, bulkhead, shed</b>
         <br><b>5.</b> Distributed system mein "ek saath" nahi hota, sirf "aakhir mein" —
         isliye sab kuch <b>idempotent, retryable, observable</b>.`,
+      solution: [
+        "sim set api.idempotency true",
+        "POST /v1/orders -H 'Idempotency-Key: ord-8812'",
+        "POST /v1/orders -H 'Idempotency-Key: ord-8812'",
+        "CREATE INDEX ix_summary ON order_summary(user_city, status, created_at)",
+        "EXPLAIN SELECT * FROM order_summary WHERE user_city = Delhi AND status = pending",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.idempotency === true && !!s.sys.seenKeys['ord-8812'] && m.index(s, 'order_summary', ['user_city', 'status', 'created_at']) && m.current(s, 'explain', r => r.table === 'order_summary' && !!r.indexUsed); },
       hints: [
-        'Idempotency on karo: sim set api.idempotency true',
-        "Order banao: POST /v1/orders -H 'Idempotency-Key: ord-8812'",
-        "Mobile ne retry kiya: POST /v1/orders -H 'Idempotency-Key: ord-8812'",
-        'Read model ke liye index: CREATE INDEX ix_summary ON order_summary(user_city, status, created_at)',
-        'Aur query ka plan dekho: EXPLAIN SELECT * FROM order_summary WHERE user_city = Delhi AND status = pending',
+        "Pehle observation: Order banao — idempotency key ke saath. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Read model query ka plan dekho — ek tez query honi chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nsim set api.idempotency true\nPOST /v1/orders -H 'Idempotency-Key: ord-8812'\nPOST /v1/orders -H 'Idempotency-Key: ord-8812'\nCREATE INDEX ix_summary ON order_summary(user_city, status, created_at)\nEXPLAIN SELECT * FROM order_summary WHERE user_city = Delhi AND status = pending",
       ],
     },
   ],
@@ -1706,26 +1539,16 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
     questions: [
       {
         q: '"Ek order system design karo jo order kabhi na khoye aur double charge kabhi na kare."',
-        choices: [
-          'Idempotency-Key se order banao (mobile retry safe), order + event ek transaction mein outbox se (event kabhi kho na sake), saga orchestration se multi-service flow, har consumer idempotent (at-least-once = duplicates), aur cross-service query ke liye read model',
-          'Ek bade transaction mein sab kuch karunga',
-          '2PC use karunga',
-          'Har service ko sync call karunga aur retry lagaunga',
-        ],
+        choices: ["Stable intent; durable handoff; reconciliation","Sync calls plus retry ensure no loss","2PC covers non participating payment APIs","Outbox eliminates all possible data loss"],
         answer: 0,
         explain: 'Poore jawab mein har layer ka ek guard hai: <b>idempotency key</b> (client retry), <b>outbox</b> (dual write), <b>saga</b> (distributed transaction), <b>idempotent consumer</b> (at-least-once), <b>read model</b> (cross-service query). Har ek alag failure mode rokta hai.',
-      },
+       choiceExplanations: ["Poore jawab mein har layer ka ek guard hai: <b>idempotency key</b> (client retry), <b>outbox</b> (dual write), <b>saga</b> (distributed transaction), <b>idempotent consumer</b> (at-least-once), <b>read model</b> (cross-service query). Har ek alag failure mode rokta hai.","RPC partial failure and timeout ambiguity persist with retries.","Provider must participate in protocol; many external APIs do not.","Durability and recovery assumptions still apply; outbox is not infinite reliability."] },
       {
-        q: '"Ek line mein — distributed systems ka sabse zaroori sabak kya hai?"',
-        choices: [
-          '"Ek saath" jaisi koi cheez nahi hoti, sirf "aakhir mein" — isliye har cheez idempotent, retryable aur observable banao',
-          'Sab kuch async kar do',
-          'Microservices hamesha behtar hain',
-          'Eventual consistency se bachna chahiye',
-        ],
+        q: "Distributed failures ke liye useful design principle?",
+        choices: ["Failure ambiguity needs durable explicit state","All work should always be asynchronous","Distributed systems cannot coordinate anything","Eventual consistency always satisfies invariants"],
         answer: 0,
-        explain: 'Yeh poore track ka nichod hai. Jaise hi tum ek machine se aage badhte ho, "ek saath ho gaya" ki guarantee chali jaati hai. Jo bachta hai woh hai: kaam <b>dobara</b> ho sakta hai (idempotent), <b>fail</b> ho sakta hai (retryable), aur tumhe <b>dikhna</b> chahiye ki kya hua (observable).',
-      },
+        explain: "Distributed failure mein success/failure knowledge ambiguous ho sakti hai; durable explicit state, idempotency, safe bounded retry and observability useful hain. Coordination/transactions possible hain, universal only-eventual slogan inaccurate hai.",
+       choiceExplanations: ["Distributed failure mein success/failure knowledge ambiguous ho sakti hai; durable explicit state, idempotency, safe bounded retry and observability useful hain. Coordination/transactions possible hain, universal only-eventual slogan inaccurate hai.","Some user flows need synchronous confirmation and stronger invariants.","Transactions, consensus and coordination exist with specific guarantees/cost.","Money/inventory constraints may require stronger protocol."] },
     ],
   },
   success: [
@@ -1842,22 +1665,28 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
       goal: `Pehle double booking <b>banao</b>, phir teen tareekon se rok ke dekho.`,
       sys: SD.sys.orders({ booking: { mode: 'none', seats: {}, holds: {} } }),
       tasks: T_CONT,
-      success: allOf(T_CONT),
+      success: SD.allTasks(T_CONT),
       successText: `Teen alag ilaaj, teen alag jagah ke liye:
         <b>pessimistic</b> jab hot row ho (sab ek hi seat maang rahe hain),
         <b>optimistic</b> jab takraav kam ho (tez, koi rukta nahi),
         aur <b>reservation</b> jab beech mein insaan ka waqt ho (checkout).
         Aur ek niyam jo teenon par lagta hai: <b>lock ke andar network call kabhi nahi</b>.`,
+      solution: [
+        "book seat A1 --concurrent 2",
+        "book reset",
+        "sim set booking.mode pessimistic",
+        "book seat A1 --concurrent 2",
+        "sim set booking.mode optimistic",
+        "book reset",
+        "book seat A1 --concurrent 2",
+        "book hold B4 --ttl 600",
+        "book seat B4 --concurrent 1",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.booking?.mode === 'optimistic' && !!s.sys.booking.seats.A1 && s.sys.booking.holds.B4 === 600 && m.current(s, 'book', r => r.blockedByHold && r.seat === 'B4'); },
       hints: [
-        'Bina kisi protection ke: book seat A1 --concurrent 2',
-        'Saaf karo: book reset',
-        'Ab row lock: sim set booking.mode pessimistic',
-        'Wahi do log: book seat A1 --concurrent 2',
-        'Ab version check wala: sim set booking.mode optimistic',
-        'Saaf karke dobara: book reset',
-        'Aur phir: book seat A1 --concurrent 2',
-        'Ab checkout wala raasta: book hold B4 --ttl 600',
-        'Aur dekho ki hold rokta hai: book seat B4 --concurrent 1',
+        "Pehle observation: Bina kisi lock ke ek seat par do log — double booking dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Dekho ki hold doosre khareedaar ko rok deta hai. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nbook seat A1 --concurrent 2\nbook reset\nsim set booking.mode pessimistic\nbook seat A1 --concurrent 2\nsim set booking.mode optimistic\nbook reset\nbook seat A1 --concurrent 2\nbook hold B4 --ttl 600\nbook seat B4 --concurrent 1",
       ],
     },
     {
@@ -1887,25 +1716,25 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
         c1: {
           text: 'Code mein SELECT karke check hai, phir UPDATE. Transaction bhi hai. Phir kaise?',
           choices: [
-            { t: 'Transaction hone se race nahi rukti — dono ne "free" padha, dono ne likh diya. Isolation level dekho aur SELECT … FOR UPDATE lagao', good: true, next: 'c2', explain: 'Sahi. Zyadatar DBs ka default <b>READ COMMITTED</b> hai, jo yeh nahi rokta: dono SELECT successful, dono ko "free" mila. Transaction <b>atomicity</b> deta hai, <b>mutual exclusion</b> nahi. Uske liye lock chahiye.' },
-            { t: 'Application mein ek mutex laga do', good: false, explain: 'Mutex sirf <b>ek process</b> ke andar kaam karta hai. Do pods par woh bilkul bekaar hai — aur yeh galti isliye chalak hai ki local testing (ek process) mein woh kaam karti hui dikhti hai.' },
-            { t: 'Retry logic add kar do', good: false, explain: 'Retry tab kaam aata hai jab kuch <b>fail</b> ho. Yahan dono requests successful thi — bas natija galat tha. Retry se kuch nahi badlega.' },
+            { t: "Check isolation;useatomic claim", good: true, next: 'c2', explain: 'Sahi. Zyadatar DBs ka default <b>READ COMMITTED</b> hai, jo yeh nahi rokta: dono SELECT successful, dono ko "free" mila. Transaction <b>atomicity</b> deta hai, <b>mutual exclusion</b> nahi. Uske liye lock chahiye.' },
+            { t: "Local process mutex only", good: false, explain: 'Mutex sirf <b>ek process</b> ke andar kaam karta hai. Do pods par woh bilkul bekaar hai — aur yeh galti isliye chalak hai ki local testing (ek process) mein woh kaam karti hui dikhti hai.' },
+            { t: "Retry racing writes unconditionally", good: false, explain: 'Retry tab kaam aata hai jab kuch <b>fail</b> ho. Yahan dono requests successful thi — bas natija galat tha. Retry se kuch nahi badlega.' },
           ],
         },
         c2: {
           text: 'FOR UPDATE laga diya, double booking band. Par ab checkout page par timeouts aa rahe hain.',
           choices: [
-            { t: 'Dekho ki lock ke ANDAR payment gateway call to nahi ho rahi', good: true, next: 'c3', explain: 'Yahi hota hai. Lock ke andar ek 2-second ka external call matlab us seat par sab 2 second ruke. Lock sirf DB ke kaam ke around ho — network call hamesha uske <b>bahar</b>.' },
-            { t: 'Lock timeout badha do', good: false, explain: 'Isse timeouts kam dikhenge par wait aur lamba ho jaayega — user ke liye woh aur bura hai. Sawaal yeh hai ki lock itni der pakda kyun ja raha hai.' },
-            { t: 'Aur DB connections add karo', good: false, explain: 'Connections yahan hadd nahi hain — <b>lock</b> hadd hai. Sab usi ek row ka intezaar kar rahe hain; 500 connections bhi ek-ek karke hi chalenge.' },
+            { t: "Trace payment calls inside row lock", good: true, next: 'c3', explain: 'Yahi hota hai. Lock ke andar ek 2-second ka external call matlab us seat par sab 2 second ruke. Lock sirf DB ke kaam ke around ho — network call hamesha uske <b>bahar</b>.' },
+            { t: "Raise lock timeout and wait longer", good: false, explain: 'Isse timeouts kam dikhenge par wait aur lamba ho jaayega — user ke liye woh aur bura hai. Sawaal yeh hai ki lock itni der pakda kyun ja raha hai.' },
+            { t: "Raise DBpool without holder evidence", good: false, explain: 'Connections yahan hadd nahi hain — <b>lock</b> hadd hai. Sab usi ek row ka intezaar kar rahe hain; 500 connections bhi ek-ek karke hi chalenge.' },
           ],
         },
         c3: {
           text: 'Payment call lock ke bahar kar di. Par ab payment ke doraan seat kisi aur ko chali jaati hai.',
           choices: [
-            { t: 'Reservation pattern: pehle seat par TTL ke saath hold lagao, phir payment, phir confirm', good: true, next: 'end', explain: 'Yahi asli hal hai. Hold ek <b>chhoti</b> transaction hai (lock milliseconds ka), par uska asar 10 minute rehta hai — aur TTL se abandoned checkouts apne aap saaf ho jaate hain. Ab teenon problems ek saath hal hain: race, lock ka waqt, aur user ka waqt.' },
-            { t: 'Lock ko payment ke doraan bhi pakde rakho', good: false, explain: 'Wapas wahi problem — ek DB lock minute bhar latka hua, poore us row par. Aur agar user ka browser band ho gaya toh woh lock timeout tak baitha rahega.' },
-            { t: 'Payment pehle lo, seat baad mein do', good: false, explain: 'Ab tumne paisa le liya aur seat na milne ka risk user par daal diya. Refund flow, support tickets, aur bharosa — teenon ka nuksaan.' },
+            { t: "Owned expiring hold;guarded confirm", good: true, next: 'end', explain: 'Yahi asli hal hai. Hold ek <b>chhoti</b> transaction hai (lock milliseconds ka), par uska asar 10 minute rehta hai — aur TTL se abandoned checkouts apne aap saaf ho jaate hain. Ab teenon problems ek saath hal hain: race, lock ka waqt, aur user ka waqt.' },
+            { t: "Hold DB lock through external payment", good: false, explain: 'Wapas wahi problem — ek DB lock minute bhar latka hua, poore us row par. Aur agar user ka browser band ho gaya toh woh lock timeout tak baitha rahega.' },
+            { t: "Charge before any seat ownership check", good: false, explain: 'Ab tumne paisa le liya aur seat na milne ka risk user par daal diya. Refund flow, support tickets, aur bharosa — teenon ka nuksaan.' },
           ],
         },
         end: {
@@ -1926,38 +1755,23 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
       title: 'Contention ki samajh',
       questions: [
         {
-          q: 'Transaction ke andar SELECT + UPDATE hai. Kya double booking ruk jaayegi?',
-          choices: [
-            'Nahi — default READ COMMITTED par dono transactions "free" padh lengi. Transaction ATOMICITY deta hai, mutual exclusion nahi. Uske liye FOR UPDATE ya atomic conditional update chahiye',
-            'Haan, transaction ise rokti hai',
-            'Haan, agar rollback ho',
-            'Sirf SERIALIZABLE par',
-          ],
+          q: "READ COMMITTED plain SELECT free-seat then UPDATE, without guard. Booking safe?",
+          choices: ["Read-modify-write needs isolation or guard","Any transaction serializes concurrent SELECT","Rollback after duplicate makes both safe","Only SERIALIZABLE can protect reservation"],
           answer: 0,
-          explain: 'Yeh sabse aam galatfehmi hai. Transaction ka waada hai "sab ya kuch nahi" — <b>"koi aur beech mein na aaye" nahi</b>. Woh waada sirf SERIALIZABLE deta hai (mehenga), ya tum khud lock leke. <code>UPDATE seats SET status=\'sold\' WHERE id=? AND status=\'free\'</code> bhi ek saaf hal hai — condition update ke andar hai, isliye race hai hi nahi.',
-        },
+          explain: "Given READ COMMITTED plain SELECT then UPDATE without guard, both transactions same seat free read kar sakti hain. SELECT FOR UPDATE, atomic conditional update orSERIALIZABLE with retry appropriate invariant protect kar sakte hain.",
+         choiceExplanations: ["Given READ COMMITTED plain SELECT then UPDATE without guard, both transactions same seat free read kar sakti hain. SELECT FOR UPDATE, atomic conditional update orSERIALIZABLE with retry appropriate invariant protect kar sakte hain.","READ COMMITTED plain SELECT may read same available value in parallel.","Already committed/external effects may not undo automatically.","Row locking/atomic conditional update can enforce specific invariant too."] },
         {
           q: 'Hot row (sabse popular seat) par optimistic locking kya karega?',
-          choices: [
-            'Lagbhag sab haarenge aur retry karenge — jo ek retry storm ban jaata hai. Hot row par pessimistic saaf hai',
-            'Achha kaam karega, koi rukta nahi',
-            'Sab jeet jaayenge',
-            'Koi farak nahi',
-          ],
+          choices: ["High conflicts can waste optimistic retries","Optimistic always wins under hot contention","Pessimistic removes wait and all deadlocks","Every failed compare should retry forever"],
           answer: 0,
-          explain: 'Optimistic ka faayda hai "koi rukta nahi" — par woh tabhi tak hai jab tak takraav <b>kam</b> hon. Hot row par har request kaam karti hai, version check par haarti hai, aur dobara koshish karti hai — yaani sab CPU aur DB time jalaate hain aur ek hi jeetta hai. Wahan queue (lock) mein lagna kam kharch hai.',
-        },
+          explain: "High contention optimistic retries waste work and amplify load kar sakte hain; bounded queueing/pessimistic claim or admission useful ho sakte hain. Whichfaster depends workload, transaction duration and lock implementation; benchmark, avoid unbounded retry.",
+         choiceExplanations: ["High contention optimistic retries waste work and amplify load kar sakte hain; bounded queueing/pessimistic claim or admission useful ho sakte hain. Whichfaster depends workload, transaction duration and lock implementation; benchmark, avoid unbounded retry.","Same hot row causes many version checks/retries; measure offered load.","Locks queue and can deadlock; timeout/order/admission still needed.","Bounded retry/backoff and admission needed to avoid amplification."] },
         {
           q: 'Reservation mein TTL na ho toh?',
-          choices: [
-            'Abandoned checkouts inventory ko chup-chaap kha jaate hain — show "sold out" dikhega jabki aadhe seats kisi ke cart mein pade hain',
-            'Kuch khaas nahi',
-            'Locks slow ho jaayenge',
-            'Double booking hogi',
-          ],
+          choices: ["Abandoned holds can leak available inventory","No TTL automatically double-books every seat","Lock timeout equals reservation business expiry","Long checkout means ownership forever"],
           answer: 0,
           explain: 'Yeh failure sabse chalak hai kyunki usme kuch <b>fail nahi hota</b>. Koi error nahi, koi alert nahi — bas inventory dheere-dheere gayab hoti jaati hai. TTL hi hold ko ek <b>vaada</b> banata hai, ek <b>kabza</b> nahi.',
-        },
+         choiceExplanations: ["Yeh failure sabse chalak hai kyunki usme kuch <b>fail nahi hota</b>. Koi error nahi, koi alert nahi — bas inventory dheere-dheere gayab hoti jaati hai. TTL hi hold ko ek <b>vaada</b> banata hai, ek <b>kabza</b> nahi.","Leak/unreleasedhold and double booking are different failure modes.","Lock lifetime and business hold state are different contracts.","Reservation must have expiry/cancel/reclaim policy."] },
       ],
     },
   ],
@@ -1967,26 +1781,16 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
     questions: [
       {
         q: '"Ticketmaster design karo. Ek popular concert, 50,000 log ek saath."',
-        choices: [
-          'Seat par reservation (hold + TTL) — Redis SET NX EX, ya DB row par status+expiry. Popular event ke liye waiting room (admission control) aage lagao, aur hold confirm karte waqt payment lock ke bahar rakho',
-          'Har seat par pessimistic lock lagao',
-          'Optimistic locking, conflict par retry',
-          'Queue mein daal do sab requests',
-        ],
+        choices: ["Short atomic holds; TTL; admission; safe payment","Hold DB lock across user payment page","Redis lease alone guarantees no double-sell","Unlimited retries on one popular seat"],
         answer: 0,
         explain: 'Do cheezein ek saath chahiye. <b>Reservation</b> checkout ke waqt ko sambhaalta hai. Aur <b>waiting room</b> — kyunki 50,000 requests ek hi event ke liye ek saath aa rahi hain, aur unhe seedha DB tak jaane dena hi outage hai. Yeh wahi flash-crowd admission control hai jo tum Resilience track mein dekh chuke ho.',
-      },
+       choiceExplanations: ["Do cheezein ek saath chahiye. <b>Reservation</b> checkout ke waqt ko sambhaalta hai. Aur <b>waiting room</b> — kyunki 50,000 requests ek hi event ke liye ek saath aa rahi hain, aur unhe seedha DB tak jaane dena hi outage hai. Yeh wahi flash-crowd admission control hai jo tum Resilience track mein dekh chuke ho.","Human/payment wait minutes-long DB locks hold resources and contention.","Lease expiry andstaleholder need authoritative guard and payment reconciliation.","Contention and deadline budget require bounded attempts/admission."] },
       {
         q: '"Optimistic ya pessimistic — kaise chunoge?"',
-        choices: [
-          'Contention rate se. Kam takraav (alag-alag rows) → optimistic, kyunki koi rukta nahi. Zyada takraav (ek hot row) → pessimistic, kyunki optimistic wahan sabko retry karwaata hai. Aur beech mein insaan ka waqt ho toh dono nahi — reservation',
-          'Hamesha pessimistic, woh surakshit hai',
-          'Hamesha optimistic, woh tez hai',
-          'Database ke hisaab se',
-        ],
+        choices: ["Contention and business duration decide","Pessimistic always faster for every row","Optimistic always safer under every failure","DB brand alone chooses application locking"],
         answer: 0,
-        explain: 'Faisla ek hi number se hota hai: <b>kitni baar do requests ek hi row par takraati hain?</b> Aur teesra option bolna hi seniority dikhata hai — kyunki asli product mein (cart, checkout, seat selection) beech mein <b>insaan</b> hota hai, aur uske liye dono locking strategies galat hain.',
-      },
+        explain: "Contention, transaction duration, isolation aur retry cost compare karo. Short atomic claim mein optimistic guard ya pessimistic lock useful ho sakta hai. Human checkout ke minutes tak DB lock mat rakho; durable reservation, expiry aur ownership check use karo.",
+       choiceExplanations: ["Contention, transaction duration, isolation aur retry cost compare karo. Short atomic claim mein optimistic guard ya pessimistic lock useful ho sakta hai. Human checkout ke minutes tak DB lock mat rakho; durable reservation, expiry aur ownership check use karo.","Low contention may not justify lock wait/coordination overhead.","Correctness requires valid state and failure handling in either strategy.","Isolation level, access pattern and contention also matter."] },
     ],
   },
   success: [
@@ -2107,18 +1911,23 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
              phir replay aur partition parallelism dekho.`,
       sys: SD.sys.orders(),
       tasks: T_STREAM,
-      success: allOf(T_STREAM),
+      success: SD.allTasks(T_STREAM),
       successText: `Teen cheezein jo queue de hi nahi sakti:
         <b>replay</b> (offset peeche), <b>kai independent consumers</b> (har group ka apna offset),
         aur <b>ordering</b> (partition ke andar). Aur ek tradeoff jo tumhe
         khud tay karna hoga: <b>watermark = completeness vs latency</b>.`,
+      solution: [
+        "stream window --size 60 --events 100000 --late 3",
+        "stream window --size 60 --watermark 30 --events 100000 --late 3",
+        "stream replay --from 0",
+        "stream partitions --partitions 6 --consumers 10",
+        "stream partitions --partitions 6 --consumers 6",
+      ],
+      verify: s => { const m = SD.mission; return m.latest(s, 'stream', 'partitions')?.idle === 0 && m.latest(s, 'stream', 'window')?.watermark === 30 && m.latest(s, 'stream', 'window')?.dropped === 0; },
       hints: [
-        'Bina watermark: stream window --size 60 --events 100000 --late 3',
-        'Ab watermark ke saath: stream window --size 60 --watermark 10 --events 100000 --late 3',
-        'Bada watermark aur bachaayega: stream window --size 60 --watermark 30 --events 100000 --late 3',
-        'Log ka asli gun: stream replay --from 0',
-        'Zyada consumers lagao: stream partitions --partitions 6 --consumers 10',
-        'Ab theek karo: stream partitions --partitions 6 --consumers 6',
+        "Pehle observation: Bina watermark ke ek window chalao — late events kho jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab consumers ko partitions ke barabar ya kam karo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nstream window --size 60 --events 100000 --late 3\nstream window --size 60 --watermark 30 --events 100000 --late 3\nstream replay --from 0\nstream partitions --partitions 6 --consumers 10\nstream partitions --partitions 6 --consumers 6",
       ],
     },
     {
@@ -2143,38 +1952,23 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
       title: 'Streams ki samajh',
       questions: [
         {
-          q: '6 partitions hain aur tumne 10 consumers laga diye. Kya hoga?',
-          choices: [
-            '6 kaam karenge, 4 bilkul khaali baithenge — ek partition ek waqt mein ek hi consumer ko milta hai',
-            'Sab 10 kaam baant lenge',
-            'Error aayega',
-            'Throughput 10/6 guna badhega',
-          ],
+          q: "Classic Kafka same consumer-group mein 6 partitions aur 10 consumers. Active parallelism?",
+          choices: ["At most 6 active same-group consumers","All 10 each get part of every partition","Kafka rejects group with more consumers","Adding 4 guarantees throughput 10/6 gain"],
           answer: 0,
-          explain: 'Yeh limit <b>ordering</b> se aati hai: agar do consumers ek hi partition padhein toh events ka kram guarantee nahi rahega. Isliye <b>partitions hi tumhari max parallelism hain</b> — aur unhe baad mein badhana mehenga hai, kyunki key→partition mapping badal jaata hai aur ek user ke purane-naye events alag partitions mein bikhar jaate hain.',
-        },
+          explain: "Classic Kafka consumer group model mein one partition ek active consumer ko assign hota hai;6 partitions aur 10 eligible same group consumers mein maximum 6 active,4 idle. Different groups independent read kar sakte hain; new protocol/feature semantics scope check karo.",
+         choiceExplanations: ["Classic Kafka consumer group model mein one partition ek active consumer ko assign hota hai;6 partitions aur 10 eligible same group consumers mein maximum 6 active,4 idle. Different groups independent read kar sakte hain; new protocol/feature semantics scope check karo.","Partition within a group assigned to one consumer at a time in this classic model.","Extra eligible consumers can beidle, not configuration error.","Parallelism bounded by partitions; downstream bottlenecks also matter."] },
         {
           q: 'Kafka mein ordering ka guarantee kahan tak hai?',
-          choices: [
-            'Sirf ek PARTITION ke andar — isliye jin cheezon ka kram matter karta hai unhe ek hi key (jaise user_id) par bhejo',
-            'Poore topic mein',
-            'Kahin nahi',
-            'Ek consumer group ke andar',
-          ],
+          choices: ["Within partition log; process order separate","Total global order across every topic","Consumer group gives cross-partition order","Concurrent workers preserve every effect order"],
           answer: 0,
-          explain: 'Global ordering ka matlab hota ek hi partition — yaani zero parallelism. Isliye Kafka woh vaada partition tak seemit rakhta hai, aur <b>tumhe</b> decide karne deta hai ki kaunsi cheezein ek saath rehni chahiye. Key ka chunav hi ordering ka design hai.',
-        },
+          explain: "Kafka partition log ordered hai; partitioning by stable key related records same partition rakh sakta hai. Application parallelism, retries, sink side effect completion order log order se alag ho sakti hai; changing partition count routing affect kar sakta hai.",
+         choiceExplanations: ["Kafka partition log ordered hai; partitioning by stable key related records same partition rakh sakta hai. Application parallelism, retries, sink side effect completion order log order se alag ho sakti hai; changing partition count routing affect kar sakta hai.","Partition logs do not define global single ordering across partitions.","Group assignment does not merge offsets into global order.","Parallel processing/retries need per key ordering guard if required."] },
         {
-          q: 'Watermark 30 second kar diya. Kya badla?',
-          choices: [
-            'Zyada late events pakde jaayenge (numbers zyada sahi), par har window ka natija 30 second DER se milega',
-            'Sab kuch tez ho gaya',
-            'Kam events process honge',
-            'Kuch nahi',
-          ],
+          q: "Out-of-orderness watermark allowance 30s kiya. Tradeoff?",
+          choices: ["Lateness tolerance vs finality and state","30s makes every event exactly 30s later","Watermark guarantees no late event exists","Longer watermark reduces all memory use"],
           answer: 0,
-          explain: 'Yeh <b>completeness vs latency</b> ka seedha exchange hai — aur iska koi "sahi" jawab nahi hai, sirf business ka jawab hai. Billing: der manzoor, galti nahi (bada watermark). Live dashboard: ulta. Aur teesra raasta: pehle approximate dikhao, baad mein correct karo.',
-        },
+          explain: "Watermark event time progress estimate hai. Larger out-of-orderness allowance finality delay and state retention badha sakti hai; exact 30 s per-request delay guarantee nahi. Events watermark ke baadarriveho sakte hain; allowed lateness/triggers/correction policy define karo.",
+         choiceExplanations: ["Watermark event time progress estimate hai. Larger out-of-orderness allowance finality delay and state retention badha sakti hai; exact 30 s per-request delay guarantee nahi. Events watermark ke baadarriveho sakte hain; allowed lateness/triggers/correction policy define karo.","Processing/output timing depends on timestamp progress, window and triggers.","Events beyond lateness bound can still arrive; policy needed.","Waiting longer usually retains window state longer."] },
       ],
     },
     {
@@ -2195,27 +1989,17 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
     instructions: 'Yahan "Kafka lagayenge" ke aage jaana hai. 🎤',
     questions: [
       {
-        q: '"Ad click aggregation — 10 lakh clicks/sec, minute-wise count chahiye. Design?"',
-        choices: [
-          'Clicks Kafka mein (partition by ad_id), stream processor (Flink) event-time tumbling windows par count kare with watermark, natija ek OLAP store mein. Late events ke liye watermark + baad mein correction, aur duplicate clicks ke liye dedup (bloom/id)',
-          'Har click DB mein insert karo aur GROUP BY chalao',
-          'Redis counter badhao',
-          'Batch job har ghante chalao',
-        ],
+        q: "1 million clicks/sec minute aggregation:event time/dedupe/skew ka correct design?",
+        choices: ["Event-time windows; skew; dedupe; late policy","Bloom positive means guaranteed duplicate","ad_id alone guarantees no hot partition","Kafka ingress means all reports exact once"],
         answer: 0,
-        explain: 'Char cheezein isme hain jo interviewer dhoondta hai: <b>partition key</b> (ad_id — taaki ek ad ke clicks ek jagah), <b>event time + watermark</b> (kyunki mobile clicks late aate hain), <b>idempotency/dedup</b> (kyunki at-least-once delivery hai aur yeh <b>paisa</b> hai), aur <b>correction</b> ka raasta. Redis counter chalega par usme replay aur audit dono nahi.',
-      },
+        explain: "High rate aggregation requires bounded partitioned processing, event IDs/dedupe, late event policy, hot key handling and sink consistency. Bloom false positive unique valid click drop kar sakti hai; approximate error explicitly acceptable ho ya authoritative check use karo.",
+       choiceExplanations: ["High rate aggregation requires bounded partitioned processing, event IDs/dedupe, late event policy, hot key handling and sink consistency. Bloom false positive unique valid click drop kar sakti hai; approximate error explicitly acceptable ho ya authoritative check use karo.","Bloom false positives can drop real events; authoritative dedupe/acceptable error needed.","Popular ad skew can overload one partition; salting/partial aggregation evaluate.","Reporting correctness needs producer IDs, transactions, late handling and sink semantics."] },
       {
-        q: '"Tumne Kafka chuna. Interviewer poochhta hai — SQS kyun nahi?"',
-        choices: [
-          'Kyunki mujhe replay chahiye (naya consumer purana data padh sake), ek hi stream par kai independent consumers chahiye, aur key ke hisaab se ordering chahiye. Agar yeh teenon nahi chahiye hote toh SQS simple aur sasti hoti',
-          'Kafka zyada scalable hai',
-          'Kafka industry standard hai',
-          'SQS mein throughput kam hai',
-        ],
+        q: "Replayable multi-subscriber event log chahiye. Kafka vsSQS ka defensible argument?",
+        choices: ["Replay and multiple independent projections","SQS FIFO cannot offer per-group ordering","Kafka always cheaper for every workload","SQS throughput alone makes replay impossible"],
         answer: 0,
-        explain: 'Achha jawab woh hai jo <b>ulta bhi</b> bata sake — "agar yeh nahi chahiye toh SQS behtar hai". Yeh dikhata hai ki tumne chuna hai, default nahi maara. Aur "scalable" ya "industry standard" wale jawab poochhne wale ko yeh batate hain ki tum sirf naam jaante ho, karan nahi.',
-      },
+        explain: "Retained Kafka log replay, multiple independent consumer groups and partition ordering ke liye useful hai. SQS FIFO message group ordering provide karta hai; queue/log retention, redrive, replay contracts and cost compare karo. SQS universally less scalable or cheaper claim nahi.",
+       choiceExplanations: ["Retained Kafka log replay, multiple independent consumer groups and partition ordering ke liye useful hai. SQS FIFO message group ordering provide karta hai; queue/log retention, redrive, replay contracts and cost compare karo. SQS universally less scalable or cheaper claim nahi.","SQS FIFO message groups order delivery; processing guarantees still contract specific.","Cost depends on traffic, retention, operations and managed options.","Queue consumption and retained log replay different abstractions, not simple rate argument."] },
     ],
   },
   success: [
@@ -2239,3 +2023,5 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
   ],
 },
 ]);
+
+})();

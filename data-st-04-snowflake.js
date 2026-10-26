@@ -152,10 +152,11 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
       ],
     },
     {
+      workload: {"peak":6,"hours":2},
       type: 'tradeoff',
       title: 'Cluster planning lab — welded vs alag',
       instructions: 'Workloads aur peak badlo. Dono models ka kharcha aur dard dekho.',
-      goal: 'Aisi setting dhoondho jahan sab workloads chalein bina ek doosre ko dheema kiye, aur mahine ka kharcha <b>200 units se kam</b> ho.',
+      goal: "Kam se kam <b>6x peak</b>, roz <b>2 hours</b> handle karo: workload contention nahi, monthly cost <b>200 units ya kam</b>, dashboard p99 <b>1,500 ms ya kam</b>.",
       scenario: `Teen workloads hain: raat ka ETL, din ke BI dashboards, aur kabhi-kabhi
         bhaari data science queries. Peak (quarter-end) baaki dinon se kai guna bada hai.`,
       knobs: [
@@ -195,15 +196,10 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
         sasti bhi pad sakti hai — architecture economics ke peechhe chalti hai.`,
       quiz: {
         q: 'Snowflake per-second billing kyun de pata hai?',
-        choices: [
-          'Kyunki compute stateless hai — usse kabhi bhi shuru aur band kiya ja sakta hai, data kahin nahi jaata',
-          'Kyunki unka billing system advanced hai',
-          'Kyunki S3 per-second charge karta hai',
-          'Kyunki queries chhoti hoti hain',
-        ],
+        choices: ["Compute ko storage se alag meter karna","Object storage se query credits lena","Short queries se billing unit badalna","Advanced invoices se compute hataana"],
         answer: 0,
-        explain: 'Billing model architecture ka natija hai: jiske paas state nahi hai, usse hi disposable banaya ja sakta hai.',
-      },
+        explain: "Storage se compute lifetime separate hone se independently metered warehouses possible hain. Standard virtual warehouse compute per-second billed hai, har start/resume par 60-second minimum; pricing policy architecture se automatically derive nahi hoti.",
+       choiceExplanations: ["Storage se compute lifetime separate hone se independently metered warehouses possible hain. Standard virtual warehouse compute per-second billed hai, har start/resume par 60-second minimum; pricing policy architecture se automatically derive nahi hoti.","Storage billing aur warehouse compute credits alag dimensions hain.","Billing granularity query length ka automatic result nahi.","Billing system architecture ki resource-lifecycle cost ko remove nahi karta."] },
     },
     {
       type: 'docker',
@@ -222,15 +218,10 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
       ],
       observe: {
         q: 'Warehouse maarne par sirf chalti hui query gayi, data nahi. Yeh kyun mumkin hai?',
-        choices: [
-          'Kyunki compute ke paas koi state nahi hai — data object storage mein rehta hai, warehouse sirf usse padhta hai',
-          'Kyunki lab ne data backup rakha tha',
-          'Kyunki query retry ho gayi',
-          'Kyunki data RAM se disk par likh diya gaya tha',
-        ],
+        choices: ["Persistent data warehouse ke bahar hai","Local RAM mein sole durable copy hai","Every kill par backup restore hua","Retry ne interrupted query bacha li"],
         answer: 0,
-        explain: 'Yahi stateless compute ka matlab hai — aur isi se auto-suspend, auto-resume aur per-second billing mumkin hote hain.',
-      },
+        explain: "Durable source data compute node ke local cache se separate hai, isliye node loss stored source ko lose nahi karta. Running query retry/failure behavior alag hai. Standard warehouse start/resume billing mein 60-second minimum bhi hai.",
+       choiceExplanations: ["Durable source data compute node ke local cache se separate hai, isliye node loss stored source ko lose nahi karta. Running query retry/failure behavior alag hai. Standard warehouse start/resume billing mein 60-second minimum bhi hai.","Local RAM sole data copy hoti toh worker loss persistent data kho sakta tha.","Persistent shared storage aur restore-per-kill alag designs hain.","Interrupted query ka retry durable storage ka substitute nahi."] },
       lesson: 'Elasticity koi feature nahi hai — woh <b>statelessness ka natija</b> hai.',
     },
   ],
@@ -240,26 +231,16 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
     questions: [
       {
         q: 'Interviewer: "Storage aur compute alag karne ka sabse bada faayda?"',
-        choices: [
-          'Dono apne-apne hisaab se badh sakte hain, aur compute disposable ho jaata hai — rebalancing, contention aur over-provisioning teenon dard khatam',
-          'Storage sasta ho jaata hai',
-          'Queries tez ho jaati hain',
-          'Backup aasan ho jaata hai',
-        ],
+        choices: ["Storage/compute independent scale","All network latency khatam hona","Every query ka instant result hona","Storage cost ka zero ho jaana"],
         answer: 0,
         explain: 'Teenon dard ek hi root cause se aate the: data machine se chipka hona.',
-      },
+       choiceExplanations: ["Teenon dard ek hi root cause se aate the: data machine se chipka hona.","Remote storage network latency/cache miss cost rakhta hai.","Query work, queueing aur cold cache ab bhi time lete hain.","Storage replicated/managed hone ka cost rehta hai."] },
       {
         q: 'Interviewer: "Toh har system ko aise hi banana chahiye?"',
-        choices: [
-          'Nahi — yeh faisla us daur ki economics par tika tha (sasta object storage, tez network, elastic compute). Har inherited rule kisi aur ki constraints ke liye bana tha, isliye apni constraints dobara naapo',
-          'Haan, yeh modern architecture hai',
-          'Nahi, kyunki network hamesha slow rahega',
-          'Haan, agar cloud use kar rahe ho',
-        ],
+        choices: ["Workload economics aur latency evaluate","Cloud ho toh same layout choose","Locality ke cost ko ignore karo","Old architecture ko obsolete maano"],
         answer: 0,
         explain: 'Yahi video ka pehla takeaway hai: architecture economics ke peechhe chalti hai. Shared-nothing 2005 mein sahi tha, 2012 ke baad uski shart badal gayi.',
-      },
+       choiceExplanations: ["Yahi video ka pehla takeaway hai: architecture economics ke peechhe chalti hai. Shared-nothing 2005 mein sahi tha, 2012 ke baad uski shart badal gayi.","Cloud label access pattern aur cost profile define nahi karta.","Disaggregation mein network/local cache tradeoffs important hain.","Older layout new workload mein bhi justified ho sakta hai."] },
     ],
   },
   success: [
@@ -275,7 +256,7 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
     { front: 'Shared-nothing ke teen dard?', back: '(1) node jodne par terabytes rebalancing, (2) sab workloads ek hi cluster par contention, (3) peak ke hisaab se over-provisioning (shrink karna bhi mehenga).' },
     { front: '2012 mein kya badla?', back: 'S3 pakka + sasta, datacenter network itna tez ki remote read ≈ local read, aur compute minuton ke liye kiraye par. Purane niyam ki shart hi khatam ho gayi.' },
     { front: 'Snowflake ki teen layers?', back: 'Storage (S3/Blob/GCS — har table yahin), virtual warehouses (stateless compute, per-second), cloud services layer (metadata, planning, transactions, security).' },
-    { front: 'Per-second billing kyun mumkin hai?', back: 'Compute stateless hai — usme data hai hi nahi. Isliye woh seconds mein start/stop ho sakta hai. Elasticity statelessness ka natija hai.' },
+    { front: 'Standard warehouse billing aur stateless compute ka sambandh?', back: 'Durable source shared storage mein hai; compute par query/cache state ho sakti hai. Isliye woh seconds mein start/stop ho sakta hai. Elasticity statelessness ka natija hai.' },
   ],
 },
 ]);
@@ -377,10 +358,11 @@ SD.registerLevels('stories', [
       ],
     },
     {
+      workload: {"slow":3},
       type: 'tradeoff',
       title: 'Cache aur resize lab',
       instructions: 'Cache warm-up, resize ka tareeka aur straggler handling — teenon ghumao.',
-      goal: 'Aisi setting dhoondho jahan resize ke turant baad bhi query <b>2,000 ms se kam</b> mein khatam ho aur resize ke dauraan network par <b>50 GB se kam</b> data ghume.',
+      goal: "Ek node kam se kam <b>3x slow</b> rahe. Resize ke turant baad query <b>2,000 ms ya kam</b> aur resize network transfer <b>50 GB ya kam</b> rakho.",
       scenario: `Warehouse abhi busy hai aur tumne use 4 node se 8 node karne ka faisla
         liya. Cache mein lagbhag <b>400 GB</b> data hai.`,
       knobs: [
@@ -419,15 +401,10 @@ SD.registerLevels('stories', [
         worker ki speed par chalti hai).`,
       quiz: {
         q: 'Work stealing ki asli zaroorat kab padti hai?',
-        choices: [
-          'Jab data barabar bata ho par nodes ki speed barabar na ho — ek straggler poori query ko rok leta hai',
-          'Jab data barabar na bata ho',
-          'Jab cache khaali ho',
-          'Jab queries chhoti hon',
-        ],
+        choices: ["Uneven completion par tasks redistribute","Equal byte split ko speed guarantee","Cold cache par all tasks restart","Short query par cluster double"],
         answer: 0,
         explain: 'Barabar batwara sirf data ka hota hai; speed ka nahi. Isliye kaam ko chalte-chalte redistribute karna padta hai.',
-      },
+       choiceExplanations: ["Barabar batwara sirf data ka hota hai; speed ka nahi. Isliye kaam ko chalte-chalte redistribute karna padta hai.","Equal bytes variable compute/network speed ko equal nahi banate.","Cache miss work stealing ka automatic all restart trigger nahi.","Extra nodes small tasks par coordination cost badha sakte hain."] },
     },
     {
       type: 'docker',
@@ -447,15 +424,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Lazy resize mein upfront 0 blocks move hue (5 ms), phir bhi doosri query tak cache hit 100% ho gaya. Kaise?',
-        choices: [
-          'Data queries ke saath khud khisak gaya — jo file jis node ko assign hui, usne padhte waqt use cache kar liya',
-          'Background job ne raat mein copy kiya',
-          'Cache hit ka hisaab galat tha',
-          'Naye nodes ne purane nodes se poori cache copy ki',
-        ],
+        choices: ["Reads ne new ownership cache warm ki","Full cache resize se pehle copy hui","Old nodes ne query results badle","Nightly job ne reads replace kiye"],
         answer: 0,
-        explain: 'Lazy consistent hashing: ownership turant, data migration queries ke natural read path se. Isliye sabse bure waqt par network par bojh nahi padta.',
-      },
+        explain: "Lab ownership metadata remap karta hai aur reads se cache lazily refill hoti hai. Upfront copy avoid hoti hai, network work disappear nahi: cold reads, refill bandwidth aur later skew monitor karo.",
+       choiceExplanations: ["Lab ownership metadata remap karta hai aur reads se cache lazily refill hoti hai. Upfront copy avoid hoti hai, network work disappear nahi: cold reads, refill bandwidth aur later skew monitor karo.","Output zero upfront blocks dikhata hai; eager fullcopy nahi.","Ownership remap aur cache fill result semantics ko nahi badalte.","Lab warmup queries se hota hai, unobserved nightly job se nahi."] },
       lesson: 'Rebalancing ka sawaal "kaise karein" se zyada <b>"kab karein"</b> hota hai. Lazy migration us "kab" ka sabse achha jawab hai.',
     },
   ],
@@ -465,26 +437,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Remote storage par bane system mein latency kaise chhupaoge?"',
-        choices: [
-          'Chaar cheezein saath: metadata se kam padho, columnar se patla padho, local cache se paas se padho, aur result cache se kabhi-kabhi kuch bhi mat padho',
-          'Sirf bada cache laga do',
-          'Data ko compute ke paas copy kar lo',
-          'Queries ko batch mein chalao',
-        ],
+        choices: ["Pruning, column reads aur cache combine","Only bigger cache, same full scans","Every query ka full remote scan","Only batching, repeated reads same"],
         answer: 0,
-        explain: 'Ek bhi trick akeli kaafi nahi. Snowflake ke numbers mein asli jeet in sab ke gunanfal se aati hai.',
-      },
+        explain: "Column pruning, compression, local cache aur parallel I/O different cost components reduce kar sakte hain. Gains actual workload/cold-cache state se measure karo; unke factors blindly multiply mat karo.",
+       choiceExplanations: ["Column pruning, compression, local cache aur parallel I/O different cost components reduce kar sakte hain. Gains actual workload/cold-cache state se measure karo; unke factors blindly multiply mat karo.","Cache cold/capacity-limited ho sakti hai; unnecessary reads ab bhi cost hain.","Fullscan remoteIO aur bandwidth cost badhata hai.","Batching repeated bytes/read amplification ko khud remove nahi karti."] },
       {
         q: 'Interviewer: "Cluster resize par cached data kaise handle karoge?"',
-        choices: [
-          'Ownership turant badlo par data ko queries ke saath lazily khiskne do — resize hamesha peak par hota hai, wahi sabse galat waqt hai data ghumane ka',
-          'Turant rebalance karo taaki cache hit rate girne na paaye',
-          'Cache poora flush kar do',
-          'Resize ko quiet hours tak rok do',
-        ],
+        choices: ["Remap ownership, cache reads par fill","Resize par all files eager copy","Every resize par cache flush karo","Peak load mein resize prohibit karo"],
         answer: 0,
         explain: 'Lazy consistent hashing ka poora point yahi hai: mehenga kaam us waqt na karo jab system pehle se dab raha ho.',
-      },
+       choiceExplanations: ["Lazy consistent hashing ka poora point yahi hai: mehenga kaam us waqt na karo jab system pehle se dab raha ho.","Eager copy peak par network work add kar sakti hai.","Flush existing useful cache discard karta hai.","Quiet window possible ho sakta hai; peak capacity need ko blanket ban solve nahi karta."] },
     ],
   },
   success: [
@@ -497,7 +459,7 @@ SD.registerLevels('stories', [
     trigger hota hai?</b> Agar jawab "jab load badhta hai" hai, toh woh sabse galat waqt
     hai — dekho ki use lazy kiya ja sakta hai ya nahi.</p>`,
   cards: [
-    { front: 'Virtual warehouse kya hai?', back: 'Stateless machines ka cluster: t-shirt sizes, seconds mein start, idle par auto-suspend, query par auto-resume, per-second billing. Beech mein maar do toh query jaati hai, data nahi.' },
+    { front: 'Virtual warehouse kya hai?', back: 'Stateless machines ka cluster: t-shirt sizes, seconds mein start, idle par auto-suspend, query par auto-resume, standard warehouse compute ki per-second billing, start/resume par 60-second minimum ke saath. Node loss par running query fail/retry ho sakti hai; durable source storage alag rehta hai.' },
     { front: 'Remote storage par latency chhupane ke 4 tareeke?', back: '(1) kam padho — min/max pruning, (2) patla padho — columnar, (3) paas se padho — local SSD cache + consistent hashing, (4) kuch mat padho — result cache.' },
     { front: 'Lazy consistent hashing kya hai?', back: 'Resize par ownership turant badalta hai par cached data baad mein khiskta hai — queries jab naye assignment ke hisaab se padhti hain tab. Rebalancing peak par network nahi kha jaati.' },
     { front: 'Work stealing kyun?', back: 'Data barabar bat sakta hai, speed nahi. Slow node (noisy neighbour, dheemi SSD) poori query ko rok deta — isliye jo node khali ho jaaye woh uski baaki files utha leta hai.' },

@@ -37,12 +37,12 @@ VISUALS['st-cf-anycast'] = {
         </div>
         <div class="dg-cap">Wahi IP har sheher se BGP par announce hoti hai. Har infected
           machine ka packet uske <b>apne nazdeeki</b> sheher mein girta hai —
-          31.4 Tbps ka attack 330 sheharon mein <b>chhoti-chhoti spikes</b> ban jaata hai.</div></div>
+          traffic multiple ingress sites mein split ho sakta hai; local concentration, peering aur capacity phir bhi limits hain.</div></div>
     </div>
 
     <div class="dg-rule"></div>
     <div class="dg-ladder">
-      <div class="dg-rung"><span class="lv">BGP</span><span class="cmd">hi load balancer hai</span><span class="q">koi global steering brain nahi — matlab koi steering brain fail bhi nahi ho sakta</span></div>
+      <div class="dg-rung"><span class="lv">BGP</span><span class="cmd">hi load balancer hai</span><span class="q">central per-request mapper ki need kam; BGP/control-plane failures ab bhi possible</span></div>
       <div class="dg-rung"><span class="lv">naya sheher</span><span class="cmd">rack karo + route announce karo</span><span class="q">traffic apne aap aane lagta hai · koi migration nahi</span></div>
       <div class="dg-rung g"><span class="lv">1.1.1.1</span><span class="cmd">wahi chaal, apne product par</span><span class="q">ek address, har data center se announce</span></div>
     </div>`,
@@ -78,7 +78,7 @@ VISUALS['st-cf-fleet'] = {
     <div class="dg-rule"></div>
     <div class="dg-split">
       <div class="dg-box is-good"><span class="bx-label">✅ Faayda</span>
-        <div class="dg-cap">Write par poori keemat do, taaki har read muft ho.</div></div>
+        <div class="dg-cap">Replication par cost do, taaki read local ho; lookup aur RAM free nahi.</div></div>
       <div class="dg-box is-bad"><span class="bx-label">⚠️ Wahi teji, ulti taraf</span>
         <div class="dg-cap">Ek galat config bhi <b>seconds mein</b> har server tak
           pahunch jaata hai. Blast radius = poora fleet.</div></div>
@@ -143,10 +143,9 @@ VISUALS['st-cf-edge'] = {
 
     <div class="dg-rule"></div>
     <div class="dg-split">
-      <div class="dg-box is-accent"><span class="bx-label">🕰️ Spectre ka jawab: ghadi hi hata do</span>
+      <div class="dg-box is-accent"><span class="bx-label">🕰️ Spectre defense: restricted timers plus isolation layers</span>
         <div class="dg-cap"><code>Date.now()</code> code chalte waqt aage nahi badhta ·
-          na threads, na shared memory · remote clock ka RTT nanosecond signal ko dubo
-          deta hai. Shak ho toh us worker ko apne process mein alag kar do.</div></div>
+          na threads, na shared memory · remote timers phir bhi risk hain. Frozen clocks ke saath detection, process isolation aur runtime/hardware defenses chahiye.</div></div>
       <div class="dg-box is-good"><span class="bx-label">📍 Durable object: ek hi copy</span>
         <div class="dg-cap">Poori duniya mein ek instance, requests ek ke baad ek.
           Na consensus, na quorum, na conflict resolution — reconcile karne ko kuch hai
@@ -184,7 +183,7 @@ SD.registerLevels('stories', [
      <table>
        <tr><th>Faayda</th><th>Kya matlab</th></tr>
        <tr><td>Global load balancer hi nahi chahiye</td><td>BGP hi load balancer hai</td></tr>
-       <tr><td>Koi steering brain nahi</td><td>Jo cheez hai hi nahi, woh fail bhi nahi ho sakti</td></tr>
+       <tr><td>Central request mapper par kam dependence</td><td>BGP policy, route withdrawals aur shared config/control-plane faults ab bhi failure modes hain</td></tr>
        <tr><td>Naya sheher jodna = servers rack karo + route announce karo</td><td>Koi migration nahi, traffic apne aap aane lagta hai</td></tr>
      </table>`,
     `<h3>🔪 Traffic slicing — defense jo routing se aati hai</h3>
@@ -194,7 +193,7 @@ SD.registerLevels('stories', [
      bat kar chhoti-chhoti spikes ban jaata hai.</p>
      <pre>Attack:        31.4 Tbps   (record, late 2025 — sirf 35 second chala)
 Network:      550+ Tbps capacity, 330+ sheher
-Har sheher par: kuch gigabits — jise ek server bhi pehchaan kar drop kar sakta hai</pre>
+Per-site traffic uneven ho sakta hai; local link, peering aur filtering capacity measure karo</pre>
      <p class="tip">🎯 Yahan koi "attack distribute" nahi kar raha. <b>Internet ki apni
      routing</b> attack ko patla kar deti hai, Cloudflare ka koi defense code chalne se
      pehle hi.</p>
@@ -238,10 +237,11 @@ Har sheher par: kuch gigabits — jise ek server bhi pehchaan kar drop kar sakta
       ],
     },
     {
+      workload: {"attack":30},
       type: 'tradeoff',
       title: 'Scrubbing center vs anycast slicing',
       instructions: 'Attack ka size aur defense ka model badlo. Dekho kaunsa model kab tootta hai.',
-      goal: 'Aisi setting dhoondho jahan attack poora absorb ho jaaye (koi drop nahi), mitigation <b>1 second se kam</b> mein lage, aur acche traffic par extra latency <b>5 ms se kam</b> ho.',
+      goal: "Kam se kam <b>30 model attack-units</b> absorb karo: koi capacity drop nahi, mitigation <b>1 second ya kam</b>, aur good traffic par extra latency <b>5 ms ya kam</b>.",
       scenario: `Ek attack aa raha hai. Do model hain: <b>scrubbing centers</b> (kuch
         badi facilities, traffic reroute karke saaf karo) ya <b>anycast</b> (har
         location defense ka hissa).`,
@@ -282,15 +282,10 @@ Har sheher par: kuch gigabits — jise ek server bhi pehchaan kar drop kar sakta
         kiya. Jab neeche ki layer pehle se kuch kar rahi hai, us par kaam daalo.`,
       quiz: {
         q: 'Scrubbing center model mein "defense ki chhat" kya hai?',
-        choices: [
-          'Scrubbing centers ki total capacity — usse bada attack aaya toh kuch nahi kiya ja sakta',
-          'Internet ka bandwidth',
-          'Origin server ka CPU',
-          'DNS ka TTL',
-        ],
+        choices: ["Reachable scrubber aur transit capacity","Har origin ki application CPU capacity","Internet ki total installed bandwidth","DNS resolver ki stored entry capacity"],
         answer: 0,
-        explain: '20 Tbps ke scrubbers bana liye toh 20 Tbps hi tumhari chhat hai. Anycast mein chhat poore network ki capacity hai, aur har nayi location usse badha deti hai.',
-      },
+        explain: "Anycast traffic routing multiple ingress sites mein split kar sakti hai, par distribution even nahi hoti. Local links, peering, geography aur concentrated attack traffic practical capacity cap karte hain; total fleet sum guaranteed usable capacity nahi.",
+       choiceExplanations: ["Anycast traffic routing multiple ingress sites mein split kar sakti hai, par distribution even nahi hoti. Local links, peering, geography aur concentrated attack traffic practical capacity cap karte hain; total fleet sum guaranteed usable capacity nahi.","Origin CPU ek bottleneck ho sakta hai, par scrubber ceiling wahi nahi.","Internet-wide bandwidth kisi deployment ki usable mitigation capacity nahi.","DNS cache size volumetric scrubber capacity nahi define karti."] },
     },
     {
       type: 'bins',
@@ -326,15 +321,10 @@ Har sheher par: kuch gigabits — jise ek server bhi pehchaan kar drop kar sakta
       ],
       observe: {
         q: 'Attack ka size dono baar same tha. Anycast mode mein drop 0% kaise ho gaya?',
-        choices: [
-          'Attack 6 locations mein bat gaya, isliye har location par load uski capacity ke andar reh gaya',
-          'Anycast ne bots ko block kar diya',
-          'Anycast mode mein requests cache hoti hain',
-          'Bots ne kam traffic bheja',
-        ],
+        choices: ["Per-location offered load capacity mein tha","Anycast ne attack signatures block kiye","Cache ne network packets hata diye","Bots ne sending rate aadha kar diya"],
         answer: 0,
         explain: 'Koi filtering nahi hui — sirf load ka batwara hua. Yahi traffic slicing hai.',
-      },
+       choiceExplanations: ["Koi filtering nahi hui — sirf load ka batwara hua. Yahi traffic slicing hai.","Is lab mein filtering nahi badli; traffic split hua.","Application cache upstream attack packets eliminate nahi karta.","Question ke mutabik offered attack same tha."] },
       lesson: 'Defense hamesha "pehchaan kar rok do" nahi hoti. Kabhi-kabhi defense sirf <b>load ka aakaar badal dena</b> hoti hai.',
     },
   ],
@@ -344,26 +334,16 @@ Har sheher par: kuch gigabits — jise ek server bhi pehchaan kar drop kar sakta
     questions: [
       {
         q: 'Interviewer: "Global load balancing kaise karoge — ek mapping service ya anycast?"',
-        choices: [
-          'Anycast — routing hi steering kar degi, aur jo steering brain hai hi nahi woh fail bhi nahi ho sakta; par state wali cheezon ke liye route stability naapo',
-          'Mapping service — usse zyada control milta hai',
-          'DNS geo-routing — sabse simple',
-          'Dono ek saath',
-        ],
+        choices: ["BGP anycast, route stability measure karke","Single mapper, bina failover plan ke","Static DNS answer, bina health signal","Per-request global directory lookup"],
         answer: 0,
-        explain: 'Cloudflare ka core tark: neeche ki layer (BGP) pehle se raasta chun rahi hai. Par yeh maan kar mat chalo — unhone route stability naap kar tab TCP par anycast chalaya.',
-      },
+        explain: "BGP-based anycast aur application mapping alag tradeoffs hain. Route stability, session state aur local capacity test karo; BGP/control-plane misconfiguration aur withdrawals ab bhi failure modes hain.",
+       choiceExplanations: ["BGP-based anycast aur application mapping alag tradeoffs hain. Route stability, session state aur local capacity test karo; BGP/control-plane misconfiguration aur withdrawals ab bhi failure modes hain.","Single mapper ko availability aur failover chahiye; woh free control nahi.","Static answer failures ya congestion par adapt nahi karega.","Har request ka remote lookup extra dependency aur latency add karta hai."] },
       {
         q: 'Interviewer: "Tumhara DDoS plan kya hai?"',
-        choices: [
-          'Load ko itni locations mein baanto ki per-location share manageable ho, aur us share ko jitna jaldi ho sake (NIC ke paas) drop karo',
-          'Ek bada scrubbing center bana lo',
-          'Rate limit application layer par lagao',
-          'Autoscaling on kar do',
-        ],
+        choices: ["Distributed capacity aur early packet drop","One scrubber aur application rate limit","Origin autoscaling aur packet parsing","DB throttling aur long request queues"],
         answer: 0,
-        explain: 'Pehle aakaar badlo (slicing), phir sasta drop (XDP). Application layer par rate limit tab tak bahut mehengi hai — packet wahan tak pahunch hi nahi-na chahiye.',
-      },
+        explain: "Volumetric traffic ko upstream/edge par cheap filter karna resource cost bachaata hai. HTTP abuse ke liye identity-aware application controls bhi chahiye; har harmful request ko packet layer par pehchaan nahi sakte.",
+       choiceExplanations: ["Volumetric traffic ko upstream/edge par cheap filter karna resource cost bachaata hai. HTTP abuse ke liye identity-aware application controls bhi chahiye; har harmful request ko packet layer par pehchaan nahi sakte.","One site ki capacity attack hotspot ban sakti hai; late filtering costly hai.","App autoscaling upstream network saturation ko khud nahi rokta.","DB tak request pahunchne par pehle hi network/app cost lag chuki hai."] },
     ],
   },
   success: [
@@ -492,7 +472,7 @@ SD.registerLevels('stories', [
       type: 'tradeoff',
       title: 'Config distribution lab',
       instructions: 'Config kahan se padhi jaaye aur kitni tezi se phaile — dono knobs ghumao.',
-      goal: 'Aisi setting dhoondho jahan request ke andar config ka kharcha <b>1 ms se kam</b> ho, config service down hone par bhi edge <b>chalta rahe</b>, aur ek kharab config ka blast radius <b>10% se kam</b> ho.',
+      goal: "Request ke andar config cost <b>1 ms ya kam</b>, config service outage ke baad edge operational, aur bad config ka blast radius <b>10% ya kam</b> rakho.",
       scenario: `Har request ko lagbhag <b>20 config lookups</b> chahiye (certificate,
         firewall rules, origin, feature flags). Tumhare paas 200 edge servers hain.`,
       knobs: [
@@ -531,15 +511,10 @@ SD.registerLevels('stories', [
         bahut pehle kiya, doosre ka sabak mehenga pada.`,
       quiz: {
         q: 'Quicksilver har server par poora dataset rakhta hai — koi partitioning nahi. Iska seedha faayda?',
-        choices: [
-          'Koi bhi server kisi bhi customer ko turant serve kar sakta hai, bina kisi lookup ke — "yeh tenant kahan hai" wala sawaal hi mit jaata hai',
-          'Disk sasta padta hai',
-          'Data consistency apne aap mil jaati hai',
-          'Backups aasan ho jaate hain',
-        ],
+        choices: ["Tenant lookup bina local config read","Replication se synchronous consistency","Partitioning se zero disk overhead","Full copies se automatic backup"],
         answer: 0,
         explain: 'Homogeneous fleet ki shart yahi hai. Jira ne ulta raasta liya (per-tenant DB + TCS lookup) kyunki wahan isolation zyada zaroori thi.',
-      },
+       choiceExplanations: ["Homogeneous fleet ki shart yahi hai. Jira ne ulta raasta liya (per-tenant DB + TCS lookup) kyunki wahan isolation zyada zaroori thi.","Replication consistency mode aur propagation delay alag design hain.","Full copies storage use badhati hain; partitioning ka saving nahi.","Replication delete/corruption ko propagate kar sakti hai; backup alag hai."] },
     },
     {
       type: 'docker',
@@ -559,15 +534,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Config service band karne par local mode mein errors 0% kyun rahe?',
-        choices: [
-          'Read path ko config service ki zaroorat hi nahi thi — har edge ke paas poori copy pehle se thi; sirf naye updates aana ruka',
-          'Edge ne config cache kar li thi jo 5 minute baad expire hoti',
-          'Load tool ne retry kar liya',
-          'Errors bas dikhe nahi',
-        ],
+        choices: ["Existing config reads local hi rahe","Local copy turant empty ho gayi","Client retries ne updates bana diye","Read path ne errors count nahi kiye"],
         answer: 0,
-        explain: 'Yahi "pay on write, free on read" ka asli faayda hai: read path ka koi runtime dependency hi nahi bachta.',
-      },
+        explain: "Local config replica existing reads se remote config-service dependency hataati hai. Local lookup, memory, replication writes aur stale-config recovery ka cost ab bhi hai; read completely free nahi.",
+       choiceExplanations: ["Local config replica existing reads se remote config-service dependency hataati hai. Local lookup, memory, replication writes aur stale-config recovery ka cost ab bhi hai; read completely free nahi.","Lab mein existing copy available thi; update service failure usse delete nahi karta.","Retry unavailable fresh config invent nahi kar sakta.","Observed result local dependency model se explain hota hai; hidden errors ka evidence nahi."] },
       lesson: 'Har request ke andar ka har network call ek naya dependency hai. Config ko read path se hatana latency aur availability, dono theek karta hai.',
     },
   ],
@@ -577,26 +547,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Tum har machine par poora config dataset kab rakhoge?"',
-        choices: [
-          'Jab reads bahut zyada hon, dataset ek machine mein aa jaaye, aur read path par kisi network dependency ki gunjaish na ho',
-          'Hamesha — local hamesha behtar hai',
-          'Kabhi nahi — data duplicate karna galat hai',
-          'Sirf tab jab config chhota ho, 1 MB se kam',
-        ],
+        choices: ["Read-heavy config local capacity mein fit ho","Write-heavy state ko har node par copy karo","Network calls hatao, freshness ignore karo","Dataset chhota ho toh consistency bhoolo"],
         answer: 0,
-        explain: 'Cloudflare sau GB ka dataset har server par rakhta hai. Sawaal size ka nahi, <b>read/write ratio aur availability</b> ka hai.',
-      },
+        explain: "Full config replication tab fit ho sakti hai jab dataset har node par budget mein aaye, reads frequent hon aur update/rollback semantics acceptable hon. Size, churn, replication cost aur failure isolation sab count karo.",
+       choiceExplanations: ["Full config replication tab fit ho sakti hai jab dataset har node par budget mein aaye, reads frequent hon aur update/rollback semantics acceptable hon. Size, churn, replication cost aur failure isolation sab count karo.","High write fanout replication cost aur lag badhata hai.","Freshness contract aur rollout strategy phir bhi chahiye.","Chhota size correctness/propagation requirements remove nahi karta."] },
       {
         q: 'Interviewer: "Ek jaise fleet ka sabse bada khatra?"',
-        choices: [
-          'Ek kharab rollout har server tak utni hi tezi se pahunchta hai jitni tezi se accha rollout — isliye config ko bhi staged bhejna padta hai',
-          'Servers mehenge ho jaate hain',
-          'Products ek doosre ka data dekh lete hain',
-          'Debugging mushkil ho jaati hai',
-        ],
+        choices: ["Bad config ka correlated fleet rollout","Har node par different CPU speed","Config reads ka central round trip","Replication se customer data merge"],
         answer: 0,
         explain: 'Fungible capacity ka doosra pehlu poora fleet blast radius hai. Isiliye config bhi 1% → 10% → 100% jaana chahiye.',
-      },
+       choiceExplanations: ["Fungible capacity ka doosra pehlu poora fleet blast radius hai. Isiliye config bhi 1% → 10% → 100% jaana chahiye.","Homogeneity ka main risk same defect sab nodes par lagna hai.","Local config reads specifically central runtime dependency kam karte hain.","Config replication tenants ka application data merge nahi karti."] },
     ],
   },
   success: [
@@ -677,7 +637,7 @@ SD.registerLevels('stories', [
      charity nahi hai, architecture ka natija hai:</p>
      <table>
        <tr><th>Kyun mumkin hai</th><th>Matlab</th></tr>
-       <tr><td>Ek aur website protect karna lagbhag muft hai</td><td>Har server pehle se poora stack chalata hai; naya customer matlab Quicksilver mein ek config push</td></tr>
+       <tr><td>Shared edge se additional deployment overhead kam ho sakta hai</td><td>Existing stack reuse hota hai; config, bandwidth, CPU aur operational cost phir bhi chahiye</td></tr>
        <tr><td>Har free customer defense ko behtar karta hai</td><td>Lakhon chhoti sites naye attack patterns bade banks se pehle dekhti hain — ek hobby blog par seekha fingerprint seconds mein poore network par</td></tr>
        <tr><td>Free tier network ko sasta banata hai</td><td>Itna traffic hone par ISPs khud settlement-free peering karna chahte hain → transit cost kam → free tier affordable</td></tr>
      </table>
@@ -707,10 +667,11 @@ SD.registerLevels('stories', [
       ],
     },
     {
+      workload: {"pps":2000000},
       type: 'tradeoff',
       title: 'Drop point lab — kahan roko',
       instructions: 'Attack ka size aur drop ki jagah badlo. CPU aur acche users dono dekho.',
-      goal: 'Aisi setting dhoondho jahan server ka CPU <b>70% se kam</b> rahe aur acche users ka p99 <b>50 ms se kam</b> ho.',
+      goal: "Kam se kam <b>20 lakh attack packets/s</b> par CPU <b>70% ya kam</b> aur good-user p99 <b>50 ms ya kam</b> rakho. Filtering stage ka resource cost compare karo; yeh classifier accuracy ka benchmark nahi.",
       scenario: `Ek server par <b>acche</b> users ke saath-saath attack traffic bhi aa
         raha hai. Tum tay karoge ki malicious packet kahan pakda jaaye: NIC par (XDP),
         firewall par (iptables), ya application ke andar.`,
@@ -750,15 +711,10 @@ SD.registerLevels('stories', [
         ja sakta hai</b>. Har layer neeche jaane par kharcha kai guna badh jaata hai.`,
       quiz: {
         q: 'Application-level rate limiting kyun sabse mehengi hoti hai?',
-        choices: [
-          'Kyunki wahan tak pahunchne mein packet memory, TCP stack aur parsing — sab kuch le chuka hota hai',
-          'Kyunki application code slow hota hai',
-          'Kyunki rate limit ka logic complex hota hai',
-          'Kyunki wahan Redis ki zaroorat padti hai',
-        ],
+        choices: ["Reject se pehle full stack cost lagta hai","Rate-limit counter ka math hi costly hai","HTTP parser par zero work lagta hai","Database har rejected packet dekhta hai"],
         answer: 0,
         explain: 'Kharcha rate limit ke logic ka nahi hai — kharcha us poore safar ka hai jo packet ne wahan tak pahunchne mein kiya.',
-      },
+       choiceExplanations: ["Kharcha rate limit ke logic ka nahi hai — kharcha us poore safar ka hai jo packet ne wahan tak pahunchne mein kiya.","Counter ka logic total ingress/TCP/TLS/parsing cost ka sirf ek hissa hai.","Application layer tak aane mein parsing aur transport cost hota hai.","App rejection DB call se pehle bhi ho sakta hai."] },
     },
     {
       type: 'quiz',
@@ -766,37 +722,22 @@ SD.registerLevels('stories', [
       questions: [
         {
           q: 'Cloudflare 2017 se free plan par bhi unmetered DDoS protection kyun de pata hai?',
-          choices: [
-            'Kyunki ek aur site protect karna lagbhag sirf ek config push hai — infra pehle se har jagah maujood hai',
-            'Kyunki free users ka traffic kam hota hai',
-            'Kyunki paid customers subsidy dete hain',
-            'Kyunki free plan par mitigation kamzor hoti hai',
-          ],
+          choices: ["Shared edge se marginal setup cost kam","Free traffic ko network cost nahi lagti","Config push unlimited capacity banata","Har attack TLS terminate karke roko"],
           answer: 0,
-          explain: 'Homogeneous fleet + anycast + XDP pehle se hain. Marginal cost lagbhag zero hai — yahi baat business model banati hai.',
-        },
+          explain: "Shared edge fleet existing capacity aur deployment overhead reuse karti hai, isliye additional setup cost kam ho sakti hai. Traffic bandwidth, CPU, memory, peering aur operations consume karta hai; zero marginal cost guarantee nahi.",
+         choiceExplanations: ["Shared edge fleet existing capacity aur deployment overhead reuse karti hai, isliye additional setup cost kam ho sakti hai. Traffic bandwidth, CPU, memory, peering aur operations consume karta hai; zero marginal cost guarantee nahi.","Free traffic bhi bandwidth/CPU consume karta hai.","Config existing infra use karti hai; new physical capacity create nahi.","Early filtering kabhi TLS se pehle ho sakti hai; universal late drop costly hai."] },
         {
           q: 'Free tier defense ko behtar kaise banata hai?',
-          choices: [
-            'Lakhon chhoti sites naye attack patterns pehle dekhti hain; ek hobby blog par seekha fingerprint Quicksilver se seconds mein har customer ko bacha leta hai',
-            'Free users bug reports bhejte hain',
-            'Free traffic se machine learning model train hota hai raat mein',
-            'Free tier se paid conversion hota hai',
-          ],
+          choices: ["Wider sites se shared threat signals","Free users se guaranteed clean labels","Nightly model hi real-time defense","Paid conversion se attack drop hota"],
           answer: 0,
           explain: 'Free tier ek global sensor network hai. Yeh "scale ka byproduct product ban gaya" wale pattern ka doosra roop hai.',
-        },
+         choiceExplanations: ["Free tier ek global sensor network hai. Yeh \"scale ka byproduct product ban gaya\" wale pattern ka doosra roop hai.","Threat observations noisy ho sakti hain; free labels automatically trusted nahi.","Local/global detection rules nightly ML par hi dependent nahi.","Business conversion traffic filtering ka mechanism nahi."] },
         {
           q: 'Universal SSL (2014) is kahani mein kyun fit hota hai?',
-          choices: [
-            'Har server pehle se HTTPS karta tha, isliye lakhon sites ko muft TLS dena naya infra nahi, sirf config change tha',
-            'Kyunki certificates sasti thin',
-            'Kyunki Let\'s Encrypt ne madad ki',
-            'Kyunki browsers ne majboor kiya',
-          ],
+          choices: ["Shared TLS fleet ka broad rollout","Certificate cost ka zero hona","Lets Encrypt ka 2014 rollout","Browser ne HTTPS ko mandatory kiya"],
           answer: 0,
-          explain: 'Ek jaisa fleet hone ka seedha natija: naya global feature deploy ka kaam nahi, config ka kaam ban jaata hai.',
-        },
+          explain: "Shared fleet certificate/TLS capability ko broadly roll out karna easier bana sakti hai; certificate issuance, key lifecycle, traffic processing aur operations ka real cost ab bhi hota hai.",
+         choiceExplanations: ["Shared fleet certificate/TLS capability ko broadly roll out karna easier bana sakti hai; certificate issuance, key lifecycle, traffic processing aur operations ka real cost ab bhi hota hai.","Certificate issuance/operation ka cost ab bhi hota hai.","Lets Encrypt public launch2015tha; Universal SSL2014ka cause nahi.","Browser policy distributed certificate provisioning khud nahi karti."] },
       ],
     },
     {
@@ -817,15 +758,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Teeno modes wahi 12,000 requests reject kar rahe the. Phir throughput 725/s se ~2,900/s kaise ho gaya?',
-        choices: [
-          'Kyunki reject karne ka kharcha is baat par nirbhar hai ki request ne wahan tak pahunchne mein kitna kaam karwaya',
-          'Edge mode kam requests reject karta hai',
-          'App mode mein logging zyada thi',
-          'TCP filter requests ko cache kar leta hai',
-        ],
+        choices: ["Early reject se request cost ghata","Edge ne fewer attacks count kiye","TCP ne application payload cache kiya","App ne saare writes skip kar diye"],
         answer: 0,
         explain: 'Yahi XDP ka tark chhote paimane par hai: jitni gehrai mein packet jaayega, use rokna utna mehenga hoga.',
-      },
+       choiceExplanations: ["Yahi XDP ka tark chhote paimane par hai: jitni gehrai mein packet jaayega, use rokna utna mehenga hoga.","Rejected count same hai; per-request cost badla.","TCP filtering application response cache nahi hai.","Question rejection depth test karta hai, write skipping nahi."] },
       lesson: 'Har defense ke saath ek sawaal poochho: "yeh request ko kis layer par rok raha hai?" Answer jitna neeche hoga, defense utni sasti hogi.',
     },
   ],
@@ -835,26 +771,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Tumhari API par scraping bot aa rahe hain. Rate limiting kahan lagaoge?"',
-        choices: [
-          'Jitna upar ho sake — edge/CDN ya load balancer par, taaki bot ka packet app tak pahunche hi na; app-level limit sirf aakhri safety net ho',
-          'Application mein, kyunki wahan business logic ka pata hota hai',
-          'Database ke saamne, kyunki asli kharcha wahi hai',
-          'Client side par, request bhejne se pehle',
-        ],
+        choices: ["Edge limits aur app identity quotas","Sirf client par request counter","Sirf DB par connection limits","App par hi volumetric traffic roko"],
         answer: 0,
         explain: 'Har layer neeche jaane par ek request ka kharcha kai guna badhta hai. App-level limit galat nahi hai, par woh pehli line nahi honi chahiye.',
-      },
+       choiceExplanations: ["Har layer neeche jaane par ek request ka kharcha kai guna badhta hai. App-level limit galat nahi hai, par woh pehli line nahi honi chahiye.","Bots client-side counters bypass kar sakte hain.","DB limits network/app ingress capacity ko protect nahi kartin.","Application identity quotas useful hain; volumetric defense pehle bhi chahiye."] },
       {
         q: 'Interviewer: "Attack detect karne wala system kahan chalega — central ya har node par?"',
-        choices: [
-          'Dono — local detection turant reaction deti hai (koi round trip nahi), aur global layer woh patterns pakadti hai jo sirf poore network mein dikhte hain',
-          'Sirf central — wahan poora data hota hai',
-          'Sirf local — central bottleneck ban jaayega',
-          'Kahin nahi, WAF vendor sambhal lega',
-        ],
+        choices: ["Local reaction aur global correlation","Central analysis par har packet wait","Har node par isolated evidence only","WAF vendor par bina telemetry bharosa"],
         answer: 0,
         explain: 'Cloudflare ka model yahi hai: dosd local, global detection upar, aur Quicksilver se fingerprint sab jagah.',
-      },
+       choiceExplanations: ["Cloudflare ka model yahi hai: dosd local, global detection upar, aur Quicksilver se fingerprint sab jagah.","Central round trip immediate local reaction ko delay aur dependency deta hai.","Local-only view distributed low-rate patterns miss kar sakti hai.","Vendor ke saath bhi telemetry, policy aur verification chahiye."] },
     ],
   },
   success: [
@@ -869,7 +795,7 @@ SD.registerLevels('stories', [
     { front: 'dosd kya karta hai?', back: 'Har Cloudflare server par chalne wala daemon: apne hi NIC ke packets sample karta hai, attack ka statistical fingerprint banata hai, aur wahin drop rule lagata hai — bina kisi central brain se poochhe.' },
     { front: 'XDP par drop kyun sasta hai?', back: 'XDP woh jagah hai jahan packet NIC se abhi aaya hai — kernel ne memory allocate nahi ki, TCP/IP stack shuru nahi hua. Cloudflare ke hisaab se iptables se ~10× sasta.' },
     { front: 'Defense mein insaan kyun nahi?', back: '9/10 network attacks 10 minute se kam chalte hain; record 31.4 Tbps attack sirf 35 second. Insaan keyboard tak pahunchne se pehle attack khatam.' },
-    { front: 'Free tier ka flywheel?', back: 'Ek aur site = config push (marginal cost ~0) → lakhon sites = global sensor network → zyada traffic = settlement-free peering = sasta network = free tier affordable.' },
+    { front: 'Free tier ka flywheel?', back: 'Ek aur site = config push (setup reuse, nonzero traffic/resource cost) → lakhon sites = global sensor network → zyada traffic = settlement-free peering = sasta network = free tier affordable.' },
   ],
 },
 ]);
@@ -895,7 +821,7 @@ SD.registerLevels('stories', [
   objectives: [
     'V8 isolates vs VM vs container — density ka faisla',
     'Cold start ko TLS handshake ke andar chhupana',
-    'Spectre ka jawab: ghadi hi hata do',
+    'Spectre defense: restricted timers plus isolation layers',
     'Cloudbleed → Rust aur Pingora ka shared connection pool',
     'Keyless SSL aur durable objects — "sab jagah copy" ke do apvaad',
   ],
@@ -924,7 +850,7 @@ SD.registerLevels('stories', [
      <p class="tip">🎯 Cold start gayab nahi hua — woh us latency ke <b>andar chhup
      gaya</b> jo connection pehle se de raha tha. Yeh chaal sirf usi ko milti hai jo
      internet ke edge par baitha ho.</p>`,
-    `<h3>🕰️ Spectre — aur "ghadi hi hata do" wala jawab</h3>
+    `<h3>🕰️ Spectre — restricted clocks ek layer hain</h3>
      <p>2018 mein Spectre aaya: yeh JavaScript ka bug nahi tha, <b>CPU</b> ka tha. Modern
      processor speculative execution karte hain — agla kaam andaze se pehle hi shuru kar
      dete hain. Andaza galat nikla toh result phenk diya jaata hai, par kuch nishaan CPU
@@ -940,12 +866,11 @@ Har timing attack ko ek GHADI chahiye.
        <tr><th>Attacker ko chahiye</th><th>Workers mein kya hai</th></tr>
        <tr><td>Precise timer</td><td><code>Date.now()</code> tumhara code chalte waqt aage badhta hi nahi — sirf I/O par badalta hai</td></tr>
        <tr><td>Counter thread se apni ghadi banana</td><td>Na threads, na shared memory, na SharedArrayBuffer</td></tr>
-       <tr><td>Remote server se time</td><td>Network RTT dasiyon ms ka hai — nanosecond ka signal usme doob jaata hai</td></tr>
+       <tr><td>Remote server se time</td><td>Network noise attack mushkil kar sakta hai, par remote clocks/amplification se leakage possible hai</td></tr>
      </table>
-     <p>Yeh Spectre ko theoretically impossible nahi banata — bas itna dheema kar deta
-     hai ki woh attack rehta hi nahi. Upar se safety net: koi worker Spectre jaisa
+     <p>Yeh complete protection nahi. Cloudflare ki <a href="https://blog.cloudflare.com/revisiting-spectre-attacks-on-workers/" target="_blank" rel="noopener">August 2026 research</a> ne restricted timers ke bawajood production remote Spectre leakage dikhayi, aur improved DyPrIs, V8 Sandbox aur MPK-based in-process isolation describe ki. Upar se safety net: koi worker Spectre jaisa
      vyavhaar dikhaye toh usse uske apne OS process mein alag kar diya jaata hai. Aur
-     kyunki engine Google ka V8 hai, V8 ka har security fix ghanton mein poore fleet par
+     kyunki engine Google ka V8 hai, V8 security fixes controlled rollout se fleet par
      chala jaata hai.</p>`,
     `<h3>🩸 Cloudbleed — shared-everything ka sabse bura din</h3>
      <p>Feb 2017: Google Project Zero ke Tavis Ormandy ne bataya ki Cloudflare ke edge
@@ -1012,46 +937,46 @@ Pingora: ek multi-threaded process, EK shared connection pool
         {
           id: 'sandbox', label: 'Isolation ka tareeka', icon: '📦',
           options: [
-            { id: 'isolate', label: 'V8 isolates — ek process, hazaron isolates', score: 4, why: 'Density ka faisla: kuch ms start, kuch MB memory. Isi wajah se worker poore fleet par push kiya ja sakta hai. Keemat: shared process, isliye Spectre jaise CPU-level attacks par alag se sochna padta hai.' },
-            { id: 'container', label: 'Har tenant ke liye container', score: 0, why: 'Chalega, par sau ms cold start aur dasiyon MB per tenant. Laakhon tenants ke liye density kaafi nahi.' },
-            { id: 'vm', label: 'Har tenant ke liye VM', score: -3, why: 'Sabse majboot deewar par second-bhar ka start aur bahut saari RAM. Edge par jahan hazaron tenants chahiye, yeh raasta band hai.' },
+            { id: 'isolate', label: "Isolates plus stronger boundaries", score: 4, why: 'Density ka faisla: kuch ms start, kuch MB memory. Isi wajah se worker poore fleet par push kiya ja sakta hai. Keemat: shared process, isliye Spectre jaise CPU-level attacks par alag se sochna padta hai.' },
+            { id: 'container', label: "One OS container per tenant", score: 0, why: 'Chalega, par sau ms cold start aur dasiyon MB per tenant. Laakhon tenants ke liye density kaafi nahi.' },
+            { id: 'vm', label: "One virtual machine per tenant", score: -3, why: 'Sabse majboot deewar par second-bhar ka start aur bahut saari RAM. Edge par jahan hazaron tenants chahiye, yeh raasta band hai.' },
           ],
         },
         {
           id: 'cold', label: 'Cold start ka kya karoge', icon: '🔥',
           options: [
-            { id: 'sni', label: 'TLS handshake ke SNI se pata karke handshake ke dauraan hi load karna shuru karo', score: 4, why: 'Cold start gayab nahi hota, woh us latency ke andar chhup jaata hai jo connection pehle se de raha tha. Yeh sirf edge par baithe system ko milta hai.' },
-            { id: 'warm', label: 'Har tenant ka ek instance hamesha garam rakho', score: -2, why: 'Laakhon tenants × hamesha garam = memory ka pahaad. Yahi cheez density ko maar deti hai.' },
-            { id: 'accept', label: 'Cold start rehne do, 200 ms theek hai', score: -1, why: 'Kabhi-kabhi theek hai — par 50 ms ka SLO diya ho toh pehli request hamesha fail karegi.' },
+            { id: 'sni', label: "Measured TLS-metadata preloading", score: 4, why: 'Cold start gayab nahi hota, woh us latency ke andar chhup jaata hai jo connection pehle se de raha tha. Yeh sirf edge par baithe system ko milta hai.' },
+            { id: 'warm', label: "Every tenant permanently warm", score: -2, why: 'Laakhon tenants × hamesha garam = memory ka pahaad. Yahi cheez density ko maar deti hai.' },
+            { id: 'accept', label: "Ignore coldstart budget and wait200ms", score: -1, why: 'Kabhi-kabhi theek hai — par 50 ms ka SLO diya ho toh pehli request hamesha fail karegi.' },
           ],
         },
         {
           id: 'timing', label: 'CPU-level (Spectre jaisa) leak se bachav', icon: '🕰️',
           options: [
-            { id: 'noclock', label: 'Sandbox se precise ghadi hata do (time I/O par hi badle, na threads, na shared memory)', score: 4, why: 'Har timing attack ko ghadi chahiye. Ghadi hatane se attack theoretically khatam nahi hota, bas itna dheema ho jaata hai ki attack rehta nahi.' },
-            { id: 'process', label: 'Har tenant ko apna OS process do', score: 1, why: 'Sabse seedha jawab, par density khatam. Cloudflare isse safety net ki tarah use karta hai — sirf un workers ke liye jo shaq paida karein.' },
-            { id: 'ignore', label: 'Yeh CPU vendor ki problem hai, hum kuch nahi kar sakte', score: -3, why: 'Shared-process runtime chalane wale ke liye yeh jawab nahi hai — tumhare hazaron tenants ek hi memory space share kar rahe hain.' },
+            { id: 'noclock', label: "Layer timer/process risk controls", score: 4, why: 'Restricted clocks ek mitigation hain. Remote timer/amplification attacks possible hain; detection, process isolation aur runtime/hardware defense layers bhi chahiye.' },
+            { id: 'process', label: "Separate tenant processes only", score: 1, why: 'Sabse seedha jawab, par density khatam. Cloudflare isse safety net ki tarah use karta hai — sirf un workers ke liye jo shaq paida karein.' },
+            { id: 'ignore', label: "Assume only CPUvendor can mitigate", score: -3, why: 'Shared-process runtime chalane wale ke liye yeh jawab nahi hai — tumhare hazaron tenants ek hi memory space share kar rahe hain.' },
           ],
         },
         {
           id: 'origin', label: 'Origin se connections', icon: '🔗',
           options: [
-            { id: 'pool', label: 'Ek multi-threaded process, ek shared connection pool', score: 3, why: 'Pingora ka faisla: har thread wahi garam connection use kar sakta hai — laakhon bekaar TCP+TLS handshakes bach jaate hain (~70% kam CPU).' },
-            { id: 'perworker', label: 'Har worker process ka apna pool', score: -2, why: 'nginx ka purana model: worker A ka garam connection worker B use nahi kar sakta. Har din laakhon extra handshakes.' },
-            { id: 'nopool', label: 'Har request par nayi connection', score: -3, why: 'Har request par TCP + TLS — origin par bhi bhaar, edge par bhi.' },
+            { id: 'pool', label: "Measured shared connection-pool design", score: 3, why: 'Pingora ka faisla: har thread wahi garam connection use kar sakta hai — laakhon bekaar TCP+TLS handshakes bach jaate hain (~70% kam CPU).' },
+            { id: 'perworker', label: "Independent pool per worker process", score: -2, why: 'nginx ka purana model: worker A ka garam connection worker B use nahi kar sakta. Har din laakhon extra handshakes.' },
+            { id: 'nopool', label: "Fresh connection per downstream request", score: -3, why: 'Har request par TCP + TLS — origin par bhi bhaar, edge par bhi.' },
           ],
         },
         {
           id: 'state', label: 'Shared mutable state (chat room)', icon: '📍',
           options: [
-            { id: 'single', label: 'Ek object ka poori duniya mein ek hi instance — sab requests wahin, ek ke baad ek', score: 4, why: 'Durable object model. Ek hi copy hai toh conflict resolution, quorum aur consensus ki zaroorat hi nahi — ordering apne aap mil jaati hai.' },
-            { id: 'kv', label: 'Eventually consistent KV har region mein', score: -3, why: 'Read-heavy data ke liye badhiya, par do log duniya ke do kono se ek hi counter badhayein toh yeh galat jawab deta hai.' },
-            { id: 'consensus', label: 'Har chat room ke liye ek consensus group', score: 0, why: 'Sahi hai par mehenga: har write par quorum. Jab ek hi maalik se kaam ban raha ho toh consensus ka kharcha kyun dena.' },
+            { id: 'single', label: "Authoritative ordered object coordinator", score: 4, why: 'Durable object model. Ek hi copy hai toh conflict resolution, quorum aur consensus ki zaroorat hi nahi — ordering apne aap mil jaati hai.' },
+            { id: 'kv', label: "Eventually consistent regional copies", score: -3, why: 'Read-heavy data ke liye badhiya, par do log duniya ke do kono se ek hi counter badhayein toh yeh galat jawab deta hai.' },
+            { id: 'consensus', label: "Independent consensus group per room", score: 0, why: 'Sahi hai par mehenga: har write par quorum. Jab ek hi maalik se kaam ban raha ho toh consensus ka kharcha kyun dena.' },
           ],
         },
       ],
       verdicts: {
-        great: '🎉 Yahi Workers ka design hai: isolates, handshake mein chhupa cold start, ghadi hatao, shared pool, aur shared state ke liye ek hi maalik.',
+        great: '🎉 Yahi Workers ka design hai: isolates, handshake mein chhupa cold start, layered side-channel defense, shared pool, aur shared state ke liye ek hi maalik.',
         ok: '👍 Chal jaayega, par ek-do jagah density ya safety ki keemat zyada hai. Review mein har option ka tark padho.',
         bad: '⚠️ Is design mein ya density nahi bachegi ya tenants ek doosre ko dekh lenge.',
       },
@@ -1092,15 +1017,10 @@ Pingora: ek multi-threaded process, EK shared connection pool
       ],
       observe: {
         q: 'Replicated counter 200 mein se sirf 26 kyun gina (replicas: 26, 24, 22)?',
-        choices: [
-          'Kai replicas ne ek hi purani value padh kar +1 kiya — bina ek maalik ke ordering hai hi nahi',
-          'Kuch requests fail ho gayin',
-          'Counter ne rate limit laga di',
-          'Network slow tha',
-        ],
+        choices: ["Concurrent read-modify-write lost updates","Replica count ne reads throttle kiye","Network lag ne requests reject ki","Counter value ka display rounded tha"],
         answer: 0,
-        explain: 'Replication read-heavy data ke liye hai. Jab hazaron log EK hi state badal rahe hon, tab ek authoritative owner chahiye — yahi durable object ka tark hai.',
-      },
+        explain: "Lab ki blind replicated read-modify-write counters lost updates deti hain. Single authoritative owner ek fix hai; correctly designed atomic operations, transactions ya suitable CRDT bhi alternatives hain. Replication sirf read-heavy workloads ke liye nahi.",
+       choiceExplanations: ["Lab ki blind replicated read-modify-write counters lost updates deti hain. Single authoritative owner ek fix hai; correctly designed atomic operations, transactions ya suitable CRDT bhi alternatives hain. Replication sirf read-heavy workloads ke liye nahi.","Lab stale reads ko overwrite karta hai; read throttle ka evidence nahi.","Successful writes bhi lost updates kar sakte hain.","Replica values exact counts hain; display rounding issue nahi."] },
       lesson: 'Ek hi platform mein dono model chahiye: config aur code <b>sab jagah copy</b>, aur shared mutable state ka <b>ek maalik</b>.',
     },
   ],
@@ -1110,37 +1030,22 @@ Pingora: ek multi-threaded process, EK shared connection pool
     questions: [
       {
         q: 'Interviewer: "Untrusted code chalane ke liye VM, container ya isolate?"',
-        choices: [
-          'Density ke hisaab se chuno: hazaron tenants per server chahiye toh isolates, par tab CPU-level side channels ka alag jawab dena padega',
-          'Hamesha VM — security sabse zaroori hai',
-          'Hamesha container — industry standard hai',
-          'Isolate, kyunki woh sabse tez hai',
-        ],
+        choices: ["Threat model aur density saath evaluate","Density metric se boundary choose","VM label se all threats solved maano","Container runtime ko trust boundary maano"],
         answer: 0,
-        explain: 'Cloudflare ne isolates density ke liye chune aur uski keemat (shared process) ka jawab alag se diya — ghadi hata kar.',
-      },
+        explain: "Isolate density ko threat model ke saath evaluate karo. Frozen timers ek mitigation hain, complete side-channel defense nahi: Cloudflare ke August 2026 research ne remote timing attack dikhaya aur stronger DyPrIs, V8 Sandbox aur in-process isolation describe ki.",
+       choiceExplanations: ["Isolate density ko threat model ke saath evaluate karo. Frozen timers ek mitigation hain, complete side-channel defense nahi: Cloudflare ke August 2026 research ne remote timing attack dikhaya aur stronger DyPrIs, V8 Sandbox aur in-process isolation describe ki.","Density isolation strength, side channels aur capabilities ka replacement nahi.","VMs bhi configuration, vulnerabilities aur privilege risks rakhte hain.","Shared kernel aur runtime config inspect karna zaroori hai."] },
       {
         q: 'Interviewer: "Cold start kaise kam karoge?"',
-        choices: [
-          'Dekho ki request se PEHLE koi aisa signal milta hai kya (TLS SNI, connection open) jisse kaam shuru kiya ja sake — cold start ko maujooda latency ke andar chhupao',
-          'Har instance hamesha garam rakho',
-          'Runtime ko C++ mein likho',
-          'Cache laga do',
-        ],
+        choices: ["TLS signal se early warmup overlap","Har request ke baad runtime warm karo","Cold code ko response cache samjho","Sirf language change se startup hatao"],
         answer: 0,
         explain: 'Cloudflare SNI se hi jaan leta hai ki kaunsa worker chahiye aur handshake ke dauraan hi isolate load karna shuru kar deta hai.',
-      },
+       choiceExplanations: ["Cloudflare SNI se hi jaan leta hai ki kaunsa worker chahiye aur handshake ke dauraan hi isolate load karna shuru kar deta hai.","Request ke baad warmup us request ka startup wait nahi chhupata.","Response cache aur executable isolate initialization alag mechanisms hain.","Language change startup ke saare provisioning costs remove nahi karta."] },
       {
         q: 'Interviewer: "Hazaron users ek hi document edit kar rahe hain. Design?"',
-        choices: [
-          'Us document ke liye ek authoritative owner rakho jahan saare writes serialize hon — replication read side ke liye',
-          'Har region mein ek copy aur last-write-wins',
-          'Har edit ke liye distributed transaction',
-          'Client side mein merge kar lo',
-        ],
+        choices: ["Document owner par serialized writes","Regional copies par blind overwrite","Every edit par global transaction","Client merge bina shared contract"],
         answer: 0,
-        explain: 'Durable object ka core tark: ek hi copy hone se ordering muft milti hai aur reconcile karne ko kuch bachta hi nahi.',
-      },
+        explain: "Per-document authority operations coordinate kar sakti hai; durable state internally replicated ho sakti hai. Correct serialized mutations/storage transactions aur async interleaving rules chahiye. CRDT/OT explicit merge contract ke saath valid alternative hain.",
+       choiceExplanations: ["Per-document authority operations coordinate kar sakti hai; durable state internally replicated ho sakti hai. Correct serialized mutations/storage transactions aur async interleaving rules chahiye. CRDT/OT explicit merge contract ke saath valid alternative hain.","Blind last-write-wins concurrent edits kho sakta hai.","Per-document authority ke liye cross-region transaction har edit par zaroori nahi.","CRDT/OT merge valid alternatives hain, lekin explicit merge semantics chahiye."] },
     ],
   },
   success: [
@@ -1155,7 +1060,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
   cards: [
     { front: 'V8 isolate vs container?', back: 'Isolate: ek process, hazaron isolates, ~kuch ms start, ~kuch MB memory (container se ~100× tez start, ~1/10 memory). Isi density ki wajah se worker poore fleet par push hota hai.' },
     { front: 'Cold start kahan chhupa?', back: 'TLS ClientHello ke SNI se pata chal jaata hai kaunsa worker chahiye, isliye handshake ke dauraan hi isolate load hona shuru — pehli HTTP request tak worker garam.' },
-    { front: 'Spectre ka Cloudflare wala jawab?', back: 'Har timing attack ko ghadi chahiye → ghadi hata do: Date.now() sirf I/O par badalta hai, na threads, na SharedArrayBuffer, remote clock ka RTT signal dubo deta hai. Shaq ho toh worker ko apne process mein alag kar do.' },
+    { front: 'Spectre ka Cloudflare wala jawab?', back: 'Restricted clocks attack surface kam karti hain, complete defense nahi: Date.now() sirf I/O par badalta hai, na threads, na SharedArrayBuffer, remote clocks aur amplification ko bhi threat model mein rakho. Shaq ho toh worker ko apne process mein alag kar do.' },
     { front: 'Pingora ne nginx se kya theek kiya?', back: 'nginx ke har worker process ka apna connection pool tha — ek ka garam connection doosra use nahi kar sakta tha. Pingora: ek multi-threaded process, ek shared pool → 8 trillion req/din, ~70% kam CPU.' },
     { front: 'Keyless SSL ka core insight?', back: 'Private key sirf handshake ke EK crypto operation mein chahiye. Woh operation customer ke HSM par bhejo, baaki handshake edge par — key kabhi customer ka infra nahi chhodti.' },
     { front: 'Durable object kya hai?', back: 'Code + uski private storage, poori duniya mein ek instance. Us id ki har request wahin jaati hai, ek ke baad ek — na consensus, na quorum, na conflict resolution.' },

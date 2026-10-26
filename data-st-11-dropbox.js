@@ -36,7 +36,7 @@ VISUALS['dropbox-erasure'] = {
       <div class="dg-box is-gold"><span class="bx-label">📑 3× replication</span>
         <div class="dg-cap">1 GB rakhne ke liye 3 GB disk. Repair sasta: ek copy uthao, likh do. Lab: 60 MB disk, repair 6 MB padha.</div></div>
       <div class="dg-box is-good"><span class="bx-label">🧩 Reed-Solomon 6+4</span>
-        <div class="dg-cap">6 data + 4 parity; koi bhi 6 se file wapas; 4 tak kho sakte ho. 1.67× disk. Lab: 33.3 MB,
+        <div class="dg-cap">6 data + 4 parity; har stripe ke koi bhi 6 valid shards se recovery; us stripe ke 4 shards tak lose kar sakte ho. 1.67× disk. Lab: 33.3 MB,
           4 disks mare → 20/20 bache; par 5 mare → 0/20; repair 20 MB padha.</div></div>
     </div>
     <div class="dg-rule"></div>
@@ -122,15 +122,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Same 500 PB — par egress 30% se 5% hote hi cloud sasta kyun ho gaya?',
-        choices: [
-          'Cloud bill ka bada hissa egress tha; kam download = cloud sasta — size same, SHAKAL badli. Isliye faisla size se nahi, workload ki shakal se',
-          'Hardware sasta hua',
-          'Chhoot badh gayi',
-          'Model mein bug',
-        ],
+        choices: ["Lower egress ne workload cost badla","Same bytes se same total bill hoga","Hardware price hi only input hai","Discount bina cost badal nahi sakta"],
         answer: 0,
-        explain: 'Dropbox ke users har file kabhi na kabhi download karte hain — unki shakal mein egress bhaari tha.',
-      },
+        explain: "Is illustrative model mein egress fraction ghatne se cloud network cost ghatti hai; result price inputs aur workload shape par conditional hai. Har Dropbox file kabhi download hogi, ya given prices current quotes hain, yeh infer nahi hota.",
+       choiceExplanations: ["Is illustrative model mein egress fraction ghatne se cloud network cost ghatti hai; result price inputs aur workload shape par conditional hai. Har Dropbox file kabhi download hogi, ya given prices current quotes hain, yeh infer nahi hota.","Stored bytes aur transferred bytes alag bill dimensions hain.","Staff, operations, egress aur workload shape bhi inputs hain.","Usage change pricing discount ke bina bill badal sakta hai."] },
       lesson: 'Rent vs own: fixed kharcha ÷ volume vs cloud ka margin. Shakal (steady, pata hua) aur size dono chahiye.',
     },
     {
@@ -156,26 +151,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Cloud bill $5M/saal hai. Apne data center mein jaayein?"',
-        choices: [
-          'Pehle shakal dekho (steady vs spiky), fixed kharche (team, DC, bijli) ka hisaab, aur kya hum saalon tak execute kar sakte hain; $5M par aksar cloud + optimization (reserved, tiering) behtar',
-          'Haan, apna hamesha sasta',
-          'Nahi, cloud hamesha',
-          'Hybrid kar do bina hisaab',
-        ],
+        choices: ["Measured TCO, growth aur team compare","Only current invoice ka comparison","Owned disks se staffing cost zero","Hybrid naam se savings guaranteed"],
         answer: 0,
-        explain: 'Lab: 10 PB par cloud $2.8M vs apna $41M.',
-      },
+        explain: "Lab ke invented price inputs TCO sensitivity dikhate hain, current vendor quote nahi. Hardware, staffing, capacity growth, network, durability, financing aur operational risk ka measured business case chahiye.",
+       choiceExplanations: ["Lab ke invented price inputs TCO sensitivity dikhate hain, current vendor quote nahi. Hardware, staffing, capacity growth, network, durability, financing aur operational risk ka measured business case chahiye.","Invoice comparison capacity, redundancy, labor aur migration cost miss kar sakta hai.","Hardware operations skilled staff aur on-call maangti hai.","Hybrid architecture bhi interconnect/duplication/ops cost laati hai."] },
       {
         q: 'Interviewer: "Dropbox ki migration ka sabse bada risk?"',
-        choices: [
-          'Execution — multi-year project; beech mein chhoda toh sab paisa gaya; hyperscaler-grade team chahiye',
-          'AWS naraaz',
-          'Hardware delivery',
-          'Koi risk nahi',
-        ],
+        choices: ["Execution, durability aur long coexistence","Cloud vendor ka displeasure only","Hardware shipment only risk","Savings model ko delivery proof maano"],
         answer: 0,
-        explain: 'Bachat sirf poora karne par.',
-      },
+        explain: "Migration data integrity, availability, dual-operation period aur rollback ownership ka risk laati hai. Savings projection ko verified cutover and old-stack retirement timeline ke saath evaluate karo.",
+       choiceExplanations: ["Migration data integrity, availability, dual-operation period aur rollback ownership ka risk laati hai. Savings projection ko verified cutover and old-stack retirement timeline ke saath evaluate karo.","Vendor relationship multiple risks mein ek; data migration correctness crucial hai.","Supply chain relevant hai par ongoing durability/cutover risk bhi hai.","Financial projection successful delivery establish nahi karta."] },
     ],
   },
   success: [
@@ -218,7 +203,7 @@ SD.registerLevels('stories', [
 disk par:  3× replication 60.0 MB (3.00×)   |   6+4 EC 33.3 MB (1.67×)
 disks mare | replication | EC
      4     |   16/20     | 20/20
-     5     |   14/20     |  0/20     ← EC "sab ya kuch nahi" girta hai → chunks alag ZONES mein
+     5     |   14/20     |  0/20     ← lab mein shared placement har stripe ka loss budget cross karti; universal all-files rule nahi
 repair (ek disk gayi): replication 6.0 MB padha | EC 20.0 MB padha</pre>`,
     `<h3>🔥🧊 Tiering</h3>
      <p>EC ki keemat: repair mein 6 chunks laao + GF(256) ka hisaab (lab: 6 MB vs 20 MB padha). Isliye <b>garam</b> data (abhi
@@ -231,10 +216,9 @@ repair (ek disk gayi): replication 6.0 MB padha | EC 20.0 MB padha</pre>`,
      <pre>lab 14 (ex2-smr) — band 256 tracks, 10,000 writes:
 sequential → 1.0 tracks likhi per badlaav
 random     → 127.5 tracks likhi per badlaav</pre>
-     <p>Dropbox ka data sequential/kabhi nahi badalta → SMR ka nuksaan zero. Custom chassis "Diskotech" SMR ke saath — video ke
-     mutabik ~1.4 PB per 4U, off-the-shelf se ~2× density. AWS general-purpose hai (customers random writes karte hain) — woh yeh
-     nahi kar sakta.</p>
-     <p class="tip">🎯 <b>Apna stack aise jugaad kholta hai jo cloud nahi de sakta</b> (SMR, apne EC parameters).</p>`,
+     <p>Immutable block workload sequential writes favor karta hai, lekin SMR garbage collection, relocation aur repair cost zero nahi. Custom chassis "Diskotech" SMR ke saath — video ke
+     mutabik ~1.4 PB per 4U, off-the-shelf se ~2× density. General object storage ko different contracts support karne padte hain; provider internally specialized hardware use nahi kar sakta, aisa is case se conclude nahi hota.</p>
+     <p class="tip">🎯 <b>Apna stack workload-specific control deta hai; managed provider ke choices alag ho sakte hain</b> (SMR, apne EC parameters).</p>`,
   ],
   stages: [
     {
@@ -251,15 +235,10 @@ random     → 127.5 tracks likhi per badlaav</pre>
       ],
       observe: {
         q: '5 disks mare toh EC ki saari 20 files gayi, replication ki 14 bachi. Toh EC kharab hai?',
-        choices: [
-          'Nahi — EC 4 tak har file bachata hai par 5 par sab gira deta hai; isliye chunks alag zones mein rakhte hain taaki ek saath 5 girna lagbhag namumkin ho. Jagah 60 → 33 MB',
-          'Haan, EC kharab',
-          'Replication hamesha behtar',
-          'Bug',
-        ],
+        choices: ["This stripe exceeded parity budget","Five disks kill every EC design","Replication is loss-free by default","Zones make correlated loss impossible"],
         answer: 0,
-        explain: 'Failure domains ke hisaab se chunks bikhero — tab EC jagah bhi bachata hai aur durability bhi deta hai.',
-      },
+        explain: "Lab har file ke same 6+4 placement mein five shards lose karta hai, jo per-stripe four-loss budget se bahar hai. Yeh har EC file/topology ka all-or-nothing law nahi; placement correlated loss reduce karti hai, impossible nahi banati.",
+       choiceExplanations: ["Lab har file ke same 6+4 placement mein five shards lose karta hai, jo per-stripe four-loss budget se bahar hai. Yeh har EC file/topology ka all-or-nothing law nahi; placement correlated loss reduce karti hai, impossible nahi banati.","Tolerance codec/shard placement par depend karti hai.","Replication bhi replicas/failure domains lose hone par datalose karti hai.","Zone distribution correlation reduce karti hai; impossible nahi."] },
       lesson: 'EC = jagah ki bachat + zone-aware placement. Repair ka kharcha zyada → garam data replication par.',
     },
     {
@@ -274,16 +253,11 @@ random     → 127.5 tracks likhi per badlaav</pre>
         { text: 'Aakhri line padho — SMR ka faayda kitna?', cmd: 'node tools/smr.js | tail -1', expect: '  (normal CMR disk par dono = 1.0 — par SMR mein wahi disk ~20–25% zyada data rakhti hai)' },
       ],
       observe: {
-        q: 'AWS apne general S3 fleet par SMR ka yeh faayda kyun nahi utha sakta jaisa Dropbox ne uthaya?',
-        choices: [
-          'General-purpose customers random writes karte hain — SMR par 127× amplification; Dropbox ka apna data likho-ek-baar hai aur stack unka apna',
-          'AWS ke paas SMR nahi',
-          'SMR mehenga hai',
-          'Kanoon',
-        ],
+        q: "Immutable block workload ko hardware se match karne ka Dropbox wala lesson kya hai?",
+        choices: ["Immutable writes fit sequential layout","S3 hardware cannot use SMR disks","SMR capacity requires no repair","All storage clients issue same I/O"],
         answer: 0,
-        explain: 'Workload ki shakal pata ho toh hardware usi ke liye chuno.',
-      },
+        explain: "Immutable sequential block layout specialized hardware/SMR tradeoffs exploit kar sakta hai. SMR overwrite/GC/repair cost zero nahi; public-cloud providers kya internally use kar sakte hain is lab se prove nahi hota.",
+       choiceExplanations: ["Immutable sequential block layout specialized hardware/SMR tradeoffs exploit kar sakta hai. SMR overwrite/GC/repair cost zero nahi; public-cloud providers kya internally use kar sakte hain is lab se prove nahi hota.","Public cloud implementation ka universal hardware claim unsupported hai.","Storage density repair and write amplification costs remove nahi karti.","Random update aur immutable blob workloads vary karte hain."] },
       lesson: 'Apna stack + pata hua workload = aise hardware jugaad jo shared platform nahi kar sakta.',
     },
   ],
@@ -293,26 +267,16 @@ random     → 127.5 tracks likhi per badlaav</pre>
     questions: [
       {
         q: 'Interviewer: "Petabytes storage, 3× replication bahut mehenga."',
-        choices: [
-          'Cold data par erasure coding (jaise 6+4, ~1.67×) failure domains/zones mein bikhra; hot data replication par; repair bandwidth ka budget',
-          '2× replication',
-          'Compression',
-          'Backups hata do',
-        ],
+        choices: ["EC tier, placement aur repair budget","Only replica count kam kar do","Only primary data compress karo","Backups ko parity se replace karo"],
         answer: 0,
-        explain: 'Lab: 60 → 33.3 MB, 4 disk failure tak sab safe.',
-      },
+        explain: "6+4 Reed-Solomon ka mathematical budget per stripe four unavailable shards tak hai, given distinct placement. Lab disk/file counts us layout ke hain; placement, repair time aur correlated domain failures production durability affect karte hain.",
+       choiceExplanations: ["6+4 Reed-Solomon ka mathematical budget per stripe four unavailable shards tak hai, given distinct placement. Lab disk/file counts us layout ke hain; placement, repair time aur correlated domain failures production durability affect karte hain.","Replica reduction specified durability target break kar sakti hai.","Compression helpful hai par redundancy/correlated failure policy replace nahi.","Parity corruption/deletion recovery ke independent backup ka substitute nahi."] },
       {
         q: 'Interviewer: "EC ka nuksaan?"',
-        choices: [
-          'Repair mein K chunks padhne padte hain (zyada network) + CPU; aur M+1 failures par sab gaya — isliye zone placement aur tiering',
-          'Koi nuksaan nahi',
-          'Read dheema hamesha',
-          'Sirf SSD par',
-        ],
+        choices: ["Repair I/O, CPU aur loss budget","Every normal read must be slower","Only SSD hardware can decode","Parity means independent backups"],
         answer: 0,
         explain: 'Lab: repair 6 MB (replication) vs 20 MB (EC).',
-      },
+       choiceExplanations: ["Lab: repair 6 MB (replication) vs 20 MB (EC).","Normal read cost codec/layout/cache par depend karta hai.","EC HDD-based systems par bhi possible hai.","Parity same failure/deletion domain mein ho sakti hai; backup alag contract hai."] },
     ],
   },
   success: [
@@ -395,26 +359,26 @@ random     → 127.5 tracks likhi per badlaav</pre>
         first: {
           text: 'Pehla kadam?',
           choices: [
-            { t: 'Backfill ko throttle/pause karo — user traffic pehle', good: true, next: 'mismatch', explain: 'Backfill user-facing traffic ke saath disks share kar raha hai. Bleeding roko — backfill kal bhi ho sakta hai, user ka download abhi.' },
-            { t: 'Cutover jaldi kar do taaki backfill khatam ho', good: false, explain: 'Mismatches badh rahe hain aur disks bhare hain — ab cutover sabse bada risk.' },
-            { t: 'Aur disks mangwao', good: false, explain: 'Hafton lagenge. Abhi user dukhi hain.' },
-            { t: 'Shadow compare band karo taaki load kam ho', good: false, explain: 'Saboot ka ekmaatra source band — andhe ho jaoge.' },
+            { t: "Throttle/pause migration for user SLO", good: true, next: 'mismatch', explain: 'Backfill user-facing traffic ke saath disks share kar raha hai. Bleeding roko — backfill kal bhi ho sakta hai, user ka download abhi.' },
+            { t: "Cutover now to stop backfill sooner", good: false, explain: 'Mismatches badh rahe hain aur disks bhare hain — ab cutover sabse bada risk.' },
+            { t: "Buy disks before saturation diagnosis", good: false, explain: 'Hafton lagenge. Abhi user dukhi hain.' },
+            { t: "Remove correctness comparison under load", good: false, explain: 'Saboot ka ekmaatra source band — andhe ho jaoge.' },
           ],
         },
         mismatch: {
           sitrep: '✅ Backfill 10 Gbps par throttle. Download p99 wapas 900 ms.',
           text: 'Ab 0.02% mismatches ka kya?',
           choices: [
-            { t: 'Cutover roko; mismatched objects ki list nikaalo, pattern dhoondho (kaunsi write path/size/time), fix karke dobara compare', good: true, next: 'fix', explain: 'Shadow read isi ke liye hai — cutover se pehle galti pakadna.' },
-            { t: '0.02% chhota hai, ignore karo', good: false, explain: 'Aadhe exabyte ka 0.02% = bahut saari files. Dropbox ka vaada "kabhi mat khoo" hai.' },
-            { t: 'S3 ko dobara primary banao hamesha ke liye', good: false, explain: 'Bahut jaldi haar. Pehle wajah dhoondho.' },
+            { t: "Gate cutover;classify and repair mismatch", good: true, next: 'fix', explain: 'Shadow read isi ke liye hai — cutover se pehle galti pakadna.' },
+            { t: "Ignore0.02%despite strict parity requirement", good: false, explain: 'Aadhe exabyte ka 0.02% = bahut saari files. Dropbox ka vaada "kabhi mat khoo" hai.' },
+            { t: "Abandon migration without finding cause", good: false, explain: 'Bahut jaldi haar. Pehle wajah dhoondho.' },
           ],
         },
         fix: {
           text: 'Aage ke liye kya lagaoge?',
           choices: [
-            { t: 'Backfill ka automatic throttle user latency ke hisaab se + mismatch rate par cutover gate (0 ho tabhi aage)', good: true, next: 'end', explain: 'Backfill "background" hai — use user traffic ke aage jhukna chahiye. Aur cutover ek data-driven gate ho, calendar nahi.' },
-            { t: 'Backfill raat ko hi', good: false, explain: 'Global users — koi "raat" nahi. Latency-based throttle behtar.' },
+            { t: "Latency-aware throttle;parity gate", good: true, next: 'end', explain: 'Backfill "background" hai — use user traffic ke aage jhukna chahiye. Aur cutover ek data-driven gate ho, calendar nahi.' },
+            { t: "Run only at night;no feedback guard", good: false, explain: 'Global users — koi "raat" nahi. Latency-based throttle behtar.' },
           ],
         },
         end: {
@@ -434,26 +398,16 @@ random     → 127.5 tracks likhi per badlaav</pre>
     questions: [
       {
         q: 'Interviewer: "500 PB ek storage se doosre mein, bina downtime — plan?"',
-        choices: [
-          'Dual write → shadow read compare → throttled backfill → gated cutover (palatne ka raasta) → stable → retire',
-          'Ek weekend maintenance window',
-          'Sab copy karke switch',
-          'Naye users naye storage par, purane purane par hamesha',
-        ],
+        choices: ["Capture writes, compare, backfill, gate","Offline copy while writes continue","Copy all bytes, no result verify","Permanent split with no ownership"],
         answer: 0,
-        explain: 'Dropbox ka 2.5 saal ka raasta.',
-      },
+        explain: "Live writes capture karo, old authority retain karo, resumable backfill aur shadow validation chalao, phir measured canary cutover/rollback gate karo. Dual writes ko atomic assume mat karo; retries/reconciliation aur retirement plan chahiye.",
+       choiceExplanations: ["Live writes capture karo, old authority retain karo, resumable backfill aur shadow validation chalao, phir measured canary cutover/rollback gate karo. Dual writes ko atomic assume mat karo; retries/reconciliation aur retirement plan chahiye.","Change capture bina live writes missed ho sakti hain.","Bytecopy completion behavior/data integrity prove nahi.","Permanent split product/ops complexity retain karta hai; retirement plan chahiye."] },
       {
         q: 'Interviewer: "Shadow read ka kya faayda jab user ko purana jawab hi milta hai?"',
-        choices: [
-          'Naye system par bina user risk ke saboot — mismatch pakadna, latency naapna — cutover se pehle',
-          'Koi faayda nahi',
-          'Cache garam karna',
-          'Load test',
-        ],
+        choices: ["Cutover se pehle parity aur latency evidence","Only new cache ka warmup karna","Only synthetic peak load simulate karna","User-visible result turant replace karna"],
         answer: 0,
-        explain: 'Yeh kadam chhodna sabse aam wajah hai migrations ke fail hone ki.',
-      },
+        explain: "Shadow reads user response old authority se serve karte hue new result parity, errors aur latency expose karti hain. Comparison coverage, side effects, sampling aur rollback decision explicit rakho.",
+       choiceExplanations: ["Shadow reads user response old authority se serve karte hue new result parity, errors aur latency expose karti hain. Comparison coverage, side effects, sampling aur rollback decision explicit rakho.","Cache warmup useful side effect hai; output comparison zyada important evidence hai.","Shadow traffic real requests exercise karti hai; synthetic load test alag hai.","Shadow mode mein user response old system se aata hai."] },
     ],
   },
   success: [

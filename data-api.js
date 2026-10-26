@@ -1,3 +1,4 @@
+(() => {
 /* =====================================================================
    TRACK 2 — API Design & Contracts
    naming · verbs · offset-pain · cursor · filtering · versioning ·
@@ -6,7 +7,7 @@
 
 const T_OFFSET = [
   { text: 'page=1 maango — kitni rows padhi gayi?',
-    check: s => s.records.some(r => r.kind === 'http' && r.page === 1 && r.status === 200) },
+    check: s => s.records.some(r => r.kind === 'http' && r.page === 1 && r.status === 200 && !r.indexUsed && r.rowsExamined > 1000000) },
   { text: 'created_at par index banao',
     check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols.includes('created_at')) },
   { text: 'Ab page=1 tez hona chahiye (rows examined 1000 se kam)',
@@ -56,7 +57,7 @@ const T_MIGRATE = [
 
 const T_IDEM = [
   { text: 'Bina idempotency ke do baar POST karo — do charge ban jaayenge',
-    check: s => s.records.filter(r => r.kind === 'http' && r.method === 'POST' && r.status === 201).length >= 2 },
+    check: s => s.records.filter(r => r.kind === 'http' && r.method === 'POST' && r.status === 201 && r.idem === 'ignored' && r.key === 'pay-1').length >= 2 },
   { text: 'Idempotency on karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /idempotency/.test(r.path) && r.value === true) },
   { text: 'Key ke saath POST karo',
@@ -76,7 +77,7 @@ const T_PROVE = [
 
 const T_RL = [
   { text: 'Bina limit ke burst bhejo — sab 200 milega',
-    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && !r.rateLimited) },
+    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && !r.rateLimited && r.repeat >= 200) },
   { text: 'Token bucket lagao (100 rps, burst 150)',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'ratelimit') },
   { text: 'Ab burst bhejo aur 429 khaao',
@@ -186,26 +187,16 @@ SD.registerLevels('api', [
       questions: [
         {
           q: 'Achhi API design ka sabse bada practical faayda kya hai?',
-          choices: [
-            'Client baaki endpoints GUESS kar sakta hai — kam docs, kam support, kam galtiyan',
-            'Woh tez chalti hai',
-            'Woh REST standard follow karti hai',
-            'Woh kam bandwidth leti hai',
-          ],
+          choices: ["Predictable contract se integration aasaan","REST label se latency guarantee mile","JSON format se bandwidth zero ho","Short routes se server cost bounded ho"],
           answer: 0,
           explain: 'Consistency ka asli faayda <b>predictability</b> hai. Jab developer <code>/users/5/orders</code> dekhta hai toh use <code>/users/5/addresses</code> bhi pata chal jaata hai. Har inconsistency ek documentation lookup aur ek support ticket hai.',
-        },
+         choiceExplanations: ["Consistency ka asli faayda <b>predictability</b> hai. Jab developer <code>/users/5/orders</code> dekhta hai toh use <code>/users/5/addresses</code> bhi pata chal jaata hai. Har inconsistency ek documentation lookup aur ek support ticket hai.","REST style latency SLO automatically enforce nahi karta.","JSON size compression, fields aur payload par depend hai.","Route length query complexity ya rate limit bound nahi karti."] },
         {
           q: 'GET se state badalne mein sabse bada khatra?',
-          choices: [
-            'Crawlers, browser prefetch aur CDN sab GET ko safe maankar chala dete hain — tumhara data khud-ba-khud mit sakta hai',
-            'Sirf semantics ka masla hai',
-            'GET mein body nahi bhej sakte',
-            'Slow hoga',
-          ],
+          choices: ["Automatic GET side effect karega","GET body browser ko corrupt kar degi","GET payload ko TLS encrypt nahi karega","CDN har GET ko origin se rok dega"],
           answer: 0,
           explain: 'Yeh asli incident hai jo bar-bar hua hai: kisi ne <code>GET /delete?id=</code> banaya, phir Google crawler ne poora database saaf kar diya. GET ka <b>safe</b> hona ek vaada hai jispar poori duniya bharosa karti hai.',
-        },
+         choiceExplanations: ["Yeh asli incident hai jo bar-bar hua hai: kisi ne <code>GET /delete?id=</code> banaya, phir Google crawler ne poora database saaf kar diya. GET ka <b>safe</b> hona ek vaada hai jispar poori duniya bharosa karti hai.","GET bodies interoperability issues rakh sakti hain; state-change risk alag hai.","HTTPS transport method-independent encryption deta hai.","GET cache hit guaranteed nahi; automatic GET execution hi danger hai."] },
       ],
     },
   ],
@@ -215,26 +206,16 @@ SD.registerLevels('api', [
     questions: [
       {
         q: '"Order cancel karne ka endpoint kaise design karoge?"',
-        choices: [
-          'POST /orders/812/cancel — ya PATCH se status badlo. Poochhunga ki cancellation ka apna wajood hai (id, reason, history) — hai toh use resource banaunga',
-          'POST /cancelOrder',
-          'DELETE /orders/812',
-          'GET /orders/812/cancel',
-        ],
+        choices: ["POST cancellation ya explicit status change","GET se cancel side effect trigger karo","DELETE se order history hi mita do","Retry par har baar nayi cancellation lo"],
         answer: 0,
         explain: 'Sahi jawab pattern bhi deta hai aur <b>sawaal</b> bhi poochhta hai. DELETE galat hai — cancel karna order ko mitana nahi hai, woh ek state hai jo audit ke liye rehni chahiye. Aur GET toh bilkul nahi.',
-      },
+       choiceExplanations: ["Sahi jawab pattern bhi deta hai aur <b>sawaal</b> bhi poochhta hai. DELETE galat hai — cancel karna order ko mitana nahi hai, woh ek state hai jo audit ke liye rehni chahiye. Aur GET toh bilkul nahi.","GET safe semantics ke khilaaf state change prefetch se trigger ho sakta hai.","Cancellation business transition hai; historical order ko delete karna alag operation.","Retries duplicate refund/cancel effects create na karein; idempotency define karo."] },
       {
         q: '"Ek team snake_case use kar rahi hai, doosri camelCase. Kya karoge?"',
-        choices: [
-          'Ek chuno aur poori API mein lagao — kaunsa, uska farak bahut kam hai; consistency ka farak bahut zyada hai',
-          'Dono support karo',
-          'snake_case hi sahi hai',
-          'Client ko convert karne do',
-        ],
+        choices: ["Ek naming convention consistently apply karo","Har endpoint client ke hisaab se badlo","Case style ko performance fix maan lo","Do spellings hamesha separately maintain karo"],
         answer: 0,
         explain: '"Dono support karo" sabse mehenga jawab hai — ab har field do jagah, har bug do baar. Yeh un decisions mein se hai jahan <b>chunna</b> zaroori hai, <b>kya chuna</b> nahi.',
-      },
+       choiceExplanations: ["\"Dono support karo\" sabse mehenga jawab hai — ab har field do jagah, har bug do baar. Yeh un decisions mein se hai jahan <b>chunna</b> zaroori hai, <b>kya chuna</b> nahi.","Per-client naming support contract aur test matrix badhata hai.","Field naming style performance bottleneck ka solution nahi.","Aliases migration ke liye useful hain; permanent duplicate contract ka cost evaluate karo."] },
     ],
   },
   success: [
@@ -353,26 +334,16 @@ SD.registerLevels('api', [
       questions: [
         {
           q: 'Server overload par 500 bhejne mein kya problem hai?',
-          choices: [
-            'Achhe clients 500 par retry nahi karte (woh bug lagta hai) — jabki yahan backoff ke saath retry hi sahi tha',
-            'Koi problem nahi, 500 generic error hai',
-            '500 se logs bhar jaate hain',
-            'Client ko 500 samajh nahi aata',
-          ],
+          choices: ["503 temporary overload ko clearer batata","500 par clients retry kar hi nahi sakte","500 se request automatically queued hoti","500 ke liye Retry-After forbidden hai"],
           answer: 0,
-          explain: 'Status code client ko <b>agla kadam</b> batata hai. 500 = "mera bug hai, retry se kuch nahi hoga". 503 = "main abhi bhara hoon, thodi der baad aana" — aur uske saath Retry-After. Galat code se client galat kaam karega.',
-        },
+          explain: "503 temporary service overload/unavailability ko 500 se clearer represent karta hai; Retry-After applicable ho toh bhejo. Clients 500 bhi retry kar sakte hain, isliye unsafe operations ke retries idempotency aur deadline/backoff policy se gate karo.",
+         choiceExplanations: ["503 temporary service overload/unavailability ko 500 se clearer represent karta hai; Retry-After applicable ho toh bhejo. Clients 500 bhi retry kar sakte hain, isliye unsafe operations ke retries idempotency aur deadline/backoff policy se gate karo.","Clients 500 retry kar sakte hain; safe retry policy operation-specific hai.","Response status work queue mein enqueue nahi karta.","Header ki syntax status code se automatically forbid nahi hoti;503 semantic fit hai."] },
         {
           q: 'PUT aur PATCH mein asli farak?',
-          choices: [
-            'PUT poora resource replace karta hai (isliye hamesha idempotent); PATCH partial change karta hai (idempotent ho bhi sakta hai, nahi bhi)',
-            'PATCH naya hai, PUT purana',
-            'PUT create karta hai, PATCH update',
-            'Koi khaas farak nahi',
-          ],
+          choices: ["PUT replacement; PATCH change instructions","PUT creates; PATCH har update ka naam","PATCH se har operation idempotent hota","PUT se every response byte same hota"],
           answer: 0,
-          explain: 'PUT ka matlab hai "resource ab bilkul YEH hai" — isliye N baar bhejne se natija nahi badalta. PATCH ka matlab hai "yeh badlo" — aur "+1 karo" jaisa patch idempotent nahi hai. Yeh farak retry logic ke liye seedha matter karta hai.',
-        },
+          explain: "PUT target resource ki intended state replace karta hai aur HTTP semantics mein idempotent hai. PATCH change document apply karta hai; replace/set operation idempotent ho sakta hai, increment operation nahi. Same effect ka matlab identical response zaroori nahi.",
+         choiceExplanations: ["PUT target resource ki intended state replace karta hai aur HTTP semantics mein idempotent hai. PATCH change document apply karta hai; replace/set operation idempotent ho sakta hai, increment operation nahi. Same effect ka matlab identical response zaroori nahi.","PUT existing resource replace bhi karta hai; create-only distinction galat.","Increment PATCH repeated effect de sakta hai; format/operation matter karte hain.","Idempotency intended server effect hai; response/timestamps same hona mandatory nahi."] },
       ],
     },
   ],
@@ -382,26 +353,16 @@ SD.registerLevels('api', [
     questions: [
       {
         q: '"POST idempotent kyun nahi hai, aur ise idempotent kaise banaoge?"',
-        choices: [
-          'POST "naya banao" kehta hai, toh do baar = do cheezein. Idempotency-Key header se: client ek key bheje, server use unique constraint ke saath store kare aur dobara aane par purana jawab lauta de',
-          'POST idempotent hai agar body same ho',
-          'POST ko PUT se badal do',
-          'Database transaction se ho jaayega',
-        ],
+        choices: ["Stable key se duplicate effect dedupe karo","Same body se POST naturally safe hoga","Local transaction retry pehchaan legi","PUT naam se payment provider dedupe karega"],
         answer: 0,
-        explain: 'Doosra hissa (kaise banaoge) hi asli jawab hai. Aur "same body toh same request" galat hai — do alag users theek same amount bhej sakte hain, woh do alag payments hain. Isiliye key <b>client</b> banata hai.',
-      },
+        explain: "POST generic semantics idempotency guarantee nahi deti; operation inherently idempotent bhi design ho sakti hai. Retried create/payment ke liye stable intent key, payload validation, atomic claim/result state aur downstream idempotency contract define karo.",
+       choiceExplanations: ["POST generic semantics idempotency guarantee nahi deti; operation inherently idempotent bhi design ho sakti hai. Retried create/payment ke liye stable intent key, payload validation, atomic claim/result state aur downstream idempotency contract define karo.","POST standard semantics generic idempotency guarantee nahi deti.","Local atomicity cross-request duplicate identity establish nahi karti.","Method rename remote provider ke duplicate charges automatically nahi rokta."] },
       {
         q: '"Client ko 401 mila. Kya karna chahiye? Aur 403 par?"',
-        choices: [
-          '401 par token refresh karke dobara try — 403 par haar maan lo, kyunki retry se kuch nahi badlega',
-          'Dono par login screen dikhao',
-          'Dono par retry karo',
-          'Dono par error dikha do',
-        ],
+        choices: ["401 identity fix;403 permissions inspect","401 aur 403 par blind retry loop chalao","Dono par same password reset karwao","403 par token refresh se access pakka"],
         answer: 0,
-        explain: '401 = <b>authentication</b> ka masla (kaun ho pata nahi) → refresh/login. 403 = <b>authorization</b> ka masla (pata hai, ijaazat nahi) → retry bekaar hai. Inhe ulta bhejne se client infinite login loop mein pahunch jaata hai — yeh asli bug hai jo bahut jagah dikhta hai.',
-      },
+        explain: "401 valid authentication missing/invalid ka signal hai; WWW-Authenticate challenge aur credential state inspect karo, refresh sirf applicable cases mein.403 request ko server refuses karta hai; permissions/ownership/policy inspect karo. Blind retry dono ka fix nahi.",
+       choiceExplanations: ["401 valid authentication missing/invalid ka signal hai; WWW-Authenticate challenge aur credential state inspect karo, refresh sirf applicable cases mein.403 request ko server refuses karta hai; permissions/ownership/policy inspect karo. Blind retry dono ka fix nahi.","Credentials/policy badle bina repeated attempts same failure de sakte hain.","403 authenticated but disallowed bhi ho sakta hai; reset se permission nahi.","Refresh missing role/ownership ko zaroor solve nahi karta."] },
     ],
   },
   success: [
@@ -503,7 +464,7 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
       goal: 'Ek 2.4 crore rows wali transactions table hai. Pehle page 1 maango. Phir index banao aur farak dekho. Phir wahi index rehte hue page 4,85,728 maango — aur samjho ki index ne kyun nahi bachaya.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_OFFSET,
-      success: allOf(T_OFFSET),
+      success: SD.allTasks(T_OFFSET),
       successText: `Yeh teen numbers yaad rakho:
         <br>• bina index, page 1 → <b>~12.8 s</b> (poori table scan + sort)
         <br>• index ke saath, page 1 → <b>~4 ms</b> ✅
@@ -512,12 +473,18 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
         <code>OFFSET</code> ka matlab hi hai "ginte hue aage badho" — aur ginne ke liye
         har entry chhuni padti hai. B-tree ek tree hai, array nahi; usme
         "24 million-vaan element" par jump nahi kiya ja sakta.`,
+      solution: [
+        "GET /api/v1/transactions?page=1&limit=50",
+        "CREATE INDEX ix_txn_created ON transactions(created_at)",
+        "GET /api/v1/transactions?page=1&limit=50",
+        "GET /api/v1/transactions?page=485728&limit=50",
+        "EXPLAIN SELECT * FROM transactions ORDER BY created_at DESC LIMIT 50 OFFSET 24286350",
+      ],
+      verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['created_at']) && m.current(s, 'explain', r => r.table === 'transactions' && r.offset === 24286350 && r.rowsExamined > 1000000); },
       hints: [
-        'Pehle bina index ke: GET /api/v1/transactions?page=1&limit=50',
-        'Ab index banao: CREATE INDEX ix_txn_created ON transactions(created_at)',
-        'Wahi page dobara maango: GET /api/v1/transactions?page=1&limit=50',
-        'Ab gehra jao: GET /api/v1/transactions?page=485728&limit=50',
-        'Aur plan khud dekho: EXPLAIN SELECT * FROM transactions ORDER BY created_at DESC LIMIT 50 OFFSET 24286350',
+        "Pehle observation: page=1 maango — kitni rows padhi gayi?. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: EXPLAIN se plan khud dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nCREATE INDEX ix_txn_created ON transactions(created_at)\nGET /api/v1/transactions?page=1&limit=50\nGET /api/v1/transactions?page=485728&limit=50\nEXPLAIN SELECT * FROM transactions ORDER BY created_at DESC LIMIT 50 OFFSET 24286350",
       ],
     },
     {
@@ -532,7 +499,7 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
         ] } } },
       }),
       tasks: T_COUNT,
-      success: allOf(T_COUNT),
+      success: SD.allTasks(T_COUNT),
       successText: `<code>total</code> ek <b>alag query</b> hai — <code>COUNT(*)</code> —
         jo <b>poore filtered set</b> ko gin-ti hai. <code>LIMIT</code> use nahi rokta.
         <br><br>Teen practical jawab:
@@ -540,10 +507,16 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
         <br>• <b>Approximate count</b> — <code>pg_class.reltuples</code> ya cached count, "about 24M"
         <br>• <b>Alag endpoint</b> — jise UI tabhi maange jab sach mein zaroorat ho
         <br><br>Poochho: kya user ko sach mein pata hona chahiye ki 2,42,86,450 rows hain?`,
+      solution: [
+        "GET /api/v1/transactions?page=1&limit=50",
+        "sim set api.countTotal false",
+        "GET /api/v1/transactions?page=1&limit=50",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.countTotal === false && m.current(s, 'http', r => r.resource === 'transactions' && r.page === 1 && r.countTotal === false && r.status === 200); },
       hints: [
-        'Pehle total ke saath: GET /api/v1/transactions?page=1&limit=50',
-        'Ab band karo: sim set api.countTotal false',
-        'Aur wahi request dobara: GET /api/v1/transactions?page=1&limit=50',
+        "Pehle observation: Dekho ki `total` field kitna mehenga hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab wahi request dobara — farak dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nsim set api.countTotal false\nGET /api/v1/transactions?page=1&limit=50",
       ],
     },
     {
@@ -562,38 +535,23 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
       title: 'Offset ki samajh',
       questions: [
         {
-          q: '"OFFSET 1000000 LIMIT 50" mein database kitni rows padhta hai?',
-          choices: [
-            '10,00,050 — offset wali sab padhni aur phenkni padti hain',
-            '50 — sirf jo return hoti hain',
-            '1000 — DB optimize kar leta hai',
-            'Depend karta hai index par — index ho toh 50',
-          ],
+          q: "Typical indexed ORDER BY plan: OFFSET 1000000 LIMIT 50. Returned rows ke alawa kya cost?",
+          choices: ["Offset plus limit entries process hoti","Sirf returned 50 entries process hoti","Index ho toh offset ki cost zero hoti","LIMIT se skipped entries reserve hoti"],
           answer: 0,
-          explain: 'Aakhri option sabse aam galatfehmi hai. Index ke saath bhi <b>10,00,050 index entries</b> walk karni padti hain. Index sorting deta hai, skipping nahi. Ek B-tree mein "10 lakh-vaan element" par jump karne ka koi tareeka nahi hai.',
-        },
+          explain: "Typical ordered OFFSET 1000000 LIMIT 50 plan ko 1 million skipped entries plus 50 results process karne padte hain. Exact physical tuples/pages plan, filters, index aur visibility par depend karte hain; returned rows ko total work mat samjho.",
+         choiceExplanations: ["Typical ordered OFFSET 1000000 LIMIT 50 plan ko 1 million skipped entries plus 50 results process karne padte hain. Exact physical tuples/pages plan, filters, index aur visibility par depend karte hain; returned rows ko total work mat samjho.","Offset rows ko skip karne ka work bhi hota hai.","Matching index sorting help karega; offset entries traversal phir bhi hota hai.","LIMIT return count bound karta hai; skip work eliminate nahi."] },
         {
           q: 'Deep-page query se sirf us request ko nuksaan hota hai?',
-          choices: [
-            'Nahi — buffer pool trash hota hai (saari queries dheemi), replica lag badhta hai, aur ek connection 7 second block rehta hai',
-            'Haan, sirf wahi request slow hoti hai',
-            'Nahi, par sirf CPU par asar padta hai',
-            'Sirf disk par asar padta hai',
-          ],
+          choices: ["Shared resources par doosre queries hurt","Sirf caller ki socket occupied hoti","Limit 50 se poori query cost bounded","Read query se memory cost nahi hoti"],
           answer: 0,
           explain: 'Yahi is level ka sabse zaroori sabak. Ek deep-page query <b>saare users</b> ka anubhav kharab karti hai: cache se doosre logon ka data nikal jaata hai, replica peeche chala jaata hai, aur pool ka ek connection kai second ke liye bandhak ban jaata hai. Isiliye "sirf ek user hi toh karta hai" wali soch galat hai.',
-        },
+         choiceExplanations: ["Yahi is level ka sabse zaroori sabak. Ek deep-page query <b>saare users</b> ka anubhav kharab karti hai: cache se doosre logon ka data nikal jaata hai, replica peeche chala jaata hai, aur pool ka ek connection kai second ke liye bandhak ban jaata hai. Isiliye \"sirf ek user hi toh karta hai\" wali soch galat hai.","DB IO, CPU, cache aur pool concurrent traffic ke shared resources hain.","Offset traversal/output count alag hain;50 rows return se scan bound nahi.","Reads buffer cache aur working set consume karte hain."] },
         {
           q: 'Offset pagination "galat" bhi kaise hai, sirf dheemi nahi?',
-          choices: [
-            'Data badalne par rows shift ho jaati hain — naya row aane par ek purani row tum kabhi nahi dekhoge, aur ek do baar dikh sakti hai',
-            'Woh galat nahi hai, bas dheemi hai',
-            'Woh sirf sorted data par galat hai',
-            'Woh duplicate rows deti hai par skip nahi karti',
-          ],
+          choices: ["Concurrent changes se rows shift hongi","Fixed snapshot mein rows zaroor shift","Stable unique sort se all mutations safe","Offset se duplicate hi hoga; skip nahi"],
           answer: 0,
           explain: 'Offset <b>position</b> par kaam karta hai. Jab tum page 1 dekh rahe the aur ek naya transaction aaya, toh sab kuch ek position aage khisak gaya — page 2 ka pehla row ab page 1 par hai, aur tumne use kabhi nahi dekha. Keyset pagination <b>identity</b> par kaam karta hai, isliye yeh problem hi nahi hoti.',
-        },
+         choiceExplanations: ["Offset <b>position</b> par kaam karta hai. Jab tum page 1 dekh rahe the aur ek naya transaction aaya, toh sab kuch ek position aage khisak gaya — page 2 ka pehla row ab page 1 par hai, aur tumne use kabhi nahi dekha. Keyset pagination <b>identity</b> par kaam karta hai, isliye yeh problem hi nahi hoti.","Same stable snapshot/order mein pagination shift necessary nahi.","Stable order ties solve karta hai; new/deleted rows offsets shift kar sakti hain.","Deletion before offset se unseen row skip bhi ho sakti hai."] },
       ],
     },
   ],
@@ -603,40 +561,36 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
     questions: [
       {
         q: '"Ek user transaction history API par page 4,85,728 maang raha hai aur DB gir raha hai. Kya karoge?"',
-        choices: [
-          'Pehle query plan dekhunga. Problem OFFSET hai — DB ko 2.4 crore rows padh ke phenkni padti hain. Cursor pagination par jaunga; tab tak max page depth, timeout aur rate limit lagaunga',
-          'User ko ban kar dunga',
-          'created_at par index laga dunga',
-          'Read replica add kar dunga',
-        ],
+        choices: ["Plan verify; depth bound; cursor migrate","Index se arbitrary offset cost zero karo","Replica add karke scan problem bhoolo","Request slow toh partner account ban karo"],
         answer: 0,
         explain: 'Sabse pehla kadam <b>plan dekhna</b> hai, andaza nahi. Index lagana adhoora jawab hai — woh page 1 theek karta hai, deep page nahi. Replica se query dheemi hi rahegi, bas doosri machine par. Aur "ban kar do" — well, thoda mann toh karta hai.',
-      },
+       choiceExplanations: ["Sabse pehla kadam <b>plan dekhna</b> hai, andaza nahi. Index lagana adhoora jawab hai — woh page 1 theek karta hai, deep page nahi. Replica se query dheemi hi rahegi, bas doosri machine par. Aur \"ban kar do\" — well, thoda mann toh karta hai.","Index order help karega; deep offset entries skip abhi bhi hoga.","Replica headroom de sakti hai; algorithmic skip cost nahi badalti.","Expensive valid request ke contract ko bound/migrate karo; ban root fix nahi."] },
       {
         terminal: {
           goal: 'Interviewer: "Yeh raha wahi endpoint. Mujhe LIVE dikhao ki index lagane ke baad bhi deep page slow rehta hai."',
           sys: SD.sys.txn({ api: { countTotal: false } }),
           tasks: T_PROVE,
-          success: allOf(T_PROVE),
+          success: SD.allTasks(T_PROVE),
           successText: 'Perfect. Tumne <b>dikha ke</b> prove kiya, bataya nahi. Interview mein yeh farak sab kuch hai.',
+          solution: [
+            "CREATE INDEX ix_c ON transactions(created_at)",
+            "GET /api/v1/transactions?page=1&limit=50",
+            "GET /api/v1/transactions?page=485728&limit=50",
+          ],
+          verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['created_at']) && m.current(s, 'http', r => r.page === 485728 && r.rowsExamined > 1000000); },
           hints: [
-            'Index banao: CREATE INDEX ix_c ON transactions(created_at)',
-            'Shallow page: GET /api/v1/transactions?page=1&limit=50',
-            'Deep page: GET /api/v1/transactions?page=485728&limit=50',
+            "Pehle observation: created_at par index banao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+            "Checklist ko kram se dekho. Aakhri proof: Deep page dikhao — index hote hue bhi dheema. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+            "Near-answer walkthrough; har command alag Enter se chalao:\nCREATE INDEX ix_c ON transactions(created_at)\nGET /api/v1/transactions?page=1&limit=50\nGET /api/v1/transactions?page=485728&limit=50",
           ],
         },
       },
       {
         q: '"Tumhare UI ko \\"1-50 of 24,286,450\\" dikhana hai. Kaise karoge?"',
-        choices: [
-          'Poochhunga ki exact count sach mein chahiye ya nahi. Zyadatar cases mein has_more kaafi hai, warna approximate count (reltuples / cached) — exact COUNT(*) har request par 2.7 s ka hai',
-          'COUNT(*) chala dunga, woh tez hai',
-          'Total ko cache kar dunga 1 ghante ke liye',
-          'Frontend se count karwa lunga',
-        ],
+        choices: ["Exact count need aur freshness poochho","Har call par cached count exact bolo","Browser se unknown total derive karao","COUNT(*) har table par constant maan lo"],
         answer: 0,
         explain: 'Sabse achha jawab <b>requirement ko challenge</b> karta hai. Twitter, Slack, Gmail — koi bhi exact total nahi dikhata, sab "more" dikhate hain. Aur agar sach mein chahiye toh approximate count 99% cases mein kaafi hai: user ko "24,286,450" aur "about 24 million" mein koi farak nahi padta.',
-      },
+       choiceExplanations: ["Sabse achha jawab <b>requirement ko challenge</b> karta hai. Twitter, Slack, Gmail — koi bhi exact total nahi dikhata, sab \"more\" dikhate hain. Aur agar sach mein chahiye toh approximate count 99% cases mein kaafi hai: user ko \"24,286,450\" aur \"about 24 million\" mein koi farak nahi padta.","Cached total stale ho sakta hai; freshness contract explicit hona chahiye.","Client sirf fetched rows count karta hai; unknown total derive nahi hota.","Exact count visibility aur data volume se work leta hai; constant-time guaranteed nahi."] },
     ],
   },
   success: [
@@ -740,7 +694,7 @@ decode karne par:  { "t": "2026-04-11T09:22:04Z", "id": 8812304, "d": "desc" }</
       goal: 'Wahi 2.4 crore rows wali table. Pehle offset ka dard dobara dekho, phir sahi index banao, cursor pagination on karo, aur prove karo ki ab kitni bhi gehrai par cost same hai.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_CURSOR,
-      success: allOf(T_CURSOR),
+      success: SD.allTasks(T_CURSOR),
       successText: `Dekha? <b>rows examined 2.4 crore se 50 par aa gaya</b> — aur ab woh
         har page par 50 hi rahega.
         <br><br>Aur teen cheezein tumne saath mein kar li:
@@ -748,13 +702,19 @@ decode karne par:  { "t": "2026-04-11T09:22:04Z", "id": 8812304, "d": "desc" }</
         <br>• API ab <code>?page=</code> ko <b>400</b> deti hai — mehenga sawaal poochha hi nahi ja sakta
         <br>• Cursor <b>opaque</b> hai — kal tum query strategy badal sakte ho, clients nahi tootenge
         <br><br>Sabse achha optimization woh query hai jo <b>kabhi chali hi nahi</b>.`,
+      solution: [
+        "GET /api/v1/transactions?page=485728&limit=50",
+        "CREATE INDEX ix_txn_keyset ON transactions(created_at, id)",
+        "sim set api.pagination cursor",
+        "GET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50",
+        "GET /api/v1/transactions?page=485728&limit=50",
+        "cursor decode eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.pagination === 'cursor' && m.index(s, 'transactions', ['created_at', 'id']) && m.current(s, 'http', r => r.keyset && r.rowsExamined <= 100 && r.status === 200) && m.current(s, 'http', r => r.guard === 'noPage'); },
       hints: [
-        'Pehle dard yaad karo: GET /api/v1/transactions?page=485728&limit=50',
-        'Keyset ke liye index: CREATE INDEX ix_txn_keyset ON transactions(created_at, id)',
-        'Ab API shift karo: sim set api.pagination cursor',
-        'Cursor se maango: GET /api/v1/transactions?cursor=eyJ0IjoxfQ&limit=50',
-        'Purana page param try karo: GET /api/v1/transactions?page=485728&limit=50',
-        'Aur cursor ke andar jhaanko: cursor decode eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0',
+        "Pehle observation: Pehle offset par page=485728 ka dard dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Cursor ke andar kya hai, khud dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=485728&limit=50\nCREATE INDEX ix_txn_keyset ON transactions(created_at, id)\nsim set api.pagination cursor\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50\nGET /api/v1/transactions?page=485728&limit=50\ncursor decode eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0",
       ],
     },
     {
@@ -775,7 +735,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
         { answer: 'created_at', explain: 'Sort column. Tuple comparison ka pehla member hamesha sort column hota hai.' },
         { answer: '<', explain: 'DESC order mein "iske baad wale" ka matlab hai "isse chhote". ASC hota toh <code>&gt;</code> lagta. Yahan ulta likhna sabse aam bug hai.' },
         { answer: 'id', explain: 'Tie-breaker. Do transactions ka timestamp bilkul same ho sakta hai — bina iske ek row skip ho jaayegi ya do baar aa jaayegi.' },
-        { answer: 'user_id', explain: '<b>Index ka pehla column filter hona chahiye</b>, phir sort column, phir tie-breaker. Left-most prefix rule: agar <code>user_id</code> leading nahi hoga toh yeh index lagega hi nahi.' },
+        { answer: 'user_id', explain: "<b>Index ka pehla column filter hona chahiye</b>, phir sort column, phir tie-breaker. User-scoped access mein leading user_id often useful hai;planner/cardinality/version matter karte hain. PostgreSQL 18 skip scan kuch missing-leading-filter cases bhi use kar sakta hai." },
       ],
     },
     {
@@ -784,7 +744,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       goal: 'Ek purani offset API chal rahi hai aur usme 4000 clients hain — tum ise raat ko band nahi kar sakte. Guards lagao taaki nuksaan ruk jaaye jab tak migration poora na ho.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_MIGRATE,
-      success: allOf(T_MIGRATE),
+      success: SD.allTasks(T_MIGRATE),
       successText: `Yeh asli duniya ka jawab hai. Tum API ko raat ko nahi badal sakte —
         par <b>nuksaan aaj hi rok sakte ho</b>.
         <br><br><code>maxPageDepth</code> ne sabse mehengi queries band ki,
@@ -793,11 +753,17 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
         timeout ya 500 se hazaar guna behtar.
         <br><br>Agla kadam: page-depth par metric lagao, dekho kaun gehra ja raha hai,
         unse baat karo, aur bade exports ke liye async job API do.`,
+      solution: [
+        "GET /api/v1/transactions?page=50000&limit=500",
+        "sim set api.maxPageDepth 1000",
+        "sim set api.maxLimit 100",
+        "GET /api/v1/transactions?page=50000&limit=50",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.maxLimit === 100 && s.sys.api.maxPageDepth === 1000 && m.current(s, 'http', r => r.guard === 'maxDepth' && r.status === 400); },
       hints: [
-        'Pehle dekho ki abhi kuch nahi rok raha: GET /api/v1/transactions?page=50000&limit=500',
-        'Page depth baandho: sim set api.maxPageDepth 1000',
-        'Limit baandho: sim set api.maxLimit 100',
-        'Ab dobara try karo: GET /api/v1/transactions?page=50000&limit=50',
+        "Pehle observation: Legacy offset API par deep page abhi bhi chal raha hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab deep page 400 se reject ho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=50000&limit=500\nsim set api.maxPageDepth 1000\nsim set api.maxLimit 100\nGET /api/v1/transactions?page=50000&limit=50",
       ],
     },
     {
@@ -807,7 +773,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       visual: 'cursor',
       questions: [
         { q: 'Same timestamp wale rows gum na hon — iske liye kya chahiye?', target: 'tuple', explain: 'Tuple comparison with tie-breaker: (created_at, id) < (?, ?). Bina id ke, same timestamp wale rows skip ya duplicate ho sakte hain.' },
-        { q: 'Cursor client se chhupa (opaque) kyun rakhte hain?', target: 'opaque', explain: 'Taaki kal tum query strategy badal sako aur clients na tootein — aur taaki user manmana cursor bana ke mehengi query trigger na kar sake.' },
+        { q: 'Cursor client se chhupa (opaque) kyun rakhte hain?', target: 'opaque', explain: "Opaque representation internal strategy ko client contract se decouple karti hai. Expensive/tampered cursors ko server-side signature, scope, expiry aur query bounds se control karo; opacity alone security nahi." },
         { q: 'Index ka kram kya hona chahiye?', target: 'idx', explain: '(filter columns, sort column, tie-breaker) — bilkul isi kram mein. Warna DB phir bhi sort karega aur cursor ka poora faayda chala jaayega.' },
       ],
     },
@@ -817,37 +783,22 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       questions: [
         {
           q: 'Keyset query mein tie-breaker id kyun zaroori hai?',
-          choices: [
-            'Kyunki do rows ka sort value bilkul same ho sakta hai — bina unique tie-breaker ke ek row skip ho sakti hai ya do baar aa sakti hai',
-            'Performance ke liye',
-            'Index chahiye isliye',
-            'Zaroori nahi hai, optional hai',
-          ],
+          choices: ["Stable unique order ties ko disambiguate","ID se access permission automatically mile","ID se har sort index-free ho jaaye","Timestamp unique hone ki guarantee mile"],
           answer: 0,
           explain: 'Agar 50 transactions ka <code>created_at</code> bilkul same hai aur page boundary unke beech mein padti hai, toh <code>created_at &lt; ?</code> se ya toh sab chhoot jaayenge ya sab dobara aayenge. Tie-breaker se ordering <b>total</b> ban jaati hai — har row ki ek hi jagah hoti hai.',
-        },
+         choiceExplanations: ["Agar 50 transactions ka <code>created_at</code> bilkul same hai aur page boundary unke beech mein padti hai, toh <code>created_at &lt; ?</code> se ya toh sab chhoot jaayenge ya sab dobara aayenge. Tie-breaker se ordering <b>total</b> ban jaati hai — har row ki ek hi jagah hoti hai.","Tie-breaker authorization check ka substitute nahi.","ORDER BY/filter ke matching indexes phir bhi chahiye.","Timestamp collisions possible hain; isi liye unique tie-breaker add karo."] },
         {
           q: 'Cursor pagination kis case mein SAHI nahi hai?',
-          choices: [
-            'Jab user ko sach mein "page 47 par jao" chahiye — jaise admin table jahan data chhota hai',
-            'Jab data bahut zyada ho',
-            'Jab sorting chahiye',
-            'Jab filtering chahiye',
-          ],
+          choices: ["Arbitrary numbered page jump chahiye","New records continuously add ho rahe","Stable sort aur filter available hain","Next page sequential browse chahiye"],
           answer: 0,
           explain: 'Cursor sirf next/prev deta hai. Agar dataset chhota hai (10,000 rows) aur user ko random page access chahiye, toh offset bilkul theek hai — wahan cost hi nahi hai. <b>Cursor ek ilaaj hai deep pagination ka, har pagination ka nahi.</b>',
-        },
+         choiceExplanations: ["Cursor sirf next/prev deta hai. Agar dataset chhota hai (10,000 rows) aur user ko random page access chahiye, toh offset bilkul theek hai — wahan cost hi nahi hai. <b>Cursor ek ilaaj hai deep pagination ka, har pagination ka nahi.</b>","Changing feeds mein stable keyset cursor offset shift ko reduce karta hai.","Matching filter/order keyset ki supporting condition hai.","Sequential next/previous navigation cursor ka common fit hai."] },
         {
           q: 'Cursor ko opaque rakhne ka sabse bada practical faayda?',
-          choices: [
-            'Tum baad mein internal query strategy badal sakte ho bina clients tode',
-            'Woh chhota hota hai',
-            'Woh secure hota hai',
-            'Woh tez hota hai',
-          ],
+          choices: ["Format badlo bina client contract tode","Base64 se sensitive fields secret ho","Opaque se cursor validation optional ho","Opaque se index khud create ho jaaye"],
           answer: 0,
-          explain: 'Yeh ek <b>API evolution</b> ka faisla hai. Agar client cursor parse karta hai toh woh tumhare internal schema par depend kar gaya — aur ab tum sort column ya partition key kabhi nahi badal sakte. Opaque cursor tumhe aazadi deta hai. (Base64 security nahi hai — woh sirf "isse mat chhuo" ka signal hai.)',
-        },
+          explain: "Opaque cursor client ko internal query encoding par depend karne se rokta hai; server strategy evolve kar sakta hai. Base64 secrecy nahi; scope, signature/tamper validation aur expiration requirements alag hain.",
+         choiceExplanations: ["Opaque cursor client ko internal query encoding par depend karne se rokta hai; server strategy evolve kar sakta hai. Base64 secrecy nahi; scope, signature/tamper validation aur expiration requirements alag hain.","Base64 encoding encryption nahi; secrets encode karke expose mat karo.","Opaque cursor ko tamper/scope/expiry ke liye validate karna hoga.","Representation index design aur query performance auto-manage nahi karta."] },
       ],
     },
   ],
@@ -857,26 +808,16 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
     questions: [
       {
         q: '"Cursor pagination design karo transaction history ke liye."',
-        choices: [
-          'GET /transactions?cursor=<opaque>&limit=50. Query: WHERE (created_at, id) < (?, ?) ORDER BY created_at DESC, id DESC LIMIT 50, index (user_id, created_at, id) par. Cursor server banata hai, base64 mein, aur usme sort value + tie-breaker + direction hote hain',
-          'GET /transactions?last_id=812&limit=50 — bas id se aage jao',
-          'GET /transactions?page=1&limit=50 par index laga do',
-          'GET /transactions?offset=0&limit=50 aur offset ko cap kar do',
-        ],
+        choices: ["Scoped keyset with unique sort pair","ID-only cursor with created_at sort","Page-number route with same deep OFFSET","Timestamp cursor without equal-time tie"],
         answer: 0,
-        explain: 'Doosra option ek chhupa hua jaal hai: <code>last_id</code> tabhi kaam karega jab id ka order sort order jaisa ho. <code>created_at DESC</code> par sort karte hue id se paginate karna galat rows dega. Poora jawab mein <b>tuple comparison + matching index + opaque cursor</b> teenon hone chahiye.',
-      },
+        explain: "ID-only cursor ka chhupa hua jaal: <code>last_id</code> tabhi kaam karega jab id ka order sort order jaisa ho. <code>created_at DESC</code> par sort karte hue id se paginate karna galat rows dega. Poora jawab mein <b>tuple comparison + matching index + opaque cursor</b> teenon hone chahiye.",
+       choiceExplanations: ["ID-only cursor ka chhupa hua jaal: <code>last_id</code> tabhi kaam karega jab id ka order sort order jaisa ho. <code>created_at DESC</code> par sort karte hue id se paginate karna galat rows dega. Poora jawab mein <b>tuple comparison + matching index + opaque cursor</b> teenon hone chahiye.","created_at ordering ko ID-only boundary necessarily represent nahi karti.","Same deep offset algorithm cost cursor naming se nahi badalta.","Equal timestamps par unique ID tie-breaker ke bina skip/repeat ho sakta hai."] },
       {
         q: '"Tumhare paas 4000 clients hain jo ?page= use kar rahe hain. Migration kaise karoge?"',
-        choices: [
-          'Dono support karo (response mein next_cursor bhi bhejo), max page depth lagao, page-depth par metric se dekho kaun gehra ja raha hai, bade exports ke liye async API do, phir page hata do',
-          'Ek din announce karke page hata dunga',
-          'Sirf naye clients ko cursor dunga, purane waise hi chalte rahenge',
-          'Page ko internally cursor mein convert kar dunga',
-        ],
+        choices: ["Dual support; measure; deprecate; migrate","Notice ke next din page support hatao","Page number ko free cursor maan lo","Legacy pages ko forever unlimited chalao"],
         answer: 0,
-        explain: 'Sabse achha jawab <b>kramik</b> hai aur beech mein bhi nuksaan rokta hai. Aakhri option (page ko internally convert karna) namumkin hai — page 485728 ka matlab hi "24M rows aage" hai, uske liye ginna hi padega. Aur "purane waise hi chalte rahenge" ka matlab hai ki problem kabhi khatam nahi hoga.',
-      },
+        explain: "Dual support, usage metrics, bounded legacy depth aur announced deprecation se clients migrate karte hain. Arbitrary numbered page ko existing cursor/bookmark ke bina cheap keyset boundary nahi milti; bounded snapshots/bookmarks alag design hain. Unlimited legacy access problem preserve karta hai.",
+       choiceExplanations: ["Dual support, usage metrics, bounded legacy depth aur announced deprecation se clients migrate karte hain. Arbitrary numbered page ko existing cursor/bookmark ke bina cheap keyset boundary nahi milti; bounded snapshots/bookmarks alag design hain. Unlimited legacy access problem preserve karta hai.","Clients ke observed usage aur migration runway ke bina breaking change risky hai.","Arbitrary page boundary locate karna existing cursor ke bina expensive ho sakta hai.","Unbounded legacy access overload aur maintenance risk preserve karta hai."] },
     ],
   },
   success: [
@@ -893,7 +834,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
     { front: 'Keyset query?', back: '<code>WHERE (created_at, id) &lt; (?, ?) ORDER BY created_at DESC, id DESC LIMIT 50</code>. Ek seek + 50 rows — <b>page 1 aur page 485728 ka cost same</b>.' },
     { front: 'Tie-breaker id kyun?', back: 'Do rows ka sort value same ho sakta hai. Bina unique tie-breaker ke page boundary par rows <b>skip ya duplicate</b> ho jaati hain. Tie-breaker ordering ko TOTAL banata hai.' },
     { front: 'Cursor ke liye index?', back: '<code>(filter columns…, sort column, tie-breaker)</code> — bilkul isi kram mein. Warna DB phir bhi sort karega aur poora faayda chala jaayega.' },
-    { front: 'Cursor opaque kyun?', back: 'Kal <b>query strategy badal sako</b> bina clients tode. Saath hi user manmana cursor bana ke mehengi query trigger nahi kar sakta. (Base64 security nahi hai.)' },
+    { front: 'Cursor opaque kyun?', back: "Kal <b>query strategy badal sako</b> bina clients tode. Tamper protection, scope aur query bounds alag enforce karo; opacity ya Base64 alone security nahi." },
     { front: 'Cursor kab SAHI nahi?', back: 'Jab dataset chhota ho aur user ko sach mein random page access chahiye (admin tables). Cursor <b>deep</b> pagination ka ilaaj hai, har pagination ka nahi.' },
     { front: 'Legacy migration ke 5 kadam?', back: '1. next_cursor bhi bhejo 2. max page depth 3. page-depth metric 4. bade export ke liye async API 5. page hata do.' },
   ],
@@ -994,26 +935,16 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       questions: [
         {
           q: '"Har column par filter allow karte hain, flexible API hai" — problem?',
-          choices: [
-            'n columns = 2ⁿ combinations. Tum har ek ke liye index nahi bana sakte, isliye kuch combinations hamesha full scan karengi',
-            'Koi problem nahi, flexibility achhi hai',
-            'Sirf documentation lambi ho jaayegi',
-            'Client confuse ho jaayega',
-          ],
+          choices: ["Query combinations ka cost bound nahi","Har column index se combinations free","GraphQL se query cost automatically bound","Timeout se every filter fast ho jaaye"],
           answer: 0,
           explain: 'Yeh deep pagination wali hi bimari hai: <b>API ne ek mehenga sawaal poochhne ki ijaazat de di</b>. Aur combinatorics tumhare khilaf hai — 15 columns par 32,768 combinations hain. Allow-list hi ek raasta hai.',
-        },
+         choiceExplanations: ["Yeh deep pagination wali hi bimari hai: <b>API ne ek mehenga sawaal poochhne ki ijaazat de di</b>. Aur combinatorics tumhare khilaf hai — 15 columns par 32,768 combinations hain. Allow-list hi ek raasta hai.","Single-column indexes har sort/filter combination ko optimal nahi banate.","GraphQL arbitrary expensive resolvers allow kar sakta hai; limits chahiye.","Timeout damage limit karta hai; successful query performance fix nahi."] },
         {
-          q: '?fields=id,amount ka sabse bada performance faayda?',
-          choices: [
-            'Query covering index se poori ho sakti hai — table chhuna hi nahi padta, random row lookups bach jaate hain',
-            'Kam bytes network par jaate hain',
-            'JSON parse tez hota hai',
-            'Cache mein zyada entries aati hain',
-          ],
+          q: "?fields=id, amount projection ka possible performance faayda?",
+          choices: ["Payload kam; covering index possible","Projection se matching index create ho","Fields kam toh joins khud remove hon","Index-only scan har DB mein guaranteed"],
           answer: 0,
-          explain: 'Bytes bachana chhota faayda hai. Bada faayda yeh hai ki agar saare maange gaye columns index mein hain, toh DB <b>sirf index padh ke</b> jawab de deta hai — heap tak jaana hi nahi padta. Yeh aksar 2-3x tez hota hai.',
-        },
+          explain: "Projection payload/serialization kam karti hai. Matching covering index ho toh table lookups bach sakte hain; PostgreSQL index-only scan ko visibility map conditions bhi chahiye. Fields select karne se index-only execution guarantee nahi.",
+         choiceExplanations: ["Projection payload/serialization kam karti hai. Matching covering index ho toh table lookups bach sakte hain; PostgreSQL index-only scan ko visibility map conditions bhi chahiye. Fields select karne se index-only execution guarantee nahi.","Requested fields schema/index ko automatically change nahi karte.","Computed fields aur query semantics joins ko require kar sakti hain.","Coverage aur PostgreSQL visibility checks jaise conditions matter karti hain."] },
       ],
     },
   ],
@@ -1023,15 +954,10 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
     questions: [
       {
         q: '"Client bolta hai use har field par filter karna hai. Kya karoge?"',
-        choices: [
-          'Poochhunga ki asli use-case kaunse 3-4 filters hain. Un par index banake allow-list dunga. Sach mein arbitrary query chahiye toh search engine (Elasticsearch) ya alag analytics API — transactional API par nahi',
-          'Sab filters allow kar dunga, client ki zaroorat hai',
-          'GraphQL use kar lunga',
-          'Sab filters allow karke query timeout laga dunga',
-        ],
+        choices: ["Use cases se supported query budget banao","Har combination transaction DB par do","GraphQL se arbitrary search free karo","Sirf timeout se unconstrained API safe"],
         answer: 0,
         explain: 'Sahi jawab pehle <b>asli zaroorat</b> poochhta hai — aksar 20 "chahiye" wale filters mein se 3 hi use hote hain. Aur GraphQL isse theek nahi karta; woh wahi unbounded problem ek naye layer par le aata hai (isliye GraphQL mein query cost analysis hoti hai).',
-      },
+       choiceExplanations: ["Sahi jawab pehle <b>asli zaroorat</b> poochhta hai — aksar 20 \"chahiye\" wale filters mein se 3 hi use hote hain. Aur GraphQL isse theek nahi karta; woh wahi unbounded problem ek naye layer par le aata hai (isliye GraphQL mein query cost analysis hoti hai).","Arbitrary combinations hot OLTP resources saturate kar sakti hain.","Query language indexing, cost control aur authorization remove nahi karti.","Timeout useful safeguard hai; cost/rows/rate controls bhi chahiye."] },
     ],
   },
   success: [
@@ -1151,26 +1077,16 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       questions: [
         {
           q: 'Sabse chhupa hua breaking change kaunsa hai?',
-          choices: [
-            'Default behaviour badalna — jaise ?limit ka default 20 se 50 karna',
-            'Field hataana',
-            'Naya endpoint add karna',
-            'Error message ka text badalna',
-          ],
+          choices: ["Omitted parameter ka default badalna","Naya optional endpoint add karna","Documented limit ko unchanged rakhna","Optional response field append karna"],
           answer: 0,
           explain: 'Field hataana <b>saaf</b> breaking hai — sab jaante hain. Default badalna chhupa hua hai: client ka code bilkul waisa hi hai, request bilkul waisi hi hai, par behaviour badal gaya. Aisi bugs debug karna sabse mushkil hota hai.',
-        },
+         choiceExplanations: ["Field hataana <b>saaf</b> breaking hai — sab jaante hain. Default badalna chhupa hua hai: client ka code bilkul waisa hi hai, request bilkul waisi hi hai, par behaviour badal gaya. Aisi bugs debug karna sabse mushkil hota hai.","Independent additive endpoint existing request semantics nahi badalta.","Same documented limit preserve karna breaking change nahi.","Tolerant clients mein additive optional field normal compatible evolution hai."] },
         {
           q: 'Public API ke liye URL versioning ka sabse bada faayda?',
-          choices: [
-            'Debuggability — browser mein paste karo aur chal jaata hai, logs mein dikhta hai, CDN cache seedha kaam karta hai',
-            'Woh zyada RESTful hai',
-            'Woh kam bandwidth leta hai',
-            'Header versioning kaam hi nahi karta',
-          ],
+          choices: ["Version logs aur URL mein saaf dikhe","Header version cache nahi ho sakta","URL versioning bandwidth guarantee de","REST mein URL version mandatory rahe"],
           answer: 0,
           explain: 'Public API mein <b>developer experience</b> sabse zyada matter karta hai. <code>/v1/</code> dikhta hai, share hota hai, curl mein aasan hai, aur CDN ke liye URL hi cache key hai. Header versioning technically zyada elegant hai par practically zyada friction deta hai.',
-        },
+         choiceExplanations: ["Public API mein <b>developer experience</b> sabse zyada matter karta hai. <code>/v1/</code> dikhta hai, share hota hai, curl mein aasan hai, aur CDN ke liye URL hi cache key hai. Header versioning technically zyada elegant hai par practically zyada friction deta hai.","Vary/cache-key configuration se header-based variants cache ho sakte hain.","Version placement payload bytes/response latency guarantee nahi karta.","REST architectural constraints URL version segment mandate nahi karte."] },
       ],
     },
   ],
@@ -1180,26 +1096,16 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
     questions: [
       {
         q: '"Tumhe response ka ek field rename karna hai. Kaise karoge?"',
-        choices: [
-          'Naya field add karke DONO bhejunga, purane ko Deprecation/Sunset headers se mark karunga, usage metrics dekhunga, bache hue clients se baat karunga, phir hataunga',
-          'Rename karke changelog mein likh dunga',
-          'v2 bana dunga',
-          'Ek mahine ka notice de ke rename kar dunga',
-        ],
+        choices: ["Alias add; usage measure; retire by policy","Field rename ko silent patch release do","Month notice se all clients fixed maan lo","Response mein old field turant delete do"],
         answer: 0,
         explain: 'Yeh database ka <b>expand-contract</b> pattern hai, API par. v2 banana bhi kaam karega par bahut mehenga hai — ek field ke liye poora naya version maintain karna? Aur "changelog mein likh dunga" ka matlab hai ki tum production incident ka intezaar kar rahe ho.',
-      },
+       choiceExplanations: ["Yeh database ka <b>expand-contract</b> pattern hai, API par. v2 banana bhi kaam karega par bahut mehenga hai — ek field ke liye poora naya version maintain karna? Aur \"changelog mein likh dunga\" ka matlab hai ki tum production incident ka intezaar kar rahe ho.","Existing parsers old field expect karte hain; silent rename breaks contract.","Calendar notice adoption prove nahi; usage aur consumer coordination chahiye.","New name deploy hone se all old clients migrated nahi hote."] },
       {
         q: '"Kab v2 banaoge?"',
-        choices: [
-          'Jab itne breaking changes ek saath chahiye hon ki additive rasta bacha hi na ho — jaise poora resource model badalna. Ek-do fields ke liye kabhi nahi',
-          'Har bade release par',
-          'Saal mein ek baar',
-          'Jab bhi koi breaking change chahiye',
-        ],
+        choices: ["Incompatible contract version karo","Har calendar year naya API major do","Code refactor par public v2 zaroor do","Additive field par public v2 zaroor do"],
         answer: 0,
-        explain: 'Har version ek <b>hamesha ka maintenance boj</b> hai — v1 ko saalon tak chalana padega. Isliye versions ko "batch" karo: jab kai fundamental changes ikattha ho jaayein tab ek v2, warna sab kuch additive.',
-      },
+        explain: "Versioning API governance ka choice hai. Additive evolution possible na ho toh incompatible contract ke liye new version, parallel endpoint ya negotiated migration do. Ek field change ke liye bhi new version valid ho sakta hai; universal field-count rule nahi.",
+       choiceExplanations: ["Versioning API governance ka choice hai. Additive evolution possible na ho toh incompatible contract ke liye new version, parallel endpoint ya negotiated migration do. Ek field change ke liye bhi new version valid ho sakta hai; universal field-count rule nahi.","Calendar date user-visible incompatibility prove nahi karti.","Internal code change same contract preserve kar sakta hai.","Optional additive fields often existing version mein compatible hote hain."] },
     ],
   },
   success: [
@@ -1347,26 +1253,16 @@ Content-Type: application/{1}+json
     questions: [
       {
         q: '"Error response mein kya hona chahiye?"',
-        choices: [
-          'Sahi status code, stable machine code (client isi par switch kare), insaani message developers ke liye, kaunsa field galat tha, aur trace_id. Internal details kabhi nahi — woh logs mein',
-          'Error message aur stack trace',
-          'Bas ek error code',
-          'HTTP status kaafi hai',
-        ],
+        choices: ["Status; stable code; safe detail; trace ID","Raw stack aur database password do","Sirf arbitrary human string parse karao","Har error ko 200 success bana kar bhejo"],
         answer: 0,
         explain: 'Sabse achha jawab batata hai ki har hissa <b>kiske liye</b> hai: status → HTTP layer, code → client ka code, message → developer, field → UI, trace_id → support. Aur stack trace response mein bhejna security issue hai.',
-      },
+       choiceExplanations: ["Sabse achha jawab batata hai ki har hissa <b>kiske liye</b> hai: status → HTTP layer, code → client ka code, message → developer, field → UI, trace_id → support. Aur stack trace response mein bhejna security issue hai.","Internal details credentials/schema expose kar sakti hain.","Human wording change ho sakti hai; stable machine code chahiye.","False success retries, metrics aur client error handling confuse karta hai."] },
       {
         q: '"Ek user ne signup kiya par email already exists. Kya bhejoge?"',
-        choices: [
-          'Depends: agar API authenticated/internal hai toh 409 with /errors/email-taken. Agar public signup hai toh soch samajh ke — "email exists" batana user enumeration deta hai, isliye kai jagah generic message + email par confirmation bheja jaata hai',
-          '409 Conflict, hamesha',
-          '400 Bad Request',
-          '500 Internal Server Error',
-        ],
+        choices: ["Public signup mein enumeration risk dekho","Har caller ko email-exists detail do","Conflict ko internal 500 bana kar bhejo","Generic response se email ownership maan lo"],
         answer: 0,
         explain: 'Yeh jawab isliye achha hai ki woh <b>security tradeoff</b> pehchaanta hai. Public signup par "yeh email registered hai" batana attacker ko bata deta hai ki kaunse emails tumhare paas hain. Kai products isliye "hum ne email bhej diya" bolte hain chahe account ho ya na ho.',
-      },
+       choiceExplanations: ["Yeh jawab isliye achha hai ki woh <b>security tradeoff</b> pehchaanta hai. Public signup par \"yeh email registered hai\" batana attacker ko bata deta hai ki kaunse emails tumhare paas hain. Kai products isliye \"hum ne email bhej diya\" bolte hain chahe account ho ya na ho.","Detailed existence signal account enumeration enable kar sakta hai.","Expected conflict ko server defect kehna inaccurate contract hai.","Generic response alone email control verify nahi karta; confirmation flow chahiye."] },
     ],
   },
   success: [
@@ -1436,7 +1332,7 @@ client → POST /payments
      key alag amount ke saath bheji, toh yeh uska bug hai. Chup-chaap purana
      jawab lauta dena ek chhupa hua bug ban jaata hai — user ko lagega ₹100
      ka payment hua jabki ₹4,999 wala jawab mila.</p>
-     <p><b>4. TTL rakho — 24 ghante se 7 din.</b> Hamesha rakhne se table
+     <p><b>4. TTL documented retry/recovery window se choose karo.</b> Hamesha rakhne se table
      anant badhegi. Zyadatar payment providers 24h rakhte hain.</p>
      <h3>⚠️ Response bhi store karo, sirf key nahi</h3>
      <p>Replay par tumhe <b>wahi jawab</b> lautana hai jo pehli baar diya
@@ -1450,7 +1346,7 @@ client → POST /payments
       goal: 'Payments API par idempotency nahi hai. Pehle khud double charge banao, phir idempotency on karke prove karo ki ab nahi ho sakta.',
       sys: SD.sys.payments(),
       tasks: T_IDEM,
-      success: allOf(T_IDEM),
+      success: SD.allTasks(T_IDEM),
       successText: `Dhyaan do ki pehli do requests mein <b>do alag payment IDs</b> bane —
         yahi asli duniya ka double charge hai.
         <br><br>Idempotency on hone ke baad wahi key dobara bhejne par
@@ -1459,12 +1355,18 @@ client → POST /payments
         ban jaayegi), server use <b>unique constraint</b> ke saath store karta hai
         (app-level check race condition hai), aur <b>response bhi</b> store hota hai —
         sirf key nahi.`,
+      solution: [
+        "POST /v1/payments -H 'Idempotency-Key: pay-1'",
+        "POST /v1/payments -H 'Idempotency-Key: pay-1'",
+        "sim set api.idempotency true",
+        "POST /v1/payments -H 'Idempotency-Key: order-8812'",
+        "POST /v1/payments -H 'Idempotency-Key: order-8812'",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.idempotency === true && !!s.sys.seenKeys['order-8812'] && m.current(s, 'http', r => r.idem === 'replay' && r.key === 'order-8812'); },
       hints: [
-        "Bina protection ke ek payment: POST /v1/payments -H 'Idempotency-Key: pay-1'",
-        "Ab dobara wahi: POST /v1/payments -H 'Idempotency-Key: pay-1'",
-        'Ab protection on karo: sim set api.idempotency true',
-        "Key ke saath bhejo: POST /v1/payments -H 'Idempotency-Key: order-8812'",
-        "Aur wahi key phir se: POST /v1/payments -H 'Idempotency-Key: order-8812'",
+        "Pehle observation: Bina idempotency ke do baar POST karo — do charge ban jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Wahi key dobara bhejo — replay milna chahiye, naya charge nahi. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nPOST /v1/payments -H 'Idempotency-Key: pay-1'\nPOST /v1/payments -H 'Idempotency-Key: pay-1'\nsim set api.idempotency true\nPOST /v1/payments -H 'Idempotency-Key: order-8812'\nPOST /v1/payments -H 'Idempotency-Key: order-8812'",
       ],
     },
     {
@@ -1502,27 +1404,17 @@ client → POST /payments
       title: 'Idempotency ki samajh',
       questions: [
         {
-          q: 'Idempotency key server kyun nahi bana sakta?',
-          choices: [
-            'Kyunki retry par server nayi key banayega — aur woh retry ek naye request jaisa dikhega. Key ko RETRY ke paar zinda rehna hai, isliye client hi bana sakta hai',
-            'Server ke paas UUID library nahi hoti',
-            'Security ke liye',
-            'Server bana sakta hai, dono theek hai',
-          ],
+          q: "Idempotency key ki sabse zaroori property kya hai?",
+          choices: ["Retry par wahi operation identity bhejo","Har retry par fresh UUID bhejte raho","Server-issued stable key invalid hoti","Same payload ko operation ID maan lo"],
           answer: 0,
-          explain: 'Poora point yeh hai ki <b>doosri request pehli ki copy hai</b>. Yeh baat sirf client jaanta hai. Server ke liye dono bilkul alag requests hain — usne pehli ka jawab bheja hi nahi tha.',
-        },
+          explain: "Idempotency operation identity retries ke paar stable honi chahiye. Client UUID common hai; server bhi pehle stable operation/key issue kar sakta hai jise client reuse kare. Har retry par nayi key dene se deduplication tootegi.",
+         choiceExplanations: ["Idempotency operation identity retries ke paar stable honi chahiye. Client UUID common hai; server bhi pehle stable operation/key issue kar sakta hai jise client reuse kare. Har retry par nayi key dene se deduplication tootegi.","Fresh ID duplicate request ko new operation bana deti hai.","Server pehle stable operation ID issue kar sakta hai; client ko reuse karni hogi.","Same payload legitimate repeat payment bhi ho sakta hai; intent identity chahiye."] },
         {
           q: 'Key ko DB unique constraint se kyun store karte hain, app check se kyun nahi?',
-          choices: [
-            'Kyunki do retries theek ek saath aa sakti hain — app-level "check karke insert" dono ko pass kar dega. Sirf DB constraint atomic hai',
-            'DB tez hai',
-            'App code mein bug ho sakta hai',
-            'Constraint se index apne aap ban jaata hai',
-          ],
+          choices: ["Atomic uniqueness concurrent race roke","SELECT then INSERT race-free hota","Single process se retries overlap nahi","Fast DB se duplicate impossible hota"],
           answer: 0,
           explain: 'Yeh wahi <b>check-then-act</b> race hai jo Boundaries level mein thi. Aur yahan toh concurrency hi asli scenario hai — retries aksar ek saath aati hain (jaise jab network wapas aata hai). App check yahan bilkul bekaar hai.',
-        },
+         choiceExplanations: ["Yeh wahi <b>check-then-act</b> race hai jo Boundaries level mein thi. Aur yahan toh concurrency hi asli scenario hai — retries aksar ek saath aati hain (jaise jab network wapas aata hai). App check yahan bilkul bekaar hai.","Do requests SELECT mein absent dekhkar parallel INSERT kar sakti hain.","Async execution, multiple workers/restarts concurrency la sakte hain.","Speed correctness guarantee nahi; atomic constraint/conditional write chahiye."] },
       ],
     },
   ],
@@ -1532,26 +1424,16 @@ client → POST /payments
     questions: [
       {
         q: '"Payment API mein double charge kaise rokoge?"',
-        choices: [
-          'Idempotency-Key header — client har payment attempt ke liye ek UUID banata hai, server use unique constraint ke saath response ke SAATH store karta hai, aur dobara aane par wahi response lauta deta hai. Same key + alag body = 409',
-          'Client ko double click rokne bolunga',
-          'Payment ke baad button disable kar dunga',
-          'Database transaction use karunga',
-        ],
+        choices: ["Stable key aur atomic result-state rakho","Browser button se backend retry roko","Commit ke baad memory-only key rakho","Payment ke har retry ki new key banao"],
         answer: 0,
-        explain: 'UI-level fixes (button disable) network retry se nahi bachate — aur network retry hi asli wajah hai. Transaction bhi nahi bachata: do alag requests, do alag transactions. Poore jawab mein <b>client-generated key + unique constraint + stored response + 409 on mismatch</b> chaaron hone chahiye.',
-      },
+        explain: "Stable idempotency key ko atomic unique/conditional write se claim karo; payload hash, status aur result persist karo. In-progress/crash cases handle karo. Payment provider ke side effect ke liye provider key ya transactional recovery design bhi chahiye; conflict status documented contract-specific hai.",
+       choiceExplanations: ["Stable idempotency key ko atomic unique/conditional write se claim karo; payload hash, status aur result persist karo. In-progress/crash cases handle karo. Payment provider ke side effect ke liye provider key ya transactional recovery design bhi chahiye; conflict status documented contract-specific hai.","Network/retry/concurrent caller browser button ke bahar hain.","Crash/restart ke baad memory-only record lost; effect duplicate ho sakta hai.","New key provider ko new intent lag sakti hai."] },
       {
-        q: '"Key kitni der store karoge?"',
-        choices: [
-          '24 ghante se 7 din — retry window se lamba, par itna nahi ki table anant badhe. TTL ke baad cleanup job se hatao',
-          'Hamesha — safety ke liye',
-          '5 minute',
-          'Jab tak payment settle na ho',
-        ],
+        q: "Idempotency-key retention kaise choose karoge?",
+        choices: ["Documented retry window cover karo","Sab APIs par fixed 5 minute TTL do","Settle hote hi retry identity hata do","Table size bina policy forever badhao"],
         answer: 0,
-        explain: 'Sochne ka tareeka: <b>retry window se lamba, par bounded</b>. Koi client 3 din baad retry nahi karega. Hamesha rakhne se table lagataar badhegi aur us par unique index bhi. Zyadatar payment providers 24 ghante rakhte hain.',
-      },
+        explain: "Retention longest supported retry/recovery window ko cover kare; TTL API/business contract se choose karo. Expiry ke baad same key new operation ho sakti hai. Long-lived business uniqueness aur storage/privacy requirements alag define karo;24 hours universal rule nahi.",
+       choiceExplanations: ["Retention longest supported retry/recovery window ko cover kare; TTL API/business contract se choose karo. Expiry ke baad same key new operation ho sakti hai. Long-lived business uniqueness aur storage/privacy requirements alag define karo;24 hours universal rule nahi.","Late retries/recovery window API-specific hai; fixed 5 min insufficient ho sakta hai.","Settlement ke baad delayed retry bhi aa sakti hai; contract window matter karti hai.","Retention safety, privacy, storage aur durable business ID tradeoffs define karo."] },
     ],
   },
   success: [
@@ -1568,7 +1450,7 @@ client → POST /payments
     { front: 'Key kaun banata hai?', back: '<b>Client.</b> Server banayega toh retry par nayi key ban jaayegi. Key ko retry ke paar zinda rehna hai — yeh sirf client jaanta hai.' },
     { front: 'Key kaise store karein?', back: '<b>DB unique constraint</b> — <code>INSERT ... ON CONFLICT</code>. App-level check race condition hai, aur concurrency hi asli scenario hai. <b>Response bhi store karo</b>, sirf key nahi.' },
     { front: 'Same key, alag body?', back: '<b>409 Conflict.</b> Chup-chaap purana jawab lautana chhupa hua bug hai — client sochega uska naya request safal hua.' },
-    { front: 'Key ka TTL?', back: '<b>24 ghante se 7 din</b> — retry window se lamba par bounded. Hamesha rakhne se table aur uska unique index anant badhenge.' },
+    { front: 'Key ka TTL?', back: "<b>Supported retry/recovery window ko cover karo.</b>24 hours ya 7 days examples hain, universal rule nahi. Hamesha rakhne se table aur uska unique index anant badhenge." },
   ],
 },
 
@@ -1638,17 +1520,23 @@ ratelimit-reset: 3</pre>
       goal: 'Ek public API bina rate limit ke chal rahi hai. Burst bhej ke dekho ki kuch nahi rokta, phir token bucket lagao aur 429 khaao.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_RL,
-      success: allOf(T_RL),
+      success: SD.allTasks(T_RL),
       successText: `Dhyaan do ki 429 ke saath <code>retry-after</code> aur
         <code>ratelimit-*</code> headers bhi aaye.
         <br><br>Woh headers optional nahi hain: <b>Retry-After ke bina client turant
         dobara maarega</b> — aur tumne rate limit lagayi hi isliye thi ki na maare.
         Achhe clients toh <code>ratelimit-remaining</code> dekh ke pehle hi dheeme
         ho jaate hain, 429 tak pahunchte hi nahi.`,
+      solution: [
+        "GET /api/v1/transactions -n 200",
+        "sim add ratelimit --rps 100 --burst 150",
+        "GET /api/v1/transactions -n 300",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 150 && m.current(s, 'http', r => r.status === 429 && r.blocked > 0); },
       hints: [
-        'Pehle bina limit ke burst: GET /api/v1/transactions -n 200',
-        'Ab bucket lagao: sim add ratelimit --rps 100 --burst 150',
-        'Aur dobara burst maaro: GET /api/v1/transactions -n 300',
+        "Pehle observation: Bina limit ke burst bhejo — sab 200 milega. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab burst bhejo aur 429 khaao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions -n 200\nsim add ratelimit --rps 100 --burst 150\nGET /api/v1/transactions -n 300",
       ],
     },
     {
@@ -1659,7 +1547,7 @@ ratelimit-reset: 3</pre>
         { left: '🏢 Ek office ke 500 log, ek IP', right: 'API key/user par limit — IP par nahi', explain: 'IP par limit asli users ko rokti hai. Attacker ke paas toh 500 IP hote hain — usko rokti bhi nahi.' },
         { left: '📊 POST /reports 8 second leta hai', right: 'Weighted limiting — 50 tokens', explain: 'Saari requests barabar nahi. Mehenge endpoints zyada tokens lein, warna 100 report calls tumhe gira dengi.' },
         { left: '⏰ "Per minute 6000" limit', right: 'Border par 12,000 aa sakte hain — sliding window ya token bucket lo', explain: 'Fixed window ka classic jaal: 10:00:59 par 6000 aur 10:01:00 par 6000.' },
-        { left: '🔴 Redis (counter store) down ho gaya', right: 'Fail OPEN — requests allow karo', explain: 'Rate limiter ek suraksha hai, product nahi. Uski kharabi se poora product nahi girna chahiye.' },
+        { left: '🔴 Redis (counter store) down ho gaya', right: 'Risk ke hisaab se degraded quota ya fail-closed', explain: 'Fail-open availability preserve kar sakta hai,par abuse/payment/cost-sensitive routes ko bounded local policy ya fail-closed chahiye. Default product risk se choose/test karo.' },
         { left: '📱 App khulte hi 30 API calls', right: 'Token bucket with burst — yeh normal hai', explain: 'Asli users burst mein aate hain. Strict per-second limit legitimate traffic ko todegi.' },
         { left: '🤖 Client 429 ke baad turant dobara maar raha hai', right: 'Retry-After header bhejo', explain: 'Iske bina client ko pata hi nahi kab try kare. Yeh ek header retry storm rokta hai.' },
       ],
@@ -1682,26 +1570,16 @@ ratelimit-reset: 3</pre>
     questions: [
       {
         q: '"Rate limiting design karo — kaunsa algorithm aur kis par?"',
-        choices: [
-          'Token bucket (burst allow karta hai, jo asli traffic ka shape hai), API key par — IP sirf anonymous endpoints ke liye. Counter Redis mein shared, aur Redis down ho toh fail open',
-          'Fixed window counter, IP par',
-          'Har request ke beech minimum gap enforce karunga',
-          'Nginx ka default rate limit laga dunga',
-        ],
+        choices: ["Identity quota; algorithm; failure policy","IP-only quota har logged-in user par","Redis-down par har route fail-open","Fixed gap se every valid burst reject"],
         answer: 0,
-        explain: 'Achha jawab teen cheezein cover karta hai: <b>algorithm + kyun</b> (burst = asli traffic shape), <b>key</b> (API key, IP nahi), aur <b>failure mode</b> (Redis down = fail open). Aakhri wala sabse zyada seniority dikhata hai.',
-      },
+        explain: "Algorithm traffic shape se choose karo; token bucket bounded burst ke liye common hai. Quota authenticated identity/tenant par, anonymous cases mein IP supplementary. Shared state consistency aur limiter-down fail-open/fail-closed policy risk/SLO se choose karo; Redis fail-open universal nahi.",
+       choiceExplanations: ["Algorithm traffic shape se choose karo; token bucket bounded burst ke liye common hai. Quota authenticated identity/tenant par, anonymous cases mein IP supplementary. Shared state consistency aur limiter-down fail-open/fail-closed policy risk/SLO se choose karo; Redis fail-open universal nahi.","NAT shared IP users ko couple karta hai; identity/business quota choose karo.","Payment/security-sensitive routes fail-closed/load-shed require kar sakte hain.","Token bucket bounded bursts allow karta hai; policy traffic shape se choose karo."] },
       {
         q: '"429 ke saath kya bhejoge?"',
-        choices: [
-          'Retry-After (kab try karein), ratelimit-limit/remaining/reset (client pehle hi dheema ho sake), aur ek stable error code. Iske bina client turant dobara maarega',
-            'Bas 429 status code',
-          '429 aur ek error message',
-          '503 bhejunga taaki client retry kare',
-        ],
+        choices: ["Retry guidance aur stable quota detail","429 se every SDK backoff guarantee","503 se client quota error chhupao","Remaining count ko unlimited bol do"],
         answer: 0,
-        explain: '<code>Retry-After</code> sabse zaroori hai — uske bina rate limit ka aadha maqsad khatam. Aur <code>ratelimit-remaining</code> se achhe clients 429 tak pahunchte hi nahi; woh pehle hi apni speed kam kar lete hain. Yeh <b>cooperative</b> design hai.',
-      },
+        explain: "429 caller rate-limit response mein applicable Retry-After aur documented quota/reset information do; stable machine-readable error rakho. Exact quota header field names contract/standard version par depend hain. Client ko jitter/backoff aur deadline respect karna hoga.",
+       choiceExplanations: ["429 caller rate-limit response mein applicable Retry-After aur documented quota/reset information do; stable machine-readable error rakho. Exact quota header field names contract/standard version par depend hain. Client ko jitter/backoff aur deadline respect karna hoga.","Clients ko explicit Retry-After/backoff policy chahiye; status alone enough nahi.","429 caller quota semantics hai;503 temporary service unavailability ka.","False quota data client planning aur retry coordination bigaadta hai."] },
     ],
   },
   success: [
@@ -1718,7 +1596,7 @@ ratelimit-reset: 3</pre>
     { front: 'Fixed window ka jaal?', back: '"Per minute 6000" par <b>border ke aar-paar 12,000</b> aa sakte hain (10:00:59 + 10:01:00). Sliding window ya token bucket lo.' },
     { front: 'Limit kis par?', back: '<b>API key / user id</b> par. IP par limit ek office ke 500 logon ko rokti hai, aur 500 IP wale attacker ko nahi rokti. IP sirf anonymous endpoints par.' },
     { front: '429 ke saath kya?', back: '<code>Retry-After</code> (laazmi) + <code>ratelimit-limit/remaining/reset</code>. Iske bina client turant dobara maarega — jo poora maqsad hi tod deta hai.' },
-    { front: 'Rate limiter ka store down ho toh?', back: '<b>Fail OPEN</b> — requests allow karo. Rate limiter ek suraksha hai, product nahi; uski kharabi se product nahi girna chahiye.' },
+    { front: 'Rate limiter ka store down ho toh?', back: 'Risk-based failure policy:bounded local limit,explicit fail-open ya fail-closed. Security/financial abuse-sensitive endpoints ko unavailable quota store par unlimited access mat do.' },
   ],
 },
 
@@ -1768,11 +1646,11 @@ POST /payments                      (koi idempotency key nahi)
           id: 'list', label: 'History endpoint', icon: '📄',
           note: 'Transaction list kaise dogey?',
           options: [
-            { id: 'page', label: 'GET /transactions?page=N&limit=50', score: -3,
+            { id: 'page', label: "GET with bounded page/limit", score: -3,
               why: 'Deep offset. Page 4,85,728 par DB ko 2.4 crore rows padh ke phenkni padengi — 7 second, ek connection bandhak, aur buffer pool trash.' },
-            { id: 'cursor', label: 'GET /transactions?cursor=<opaque>&limit=50', score: 3,
+            { id: 'cursor', label: "GET with opaque cursor/limit", score: 3,
               why: 'Keyset pagination. Har page ka cost same — ek seek + 50 rows. Opaque cursor se tum baad mein query strategy badal sakte ho.' },
-            { id: 'both', label: 'Dono: cursor + page (max depth 1000)', score: 2,
+            { id: 'both', label: "Dual API;cap legacy page depth", score: 2,
               why: 'Migration ke DAURAN sahi hai — purane clients chalte rahenge aur nuksaan bounded hai. Par yeh manzil nahi, raasta hai.' },
           ],
         },
@@ -1780,11 +1658,11 @@ POST /payments                      (koi idempotency key nahi)
           id: 'total', label: '"total" field', icon: '🧮',
           note: 'UI ko "1-50 of 24,286,450" dikhana hai',
           options: [
-            { id: 'exact', label: 'Har response mein exact COUNT(*)', score: -3,
+            { id: 'exact', label: "Fresh exact COUNT each response", score: -3,
               why: 'Har request par ek poora COUNT(*) — 24M rows par ~2.7 s. LIMIT ise nahi rokta. Yeh akela hi SLO tod dega.' },
-            { id: 'hasmore', label: 'Sirf has_more: true', score: 3,
+            { id: 'hasmore', label: "Bounded has_more plus next cursor", score: 3,
               why: 'Twitter, Slack, Gmail — koi exact total nahi dikhata. Sabse sasta aur 95% cases mein kaafi.' },
-            { id: 'approx', label: 'Approximate count (cached / reltuples)', score: 2,
+            { id: 'approx', label: "Cached approximate total count", score: 2,
               why: 'Agar product ko sach mein number chahiye toh yeh sahi samjhauta hai. "About 24 million" aur "24,286,450" mein user ko koi farak nahi.' },
           ],
         },
@@ -1792,11 +1670,11 @@ POST /payments                      (koi idempotency key nahi)
           id: 'pay', label: 'POST /payments', icon: '💳',
           note: 'Mobile app network drop par retry karta hai',
           options: [
-            { id: 'plain', label: 'Plain POST', score: -3,
+            { id: 'plain', label: "Plain POST with no operation ID", score: -3,
               why: 'Network timeout par client retry karega aur DOOSRA charge ban jaayega. Client jaan hi nahi sakta ki request pahunchi thi ya jawab kho gaya.' },
-            { id: 'idem', label: 'POST + Idempotency-Key (client-generated)', score: 3,
+            { id: 'idem', label: "POST with stable idempotency key", score: 3,
               why: 'Sahi. Server key ko unique constraint ke saath response ke SAATH store kare, aur dobara aane par wahi response lauta de.' },
-            { id: 'dedupe', label: 'Server body ka hash banake dedupe kare', score: -1,
+            { id: 'dedupe', label: "Hash body as operation identity", score: -1,
               why: 'Toota hua: do alag users theek same amount bhej sakte hain — woh do jaayaz payments hain, duplicate nahi. Key client ko banani hi hogi.' },
           ],
         },
@@ -1804,11 +1682,11 @@ POST /payments                      (koi idempotency key nahi)
           id: 'bulk', label: 'Partner ka bulk export', icon: '📦',
           note: 'Roz raat ko poora data chahiye',
           options: [
-            { id: 'biglimit', label: 'limit=100000 allow kar do', score: -3,
+            { id: 'biglimit', label: "One huge synchronous response", score: -3,
               why: 'Ek request poori memory kha jaayegi, ek connection ghanton block karegi, aur timeout par partner poora retry karega.' },
-            { id: 'job', label: 'Async export job — 202 + status URL + file link', score: 3,
+            { id: 'job', label: "Async export;status and download", score: 3,
               why: 'Bade exports sync API par hone hi nahi chahiye. Job banao, background mein file banao, download link do. Yeh sync API ko poori tarah bacha leta hai.' },
-            { id: 'cursorbulk', label: 'Wahi cursor API, unhe loop karne do', score: 1,
+            { id: 'cursorbulk', label: "Existing cursor API in a loop", score: 1,
               why: 'Chal jaayega aur bounded bhi hai — par 2.4 crore rows ke liye 4.8 lakh requests. Rate limit ke saath ghanton lagenge. Export job behtar hai.' },
           ],
         },
@@ -1816,11 +1694,11 @@ POST /payments                      (koi idempotency key nahi)
           id: 'err', label: 'Error format', icon: '🚨',
           note: 'Client ko pata chalna chahiye ab kya karna hai',
           options: [
-            { id: 'always200', label: '200 + { "error": "..." }', score: -3,
+            { id: 'always200', label: "200 with an error body", score: -3,
               why: 'Status jhooth bol raha hai. Har HTTP client, retry library aur monitoring tool ko lagega sab theek hai. Yeh silent failures banata hai.' },
-            { id: 'problem', label: 'Sahi status + problem+json (type, detail, trace_id)', score: 3,
+            { id: 'problem', label: "Status plus problem+json details", score: 3,
               why: 'Client stable `type` par switch kar sakta hai, UI field-level error dikha sakta hai, aur support trace_id se seedha logs mein ja sakta hai.' },
-            { id: 'code', label: 'Sahi status + ek custom error code', score: 1,
+            { id: 'code', label: "Status plus stable custom code", score: 1,
               why: 'Bura nahi — status aur code dono hain. Par trace_id aur field-level details ke bina debugging aur form UX dono mushkil rahenge.' },
           ],
         },
@@ -1828,17 +1706,17 @@ POST /payments                      (koi idempotency key nahi)
           id: 'rl', label: 'Rate limiting', icon: '🚦',
           note: 'Partner sync raat ko bahut traffic bhejta hai',
           options: [
-            { id: 'none', label: 'Koi limit nahi — partner bharosemand hai', score: -3,
+            { id: 'none', label: "No per-partner quota needed", score: -3,
               why: 'Ek buggy retry loop ya galti se do baar chala sync poora product gira dega. "Bharosemand client" ek architecture decision nahi hai.' },
-            { id: 'ip', label: 'IP par 1000 rpm', score: -1,
+            { id: 'ip', label: "IP-only fixed request limit", score: -1,
               why: 'IP galat key hai: ek office ke 500 log ek IP se aate hain, aur attacker ke paas 500 IP hote hain. Aur mehengi requests sasti jaisi hi gini jaayengi.' },
-            { id: 'weighted', label: 'API key par token bucket + weighted cost + Retry-After', score: 3,
+            { id: 'weighted', label: "Identity quota with cost budget", score: 3,
               why: 'Sahi key (API key), sahi shape (burst allowed), sahi cost model (export mehenga), aur client ko batata hai ki kab dobara aaye.' },
           ],
         },
       ],
       verdicts: {
-        great: 'Har decision production-grade hai. Yeh API 2.4 crore rows par bhi predictable rahegi aur double charge kabhi nahi karegi.',
+        great: 'Har decision production-grade hai. Design bounded queries aur safe retry intent ki direction mein hai;real capacity,crash recovery aur external payment idempotency test karna baaki hai.',
         ok: 'Design theek hai, par ek-do jagah tumne apne aap ko future incident de diya hai. Neeche tradeoffs dekho.',
         bad: 'Yeh API pehle bade partner sync par gir jaayegi. Har option ka "why" padho — asli seekh wahi hai.',
       },
@@ -1849,21 +1727,30 @@ POST /payments                      (koi idempotency key nahi)
       goal: 'Ab poore track ko ek mission mein lagao — deep offset ka dard dikhao, sahi index banao, cursor par shift karo, guards lagao, aur rate limit chalu karo.',
       sys: SD.sys.txn({ api: { countTotal: true } }),
       tasks: T_BOSS_API,
-      success: allOf(T_BOSS_API),
+      success: SD.allTasks(T_BOSS_API),
       successText: `Ek line mein poora track:
         <br><br><b>Achhi API woh hai jiska naam guess kiya ja sake, jiski cost bounded ho,
         jiske errors actionable hon, aur jise surakshit retry kiya ja sake.</b>
         <br><br>Tumne aaj chaaron kiye: cursor se cost bounded ki, guards se mehenge sawaal band kiye,
         <code>total</code> hata ke chhupa hua COUNT(*) nikala, aur rate limit se ek client ko sab
         kuch kha jaane se roka.`,
+      solution: [
+        "GET /api/v1/transactions?page=485728&limit=50",
+        "CREATE INDEX ix_keyset ON transactions(created_at, id)",
+        "sim set api.countTotal false",
+        "sim set api.pagination cursor",
+        "GET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50",
+        "sim set api.maxLimit 100",
+        "sim add ratelimit --rps 100 --burst 150",
+        "GET /api/v1/transactions?limit=1000",
+        "GET /api/v1/transactions?page=485728&limit=50",
+        "GET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50 -n 300",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.countTotal === false && s.sys.api.pagination === 'cursor' && s.sys.api.maxLimit === 100 && s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 150 && m.index(s, 'transactions', ['created_at', 'id']) && m.current(s, 'http', r => r.guard === 'maxLimit') && m.current(s, 'http', r => r.guard === 'noPage') && m.current(s, 'http', r => r.status === 429 && r.blocked > 0); },
       hints: [
-        'Dard dikhao: GET /api/v1/transactions?page=485728&limit=50',
-        'Sahi index: CREATE INDEX ix_keyset ON transactions(created_at, id)',
-        'total ka chhupa hua COUNT hatao: sim set api.countTotal false',
-        'Cursor par shift: sim set api.pagination cursor',
-        'Aur maango: GET /api/v1/transactions?cursor=eyJ0IjoxfQ&limit=50',
-        'Limit baandho: sim set api.maxLimit 100',
-        'Rate limit: sim add ratelimit --rps 100 --burst 150',
+        "Pehle observation: Deep offset ka dard dikhao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Rate limit lagao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=485728&limit=50\nCREATE INDEX ix_keyset ON transactions(created_at, id)\nsim set api.countTotal false\nsim set api.pagination cursor\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50\nsim set api.maxLimit 100\nsim add ratelimit --rps 100 --burst 150\nGET /api/v1/transactions?limit=1000\nGET /api/v1/transactions?page=485728&limit=50\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50 -n 300",
       ],
     },
   ],
@@ -1873,26 +1760,16 @@ POST /payments                      (koi idempotency key nahi)
     questions: [
       {
         q: '"Ek line mein — achhi API kya hai?"',
-        choices: [
-          'Jiska naam guess kiya ja sake, jiski cost bounded ho, jiske errors actionable hon, aur jise surakshit retry kiya ja sake',
-          'Jo REST standard follow kare',
-          'Jo tez ho',
-          'Jiski documentation achhi ho',
-        ],
+        choices: ["Predictable; bounded; actionable; retry-safe","REST naam se correctness guaranteed","Low median se contract automatically good","Docs se unbounded cost acceptable"],
         answer: 0,
         explain: 'Chaaron cheezein alag khatre se bachati hain: <b>guessable</b> (developer experience), <b>bounded cost</b> (production survival), <b>actionable errors</b> (client behaviour), <b>safe retry</b> (correctness). Documentation zaroori hai — par achhi API ko uski utni zaroorat hi nahi padti.',
-      },
+       choiceExplanations: ["Chaaron cheezein alag khatre se bachati hain: <b>guessable</b> (developer experience), <b>bounded cost</b> (production survival), <b>actionable errors</b> (client behaviour), <b>safe retry</b> (correctness). Documentation zaroori hai — par achhi API ko uski utni zaroorat hi nahi padti.","Architectural style validation, authorization aur retry semantics guarantee nahi.","Tail, cost, compatibility aur failures bhi contract ka hissa hain.","Documentation expensive/unbounded work ko operationally safe nahi banati."] },
       {
         q: '"Tumhare paas ek endpoint hai jispar ek partner roz 2.4 crore rows sync karta hai. Kya karoge?"',
-        choices: [
-          'Use sync API se hatakar async export job par lunga — 202 + status URL + file download. Sync list API bade exports ke liye bani hi nahi hai',
-          'Uske liye limit badha dunga',
-          'Uske liye alag replica de dunga',
-          'Cursor pagination par loop karne bolunga',
-        ],
+        choices: ["Snapshot export aur resumable status do","One request mein 24 million rows bhejo","Replica se unlimited response memory do","Every page fresh ho; consistent export bolo"],
         answer: 0,
         explain: 'Yeh <b>sahi tool</b> ka sawaal hai. Sync list API interactive browsing ke liye hai. 2.4 crore rows ka bulk transfer ek batch job hai — usse ek HTTP request cycle mein daalne ki koshish hamesha timeouts, retries aur memory problems degi. (Cursor loop bhi chal jaayega par 4.8 lakh requests lagenge.)',
-      },
+       choiceExplanations: ["Yeh <b>sahi tool</b> ka sawaal hai. Sync list API interactive browsing ke liye hai. 2.4 crore rows ka bulk transfer ek batch job hai — usse ek HTTP request cycle mein daalne ki koshish hamesha timeouts, retries aur memory problems degi. (Cursor loop bhi chal jaayega par 4.8 lakh requests lagenge.)","Huge response timeout, memory aur restart cost laati hai.","Replica DB load isolate kar sakti hai; response size bound phir bhi chahiye.","Mutating source par independent fresh pages consistent snapshot guarantee nahi."] },
     ],
   },
   success: [
@@ -1975,8 +1852,8 @@ GET /api/v1/transactions?user_id=8      ← "...ab main user 8 hoon" 😈</pre>
     `<h3>🔬 JWT vs Server Session</h3>
      <table>
        <tr><th></th><th>JWT (self-contained)</th><th>Server session</th></tr>
-       <tr><td>Verify karne mein</td><td>✅ sirf signature check — koi DB call nahi</td><td>❌ har request par store lookup</td></tr>
-       <tr><td>Turant revoke</td><td>❌ <b>nahi ho sakta</b> — token expire hone tak valid hai</td><td>✅ row delete karo, khatam</td></tr>
+       <tr><td>Verify karne mein</td><td>✅ local signature + issuer/audience/time validation possible; policy may add state checks</td><td>❌ har request par store lookup</td></tr>
+       <tr><td>Turant revoke</td><td>⚠️ pure local signature/expiry checks mein expiry tak valid; immediate revoke ko deny list/introspection/version policy chahiye</td><td>✅ row delete karo, khatam</td></tr>
        <tr><td>Size</td><td>~800 bytes, har request ke saath</td><td>~40 bytes (bas ek id)</td></tr>
        <tr><td>Scale</td><td>✅ stateless — koi bhi node verify kar le</td><td>⚠️ shared store (Redis) chahiye</td></tr>
        <tr><td>Data purana ho jaana</td><td>❌ role token ke andar chhap gaya hai</td><td>✅ hamesha taaza</td></tr>
@@ -1985,8 +1862,7 @@ GET /api/v1/transactions?user_id=8      ← "...ab main user 8 hoon" 😈</pre>
      <pre>access token   JWT, umar 5–15 minute      ← har request iske saath
 refresh token  opaque, server ke paas,     ← sirf naya access token lene ke liye
                umar 30 din, REVOKE ho sakta hai</pre>
-     <p>Ab "revoke nahi kar sakte" ki khidki sirf 15 minute ki hai — aur woh aksar
-     kaafi hoti hai. User ko ban karo → refresh token delete → 15 min mein woh bahar.</p>
+     <p>Given 15-minute access token aur no immediate revocation check, refresh credential revoke karne ke baad existing access expiry tak valid reh sakta hai. Sensitive products ko deny list, token version ya introspection se shorter revoke window chahiye. 5–15 minute aur 30-day refresh duration examples hain; theft risk, rotation aur client recovery se policy choose karo.</p>
      <h3>🎯 Default-deny</h3>
      <p>Sabse mehengi auth bug "galat rule" nahi hoti — <b>bhool jaana</b> hoti hai.
      Koi naya endpoint bana deta hai aur auth lagana bhool jaata hai. Ilaaj: framework
@@ -2036,19 +1912,25 @@ GET  /v1/admin/users         ← token + role=admin</pre>
         api: { auth: null, countTotal: false, pagination: 'cursor' },
       }),
       tasks: T_AUTH,
-      success: allOf(T_AUTH),
+      success: SD.allTasks(T_AUTH),
       successText: `Tumne API ki sabse aam vulnerability apne haath se banayi aur band ki.
         Yaad rakho: <b>identity token se, scope token se, ownership check har resource par.</b>
         Aur 401 ≠ 403 — client dono ka bilkul alag matlab nikaalta hai.`,
+      solution: [
+        "GET /api/v1/transactions?user_id=8&limit=5",
+        "sim set api.auth body",
+        "GET /api/v1/transactions?user_id=8&limit=5",
+        "sim set api.auth header",
+        "GET /api/v1/transactions?limit=5",
+        "GET /api/v1/transactions?limit=5 -H 'Authorization: Bearer expired'",
+        "GET /api/v1/transactions?user_id=7&limit=5 -H 'Authorization: Bearer u7'",
+        "GET /api/v1/transactions?user_id=8&limit=5 -H 'Authorization: Bearer u7'",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.auth === 'header' && m.current(s, 'http', r => r.status === 403 && r.actedAs === '7' && r.claimed === '8'); },
       hints: [
-        "Pehle bina auth ke kisi aur ka data maango: GET /api/v1/transactions?user_id=8&limit=5",
-        "Ab identity request se lene lago: sim set api.auth body",
-        "Aur kisi aur ban jao: GET /api/v1/transactions?user_id=8&limit=5",
-        "Ab sahi tareeka: sim set api.auth header",
-        "Bina token bhejo: GET /api/v1/transactions?limit=5",
-        "Expired token: GET /api/v1/transactions?limit=5 -H 'Authorization: Bearer expired'",
-        "Apna token, apna data: GET /api/v1/transactions?user_id=7&limit=5 -H 'Authorization: Bearer u7'",
-        "Apna token, DOOSRE ka data: GET /api/v1/transactions?user_id=8&limit=5 -H 'Authorization: Bearer u7'",
+        "Pehle observation: Bina kisi auth ke kisi aur user ka data maango — dekho, mil jaata hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Apne token se KISI AUR ka data maango — 403 aana chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?user_id=8&limit=5\nsim set api.auth body\nGET /api/v1/transactions?user_id=8&limit=5\nsim set api.auth header\nGET /api/v1/transactions?limit=5\nGET /api/v1/transactions?limit=5 -H 'Authorization: Bearer expired'\nGET /api/v1/transactions?user_id=7&limit=5 -H 'Authorization: Bearer u7'\nGET /api/v1/transactions?user_id=8&limit=5 -H 'Authorization: Bearer u7'",
       ],
     },
     {
@@ -2059,7 +1941,7 @@ GET  /v1/admin/users         ← token + role=admin</pre>
         { q: 'Identity kis cheez se nikalni chahiye?', target: 'token', explain: 'Sirf verified token se. Query param, body field, ya koi bhi <code>X-User-Id</code> jo client bhej sakta hai — sab jhooth bol sakte hain.' },
         { q: 'Kaunsa hissa client jhooth bol ke bhar sakta hai?', target: 'spoof', explain: 'Query aur body — dono poori tarah client ke kaabu mein hain. Yahan se identity lena hi IDOR ki jad hai.' },
         { q: 'Ownership check kahan hona chahiye?', target: 'own', explain: 'Service ke andar, <b>har resource par</b>. Gateway sirf "token valid hai" bata sakta hai; "yeh order <b>iska</b> hai" sirf woh service jaanti hai jiske paas data hai.' },
-        { q: 'Access token ki umar chhoti kyun rakhte hain?', target: 'short', explain: 'Kyunki JWT ko beech mein revoke nahi kar sakte. Chhoti umar = chori hue token ki khidki chhoti. Lambi umar ka kaam refresh token karta hai, jo revoke ho sakta hai.' },
+        { q: 'Access token ki umar chhoti kyun rakhte hain?', target: 'short', explain: "Pure signature/expiry-only validation revoked user ko expiry tak allow kar sakti hai. Short access lifetime exposure bound karti hai; immediate revocation ko stateful policy chahiye. Refresh credentials ko protected storage, rotation aur revocation chahiye." },
       ],
     },
     {
@@ -2068,37 +1950,22 @@ GET  /v1/admin/users         ← token + role=admin</pre>
       questions: [
         {
           q: 'Gateway ne token verify kar liya. Ab service ke andar aur kya check karna zaroori hai?',
-          choices: [
-            'Ownership — kya yeh resource sach mein isi user ka hai',
-            'Kuch nahi, gateway ne kaam kar diya',
-            'Token dobara verify karna',
-            'Rate limit',
-          ],
+          choices: ["Resource ownership aur action authorize","JWT valid toh har order return karo","Path ID se caller identity trust karo","Frontend hidden button ko permission maano"],
           answer: 0,
           explain: 'Gateway sirf <b>authentication</b> karta hai — "token asli hai, yeh user 7 hai". Par "order #9912 user 7 ka hai ya nahi" — yeh sirf orders service jaanti hai, kyunki data uske paas hai. Yeh check chhootna hi sabse aam data leak hai.',
-        },
+         choiceExplanations: ["Gateway sirf <b>authentication</b> karta hai — \"token asli hai, yeh user 7 hai\". Par \"order #9912 user 7 ka hai ya nahi\" — yeh sirf orders service jaanti hai, kyunki data uske paas hai. Yeh check chhootna hi sabse aam data leak hai.","Authentication identity hai; object-level authorization alag invariant hai.","Client-controlled resource ID owner identity prove nahi karta.","Direct API caller UI controls bypass kar sakta hai."] },
         {
-          q: 'Ek user ko turant block karna hai. Tum pure JWT use kar rahe ho jiski umar 24 ghante hai. Kya hoga?',
-          choices: [
-            'Woh 24 ghante tak andar rahega — JWT self-contained hai, server use "wapas" nahi le sakta',
-            'Agli request par block ho jaayega',
-            'JWT delete kar denge',
-            'Signature key badal denge, bas',
-          ],
+          q: "24 hour JWT sirf signature/exp se validate hota hai; revocation check nahi. User block karne par?",
+          choices: ["No revocation: valid till expiry","Logout se all copies ki JWT delete","Pure JWT se immediate revoke automatic","Key rotate se sirf ek user block"],
           answer: 0,
-          explain: 'Yahi JWT ka sabse bada tradeoff hai. Token ke andar hi sab likha hai, isliye server bina DB dekhe verify karta hai — <b>aur isi wajah se</b> use beech mein cancel nahi kar sakta. (Signature key badalna kaam karega par woh <b>sabko</b> logout kar dega.) Practical hal: access token 15 min ka + revocable refresh token.',
-        },
+          explain: "Agar validation sirf 24 hour JWT signature/exp par hai aur revocation/deny list/introspection check nahi, toh user token expiry tak access rakh sakta hai. Short-lived tokens, stateful revocation, token version ya emergency key rotation ke tradeoffs alag hain.",
+         choiceExplanations: ["Agar validation sirf 24 hour JWT signature/exp par hai aur revocation/deny list/introspection check nahi, toh user token expiry tak access rakh sakta hai. Short-lived tokens, stateful revocation, token version ya emergency key rotation ke tradeoffs alag hain.","Logout client copy hata sakta hai; stolen token signature abhi valid hai.","Immediate revocation ke liye deny list, introspection ya other state/policy chahiye.","Shared signing-key rotation all affected tokens impact karti hai."] },
         {
           q: 'Naya endpoint bana aur auth lagana bhool gaye. Isse bachne ka sabse pakka tareeka?',
-          choices: [
-            'Framework mein default DENY ho — public endpoint ko explicitly mark karna pade',
-            'Code review checklist',
-            'Har PR par security team se poochho',
-            'Endpoint ke naam mein "public" likho',
-          ],
+          choices: ["Default deny; public routes opt-in","Name mein public word security banega","Review checklist se omission impossible","Frontend se URL hide kar do"],
           answer: 0,
           explain: 'Checklists insaan par nirbhar hain, aur insaan bhoolta hai. <b>Default-deny</b> galti ko structurally impossible bana deta hai: bhoolne ka natija "sabke liye khula" nahi, "sabke liye band" hai. Bhool pakdi jaati hai kyunki endpoint <b>kaam hi nahi karta</b> — chupchaap leak nahi hota.',
-        },
+         choiceExplanations: ["Checklists insaan par nirbhar hain, aur insaan bhoolta hai. <b>Default-deny</b> galti ko structurally impossible bana deta hai: bhoolne ka natija \"sabke liye khula\" nahi, \"sabke liye band\" hai. Bhool pakdi jaati hai kyunki endpoint <b>kaam hi nahi karta</b> — chupchaap leak nahi hota.","Endpoint names enforcement mechanism nahi.","Review useful defense hai; default deny runtime omission block karta hai.","Hidden URL access control nahi; direct calls possible hain."] },
       ],
     },
     {
@@ -2107,7 +1974,7 @@ GET  /v1/admin/users         ← token + role=admin</pre>
       pairs: [
         { left: 'Public REST API, third-party developers', right: 'API key + rate limit per key', explain: 'Key se tum <b>caller</b> pehchante ho (user nahi), aur usi par quota aur billing lagti hai. Key rotate karne layak honi chahiye.' },
         { left: 'Browser SPA, apna hi backend', right: 'HttpOnly + Secure + SameSite cookie session', explain: 'JS use padh hi nahi sakta, isliye XSS token chura nahi sakta. Server session hone se logout turant asar karta hai. localStorage mein JWT rakhna sabse aam galti hai.' },
-        { left: 'Mobile app', right: 'Chhoti umar ka access token + revocable refresh token', explain: 'Mobile par cookies asuvidha hain. Access token chhota rakho (revoke nahi hota), refresh token secure storage mein (revoke hota hai).' },
+        { left: 'Mobile app', right: 'Chhoti umar ka access token + revocable refresh token', explain: "Mobile client par access token short-lived aur refresh credential protected storage mein rakho. Immediate access revocation automatic nahi; deny list/introspection/version policy add kar sakte ho. Cookie vs bearer choice client/runtime threat model se decide karo." },
         { left: 'Service → service (internal)', right: 'mTLS ya short-lived service token', explain: 'Yahan "user" hai hi nahi. Har service ka apna identity certificate ho. Aur asli user ki identity alag se propagate karo — warna downstream ownership check nahi kar sakti.' },
         { left: 'GraphQL — ek user ka email sirf usi ko dikhe', right: 'Resolver-level (field-level) authorization', explain: 'GraphQL mein endpoint ek hi hai (<code>/graphql</code>), isliye endpoint par authz kaafi nahi. Har field ka apna resolver hai — check wahin lagta hai.' },
       ],
@@ -2119,26 +1986,16 @@ GET  /v1/admin/users         ← token + role=admin</pre>
     questions: [
       {
         q: '"Tumhari API mein user apna order dekhta hai. Design bolo."',
-        choices: [
-          'Token se user id nikaalo, phir query hi user_id se scope karo: WHERE id = ? AND user_id = <token wala>. Order id URL mein hai par identity token se hi aayegi',
-          'URL se order id lo aur woh order laut do',
-          'Client se user_id aur order id dono lo, dono match karo',
-          'Frontend mein doosre users ke orders dikhaao hi mat',
-        ],
+        choices: ["Trusted identity se query owner scope karo","Order ID milte hi response return karo","Body user_id ko trusted identity maano","Client-side filtering ko only auth banao"],
         answer: 0,
         explain: 'Asli baat query mein hai: <code>AND user_id = ?</code>. Isse ownership check <b>bhoolna hi mumkin nahi</b> — galat user ko row milegi hi nahi. "Pehle fetch karo phir compare karo" bhi chalta hai, par usme woh <code>if</code> koi na koi din chhoot jaata hai.',
-      },
+       choiceExplanations: ["Asli baat query mein hai: <code>AND user_id = ?</code>. Isse ownership check <b>bhoolna hi mumkin nahi</b> — galat user ko row milegi hi nahi. \"Pehle fetch karo phir compare karo\" bhi chalta hai, par usme woh <code>if</code> koi na koi din chhoot jaata hai.","Guessable/leaked ID se doosre user ka resource expose ho sakta hai.","Caller body user_id forge kar sakta hai; verified identity use karo.","Authorization server par enforce honi chahiye; client bypassable hai."] },
       {
-        q: '"Tumhara auth service down ho gaya. API ko kya karna chahiye?"',
-        choices: [
-          'Fail CLOSED — 503 do. Auth ke liye "shak ho toh andar aane do" kabhi nahi',
-          'Sabko andar aane do taaki availability bani rahe',
-          'Cached tokens allow karo, naye reject karo',
-          'Read allow, write block',
-        ],
+        q: "Auth dependency down hai aur required caller identity verify nahi ho sakti. Protected API kya kare?",
+        choices: ["Verify na ho toh protected access deny","Auth-down mein every request allow","Read requests ko auth ke bina allow","Cached key se har revoked JWT allow"],
         answer: 0,
-        explain: 'Baaki poore track mein hum <b>graceful degradation</b> sikhte hain — adhoora jawab &gt; koi jawab nahi. Auth <b>apwaad</b> hai: yahan degrade karne ka matlab hai sabka data sabko de dena. (Teesra option practical hai — pehle se verify hue tokens ki chhoti si cache thodi der chalti rahe — par uska scope aur TTL <b>pehle se</b> tay hona chahiye, incident ke beech mein nahi.)',
-      },
+        explain: "Jahan required authentication/authorization establish nahi ho sakti, wahan protected access deny karo; dependency outage par 503 useful ho sakta hai. Valid cached public keys aur locally verifiable tokens se verification continue kar sakti hai, agar key freshness/revocation policy permit kare. Auth-service unavailable ka matlab every JWT unverifiable nahi.",
+       choiceExplanations: ["Jahan required authentication/authorization establish nahi ho sakti, wahan protected access deny karo; dependency outage par 503 useful ho sakta hai. Valid cached public keys aur locally verifiable tokens se verification continue kar sakti hai, agar key freshness/revocation policy permit kare. Auth-service unavailable ka matlab every JWT unverifiable nahi.","Unverified caller ko protected resource dena fail-open breach risk hai.","Read bhi private data expose kar sakta hai; write-only protection enough nahi.","Cached valid keys acceptable ho sakti hain; revocation/freshness policy still enforce karo."] },
     ],
   },
   success: [
@@ -2153,10 +2010,12 @@ GET  /v1/admin/users         ← token + role=admin</pre>
   cards: [
     { front: 'Identity kahan se lein?', back: 'Sirf <b>verified token</b> se (Authorization header). Query/body/koi bhi client-set header <b>jhooth bol sakta hai</b> — wahan se identity lena hi IDOR hai.' },
     { front: '401 vs 403?', back: '<b>401</b> = "tum kaun ho, pata nahi" → client login/refresh bheje. <b>403</b> = "pata hai, ijaazat nahi" → login se kuch nahi hoga. Galat code = infinite login loop.' },
-    { front: 'JWT ka sabse bada tradeoff?', back: 'Bina DB dekhe verify hota hai — <b>isi wajah se</b> revoke nahi hota. Hal: access token 5–15 min + revocable refresh token.' },
+    { front: 'JWT ka sabse bada tradeoff?', back: "JWT locally validate ho sakta hai, par immediate user/token revocation ko deny list, introspection ya token-version state chahiye. Short-lived access + rotated revocable refresh credentials common design hai; lifetime policy risk se choose karo." },
     { front: 'Ownership check kahan?', back: 'Service ke andar, har resource par — aur behtar, <b>query mein</b>: <code>WHERE id=? AND user_id=?</code>. Gateway sirf authN karta hai, authZ nahi.' },
     { front: 'Naye endpoint par auth bhoolne se kaise bachein?', back: '<b>Default-deny.</b> Public ko <code>@Public</code> se explicitly mark karna pade. Bhoolne ka natija "band" ho, "khula" nahi.' },
-    { front: 'Auth service down — fail open ya closed?', back: '<b>Fail CLOSED (503).</b> Baaki har jagah degrade karna sahi hai; auth apwaad hai — yahan degrade = sabka data sabko.' },
+    { front: 'Auth service down — fail open ya closed?', back: "Required identity/permission verify na ho toh protected access deny karo. Valid cached verification keys/tokens usable ho sakte hain if freshness/revocation policy permits;auth dependency outage always all requests failure nahi." },
   ],
 },
 ]);
+
+})();

@@ -109,16 +109,11 @@ SD.registerLevels('sdd-resil', [
           vars: { in: '6', line: ['wait:#3', 'wait:#4', 'wait:#5', 'wait:#6'], out: '1' },
           ask: {
             q: 'Har second 5 orders aate hain aur 1 nikalta hai. 2.9 s par line mein kitne orders khade honge?',
-            choices: [
-              '12 — har second 4 badhte hain (5 aaye, 1 nikla)',
-              '3 — dispatch-service raftaar pakad legi',
-              '15 — jitne aaye utne',
-              '0 — line khaali ho jaayegi',
-            ],
+            choices: ["12: teen rounds mein net 4 orders judte hain","3: har round mein sirf ek waiting order gino","15: teen rounds ke saare arrivals waiting gino","0: har round ke saare arrivals processed gino"],
             answer: 0,
             hint: 'Ek second mein kitne aaye? Kitne nikle? Jo farak bacha, woh kahan gaya?',
             explain: '5 − 1 = <b>4 har second</b>. 0.9 s par 4, 1.9 s par 8, 2.9 s par 12. Yeh farak kahin jaata nahi. Line mein jama hota hai.',
-          },
+           choiceExplanations: ["5 − 1 = <b>4 har second</b>. 0.9 s par 4, 1.9 s par 8, 2.9 s par 12. Yeh farak kahin jaata nahi. Line mein jama hota hai.","Consumer har round ek nikaalta hai; waiting mein 5 minus 1 judte hain, sirf 1 nahi.","15 arrivals mein se teen process bhi hue; unhe waiting mein dobara mat gino.","Arrival rate 5/s, processing 1/s hai. Dono barabar nahi, isliye queue khaali nahi rehti."] },
         },
         {
           clock: '2.9 s',
@@ -135,16 +130,11 @@ SD.registerLevels('sdd-resil', [
           vars: { in: '25', line: '20 orders', mem: mem(20), out: '4', wait: '~21.2 s baad', dash: '🟢 errors 0 · 25 mein se 25 "confirm"' },
           ask: {
             q: 'dispatch-service ki memory mein 20 orders ki line aati hai. (Slow motion ke liye sankhya chhoti hai; asli process mein yeh lakhon hoti hai.) Agla order 5.0 s par aayega. Kya hoga?',
-            choices: [
-              'Line 21 ho jaayegi, memory mein jagah nahi bachegi — dispatch-service crash, aur line ke saare orders uske saath gayab',
-              'order-service apne aap dheemi ho jaayegi',
-              '21va order wapas chala jaayega aur customer ko bata diya jaayega',
-              'Lambi line dekh ke dispatch-service tez ho jaayegi',
-            ],
+            choices: ["Lab ki memory limit tootegi; process aur RAM queue jaayenge","Producer wait karega; offer() pending Promise lautayega","Offer reject hoga; customer ko overload status milega","Consumer scale hoga; naye workers queue saaf karenge"],
             answer: 0,
             hint: 'Kya kisi ne order-service ko bataya hai ki line bhar rahi hai? Kya line ko pata hai ki uski koi hadd hai?',
             explain: 'Line ko apni hadd pata hi nahi: line har order le leti hai. Asli hadd memory ki hai. Aur memory "na" nahi bolti — <b>process ko maar deti hai</b>.',
-          },
+           choiceExplanations: ["Line ko apni hadd pata hi nahi: line har order le leti hai. Asli hadd memory ki hai. Aur memory \"na\" nahi bolti — <b>process ko maar deti hai</b>.","Is unbounded offer() mein waiting Promise ya feedback ka code nahi hai.","Yahan reject policy lagi nahi hai; overloaded RAM queue aur controlled rejection alag hain.","Lab worker rate fixed hai. Queue length apne aap worker count nahi badhati."] },
         },
         {
           clock: '5.0 s',
@@ -215,16 +205,11 @@ SD.registerLevels('sdd-resil', [
           vars: { fix: 'koi nahi (memory 20)', proc: '5.0 s par CRASH', line: '21 par toot gayi', lost: '22', know: 'kisi ko nahi' },
           ask: {
             q: 'Memory dugni (40 orders ki jagah) karne se kya badlega?',
-            choices: [
-              'Crash 5.0 s ki jagah 10.0 s par hoga — aur tab zyada orders gayab honge',
-              'Samasya khatam: 40 ki jagah kaafi hai',
-              'Line 20 par ruk jaayegi',
-              'dispatch-service dugni tez ho jaayegi',
-            ],
+            choices: ["Isi model mein crash der se; backlog aur loss zyada","40-slot buffer se processing rate 5/s ho jaayegi","40-slot buffer lagte hi producer rate 1/s ho jaayegi","Queue 20 par rukegi; baaki requests reject hongi"],
             answer: 0,
             hint: 'Line har second 4 badhti hai. Memory dugni karne se yeh 4 badalta hai kya?',
             explain: 'Memory se raftaar nahi badalti. 5 aate hain, 1 nikalta hai: line ab bhi har second 4 badhti hai. Bas bharne mein dugna waqt lagta hai.',
-          },
+           choiceExplanations: ["Memory se raftaar nahi badalti. 5 aate hain, 1 nikalta hai: line ab bhi har second 4 badhti hai. Bas bharne mein dugna waqt lagta hai.","Extra storage se fixed worker ka service time nahi badalta.","Producer ko feedback nahi diya, isliye arrival rate ab bhi 5/s hai.","Memory budget badla; admission/reject policy add nahi hui."] },
         },
         {
           clock: '10.0 s',
@@ -259,16 +244,11 @@ SD.registerLevels('sdd-resil', [
           vars: { lost: '1 (#11)' },
           ask: {
             q: '#11 ke customer ke phone par abhi kya likha hai?',
-            choices: [
-              '"✅ Order confirm" — order-service paisa kaat ke confirm bol chuki thi; line ne order chupchaap gira diya',
-              '"Abhi bahut bheed hai, thodi der mein try karein"',
-              'Phone par spinner ghoom raha hai',
-              'Kuch nahi — #11 line mein chala gaya',
-            ],
+            choices: ["Order confirm: app ko silent drop ka pata nahi chala","Busy, retry later: queue ne overload response bheja","Processing: app consumer acknowledgement ka wait kare","Cancelled: timeout ke baad payment rollback ho gaya"],
             answer: 0,
             hint: 'order-service ne "confirm" kab bola tha: order dene se pehle ya baad mein? Aur line ne girate waqt kisi ko bataya?',
             explain: 'Line ne <b>chupchaap</b> giraya. order-service ko pata nahi, customer ko pata nahi. Slow motion ki line: <code>#11 aaya → line bhari (8/8) → #11 chupchaap gira · customer ko phir bhi "order confirm"</code>',
-          },
+           choiceExplanations: ["Line ne <b>chupchaap</b> giraya. order-service ko pata nahi, customer ko pata nahi. Slow motion ki line: <code>#11 aaya → line bhari (8/8) → #11 chupchaap gira · customer ko phir bhi \"order confirm\"</code>","Drop-new ne success jaisa return diya. Is path mein overload response nahi bheja gaya.","App ne queue admission ko final completion samajh liya; consumer acknowledgement ka wait nahi hai.","Silent drop automatic cancellation ya payment refund trigger nahi karta."] },
         },
         {
           clock: '2.1–3.0 s',
@@ -335,16 +315,11 @@ SD.registerLevels('sdd-resil', [
           say: 'Har ghar mein koi na koi chillata hai: <b>"Motor band karo, tanki bhar gayi!"</b><br><br>Kai gharon mein yeh kaam ek chhota switch karta hai. Tanki ke andar ek gola tairta hai. Paani upar aaya → gola upar → motor band. Paani neeche gaya → gola neeche → motor chalu.',
           ask: {
             q: 'Us tairte hue gole ne asal mein kya kiya?',
-            choices: [
-              'Tanki ka haal motor tak pahunchaya: paani upar jaata hai, "ruk ja" neeche aata hai',
-              'Tanki ko bada kar diya',
-              'Nal ko tez kar diya',
-              'Extra paani ko chupchaap baha diya',
-            ],
+            choices: ["Fullness ki khabar motor tak bhej kar inflow roka","Storage capacity badha kar paani ko jagah di","Outflow ki raftaar badha kar backlog saaf kiya","Naya paani gira kar inflow ko chalta rehne diya"],
             answer: 0,
             hint: 'Paani kis disha mein jaata hai? "Ruk ja" kis disha mein jaata hai?',
             explain: 'Paani: motor → tanki → nal. "Ruk ja": tanki → motor. Kaam jis disha mein behta hai, yeh khabar kaam ki <b>ulti disha</b> mein chalti hai. Poori baat yahi hai.',
-          },
+           choiceExplanations: ["Paani: motor → tanki → nal. \"Ruk ja\": tanki → motor. Kaam jis disha mein behta hai, yeh khabar kaam ki <b>ulti disha</b> mein chalti hai. Poori baat yahi hai.","Float feedback deta hai, tank ki physical capacity nahi badalta.","Nal ki output capacity wahi hai; float producer ko rokta hai.","Drop policy overflow ko discard karti; float upstream flow ko rokta hai."] },
         },
         {
           title: '4. In cheezon ke naam',
@@ -384,26 +359,16 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Hamari service mein koi error nahi tha, CPU theek tha. Phir bhi process out-of-memory se mar gaya aur hazaaron kaam kho gaye. Kya hua hoga?"',
-        choices: [
-          'Andar koi bina hadd ki line thi. Kaam aane ki raftaar nikalne ki raftaar se zyada thi, toh farak line mein jama hota gaya. Ilaaj: line par hadd, aur bhari hone par bhejne wale ko batana — sirf memory badhana nahi',
-          'Memory leak hoga; process ko roz restart kar do',
-          'Garbage collector kharab hai; doosri language mein likho',
-          'Server chhota hai; bada server le lo',
-        ],
+        choices: ["Unbounded backlog maapo; capacity aur admission bound karo","Daily restart lagao; queue growth ko memory leak maano","GC tune karo; pending work ka count badalne do","RAM badhao; producer aur consumer rates wahi rakho"],
         answer: 0,
         explain: 'Lab: bhejne wala 10,000/s, kaam karne wala 2,000/s → line 30 s mein 2,36,000, error 0. Memory hadd 100 MB par process ~36 s mein mara aur 2.2 lakh se zyada kaam gaye.',
-      },
+       choiceExplanations: ["Lab: bhejne wala 10,000/s, kaam karne wala 2,000/s → line 30 s mein 2,36,000, error 0. Memory hadd 100 MB par process ~36 s mein mara aur 2.2 lakh se zyada kaam gaye.","Restart lost work aur growing backlog ka root cause nahi hatata. Leak alag evidence se prove karo.","Reachable queued work garbage nahi hai; GC useful pending entries nahi hata sakta.","Sustained arrivals completions se zyada rahein toh extra RAM sirf crash postpone karti hai."] },
       {
         q: '"Queue lambi hoti ja rahi hai. Queue badi kar dein, ya RAM badha dein?"',
-        choices: [
-          'Pehle dekho: yeh thodi der ki tezi hai ya lagataar farak? Thodi der ki tezi ko line sokh legi. Lagataar farak ho toh har line bharegi — badi line sirf der badhati hai, aur girne par nuksaan bhi. Tab bhejne wale ko dheema karna, kaam karne wale ko tez karna, ya kaam girana padega',
-          'Haan, queue dugni kar do — samasya khatam',
-          'Queue hata do; seedha call karo',
-          'RAM badha do, queue ko chhedo mat',
-        ],
+        choices: ["Burst ya sustained overload maapo; phir capacity chuno","Buffer dugna karo; worker capacity baad mein maapo","Queue hatao; wahi load seedhe consumer ko bhejo","RAM dugni karo; admission policy baad mein socho"],
         answer: 0,
         explain: 'Slow motion: memory 20 → 5.0 s par crash, 22 gayab. Memory 40 → 10.0 s par crash, 42 gayab. Raftaar ka farak (har second 4) jaisa tha waisa raha.',
-      },
+       choiceExplanations: ["Slow motion: memory 20 → 5.0 s par crash, 22 gayab. Memory 40 → 10.0 s par crash, 42 gayab. Raftaar ka farak (har second 4) jaisa tha waisa raha.","Sustained rate mismatch ko larger buffer fix nahi karta; waiting time aur crash loss badh sakte hain.","Queue hatane se consumer ka processing budget nahi badhta; direct requests bhi overload karengi.","RAM bounded waiting budget ka hissa hai, sustainable throughput ka substitute nahi."] },
     ],
   },
   success: [

@@ -45,7 +45,7 @@
           done = true;
           b.classList.add('right');
           fb.className = 'dk-ask-fb good';
-          fb.innerHTML = '✅ ' + (q.explain || 'Sahi!');
+          fb.innerHTML = '✅ ' + SD.choiceFeedback(q, i);
           onRight(!wrong);
         } else {
           if (!wrong) SD.noteMistake(q.q, `<b>${q.choices[q.answer]}</b><br>${q.explain || ''}`, tag);
@@ -54,7 +54,7 @@
           b.disabled = true;
           shake(card);
           fb.className = 'dk-ask-fb bad';
-          fb.innerHTML = '❌ Nahi — output dobara padho aur ek aur try karo.';
+          fb.innerHTML = '❌ ' + SD.choiceFeedback(q, i);
         }
       };
       card.appendChild(b);
@@ -69,9 +69,10 @@
     let asked = false;
 
     arena.appendChild(goalBox(stage.goal));
+    arena.appendChild(el('div', 'lab-scenario dk-verification', '<b>Local lab · self-reported walkthrough.</b> Browser tumhare laptop ke commands ya output verify nahi karta. Har step khud chalao, expected result se compare karo, phir step confirm karo. Sirf sawaal dekhna practice hai; lab complete nahi hota.'));
 
     const where = el('div', 'dk-where');
-    where.innerHTML = `📁 <code>sysdesigngurukul/docker-labs/${escapeHtml(stage.project)}</code>` +
+    where.innerHTML = `📁 <code>sys-design-gurukul/docker-labs/${escapeHtml(stage.project)}</code>` +
       (stage.exercise ? ` · exercise <code>${escapeHtml(stage.exercise)}</code>` : '') +
       `<div class="dk-note">Docker nahi hai? Har project <code>npm install &amp;&amp; npm start ${escapeHtml(stage.exercise || '')}</code> se bhi chalta hai (Node.js 18+). Poori details project ke <code>README.md</code> mein.</div>`;
     arena.appendChild(where);
@@ -87,8 +88,9 @@
         const copy = el('button', 'btn ghost small dk-copy', '📋 Copy');
         copy.onclick = () => {
           try {
-            if (typeof navigator !== 'undefined' && navigator.clipboard) navigator.clipboard.writeText(s.cmd);
-            copy.textContent = '✅ Copied';
+            if (typeof navigator !== 'undefined' && navigator.clipboard) {
+              Promise.resolve(navigator.clipboard.writeText(s.cmd)).then(() => { copy.textContent = '✅ Copied'; }, () => { copy.textContent = 'Select karke copy karo'; });
+            } else copy.textContent = 'Select karke copy karo';
           } catch (e) { copy.textContent = 'Select karke copy karo'; }
         };
         row.appendChild(copy);
@@ -100,10 +102,12 @@
         li.appendChild(ex);
       }
       const tick = el('button', 'btn small dk-tick', '✔ Ho gaya');
+      tick.setAttribute('aria-pressed', 'false');
       tick.onclick = () => {
         ticked[idx] = !ticked[idx];
         tick.className = 'btn small dk-tick' + (ticked[idx] ? ' good' : '');
         tick.textContent = ticked[idx] ? '✅ Ho gaya' : '✔ Ho gaya';
+        tick.setAttribute('aria-pressed', String(ticked[idx]));
         li.className = 'dk-step' + (ticked[idx] ? ' done' : '');
         maybeAsk();
       };
@@ -115,18 +119,33 @@
     const askSlot = el('div', 'dk-ask');
     arena.appendChild(askSlot);
     const skip = el('button', 'btn ghost small dk-skip', 'Abhi laptop paas nahi — sawaal pehle dekh lo');
-    skip.onclick = () => { skip.remove(); ask(); };
+    skip.onclick = () => { skip.remove(); ask(true); };
     arena.appendChild(skip);
 
-    function maybeAsk() { if (ticked.every(Boolean)) { skip.remove(); ask(); } }
-    function ask() {
+    let observationRight = false, observationFirst = false, doneButton = null;
+    function maybeAsk() {
+      if (ticked.every(Boolean)) { skip.remove(); ask(false); }
+      syncDone();
+    }
+    function syncDone() {
+      if (!doneButton) return;
+      doneButton.disabled = !observationRight || !ticked.every(Boolean);
+      doneButton.textContent = doneButton.disabled ? 'Lab steps confirm karne baaki hain' : 'Self-reported walkthrough poora →';
+    }
+    function ask(preview) {
       if (asked) return;
       asked = true;
+      if (preview) askSlot.appendChild(el('div', 'dk-preview-note', 'Practice mode: sawaal solve kar sakte ho. Lab completion ke liye baad mein upar har actual step chalaakar confirm karo.'));
       askSlot.appendChild(askCard(stage.observe, 'dk-opt', '🐳 Docker lab', first => {
+        observationRight = true;
+        observationFirst = first;
         if (stage.lesson) askSlot.appendChild(el("div", "lab-win", stage.lesson));
         const done = el('button', 'btn big dk-done', 'Aage badho →');
-        done.onclick = () => onDone({ firstTry: first ? 1 : 0, total: 1 });
+        doneButton = done;
+        let continued = false;
+        done.onclick = () => { if (continued || done.disabled || !observationRight || !ticked.every(Boolean)) return; continued = true; onDone({ firstTry: observationFirst ? 1 : 0, total: 1, verification: 'self-reported' }); };
         askSlot.appendChild(done);
+        syncDone();
       }));
     }
   };

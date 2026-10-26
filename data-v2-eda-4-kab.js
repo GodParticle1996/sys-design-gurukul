@@ -93,30 +93,22 @@ SD.registerLevels('sdd-eda', [
           "say": "<pre>kaam ke baad ack na pahunche: same id do baar padha · SMS 2\nid yaad rakhi (isi process mein): SMS 1</pre>Demo mein same entry ack se pehle do baar padhi. Dono baar SMS effect hua: 2. ID yaad rakhi toh 1. Par yeh Set isi process ki memory hai.",
           "ask": {
             "q": "SMS effect ho gaya, ack nahi pahuncha. Entry dobara padhi toh kya khatra?",
-            "choices": [
-              "Wahi SMS dobara bhej sakte hain; effect ko event ID se surakshit banana padega",
-              "Broker pehla SMS wapas le lega",
-              "Ack nahi aaya toh pehla kaam hua hi nahi"
-            ],
+            "choices": ["Duplicate effect risk; event ID se dedupe chahiye","Missing ack prior SMS ko provider se undo karega","Missing ack prove karta hai pehla SMS nahi bheja"],
             "answer": 0,
             "hint": "Consumer ka effect aur broker ka ack do alag cheezein hain.",
-            "explain": "Duplicate delivery aur duplicate business effect ko alag sambhalo. Durable dedup aur effect ko saath enforce karna aage ka kaam hai."
-          }
+            "explain": "Effect-before-ack crash redelivery par effect repeat kar sakta hai; durable consumer dedupe/transaction boundary design chahiye. Acknowledgment broker metadata hai, external SMS rollback nahi. Ack failure effect outcome ko ambiguous chhod sakti hai."
+          , choiceExplanations: ["Effect-before-ack crash redelivery par effect repeat kar sakta hai; durable consumer dedupe/transaction boundary design chahiye.","Acknowledgment broker metadata hai, external SMS rollback nahi.","Ack failure effect outcome ko ambiguous chhod sakti hai."] }
         },
         {
           "title": "2. Publish ka successful jawab mila. Restart par bach gaya?",
           "say": "<pre>asli broker process restart: kitchen 4 → 0 · notify 4 → 0\npublish ke HTTP jawab mil chuke the; RAM ki 8 pending copies gayi</pre>Tool ne sirf apna broker process restart kiya. Kitchen aur notify ki 4–4 pending copies gayin. Broker ne RAM mein rakha tha, disk par nahi.",
           "ask": {
             "q": "Publish ko HTTP success milna kya disk durability prove karta hai?",
-            "choices": [
-              "Nahi. Is broker mein successful publication ke baad bhi restart par 8 copies gayin",
-              "Haan, successful HTTP reply data ko disk par likhta hai",
-              "Haan, event format apne aap durable hai"
-            ],
+            "choices": ["Nahi; in-memory broker restart par copies kho sakta","Haan; HTTP success disk fsync ka built-in promise hai","Haan; JSON event data restart ke baad khud restore hota"],
             "answer": 0,
             "hint": "Broker code mein file ya database write hai?",
-            "explain": "Durability alag guarantee hai. Is lab ke RAM broker ne woh guarantee di hi nahi."
-          }
+            "explain": "Durability successful HTTP response se infer nahi hoti; broker storage/ack contract verify karo. HTTP status durable storage semantics define nahi karta. Serialization format persistent storage ka replacement nahi."
+          , choiceExplanations: ["Durability successful HTTP response se infer nahi hoti; broker storage/ack contract verify karo.","HTTP status durable storage semantics define nahi karta.","Serialization format persistent storage ka replacement nahi."] }
         },
         {
           "title": "3. Notification band rahe aur line bhar jaaye?",
@@ -150,14 +142,10 @@ SD.registerLevels('sdd-eda', [
       ],
       "observe": {
         "q": "Publish ka reply milne ke baad bhi copies gayin, aur save ke baad publish fail bhi hua. Kya sirf broker jodna reliable delivery ke liye kaafi hai?",
-        "choices": [
-          "Nahi. Durability, save/publish ka saath, aur consumer ke duplicate effect ka alag intezaam chahiye",
-          "Haan, queue ka naam reliable hai",
-          "Haan, 202 hamesha end-to-end success hai"
-        ],
+        "choices": ["Durability, atomic publish intent aur dedupe chahiye","Broker install se save/publish atomic ho jaate hain","202 producer response consumer delivery prove karta"],
         "answer": 0,
-        "explain": "Lab ne real HTTP acceptance, memory loss aur two-write gap alag-alag dikhaye. Ek metric pass hone se baaki guarantees prove nahi hoti."
-      },
+        "explain": "End-to-end reliability producer gap, broker persistence aur duplicate consumer effects teen boundaries cover karti hai. Separate systems ko queue add karna atomic commit nahi deta. Acceptance response downstream completion receipt nahi."
+      , choiceExplanations: ["End-to-end reliability producer gap, broker persistence aur duplicate consumer effects teen boundaries cover karti hai.","Separate systems ko queue add karna atomic commit nahi deta.","Acceptance response downstream completion receipt nahi."] },
       "lesson": "Pehle business promise likho. Phir us promise ko failure ke saath chala ke naapo."
     }
   ],
@@ -167,24 +155,16 @@ SD.registerLevels('sdd-eda', [
     "questions": [
       {
         "q": "Har saved order ka event chahiye. Save ke baad process band ho sakta hai. Kya save(); publish(); kaafi?",
-        "choices": [
-          "Nahi; dono ke beech gap hai. Order aur event ko saath record karne ka intezaam chahiye",
-          "Haan; do awaits ek transaction hain",
-          "Haan; try/catch gap mita deta hai"
-        ],
+        "choices": ["Order aur publish intent transaction mein record karo","Do awaits sequential hain; atomic transaction maan lo","Try/catch jodo; process-crash gap eliminate ho jaayega"],
         "answer": 0,
-        "explain": "Lab mein order #3 save hua par publish fail. Isi failure window ko outbox jaise tareeke address karte hain; is lab mein outbox implement nahi hai."
-      },
+        "explain": "Transactional outbox order aur event intent same durable transaction mein record karke relay retry enable kar sakti hai; duplicates phir bhi handle karo. Sequencing alone crash atomicity nahi. Process death application catch code ko execute karne ki guarantee nahi deti."
+      , choiceExplanations: ["Transactional outbox order aur event intent same durable transaction mein record karke relay retry enable kar sakti hai; duplicates phir bhi handle karo.","Sequencing alone crash atomicity nahi.","Process death application catch code ko execute karne ki guarantee nahi deti."] },
       {
         "q": "Notify consumer band hai; API 202 de rahi hai. Healthy kehne ke liye kya dekhein?",
-        "choices": [
-          "Pending kaam, kitna purana hai, failures aur recovery; sirf API response nahi",
-          "Sirf API ki fast median",
-          "Sirf broker ka process zinda hai"
-        ],
+        "choices": ["Backlog age, failures aur recovery trend dekho","API median low ho toh consumer health pass maano","Broker process alive ho toh pending work ignore karo"],
         "answer": 0,
-        "explain": "API acceptance aur business completion alag hain. Backlog ka badhna user ke liye der ban sakta hai."
-      }
+        "explain": "Async pipeline health acceptance ke saath completion lag, oldest work aur failed/retried delivery se assess hoti hai. Fast enqueue blocked consumer ko hide kar sakta hai. Process availability useful hai, end-to-end progress ka proof nahi."
+      , choiceExplanations: ["Async pipeline health acceptance ke saath completion lag, oldest work aur failed/retried delivery se assess hoti hai.","Fast enqueue blocked consumer ko hide kar sakta hai.","Process availability useful hai, end-to-end progress ka proof nahi."] }
     ]
   },
   "success": [

@@ -106,16 +106,11 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
           vars: { ans: '<b>false</b> — "nahi liya"', count: 'dropped 0 · refused <b>1</b>' },
           ask: {
             q: 'Wahi <code>offer(#11)</code>, par policy <code>\'drop-new\'</code> hoti. Kaunsi line chalti, aur order-service ko kya milta?',
-            choices: [
-              'Line 23: <code>dropped++</code> aur <code>return true</code> — order-service ko "le liya" milta, jabki #11 gir chuka hota',
-              'Line 28: <code>return false</code> — order-service ko pata chal jaata',
-              'Line 22: #11 line mein chala jaata',
-              'Line 25: line ka sabse purana order girta',
-            ],
+            choices: ["Line 23: dropped++ aur true; sender ko accepted dikha","Line 28: false; sender ko explicit rejection dikha","Line 22: append; queue capacity ek entry badh gayi","Line 25: shift; oldest entry ke badle nayi entry aayi"],
             answer: 0,
             hint: 'Line 23 ki shart dekho. Phir dekho ki wahi line kya lautati hai.',
             explain: 'Line 23 <code>true</code> lautati hai. Bhejne wale ko "le liya" aur "gira diya" mein koi farak nahi dikhta. "Chupchaap" ka matlab code mein yahi ek shabd hai: <code>true</code>.',
-          },
+           choiceExplanations: ["Line 23 <code>true</code> lautati hai. Bhejne wale ko \"le liya\" aur \"gira diya\" mein koi farak nahi dikhta. \"Chupchaap\" ka matlab code mein yahi ek shabd hai: <code>true</code>.","False reject policy ka result hota; selected branch drop-new hai.","Full queue ke drop-new branch mein append nahi hota.","Shift oldest drop-old policy mein hota, drop-new mein nahi."] },
         },
         {
           clock: 'offer(#11) · policy \'drop-new\'',
@@ -142,16 +137,11 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
           vars: { cfg: 'cap 8 · policy \'block\'', items: cells(seq(3, 10), 8), ans: 'abhi koi jawab nahi — <b>ruka hua</b>', count: 'dropped 0 · refused 0', waiting: '[ wake ] — #11 ka' },
           ask: {
             q: '<code>put(#11)</code> line 33 ke <code>await</code> par ruka hai. Ise aage kaun badhayega?',
-            choices: [
-              '<code>take()</code> — jab kaam karne wala ek order nikaalega, line 40–41 <code>wake()</code> bula dengi',
-              'Ek timer — 1 second baad apne aap',
-              'Bhejne wala khud, dobara <code>put()</code> bula ke',
-              'Koi nahi — yeh hamesha ruka rahega',
-            ],
+            choices: ["take() entry nikaal kar waiting producer ko wake karega","Timer ek second baad waiting Promise resolve karega","Producer dobara put() karke pehli Promise resolve karega","Queue ka size() call waiting Promise resolve karega"],
             answer: 0,
             hint: '<code>wake</code> function kahan rakha gaya hai? Us array ko class mein aur kaun padhta hai?',
             explain: '<code>this.waiting</code> ko sirf <code>take()</code> padhta hai (line 40). Jo jagah banata hai, wahi jagata hai.',
-          },
+           choiceExplanations: ["<code>this.waiting</code> ko sirf <code>take()</code> padhta hai (line 40). Jo jagah banata hai, wahi jagata hai.","Is code path mein timer nahi; available capacity consumer ke take() se aati hai.","Duplicate put() aur kaam create karega; existing waiter ko consumer wake karta hai.","size() observation hai; queue se entry nikaal kar capacity nahi banata."] },
         },
         {
           clock: 'take()',
@@ -224,16 +214,11 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
           vars: { line: cells([1, 2, 3], 3), snd: '#1, #2, #3 de chuka' },
           ask: {
             q: 'Line ki teeno jagah bhar gayi. <code>sender()</code> ab k = 4 ke saath line 12 par pahunchega. Kya hoga?',
-            choices: [
-              '<code>put()</code> lautega hi nahi — <code>sender()</code> line 12 par khada rahega jab tak <code>worker()</code> ek kaam na uthaye',
-              '<code>put()</code> error phenkega',
-              '#4 chupchaap gir jaayega',
-              '#4 line mein chala jaayega aur line 4 ki ho jaayegi',
-            ],
+            choices: ["put() ka Promise pending; dequeue tak sender wait kare","put() exception de; sender catch mein retry kare","put() true de; fourth job silently discard ho jaaye","put() resolve ho; fourth job bounded buffer mein jud jaaye"],
             answer: 0,
             hint: 'Line 7 mein policy kya hai? Pichhle stage mein <code>put()</code> bhari line par kya karta tha?',
             explain: 'Policy <code>\'block\'</code> hai aur darwaza <code>put()</code> hai. Bhari line par <code>put()</code> ek adhoora Promise lautata hai; <code>await</code> wahin ruk jaata hai.',
-          },
+           choiceExplanations: ["Policy <code>'block'</code> hai aur darwaza <code>put()</code> hai. Bhari line par <code>put()</code> ek adhoora Promise lautata hai; <code>await</code> wahin ruk jaata hai.","Block policy waiting Promise return karti hai; full-buffer exception branch nahi.","Silent discard drop-new policy hoti; selected branch block hai.","Buffer full hai; capacity aane se pehle fourth entry append nahi ho sakti."] },
         },
         {
           clock: '0.0 s',
@@ -254,16 +239,11 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
           vars: { line: cells([6, 7, 8], 3), snd: 'aathon de chuka (1.7 s par)', wrk: '#5 par kaam' },
           ask: {
             q: '<code>sender()</code> ke code mein kahin <code>sleep</code> nahi hai. Phir <code>sender()</code> har 400 ms par ek hi kaam kyun de paaya?',
-            choices: [
-              'Kyunki <code>await line.put()</code> tabhi laut-ta hai jab <code>worker()</code> ek kaam uthata hai — <code>worker()</code> ki raftaar <code>sender()</code> ki raftaar ban gayi',
-              'Kyunki Node har loop ke beech 400 ms rukta hai',
-              'Kyunki line ki hadd 3 hai, aur 3 kaam 400 ms mein hi aate hain',
-              'Kyunki chhapne (<code>say</code>) mein 400 ms lagte hain',
-            ],
+            choices: ["Awaited put() ko worker dequeue har 400 ms par jagata","Node event loop har iteration ke baad 400 ms rukta","Queue cap 3 producer ke liye 400 ms timer set karti","say() logging har output ke liye 400 ms delay daalti"],
             answer: 0,
             hint: 'Line 12 kab laut-ti hai? Uske lautne ke liye line 21 par kya hona zaroori hai?',
             explain: 'Raftaar <code>sender()</code> mein likhi nahi hai. Raftaar <code>worker()</code> se <code>await</code> ke raaste <code>sender()</code> tak pahunchti hai. Yahi backpressure hai.',
-          },
+           choiceExplanations: ["Raftaar <code>sender()</code> mein likhi nahi hai. Raftaar <code>worker()</code> se <code>await</code> ke raaste <code>sender()</code> tak pahunchti hai. Yahi backpressure hai.","Node mein aisa automatic loop sleep nahi; code ke pending Promise ko trace karo.","Capacity count hai, timer duration nahi. Worker delay se capacity release ka interval aata hai.","Lab ke say() mein 400 ms blocking work nahi; delay worker path mein configured hai."] },
         },
         {
           clock: '2.9 s',
@@ -292,26 +272,16 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
     questions: [
       {
         q: '"Async code mein producer ko consumer ki raftaar par kaise chalaoge — bina sleep ke?"',
-        choices: [
-          'Producer ka "daalna" ek Promise lautaye jo tabhi poora ho jab line mein jagah bane; producer use await kare. Jagah consumer ke "nikaalne" se banti hai, toh consumer ki raftaar await ke raaste producer tak pahunchti hai',
-          'Producer mein setTimeout laga ke andaze se dheema karo',
-          'Consumer ko zyada threads de do',
-          'Line ko itna bada kar do ki kabhi na bhare',
-        ],
+        choices: ["Capacity-returning Promise await karao; queue bound rakho","Fixed sleep lagao; consumer capacity ko estimate karo","Await hatao; consumer ke liye extra threads chalao","Buffer bada karo; producer ko continuously chalne do"],
         answer: 0,
         explain: 'Lab ka mini program: line 3 ki, worker 400 ms/kaam. Sender ne pehle 3 kaam ek saath diye, phir har 400 ms par ek — jabki sender mein koi sleep nahi. Line kabhi 3 se upar nahi gayi.',
-      },
+       choiceExplanations: ["Lab ka mini program: line 3 ki, worker 400 ms/kaam. Sender ne pehle 3 kaam ek saath diye, phir har 400 ms par ek — jabki sender mein koi sleep nahi. Line kabhi 3 se upar nahi gayi.","Fixed sleep changing consumer speed nahi follow karta; demand feedback zyada direct hai.","Extra workers capacity change kar sakte hain, lekin source ko pressure feedback nahi dete.","Bada finite buffer sustained mismatch absorb nahi kar sakta."] },
       {
         q: '"Tumhari bounded queue bhari hone par kaam gira deti hai. Tumhe kaise pata chalega ki kitna gir raha hai?"',
-        choices: [
-          'Girane wali line par ek ginti (dropped) badhao aur use metric / alert mein dikhao — chupchaap girane mein bhejne wale ko "le liya" hi milta hai, toh yeh ginti hi akela nishaan hai',
-          'Pata chal hi jaayega — bhejne wale ko error milega',
-          'Logs mein har gire hue kaam ki poori details likho',
-          'Girne do, ginne ki zaroorat nahi',
-        ],
+        choices: ["Drop counter aur rate alert; acceptance semantics alag rakho","Success count se losses nikalo; drop return ko accept maano","Har payload full log karo; drop metrics ki jagah logs rakho","Queue depth maapo; zero depth ko zero drops ka proof maano"],
         answer: 0,
         explain: 'Lab ke code mein drop-new wali line <code>dropped++</code> ke baad <code>return true</code> karti hai. Asli raftaar par 30 second mein 2,16,740 kaam gire — aur bhejne wale ko ek baar bhi pata nahi chala.',
-      },
+       choiceExplanations: ["Lab ke code mein drop-new wali line <code>dropped++</code> ke baad <code>return true</code> karti hai. Asli raftaar par 30 second mein 2,16,740 kaam gire — aur bhejne wale ko ek baar bhi pata nahi chala.","Silent-drop success return accepted-work count ko misleading banaata hai; direct drop metric chahiye.","Payload logs high volume aur sensitive-data risk laate hain; aggregate counter primary signal hai.","Fast dropping se depth stable reh sakti hai jabki bahut work lose ho raha ho."] },
     ],
   },
   success: [

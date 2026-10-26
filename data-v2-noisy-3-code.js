@@ -99,16 +99,11 @@ uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
           vars: { turn: '[ B, A ]', la: line('A', [2, 3, 4, 5]), ret: '<b>A#1</b>', out: 'A#1' },
           ask: {
             q: '<code>turn</code> ab [B, A] hai. A ki line mein 4 kaam hain, B ki line mein 2. A ke chaaron kaam B ke kaam se pehle aaye the. Agla <code>next()</code> kya lautayega?',
-            choices: [
-              '<b>B#1</b> — line 23 kram ka pehla naam (B) uthati hai. Line ki lambai ya aane ka samay code mein kahin dekha hi nahi jaata',
-              'A#2 — A ke kaam pehle aaye the',
-              'A#2 — A ki line lambi hai',
-              'null — B ki baari abhi nahi aayi',
-            ],
+            choices: ["B1: turn array ka pehla nonempty tenant B hai","A2: cross-tenant earliest arrival primary comparison hai","A2: longer queue ko this code mein priority milti","Null: B ki queue nonempty hone par bhi wait karte"],
             answer: 0,
             hint: 'Line 23 kya uthati hai: sabse purana kaam, sabse lambi line, ya <code>turn</code> ka pehla naam?',
             explain: '<code>next()</code> mein "kaun pehle aaya" ka koi hisaab nahi hai. Woh hisaab sirf line 26 mein hai (<code>line.shift()</code>) — yaani ek tenant ki <b>apni</b> line ke andar.',
-          },
+           choiceExplanations: ["<code>next()</code> mein \"kaun pehle aaya\" ka koi hisaab nahi hai. Woh hisaab sirf line 26 mein hai (<code>line.shift()</code>) — yaani ek tenant ki <b>apni</b> line ke andar.","Shown next() turn order padhta hai, global job arrival timestamps nahi.","Queue length priority ka comparison this next() mein nahi.","B ke paas jobs hain aur turn first hai; null return ki zaroorat nahi."] },
         },
         {
           clock: 'next() — doosri, teesri, chauthi baar',
@@ -125,16 +120,11 @@ uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
           vars: { turn: '[ B, A ]', la: line('A', [4, 5]), ret: '<b>A#3</b>', out: 'A#1 · B#1 · A#2 · B#2 · A#3' },
           ask: {
             q: '<code>turn</code> = [B, A], aur B ki line khaali hai. Agla <code>next()</code> kya karega?',
-            choices: [
-              'B ko kram mein peeche bhej ke aage badhega, aur <b>A#4</b> lautayega — line 22 ka loop agle naam ko dekh leta hai',
-              '<code>null</code> lautayega, kyunki baari B ki hai aur B ke paas kuch nahi',
-              'Tab tak rukega jab tak B ka kaam na aaye',
-              'Error phenkega',
-            ],
+            choices: ["B turn rotate; empty skip karke A4 return kare","Null return; first tenant empty ho toh scan stop ho","B arrival wait; worker ko idle retain kare","Error throw; empty tenant queue invalid state hai"],
             answer: 0,
             hint: 'Line 26 ki shart jhoothi ho toh <code>return</code> nahi chalta. Uske baad loop kahan jaata hai?',
             explain: 'Line 26: B ki line khaali → <code>return</code> nahi. Loop (line 22) dobara: ab A nikla → A#4. Khaali baari apne aap agle tenant ko mil gayi.',
-          },
+           choiceExplanations: ["Line 26: B ki line khaali → <code>return</code> nahi. Loop (line 22) dobara: ab A nikla → A#4. Khaali baari apne aap agle tenant ko mil gayi.","Loop next tenant check karta hai; first empty entry scan ka end nahi.","Work-conserving rule available A work ko use karta hai.","Empty queue expected state hai, parser/runtime exception condition nahi."] },
         },
         {
           clock: 'next() — chhathi, saatvi baar',
@@ -222,16 +212,11 @@ uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
           vars: { at: '0.0 s (0.6 s pehle)' },
           ask: {
             q: 'Line 15: <code>Math.min(this.burst, this.tokens + (t - this.at) / 1000 * this.rate)</code>. Abhi <code>tokens</code> 0 hai, 0.6 second beete hain, <code>rate</code> 2 hai, <code>burst</code> 2. Line 15 ke baad <code>tokens</code> kitna hoga?',
-            choices: [
-              '1.2 — 0 + 0.6 × 2 = 1.2, aur 1.2 baalti (2) se chhota hai',
-              '2 — baalti hamesha poori bhar jaati hai',
-              '0 — beech mein code chala hi nahi, toh tokens bane hi nahi',
-              '0.6 — jitne second beete',
-            ],
+            choices: ["1.2: elapsed 0.6 times rate 2; cap 2 abhi door","2.0: har function call bucket ko full restore karta","0.0: background timer nahi toh refill possible nahi","0.6: elapsed seconds ko tokens ke barabar samjho"],
             answer: 0,
             hint: 'Beeta samay (second mein) × rate. Phir us jod ko baalti ki hadd se milao.',
             explain: 'Tokens sach mein "tapakte" nahi. Jab koi <code>take()</code> bulata hai, <b>tab</b> line 15 hisaab lagati hai ki pichhli baar se ab tak kitne tapakne chahiye the.',
-          },
+           choiceExplanations: ["Tokens sach mein \"tapakte\" nahi. Jab koi <code>take()</code> bulata hai, <b>tab</b> line 15 hisaab lagati hai ki pichhli baar se ab tak kitne tapakne chahiye the.","Refill amount elapsed times rate se aata hai; request arrival full reset nahi.","Lazy calculation elapsed time account karti hai; background timer ki zaroorat nahi.","Tokens/s rate multiplier chahiye; sirf time duration token balance nahi."] },
         },
         {
           clock: 'take() — 0.6 s, do baar',
@@ -248,16 +233,11 @@ uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
           vars: { tokens: '2 → 0', at: '5.6 s', ret: 'true · true · false · false' },
           ask: {
             q: 'Line 15 se <code>Math.min(this.burst, …)</code> hata do. Tab 5 second shaant rehne ke baad tenant ek saath kitni requests andar bhej paata?',
-            choices: [
-              '10 — tokens jama hote rehte. Ghanta bhar shaant rehne wala tenant ek saath 7,200 bhej deta',
-              '2 — burst hatane se kuch nahi badalta',
-              '4 — jitni requests aayi',
-              '0 — baalti toot jaati',
-            ],
+            choices: ["10 tokens available; cap hataane se idle balance badha","2 tokens available; burst variable ab bhi implicit cap","4 tokens available; incoming batch size refill decide kare","0 tokens available; Math.min hataate hi bucket reset ho"],
             answer: 0,
             hint: 'Line 15 ka jod kitna aaya tha, <code>Math.min</code> lagne se pehle?',
             explain: '<code>burst</code> hi woh cheez hai jo "ek saath kitna" ko rokti hai. <code>burst</code> ke bina hadd sirf ausat par lagti — aur shor karne wala tenant ausat theek rakh ke bhi ek pal mein sab kuch bhej sakta hai.',
-          },
+           choiceExplanations: ["<code>burst</code> hi woh cheez hai jo \"ek saath kitna\" ko rokti hai. <code>burst</code> ke bina hadd sirf ausat par lagti — aur shor karne wala tenant ausat theek rakh ke bhi ek pal mein sab kuch bhej sakta hai.","Only burst clamp balance cap karta tha; removed expression ke baad uski implicit protection nahi.","Available balance elapsed times rate hai, batch size se generated nahi.","Arithmetic valid hai; clamp removal reset nahi, accumulation ko unbounded banaata hai."] },
         },
         {
           clock: 'timer kahan hai?',
@@ -278,26 +258,16 @@ uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
     questions: [
       {
         q: '"Per-tenant fair queue kaise banaoge? Do line mein samjhao."',
-        choices: [
-          'Har tenant ki apni line, aur tenants ke naamon ka ek baari-kram. Agla kaam: kram ka pehla naam uthao, us naam ko peeche bhejo, us tenant ki line se ek kaam do; line khaali ho toh agle naam par jao. Ek tenant ki line par hadd bhi — bhari ho toh sirf usi tenant ko "na"',
-          'Ek hi line rakho aur use tenant ke naam se sort karte raho',
-          'Har request par random tenant chuno',
-          'Sabse chhoti line wale tenant ko hamesha pehle karo',
-        ],
+        choices: ["Bounded per-tenant FIFO plus rotating active-tenant turns","Single global FIFO ko tenant name alphabetical sort karo","Random tenant sample karo; queue caps ko optional rakho","Shortest tenant queue ko priority do; turn history hatao"],
         answer: 0,
         explain: 'Lab ka mini program: aane ka kram A#1…A#5, B#1, B#2. Uthane ka kram A#1, B#1, A#2, B#2, A#3, A#4, A#5. Kram mein A ka naam do baar daalne par: A#1, B#1, A#2, A#3, B#2, A#4, A#5, B#3, A#6.',
-      },
+       choiceExplanations: ["Lab ka mini program: aane ka kram A#1…A#5, B#1, B#2. Uthane ka kram A#1, B#1, A#2, B#2, A#3, A#4, A#5. Kram mein A ka naam do baar daalne par: A#1, B#1, A#2, A#3, B#2, A#4, A#5, B#3, A#6.","Alphabetical ordering fairness nahi; early names later tenants ko starve kar sakte hain.","Randomness alone tenant admission bounds ya predictable service share nahi deta.","Shortest queue can starve long useful jobs; selected policy rotating opportunities hai."] },
       {
         q: '"10 lakh users par per-user rate limit lagani hai. Har user ke liye ek timer chalaoge jo har second tokens bhare?"',
-        choices: [
-          'Nahi. Har user ke do number rakhunga: tokens aur pichhli baar ka samay. Request aane par hisaab: beeta samay × rate, baalti ki hadd tak. Jo user kuch nahi bhej raha, us par koi kaam nahi hota',
-          'Haan — 10 lakh timers theek hain',
-          'Har second saare users ki ginti zero kar dunga',
-          'Rate limit sirf top 100 users par lagaunga',
-        ],
+        choices: ["Lazy refill: token balance aur last timestamp store karo","Har user ka periodic timer; idle users bhi update karo","Global counter reset; per-user identity ko aggregate karo","Only top users track; baaki users ko unbounded admit karo"],
         answer: 0,
         explain: 'Lab ki token-bucket.js mein koi timer nahi: line 15 beeta samay × rate jodti hai aur baalti ki hadd par kaat deti hai. 5 second shaant rehne par bhi 2 hi tokens (baalti 2).',
-      },
+       choiceExplanations: ["Lab ki token-bucket.js mein koi timer nahi: line 15 beeta samay × rate jodti hai aur baalti ki hadd par kaat deti hai. 5 second shaant rehne par bhi 2 hi tokens (baalti 2).","Timer per idle user unnecessary scheduled work aur state lifecycle cost badhaata hai.","Shared counter per-user isolation hataata hai; fixed resets boundary bursts bhi laate hain.","Untracked users resource budget bypass kar sakte hain; unknown/new identity admission bhi chahiye."] },
     ],
   },
   success: [

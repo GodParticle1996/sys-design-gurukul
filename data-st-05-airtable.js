@@ -81,8 +81,7 @@ VISUALS['st-air-rust'] = {
     <div class="dg-split">
       <div class="dg-box is-bad"><span class="bx-label">❌ Pehle: TypeScript on Node</span>
         <div class="dg-cap">Ek main thread. Kaam CPU-bound hai, par baaki cores khaali.
-          Parallel karna ho toh alag process → base ki <b>doosri copy</b> (kabhi
-          dasiyon GB) aur har edit sab copies mein bhejni padegi.</div></div>
+          Original JS object graph ko worker isolates mein directly share karna mushkil tha. Rust-backed shared memory aur Node worker threads chosen fix hain; Node universally one-core nahi.</div></div>
       <div class="dg-box is-good"><span class="bx-label">✅ Baad mein: Rust engine</span>
         <div class="dg-node is-good" data-hs="writer"><span class="ni">✍️</span><span class="nl">1 write thread</span><span class="ns">saare writes ek kram mein</span></div>
         <div class="dg-node is-accent" data-hs="readers"><span class="ni">👀</span><span class="nl">N read threads</span><span class="ns">MVCC snapshot — rukte nahi</span></div>
@@ -179,16 +178,17 @@ SD.registerLevels('stories', [
       ],
     },
     {
+      workload: {"records":1000000},
       type: 'tradeoff',
       title: 'One-machine ceiling lab',
       instructions: 'Records, RAM aur architecture — teenon ghumao. Dekho record limit kahan se aati hai.',
-      goal: 'Aisi setting dhoondho jahan base machine mein <b>aa jaaye</b>, filter query <b>300 ms se kam</b> mein chale, aur ek monster base baaki customers ko <b>dheema na kare</b>.',
+      goal: "Admission policy mein kam se kam <b>10 lakh records per base</b> support karo. Accepted base RAM mein fit ho, filter <b>300 ms ya kam</b> chale, aur padosi base ko dheema na kare. Cap se bada base reject/migrate hoga; existing records silently delete nahi honge.",
       scenario: `Har record lagbhag <b>2 KB</b> memory leta hai (fields, formulas,
         indexes, dependency graph sab milakar). Worker machine ki RAM tumhare haath mein
         hai.`,
       knobs: [
-        { id: 'records', label: 'Base mein records', min: 50000, max: 2000000, step: 50000, value: 1500000, unit: '',
-          note: 'Airtable ki performance lagbhag 8 lakh ke baad girne lagti hai.' },
+        { id: 'records', label: 'Accepted base ka record cap', min: 50000, max: 2000000, step: 50000, value: 1500000, unit: '',
+          note: 'Toy CPU/RAM model ka admission cap. Bada base reject/migrate karo; records delete mat karo. Yeh current Airtable product limit nahi.' },
         { id: 'ram', label: 'Worker machine ki RAM', min: 2, max: 64, step: 2, value: 8, unit: ' GB',
           note: 'Base poora ismein aana chahiye.' },
         { id: 'shape', label: 'Architecture (0 = ek worker par kai bases · 1 = ek base = ek worker)', min: 0, max: 1, step: 1, value: 0, unit: '',
@@ -223,15 +223,10 @@ SD.registerLevels('stories', [
         hai; jis din nahi aata, us din poora model badalna padta hai.`,
       quiz: {
         q: 'Airtable ka record limit product ka faisla hai ya architecture ka?',
-        choices: [
-          'Architecture ka — base ko ek machine ki memory mein aana hai, isliye limit wahi hai jo ek machine tez rakh sakti hai',
-          'Product ka — taaki log upgrade karein',
-          'Database ka — Postgres ki row limit',
-          'Browser ka — JavaScript ki array limit',
-        ],
+        choices: ["Described base worker ki RAM bound","Postgres ki fixed row-count bound","Browser array ki same hard bound","Pricing se independent zero bound"],
         answer: 0,
-        explain: 'Browser ki bhi apni seema hai (client bhi ek copy rakhta hai), par asli chhat worker ki RAM hai.',
-      },
+        explain: "Described historical in-memory base worker ki resident dataset bound architecture input hai; product limits pricing, client budgets aur operational headroom se bhi affected ho sakti hain. Yeh current universal Airtable limit claim nahi.",
+       choiceExplanations: ["Described historical in-memory base worker ki resident dataset bound architecture input hai; product limits pricing, client budgets aur operational headroom se bhi affected ho sakti hain. Yeh current universal Airtable limit claim nahi.","Postgres ki aisi product-specific universal row limit nahi.","Client memory alag limit hai; yahan server worker architecture discuss ho rahi hai.","Product limits architecture aur commercial policy dono se influence ho sakti hain."] },
     },
     {
       type: 'docker',
@@ -250,15 +245,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Memory mode mein p50 27 ms se 3 ms ho gaya, par RSS 95 MB se 110 MB — aur 15 lakh records par worker ne mana kar diya. Yeh kis cheez ka sauda hai?',
-        choices: [
-          'Latency ke badle memory — aur us memory ki wajah se ek base ka size ek machine se bandh jaata hai',
-          'CPU ke badle disk',
-          'Sirf better caching, koi sauda nahi',
-          'Network ke badle CPU',
-        ],
+        choices: ["Lower latency, more resident RAM","Lower CPU, smaller stored dataset","Less network, no capacity limit","Only compression, no RAM tradeoff"],
         answer: 0,
         explain: 'Yahi Airtable ka core sauda hai: sab kuch RAM mein rakho (tez), par ab base ko ek machine mein aana hi hoga (seema).',
-      },
+       choiceExplanations: ["Yahi Airtable ka core sauda hai: sab kuch RAM mein rakho (tez), par ab base ko ek machine mein aana hi hoga (seema).","RSS badha; smaller stored dataset ka evidence nahi.","RAM fit limit question mein explicitly hit hui.","Faster resident reads RAM ka additional cost rakhte hain."] },
       lesson: 'Har architecture ek cheez deta hai aur ek cheez le leta hai. In-memory speed deta hai aur <b>ek machine ki chhat</b> le leta hai.',
     },
   ],
@@ -268,26 +258,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Poora dataset memory mein rakhna kab sahi hai?"',
-        choices: [
-          'Jab dataset ek machine mein aata ho, kaam computation-heavy ho, aur tum us seema ko product ki limit ke roop mein maan sako',
-          'Jab data chhota ho, warna kabhi nahi',
-          'Hamesha — RAM sasti hai',
-          'Sirf cache ke roop mein, source of truth kabhi nahi',
-        ],
+        choices: ["Bounded working set aur durable backing","RAM fit ho, durability baad mein","Every tenant ka unlimited dataset","Cache ho toh capacity planning chhodo"],
         answer: 0,
         explain: 'Airtable ne teeno shartein maanin aur record limit ko product ka hissa bana diya.',
-      },
+       choiceExplanations: ["Airtable ne teeno shartein maanin aur record limit ko product ka hissa bana diya.","Volatile RAM ko sole durable copy maan lena data-loss risk hai.","Tenant growth aur headroom ko bounded contract chahiye.","Cache bhi eviction, working-set size aur miss behavior demand karti hai."] },
       {
         q: 'Interviewer: "Tumhara service CPU-bound nikla. Pehla kadam?"',
-        choices: [
-          'Dekho ki runtime saare cores use kar bhi sakta hai ya nahi — warna bada machine lene se kuch nahi hoga',
-          'Connection pool badha do',
-          'Cache laga do',
-          'Autoscaling on kar do',
-        ],
+        choices: ["Profile aur runtime CPU utilization dekho","Pool size ko bottleneck maan lo","Hot state ko cache se duplicate karo","CPU cause dekhe bina replicas badhao"],
         answer: 0,
-        explain: 'Yahi woh jagah hai jahan Airtable atka tha: kaam CPU ka tha par runtime ek hi thread par chal raha tha.',
-      },
+        explain: "Pehle profile karo: CPU JavaScript kis thread par hai, transferable/shared data kya hai aur memory layout kaisa hai. Node worker threads/processes parallel work support karte hain; specific shared-state design bottleneck identify karo.",
+       choiceExplanations: ["Pehle profile karo: CPU JavaScript kis thread par hai, transferable/shared data kya hai aur memory layout kaisa hai. Node worker threads/processes parallel work support karte hain; specific shared-state design bottleneck identify karo.","CPU bottleneck mein connection count badhana contention badha sakta hai.","Cache useful tab jab repeated calculation avoid ho; diagnosis pehle chahiye.","Scaling useful ho sakti hai; per-process/shared-state constraint samajhna zaroori hai."] },
     ],
   },
   success: [
@@ -412,10 +392,11 @@ SD.registerLevels('stories', [
       ],
     },
     {
+      workload: {"viewers":60,"writes":20},
       type: 'tradeoff',
       title: 'Live views lab — kaam kis par nirbhar ho',
       instructions: 'Viewers, write rate aur model badlo. Har write par kitna kaam hota hai, dekho.',
-      goal: 'Aisa model chuno jo viewers badhne par na phate — server ka kaam <b>40 units/second se kam</b> aur clients ko update <b>200 ms se kam</b> mein.',
+      goal: "Kam se kam <b>60 viewers</b> aur <b>20 writes/s</b> ke liye diff model choose karo. Server work <b>40 units/s ya kam</b> aur update latency <b>200 ms ya kam</b> rakho.",
       scenario: `Ek popular base hai. Kai log ek saath dekh rahe hain aur kuch log
         lagatar likh rahe hain. Tum tay karoge ki view fresh rakhne ka tareeka kya ho.`,
       knobs: [
@@ -455,15 +436,10 @@ SD.registerLevels('stories', [
         woh lagbhag sirf "writes" par aa jaata hai.`,
       quiz: {
         q: 'Incremental view maintenance ka core sawaal kya hai?',
-        choices: [
-          '"Is ek write se har live query ka jawab kaise badla?" — poora jawab dobara banane ke bajaye sirf farq nikalna',
-          '"Query ko kaise tez karein?"',
-          '"Kaunsi views cache karein?"',
-          '"Kitni der baad refresh karein?"',
-        ],
+        choices: ["Ek write se result ka delta kya hai","Puri view ko kab expire karna hai","Har query ko kaunsa node milega","Base ka snapshot kaise compress ho"],
         answer: 0,
         explain: 'Yahi sawaal Airtable ko har change par har view dobara chalane se bachata hai.',
-      },
+       choiceExplanations: ["Yahi sawaal Airtable ko har change par har view dobara chalane se bachata hai.","Expiry repeated full recomputation ka scheduling choice hai.","Routing result maintenance se alag concern hai.","Snapshot compression changes ka incremental effect nahi nikalti."] },
     },
     {
       type: 'docker',
@@ -482,15 +458,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Diff mode mein 40 viewers hote hue bhi view queries 3,360 se 40 (sirf shuruaati load) aur rows 99 lakh se 1.19 lakh ho gaye. Kaam kahan gaya?',
-        choices: [
-          'Kaam hua hi nahi tha — rerun mode har viewer ke liye poora jawab dobara bana raha tha, jabki asli badlav sirf kuch rows ka tha',
-          'Diff mode ne compression laga diya',
-          'Viewers ne kam data maanga',
-          'Writes kam ho gaye',
-        ],
+        choices: ["Small deltas ne full reruns avoid kiye","Compression ne query count ghata diya","Viewers ne subscriptions kam kar di","Database ne writes reject kar di"],
         answer: 0,
-        explain: 'Incremental maintenance ka poora point yahi hai: kaam ko "viewers × writes" se hata kar lagbhag "writes" par le aana.',
-      },
+        explain: "Incremental maintenance full query reruns aur repeated row transfer avoid kar sakti hai. Actual work affected rows/views, active recipients, indexes aur write fanout par depend karta hai; total work sirf write count hone ki guarantee nahi.",
+       choiceExplanations: ["Incremental maintenance full query reruns aur repeated row transfer avoid kar sakti hai. Actual work affected rows/views, active recipients, indexes aur write fanout par depend karta hai; total work sirf write count hone ki guarantee nahi.","Compression payload bytes ghata sakti hai; query rerun count nahi.","Viewer count same diya hai.","Write loss lab ka intended mechanism nahi; avoidable computation ghati."] },
       lesson: 'Jab bhi koi UI "live" hona chahiye, poochho: har change par kaam <b>viewers ke saath</b> badhta hai ya <b>changes ke saath</b>?',
     },
   ],
@@ -500,26 +471,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Collaborative app mein sabki screen live kaise rakhoge?"',
-        choices: [
-          'Har client ki subscription (filter/sort) yaad rakho, aur har write par sirf uska diff nikaal kar bhejo — poori query dobara mat chalao',
-          'Har client ko 1 second par poll karne do',
-          'Har write par sab clients ko poora dataset bhej do',
-          'WebSocket par har write broadcast kar do, client khud filter kar le',
-        ],
+        choices: ["Subscriptions ke filtered deltas bhejo","Every event par full dataset bhejo","All rows broadcast, client filter kare","Every client se full query poll karao"],
         answer: 0,
         explain: 'Broadcast karna server par sasta lagta hai par har client ko sab kuch bhejta hai aur client par kaam daalta hai. Diff dono taraf sasta hai.',
-      },
+       choiceExplanations: ["Broadcast karna server par sasta lagta hai par har client ko sab kuch bhejta hai aur client par kaam daalta hai. Diff dono taraf sasta hai.","Full dataset repeated transfer/compute demand rakhta hai.","Client ko unauthorized/unneeded data bhejna privacy aur bandwidth risk hai.","Polling interval ke saath repeated work aur staleness tradeoff aata hai."] },
       {
         q: 'Interviewer: "Drag-and-drop ordering kaise store karoge?"',
-        choices: [
-          'Fractional index — do padosiyon ke beech ka number (2 aur 3 ke beech 2.5), sirf hili hui row likho',
-          'Har row ka integer position, aur move par neeche ki sab rows dobara number karo',
-          'Linked list ke roop mein prev/next pointers',
-          'Created timestamp se sort karo',
-        ],
+        choices: ["Fractional ranks, tie/rebalance policy","Dense integer ranks, full renumbering","Creation timestamp ko fixed rank banao","Only prev pointer, no conflict policy"],
         answer: 0,
         explain: 'Renumbering ek chhote se UI action ko hazaron writes bana deti hai. Fractional indexing ek write mein kaam khatam karti hai (bas kabhi-kabhi rebalance chahiye).',
-      },
+       choiceExplanations: ["Renumbering ek chhote se UI action ko hazaron writes bana deti hai. Fractional indexing ek write mein kaam khatam karti hai (bas kabhi-kabhi rebalance chahiye).","Dense positions move par bahut rows update kar sakte hain.","Creation time arbitrary later drag order preserve nahi karti.","Linked structures valid ho sakti hain; incomplete conflict/traversal policy nahi."] },
     ],
   },
   success: [
@@ -558,7 +519,7 @@ SD.registerLevels('stories', [
   title: 'Airtable — jab bottleneck hardware nahi, runtime ho',
   badge: 'Rewrite Rishi',
   objectives: [
-    'CPU-bound kaam + single-threaded runtime = deadlock jaisa halaat',
+    'CPU-bound shared-state work: memory layout aur thread model ka bottleneck',
     'Ek write thread, N read threads, aur MVCC',
     'Live product ke neeche database badalna: boundary → dual run → diff → cutover',
     'Mehengi storage patli rakho — embeddings alag store mein aur thoda peechhe',
@@ -573,7 +534,9 @@ SD.registerLevels('stories', [
      <pre>Shart 1: poora base memory mein hona chahiye (speed ke liye)
 Shart 2: kai cores ko usi memory par kaam karna chahiye
 
-Node mein har worker apni memory mein → base ki DOOSRI copy
+Original JS object graph worker isolates mein direct share nahi hota
+   worker_threads shared buffers/native data use kar sakte hain
+   chosen Rust-backed engine shared data layout ko enable karta hai
    enterprise base kabhi dasiyon GB ka
    aur har edit ab har copy mein bhejni padegi</pre>
      <p class="tip">🎯 Airtable ki apni line: <b>bottleneck hardware nahi tha, programming
@@ -658,33 +621,33 @@ N read threads      — queries parallel
         {
           id: 'shape', label: 'Naye engine ka concurrency model', icon: '🧵',
           options: [
-            { id: 'one-writer', label: 'Shared memory + 1 write thread + N read threads (MVCC snapshots)', score: 4, why: 'Airtable ka model: writes serialize hone se ordering aur consistency muft milti hai, aur MVCC ki wajah se readers rukte nahi. CPU-bound reads parallel ho jaate hain.' },
-            { id: 'multi-writer', label: 'Kai write threads + fine-grained locks', score: -1, why: 'Zyada throughput ka vaada karta hai par deadlocks, lock ordering aur subtle races le aata hai — ek in-memory database ke liye yeh sabse mehenga raasta hai.' },
-            { id: 'process', label: 'Kai processes, har ek ke paas base ki apni copy', score: -3, why: 'Yahi woh dead end hai jisne rewrite majboor kiya: dasiyon GB ki copies aur har edit ko har copy tak pahunchana.' },
+            { id: 'one-writer', label: "MVCC snapshots;controlled writer ownership", score: 4, why: 'Airtable ka model: writes serialize hone se ordering simplify hoti hai; transaction boundaries ab bhi chahiye, aur MVCC ki wajah se readers rukte nahi. CPU-bound reads parallel ho jaate hain.' },
+            { id: 'multi-writer', label: "Multiple writers with fine-grained locks", score: -1, why: 'Zyada throughput ka vaada karta hai par deadlocks, lock ordering aur subtle races le aata hai — ek in-memory database ke liye yeh sabse mehenga raasta hai.' },
+            { id: 'process', label: "Separate process copy per request", score: -3, why: 'Yahi woh dead end hai jisne rewrite majboor kiya: dasiyon GB ki copies aur har edit ko har copy tak pahunchana.' },
           ],
         },
         {
           id: 'boundary', label: 'Product aur engine ke beech', icon: '🚪',
           options: [
-            { id: 'layer', label: 'Ek abstraction layer — product ek taraf, engine ke operations doosri taraf', score: 3, why: 'Isi ne rewrite ko multi-year feature freeze banne se bachaya: product TypeScript mein chalta raha, engine alag banta raha.' },
-            { id: 'direct', label: 'Product seedha naye engine ki API use kare', score: -2, why: 'Tab product aur engine ek saath badalne padte hain — har step par dono teams block.' },
-            { id: 'fork', label: 'Product ka fork banao naye engine ke liye', score: -3, why: 'Do codebases, do sach, aur merge ka pahaad. Migration khatam hone se pehle dono alag ho chuke honge.' },
+            { id: 'layer', label: "Stable engine abstraction boundary", score: 3, why: 'Isi ne rewrite ko multi-year feature freeze banne se bachaya: product TypeScript mein chalta raha, engine alag banta raha.' },
+            { id: 'direct', label: "Product depends on concrete engine API", score: -2, why: 'Tab product aur engine ek saath badalne padte hain — har step par dono teams block.' },
+            { id: 'fork', label: "Fork product to support second engine", score: -3, why: 'Do codebases, do sach, aur merge ka pahaad. Migration khatam hone se pehle dono alag ho chuke honge.' },
           ],
         },
         {
           id: 'verify', label: 'Kaise bharosa karoge ki naya engine sahi hai', icon: '🔍',
           options: [
-            { id: 'dual', label: 'Dual run — har operation dono par, jawab apne aap compare, aur poore dataset ka lagatar diff', score: 4, why: 'Yahi Airtable ne kiya: production traffic tak pahunchne se pehle naya engine wahi workload laakhon baar chala chuka tha aur har mismatch theek ho chuka tha.' },
-            { id: 'tests', label: 'Bahut saare unit aur integration tests likho', score: 1, why: 'Zaroori hai par kaafi nahi — asli data ke edge cases test suite mein nahi hote.' },
-            { id: 'canary', label: 'Seedha 1% customers par naya engine chala do', score: 0, why: 'Behtar hai big-bang se, par un 1% ka data phir bhi daav par hai. Pehle shadow compare, phir canary.' },
+            { id: 'dual', label: "Dual-run/diff against invariant checks", score: 4, why: 'Yahi Airtable ne kiya: production traffic tak pahunchne se pehle naya engine wahi workload laakhon baar chala chuka tha aur har mismatch theek ho chuka tha.' },
+            { id: 'tests', label: "Unit/integration tests without data parity", score: 1, why: 'Zaroori hai par kaafi nahi — asli data ke edge cases test suite mein nahi hote.' },
+            { id: 'canary', label: "Expose1%without representative validation", score: 0, why: 'Behtar hai big-bang se, par un 1% ka data phir bhi daav par hai. Pehle shadow compare, phir canary.' },
           ],
         },
         {
           id: 'vectors', label: 'AI embeddings kahan rakhoge', icon: '🧮',
           options: [
-            { id: 'sep', label: 'Alag vector store mein, aur unhe thoda peechhe rehne do', score: 3, why: 'Vector row se ~10× bada hota hai aur memory sabse mehengi cheez hai. Embedding banane ke liye model call chahiye — woh user-facing transaction mein nahi aa sakta.' },
-            { id: 'inline', label: 'Core in-memory database mein hi rakho', score: -3, why: 'Har base ki har row par 10× memory ka bill — yahi cheez poori in-memory architecture ko tod deti.' },
-            { id: 'sync', label: 'Alag store mein, par har write ke saath synchronously update karo', score: -1, why: 'Ab har edit ek model call ka intezaar karegi — product turant sust lagega.' },
+            { id: 'sep', label: "Derived embedding store with lag contract", score: 3, why: 'Vector row se ~10× bada hota hai aur memory sabse mehengi cheez hai. Embedding banane ke liye model call chahiye — woh user-facing transaction mein nahi aa sakta.' },
+            { id: 'inline', label: "Embedding payload in core row engine", score: -3, why: 'Har base ki har row par 10× memory ka bill — yahi cheez poori in-memory architecture ko tod deti.' },
+            { id: 'sync', label: "Synchronous remote vector write per mutation", score: -1, why: 'Ab har edit ek model call ka intezaar karegi — product turant sust lagega.' },
           ],
         },
       ],
@@ -698,8 +661,8 @@ N read threads      — queries parallel
       type: 'match',
       title: 'Faisla aur uski wajah',
       pairs: [
-        { left: '🦀 Rust engine', right: 'CPU-bound kaam ko saare cores par chalana, bina base ki dusri copy banaye', explain: 'Node ka single thread hi chhat thi; alag process matlab dasiyon GB ki copy.' },
-        { left: '✍️ Ek write thread', right: 'Saare writes ek kram mein — base kabhi aadhe state mein nahi', explain: 'Ordering aur consistency muft mein mil jaati hai, conflict resolution ki zaroorat hi nahi.' },
+        { left: '🦀 Rust engine', right: 'CPU-bound kaam ko saare cores par chalana, bina base ki dusri copy banaye', explain: 'Original object graph ka shareable layout bottleneck tha; Node workers/processes parallelism support karte hain.' },
+        { left: '✍️ Ek write thread', right: 'Saare writes ek kram mein — base kabhi aadhe state mein nahi', explain: 'Single writer ordering simplify karta hai; transactions, snapshot semantics aur async interleaving correctness alag design chahiye.' },
         { left: '👀 MVCC', right: 'Readers ko write ke dauraan bhi consistent snapshot', explain: 'Writes serialize hone ke baad bhi reads parallel rehte hain — responsiveness bachti hai.' },
         { left: '🚪 Abstraction boundary', right: 'Product feature deta raha jabki engine alag banta raha', explain: 'Warna rewrite ek multi-year feature freeze ban jaata.' },
         { left: '🔍 Dual run + diff', right: 'Naye engine ka bharosa production data par, bina risk ke', explain: 'Cutover tabhi hua jab jawabon mein farq bacha hi nahi.' },
@@ -723,15 +686,10 @@ N read threads      — queries parallel
       ],
       observe: {
         q: 'Dual run ne 5,000 operations mein 213 mismatch pakde (rounding + khaali cell). Agar seedha cutover kar dete toh?',
-        choices: [
-          'Woh 37 galtiyan asli customer data mein likhi jaatin — aur galat value ke saath banaye gaye rollups/formulas ka pata lagana bahut mushkil hota',
-          'Kuch nahi hota, 4% bahut kam hai',
-          'Service crash ho jaati',
-          'Latency badh jaati',
-        ],
+        choices: ["Wrong values customer state mein jaatin","Mismatch percent ko ignore karte","Every mismatch process crash karta","Only response latency badalti"],
         answer: 0,
-        explain: 'Woh 213 galat jawab asli customer data mein likhe jaate. Isi liye Airtable ne lambe samay tak dual run chalaya: database migration mein galti performance bug nahi, corrupt data hoti hai.',
-      },
+        explain: "Dual run customer-visible behavior differences ko cutover se pehle expose karta hai. Read mismatch wrong answer ho sakta hai; write mismatch wrong state bana sakta hai. Har mismatch customer data corruption hi ho, yeh assume mat karo.",
+       choiceExplanations: ["Dual run customer-visible behavior differences ko cutover se pehle expose karta hai. Read mismatch wrong answer ho sakta hai; write mismatch wrong state bana sakta hai. Har mismatch customer data corruption hi ho, yeh assume mat karo.","Correctness errors few percent bhi dependent calculations corrupt kar sakte hain.","Semantic mismatch bina process crash ke bhi hota hai.","Rounding/empty-cell differences result correctness ko affect karte hain."] },
       lesson: 'Critical system badalne ka niyam: <b>purana aur naya saath chalao, jawab compare karo, aur tabhi switch karo jab farq zero ho jaaye.</b>',
     },
   ],
@@ -741,26 +699,16 @@ N read threads      — queries parallel
     questions: [
       {
         q: 'Interviewer: "Kab maanoge ki language/runtime hi bottleneck hai?"',
-        choices: [
-          'Jab kaam CPU-bound ho, profiling saaf ho, aur runtime us kaam ko cores par baant hi na sake bina data duplicate kiye',
-          'Jab benchmark mein doosri language tez dikhe',
-          'Jab team nayi language seekhna chahe',
-          'Jab latency spike aaye',
-        ],
+        choices: ["Profiled CPU work ka core-sharing bound","Other language benchmark hi enough","New syntax se team happy ho","Any latency spike runtime proof"],
         answer: 0,
-        explain: 'Airtable ka case yahi tha: shared bade state par CPU-bound kaam, aur Node ka model us state ko cores mein baant nahi sakta tha.',
-      },
+        explain: "Airtable ne large shared mutable database ke memory layout/lifecycle ko bottleneck bataya. Naye design mein Rust-backed shared data ke saath multiple Node worker threads hain; Node ko universally one-core runtime kehna galat hai.",
+       choiceExplanations: ["Airtable ne large shared mutable database ke memory layout/lifecycle ko bottleneck bataya. Naye design mein Rust-backed shared data ke saath multiple Node worker threads hain; Node ko universally one-core runtime kehna galat hai.","Microbenchmark production bottleneck aur migration cost establish nahi karta.","Learning preference performance diagnosis ka evidence nahi.","Latency I/O, queueing, locks ya dependencies se bhi badh sakti hai."] },
       {
         q: 'Interviewer: "Live database ke neeche engine badalna hai. Sabse pehla kadam?"',
-        choices: [
-          'Product aur database ke beech ek abstraction boundary daalo, taaki dono alag-alag speed se chal sakein',
-          'Naya engine banana shuru karo',
-          'Feature freeze lo',
-          'Naye engine par ek chhota customer chala do',
-        ],
+        choices: ["Stable engine boundary aur test oracle","Production data par direct rewrite","Feature freeze ko correctness maano","New engine par ungated cutover"],
         answer: 0,
-        explain: 'Boundary ke bina rewrite ya to product ko rok deta hai ya khud kabhi khatam nahi hota.',
-      },
+        explain: "Stable abstraction boundary product changes ko engine replacement se decouple kar sakti hai. Compatibility oracle, representative tests/dual run, persistent-state validation aur rollback ke saath migration gate karo.",
+       choiceExplanations: ["Stable abstraction boundary product changes ko engine replacement se decouple kar sakti hai. Compatibility oracle, representative tests/dual run, persistent-state validation aur rollback ke saath migration gate karo.","Direct coupling product evolution aur engine migration ko ek risk bana deti hai.","Freeze behavior parity prove nahi karta.","Cutover se pehle compatibility checks aur rollback chahiye."] },
     ],
   },
   success: [
@@ -773,7 +721,7 @@ N read threads      — queries parallel
     pata chalega? Agar jawab "shayad kabhi nahi", toh pehle <b>compare</b> ka raasta
     banao, phir switch ka.</p>`,
   cards: [
-    { front: 'Airtable ka asli bottleneck kya tha?', back: 'Hardware nahi — programming model. CPU-bound kaam single-threaded Node par tha, aur parallel karne ke liye base ki doosri copy chahiye thi (kabhi dasiyon GB).' },
+    { front: 'Airtable ka asli bottleneck kya tha?', back: 'Hardware nahi — programming model. CPU-bound kaam single-threaded Node par tha, Original large JS object graph multiple isolates mein directly shared nahi tha. Rust-backed shared layout aur Node worker threads ne design badla; workers universally extra full copies require nahi karte.' },
     { front: 'Naye Rust engine ka concurrency model?', back: 'Shared memory + 1 write thread (saare writes ek kram mein) + N read threads (MVCC snapshot par, rukte nahi) + ek dispatcher. Saath mein indexes, constraints aur triggers.' },
     { front: 'Live database migration ke 4 kadam?', back: '(1) abstraction boundary, (2) dual run — har operation dono engines par + apne aap compare, (3) poore dataset ka lagatar diff, (4) cutover jab farq zero ho.' },
     { front: 'Embeddings alag store mein kyun?', back: 'Ek vector row se ~10× bada hota hai aur memory sabse mehenga resource hai. Alag vector DB (self-hosted), aur eventually consistent — kyunki embedding ke liye model call user-facing transaction mein nahi aa sakti.' },

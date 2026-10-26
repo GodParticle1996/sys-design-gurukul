@@ -9,7 +9,7 @@
    1) STRUCTURE — level/stage ki shakl, unsolvable quiz/fill, softlock
       hotspot (aisa target jo diagram mein hai hi nahi), toote incident
       branches, gayab VISUALS, ranks ka order, index.html ke script tags.
-   2) MISSIONS  — har terminal mission ke HINTS ko ASLI perfsim par chala ke
+   2) MISSIONS  — har terminal mission ki solution[] ko ASLI perfsim par chala ke
       dekhta hai ki tasks poore hote hain aur success() true hota hai.
       Saath hi check karta hai ki fresh sim par success() FALSE ho — warna
       mission bina kuch kiye hi "complete" ho jaayega.
@@ -65,7 +65,7 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-fp-physics-1-kyun.js',
   'data-v2-fp-physics-2-kaise.js',
   'data-v2-fp-physics-3-code.js',
-  'data-v2-fp-physics-4-kab.js'];
+  'data-v2-fp-physics-4-kab.js', 'data-guidance.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */
@@ -89,12 +89,16 @@ function makeEl(tag) {
       add(...c) { c.forEach(x => e.classList._s.add(x)); },
       remove(...c) { c.forEach(x => e.classList._s.delete(x)); },
       contains: c => e.classList._s.has(c),
+      toggle(c, force) { const add = force == null ? !e.classList._s.has(c) : !!force; if (add) e.classList._s.add(c); else e.classList._s.delete(c); return add; },
     },
     /* browser jaisa: innerHTML set karne se purane children hat jaate hain */
     set innerHTML(v) { e._html = v; e.children.length = 0; }, get innerHTML() { return e._html; },
     set textContent(v) { e._txt = v; }, get textContent() { return e._txt; },
     appendChild(c) { e.children.push(c); return c; },
     append(...cs) { cs.forEach(c => e.children.push(c)); },
+    contains(c) { return e.children.includes(c) || e.children.some(child => child.contains && child.contains(c)); },
+    setAttribute(name, value) { e[name] = String(value); },
+    getAttribute(name) { return e[name] == null ? null : e[name]; },
     addEventListener(ev, fn) { e._handlers[ev] = fn; },
     removeChild(c) { const i = e.children.indexOf(c); if (i > -1) e.children.splice(i, 1); },
     insertBefore(c) { e.children.unshift(c); return c; },
@@ -349,6 +353,13 @@ function structure() {
             fail(`${sat} knob[${ki}]: starting value (${k.value}) range se bahar`);
           else ok();
         });
+        Object.entries(st.workload || {}).forEach(([id, minimum]) => {
+          const k = ks.find(knob => knob.id === id);
+          if (!k || !Number.isFinite(minimum) || minimum < k.min || minimum > k.max ||
+              Math.abs((minimum - k.min) / (k.step || 1) - Math.round((minimum - k.min) / (k.step || 1))) > 1e-7)
+            fail(`${sat}: workload.${id} valid knob range/step mein hona chahiye`);
+          else ok();
+        });
         ['readouts', 'bars', 'verdict', 'check'].forEach(fn => {
           if (typeof st[fn] !== 'function') fail(`${sat}: ${fn}() function nahi hai`); else ok();
         });
@@ -493,7 +504,9 @@ function structure() {
       if (st.type === 'terminal') {
         if (!(st.tasks || []).length) fail(`${sat}: koi task nahi`);
         if (typeof st.success !== 'function') fail(`${sat}: success() missing`);
-        if (!(st.hints || []).length) fail(`${sat}: koi hint nahi — mission solve nahi ho sakta`);
+        if ((st.hints || []).length < 3) fail(`${sat}: 3 progressive hints chahiye`);
+        if (!(st.solution || []).length) fail(`${sat}: explicit solution[] missing`);
+        if (typeof st.verify !== 'function') fail(`${sat}: live-state verify() missing`);
         if (!st.goal) fail(`${sat}: goal missing`);
         (st.tasks || []).forEach((t, ti) => {
           if (typeof t.check !== 'function') fail(`${sat} task[${ti}]: check() missing`);
@@ -501,6 +514,21 @@ function structure() {
         });
       }
     });
+  });
+
+  /* boss aakhir mein? */
+  /* Every major topic has an authored decision guide, and every level is
+     explicitly assigned. No generic fallback can hide missing coverage. */
+  const guidance = SD.guidance || { topics: {}, byLevel: {} };
+  allLevels.forEach(({ level }) => {
+    const topic = guidance.topics[guidance.byLevel[level.id]];
+    if (!topic) return fail(`${level.id}: major-topic decision guide missing`);
+    ['title', 'why', 'concept', 'example', 'handsOn', 'use', 'avoid', 'mistake', 'production', 'followup'].forEach(key => {
+      if (typeof topic[key] !== 'string' || !topic[key].trim()) fail(`${level.id}: guidance.${key} missing`); else ok();
+    });
+    if (!(topic.compare || []).length || topic.compare.some(row => !row.choice || !row.when || !row.tradeoff)) fail(`${level.id}: X-vs-Y comparison missing`); else ok();
+    if ((topic.tree || []).length < 3 || topic.tree.some(step => !step)) fail(`${level.id}: decision tree incomplete`); else ok();
+    if (!(topic.sources || []).length || topic.sources.some(source => !source.title || !/^https:\/\//.test(source.url || ''))) fail(`${level.id}: primary guidance sources missing`); else ok();
   });
 
   /* boss aakhir mein? */
@@ -549,129 +577,14 @@ function structure() {
 }
 
 /* =====================================================================
-   2. MISSIONS — hints ko asli perfsim par chalao
+   2. MISSIONS — explicit solutions, fresh state, omitted steps and bad input
    ===================================================================== */
-const CMD_START = /^(GET|POST|PUT|PATCH|DELETE|curl|sim|load|trace|metrics|slo|estimate|cursor|cache|migrate|bench|ring|bloom|hll|id|net|stream|book|explain|create\s+(unique\s+)?index|drop\s+index|show|help|clear)\b/i;
-
-/* Hint convention: "Prose: command"  ya  "command" — dono chalte hain. */
-function cmdsFromHint(hint) {
-  const out = [];
-  String(hint).split(/\s*(?:→|←)\s*|\n+/).forEach(chunk => {
-    let q = chunk.trim();
-    if (!q) return;
-    /* "Prose: command" — har ': ' par try karo, BAAYEN se DAAYEN.
-       Sirf aakhri ': ' dekhna galat hai: command ke ANDAR bhi colon ho sakta
-       hai (jaise -H 'Idempotency-Key: abc'). Aur poore string ko pehle
-       command maan lena bhi galat hai: "Cursor se maango: GET ..." khud
-       'cursor' command jaisa dikhta hai. */
-    let picked = null;
-    for (let i = q.indexOf(': '); i > -1; i = q.indexOf(': ', i + 1)) {
-      const tail = q.slice(i + 2).trim();
-      if (CMD_START.test(tail)) { picked = tail; break; }
-    }
-    if (picked == null && CMD_START.test(q)) picked = q;
-    if (picked) out.push(picked);
-  });
-  return out;
-}
-
-function openTerminal(stage) {
-  const arena = makeEl('div');
-  SD.renderers.terminal(stage, arena, () => {});
-  const term = arena.children.find(c => c.className === 'terminal');
-  if (!term) return null;
-  return { input: term._in, out: term._out, handler: term._in._handlers.keydown };
-}
-
-function runMission(stage, label) {
-  const hints = stage.hints || [];
-  const cmds = [];
-  hints.forEach(h => cmds.push(...cmdsFromHint(h)));
-  if (!cmds.length) { fail(`${label}: hints se koi command nahi nikla — copy-paste-able hints likho ("Prose: command")`); return; }
-
-  /* (a) fresh sim par success() FALSE hona chahiye */
-  const fresh = openTerminal(stage);
-  if (!fresh) { fail(`${label}: terminal render nahi hua`); return; }
-  let freshSim = null;
-  try {
-    fresh.input.value = 'help'; fresh.handler({ key: 'Enter', preventDefault() {} });
-  } catch (e) { fail(`${label}: 'help' par crash — ${e.message}`); return; }
-
-  const t = openTerminal(stage);
-  const errsSeen = [];
-  cmds.forEach(c => {
-    t.input.value = c;
-    const before = t.out.children.length;
-    try { t.handler({ key: 'Enter', preventDefault() {} }); }
-    catch (e) { fail(`${label}: command crash "${c}" — ${e.message}`); return; }
-    t.out.children.slice(before).forEach(ch => {
-      if (ch.className === 't-err' && /^(command samajh nahi|400 —|simulator error)/.test(ch.textContent || ''))
-        errsSeen.push(`"${c}" → ${(ch.textContent || '').split('\n')[0]}`);
-    });
-  });
-  errsSeen.forEach(e => fail(`${label}: hint ka command nahi chala — ${e}`));
-
-  /* sim object nikalne ke liye ek task check ko probe karo */
-  const probe = { records: [], history: [], sys: null };
-  let sim = null;
-  try {
-    /* renderer ne sim ko closure mein rakha hai — task checks ke through pata karo */
-    const s = stage._lastSim;
-    sim = s;
-  } catch (e) { /* neeche fallback */ }
-
-  /* seedha: renderer ke andar se sim uthane ke liye stage par hook lagao */
-  if (!sim) {
-    const hooked = Object.assign({}, stage, {
-      tasks: (stage.tasks || []).map(tk => ({ text: tk.text, check: s => { sim = s; return tk.check(s); } })),
-      success: s => { sim = s; return stage.success(s); },
-    });
-    const t2 = openTerminal(hooked);
-    cmds.forEach(c => {
-      t2.input.value = c;
-      try { t2.handler({ key: 'Enter', preventDefault() {} }); } catch (e) { /* upar report ho chuka */ }
-    });
-  }
-
-  if (!sim) { fail(`${label}: sim state nahi mila`); return; }
-
-  let allPass = true;
-  (stage.tasks || []).forEach((tk, i) => {
-    let r = false;
-    try { r = !!tk.check(sim); } catch (e) { fail(`${label} task[${i}]: check() crash — ${e.message}`); }
-    if (!r) { fail(`${label} task[${i}] "${tk.text}" hints chalane ke baad bhi pass nahi hua`); allPass = false; }
-    else ok();
-  });
-  let succ = false;
-  try { succ = !!stage.success(sim); } catch (e) { fail(`${label}: success() crash — ${e.message}`); }
-  if (!succ) { fail(`${label}: hints chalane ke baad bhi success() false hai`); allPass = false; }
-  else ok();
-
-  /* (b) TRIVIAL-SUCCESS GUARD */
-  const blank = { records: [], history: [], sys: SD.defaultSys(), lastError: null, hintsUsed: 0, done: false };
-  let trivial = false;
-  try { trivial = !!stage.success(blank); } catch (e) { /* throw karna theek hai */ }
-  if (trivial) fail(`${label}: success() bina kuch kiye hi true hai — mission apne aap complete ho jaayega`);
-  else ok();
-
-  return allPass;
-}
-
 function missions() {
-  console.log('\n🧪 MISSIONS (hints ko asli perfsim par chala ke)');
-  let n = 0;
-  allLevels.forEach(({ track, level: l }) => {
-    if (ONLY && l.id !== ONLY) return;
-    allStages(l).forEach((st, si) => {
-      if (st.type === 'terminal') { n++; runMission(st, `${l.id} stage[${si}]`); }
-      if (st.type === 'interview') {
-        (st.questions || []).forEach((q, qi) => {
-          if (q.terminal) { n++; runMission(q.terminal, `${l.id} interview q[${qi}]`); }
-        });
-      }
-    });
-  });
-  console.log(`  missions run: ${n}`);
+  console.log('\n🧪 MISSIONS (explicit solution + adversarial engine replay)');
+  const result = require('./tools/replay-missions').run({ only: ONLY, silent: true });
+  result.failures.forEach(fail);
+  checks += result.checks;
+  console.log(`  ${result.missions} missions · ${result.omissions} omitted-step attempts · ${result.fuzz} malformed-input attempts`);
 }
 
 /* =====================================================================
@@ -687,14 +600,14 @@ function render() {
   ok();
 
   ['showHome', 'showTrack', 'showIntro', 'runStage', 'showCertificate'].forEach(fn => {
-    const t = vm.runInContext(`typeof ${fn}`, sandbox);
+    const t = vm.runInContext(`typeof SD.ui.${fn}`, sandbox);
     if (t !== 'function') fail(`app.js mein ${fn}() nahi mila`); else ok();
   });
 
   let n = 0;
   allLevels.forEach(({ track, level: l }) => {
     try {
-      vm.runInContext(`showIntro(SD.levelSets[${JSON.stringify(track.id)}].find(x => x.id === ${JSON.stringify(l.id)}))`, sandbox);
+      vm.runInContext(`SD.ui.showIntro(SD.levelSets[${JSON.stringify(track.id)}].find(x => x.id === ${JSON.stringify(l.id)}))`, sandbox);
       n++;
       const app = sandbox.document._els['app'];
       const html = (app ? app.children : []).map(c => c._html || '').join(' ');
@@ -757,7 +670,7 @@ function labs() {
           if (i === knobs.length) {
             try {
               const won = !!st.check(cur);
-              if (won) solvable++;
+              if (SD.tradeoffStatus(st, cur).ok) solvable++;
               /* verdict ki line aur check() ek hi baat bolein — warna player "✅ sahi" padhta hai
                  par level aage nahi badhta (ya ❌ padhta hai aur level poora ho jaata hai) */
               if (!mismatch && st.verdict && !!st.verdict(cur).ok !== won) mismatch = { won, at: JSON.stringify(cur) };
@@ -776,7 +689,7 @@ function labs() {
         const start = {};
         knobs.forEach(k => { start[k.id] = k.value; });
         let pre = false;
-        try { pre = !!st.check(start); } catch (e) { fail(`${at}: check() starting values par crash — ${e.message}`); }
+        try { pre = SD.tradeoffStatus(st, start).ok; } catch (e) { fail(`${at}: goal starting values par crash — ${e.message}`); }
         if (pre) fail(`${at}: goal SHURU MEIN HI poora hai — player ko knob chhoona hi nahi padega`);
         else ok();
 
@@ -799,8 +712,9 @@ function labs() {
         const opts = byClass(arena, 'rp-opt');
         if (opts.length && ai < asks.length) {
           const want = asks[ai].ask.answer;
-          if (!opts[want]) { fail(`${at}: ask[${ai}] ka sahi option render hi nahi hua`); break; }
-          opts[want].click();                                   /* sahi jawab */
+          const right = opts.find(b => String(b.dataset.i) === String(want));
+          if (!right) { fail(`${at}: ask[${ai}] ka sahi option render hi nahi hua`); break; }
+          right.click();                                        /* sahi jawab */
           ai++;
           const go = one(arena, 'rp-go');
           if (go) go.click();
@@ -857,9 +771,10 @@ function labs() {
 
     if (st.type === 'archdiff') {
       const flawIds = (st.flaws || []).map(f => f.id);
-      byClass(arena, 'ad-node')
-        .filter(c => flawIds.indexOf(c.dataset.id) > -1)
-        .forEach(c => c.click());
+      byClass(arena, 'ad-node').forEach(c => {
+        const action = one(c, flawIds.includes(c.dataset.id) ? 'ad-flaw-btn' : 'ad-safe-btn');
+        if (action) action.click();
+      });
       const fin = one(arena, 'ad-done');
       if (fin) fin.click();
       if (!done) fail(`${at}: SOFTLOCK — saari flaws par click karne par bhi lab poora nahi hua`);

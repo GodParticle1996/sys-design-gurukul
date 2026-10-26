@@ -52,7 +52,7 @@ VISUALS['stripe-gil'] = {
       <div class="dg-node is-gold"><span class="ni">📬</span><span class="nl">1 process, extras queue par</span><span class="ns">73/s</span></div>
       <div class="dg-node is-good"><span class="ni">8️⃣</span><span class="nl">8 processes</span><span class="ns">420/s, p99 142 ms</span></div>
     </div>
-    <div class="dg-cap">Node ka single thread = Ruby ke GIL ki shakal. Language nahi badli, architecture badla.</div>`,
+    <div class="dg-cap">Lab mein CPU JS ek event loop par hai; Node worker threads/processes alag concurrency options hain. Language nahi badli, architecture badla.</div>`,
 };
 
 SD.registerLevels('stories', [
@@ -138,26 +138,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Hamara Python monolith dheema aur ulajha hua hai. Go mein rewrite karein?"',
-        choices: [
-          'Pehle poochho asal mein kya mushkil hai — onboarding, refactor, tests (productivity) ya latency/throughput (performance); dono ke alag, sasta ilaaj; rewrite aakhri option',
-          'Haan, Go tez hai',
-          'Microservices mein tod do',
-          'Kuch mat karo',
-        ],
+        choices: ["Productivity vs runtime bottleneck maapo","Language benchmark par rewrite decide","All modules ko network services banao","Slow code ko untouched chhod do"],
         answer: 0,
         explain: 'Stripe ka tareeka: problem ko naam do, phir sabse chhota ilaaj.',
-      },
+       choiceExplanations: ["Stripe ka tareeka: problem ko naam do, phir sabse chhota ilaaj.","Benchmark production causes aur parity cost establish nahi karta.","Network boundaries latency/ops cost add karti hain.","Problem identify karke targeted improvement possible hai."] },
       {
         q: 'Interviewer: "Rewrite ki sabse chhupi keemat?"',
-        choices: [
-          'Business chalta rehta hai — do systems saath chalana, features dono mein, saalon ka hidden knowledge (edge cases) dobara seekhna',
-          'Naye servers',
-          'Nayi language seekhna',
-          'Koi keemat nahi',
-        ],
+        choices: ["Parallel systems aur behavior parity","Only compiler installation ka cost","Only replacement servers ka bill","New syntax se edge cases inherit"],
         answer: 0,
         explain: 'Purana code sirf code nahi, saalon ke sabak hai.',
-      },
+       choiceExplanations: ["Purana code sirf code nahi, saalon ke sabak hai.","Tool setup total migration effort ka small part hai.","Infrastructure bill domain knowledge/retesting cost cover nahi karta.","Old edge cases automatic new implementation mein transfer nahi hote."] },
     ],
   },
   success: [
@@ -235,15 +225,10 @@ dynamic edges  0                  →  0</pre>
       ],
       observe: {
         q: 'Sirf 60 dynamic calls (static ka ~1%) se 91/300 changes mein failing test kyun chhoota?',
-        choices: [
-          'Ek chhupa raasta poore upstream subgraph ko andha kar deta hai — us raaste ke saare callers ke tests selective runner ko dikhte hi nahi',
-          'Tests flaky the',
-          'Selective runner mein bug',
-          '60 bahut zyada hain',
-        ],
+        choices: ["Missing edge ne affected tests chhupaye","Dynamic calls ne tests faster banaye","Graph ne all callers trace kar liye","Few edges se impact bhi few hi hoga"],
         answer: 0,
         explain: 'Graph ek zanjeer hai — ek tooti kadi sab kuch chhupa deti hai.',
-      },
+       choiceExplanations: ["Graph ek zanjeer hai — ek tooti kadi sab kuch chhupa deti hai.","Faster execution false-negative test selection justify nahi karta.","Missing edge upstream dependencies hide karta hai.","Single missing edge large caller subgraph ko affect kar sakta hai."] },
       lesson: 'Selective testing ki taakat graph ki sachchai jitni hai. Dynamic calls kam karo, ya unhe graph mein declare karo.',
     },
     {
@@ -252,26 +237,16 @@ dynamic edges  0                  →  0</pre>
       questions: [
         {
           q: '"Gradual" typing ka faayda 5 crore line codebase mein?',
-          choices: [
-            'Ek saath sab type nahi karna padta — jahan faayda wahan pehle, baaki untyped chalega; dheere-dheere coverage badhao',
-            'Types optional hain toh bekaar',
-            'Gradual matlab dheema',
-            'Sirf naye code mein',
-          ],
+          choices: ["Types ko incrementally introduce","Types add karte hi all code verify","Only new files par types valid","Untyped regions ka risk zero maano"],
           answer: 0,
-          explain: 'Isi se 37 lakh lines ka ek-PR refactor mumkin hua — pehle se kaafi types the.',
-        },
+          explain: "Gradual typing boundaries ko incrementally strengthen karti hai, par annotation alone all runtime behavior prove nahi karti. Coverage, escape hatches aur tooling rules refactor confidence ke relevant evidence hain.",
+         choiceExplanations: ["Gradual typing boundaries ko incrementally strengthen karti hai, par annotation alone all runtime behavior prove nahi karti. Coverage, escape hatches aur tooling rules refactor confidence ke relevant evidence hain.","Partial coverage untyped behavior fully verify nahi karti.","Existing code bhi incrementally annotate ho sakta hai.","Dynamic/untyped boundaries mein runtime errors reh sakte hain."] },
         {
           q: 'Stripe ke tooling ka lock-in kya hai?',
-          choices: [
-            'Ruby chhodna = das saal ka custom tooling (Sorbet, selective CI, Minions) aur gyaan bhi chhodna/migrate karna',
-            'Ruby license',
-            'Cloud vendor',
-            'Koi lock-in nahi',
-          ],
+          choices: ["Language-specific tooling ka investment","Ruby license ka annual lock-in","Cloud region ka fixed network path","Shared repo ka automatic vendor tie"],
           answer: 0,
           explain: 'Jitna gehra invest, utna gehra lock-in — soch ke liya gaya sauda.',
-        },
+         choiceExplanations: ["Jitna gehra invest, utna gehra lock-in — soch ke liya gaya sauda.","Ruby license yahan internal toolchain investment ka cost nahi.","Question language migration ka hai, cloud placement ka nahi.","Monorepo apne aap specific vendor tie nahi banata."] },
       ],
     },
   ],
@@ -281,26 +256,16 @@ dynamic edges  0                  →  0</pre>
     questions: [
       {
         q: 'Interviewer: "Monorepo CI 90 minute leta hai. Microservices mein todein?"',
-        choices: [
-          'Pehle selective test execution — build/call graph se affected tests; graph ko traceable rakho (dynamic calls kam/declare); network boundaries ki keemat ke bina wahi faayda',
-          'Haan, tod do',
-          'Zyada CI machines',
-          'Tests kam karo',
-        ],
+        choices: ["Affected tests aur conservative fallback","Service split se tests delete karo","Parallel workers, dependency graph nahi","Failing tests ko permanently disable"],
         answer: 0,
         explain: 'Lab: aam change par 0.7% tests.',
-      },
+       choiceExplanations: ["Lab: aam change par 0.7% tests.","Service boundaries behavior coverage requirement remove nahi kartin.","Parallelism helpful hai par unnecessary tests/correct selection alag concerns hain.","Tests disable karna correctness risk chhupata hai."] },
       {
         q: 'Interviewer: "Selective CI ne ek bug miss kiya jo reflection se call hota tha."',
-        choices: [
-          'Graph ka blind spot — reflection/dynamic dispatch ko lint se pakdo, allowlist mein declare karo, aur periodic full runs rakho',
-          'Selective CI band karo',
-          'Reflection allowed hai, kuch nahi kar sakte',
-          'Test dobara chalao',
-        ],
+        choices: ["Dynamic edges declare, full runs rakho","Same selected subset repeat karo","All reflection ko invisible rehne do","Random tests ko complete proof maano"],
         answer: 0,
         explain: 'Lab: 60 dynamic edges → 91/300 changes mein miss.',
-      },
+       choiceExplanations: ["Lab: 60 dynamic edges → 91/300 changes mein miss.","Same blind subset missing dependency cover nahi karega.","Untracked calls conservative fallback ya declarations maangti hain.","Random coverage dependency completeness guarantee nahi."] },
     ],
   },
   success: [
@@ -334,8 +299,7 @@ dynamic edges  0                  →  0</pre>
   lesson: [
     `<h3>🎤 Ek mic, bahut singers</h3>
      <p>Ruby ka <b>GIL</b> (Global Interpreter Lock): ek process mein ek waqt <b>ek</b> thread Ruby chalata hai — jaise stage par
-     ek mic, singers baari-baari. Machine mein 16 cores hon, ek Ruby process ~1 core jitna kaam karega. Node ka JavaScript bhi
-     ek process mein ek thread par chalta hai — wahi shakal.</p>
+     ek mic, singers baari-baari. Machine mein 16 cores hon, ek Ruby process ~1 core jitna kaam karega. CPU JavaScript ek event loop par serial execute ho sakti hai; Node worker threads aur processes se parallel work bhi chalata hai. MRI Ruby GVL aur Node execution model identical nahi.</p>
      <p>Charge ka raasta: fraud score, user auth, charge authorize, ledger update — Stripe ka <b>sabse latency-sensitive,
      sabse zaroori</b> system, synchronously Ruby mein.</p>
      <h3>🧮 Ilaaj: architecture, language nahi</h3>
@@ -370,15 +334,10 @@ WORKERS=8 EXTRAS=queue  420 charges/s | p50  30 ms | p99 142 ms   (14-core lapto
       ],
       observe: {
         q: '14 cores ki machine par 1 process ~50 charges/s par kyun ruka?',
-        choices: [
-          'Ek process ek waqt ek core — 1000 ms ÷ 20 ms per charge ≈ 50/s; baaki 13 cores khaali',
-          'Network limit',
-          'Disk slow',
-          'Load tool dheema',
-        ],
+        choices: ["20ms serial CPU work se ~50/s ceiling","14 cores se one loop 700/s dega","Async await CPU work parallel karega","Fast disk se loop multi-core hoga"],
         answer: 0,
-        explain: 'GIL/single-thread ki chhat. Cores tabhi kaam aate hain jab processes hon.',
-      },
+        explain: "Lab mein CPU-heavy JavaScript ek event-loop thread par execute hoti hai. More processes ya worker threads cores use kar sakte hain. MRI Ruby GVL interpreted Ruby threads ko limit karta hai; I/O/native work aur other Ruby implementations alag behavior rakh sakte hain.",
+       choiceExplanations: ["Lab mein CPU-heavy JavaScript ek event-loop thread par execute hoti hai. More processes ya worker threads cores use kar sakte hain. MRI Ruby GVL interpreted Ruby threads ko limit karta hai; I/O/native work aur other Ruby implementations alag behavior rakh sakte hain.","Multiple cores tabhelp jab workload concurrently execute ho.","Await I/O scheduling deta hai; CPUloop khud parallel nahi.","Disk throughput serial CPU budget nahi badhata."] },
       lesson: 'Performance problem ka ilaaj: kaam path se hatao, processes badhao — language wahi.',
     },
     {
@@ -405,26 +364,16 @@ WORKERS=8 EXTRAS=queue  420 charges/s | p50  30 ms | p99 142 ms   (14-core lapto
     questions: [
       {
         q: 'Interviewer: "Node API 32-core machine par 1 core use karta hai."',
-        choices: [
-          'Cluster/multiple processes (ya containers) + load balancer; CPU-heavy kaam worker threads/alag service; non-zaroori kaam queue par',
-          'Bada single core CPU',
-          'Go mein rewrite',
-          'Async/await lagao',
-        ],
+        choices: ["Workers/processes + load balance","Only async await se cores fill","Only timeout ko zyada rakho","CPU queue ko unlimited grow karo"],
         answer: 0,
-        explain: 'async/await I/O ke liye hai, CPU ke liye nahi. Lab: 1 → 8 processes = 73 → 420/s.',
-      },
+        explain: "Await CPU-bound JavaScript ko parallel nahi karta. Profile karke worker_threads, process pool ya native/off-path work choose karo; transfer, scheduling aur shared-data costs measure karo. Lab cluster processes ek example hain.",
+       choiceExplanations: ["Await CPU-bound JavaScript ko parallel nahi karta. Profile karke worker_threads, process pool ya native/off-path work choose karo; transfer, scheduling aur shared-data costs measure karo. Lab cluster processes ek example hain.","Async I/O CPU heavy JavaScript parallel nahi karta.","Timeout compute throughput nahi badhata.","Unbounded queue latency aur memory blowup badhati hai."] },
       {
         q: 'Interviewer: "Checkout slow hai; handler mein PDF invoice banta hai."',
-        choices: [
-          'Invoice ko request path se bahar — queue + worker; checkout sirf zaroori kadam',
-          'PDF library tez karo',
-          'Timeout badhao',
-          'Server bada karo',
-        ],
+        choices: ["Noncritical invoice ko durable job banao","Checkout timeout ko aur bada karo","PDF ko same handler mein repeat karo","Queue ack se invoice complete maano"],
         answer: 0,
         explain: 'Lab: extras queue par → 46 → 73/s ek hi process mein.',
-      },
+       choiceExplanations: ["Lab: extras queue par → 46 → 73/s ek hi process mein.","Timeout userwait badhata hai, request path work nahi ghatata.","Repeated generation CPUwaste retain karta hai.","Accepted job aur completed invoice alag states hain."] },
     ],
   },
   success: [

@@ -65,13 +65,7 @@ VISUALS['aws-constant-work'] = {
 
 VISUALS['aws-proofs'] = {
   t: 'Testing sample hai, proof poora',
-  html: `
-    <div class="dg-grid">
-      <div class="dg-node is-gold"><span class="ni">🧪</span><span class="nl">Testing</span><span class="ns">kuch raaste chala ke dekhe. Scale par 1-in-a-billion raasta ek aam dopahar ko chalta hai</span></div>
-      <div class="dg-node is-good"><span class="ni">📐</span><span class="nl">TLA+ model checking</span><span class="ns">har reachable state dekhta hai — DynamoDB replication bug, sabse chhota failing trace 35 kadam</span></div>
-      <div class="dg-node is-good"><span class="ni">🔏</span><span class="nl">Zelkova</span><span class="ns">IAM/S3 policy → math → SMT solver: "kya KOI bhi request is bucket ko public bana sakti hai?"</span></div>
-    </div>
-    <div class="dg-cap">Zelkova hi IAM Access Analyzer, S3 Block Public Access aur console ke "Public" badge ke peeche hai.</div>`,
+  html: "\n    <div class=\"dg-grid\">\n      <div class=\"dg-node is-gold\"><span class=\"ni\">🧪</span><span class=\"nl\">Testing</span><span class=\"ns\">kuch raaste chala ke dekhe. Scale par 1-in-a-billion raasta ek aam dopahar ko chalta hai</span></div>\n      <div class=\"dg-node is-good\"><span class=\"ni\">📐</span><span class=\"nl\">TLA+ model checking</span><span class=\"ns\">bounded modeled states explore karta hai — DynamoDB replication bug, sabse chhota failing trace 35 kadam</span></div>\n      <div class=\"dg-node is-good\"><span class=\"ni\">🔏</span><span class=\"nl\">Zelkova</span><span class=\"ns\">IAM/S3 policy → math → SMT solver: \"kya KOI bhi request is bucket ko public bana sakti hai?\"</span></div>\n    </div>\n    <div class=\"dg-cap\">Zelkova hi IAM Access Analyzer, S3 Block Public Access aur console ke \"Public\" badge ke peeche hai.</div>",
 };
 
 SD.registerLevels('ai', [
@@ -90,20 +84,7 @@ SD.registerLevels('ai', [
     'Production par SSH nahi — security aur scaling dono',
   ],
   lesson: [
-    `<h3>🛒 Yeh aam shopping list nahi</h3>
-     <p>Amazon ka capex ~$200B saal (roz $0.5B se zyada), zyadatar AWS. 2016 mein James Hamilton ne kaha
-     tha: AWS har din itni capacity jodta hai jitni 2004 ke poore Amazon (ek $7B company) ko chalane ke
-     liye chahiye thi. Aur yeh servers "khareedna" nahi — apne servers, apne CPUs (Graviton), apne routers,
-     apna fiber aur undersea cables mein hissa, data center ke andar apna transport (TCP nahi).</p>
-     <p>Kyun? Vendor ka saamaan hazaron machines ke liye bana hai. <b>Laakhon</b> par jo kharche aur failure
-     rates dikhte nahi the, woh bahut bade ho jaate hain → khud banana sasta.</p>
-     <p class="tip">Ek mithak bhi: "AWS retail ke khaali servers kiraye par dene se bana" — galat. Holiday peak
-     par woh servers wapas chahiye hote. Asli wajah: andar ki takleef, har team infra dobara bana rahi thi;
-     Bezos ka mandate — mazboot internal services; phir woh hunar bech diya.</p>
-     <h3>🎲 Failure ek RATE hai</h3>
-     <p>Ek machine par 1-in-a-million/din wali galti shayad kabhi na dikhe. 10 lakh machines par wahi galti
-     <b>roz</b> hoti hai. Werner Vogels: <b>"Everything fails all the time."</b> Design ka sawaal "kya yeh
-     fail hoga?" nahi, "yeh roz kitni baar fail hoga, aur tab kya?"</p>`,
+    "<h3>🛒 Yeh aam shopping list nahi</h3>\n     <p>Amazon ka capex ~$200B saal (roz $0.5B se zyada), zyadatar AWS. 2016 mein James Hamilton ne kaha\n     tha: AWS har din itni capacity jodta hai jitni 2004 ke poore Amazon (ek $7B company) ko chalane ke\n     liye chahiye thi. Aur yeh servers \"khareedna\" nahi — apne servers, apne CPUs (Graviton), apne routers,\n     apna fiber aur undersea cables mein hissa, data center ke andar apna transport (TCP nahi).</p>\n     <p>Kyun? Vendor ka saamaan hazaron machines ke liye bana hai. <b>Laakhon</b> par jo kharche aur failure\n     rates dikhte nahi the, woh bahut bade ho jaate hain → khud banana sasta.</p>\n     <p class=\"tip\">Ek mithak bhi: \"AWS retail ke khaali servers kiraye par dene se bana\" — galat. Holiday peak\n     par woh servers wapas chahiye hote. Asli wajah: andar ki takleef, har team infra dobara bana rahi thi;\n     Bezos ka mandate — mazboot internal services; phir woh hunar bech diya.</p>\n     <h3>🎲 Failure ek RATE hai</h3>\n     <p>Ek machine par 1-in-a-million/din wali galti shayad kabhi na dikhe. 10 lakh machines par wahi galti\n     <b>roz</b> hoti hai. Werner Vogels: <b>\"Everything fails all the time.\"</b> Design ka sawaal \"kya yeh\n     fail hoga?\" nahi, \"yeh roz kitni baar fail hoga, aur tab kya?\"</p>",
     `<h3>🖥️ Nitro — overhead ko CPU se hatao</h3>
      <p>Pehle dashak AWS Xen hypervisor chalata tha — virtual networking, storage emulation, management, sab
      customer ke CPU par. Yeh overhead × crore machines = <b>poore data centers</b> sirf Xen chala rahe the.</p>
@@ -137,7 +118,7 @@ SD.registerLevels('ai', [
           q: 'Hypervisor har machine ka 10% CPU khata hai. 20 lakh machines par kitni machines ka CPU sirf hypervisor par?',
           unit: 'machines', given: ['10% overhead', '20,00,000 machines'],
           answer: 200000, tol: 0.3,
-          steps: ['20,00,000 × 0.10 = 2,00,000', 'Poore data centers jitna — yahi Nitro ki wajah'],
+          steps: ["20,00,000 × 0.10 = 2,00,000", 'Poore data centers jitna — yahi Nitro ki wajah'],
           lesson: 'Chhota kharcha × fleet = bada faisla. Scale par har % ka hisaab lagao.',
         },
       ],
@@ -148,26 +129,16 @@ SD.registerLevels('ai', [
       questions: [
         {
           q: 'Production hosts par SSH band karne ka SCALING wala faayda?',
-          choices: [
-            'Agar har problem par insaan ko login karna pade, ops team fleet ke saath badhegi — woh bottleneck ban jaata hai. Tay APIs automate ho sakte hain',
-            'SSH dheema hai',
-            'SSH mehenga hai',
-            'Koi scaling faayda nahi, sirf security',
-          ],
+          choices: ["Repeatable operations APIs se automate","SSH packet latency fleet bottleneck","API means authentication unnecessary","No SSH means no emergency access"],
           answer: 0,
           explain: 'Video ka sabak: aise systems mat banao jinhe badhne ke liye insaan badhane padein.',
-        },
+         choiceExplanations: ["Video ka sabak: aise systems mat banao jinhe badhne ke liye insaan badhane padein.","Scaling issue manual per-host intervention ka labor/correctness cost hai.","Operational endpoints strong auth, audit and bounded actions maangte hain.","Break-glass paths planned and controlled ho sakte hain."] },
         {
           q: '"AWS retail ke khaali servers kiraye se bana" — yeh galat kyun?',
-          choices: [
-            'Holiday peak par retail ko woh servers wapas chahiye hote — asli wajah andar ki takleef aur mazboot internal services ka hunar tha',
-            'Kyunki retail ke paas servers nahi the',
-            'Kyunki AWS pehle bana, retail baad mein',
-            'Kyunki servers purane the',
-          ],
+          choices: ["Dedicated cloud service economics alag","Retail had no server infrastructure","AWS launch predates retail business","Unused capacity alone proves origin"],
           answer: 0,
           explain: 'Achha mithak, par economics ulta hai.',
-        },
+         choiceExplanations: ["Achha mithak, par economics ulta hai.","Retail infrastructure thi; simplistic rental-origin story incomplete hai.","Amazon retail business AWS se pehle tha.","Shared operational expertise aur service architecture ka context matter karta hai."] },
       ],
     },
   ],
@@ -177,26 +148,16 @@ SD.registerLevels('ai', [
     questions: [
       {
         q: 'Interviewer: "Hamara fleet 100 se 10,000 machines hoga. Ops kaise sambhaloge?"',
-        choices: [
-          'Failure ko rate maan ke design: automatic detection, replacement, repair; har operational kaam ek tay, authenticated API; SSH ek emergency raasta, aadat nahi',
-          '10× zyada ops engineers',
-          'Behtar hardware jo fail na ho',
-          'Har machine par monitoring agent aur on-call',
-        ],
+        choices: ["Automated detection, replacement and repair","Only headcount fleet ke proportion mein","Hardware failures ko impossible maano","Monitoring alerts without remediation"],
         answer: 0,
         explain: 'Ops ko fleet ke saath linearly mat badhne do.',
-      },
+       choiceExplanations: ["Ops ko fleet ke saath linearly mat badhne do.","Headcount-only response large fleet operations scale poorly karta hai.","At scale failures expected rates par aati hain.","Detection important hai; safe action and recovery paths bhi chahiye."] },
       {
         q: 'Interviewer: "Khud hardware banana kab samajhdaari hai?"',
-        choices: [
-          'Jab scale itna bada ho ki vendor ke chhupe kharche (overhead %, failure modes) × fleet, khud banane ki keemat se zyada ho jaayein — aur problem tumhare liye khaas ho',
-          'Hamesha',
-          'Kabhi nahi',
-          'Jab team badi ho',
-        ],
+        choices: ["Workload TCO aur execution fit","Any large team should design chips","Only unit sticker price compare","Vendor overhead always exceeds R&D"],
         answer: 0,
         explain: 'Dropbox (storage) aur AWS (Nitro) — dono ne yahi hisaab lagaya.',
-      },
+       choiceExplanations: ["Dropbox (storage) aur AWS (Nitro) — dono ne yahi hisaab lagaya.","Team size workload benefit ya hardware capability establish nahi karta.","R&D, supply chain, qualification and long-term support total cost hain.","Vendor economies some workloads mein better deal de sakti hain."] },
     ],
   },
   success: [
@@ -244,23 +205,7 @@ SD.registerLevels('ai', [
        <tr><td>Order mein delivery (ek ruka toh sab ruke)</td><td>Head-of-line blocking tail latency khaata hai</td></tr>
        <tr><td>Loss recovery ms mein</td><td>RTT µs mein — recovery delivery se ~8,000× lamba</td></tr>
      </table>`,
-    `<h3>🌊 SRD — Scalable Reliable Datagram</h3>
-     <p>Ek flow ko <b>64 raaston</b> par bikher do. Order ki parwah mat karo — upar wali layer packets jod legi.
-     Khoya packet <b>microseconds</b> mein kisi dusre raaste se dobara. Congestion control sirf Amazon ke apne
-     network ke liye tuned. Ek link mara = 1/64 capacity kam, aur baaki 63 par µs mein retransmit.</p>
-     <h3>📏 Lab 20 (ex3) — 1,000 flows × 1 MB, 64 raaste, raasta #0 kharab</h3>
-     <pre>kharabi             protocol    p50        p99        max
-sab theek           TCP         89 µs      89 µs      89 µs
-1 raasta 1% loss    TCP         89 µs      1.09 ms    3.09 ms
-1 raasta 1% loss    SRD         89 µs      110 µs     110 µs
-1 raasta dead 20ms  TCP         89 µs      31.09 ms   31.09 ms
-1 raasta dead 20ms  SRD         110 µs     110 µs     110 µs</pre>
-     <p>p50 dono ka <b>same</b>. Farq sirf unlucky flows mein: TCP ka flow ek raaste par hash hota hai (ECMP) →
-     1/64 flows kharab raaste par → ms tak ruke. SRD mein har flow ka thoda hissa kharab raaste par → sab ~20 µs
-     dheeme, koi ms tak nahi. (Model ki assumptions tool ke upar likhi hain; Linux ka default RTO min 200 ms
-     lagao toh TCP p99 200 ms.)</p>
-     <p class="tip">🎯 Kisi bhi technology ke peeche ki <b>maanyataein</b> poochho. TCP internet ke liye bana
-     tha; data center ki physics alag hai.</p>`,
+    "<h3>🌊 SRD — Scalable Reliable Datagram</h3>\n     <p>Ek flow ko <b>64 raaston</b> par bikher do. Order ki parwah mat karo — upar wali layer packets jod legi.\n     Khoya packet <b>microseconds</b> mein kisi dusre raaste se dobara. Congestion control sirf Amazon ke apne\n     network ke liye tuned. Ek link mara = 1/64 capacity kam, aur baaki 63 par µs mein retransmit.</p>\n     <h3>📏 Lab 20 (ex3) — 1,000 flows × 1 MB, 64 raaste, raasta #0 kharab</h3>\n     <pre>kharabi             protocol    p50        p99        max\nsab theek           TCP         89 µs      89 µs      89 µs\n1 raasta 1% loss    TCP         89 µs      1.09 ms    3.09 ms\n1 raasta 1% loss    SRD         89 µs      110 µs     110 µs\n1 raasta dead 20 ms  TCP         89 µs      31.09 ms   31.09 ms\n1 raasta dead 20 ms  SRD         110 µs     110 µs     110 µs</pre>\n     <p>p50 dono ka <b>same</b>. Farq sirf unlucky flows mein: TCP ka flow ek raaste par hash hota hai (ECMP) →\n     1/64 flows kharab raaste par → ms tak ruke. SRD mein har flow ka thoda hissa kharab raaste par → sab ~20 µs\n     dheeme, koi ms tak nahi. (Model ki assumptions tool ke upar likhi hain; Linux ka default RTO min 200 ms\n     lagao toh TCP p99 200 ms.)</p>\n     <p class=\"tip\">🎯 Kisi bhi technology ke peeche ki <b>maanyataein</b> poochho. TCP internet ke liye bana\n     tha; data center ki physics alag hai.</p>",
   ],
   stages: [
     {
@@ -277,15 +222,10 @@ sab theek           TCP         89 µs      89 µs      89 µs
       ],
       observe: {
         q: 'TCP ka p50 SRD jitna hi achha (89 µs). Toh SRD kis cheez ke liye bana?',
-        choices: [
-          'Tail ke liye — 1/64 unlucky flows jo kharab raaste par hash hue, woh ms (ya 200 ms) tak ruke. Badi training/storage mein sabse dheema flow hi poore kaam ki speed tay karta hai',
-          'p50 behtar karne ke liye',
-          'Bandwidth badhane ke liye',
-          'Encryption ke liye',
-        ],
+        choices: ["Flow tail ne synchronized job roka","Median latency was only objective","Encryption consumes unlucky flows","Average bandwidth proves no tail"],
         answer: 0,
         explain: 'Fan-out wale kaam mein (ek step = hazaron flows) p99 hi asli latency hai.',
-      },
+       choiceExplanations: ["Fan-out wale kaam mein (ek step = hazaron flows) p99 hi asli latency hai.","Same p50 ke saath rare stalls synchronized work affect kar sakte hain.","Transport design question tail routing/recovery ka hai.","Average bandwidth individual slow paths hide kar sakti hai."] },
       lesson: 'Multipath + no ordering + µs retransmit = ek kharab raasta sirf ek chhota sa dent, jhatka nahi.',
     },
     {
@@ -307,26 +247,16 @@ sab theek           TCP         89 µs      89 µs      89 µs
     questions: [
       {
         q: 'Interviewer: "Distributed training ke step ka p99 kharab hai jabki average theek. Network mein kya dekhoge?"',
-        choices: [
-          'Unlucky flows — ECMP hash se kharab/congested link par gaye flows aur TCP ka HOL blocking + RTO; multipath spraying / RTO tuning / flow-level load balancing',
-          'Average bandwidth badhao',
-          'Packets bade karo',
-          'Compression lagao',
-        ],
+        choices: ["Per-flow congestion and recovery trace","Only mean bandwidth graph dekho","Learning rate ko network knob maano","Disable retries without failure plan"],
         answer: 0,
         explain: 'Tail ki wajah aksar ek chhota hissa hota hai — aur fan-out use poora kaam bana deta hai.',
-      },
+       choiceExplanations: ["Tail ki wajah aksar ek chhota hissa hota hai — aur fan-out use poora kaam bana deta hai.","Mean isolated stalled flows hide kar sakta hai.","Learning rate transport routing/retransmission control nahi.","Recovery remove karna data loss/failures la sakta hai."] },
       {
         q: 'Interviewer: "Feature-rich router ya simple switch?"',
-        choices: [
-          'Scale par simple — failure modes kam aur predictable; features upar software mein; redundancy fabric (bahut raaste) se',
-          'Hamesha feature-rich',
-          'Jo sasta ho',
-          'Jo vendor recommend kare',
-        ],
+        choices: ["Required features vs predictable failure","Simple hardware cannot ever fail","Feature count guarantees resilience","Only lowest purchase price choose"],
         answer: 0,
         explain: 'Hamilton ka sawaal: failure kaisa dikhega aur kitna hamara control mein?',
-      },
+       choiceExplanations: ["Hamilton ka sawaal: failure kaisa dikhega aur kitna hamara control mein?","Simple components bhi fail hote hain; redundancy and operations chahiye.","More features additional state/failure modes la sakte hain.","Lifecycle cost, capacity and support price ke saath compare karo."] },
     ],
   },
   success: [
@@ -359,22 +289,7 @@ sab theek           TCP         89 µs      89 µs      89 µs
     'Physalia: har volume ka apna chhota database',
   ],
   lesson: [
-    `<h3>☕ Barista vs coffee machine</h3>
-     <p>Barista: order aaya toh banaya, nahi toh baitha. Shaant din aaram, rush hour mein pagal. Coffee machine:
-     har minute ek cup, chahe koi pee ya na pee. "Wasteful" — par rush hour mein bhi wahi kaam.</p>
-     <p><b>Delta sync</b> barista hai: sirf badlaav bhejo. Do bimaariyan:</p>
-     <ul>
-       <li>Shaant din kuch kaam nahi, <b>bure din hazaron updates</b> — thik tab jab system pehle se pareshan hai.</li>
-       <li>Ek update khoya → <b>hamesha ke liye drift</b>. Koi dobara nahi bhejta.</li>
-     </ul>
-     <p><b>Route 53 health checks</b> coffee machine hain: har kuch second ek service <b>har</b> health check ki
-     <b>poori</b> state ek <b>fixed-size</b> file mein S3 par likhti hai; har DNS server poori file le jaata hai.
-     0 badlaav ho ya 1,00,000 — same kaam. Kuch galat ya chhoot gaya? Agli file sab overwrite kar deti hai.</p>
-     <pre>lab 20 (10,000 checks, t=4 par 10,000 ek saath badle):
-delta     peak 9,772 msgs/sec per DNS server   drift (1% messages khoye): ~108 hamesha
-constant  hamesha 1 msg (10 KB)/sec             drift: 0</pre>
-     <p class="tip">🎯 <b>Jo cheez fail nahi honi chahiye, uska kaam predictable rakho.</b> Sabse bura din =
-     sabse shaant din.</p>`,
+    "<h3>☕ Barista vs coffee machine</h3>\n     <p>Barista: order aaya toh banaya, nahi toh baitha. Shaant din aaram, rush hour mein pagal. Coffee machine:\n     har minute ek cup, chahe koi pee ya na pee. \"Wasteful\" — par rush hour mein bhi wahi kaam.</p>\n     <p><b>Delta sync</b> barista hai: sirf badlaav bhejo. Do bimaariyan:</p>\n     <ul>\n       <li>Shaant din kuch kaam nahi, <b>bure din hazaron updates</b> — thik tab jab system pehle se pareshan hai.</li>\n       <li>Ek update khoya → <b>hamesha ke liye drift</b>. Koi dobara nahi bhejta.</li>\n     </ul>\n     <p><b>Route 53 health checks</b> coffee machine hain: har kuch second ek service <b>har</b> health check ki\n     <b>poori</b> state ek <b>fixed-size</b> file mein S3 par likhti hai; har DNS server poori file le jaata hai.\n     Is bounded-state example mein 0 ya1,00,000 changes par scheduled full-state transfer ka budget same rakha hai. Lost delta valid newer authoritative snapshot se repair ho sakti hai; corrupt source/config or missing delivery alag problem hain.</p>\n     <pre>lab 20 (10,000 checks, t=4 par 10,000 ek saath badle):\ndelta     peak 9,772 msgs/sec per DNS server   drift (1% messages khoye): ~108 hamesha\nconstant  hamesha 1 msg (10 KB)/sec             drift: 0</pre>\n     <p class=\"tip\">🎯 <b>Jo cheez fail nahi honi chahiye, uska kaam predictable rakho.</b> Sabse bura din =\n     sabse shaant din.</p>",
     `<h3>🌪️ EBS, 21 April 2011, us-east-1</h3>
      <p>Ek routine network change ne EBS ka replication traffic ek kam-capacity backup network par bhej diya.
      Volumes ne apne replicas kho diye. Network wapas aaya toh sab volumes ne ek saath <b>re-mirror</b> shuru
@@ -407,15 +322,10 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf waha
       ],
       observe: {
         q: 'Delta mein storm ke baad drift ~108 hamesha kyun reh gaya?',
-        choices: [
-          '1% messages khoye aur koi unhe dobara nahi bhejta — jab tak woh check phir se na badle, DNS server galat jawab deta rahega',
-          'DNS server slow tha',
-          'Storm abhi chal raha hai',
-          'Checks galat the',
-        ],
+        choices: ["Lost deltas repair path ke bina rahe","Every replica eventually invents update","Storm ending guarantees convergence","DNS TTL reconstructs source values"],
         answer: 0,
-        explain: 'Constant work mein har file poori state hai — koi bhi galti agli file mein apne aap theek.',
-      },
+        explain: "Is model mein lost deltas ke baad valid authoritative full snapshot state reconcile karti hai. Corrupt source, stale version, missing delivery ya bad validation next snapshot se automatically repair nahi hote.",
+       choiceExplanations: ["Is model mein lost deltas ke baad valid authoritative full snapshot state reconcile karti hai. Corrupt source, stale version, missing delivery ya bad validation next snapshot se automatically repair nahi hote.","Missing state delivery/reconciliation ke bina infer nahi hoti.","Arrival rate normal hone se dropped changes return nahi hotin.","TTL cache timing hai; source update repair mechanism nahi."] },
       lesson: 'Delta sync mein galti yaad reh jaati hai; constant work mein har cycle ek naya, poora sach.',
     },
     {
@@ -432,15 +342,10 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf waha
       ],
       observe: {
         q: 'Cells mein AZ-A ki normal queries 56% → 32% kharab hui. Phir bhi cells behtar kyun?',
-        choices: [
-          'Dard sirf wahan jahan aag lagi — AZ-B aur AZ-C 100%. Blast radius ek jaana-pehchaana number ban gaya, poora region nahi',
-          'Cells tez hain',
-          'Cells mein capacity zyada hai',
-          'AZ-A ka data kam tha',
-        ],
+        choices: ["Other cells ka failure exposure bounded","Cells create extra physical capacity","One cell fault becomes impossible","All same-cell requests guaranteed fast"],
         answer: 0,
         explain: 'Kul capacity same thi. Cells ne dukh ko baanta nahi, simit kiya.',
-      },
+       choiceExplanations: ["Kul capacity same thi. Cells ne dukh ko baanta nahi, simit kiya.","Question total capacity same rakhta hai.","Isolation failure ko scope karta hai, eliminate nahi.","Affected cell still degraded ho sakta hai."] },
       lesson: '"Guaranteed bottleneck" ko chhote tukdon mein todo aur jiska kaam hai uske paas rakho.',
     },
   ],
@@ -450,26 +355,16 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf waha
     questions: [
       {
         q: 'Interviewer: "10,000 edge servers ko config push karni hai. Delta ya full?"',
-        choices: [
-          'Jo cheez fail nahi honi chahiye uske liye constant work — har cycle poori fixed-size config, servers khud le jaayein; bura din = shaant din, aur drift apne aap theek',
-          'Delta, kyunki kam bytes',
-          'Har badlaav par sabko push',
-          'Raat ko ek baar',
-        ],
+        choices: ["Bounded snapshots + versioned pull","Only deltas, no repair snapshot","Immediate global push without budget","Full unbounded files count as constant"],
         answer: 0,
-        explain: 'Kam bytes aur predictable kaam mein se, control plane ke liye predictable jeetta hai.',
-      },
+        explain: "Bounded control state ko fixed cadence par version/checksum ke saath reconcile karna update storms ka work predictable rakh sakta hai. Full snapshots universal best nahi; state size, bandwidth and freshness budget evaluate karo.",
+       choiceExplanations: ["Bounded control state ko fixed cadence par version/checksum ke saath reconcile karna update storms ka work predictable rakh sakta hai. Full snapshots universal best nahi; state size, bandwidth and freshness budget evaluate karo.","Lost delta ke liye reconciliation or full refresh chahiye.","Failure storms push work spike create kar sakti hain.","State growth bound kiye bina full snapshot cost grow karti hai."] },
       {
         q: 'Interviewer: "Metadata DB overload ho raha hai. Bada instance le lein?"',
-        choices: [
-          'Pehle poochho kya yeh sabka saajha girne ka point hai — agar haan, toh chhote cells mein todo (per tenant/volume/AZ), jiska data uske paas',
-          'Haan, bada instance',
-          'Cache laga do',
-          'Read replicas',
-        ],
+        choices: ["Find hotspot, shared risk and capacity","Only larger metadata DB forever","Only cache, invalidation unnecessary","Only replicas for every write problem"],
         answer: 0,
         explain: 'EBS 2011 ka sabak: bada DB wahi bimari bada kar deta hai.',
-      },
+       choiceExplanations: ["EBS 2011 ka sabak: bada DB wahi bimari bada kar deta hai.","Vertical scaling temporary relief ho sakti hai; shared blast radius assess karo.","Cache correctness, freshness and miss behavior still matter.","Read replicas serialized write/metadata ownership solve nahi kartin."] },
     ],
   },
   success: [
@@ -481,7 +376,7 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf waha
     cache invalidation, feature flags). Likho: bure din uska kaam kitna badhta hai, aur ek message kho jaaye toh
     kya hota hai? Kya use "har N second poori state" mein badal sakte ho?</p>`,
   cards: [
-    { front: 'Constant work?', back: 'Har cycle poori state ek fixed-size file mein; consumers poori file lete hain. 0 ya 1 lakh badlaav — same kaam; galti agli file mein theek. (Route 53 health checks)' },
+    { front: 'Constant work?', back: "Bounded state ko version/checksum ke saath periodic full snapshot se reconcile karo. Lost updates next valid newer authoritative snapshot repair kar sakti hai; corrupt source or failed delivery nahi. Route53 course example historical bounded design hai." },
     { front: 'EBS 2011 root cause?', back: 'Network change → replicas chhoote → sab volumes ne ek saath re-mirror → sab ek shared control-plane DB se poochh rahe the → DB gira → dinon ka recovery.' },
     { front: 'Physalia?', back: 'Har EBS volume ka apna chhota 7-node Paxos cell, volume ke paas. Ek bada saajha DB ki jagah laakhon chhote — blast radius ek volume.' },
   ],
@@ -502,20 +397,7 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf waha
     'Poore AWS ke sabak ek jagah',
   ],
   lesson: [
-    `<h3>🎯 Testing = kuch raaste chala ke dekhna</h3>
-     <p>Tests kuch raaste chalate hain. Scale par 1-in-a-billion raasta ek aam dopahar ko chal jaata hai — aur
-     woh raasta tumhare test mein kabhi nahi tha.</p>
-     <h3>📐 TLA+ — har mumkin haalat</h3>
-     <p>TLA+ mein system ka <b>design</b> (code nahi) likhte hain — states aur transitions — aur model checker
-     <b>har reachable state</b> dekhta hai. AWS ne DynamoDB replication mein aisa bug pakda jiska sabse
-     chhota failing trace <b>35 kadam</b> ka tha. Koi insaan ya random test 35 kadam ka woh khaas order nahi
-     dhoondhta.</p>
-     <h3>🔏 Zelkova — "kya KOI bhi request?"</h3>
-     <p>IAM/S3 policy ko math ke formula mein badlo, phir SMT solver (theorem prover) se poochho: <b>"kya koi
-     bhi request is bucket ko public bana sakti hai?"</b> Jawab "haan" ho toh solver misaal bhi deta hai. Yahi
-     IAM Access Analyzer, S3 Block Public Access aur console ke "Public" badge ke peeche hai.</p>
-     <p class="tip">🎯 Test poochhta hai "yeh request kya karti hai?". Proof poochhta hai "<b>koi bhi</b> request
-     kya kar sakti hai?"</p>`,
+    "<h3>🎯 Testing = kuch raaste chala ke dekhna</h3>\n     <p>Tests kuch raaste chalate hain. Scale par 1-in-a-billion raasta ek aam dopahar ko chal jaata hai — aur\n     woh raasta tumhare test mein kabhi nahi tha.</p>\n     <h3>📐 TLA+ — har mumkin haalat</h3>\n     <p>TLA+ mein system ka <b>design</b> (code nahi) likhte hain — states aur transitions — aur model checker\n     <b>specified bounded model ki reachable states</b> explore karta hai, jab search successfully complete ho. AWS ne DynamoDB replication mein aisa bug pakda jiska sabse\n     chhota failing trace <b>35 kadam</b> ka tha. Random tests kuch aise bugs pakad sakte hain, par rare interleavings ki coverage establish karna mushkil hai.</p>\n     <h3>🔏 Zelkova — \"kya KOI bhi request?\"</h3>\n     <p>IAM/S3 policy ko math ke formula mein badlo, phir SMT solver (theorem prover) se poochho: <b>\"kya koi\n     bhi request is bucket ko public bana sakti hai?\"</b> Jawab \"haan\" ho toh solver misaal bhi deta hai. Yahi\n     IAM Access Analyzer, S3 Block Public Access aur console ke \"Public\" badge ke peeche hai.</p>\n     <p class=\"tip\">🎯 Test poochhta hai \"yeh request kya karti hai?\". Proof poochhta hai \"<b>koi bhi</b> request\n     kya kar sakti hai?\"</p>",
     `<h3>🧵 Ek VM launch — poori kahani ek saath (video)</h3>
      <pre>shuffle-sharded control plane  → ek kharab customer sabko nahi gira sakta
 Nitro-verified host            → boot se pehle firmware jaancha, koi SSH nahi
@@ -547,7 +429,7 @@ Zelkova-proved bucket policy   → "public?" ka math wala jawab
       items: [
         { text: '"Kya KOI bhi request is S3 bucket ko public padh sakti hai?"', bin: 'proof', explain: '"Koi bhi" = saari mumkin requests — Zelkova ka kaam.' },
         { text: '"Login page par galat password se error aata hai?"', bin: 'test', explain: 'Ek khaas raasta — test kaafi.' },
-        { text: '"Replication protocol mein kabhi do leaders ek saath commit kar sakte hain?"', bin: 'proof', explain: 'Har interleaving — TLA+ jaisa model checker.' },
+        { text: '"Replication protocol mein kabhi do leaders ek saath commit kar sakte hain?"', bin: 'proof', explain: "Specified model ki interleavings explore karo; bounds, liveness/fairness aur implementation mapping explicitly check karo." },
         { text: '"Is API ka response 200 ms se kam?"', bin: 'test', explain: 'Measurement/benchmark ka sawaal.' },
         { text: '"Kisi bhi crash order ke baad ledger ka total sahi rehta hai?"', bin: 'proof', explain: 'Crash kisi bhi kadam par — saari states dekhni padengi.' },
         { text: '"Naya button mobile par dikhta hai?"', bin: 'test', explain: 'UI test.' },
@@ -559,26 +441,16 @@ Zelkova-proved bucket policy   → "public?" ka math wala jawab
       questions: [
         {
           q: 'DynamoDB ka bug 35 kadam lamba trace tha. Isse kya pata chalta hai?',
-          choices: [
-            'Kuch bugs sirf ek bahut khaas, lambe order mein dikhte hain — random testing unhe lagbhag kabhi nahi pakdegi, par scale par woh order kabhi na kabhi chalega',
-            'DynamoDB kharab hai',
-            'TLA+ dheema hai',
-            'Bug chhota tha',
-          ],
+          choices: ["Long interleavings target models need","Random tests mathematically cannot find","TLA trace proves production source bug","Any short test complete correctness"],
           answer: 0,
           explain: 'Isi liye design level par model checking — code se pehle.',
-        },
+         choiceExplanations: ["Isi liye design level par model checking — code se pehle.","Random tests can find some rare bugs; coverage hard to establish hai.","Model counterexample modeled design ka evidence hai; implementation mapping verify karo.","Short tests all state sequences explore nahi kartin."] },
         {
           q: 'Zelkova kis sawaal ka jawab deta hai jo test nahi de sakta?',
-          choices: [
-            '"Kya koi bhi request ye kar sakti hai?" — saari mumkin requests par, math se',
-            '"Kya yeh request fast hai?"',
-            '"Kya policy ka JSON valid hai?"',
-            '"Kitne users ne bucket padha?"',
-          ],
+          choices: ["Modeled policy par possible access query","Only current response time estimate","Only JSON grammar validation","Only historical bucket access count"],
           answer: 0,
-          explain: 'Test ek request chalata hai; SMT solver saari requests ka ek saath jawab deta hai.',
-        },
+          explain: "Automated reasoning supported policy semantics aur modeled request space par possible access analyze karti hai. Identity setup, resource configuration aur unmodeled system behavior ki separate verification chahiye.",
+         choiceExplanations: ["Automated reasoning supported policy semantics aur modeled request space par possible access analyze karti hai. Identity setup, resource configuration aur unmodeled system behavior ki separate verification chahiye.","Latency performance measurement different tool concern hai.","Syntax valid hone se policy restrictiveness establish nahi.","Past accesses possible future permission space ka complete proof nahi."] },
       ],
     },
   ],
@@ -588,26 +460,16 @@ Zelkova-proved bucket policy   → "public?" ka math wala jawab
     questions: [
       {
         q: 'Interviewer: "Naya consensus-based replication protocol likh rahe hain. Sirf tests kaafi?"',
-        choices: [
-          'Nahi — pehle design ko TLA+ (ya aisa model) mein likh ke model check karo; phir tests aur chaos. Rare interleavings tests se nahi milte',
-          'Haan, 100% coverage kaafi',
-          'Production mein dekh lenge',
-          'Code review kaafi',
-        ],
+        choices: ["Model checking plus implementation tests","100% lines cover all interleavings","Only code review proves protocol","Only production incidents as testing"],
         answer: 0,
-        explain: 'Scale par "rare" roz hota hai.',
-      },
+        explain: "Model checking specified state/failure space mein counterexamples search karti hai. Actual implementation, environmental assumptions aur performance ke liye tests, review and controlled fault injection bhi required hain.",
+       choiceExplanations: ["Model checking specified state/failure space mein counterexamples search karti hai. Actual implementation, environmental assumptions aur performance ke liye tests, review and controlled fault injection bhi required hain.","Line coverage scheduling/failure sequences exhaust nahi karti.","Review valuable hai but formal and runtime checks complementary hain.","Customer impact se pehle failure cases exercise karne chahiye."] },
       {
         q: 'Interviewer: "Hamare 5,000 S3 buckets mein koi public toh nahi?"',
-        choices: [
-          'Policies ko automated reasoning se check karo (jaise IAM Access Analyzer / Block Public Access) — "koi bhi request" ka jawab; manual review scale nahi karta',
-          'Har bucket ko ek anonymous request se test karo',
-          'Team se poochho',
-          'Naam mein "public" wale dekho',
-        ],
+        choices: ["Policy analysis + access controls","Only one anonymous GET sufficient","Only bucket name matching public","Only team assurance without evidence"],
         answer: 0,
         explain: 'Ek request test karna ek raasta hai; policy mein aur raaste ho sakte hain.',
-      },
+       choiceExplanations: ["Ek request test karna ek raasta hai; policy mein aur raaste ho sakte hain.","One request path all principals/actions/conditions cover nahi karta.","Resource name actual effective policy decide nahi karta.","Automated analysis and config evidence stronger than verbal assurance hain."] },
     ],
   },
   success: [
@@ -619,8 +481,8 @@ Zelkova-proved bucket policy   → "public?" ka math wala jawab
     "koi bucket public nahi"). Phir likho: abhi use kaun check karta hai — test, review, ya kuch nahi? Aur
     kya "saari mumkin haalaton" par check karne ka koi tareeka hai?</p>`,
   cards: [
-    { front: 'TLA+ model checking?', back: 'Design ko states + transitions mein likho; checker har reachable state dekhta hai. DynamoDB replication bug: sabse chhota failing trace 35 kadam.' },
-    { front: 'Zelkova?', back: 'IAM/S3 policy → math → SMT solver: "kya KOI bhi request bucket public kar sakti hai?" IAM Access Analyzer, Block Public Access ke peeche.' },
+    { front: 'TLA+ model checking?', back: "Design ko states/transitions mein likho; finite configured model ka completed search reachable states explore karta hai. Unbounded system/actual source code automatically proved nahi. DynamoDB replication bug: sabse chhota failing trace 35 kadam." },
+    { front: 'Zelkova?', back: 'Supported IAM/S3 policy semantics ka solver analysis possible access classify karta hai. Identity/configuration context aur unmodeled behavior separately verify karo; solver answer complete system proof nahi.' },
     { front: 'Test vs proof?', back: 'Test: "yeh request kya karti hai?" Proof: "koi bhi request kya kar sakti hai?" Scale par rare raaste roz chalte hain.' },
   ],
 },

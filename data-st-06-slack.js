@@ -223,10 +223,11 @@ SD.registerLevels('stories', [
       ],
     },
     {
+      workload: {"users":40000},
       type: 'tradeoff',
       title: 'Boot model lab',
       instructions: 'Org size, boot model aur edge caching badlo. Reconnect storm ka asar dekho.',
-      goal: 'Aisi setting dhoondho jahan boot payload <b>3 MB se kam</b> ho, storm ke waqt core par load <b>30% se kam</b> rahe, aur client ko missing data ke liye <b>alag round trips na karne padein</b>.',
+      goal: "Kam se kam <b>40,000 workspace users</b> ke boot storm par payload <b>3 MB ya kam</b>, core load <b>30% ya kam</b>, aur missing data ke liye extra client round trips nahi.",
       scenario: `Ek bade customer ki org hai. Subah 9 baje sab ek saath Slack kholte hain.
         Tumhe boot ka model chunna hai.`,
       knobs: [
@@ -266,15 +267,10 @@ SD.registerLevels('stories', [
         Flannel ne teenon badle: kitna (kam), kab (jab chahiye), kahan se (edge).`,
       quiz: {
         q: 'Flannel ko sirf cache kehna galat kyun hai?',
-        choices: [
-          'Kyunki woh real-time stream ke raaste mein baith kar events ko badalta hai — client jo maangne wala hai woh pehle hi jod deta hai',
-          'Kyunki woh disk par data rakhta hai',
-          'Kyunki woh database ke saamne nahi hai',
-          'Kyunki woh sirf metadata rakhta hai',
-        ],
+        choices: ["Stream events mein missing metadata jodta","Only expired keys ka value lautata","Persistent rows ka storage replace karta","All clients ko full snapshots bhejta"],
         answer: 0,
         explain: 'Aam cache sawaal ka jawab deta hai. Flannel jawab ko bina sawaal ke bhej deta hai — isi se purane clients bina badle naye backend par chal gaye.',
-      },
+       choiceExplanations: ["Aam cache sawaal ka jawab deta hai. Flannel jawab ko bina sawaal ke bhej deta hai — isi se purane clients bina badle naye backend par chal gaye.","Ordinary lookup cache proactive event enrichment explain nahi karta.","Flannel serving/cache layer core durable store ka automatic replacement nahi.","Injection needed metadata bhejti hai, complete org snapshot nahi."] },
     },
     {
       type: 'docker',
@@ -295,15 +291,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Lazy mode mein payload toh gir gaya par har client ne 30 extra lookups kiye (core par 6,396 requests). Injection ne woh 0 kaise kar diye?',
-        choices: [
-          'Edge ne event bhejte waqt hi woh metadata saath jod diya jo client ke paas nahi tha — client ko poochhne ki naubat hi nahi aayi',
-          'Client ne data cache kar liya',
-          'Injection mode ne poora snapshot bhej diya',
-          'Lookups background mein chale gaye',
-        ],
+        choices: ["Event mein client-missing metadata aaya","Client ne full snapshot cache kiya","Lookups ka timing hi badal gaya","Backend ne object count ghata diya"],
         answer: 0,
         explain: 'Yahi Flannel ka core idea hai: cache ko stream ke raaste mein rakho aur zaroorat se pehle data bhej do.',
-      },
+       choiceExplanations: ["Yahi Flannel ka core idea hai: cache ko stream ke raaste mein rakho aur zaroorat se pehle data bhej do.","Full snapshot avoid karna lazyboot ka purpose tha.","Question extra lookup count zero dikhata hai; only background timing nahi.","Same objects ko needed context ke saath deliver kiya gaya."] },
       lesson: 'Lazy loading akeli adhoori hai — usse "zaroorat se pehle bhej do" ke saath milao, warna tum ek bada request ko kai chhote requests mein badal dete ho.',
     },
   ],
@@ -313,26 +304,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "App ka initial load 40 MB hai. Kya karoge?"',
-        choices: [
-          'Boot ko lazy karo, aur jo data events ke liye chahiye woh event ke saath hi bhejo — taaki lazy loading kai chhoti requests na ban jaaye',
-          'Payload compress kar do',
-          'Snapshot ko cache kar lo browser mein',
-          'Boot ko background mein kar do',
-        ],
+        choices: ["Lazy boot aur event-context enrichment","Full org snapshot ko compress karo","Same snapshot ko background bhejo","Every event par many remote lookups"],
         answer: 0,
         explain: 'Compression aur caching madad karte hain par payload phir bhi org ke saath badhta hai. Slack ne model hi badla.',
-      },
+       choiceExplanations: ["Compression aur caching madad karte hain par payload phir bhi org ke saath badhta hai. Slack ne model hi badla.","Compression bytecost reduce karti hai, org-size coupling nahi hatati.","Background transfer total workload/bandwidth retain karta hai.","Lazy loading bina context new request fanout bana sakti hai."] },
       {
         q: 'Interviewer: "Backend ka data model badalna hai par purane mobile clients saalon tak chalenge. Kya karoge?"',
-        choices: [
-          'Beech mein ek layer rakho jo purane clients ko wahi shakal deti rahe jo woh expect karte hain, jabki backend naye model par chala jaaye',
-          'Sab clients ko force update karo',
-          'Dono models backend mein rakho aur version header se switch karo',
-          'Naye model ko sirf naye clients ke liye rakho',
-        ],
+        choices: ["Client contract ka adapter layer","All old clients ko turant block","Only new schema ka response bhejo","Every client ko all backend models"],
         answer: 0,
         explain: 'Flannel ne yahi kiya: purane clients ko lagta raha ki unke paas sab kuch pehle se hai, jabki backend lazy model par chala gaya.',
-      },
+       choiceExplanations: ["Flannel ne yahi kiya: purane clients ko lagta raha ki unke paas sab kuch pehle se hai, jabki backend lazy model par chala gaya.","Forced update question ke long-lived client constraint ko todta hai.","Old clients new schema understand na kar sakein.","All models ship karna payload aur client coupling badhata hai."] },
     ],
   },
   success: [
@@ -432,10 +413,11 @@ SD.registerLevels('stories', [
       ],
     },
     {
+      workload: {"members":3000},
       type: 'tradeoff',
       title: 'Fan-out lab — copies kahan banein',
       instructions: 'Channel ka size, edge locations aur model badlo. Long-haul traffic aur latency dekho.',
-      goal: 'Aisa model chuno jo bade channel par bhi tike — long-haul (lambi doori) par bheje gaye messages <b>15 se kam</b> aur delivery p99 <b>250 ms se kam</b>.',
+      goal: "Kam se kam <b>3,000 members</b> ke channel par edge fanout choose karo: long-haul copies <b>15 ya kam</b> aur delivery p99 <b>250 ms ya kam</b>.",
       scenario: `Ek bade channel mein message aaya hai. Members duniya bhar mein baithe
         hain. Tum tay karoge ki copies kahan banengi.`,
       knobs: [
@@ -474,15 +456,10 @@ SD.registerLevels('stories', [
         Ek copy mehengi link par bhejo aur baaki sasti link par banao.`,
       quiz: {
         q: 'Replay buffer ka kaam kya hai?',
-        choices: [
-          'Fan-out ke beech crash hone par adhoore delivery ko restart ke baad poora karna — message der se aaye, gayab na ho',
-          'Purane messages ko search ke liye rakhna',
-          'Slow clients ke liye rate limiting',
-          'Duplicate messages rokna',
-        ],
+        choices: ["Interrupted fanout ko replay karna","Search ranking ka history banana","Slow clients ko permanently drop","Duplicates ko magically eliminate"],
         answer: 0,
-        explain: 'Store-then-send message ko DB mein bachata hai; replay buffer usse delivery ke beech kho jaane se bachata hai.',
-      },
+        explain: "Replay buffer limited delivery gaps bridge kar sakta hai; persistent message history aur acknowledgments recoverability ka separate base hain. Buffer retention expire ho toh reconnect ko durable catch-up path chahiye.",
+       choiceExplanations: ["Replay buffer limited delivery gaps bridge kar sakta hai; persistent message history aur acknowledgments recoverability ka separate base hain. Buffer retention expire ho toh reconnect ko durable catch-up path chahiye.","Delivery recovery aur search index history alag contracts hain.","Slow-client policy replay recovery ki definition nahi.","At-least-once replay duplicates la sakta hai; dedupe alag chahiye."] },
     },
     {
       type: 'docker',
@@ -502,15 +479,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Crash test mein 120 duplicate deliveries hui par 0 message kho gaya. Yeh kis design choice ka natija hai?',
-        choices: [
-          'Replay buffer at-least-once delivery deta hai — duplicate sasta hai, kho jaana mehenga',
-          'Channel server ne transaction use kiya',
-          'Client ne message dobara maanga',
-          'Database ne rollback kiya',
-        ],
+        choices: ["At-least-once replay, dedupe alag","Exactly-once transport guarantee","Database rollback ne sends mita diye","Retries se duplicate impossible"],
         answer: 0,
-        explain: 'Distributed delivery mein exactly-once nahi milta. Isliye at-least-once + client-side dedupe chuna jaata hai.',
-      },
+        explain: "Is lab mein at-least-once redelivery duplicates ke saath loss avoid karti hai, aur stable message ID dedupe repeat effects rokti hai. Scoped transactional exactly-once guarantees possible hain; unhe arbitrary end-to-end delivery par assume nahi kar sakte.",
+       choiceExplanations: ["Is lab mein at-least-once redelivery duplicates ke saath loss avoid karti hai, aur stable message ID dedupe repeat effects rokti hai. Scoped transactional exactly-once guarantees possible hain; unhe arbitrary end-to-end delivery par assume nahi kar sakte.","Duplicate deliveries exactly-once transport claim ko contradict karti hain.","Delivered network messages database rollback se unsend nahi hote.","Retries duplicate risk badha sakti hain; stable ids/dedupe chahiye."] },
       lesson: 'Delivery design ka sabse zaroori sawaal: <b>kho jaana kitna mehenga hai, aur duplicate kitna sasta?</b>',
     },
   ],
@@ -520,26 +492,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Chat message ka flow design karo."',
-        choices: [
-          'Pehle durable write, phir subscription map se sirf channel ke online members ko fan-out, ek copy per edge, aur beech mein crash ke liye replay buffer',
-          'Message ko sab connected clients ko broadcast kar do, client filter kar lega',
-          'Message ko sirf memory mein rakho aur turant bhej do, DB write background mein',
-          'Har client ko 1 second par poll karne do',
-        ],
+        choices: ["Durable save, scoped fanout aur replay","Memory send first, durable save later","All clients ko full channel broadcast","Every client se frequent full polling"],
         answer: 0,
         explain: 'Broadcast bandwidth barbaad karta hai; "send pehle, write baad mein" aise messages dikhata hai jo hue hi nahi.',
-      },
+       choiceExplanations: ["Broadcast bandwidth barbaad karta hai; \"send pehle, write baad mein\" aise messages dikhata hai jo hue hi nahi.","Crash-before-save acknowledged message kho sakta hai.","Unsubscribed clients ko data exposure/bandwidth risk hai.","Polling latency aur repeated queries add karta hai."] },
       {
         q: 'Interviewer: "Presence (online status) 50 lakh connections par kaise karoge?"',
-        choices: [
-          'Client sirf un logon ki presence subscribe kare jo uski screen par hain, aur scroll par subscription badle',
-          'Har badlav sabko broadcast karo, data chhota hai',
-          'Har 30 second par poori list poll karo',
-          'Presence ko database mein rakho aur har render par query karo',
-        ],
+        choices: ["Visible members ki presence subscribe","Every update all connections ko bhejo","Every render par full DB presence","Fixed interval par entire org fetch"],
         answer: 0,
         explain: 'Presence ka data chhota hai par event rate bahut bada — isliye subscription ko UI se jodna hi ilaaj hai (Slack: ~5× kami).',
-      },
+       choiceExplanations: ["Presence ka data chhota hai par event rate bahut bada — isliye subscription ko UI se jodna hi ilaaj hai (Slack: ~5× kami).","Small payload bhi huge fanout par high event bandwidth laata hai.","Transient presence per-render DB lookup hot read load bana sakti hai.","Fullorg polling unnecessary data aur stale intervals rakhti hai."] },
     ],
   },
   success: [
@@ -702,15 +664,10 @@ Raasta 2: hamesha bada machine kharido
       ],
       observe: {
         q: 'Code routing mein `% 16` karne par 23% rows (sab tenants mein bikhre) ka thikana badal gaya, aur monster ko baanta hi nahi ja saka. Mapping layer mein sirf monster ke chune hue rows hile, aur code ki 0 lines badli. Kyun?',
-        choices: [
-          'Kyunki modulo hashing har key ka thikana formula se nikaalta hai — formula badla toh sabka thikana badla. Mapping table mein sirf wahi entry badalti hai jo tum badalte ho',
-          'Kyunki mapping layer tez hai',
-          'Kyunki mapping layer ne data compress kiya',
-          'Kyunki 16 shards zyada hain',
-        ],
+        choices: ["Sirf selected mapping entries badlin","Mapper ne every value compress ki","New shard count ne all data sort kiya","Formula ne tenant split khud kar diya"],
         answer: 0,
         explain: 'Yahi wajah hai ki Slack ne routing ko application se hata kar ek layer mein daala, aur Instagram ne logical shards + mapping table chuna.',
-      },
+       choiceExplanations: ["Yahi wajah hai ki Slack ne routing ko application se hata kar ek layer mein daala, aur Instagram ne logical shards + mapping table chuna.","Compression key-to-node placement indirection explain nahi karti.","Shard count order/placement mapping ki fine-grained control nahi deta.","Tenant-only hash ek tenant ko automatically fine grained split nahi karta."] },
       lesson: 'Sharding ka sabse zaroori faisla: <b>mapping ek data hai ya ek formula?</b> Data badla ja sakta hai, formula sabko hila deta hai.',
     },
   ],
@@ -720,26 +677,16 @@ Raasta 2: hamesha bada machine kharido
     questions: [
       {
         q: 'Interviewer: "Ek customer itna bada ho gaya ki uska shard dab raha hai. Options?"',
-        choices: [
-          'Routing ko application se hata kar ek layer mein lao taaki us ek tenant ka data fine-grained tarike se kai shards par bat sake',
-          'Us customer ke liye bada server le lo',
-          'Uske purane messages delete kar do',
-          'Us customer ko rate limit kar do',
-        ],
+        choices: ["Fine-grained shard key aur routing layer","Only workspace id ko hash karte raho","Whole fleet nodes badha kar dekho","Product contract bina tenant data drop"],
         answer: 0,
-        explain: 'Bada server ek din khatam ho jaayega aur rate limit customer ko sazaa hai. Slack ne Vitess se "ek workspace = ek shard" ka bandhan toda.',
-      },
+        explain: "Hot workspace ko split/reshard, isolate, capacity increase ya workload-aware limits se manage kar sakte ho. Routing indirection growth options deti hai; rate limiting legitimate fairness/control tool ho sakti hai.",
+       choiceExplanations: ["Hot workspace ko split/reshard, isolate, capacity increase ya workload-aware limits se manage kar sakte ho. Routing indirection growth options deti hai; rate limiting legitimate fairness/control tool ho sakti hai.","Same workspace key same shard ko hot rakhegi.","Extra nodes same hot key ka share khud distribute nahi karte.","Data deletion user retention contract violate kar sakti hai."] },
       {
         q: 'Interviewer: "Tumhara product ab cross-tenant collaboration deta hai. Data model par kya asar?"',
-        choices: [
-          'Har woh simplification sawaal ban jaati hai jo "sab kuch ek tenant ke andar hai" par tiki thi — ownership, keyspace, fan-out aur permissions sabko dobara design karna padta hai',
-          'Kuch khaas nahi, bas ek join aur lag jaayega',
-          'Sirf UI badalta hai',
-          'Naya tenant bana do jisme dono log ho',
-        ],
+        choices: ["Ownership, permissions aur routing recheck","Only UI mein shared badge jodo","Same-tenant assumption har jagah rakho","Shared channel ka owner undefined chhodo"],
         answer: 0,
         explain: 'Slack ke Enterprise Grid aur shared channels ne exactly yahi kiya — aur uske baad edge cache aur real-time tier dobara banana pada.',
-      },
+       choiceExplanations: ["Slack ke Enterprise Grid aur shared channels ne exactly yahi kiya — aur uske baad edge cache aur real-time tier dobara banana pada.","Cross-tenant visibility backend authorization aur routing ko affect karti hai.","Old assumption shared records ko wrongly route ya expose kar sakti hai.","Owner undefined hone se lifecycle/billing/policy inconsistent ho sakte hain."] },
     ],
   },
   success: [
@@ -860,48 +807,33 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
         { t: 'T+0', event: 'Sab normal. Workers jobs utha rahe hain, backlog lagbhag zero.', metrics: { backlog: 2, mem: 30, lost: 0 } },
         { t: 'T+5m', event: 'Database dheema hua. Background jobs ko DB chahiye — <b>workers dheeme</b> ho gaye.', metrics: { backlog: 40, mem: 44, lost: 0 }, tone: 'warn',
           ask: { q: 'Is waqt sabse zaroori metric kaunsa hai?',
-                 choices: [
-                   'Jobs aane ki rate vs khatam hone ki rate — kyunki uska farq hi backlog banata hai',
-                   'Average job latency',
-                   'Worker CPU',
-                   'Redis hit rate',
-                 ], answer: 0,
+                 choices: ["Arrival vs completion aur backlog age","Only completed jobs ka average time","Only worker CPU ka fleet average","Only Redis hit ratio ka daily mean"], answer: 0,
                  explain: 'Queue ka poora khel arrival rate aur drain rate ke farq ka hai. Woh farq jab tak positive hai, backlog badhta hi rahega.',
                  wrongHints: [
                    'Job latency badhegi zaroor, par woh batati nahi ki backlog kitni tezi se bhar raha hai.',
                    'CPU kam ho sakta hai — workers DB ka intezaar kar rahe hain.',
                    'Redis abhi theek hai; problem uski memory ki taraf badh rahi hai.',
-                 ] } },
+                 ] , choiceExplanations: ["Queue ka poora khel arrival rate aur drain rate ke farq ka hai. Woh farq jab tak positive hai, backlog badhta hi rahega.","Completed-only latency queued starvation chhupa sakti hai.","CPU alone effective drain capacity ka complete signal nahi.","Hitratio jobs ke arrival/drain imbalance ko directly nahi maapta."] } },
         { t: 'T+18m', event: 'Backlog RAM mein jama ho raha hai. Redis memory <b>78%</b>.', metrics: { backlog: 210, mem: 78, lost: 0 }, tone: 'warn' },
         { t: 'T+26m', event: 'Redis memory poori. Naye jobs <b>accept nahi</b> ho rahe — asli kaam floor par gir raha hai.', metrics: { backlog: 300, mem: 100, lost: 38 }, tone: 'bad',
           ask: { q: 'Naye jobs drop ho rahe hain. Sabse pehle kya karoge?',
-                 choices: [
-                   'Jobs ko kisi durable jagah (disk-backed log) par bhejo taaki woh kho na jaayein, phir drain par kaam karo',
-                   'Redis ko restart karo taaki memory khaali ho',
-                   'Workers badha do',
-                   'Queue ko flush kar do',
-                 ], answer: 0,
-                 explain: 'Data loss sabse mehengi cheez hai. Jobs ko durable buffer mein le jao — Slack ka permanent fix bhi yahi bana (Kafka Redis ke aage).',
+                 choices: ["Durable ingress aur bounded admission","Queue flush karke RAM free karo","Restart ko job durability maan lo","Dependency dekhe bina workers badhao"], answer: 0,
+                 explain: "Accepted work ko appropriately replicated durable buffer mein protect karo, saath bounded admission/backpressure aur recovery budget rakho. Disk-backed buffer bhi finite hai; producer ACK durability contract verify karo.",
                  wrongHints: [
                    'Restart matlab jo backlog RAM mein hai woh bhi gaya — loss aur bada.',
                    'Workers badhane se DB par aur dabaav padega, aur DB pehle se dheema hai.',
                    'Flush karna jaan-boojh kar data phenkna hai.',
-                 ] } },
+                 ] , choiceExplanations: ["Accepted work ko appropriately replicated durable buffer mein protect karo, saath bounded admission/backpressure aur recovery budget rakho. Disk-backed buffer bhi finite hai; producer ACK durability contract verify karo.","Flush outstanding work lose karta hai.","In-memory queued work restart se recover hona guaranteed nahi.","Workers badhane se saturated dependency aur overload ho sakti hai."] } },
         { t: 'T+31m', event: 'Aur bura: job <b>nikaalne</b> ke liye bhi thodi memory chahiye thi. Queue dono taraf se <b>jam</b>.', metrics: { backlog: 330, mem: 100, lost: 96 }, tone: 'bad' },
         { t: 'T+40m', event: 'Dequeue <b>O(n)</b> hai — queue jitni lambi, nikalna utna dheema. Drain rate aur gir gaya.', metrics: { backlog: 360, mem: 100, lost: 150 }, tone: 'bad',
           ask: { q: 'Is outage ka asli sabak kya hai?',
-                 choices: [
-                   'Boring implementation details (memory chahne wala dequeue, O(n) dequeue) hi ek slow database ko poora outage bana dete hain',
-                   'Redis queue ke liye galat choice hai',
-                   'Database ko kabhi dheema nahi hona chahiye',
-                   'Background jobs nahi hone chahiye',
-                 ], answer: 0,
+                 choices: ["Queue cost, capacity aur durability","Redis naam hi outage ka proof","Background jobs ko synchronous karo","Database slowness ko impossible maano"], answer: 0,
                  explain: 'Redis galat nahi tha — uske saamne durable buffer na hona aur us particular data structure ka vyavhaar galat tha.',
                  wrongHints: [
                    'Slack ne Redis rakha — usne sirf Kafka usse pehle laga diya.',
                    'Database dheema hoga hi kabhi na kabhi; system ko us din survive karna aana chahiye.',
                    'Background jobs ke bina UI sust ho jaati.',
-                 ] } },
+                 ] , choiceExplanations: ["Redis galat nahi tha — uske saamne durable buffer na hona aur us particular data structure ka vyavhaar galat tha.","Toolname se particular data structure/implementation defect prove nahi.","Sync coupling same dependency pain ko request path mein la sakti hai.","Slowdown production reality hai; bounded recovery design chahiye."] } },
         { t: 'T+2h', event: 'Fix ke baad: Kafka Redis ke <b>aage</b> — backlog disk par, Redis sirf chal rahe kaam ke liye.', metrics: { backlog: 60, mem: 42, lost: 150 }, tone: 'ok' },
       ],
       lesson: `Queue ke teen sawaal hamesha poochho: <b>backlog kahan jama hoga</b>
@@ -937,15 +869,10 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
       ],
       observe: {
         q: 'O(1) dequeue karne ke baad jam toh khul gaya (9 s mein khaali), par phir bhi 2,428 jobs gire. Durable log lagate hi 0 gire. Kyun?',
-        choices: [
-          'O(1) sirf drain tez karta hai; capacity phir bhi RAM ki thi. Durable log backlog ko disk par le gaya, jahan jagah bahut zyada hai',
-          'Durable log ne jobs compress kar diye',
-          'O(1) dequeue ne memory leak theek kiya',
-          'Durable log ne rate limit laga di',
-        ],
+        choices: ["Drain speed aur buffer capacity alag","Disk buffer ne CPU work hata diya","O(1) se RAM size unlimited hua","Durable log ne input traffic rok diya"],
         answer: 0,
         explain: 'Do alag problem: drain ki speed (data structure) aur backlog ki jagah (RAM vs disk). Slack ne dono theek kiye.',
-      },
+       choiceExplanations: ["Do alag problem: drain ki speed (data structure) aur backlog ki jagah (RAM vs disk). Slack ne dono theek kiye.","Disk buffer queued job compute ko eliminate nahi karta.","Constant-time dequeue buffer capacity infinite nahi banata.","Admission/rate limit independent control hai."] },
       lesson: 'Queue design mein pehla sawaal yeh nahi ki "kitni tez hai" — pehla sawaal yeh hai ki <b>bhar jaane par kya hoga</b>.',
     },
   ],
@@ -955,26 +882,16 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
     questions: [
       {
         q: 'Interviewer: "In-memory queue use kar rahe ho. Backlog badhne par kya hoga?"',
-        choices: [
-          'Memory limit tak jaake naye jobs girne lagenge — isliye aage ek durable log rakho aur in-memory queue ko chhota aur bounded rakho',
-          'Kuch nahi, Redis bahut memory sambhal leta hai',
-          'Autoscaling se workers badh jaayenge',
-          'Queue apne aap disk par spill kar degi',
-        ],
+        choices: ["Finite buffer; reject, block ya persist","Unlimited RAM queue auto-expand","Node restart se all queued jobs save","Workers autoscale, backlog ignore"],
         answer: 0,
         explain: 'Yahi 2016 ka sabak hai. Durable log sabse aage, scheduling ke liye in-memory queue peechhe.',
-      },
+       choiceExplanations: ["Yahi 2016 ka sabak hai. Durable log sabse aage, scheduling ke liye in-memory queue peechhe.","Memory budget finite hai; expansion durability nahi deta.","Persistence mode ke bina restart work kho sakta hai.","Autoscaling delayed/capped ho sakti hai; queue capacity policy chahiye."] },
       {
         q: 'Interviewer: "Toh purana queue system hata kar sab kuch Kafka par le jaayein?"',
-        choices: [
-          'Nahi — Kafka log ka kaam achha karta hai, par per-task scheduling aur dobara na chalne ki guarantee queue ka kaam hai. Dono rakho aur beech mein ek safe handoff bridge likho',
-          'Haan, ek hi system rakhna hamesha behtar hai',
-          'Haan, Kafka mein sab kuch ho jaata hai',
-          'Nahi, Kafka slow hai',
-        ],
+        choices: ["Durable log aur safe scheduler handoff","Kafka name se task exactly-once","Queue name se retries impossible","One replacement bina behavior parity"],
         answer: 0,
-        explain: 'Slack ne yahi socha aur Redis ko rakha — kyunki rewrite ka risk tha aur faayda kuch nahi tha.',
-      },
+        explain: "Existing Redis scheduling contract ko retain karke durable ingress log add karna targeted migration ho sakti hai. Kafka replacement ka benefit required scheduling/order/retry semantics aur operations cost se compare karo; rewrite universally useless nahi.",
+       choiceExplanations: ["Existing Redis scheduling contract ko retain karke durable ingress log add karna targeted migration ho sakti hai. Kafka replacement ka benefit required scheduling/order/retry semantics aur operations cost se compare karo; rewrite universally useless nahi.","Log durability arbitrary external effects exactly-once nahi banati.","Queues retry/replay kar sakti hain; task idempotency chahiye.","Scheduling semantics, recovery aur operations verify karne honge."] },
     ],
   },
   success: [

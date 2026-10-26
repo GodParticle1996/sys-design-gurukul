@@ -97,16 +97,11 @@ SD.registerLevels('sdd-resil', [
             </ul>`,
           ask: {
             q: 'Random intezaar ke saath bhi ek baar leader banne mein do round lage. Kya random fail ho gaya?',
-            choices: [
-              'Nahi. Random takraav ko kam karta hai, khatam nahi. Do nodes kabhi-kabhi paas-paas ka samay chun lete hain; agle round mein dono naya random samay chunte hain, aur baat sulajh jaati hai',
-              'Haan — random timeout bekaar hai',
-              'Haan — sab ka samay barabar kar dena chahiye',
-              'Yeh lab ki galti hai; asli systems mein kabhi nahi hota',
-            ],
+            choices: ["Collision possible; randomized retries odds improve karte","Two rounds proof hai random timeout broken hai","Equal timeouts karo; next round synchronization hategi","Real Raft mein timing collision nahi; model wrong hai"],
             answer: 0,
             hint: 'Barabar samay ke saath kya hua tha: kitne second, kitne elections? Aur random ke saath sabse bura kya tha?',
             explain: 'Barabar samay: 10 s mein 103–105 elections, koi leader nahi — takraav har baar, hamesha ke liye. Random samay: sabse bura 882 ms. Random ka vaada "kabhi nahi" nahi, "baar-baar nahi" hai.',
-          },
+           choiceExplanations: ["Barabar samay: 10 s mein 103–105 elections, koi leader nahi — takraav har baar, hamesha ke liye. Random samay: sabse bura 882 ms. Random ka vaada \"kabhi nahi\" nahi, \"baar-baar nahi\" hai.","Randomization probability improve karti hai, guaranteed one-round completion nahi.","Equal timeouts repeated synchronized candidacy aur split vote badha sakte hain.","Real networks/elections bhi races/split votes face karte hain."] },
         },
         {
           title: '3. Random kab bilkul nahi?',
@@ -147,15 +142,10 @@ SD.registerLevels('sdd-resil', [
       ],
       observe: {
         q: 'Barabar intezaar ke saath 10 second mein 104 elections hue aur koi leader nahi bana. Har election mein kya hua hoga?',
-        choices: [
-          'Paanchon nodes ek hi pal jaage, paanchon ne khud ko vote diya, kisi ko 3 vote nahi mile. Phir sab ne utna hi intezaar kiya aur phir ek saath jaage',
-          'Nodes ek doosre tak pahunch hi nahi paaye',
-          'Leader bana tha, par turant mar gaya',
-          'Vote ginne mein galti hui',
-        ],
+        choices: ["Repeated synchronized self-votes; kisi ko majority nahi","Leader elected; har round process crash se usko kho diya","Network partition proven; timing policy ka role nahi","Vote count random tha; majority threshold change ho gayi"],
         answer: 0,
         explain: 'Wahi jhund: bahut saare, ek hi ghadi, ek hi niyam, ek hi pal. Random intezaar mein ek node baaki se pehle jaagta hai, vote maangta hai, aur baaki nodes usi node ko vote de dete hain.',
-      },
+       choiceExplanations: ["Wahi jhund: bahut saare, ek hi ghadi, ek hi niyam, ek hi pal. Random intezaar mein ek node baaki se pehle jaagta hai, vote maangta hai, aur baaki nodes usi node ko vote de dete hain.","Stated trace repeated split elections hai; repeated successful leader/crash evidence nahi.","Same timing alone split votes model explain karta hai; partition extra hypothesis hai.","Majority five voters mein three fixed hai; timing experiment threshold nahi badalta."] },
       lesson: 'Retries mein random ne phones ko alag-alag pal par lautaya. Yahan random ne nodes ko alag-alag pal par jagaya. Auzaar wahi hai.',
     },
 
@@ -186,37 +176,22 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Distributed systems mein randomness kahan-kahan jaan-boojh ke daali jaati hai, aur kyun?"',
-        choices: [
-          'Jahan bahut saare hisse ek saath ek jaisa faisla lete hain: retry ke intezaar mein (jitter), server chunne mein (do random mein se behtar), leader chunne ke intezaar mein, cache expiry aur scheduled jobs ke samay mein, aur failure testing mein. Maqsad har jagah ek: sab ek hi pal par ek hi jagah na pahunchein',
-          'Sirf password aur encryption mein',
-          'Kahin nahi — distributed systems mein sab kuch pakka hona chahiye',
-          'Sirf load testing mein',
-        ],
+        choices: ["Independent timing/sample choices correlated herds ghataaye","Only retry timers random; election timers equal rakhe","Only cryptography random; capacity decisions fixed rakhe","Only load tests random; production expiries sync rakhe"],
         answer: 0,
         explain: 'Lab: retries 6 mein se 0 → 6 mein se 6 order. Server chunna: line 92–106 → 29–32. Leader chunna: 10 s mein koi nahi → 273–882 ms.',
-      },
+       choiceExplanations: ["Lab: retries 6 mein se 0 → 6 mein se 6 order. Server chunna: line 92–106 → 29–32. Leader chunna: 10 s mein koi nahi → 273–882 ms.","Leader election aur other synchronized transitions bhi intentional randomness use karte hain.","Security randomness ke alawa jitter/load selection ke independent choices useful hain.","Production synchronized expiry/jobs retry-like bursts la sakte hain."] },
       {
         q: '"Raft jaise algorithm mein election timeout random kyun hota hai?"',
-        choices: [
-          'Taaki leader ke jaane par saare followers ek hi pal ummeedvaar na banein. Barabar timeout ho toh sab ek saath khud ko vote dete hain aur kisi ko majority nahi milti — baar-baar. Random timeout mein ek node pehle jaagta hai aur baaki nodes usi node ko vote de dete hain',
-          'Taaki hacker timeout ka andaza na laga sake',
-          'Taaki network ka bojh kam ho',
-          'Kyunki ghadiyan kabhi sahi nahi hoti',
-        ],
+        choices: ["Split-vote chance ghataaye; candidates alag waqt jaagein","Timeout hide kare; election ka goal attacker secrecy ho","Network rate limit kare; majority votes ka role na ho","Clock errors cancel kare; all followers exact sync ho"],
         answer: 0,
         explain: 'Lab: barabar timeout → 10 s mein 103–105 elections, koi leader nahi. Random (300–600 ms) → teen run mein ausat 374–557 ms.',
-      },
+       choiceExplanations: ["Lab: barabar timeout → 10 s mein 103–105 elections, koi leader nahi. Random (300–600 ms) → teen run mein ausat 374–557 ms.","Election timeout randomization cryptographic secrecy guarantee nahi; liveness/tie breaking primary role hai.","Less repetition possible outcome hai, par mechanism split candidacy avoid karna hai.","Random timeouts clock synchronization algorithm nahi."] },
       {
         q: '"Kab tum random load balancing NAHI lagaoge?"',
-        choices: [
-          'Jab grahak ko hamesha wahi server chahiye (session, cache) — tab hash. Jab servers ya requests ek jaisi na hon — tab load dekhne wala tareeka (apni ginti, ya do mein se behtar), kyunki akela random dheeme server ko barabar hissa deta hai',
-          'Kabhi nahi — random hamesha theek hai',
-          'Jab servers 10 se zyada hon',
-          'Jab traffic kam ho',
-        ],
+        choices: ["Affinity ya unequal costs ho toh hash/adaptive policy dekho","More than ten servers ho toh random policy invalid ho","Low traffic ho toh randomness request duplication kare","Shared cache ho toh pure random sticky routing guarantee"],
         answer: 0,
         explain: 'Lab: ek dheeme server ke saath random ki line 139–152; load balancer ki apni ginti ke saath 0–1.',
-      },
+       choiceExplanations: ["Lab: ek dheeme server ke saath random ki line 139–152; load balancer ki apni ginti ke saath 0–1.","Algorithm arbitrary fleet-size cutoff nahi rakhta.","Routing choice randomness same request duplicate nahi karti.","Pure random same key ko same node nahi bhejta; hash/affinity separately define karo."] },
     ],
   },
   success: [

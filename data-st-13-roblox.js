@@ -11,47 +11,17 @@
 
 VISUALS['rbx-instances'] = {
   t: 'Game server ko bada mat karo — upar ki layer ko',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-gold"><span class="bx-label">🏰 MMO (WoW, EVE)</span>
-        <div class="dg-cap">Ek hamesha ki duniya, shards mein (kuch hazaar log har ek), ek game ke liye custom. EVE ek universe ~1 lakh peak.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">🧩 Roblox</span>
-        <div class="dg-cap">Laakhon games, alag developers. Har game session = ek chhota server (<b>instance</b>, 10–200 players),
-          ek session jeeta hai, aakhri player gaya toh band. Aug 2025: 4.7 crore ek saath.</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-ladder">
-      <div class="dg-rung"><span class="lv">🏢</span><span class="cmd">Platform layer</span><span class="q">accounts, inventory, Robux, friends — kabhi mat khoo</span></div>
-      <div class="dg-rung a"><span class="lv">🎯</span><span class="cmd">Matchmaking</span><span class="q">kaunsa player kaunse instance mein</span></div>
-      <div class="dg-rung a"><span class="lv">🎮</span><span class="cmd">Laakhon instances (sandbox + Luau)</span><span class="q">game state memory mein, instance ke saath marta hai</span></div>
-      <div class="dg-rung g"><span class="lv">🖥️</span><span class="cmd">Apne physical servers</span><span class="q">800,000+ · 24 edge DCs + 2 core DCs</span></div>
-    </div>`,
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-gold\"><span class=\"bx-label\">🏰 MMO (WoW, EVE)</span>\n        <div class=\"dg-cap\">Ek hamesha ki duniya, shards mein (kuch hazaar log har ek), ek game ke liye custom. EVE ek universe ~1 lakh peak.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🧩 Roblox</span>\n        <div class=\"dg-cap\">Laakhon games, alag developers. Har game session = ek chhota server (<b>instance</b>, 10–200 players),\n          ek session jeeta hai, aakhri player gaya toh band. Aug 2025: 4.7 crore ek saath.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-ladder\">\n      <div class=\"dg-rung\"><span class=\"lv\">🏢</span><span class=\"cmd\">Platform layer</span><span class=\"q\">accounts, inventory, Robux, friends — kabhi mat khoo</span></div>\n      <div class=\"dg-rung a\"><span class=\"lv\">🎯</span><span class=\"cmd\">Matchmaking</span><span class=\"q\">kaunsa player kaunse instance mein</span></div>\n      <div class=\"dg-rung a\"><span class=\"lv\">🎮</span><span class=\"cmd\">Laakhon instances (sandbox + Luau)</span><span class=\"q\">game state memory mein, instance ke saath marta hai</span></div>\n      <div class=\"dg-rung g\"><span class=\"lv\">🖥️</span><span class=\"cmd\">Apne physical servers</span><span class=\"q\">800,000+ · 24 edge DCs + 2 core DCs</span></div>\n    </div>",
 };
 
 VISUALS['rbx-luau'] = {
   t: 'Sandbox ek bhasha ki problem hai',
-  html: `
-    <div class="dg-grid">
-      <div class="dg-node is-good"><span class="ni">🧱</span><span class="nl">Har script ka apna global table</span><span class="ns">doosre scripts dikhte hi nahi</span></div>
-      <div class="dg-node is-good"><span class="ni">✂️</span><span class="nl">Stdlib kaati</span><span class="ns">system chhoone/bahar nikalne wale hisse hataye; ek GC hook bhi</span></div>
-      <div class="dg-node is-good"><span class="ni">🛡️</span><span class="nl">Memory-safe implementation</span><span class="ns">memory bug se native code chalana namumkin</span></div>
-      <div class="dg-node is-accent"><span class="ni">🏷️</span><span class="nl">Gradual types</span><span class="ns">9 saal ke bachche se pro studio tak; inference</span></div>
-      <div class="dg-node is-gold"><span class="ni">⚡</span><span class="nl">Native codegen (2024)</span><span class="ns">hot scripts → machine code, numeric 2–3× tez; types compiler ko madad</span></div>
-    </div>
-    <div class="dg-cap">Lua 5.1 se fork (2019 ship, 2021 open source); interpreter C++ mein dobara — lagbhag LuaJIT jitni speed, consoles par bhi.</div>`,
+  html: "\n    <div class=\"dg-grid\">\n      <div class=\"dg-node is-good\"><span class=\"ni\">🧱</span><span class=\"nl\">Har script ka apna global table</span><span class=\"ns\">doosre scripts dikhte hi nahi</span></div>\n      <div class=\"dg-node is-good\"><span class=\"ni\">✂️</span><span class=\"nl\">Stdlib kaati</span><span class=\"ns\">system chhoone/bahar nikalne wale hisse hataye; ek GC hook bhi</span></div>\n      <div class=\"dg-node is-good\"><span class=\"ni\">🛡️</span><span class=\"nl\">Memory-safe implementation</span><span class=\"ns\">memory bug se native code chalana namumkin</span></div>\n      <div class=\"dg-node is-accent\"><span class=\"ni\">🏷️</span><span class=\"nl\">Gradual types</span><span class=\"ns\">9 saal ke bachche se pro studio tak; inference</span></div>\n      <div class=\"dg-node is-gold\"><span class=\"ni\">⚡</span><span class=\"nl\">Native codegen (2024)</span><span class=\"ns\">hot scripts → machine code, numeric 2–3× tez; types compiler ko madad</span></div>\n    </div>\n    <div class=\"dg-cap\">Lua 5.1 se fork (2019 ship, 2021 open source); interpreter C++ mein dobara — lagbhag LuaJIT jitni speed, consoles par bhi.</div>",
 };
 
 VISUALS['rbx-matchmaker'] = {
   t: 'Matchmaker hi asli product',
-  html: `
-    <div class="dg-grid">
-      <div class="dg-node"><span class="ni">📡</span><span class="nl">1. Latency</span><span class="ns">24 edge DCs mein sabse paas</span></div>
-      <div class="dg-node"><span class="ni">👫</span><span class="nl">2. Dost</span><span class="ns">jahan dost pehle se khel rahe</span></div>
-      <div class="dg-node"><span class="ni">⚖️</span><span class="nl">3. Load</span><span class="ns">bhara bahar; lagbhag-bhara bhi bura agar dost aane wale</span></div>
-      <div class="dg-node"><span class="ni">📜</span><span class="nl">4. Developer rules</span><span class="ns">region se group ya mix</span></div>
-      <div class="dg-node"><span class="ni">💰</span><span class="nl">5. Naya vs purana</span><span class="ns">naya server = paisa; aadhe-khaali hazaar mat kholo</span></div>
-    </div>
-    <div class="dg-cap">&lt;100 ms mein faisla. Lab 27 (20,000 joins): fill-first → ping 152 ms, 14% dost saath; smart → ping 38 ms, <b>100%</b> dost saath, utne hi servers.</div>`,
+  html: "\n    <div class=\"dg-grid\">\n      <div class=\"dg-node\"><span class=\"ni\">📡</span><span class=\"nl\">1. Latency</span><span class=\"ns\">24 edge DCs mein sabse paas</span></div>\n      <div class=\"dg-node\"><span class=\"ni\">👫</span><span class=\"nl\">2. Dost</span><span class=\"ns\">jahan dost pehle se khel rahe</span></div>\n      <div class=\"dg-node\"><span class=\"ni\">⚖️</span><span class=\"nl\">3. Load</span><span class=\"ns\">bhara bahar; lagbhag-bhara bhi bura agar dost aane wale</span></div>\n      <div class=\"dg-node\"><span class=\"ni\">📜</span><span class=\"nl\">4. Developer rules</span><span class=\"ns\">region se group ya mix</span></div>\n      <div class=\"dg-node\"><span class=\"ni\">💰</span><span class=\"nl\">5. Naya vs purana</span><span class=\"ns\">naya server = paisa; aadhe-khaali hazaar mat kholo</span></div>\n    </div>\n    <div class=\"dg-cap\">&lt; 100 ms mein faisla. Lab 27 (20,000 joins): fill-first → ping 152 ms, 14% dost saath; smart → ping 38 ms, <b>100%</b> dost saath, utne hi servers.</div>",
 };
 
 VISUALS['rbx-cells'] = {
@@ -83,21 +53,7 @@ SD.registerLevels('stories', [
     'Lab: instance crash — kya gaya, kya bacha, kitne prabhavit',
   ],
   lesson: [
-    `<h3>🌍 4.7 crore ek saath</h3>
-     <p>Aug 2025: 4.7 crore log ek saath (ek saal pehle peak ~1 crore) — zyadatar ek game (<b>Grow a Garden</b>) ne ~2 mahine mein
-     platform ka peak dugna kiya. WoW/Final Fantasy: ek shared duniya mein kuch hazaar; EVE Online ka ek universe ~1 lakh peak;
-     Roblox ~500× us se. Apni bhasha, apne hardware par apna cloud, aur ulta architecture.</p>
-     <h3>🏠 Ek bada mahal vs laakhon chhote kamre</h3>
-     <p>~15 saal pehle ka faisla: <b>game server ko bada mat karo — us layer ko karo jo tay karti hai kaunsa server kaunsa game
-     kin players ke liye.</b></p>
-     <ul>
-       <li><b>MMO</b>: ek hamesha ki duniya, shards mein bati (kuch hazaar har ek), ek game ke liye custom.</li>
-       <li><b>Roblox</b>: platform par laakhon games, alag rules/physics/size. Har game session = ek chhota server,
-       <b>instance</b> (kuch darjan players; developer 10–200 cap chunta hai), ek session jeeta hai (20 min se kuch ghante),
-       aakhri player gaya → band, resources wapas pool mein.</li>
-     </ul>
-     <p>Saikdon hazaar instances ek saath, aapas mein baat nahi karte, aur 4.7 crore ka koi global tracker nahi. Crash = sirf 40–100
-     log, seconds mein naye instance mein. Chhote phenkne layak servers → <b>coordination hi product ban jaata hai</b>.</p>`,
+    "<h3>🌍 4.7 crore ek saath</h3>\n     <p>Aug 2025: 4.7 crore log ek saath (ek saal pehle peak ~1 crore) — zyadatar ek game (<b>Grow a Garden</b>) ne ~2 mahine mein\n     platform ka peak dugna kiya. WoW/Final Fantasy: ek shared duniya mein kuch hazaar; EVE Online ka ek universe ~1 lakh peak;\n     Roblox ~500× us se. Apni bhasha, apne hardware par apna cloud, aur ulta architecture.</p>\n     <h3>🏠 Ek bada mahal vs laakhon chhote kamre</h3>\n     <p>~15 saal pehle ka faisla: <b>game server ko bada mat karo — us layer ko karo jo tay karti hai kaunsa server kaunsa game\n     kin players ke liye.</b></p>\n     <ul>\n       <li><b>MMO</b>: ek hamesha ki duniya, shards mein bati (kuch hazaar har ek), ek game ke liye custom.</li>\n       <li><b>Roblox</b>: platform par laakhon games, alag rules/physics/size. Har game session = ek chhota server,\n       <b>instance</b> (kuch darjan players; developer 10–200 cap chunta hai), ek session jeeta hai (20 min se kuch ghante),\n       aakhri player gaya → band, resources wapas pool mein.</li>\n     </ul>\n     <p>Saikdon hazaar instances ek saath, aapas mein baat nahi karte, aur 4.7 crore ka koi global tracker nahi. Crash = sirf 40–100\n     log, seconds mein naye instance mein. Chhote phenkne layak servers → <b>coordination hi product ban jaata hai</b>.</p>",
     `<h3>💾 Kya marne do, kya kabhi nahi</h3>
      <table>
        <tr><th></th><th>🎮 Game state</th><th>🏢 Platform state</th></tr>
@@ -126,15 +82,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Score gaya par hat bacha. Kya score ko bhi bachana chahiye tha?',
-        choices: [
-          'Nahi — 10 minute ke match ko durable banana mehenga aur bekaar; player seconds mein naye match mein. Sirf platform state (hat, Robux) kabhi nahi khona',
-          'Haan, sab kuch durable ho',
-          'Score DB mein har tick',
-          'Crash hona hi nahi chahiye',
-        ],
+        choices: ["Product recovery contract se state choose","All match ticks ko purchase jaisa save","All inventory ko temporary state maano","Runtime crash ko data backup maano"],
         answer: 0,
         explain: 'Protect only what must survive — ek layer mein.',
-      },
+       choiceExplanations: ["Protect only what must survive — ek layer mein.","Har tick durable karna cost/latency tradeoff hai; requirement pehle define karo.","Purchases aur inventory ka durability contract match score se different ho sakta hai.","Crash behavior backup ya durability guarantee nahi deta."] },
       lesson: 'Chhote instances = chhota blast radius; game state phenkne layak, platform state kabhi nahi.',
     },
     {
@@ -161,26 +112,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Multiplayer game platform — ek bada world ya kai chhote servers?"',
-        choices: [
-          'Agar games/sessions independent hain toh chhote per-session instances + strong matchmaking + durable state alag platform layer mein — blast radius chhota, scale by count',
-          'Ek bada world, bade servers',
-          'P2P sab',
-          'Har player ka apna server',
-        ],
+        choices: ["Sessions alag, platform durable","One global world bina coordination","P2P clients ko currency authority","Every player ka separate full world"],
         answer: 0,
         explain: 'Roblox: "unit chhoti karo, bahut chalao."',
-      },
+       choiceExplanations: ["Roblox: \"unit chhoti karo, bahut chalao.\"","Shared world ko synchronization/partition policy chahiye.","Untrusted clients ko economic state authority dena cheating risk hai.","Per-player world group interaction contract tod sakta hai."] },
       {
         q: 'Interviewer: "Instance crash par player ki inventory?"',
-        choices: [
-          'Inventory kabhi instance mein nahi — platform service mein; instance sirf poochhe/likhe (idempotent grants)',
-          'Crash se pehle save',
-          'Har minute snapshot',
-          'Client par rakho',
-        ],
+        choices: ["Durable owner, idempotent grants","Only shutdown hook par inventory save","Every minute snapshot hi enough","Client balance ko source of truth"],
         answer: 0,
         explain: 'Lab: 120/120 hats bache.',
-      },
+       choiceExplanations: ["Lab: 120/120 hats bache.","Crash/shutdown hook execute hona guaranteed nahi.","Periodic snapshot acknowledged recent grants lose kar sakti hai.","Client state tamper ho sakti hai; trusted authority chahiye."] },
     ],
   },
   success: [
@@ -212,18 +153,7 @@ SD.registerLevels('stories', [
     'Gradual types — safety aur speed dono',
   ],
   lesson: [
-    `<h3>👧 9 saal ke bachche aur hackers — ek hi runtime</h3>
-     <p>Roblox par laakhon developers (bahut se bachche, kuch jaan-boojh ke dushman) ka code chalta hai — Roblox ke servers par
-     <b>aur</b> har player ke device par. Isliye apni bhasha: <b>Luau</b> — Lua 5.1 se fork, 2019 mein ship, 2021 mein open source.</p>
-     <h3>🛡️ Sandbox — bhasha mein hi</h3>
-     <ul>
-       <li><b>Har script ka apna global table</b> — doosre scripts ke globals dikhte hi nahi.</li>
-       <li><b>Stdlib kaati</b> — jo bhi hissa system chhoo sakta tha ya bahar nikal sakta tha, hataya; ek GC hook bhi (isolation + performance).</li>
-       <li><b>Memory-safe implementation</b> — dushman script memory bug se native code nahi chala sakta. Yahi sandbox asli attackers ke
-       saamne tikta hai.</li>
-     </ul>
-     <p class="tip">🎯 Video ka sabak: <b>untrusted code chalana ho toh sandbox ek BHASHA ki problem hai</b>, poori gehrai tak — sirf
-     container ke upar ki deewar nahi. (Colab ne gVisor se OS level par kiya; Roblox ne language level par.)</p>`,
+    "<h3>👧 9 saal ke bachche aur hackers — ek hi runtime</h3>\n     <p>Roblox par laakhon developers (bahut se bachche, kuch jaan-boojh ke dushman) ka code chalta hai — Roblox ke servers par\n     <b>aur</b> har player ke device par. Isliye apni bhasha: <b>Luau</b> — Lua 5.1 se fork, 2019 mein ship, 2021 mein open source.</p>\n     <h3>🛡️ Sandbox — bhasha mein hi</h3>\n     <ul>\n       <li><b>Har script ka apna global table</b> — doosre scripts ke globals dikhte hi nahi.</li>\n       <li><b>Stdlib kaati</b> — jo bhi hissa system chhoo sakta tha ya bahar nikal sakta tha, hataya; ek GC hook bhi (isolation + performance).</li>\n       <li><b>Memory-safe implementation</b> — dushman script memory bug se native code nahi chala sakta. Yahi sandbox asli attackers ke\n       saamne tikta hai.</li>\n     </ul>\n     <p class=\"tip\">🎯 Video ka sabak: <b>untrusted code chalana ho toh sandbox ek BHASHA ki problem hai</b>, poori gehrai tak — sirf\n     container ke upar ki deewar nahi. (Colab ne gVisor se OS level par kiya; Roblox ne language level par.)</p>",
     `<h3>⚡ Tez bhi chahiye</h3>
      <p>Stock Lua bahut dheema; LuaJIT consoles support nahi karta aur maintain karna mushkil. Toh interpreter <b>C++ mein dobara</b> —
      lagbhag LuaJIT jitni speed. 2024: servers par <b>native codegen</b> — hot scripts machine code ban jaate hain, numeric code
@@ -251,26 +181,16 @@ SD.registerLevels('stories', [
       questions: [
         {
           q: 'Roblox ne LuaJIT kyun nahi liya?',
-          choices: [
-            'Consoles support nahi karta tha aur maintain karna mushkil — isliye apna C++ interpreter jo lagbhag utna tez',
-            'LuaJIT mehenga tha',
-            'LuaJIT dheema tha',
-            'License',
-          ],
+          choices: ["Platform/JIT constraints aur control","LuaJIT ki paid license compulsory","JIT har console par available","Interpreter ko sandbox ki need nahi"],
           answer: 0,
           explain: 'Platform ki zaroorat (har device) ne faisla kiya.',
-        },
+         choiceExplanations: ["Platform ki zaroorat (har device) ne faisla kiya.","License fee is platform tradeoff ka established reason nahi.","Many target platforms runtime code generation restrict karti hain.","Interpreter bhi capabilities, resource limits aur isolation maangta hai."] },
         {
           q: 'Colab (gVisor) aur Roblox (Luau) ke sandbox mein farq?',
-          choices: [
-            'Colab OS/syscall level par deewar (anjaan Python chal sakta hai); Roblox bhasha level par (sirf Luau, uske andar hi sab band)',
-            'Dono same',
-            'Roblox sandbox nahi karta',
-            'Colab sirf GPU',
-          ],
+          choices: ["Language capability vs syscall boundary","Dono arbitrary native code allow","Luau se host kernel automatically private","gVisor only source code types check"],
           answer: 0,
           explain: 'Deewar kahan lagao — us par depend karta hai ki kaunsa code chalana hai.',
-        },
+         choiceExplanations: ["Deewar kahan lagao — us par depend karta hai ki kaunsa code chalana hai.","Boundary allowed code/capabilities ke saath vary karti hai.","Embedding host APIs aur runtime implementation boundary define karte hain.","gVisor syscall interface reimplementation hai, type checker nahi."] },
       ],
     },
   ],
@@ -280,26 +200,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Hamare SaaS mein customers apne scripts (automation) chalayenge. Kaise?"',
-        choices: [
-          'Embedded sandboxed language/VM (alag globals, kaati stdlib, memory-safe, CPU/memory/time limits), ya WASM — plus process/container isolation bahar',
-          'eval() server par',
-          'Customer ka Docker image',
-          'Sirf approved scripts manually review',
-        ],
+        choices: ["Sandbox plus outer resource limits","Customer code ko app process eval","Image name ko complete security proof","Only code review se runtime safe"],
         answer: 0,
         explain: 'Defense in depth — bhasha + OS.',
-      },
+       choiceExplanations: ["Defense in depth — bhasha + OS.","Eval app capabilities/secrets expose kar sakta hai.","Container image bina kernel/isolation/network policy complete boundary nahi.","Review resource exhaustion aur runtime flaws ka substitute nahi."] },
       {
         q: 'Interviewer: "Types optional rakhein ya zaroori?"',
-        choices: [
-          'Gradual — beginners bina, bade codebases ke saath; inference madad kare; aur annotations se compiler optimizations',
-          'Hamesha zaroori',
-          'Kabhi nahi',
-          'Sirf comments mein',
-        ],
+        choices: ["Gradual types, explicit trusted boundaries","Optional type ko runtime validation maano","Annotations se sandbox enforce karo","Only mandatory types se scale milega"],
         answer: 0,
         explain: 'Luau aur Sorbet dono ka tareeka.',
-      },
+       choiceExplanations: ["Luau aur Sorbet dono ka tareeka.","Static typing untrusted runtime values ko automatically validate nahi karti.","Types capability isolation/resource quotas nahi enforce kartin.","Type policy developer needs aur tooling tradeoffs par depend karti hai."] },
     ],
   },
   success: [
@@ -331,34 +241,8 @@ SD.registerLevels('stories', [
     'Metal par cloud jaisa ops: Nomad, Consul, Vault, MAAS',
   ],
   lesson: [
-    `<h3>🎟️ "Play" dabaya — ab?</h3>
-     <p>Kisi instance mein daalo jismein jagah hai, ya naya kholo — aur yeh faisla &lt;100 ms mein, popular game par saikdon per second,
-     hazaron games ke liye. Paanch cheezein tolni hain:</p>
-     <ol>
-       <li><b>Latency</b> — 24 edge DCs mein sabse paas.</li>
-       <li><b>Dost</b> — jahan dost pehle se khel rahe.</li>
-       <li><b>Load</b> — bhara bahar; lagbhag-bhara bhi bura agar dost aane wale hain.</li>
-       <li><b>Developer rules</b> — region se group karo ya mix.</li>
-       <li><b>Naya vs purana</b> — naya server paisa; hazaron aadhe-khaali servers mat kholo.</li>
-     </ol>
-     <p>Galat faisla = lag, ya dost se alag → player chala gaya.</p>
-     <pre>lab 27 (ex1-matchmaker) — 20,000 players, 6 regions, 40% dosto ke group:
-policy       instances   avg fill   avg ping   dost ek saath
-fill-first      500       100%      152 ms     14%
-nearest         502      99.6%       21 ms     70%
-smart           502      99.6%       38 ms    100%</pre>
-     <p>Smart = latency limit + <b>party ke liye seats rok ke rakho</b> + pehle bhare instance bharo. Nearest se ping thoda zyada
-     (kabhi paas ke khaali server ki jagah thoda door ka aadha-bhara) — yahi roz ka trade-off.</p>`,
-    `<h3>🏗️ Apna cloud</h3>
-     <p>800,000+ apne servers; <b>24 edge DCs</b> players ke paas instances chalate hain; <b>2 core DCs</b> (website, recommendations,
-     economy, safety filters); apna global private network; edges core ke liye firewall bhi. Kyun? <b>Network ka kharcha</b> — is
-     workload ke liye public cloud networking apne hardware se ~10× tak mehenga. 2021 outage ke baad Virginia mein $400M ka naya DC.
-     Public cloud sirf <b>burst</b> ke liye.</p>
-     <p>Metal par cloud jaisa ops: HashiCorp <b>Nomad</b> (containers schedule), <b>Consul</b> (service discovery), <b>Vault</b>
-     (secrets), aur MAAS (metal as a service) ka apna Terraform provider → physical servers bhi infrastructure-as-code.</p>
-     <h3>🛡️ Safety bhi scale par</h3>
-     <p>Bachche + sab kuch user-generated (games, chat, images, sounds). Text filter ~2.5 lakh requests/sec — har message par bade model
-     ka inference, word list nahi; 300+ AI inference pipelines; GPU/CPU ka batwara kharche ke liye; apne hardware par (latency, privacy).</p>`,
+    "<h3>🎟️ \"Play\" dabaya — ab?</h3>\n     <p>Kisi instance mein daalo jismein jagah hai, ya naya kholo — aur yeh faisla &lt; 100 ms mein, popular game par saikdon per second,\n     hazaron games ke liye. Paanch cheezein tolni hain:</p>\n     <ol>\n       <li><b>Latency</b> — 24 edge DCs mein sabse paas.</li>\n       <li><b>Dost</b> — jahan dost pehle se khel rahe.</li>\n       <li><b>Load</b> — bhara bahar; lagbhag-bhara bhi bura agar dost aane wale hain.</li>\n       <li><b>Developer rules</b> — region se group karo ya mix.</li>\n       <li><b>Naya vs purana</b> — naya server paisa; hazaron aadhe-khaali servers mat kholo.</li>\n     </ol>\n     <p>Galat faisla = lag, ya dost se alag → player chala gaya.</p>\n     <pre>lab 27 (ex1-matchmaker) — 20,000 players, 6 regions, 40% dosto ke group:\npolicy       instances   avg fill   avg ping   dost ek saath\nfill-first      500       100%      152 ms     14%\nnearest         502      99.6%       21 ms     70%\nsmart           502      99.6%       38 ms    100%</pre>\n     <p>Smart = latency limit + <b>party ke liye seats rok ke rakho</b> + pehle bhare instance bharo. Nearest se ping thoda zyada\n     (kabhi paas ke khaali server ki jagah thoda door ka aadha-bhara) — yahi roz ka trade-off.</p>",
+    "<h3>🏗️ Apna cloud</h3>\n     <p>800,000+ apne servers; <b>24 edge DCs</b> players ke paas instances chalate hain; <b>2 core DCs</b> (website, recommendations,\n     economy, safety filters); apna global private network; edges core ke liye firewall bhi. Kyun? <b>Network ka kharcha</b> — is\n     workload ke liye public cloud networking apne hardware se ~10× tak mehenga. 2021 outage ke baad Virginia mein $400M ka naya DC.\n     Public cloud sirf <b>burst</b> ke liye.</p>\n     <p>Metal par cloud jaisa ops: HashiCorp <b>Nomad</b> (containers schedule), <b>Consul</b> (service discovery), <b>Vault</b>\n     (secrets), aur MAAS (metal as a service) ka apna Terraform provider → physical servers bhi infrastructure-as-code.</p>\n     <h3>🛡️ Safety bhi scale par</h3>\n     <p>Bachche + sab kuch user-generated (games, chat, images, sounds). Text filter ~2.5 lakh requests/sec — har message par bade model\n     ka inference, word list nahi; 300+ AI inference pipelines; GPU/CPU ka batwara kharche ke liye; apne hardware par (latency, privacy).</p>",
   ],
   stages: [
     {
@@ -375,15 +259,10 @@ smart           502      99.6%       38 ms    100%</pre>
       ],
       observe: {
         q: 'Nearest mein 30% groups kyun toot gaye jabki sab paas ke DC mein the?',
-        choices: [
-          'Dost thodi der baad aate hain — tab tak instance bhar chuka hota hai; smart ne pehle dost ke aate hi party size jitni seats rok li',
-          'Latency zyada thi',
-          'Regions alag the',
-          'Servers kam the',
-        ],
+        choices: ["Party ke liye seats reserve nahi thi","Nearest routing ne geography badli","Smart mode ne latency zero ki","All servers ka size double hua"],
         answer: 0,
-        explain: 'Load factor ka woh hissa: "lagbhag-bhara bura hai agar dost aane wale hain".',
-      },
+        explain: "Nearest policy ne late party members ke liye seats reserve nahi ki. Instance almost full ho gaya toh baad ke friends elsewhere place hue. Smart mode bounded party reservation use karta hai.",
+       choiceExplanations: ["Nearest policy ne late party members ke liye seats reserve nahi ki. Instance almost full ho gaya toh baad ke friends elsewhere place hue. Smart mode bounded party reservation use karta hai.","Both cases nearby DC hain; group capacity key variable hai.","Placement party completion improve karta hai, physical RTT zero nahi.","Question reservation logic compare karta hai, server-size change nahi."] },
       lesson: 'Matchmaker ek real-time scheduler hai — har factor ka apna dukh, aur unka balance hi product.',
     },
     {
@@ -425,15 +304,10 @@ smart           502      99.6%       38 ms    100%</pre>
         doosra dheela padta hai — tight latency + zyada packing kabhi-kabhi naya server maangti hai.`,
       quiz: {
         q: 'Matchmaker ko platform ka "asli SPOF" kyun kehte hain?',
-        choices: [
-          'Instance mara = 40 log; matchmaker mara = koi bhi naya game shuru nahi kar sakta — reliability ka dabav upar ki is layer par',
-          'Woh sabse mehenga hai',
-          'Woh ek hi server par hai',
-          'Woh database hai',
-        ],
+        choices: ["Shared admission ka wide impact","It must be one physical server","It must cost more than game fleet","Every matchmaker is one database"],
         answer: 0,
         explain: 'Chhote instances ne blast radius ghataya — par coordination layer ki zimmedari badhi.',
-      },
+       choiceExplanations: ["Chhote instances ne blast radius ghataya — par coordination layer ki zimmedari badhi.","Logical dependency redundant deployments ke saath bhi broad impact rakh sakti hai.","Cost failure blast radius ka definition nahi.","Implementation database hona necessary nahi."] },
     },
   ],
   interview: {
@@ -442,26 +316,16 @@ smart           502      99.6%       38 ms    100%</pre>
     questions: [
       {
         q: 'Interviewer: "Dost ek saath game join karein par alag servers mein chale jaate hain."',
-        choices: [
-          'Party/friend-aware placement: pehle member par group size ki seats reserve (TTL ke saath), baad walon ko wahi instance; lagbhag-bhare instance mein party mat bhejo',
-          'Instance capacity badhao',
-          'Dost ko manually invite',
-          'Random placement',
-        ],
+        choices: ["Party seats reserve + TTL/affinity","Nearest full instance ko hi choose","Every friend random instance bhejo","UI invite se capacity guarantee"],
         answer: 0,
         explain: 'Lab: nearest 70% → smart 100%.',
-      },
+       choiceExplanations: ["Lab: nearest 70% → smart 100%.","Almost-full target late friends ke liye seats nahi rakhega.","Random placement party separation badha sakti hai.","Invite actual capacity reserve nahi karta."] },
       {
         q: 'Interviewer: "Roblox public cloud par kyun nahi?"',
-        choices: [
-          'Is workload ka network kharcha cloud par ~10× tak — steady bada load apne metal par sasta; cloud sirf burst ke liye (cells se)',
-          'Cloud unreliable',
-          'Kanoon',
-          'Security',
-        ],
+        choices: ["Workload TCO aur steady demand compare","Cloud platform inherently unreliable","Owned hardware always lower cost","Security cloud use prohibit karti"],
         answer: 0,
         explain: '"Cloud default hai, kanoon nahi — jaano sabse badi cost line kahan palatti hai."',
-      },
+       choiceExplanations: ["\"Cloud default hai, kanoon nahi — jaano sabse badi cost line kahan palatti hai.\"","Reliability architecture aur operations par depend karti hai.","Utilization, staffing, egress aur capex assumptions compare karne honge.","Security policy workload-specific hai; universal ban nahi."] },
     ],
   },
   success: [
@@ -565,15 +429,10 @@ smart           502      99.6%       38 ms    100%</pre>
       lesson: `Weekend ka time pata hai (Friday extra), size nahi (cloud burst). Aur cells failure ko simit rakhte hain — tabhi burst bhi saaf hota hai.`,
       quiz: {
         q: 'Cells hone se cloud burst aasaan kyun hota hai?',
-        choices: [
-          'Cloud mein bas ek aur khud-mein-poora cell khada karo; matchmaker use apne cells jaisa hi use kare — koi saajhi cheez nahi jo cloud aur DC ko jode',
-          'Cloud sasta hai',
-          'Cells chhote hote hain',
-          'Koi farq nahi',
-        ],
+        choices: ["Repeatable unit se placement portable","Cells se interconnect latency zero","Cloud capacity automatically free","All shared control planes gayab"],
         answer: 0,
         explain: 'Self-contained unit = kahin bhi chala do.',
-      },
+       choiceExplanations: ["Self-contained unit = kahin bhi chala do.","Remote dependencies aur network RTT phir bhi assess karne honge.","Portable deployment cloud bill eliminate nahi karta.","Cell design common admission/config/identity dependencies rakh sakta hai."] },
     },
     {
       type: 'order',
@@ -594,26 +453,16 @@ smart           502      99.6%       38 ms    100%</pre>
     questions: [
       {
         q: 'Interviewer: "Kabhi-kabhi ek viral event se load 3× ho jaata hai, kab pata nahi."',
-        choices: [
-          'Baseline + predictable peak apne/reserved capacity par; anishchit hissa burst (cloud) cells se; self-contained cells taaki burst aur failure dono simit; chaos tests se sabit',
-          'Hamesha 3× capacity rakho',
-          'Rate limit karke users ko wapas bhejo',
-          'Event hone par manually servers',
-        ],
+        choices: ["Bounded baseline plus tested burst cells","Unlimited on-demand capacity assume","Event ke baad manual hosts order","Reject users bina product priority"],
         answer: 0,
         explain: 'Roblox ka mix: apna + burst + cells.',
-      },
+       choiceExplanations: ["Roblox ka mix: apna + burst + cells.","Provider quotas, startup delay aur dependent services burst bound karte hain.","Manual provisioning viral peak ke liye late ho sakti hai.","Admission/degradation useful ho sakte hain; priorities aur SLO explicit hon."] },
       {
         q: 'Interviewer: "Chaos testing production mein kyun?"',
-        choices: [
-          'Failure ka vaada (cell ke andar rahega) tab tak bekaar jab tak test na ho — aur asli haalat sirf prod mein hoti hai',
-          'Staging nahi hai',
-          'Mazaa aata hai',
-          'Kanoon',
-        ],
+        choices: ["Bounded fault tests se assumptions verify","Production mein random damage daily","Staging coverage ko irrelevant maano","Fault injection bina rollback chalao"],
         answer: 0,
-        explain: '"Break prod daily."',
-      },
+        explain: "Approved bounded experiments mein hypothesis, representative baseline, limited radius, abort thresholds aur verified cleanup rakho. Production optional context hai, uncontrolled damage goal nahi.",
+       choiceExplanations: ["Approved bounded experiments mein hypothesis, representative baseline, limited radius, abort thresholds aur verified cleanup rakho. Production optional context hai, uncontrolled damage goal nahi.","Uncontrolled faults unnecessary customer damage kar sakte hain.","Staging useful hai; production conditions ki kuch gaps reh sakti hain.","Hypothesis, scope, monitoring aur abort thresholds chahiye."] },
     ],
   },
   success: [

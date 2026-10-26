@@ -154,16 +154,11 @@ opossum:           call #9 par OPEN  ·  latki recs-service tak 5 calls</pre>
           vars: { what: 'mini.js line 14: <code>!res || status &gt;= 500</code> → opossum: <b>errorFilter</b> (4xx par <code>true</code> = mat gino)' },
           ask: {
             q: 'recs-service ne <b>503</b> diya (<code>err.status</code> = 503). Line 25 ka <code>errorFilter</code> kya lautayega — aur opossum is call ko kya ginegi?',
-            choices: [
-              '<code>false</code> (503, 400–499 ke beech nahi hai) → opossum is call ko <b>failure</b> ginegi',
-              '<code>true</code> → opossum is call ko failure <b>nahi</b> ginegi',
-              '<code>true</code> → opossum turant OPEN ho jaayegi',
-              '<code>errorFilter</code> 5xx par chalta hi nahi',
-            ],
+            choices: ["Filter false; opossum 503 ko failure sample ginti hai","Filter true; opossum 503 ko failure se exclude karti hai","Filter true; opossum turant open transition karti hai","Filter skip; opossum sirf thrown timeout ginti hai"],
             answer: 0,
             hint: 'Line 25 padho. 503 &gt;= 400 sach hai. Par 503 &lt; 500? Dono sach hon tabhi <code>true</code>.',
             explain: '503 &lt; 500 jhooth hai → filter <code>false</code> deta hai → failure gina gaya. Yaad rakhne ka tareeka: <code>errorFilter</code> = "kis error ko <b>maaf</b> karna hai". 4xx maaf. 5xx aur timeout maaf nahi.',
-          },
+           choiceExplanations: ["503 &lt; 500 jhooth hai → filter <code>false</code> deta hai → failure gina gaya. Yaad rakhne ka tareeka: <code>errorFilter</code> = \"kis error ko <b>maaf</b> karna hai\". 4xx maaf. 5xx aur timeout maaf nahi.","Shown filter 400-499 ke liye true hai; 503 us range ke bahar hai.","errorFilter true ignore semantics hai; open karne ka direct command nahi.","Thrown error filter ko diya jaata hai; 5xx status wala wrapped error bhi action failure hai."] },
         },
         {
           line: [27, 28],
@@ -195,16 +190,11 @@ opossum:           call #9 par OPEN  ·  latki recs-service tak 5 calls</pre>
             #5, #6, #7 teeno timeout hui, teeno failure ginti gayi. Phir bhi opossum CLOSED.`,
           ask: {
             q: 'Hamari class #7 par OPEN hui. opossum #7 par OPEN kyun nahi hui?',
-            choices: [
-              'opossum pichhle 10 second ki saari 7 calls ginti hai: 3/7 = 43%, aur use 50% se ZYADA chahiye. Hamari class pichhli 6 calls dekhti hai: 3/6 = 50%, aur 50% ya zyada par khul jaati hai',
-              'opossum ko kam se kam 6 calls chahiye thi (<code>volumeThreshold</code>), aur #7 par 6 nahi thi',
-              'opossum timeout ko failure hi nahi ginti',
-              'opossum mein bug hai',
-            ],
+            choices: ["Time window aur strict > rule; sample count alag hai","Minimum six calls abhi poori nahi; seventh call skip hai","Timeouts sample mein nahi; failures sirf HTTP 500 hain","Library state request par reset; history retain nahi hoti"],
             answer: 0,
             hint: 'Dono ne alag number dekhe: kitni calls, aur kitna fail. Line 20 aur line 22 dekho.',
             explain: 'Window alag: opossum ke 7 calls mein 3 fail = 43%. Hamari class ke 6 calls mein 3 fail = 50%. Hadd alag: opossum <b>&gt; 50%</b>, hamari <b>&gt;= 50%</b>. Dono ne alag number dekhe, isliye alag faisla.',
-          },
+           choiceExplanations: ["Window alag: opossum ke 7 calls mein 3 fail = 43%. Hamari class ke 6 calls mein 3 fail = 50%. Hadd alag: opossum <b>&gt; 50%</b>, hamari <b>&gt;= 50%</b>. Dono ne alag number dekhe, isliye alag faisla.","Seven calls minimum six se zyada hain; real difference window contents aur equality rule hai.","Opossum timeout failures track karta hai; classification ko outcome evidence se verify karo.","Lab breaker instance shared hai; per-request reset issue yahan nahi."] },
         },
         {
           clock: '#8 · 2.5 s → #9 · 3.0 s',
@@ -268,16 +258,11 @@ opossum:           call #9 par OPEN  ·  latki recs-service tak 5 calls</pre>
             Defaults library likhne walon ka andaaza hain. KhanaKart ki traffic ka andaaza nahi.`,
           ask: {
             q: 'KhanaKart ne opossum lagayi: <code>timeout</code> aur fallback likhe, baaki sab default. recs-service par pehli hi call fail hui. Kya ho sakta hai?',
-            choices: [
-              '<code>volumeThreshold</code> 0 hai, yaani "kam se kam" ki koi hadd nahi (hamari class mein line 37 delete karne jaisa). 1 call, 1 fail = 100%, 50% se ZYADA → breaker ek hi call par OPEN ho sakta hai',
-              'Kuch nahi — opossum 10 calls se pehle faisla nahi karti',
-              'Breaker 30 second tak CLOSED rehta hai, fail ho ya na ho',
-              'Library error phenk kar crash ho jaati hai',
-            ],
+            choices: ["Shown default volume gate 0; one failure se open mumkin","Default gate ten calls; first failure abhi ignore hogi","Default reset timer closed state ko 30 s lock karega","First failure fallback de; ratio window sample na le"],
             answer: 0,
             hint: 'Line 21 ka naam yaad karo: <code>volumeThreshold</code> = kam se kam kitni calls. Default 0 ka matlab?',
             explain: '<code>volumeThreshold</code> ka default 0: faisla karne ke liye kam se kam koi sankhya nahi. Ek call, ek fail = 100%, aur 100 &gt; 50. Isliye library ke default par bharosa mat karo. Apni traffic se number nikalo.',
-          },
+           choiceExplanations: ["<code>volumeThreshold</code> ka default 0: faisla karne ke liye kam se kam koi sankhya nahi. Ek call, ek fail = 100%, aur 100 &gt; 50. Isliye library ke default par bharosa mat karo. Apni traffic se number nikalo.","Pinned library default volumeThreshold zero hai; ten-call rule assume mat karo.","resetTimeout open-to-half-open cooldown hai, startup closed lock nahi.","Fallback result action failure statistics ko automatically success nahi banaata."] },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> library tumhara <code>allow()</code> aur <code>record()</code> likh deti hai. Par paanch sawaal tumhare hi rehte hain: kitni calls dekhun, kam se kam kitni, kitna fail, kitni der OPEN, kitni trial.<br>Library lagane se pehle teen sawaal apni traffic se poochho: <b>recs-service ko ek minute mein kitni calls jaati hain</b> (isse window aur kam se kam calls banti hain), <b>recs-service aam taur par theek hone mein kitna waqt leti hai</b> (OPEN kitni der), aur <b>fallback kitna purana chalega</b>. Phir har setting ka number likho. Default par mat chhodo.',
@@ -320,15 +305,10 @@ opossum:           call #9 par OPEN  ·  latki recs-service tak 5 calls</pre>
       ],
       observe: {
         q: 'Call #8 par 8 calls mein 4 fail hue, yaani theek 50%. Phir bhi opossum CLOSED kyun rahi?',
-        choices: [
-          'opossum ko 50% se <b>ZYADA</b> fail chahiye (<code>errorThresholdPercentage</code>). Theek 50% kaafi nahi. #9 par 5/9 = 56% hua, tab OPEN',
-          'OPEN ka timer (<code>resetTimeout</code>) abhi poora nahi hua tha',
-          '<code>volumeThreshold</code> 6 hai aur #8 par sirf 4 calls thi',
-          'opossum timeout ko failure nahi ginti',
-        ],
+        choices: ["Strict > 50% chahiye; exactly 50% se open nahi hua","Reset cooldown baaki; closed window evaluate nahi hoti","Minimum sample six; total calls count abhi four hai","Timeout errors excluded; eight calls sab successful hain"],
         answer: 0,
         explain: 'Hamari class mein <code>&gt;=</code> tha: 3/6 = 50% par OPEN. opossum mein <code>&gt;</code>: 4/8 = 50% par CLOSED, 5/9 = 56% par OPEN. Isi wajah se opossum do call baad khuli.',
-      },
+       choiceExplanations: ["Hamari class mein <code>&gt;=</code> tha: 3/6 = 50% par OPEN. opossum mein <code>&gt;</code>: 4/8 = 50% par CLOSED, 5/9 = 56% par OPEN. Isi wajah se opossum do call baad khuli.","Shown state closed hai; reset cooldown open recovery mein matter karta hai.","Total eight samples hain; failure count four ko total sample count mat samjho.","Timeout failures statistics mein count hoti hain."] },
       lesson: 'Library wahi kaam karti hai, par ginti ka niyam alag hota hai (10 second ka window, "50% se ZYADA"). Library lagane se pehle uska niyam padho.',
     },
   ],
@@ -338,26 +318,16 @@ opossum:           call #9 par OPEN  ·  latki recs-service tak 5 calls</pre>
     questions: [
       {
         q: '"Humne library ka circuit breaker laga diya, default settings ke saath. Kaafi hai?"',
-        choices: [
-          'Nahi. Default library likhne walon ke andaaze hain. Apni traffic se window, kam se kam calls aur OPEN ka waqt tay karo, kya failure ginna hai chuno, aur fallback likho',
-          'Haan, library ke defaults production ke liye tested hain',
-          'Nahi, library ka breaker kabhi bharosemand nahi hota — apna likho',
-          'Haan, bas timeout badha do',
-        ],
+        choices: ["Traffic, failure policy, sample gate aur fallback configure karo","Defaults deploy karo; timeout ko baad mein adjust karna","Custom rewrite karo; library behavior verify mat karna","Threshold badhao; sample window aur fallback same chhodo"],
         answer: 0,
         explain: 'opossum ka default <code>volumeThreshold</code> 0 aur <code>resetTimeout</code> 30 s hai. resilience4j ka <code>minimumNumberOfCalls</code> 100 aur <code>waitDurationInOpenState</code> 60 s. Maan lo recs-service ko sirf 20 calls/minute jaati hain: 100 calls ke liye 5 minute lagenge.',
-      },
+       choiceExplanations: ["opossum ka default <code>volumeThreshold</code> 0 aur <code>resetTimeout</code> 30 s hai. resilience4j ka <code>minimumNumberOfCalls</code> 100 aur <code>waitDurationInOpenState</code> 60 s. Maan lo recs-service ko sirf 20 calls/minute jaati hain: 100 calls ke liye 5 minute lagenge.","Defaults workload deadlines, volume ya failure domains nahi jaante.","Custom code bhi incorrect ho sakta hai; library semantics verify aur tests zyada useful hain.","Ek threshold tune karna minimum samples, recovery timing aur business fallback ka replacement nahi."] },
       {
         q: '"Window calls ki ginti se rakhein, ya waqt se? Farq kya padta hai?"',
-        choices: [
-          'Ginti wali window pichhli N calls dekhti hai: traffic kam ho ya zyada, hamesha utne hi nateeje. Waqt wali window pichhle N second dekhti hai: kam traffic mein bahut kam nateeje aate hain, isliye uske saath "kam se kam calls" zaroor rakho',
-          'Dono ek hi cheez hain, bas naam alag hai',
-          'Waqt wali window hamesha behtar hai',
-          'Ginti wali window sirf Java mein chalti hai',
-        ],
+        choices: ["Count window last N calls; time window last N seconds","Count aur time window same samples har traffic par lete","Time window low traffic par minimum samples de deti","Count window burst ke baad state ko fixed time mein bhoolti"],
         answer: 0,
         explain: 'Lab: wahi 3 timeouts. Pichhli 6 calls mein 3/6 = 50% → haath ka breaker khul gaya. Pichhle 10 second ki 7 calls mein 3/7 = 43% → opossum nahi khuli.',
-      },
+       choiceExplanations: ["Lab: wahi 3 timeouts. Pichhli 6 calls mein 3/6 = 50% → haath ka breaker khul gaya. Pichhle 10 second ki 7 calls mein 3/7 = 43% → opossum nahi khuli.","Arrival rate change hote hi N calls ka real elapsed duration change hota hai.","Low traffic mein time window mein bahut kam samples ho sakte hain; volume gate chahiye.","Count window new calls ke saath slide hoti hai; fixed TTL behavior alag policy hai."] },
     ],
   },
   success: [

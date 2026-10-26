@@ -10,19 +10,7 @@
 
 VISUALS['tt-feedback-loop'] = {
   t: 'Duniya aur model ke beech ka gap',
-  html: `
-    <div class="dg-grid">
-      <div class="dg-node"><span class="ni">🎬</span><span class="nl">Netflix</span><span class="ns">~15,000 titles · 1 faisla / 2 ghante · taste hafton mein badle</span></div>
-      <div class="dg-node"><span class="ni">🎵</span><span class="nl">Spotify</span><span class="ns">taste mahino mein badalta hai</span></div>
-      <div class="dg-node is-bad"><span class="ni">📱</span><span class="nl">TikTok</span><span class="ns">~1 crore nayi videos/din · 10 min mein 20 faisle · taste SESSION ke andar badle</span></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-split">
-      <div class="dg-box is-bad"><span class="bx-label">🌙 Batch (raat ko retrain)</span>
-        <div class="dg-cap">Aaj cricket chahiye, model kal tak "cooking wala banda" samjhega. Lab 28: 20 mein <b>0.3</b> hit.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">⚡ Online (har swipe se seekho)</span>
-        <div class="dg-cap">Kuch skips ke andar model samajh jaata hai. Lab 28: 20 mein <b>11.2</b> hit, 6th video tak samjha.</div></div>
-    </div>`,
+  html: "\n    <div class=\"dg-grid\">\n      <div class=\"dg-node\"><span class=\"ni\">🎬</span><span class=\"nl\">Netflix</span><span class=\"ns\">~15,000 titles · 1 faisla / 2 ghante · taste hafton mein badle</span></div>\n      <div class=\"dg-node\"><span class=\"ni\">🎵</span><span class=\"nl\">Spotify</span><span class=\"ns\">taste mahino mein badalta hai</span></div>\n      <div class=\"dg-node is-bad\"><span class=\"ni\">📱</span><span class=\"nl\">TikTok</span><span class=\"ns\">~1 crore nayi videos/din · 10 min mein 20 faisle · taste SESSION ke andar badle</span></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">🌙 Batch (raat ko retrain)</span>\n        <div class=\"dg-cap\">Aaj cricket chahiye, model kal tak \"cooking wala banda\" samjhega. Lab 28: 20 mein <b>0.3</b> hit.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">⚡ Online (har swipe se seekho)</span>\n        <div class=\"dg-cap\">Kuch skips ke andar model samajh jaata hai. Lab 28: 20 mein <b>11.2</b> hit, 6th video tak samjha.</div></div>\n    </div>",
 };
 
 VISUALS['tt-embeddings'] = {
@@ -34,7 +22,7 @@ VISUALS['tt-embeddings'] = {
           Lab: users jitni rows par bhi <b>63%</b> users kisi aur ke saath share.</div></div>
       <div class="dg-box is-good"><span class="bx-label">🐦 Cuckoo table</span>
         <div class="dg-cap">Do hash functions = har key ki do jagah. Jagah bhari → purane ko uski dusri jagah dhakelo.
-          <b>0% sharing</b>, lookup hamesha 2 jagah.</div></div>
+          <b>0% sharing</b>, classical two-choice variant mein bounded candidate lookup.</div></div>
     </div>
     <div class="dg-rule"></div>
     <div class="dg-flow">
@@ -47,21 +35,7 @@ VISUALS['tt-embeddings'] = {
 
 VISUALS['tt-pipeline'] = {
   t: 'Model standard hai, pipeline mushkil hai',
-  html: `
-    <div class="dg-flow">
-      <span class="dg-pill acc">📤 features topic (recommend karte waqt)</span><span class="dg-arrow">+</span>
-      <span class="dg-pill acc">👆 actions topic (1–30 sec baad)</span><span class="dg-arrow">→</span>
-      <span class="dg-pill">🔗 Flink join (recommendation id se, window ke saath)</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good">🏋️ training PS</span>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-split">
-      <div class="dg-box is-gold"><span class="bx-label">🧪 Training parameter servers</span>
-        <div class="dg-cap">Lagatar update, thoda messy chalega — experiment ki jagah.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">🚀 Serving parameter servers</span>
-        <div class="dg-cap">&lt;200 ms, bharosemand. Har kuch minute mein <b>jaanche hue</b> params ka sync.
-          Training gire, serving jawab deta rehta hai.</div></div>
-    </div>`,
+  html: "\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill acc\">📤 features topic (recommend karte waqt)</span><span class=\"dg-arrow\">+</span>\n      <span class=\"dg-pill acc\">👆 actions topic (1–30 sec baad)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill\">🔗 Flink join (recommendation id se, window ke saath)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">🏋️ training PS</span>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-gold\"><span class=\"bx-label\">🧪 Training parameter servers</span>\n        <div class=\"dg-cap\">Lagatar update, thoda messy chalega — experiment ki jagah.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🚀 Serving parameter servers</span>\n        <div class=\"dg-cap\">&lt; 200 ms, bharosemand. Har kuch minute mein <b>jaanche hue</b> params ka sync.\n          Training gire, serving jawab deta rehta hai.</div></div>\n    </div>",
 };
 
 VISUALS['tt-ranking'] = {
@@ -73,7 +47,7 @@ VISUALS['tt-ranking'] = {
       <div class="dg-rung g"><span class="lv">~20</span><span class="cmd">Fine ranking + multi-objective score</span><span class="q">watch, like, share, completion — business weights ke saath</span></div>
     </div>
     <div class="dg-cap">Signal: <b>tumhara angootha</b>. 15 sec ki video poori dekhi = mazboot haan. 1 sec mein scroll = mazboot na.
-      Like fake kar sakte ho, dekha hua fake nahi.</div>`,
+      Likes aur watch behavior dono manipulate ho sakte hain; multiple signals aur abuse checks chahiye.</div>`,
 };
 
 SD.registerLevels('ai', [
@@ -106,22 +80,7 @@ SD.registerLevels('ai', [
        <tr><td>Video ki umar</td><td>saalon</td><td>4 ghante pehle hot, ab mari hui</td></tr>
        <tr><td>Taste badalta hai</td><td>hafton mein</td><td>session ke andar</td></tr>
      </table>`,
-    `<h3>🏗️ "Batch ko zyada baar chala do" kaam kyun nahi karta</h3>
-     <p>Batch pipeline: din bhar ka data jama karo → raat ko poora model train → subah deploy. Isko har
-     ghante chalao toh bhi har baar poora data, poori training, poora deploy — mehenga aur phir bhi
-     ghante bhar peeche.</p>
-     <p>Online learning alag architecture hai: har action (dekha/skip kiya) ek chhota training example
-     ban ke <b>turant</b> model ke parameters thode se hilata hai, aur naye parameters kuch minute mein
-     serving tak pahunchte hain. Yeh wahi pattern hai jo fraud detection, ad ranking, dynamic pricing
-     mein kaam aata hai — jahan bhi data <b>non-stationary</b> ho (sach badalta rehta ho).</p>
-     <h3>📏 Lab 28 mein naapa</h3>
-     <pre>model              agle 20 videos mein poore dekhe   model kab samjha
-nightly batch         0.3 / 20                     aaj kabhi nahi
-online (lr 0.05)      2.6 / 20                     video #17.9
-online (lr 0.2)      11.2 / 20                     video #6.4</pre>
-     <p class="tip">🎯 Video ka pehla sabak: <b>feedback loop ki speed, model ki sophistication se zyada
-     maayne rakhti hai.</b> Seedha model jo har minute seekhe, us fancy model ko hara deta hai jo raat
-     ko seekhe.</p>`,
+    "<h3>🏗️ \"Batch ko zyada baar chala do\" kaam kyun nahi karta</h3>\n     <p>Batch pipeline: din bhar ka data jama karo → raat ko poora model train → subah deploy. Isko har\n     ghante chalao toh bhi har baar poora data, poori training, poora deploy — mehenga aur phir bhi\n     ghante bhar peeche.</p>\n     <p>Online learning alag architecture hai: har action (dekha/skip kiya) ek chhota training example\n     ban ke <b>turant</b> model ke parameters thode se hilata hai, aur naye parameters kuch minute mein\n     serving tak pahunchte hain. Yeh wahi pattern hai jo fraud detection, ad ranking, dynamic pricing\n     mein kaam aata hai — jahan bhi data <b>non-stationary</b> ho (sach badalta rehta ho).</p>\n     <h3>📏 Lab 28 mein naapa</h3>\n     <pre>model              agle 20 videos mein poore dekhe   model kab samjha\nnightly batch         0.3 / 20                     aaj kabhi nahi\nonline (lr 0.05)      2.6 / 20                     video #17.9\nonline (lr 0.2)      11.2 / 20                     video #6.4</pre>\n     <p class=\"tip\">🎯 Video ka pehla sabak: <b>feedback loop ki speed, model ki sophistication se zyada\n     maayne rakhti hai.</b> Seedha model jo har minute seekhe, us fancy model ko hara deta hai jo raat\n     ko seekhe.</p>",
   ],
   stages: [
     {
@@ -152,19 +111,14 @@ online (lr 0.2)      11.2 / 20                     video #6.4</pre>
         user ka vector thoda hilata hai. 500 users ka average.`,
       steps: [
         { text: 'Simulation chalao (koi server nahi chahiye).', cmd: 'cd docker-labs/28-tiktok && node tools/tasteflip.js', expect: 'nightly batch         0.3 / 20                     aaj kabhi nahi\nonline (lr 0.05)      2.6 / 20                     video #17.9 (96% users)\nonline (lr 0.2)      11.2 / 20                     video #6.4 (99% users)' },
-        { text: '<code>lr</code> 0.05 aur 0.2 ka farq dekho — "kitni jaldi yakeen karein".', cmd: 'node tools/tasteflip.js | tail -3', expect: 'lr = "kitni jaldi yakeen karein" — chhota lr der se samjha (#17.9), bada lr jaldi (#6.4).' },
+        { text: "<code>lr</code> 0.05 aur 0.2 ka farq dekho — \"kitni jaldi yakeen karein\".", cmd: 'node tools/tasteflip.js | tail -3', expect: 'lr = "kitni jaldi yakeen karein" — chhota lr der se samjha (#17.9), bada lr jaldi (#6.4).' },
       ],
       observe: {
-        q: 'Batch model ko 20 mein sirf 0.3 hit mile. Woh 0.3 bhi kahan se aaye?',
-        choices: [
-          '10% explore se — kabhi-kabhi random cricket video aa gayi. Model khud kuch nahi seekha',
-          'Batch model ne dheere-dheere seekha',
-          'User ne cooking bhi dekhi',
-          'Bug hai',
-        ],
+        q: "Batch model ko 20 mein sirf 0.3 hit mile. Woh 0.3 bhi kahan se aaye?",
+        choices: ["Frozen model ko exploration se chance hit","Batch model har click par update hua","Cache ne cricket labels train kiye","User preference switch hua hi nahi"],
         answer: 0,
         explain: 'Batch model aaj poore din frozen hai. Explore hi ek raasta tha — aur online model usi explore se seekhta hai.',
-      },
+       choiceExplanations: ["Batch model aaj poore din frozen hai. Explore hi ek raasta tha — aur online model usi explore se seekhta hai.","Question daily-frozen weights describe karta hai.","Caching aur training label updates alag mechanisms hain.","Given simulation user interest switch karta hai."] },
       lesson: 'Online learning = explore se mila signal turant istemaal. Batch mein wahi signal kal tak pada rehta hai.',
     },
   ],
@@ -174,26 +128,16 @@ online (lr 0.2)      11.2 / 20                     video #6.4</pre>
     questions: [
       {
         q: 'Interviewer: "Hamara feed model raat ko retrain hota hai. Naye users 2 din mein chale jaate hain. Kya karoge?"',
-        choices: [
-          'Online learning — actions ko stream se turant training mein, user embeddings ko minute-level par update, aur naye params ko kuch minute mein serving tak sync',
-          'Retraining har ghante chala do',
-          'Bada model lagao',
-          'Naye users ko popular videos dikhao, hamesha',
-        ],
+        choices: ["Fresh features + tested updates","Only model parameter count badhao","Only popular items permanently serve","Cadence badhao, quality tests chhodo"],
         answer: 0,
-        explain: 'Batch ko zyada baar chalana alag architecture nahi hai — har baar poora kaam, phir bhi peeche.',
-      },
+        explain: "Freshness bottleneck pehle measure karo: feature updates, ingestion lag, model cadence and cold-start exploration alag knobs hain. Incremental batch/mini-batch bhi valid ho sakte hain; continuous online learning automatic best answer nahi.",
+       choiceExplanations: ["Freshness bottleneck pehle measure karo: feature updates, ingestion lag, model cadence and cold-start exploration alag knobs hain. Incremental batch/mini-batch bhi valid ho sakte hain; continuous online learning automatic best answer nahi.","Bigger model stale interest feedback automatically fix nahi karta.","Popular baseline useful hai; permanent policy personalization ignore karti hai.","Faster updates ke saath quality, skew, drift and safety evals chahiye."] },
       {
         q: 'Interviewer: "Online learning ka sabse bada nuksaan?"',
-        choices: [
-          'Lagatar training = lagatar fail hone wala production system (crash, sync lag, Kafka backlog) aur reproducibility khatam — 5 minute pehle wala model ab hai hi nahi',
-          'Yeh mehenga GPU maangta hai',
-          'Yeh sirf chhote models par chalta hai',
-          'Koi nuksaan nahi',
-        ],
+        choices: ["Pipeline reliability and versioning","Online means historical versions impossible","Only tiny models online train hote","GPU cost zero because data streams"],
         answer: 0,
-        explain: 'Video: "a continuously training production model is a continuously failing production model".',
-      },
+        explain: "Online learning mein continuous data/training/serving pipeline operational risk badhati hai. Logged features, checkpoints aur versioned artifacts se reproducibility possible hai; automatic loss of reproducibility universal rule nahi.",
+       choiceExplanations: ["Online learning mein continuous data/training/serving pipeline operational risk badhati hai. Logged features, checkpoints aur versioned artifacts se reproducibility possible hai; automatic loss of reproducibility universal rule nahi.","Checkpoints, versioning aur logged features reproducibility improve kar sakte hain.","Model size implementation/capacity choice hai, universal tiny-only rule nahi.","Continuous compute, state and operations cost remain."] },
     ],
   },
   success: [
@@ -207,7 +151,7 @@ online (lr 0.2)      11.2 / 20                     video #6.4</pre>
   cards: [
     { front: 'TikTok ka core architectural bet?', back: 'Batch retraining ki jagah real-time online learning — har action se turant seekhna, params kuch minute mein serving tak.' },
     { front: 'Batch ko har ghante chala dena online learning kyun nahi?', back: 'Har baar poora data, poori training, poora deploy — mehenga aur phir bhi ghanta bhar peeche. Online = alag architecture (stream → chhote updates → sync).' },
-    { front: 'Lab 28: taste flip par batch vs online?', back: 'Nightly batch: 0.3/20 hit (sirf explore se). Online lr 0.2: 11.2/20, 6th video tak samjha.' },
+    { front: 'Lab 28: taste flip par batch vs online?', back: "Nightly batch: 0.3/20 hit (sirf explore se). Online lr 0.2: 11.2/20, 6th video tak samjha." },
   ],
 },
 
@@ -226,39 +170,8 @@ online (lr 0.2)      11.2 / 20                     video #6.4</pre>
     'Expiry aur frequency filter se memory bounded',
   ],
   lesson: [
-    `<h3>🧭 Embedding = taste ka pata</h3>
-     <p>Har user aur har video ek <b>vector</b> hai — kuch sau numbers — jo "is bande ko kya pasand hai"
-     ya "yeh video kis tarah ki hai" batata hai. Paas-paas ke vectors = milta-julta taste.</p>
-     <p>1 arab+ users, arabon videos → table ki arabon rows. Ek machine mein fit nahi, aur har second
-     <b>badhti</b> hai (naye users, nayi videos). Isliye yeh parameter servers mein bikhri hoti hai.</p>
-     <h3>🔀 Fixed-size table ka chupa dhokha</h3>
-     <p>Aam TensorFlow embedding tables fixed-size hoti hain: <code>row = hash(user) % size</code>.
-     Table bhari → do alag users (video ki misaal: Akhil aur Yuki) <b>ek hi row</b> share karte hain →
-     model dono ko ek hi insaan samajhta hai → dono ko ek hi feed. Koi error nahi aata — bas quality
-     chupchaap girti hai, aur log chale jaate hain.</p>
-     <p>Lab 28 mein 10 lakh users:</p>
-     <pre>table   500000 rows:  86.5% users kisi aur ke saath row share karte hain
-table  1000000 rows:  63.2%   ← users jitni rows, phir bhi!
-table  4000000 rows:  22.2%   ← 4× memory, phir bhi 1 mein se 5</pre>`,
-    `<h3>🐦 Cuckoo hashing — koyal ki tarah dhakelo</h3>
-     <p>Koyal apna anda doosri chidiya ke ghonsle mein daalti hai aur uska anda bahar dhakel deti hai.
-     Cuckoo hashing yahi karta hai:</p>
-     <ol>
-       <li>Har key ki <b>do sambhav jagah</b> (do hash functions).</li>
-       <li>Pehli jagah khaali → baith jao. Bhari → wahan baithe ko <b>dhakelo</b>.</li>
-       <li>Dhakela hua apni <b>dusri</b> jagah jaata hai; wahan bhi koi hai toh use dhakelta hai… jab tak
-       sabko ghar na mil jaaye.</li>
-     </ol>
-     <p>Nateeja: <b>koi do users ek row share nahi karte</b>, aur lookup hamesha sirf 2 jagah dekhna.
-     Lab: 20 lakh rows (load 50%), 0% sharing, average 0.27 dhakke — par 50% load ke paas kabhi-kabhi
-     lambi chain (366), isliye table ko isse zyada nahi bharte.</p>
-     <h3>⌛ Memory bounded rakhne ke do jugaad</h3>
-     <ul>
-       <li><b>Expiry</b> — har row par "last seen". 30 din se nahi aaya → row hatao; wapas aaya toh dobara
-       seekh lo (hamesha rakhne se sasta). Lab: 10 lakh mein se 3.7 lakh hi active → <b>63% memory bachi</b>.</li>
-       <li><b>Frequency filter</b> — bahut kam interactions wale ko table mein daalo hi mat jab tak ek
-       threshold paar na ho. Ek baar aaya, kabhi nahi lauta — uske liye row kyun?</li>
-     </ul>`,
+    "<h3>🧭 Embedding = taste ka pata</h3>\n     <p>Har user aur har video ek <b>vector</b> hai — kuch sau numbers — jo \"is bande ko kya pasand hai\"\n     ya \"yeh video kis tarah ki hai\" batata hai. Paas-paas ke vectors = milta-julta taste.</p>\n     <p>1 arab+ users, arabon videos → table ki arabon rows. Ek machine mein fit nahi, aur har second\n     <b>badhti</b> hai (naye users, nayi videos). Isliye yeh parameter servers mein bikhri hoti hai.</p>\n     <h3>🔀 Fixed-size table ka chupa dhokha</h3>\n     <p>Aam TensorFlow embedding tables fixed-size hoti hain: <code>row = hash(user) % size</code>.\n     Table bhari → do alag users (video ki misaal: Akhil aur Yuki) <b>ek hi row</b> share karte hain →\n     model dono ko ek hi insaan samajhta hai → dono ko ek hi feed. Koi error nahi aata — bas quality\n     chupchaap girti hai, aur log chale jaate hain.</p>\n     <p>Lab 28 mein 10 lakh users:</p>\n     <pre>table   500000 rows:  86.5% users kisi aur ke saath row share karte hain\ntable  1000000 rows:  63.2%   ← users jitni rows, phir bhi!\ntable  4000000 rows:  22.2%   ← 4× memory, phir bhi 1 mein se 5</pre>",
+    "<h3>🐦 Cuckoo hashing — koyal ki tarah dhakelo</h3>\n     <p>Koyal apna anda doosri chidiya ke ghonsle mein daalti hai aur uska anda bahar dhakel deti hai.\n     Cuckoo hashing yahi karta hai:</p>\n     <ol>\n       <li>Har key ki <b>do sambhav jagah</b> (do hash functions).</li>\n       <li>Pehli jagah khaali → baith jao. Bhari → wahan baithe ko <b>dhakelo</b>.</li>\n       <li>Dhakela hua apni <b>dusri</b> jagah jaata hai; wahan bhi koi hai toh use dhakelta hai… jab tak\n       sabko ghar na mil jaaye.</li>\n     </ol>\n     <p>Nateeja: <b>koi do users ek row share nahi karte</b>, aur is toy two-choice variant mein do candidate positions dekhna.\n     Lab: 20 lakh rows (load 50%), 0% sharing, average 0.27 dhakke — par is classical two-choice single-slot setup ke high load par kabhi-kabhi\n     lambi chain (366), isliye table ko isse zyada nahi bharte.</p>\n     <h3>⌛ Memory bounded rakhne ke do jugaad</h3>\n     <ul>\n       <li><b>Expiry</b> — har row par \"last seen\". 30 din se nahi aaya → row hatao; wapas aaya toh dobara\n       seekh lo (hamesha rakhne se sasta). Lab: 10 lakh mein se 3.7 lakh hi active → <b>63% memory bachi</b>.</li>\n       <li><b>Frequency filter</b> — bahut kam interactions wale ko table mein daalo hi mat jab tak ek\n       threshold paar na ho. Ek baar aaya, kabhi nahi lauta — uske liye row kyun?</li>\n     </ul>",
   ],
   stages: [
     {
@@ -286,16 +199,11 @@ table  4000000 rows:  22.2%   ← 4× memory, phir bhi 1 mein se 5</pre>`,
         { text: 'Users 20 lakh karke dekho — ratios wahi, par cuckoo ki chain?', cmd: 'node tools/embeddings.js --users 2000000', expect: '   table  2000000 rows (122 MB):  63.2% users kisi aur ke saath row share karte hain\n   table 4000000 rows (244 MB): 0% sharing (har user ki apni row), avg dhakke 0.27, sabse lambi chain 501, fail 1' },
       ],
       observe: {
-        q: 'Fixed table mein users jitni hi rows hon (1:1), tab bhi 63% users share kyun karte hain?',
-        choices: [
-          'Hash random jagah deta hai — kuch rows mein 2-3 aa jaate hain aur kuch khaali rehti hain (birthday problem). 1:1 ka matlab "har ek ki apni" nahi',
-          'Hash function kharab hai',
-          'Table chhoti hai',
-          'Users duplicate hain',
-        ],
+        q: "Fixed table mein users jitni hi rows hon (1: 1), tab bhi 63% users share kyun karte hain?",
+        choices: ["Uniform bucket mapping collides","User ids duplicates hona necessary","Hash quality automatically broken","Equal rows se one-to-one mapping"],
         answer: 0,
-        explain: 'Random jagah = takraav pakka. 1 − 1/e ≈ 63% — isi liye collision-free ke liye cuckoo jaisa structure chahiye.',
-      },
+        explain: "Large N unique users independently N buckets mein uniformly map karein toh ek tagged user ke kisi aur se bucket share karne ka chance 1-(1-1/N)^(N-1) ≈63% hai. Equal bucket count bijection guarantee nahi. Cuckoo collision resolution ya another explicit entity map tradeoffs compare karo.",
+       choiceExplanations: ["Large N unique users independently N buckets mein uniformly map karein toh ek tagged user ke kisi aur se bucket share karne ka chance 1-(1-1/N)^(N-1) ≈63% hai. Equal bucket count bijection guarantee nahi. Cuckoo collision resolution ya another explicit entity map tradeoffs compare karo.","Unique ids bhi same finite bucket choose kar sakte hain.","Uniform random mapping ke saath bhi expected collisions hoti hain.","Counts equal hona bijection guarantee nahi."] },
       lesson: 'Collision ka nuksaan error nahi, chupchaap giri hui quality hai. Isliye "har user ki apni row" ek design faisla hai.',
     },
   ],
@@ -305,26 +213,16 @@ table  4000000 rows:  22.2%   ← 4× memory, phir bhi 1 mein se 5</pre>`,
     questions: [
       {
         q: 'Interviewer: "Embedding table memory bahut kha rahi hai. Kya karoge?"',
-        choices: [
-          'Expiry (inactive users hatao, wapas aane par dobara seekho) + frequency filter (ek-baar wale ko table mein mat daalo) — table ko sirf zinda users jitna rakho',
-          'Table chhoti karke hash karo',
-          'Embedding size aadha kar do sabka',
-          'Purane users ka data delete kar do hamesha ke liye',
-        ],
+        choices: ["Retention/frequency vs model quality","Tiny hash table ko lossless maano","Inactive data ko legally forever keep","Only dimensions cut, quality ignore"],
         answer: 0,
         explain: 'Hash karke chhota karna collisions laata hai — quality chupchaap girti hai.',
-      },
+       choiceExplanations: ["Hash karke chhota karna collisions laata hai — quality chupchaap girti hai.","Hash collisions entity embeddings mix kar sakti hain.","Retention privacy and reactivation needs se govern honi chahiye.","Dimension reduction quality/memory tradeoff hai, free fix nahi."] },
       {
         q: 'Interviewer: "Cuckoo hashing ka ek risk?"',
-        choices: [
-          'Load 50% ke paas displacement chains lambi ho jaati hain — insert dheema/fail; isliye load limit rakho aur zaroorat par table badhao',
-          'Lookup dheema hai',
-          'Collisions hote hain',
-          'Sirf strings par chalta hai',
-        ],
+        choices: ["High load se displacement/rebuild risk","Every cuckoo variant threshold same","Lookup ko unbounded chain chahiye","Only strings ko cuckoo map kar sakta"],
         answer: 0,
-        explain: 'Lab mein average 0.27 dhakke, par sabse lambi chain 366 — yahi warning sign hai.',
-      },
+        explain: "Classical two-choice, one-slot cuckoo hashing high load par long displacement chains/rebuilds la sakti hai. Exact threshold variant, bucket size aur hash assumptions par depend karta hai; 50% universal cutoff nahi.",
+       choiceExplanations: ["Classical two-choice, one-slot cuckoo hashing high load par long displacement chains/rebuilds la sakti hai. Exact threshold variant, bucket size aur hash assumptions par depend karta hai; 50% universal cutoff nahi.","Threshold choices, bucket size and variant par depend karta hai.","Standard cuckoo lookup bounded candidate locations inspect karti hai.","Hashable key types strings tak restricted nahi."] },
     ],
   },
   success: [
@@ -336,7 +234,7 @@ table  4000000 rows:  22.2%   ← 4× memory, phir bhi 1 mein se 5</pre>`,
     buckets, feature hashing, cache shards. Poochho: agar do alag cheezein ek bucket mein gir gayin toh
     kya chupchaap galat hoga? Wahan collision ka nuksaan likho.</p>`,
   cards: [
-    { front: 'Fixed-size embedding table ka nuksaan?', back: 'Hash collisions: do users ek row share → model dono ko ek insaan samajhta hai → quality chupchaap girti hai. Lab: 1:1 rows par bhi 63% share.' },
+    { front: 'Fixed-size embedding table ka nuksaan?', back: "Hash collisions: do users ek row share → model dono ko ek insaan samajhta hai → quality chupchaap girti hai. Lab: 1: 1 rows par bhi 63% share." },
     { front: 'Cuckoo hashing?', back: 'Har key ki do jagah; bhari ho toh purane ko uski dusri jagah dhakelo. Collision-free, lookup 2 jagah. Load ~50% ke paas chains lambi.' },
     { front: 'Expiry + frequency filter?', back: 'Expiry: N din inactive → row hatao, wapas aane par dobara seekho (lab: 63% memory bachi). Frequency filter: kam interactions wale ko table mein daalo hi mat.' },
   ],
@@ -357,23 +255,7 @@ table  4000000 rows:  22.2%   ← 4× memory, phir bhi 1 mein se 5</pre>`,
     'Relaxed consistency — speed ke liye kya chhodna padta hai',
   ],
   lesson: [
-    `<h3>🧩 Ek example, do hisse, do waqt</h3>
-     <p>Training example = <b>features</b> (video dikhate waqt kya pata tha: category, creator, us pal ki
-     popularity) + <b>action</b> (poora dekha? 2 sec mein scroll? like? share?). Features turant log hote
-     hain; action 1–30 second baad aata hai (rewatch ho toh aur baad mein).</p>
-     <pre>Kafka topic 1: features  (recommendation id ke saath, dikhate waqt)
-Kafka topic 2: actions   (jab user kuch kare)
-Flink join:    features ko recommendation id se cache karo → action aaye toh jodo → example
-Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit karo</pre>
-     <p>Video ki line: <b>"model standard hai; pipeline mushkil hai."</b></p>
-     <h3>⏱️ Window ka dilemma (lab 28 ka asli run)</h3>
-     <pre>window    positive   negative   LATE (galat negative)
-  500 ms      130       1870          746 (85.2%)
- 2000 ms      695       1305          163 (19.0%)
- 9000 ms      902       1098            0 (0.0%)    ← par memory ~5×, aur example 9 sec der se</pre>
-     <p>Chhoti window: model jaldi seekhta hai, par 85% positives "user ko pasand nahi aaya" ban gaye —
-     <b>galat sabak</b>. Badi window: labels sahi, par der aur memory. Beech ka raasta + late actions ke
-     liye correction.</p>`,
+    "<h3>🧩 Ek example, do hisse, do waqt</h3>\n     <p>Training example = <b>features</b> (video dikhate waqt kya pata tha: category, creator, us pal ki\n     popularity) + <b>action</b> (poora dekha? 2 sec mein scroll? like? share?). Features turant log hote\n     hain; action 1–30 second baad aata hai (rewatch ho toh aur baad mein).</p>\n     <pre>Kafka topic 1: features  (recommendation id ke saath, dikhate waqt)\nKafka topic 2: actions   (jab user kuch kare)\nFlink join:    features ko recommendation id se cache karo → action aaye toh jodo → example\nWindow:        tay waqt tak action nahi aaya → NEGATIVE (\"dekha nahi\") emit karo</pre>\n     <p>Video ki line: <b>\"model standard hai; pipeline mushkil hai.\"</b></p>\n     <h3>⏱️ Window ka dilemma (lab 28 ka asli run)</h3>\n     <pre>window    positive   negative   LATE (galat negative)\n  500 ms      130       1870          746 (85.2%)\n 2000 ms      695       1305          163 (19.0%)\n 9000 ms      902       1098            0 (0.0%)    ← par memory ~5×, aur example 9 sec der se</pre>\n     <p>Chhoti window: model jaldi seekhta hai, par 85% positives \"user ko pasand nahi aaya\" ban gaye —\n     <b>galat sabak</b>. Badi window: labels sahi, par der aur memory. Beech ka raasta + late actions ke\n     liye correction.</p>",
     `<h3>🧪 Training alag, 🚀 serving alag</h3>
      <p>Training model lagatar badalta hai — messy, adhoora, experiment wala. Serving model ko har request
      200 ms se kam mein, bharose se, arabon baar jawab dena hai. Dono ek hi cheez hon toh video ki line
@@ -396,8 +278,7 @@ Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit ka
       title: 'Join window chuno',
       instructions: 'Window aur late-correction badlo — dekho labels kitne sahi aur model kitna taaza.',
       goal: 'Galat negatives <b>10% se kam</b>, example ki der <b>5 sec se kam</b>, aur joiner memory <b>limit (1,300) ke andar</b>.',
-      scenario: `Actions ka delay: 80% ka 0.2–2 sec, 20% ka 2–8 sec. Tum join window aur "late action
-        aaye toh correction bhejo" tay karte ho.`,
+      scenario: "Actions ka delay: 80% ka 0.2–2 sec, 20% ka 2–8 sec. Tum join window aur \"late action\n        aaye toh correction bhejo\" tay karte ho.",
       knobs: [
         { id: 'win', label: 'Join window (sec)', min: 0.5, max: 10, step: 0.5, value: 0.5, unit: ' s', note: 'Itni der action ka intezaar, phir negative.' },
         { id: 'fix', label: 'Late action par correction (0 = nahi, 1 = haan)', min: 0, max: 1, step: 1, value: 0, unit: '', note: 'Late positive aaye toh trainer ko "pichhla negative galat tha" bhejo.' },
@@ -429,15 +310,10 @@ Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit ka
         <b>Late correction</b> hi beech ka raasta kholta hai.`,
       quiz: {
         q: 'Late correction na ho toh chhoti window ka asli nuksaan?',
-        choices: [
-          'Positives ko negative bol diya — model sikhta hai ki user ko woh pasand nahi aaya jo use pasand aaya tha',
-          'Memory zyada lagti hai',
-          'Example der se aata hai',
-          'Koi nuksaan nahi',
-        ],
+        choices: ["Late positive ko negative maana","Short window state memory badhati","Only examples late appear hue","All missing labels actually negative"],
         answer: 0,
         explain: 'Galat label galat sabak hai — aur woh chupchaap hota hai.',
-      },
+       choiceExplanations: ["Galat label galat sabak hai — aur woh chupchaap hota hai.","Short window normally less retained join state rakhti hai.","Issue timing alone nahi; training target incorrectly negative hai.","Missing event delayed bhi ho sakta hai; censoring policy chahiye."] },
     },
     {
       type: 'docker',
@@ -452,16 +328,11 @@ Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit ka
         { text: 'Chaar windows par stream chalao.', cmd: 'node tools/stream.js', expect: '  500 ms      130       1870          746 (85.2%)              876                321\n 2000 ms      695       1305          163 (19.0%)              858                917\n 5000 ms      796       1204           94 (10.6%)              890                1516\n 9000 ms      902       1098            0 (0.0%)              902                1472' },
       ],
       observe: {
-        q: '5 sec window par bhi 10.6% galat negatives kyun?',
-        choices: [
-          '20% actions 2–8 sec mein aate hain — unme se 5 sec ke baad wale (~10%) window chook jaate hain',
-          'Joiner mein bug hai',
-          'Network slow hai',
-          'Positive hi kam the',
-        ],
+        q: "5 sec window par bhi 10.6% galat negatives kyun?",
+        choices: ["Delay tail window se bahar gayi","Any false negative joiner bug proof","All network delays fixed 5 sec the","Short window se positives impossible"],
         answer: 0,
         explain: 'Window hamesha delay distribution ki poonch kaatti hai. Poonch ka ilaaj correction hai, anant window nahi.',
-      },
+       choiceExplanations: ["Window hamesha delay distribution ki poonch kaatti hai. Poonch ka ilaaj correction hai, anant window nahi.","Designed finite window bhi late positives miss kar sakti hai.","Question distribution2-8 sec deta hai, fixed5sec nahi.","Window ke andar positive events ab bhi join hote hain."] },
       lesson: 'Streaming join ka faisla = labels ki sachchai vs model ki taazgi vs memory. Teeno ek saath dekho.',
     },
   ],
@@ -471,26 +342,16 @@ Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit ka
     questions: [
       {
         q: 'Interviewer: "Training cluster crash ho gaya. Users ko kya dikhega?"',
-        choices: [
-          'Kuch nahi badlega — serving alag parameter servers se purane (aakhri synced) params par jawab deta rahega; bas model thoda kam taaza',
-          'Feed band ho jaayegi',
-          'Random videos dikhenge',
-          'Error page',
-        ],
+        choices: ["Last synced serving params remain available","Training loss instantly corrupts serving","Every request needs live gradient step","Serving must return random fallback"],
         answer: 0,
         explain: 'Training aur serving ke beech buffer (sync) isi liye hai.',
-      },
+       choiceExplanations: ["Training aur serving ke beech buffer (sync) isi liye hai.","Separate serving state need not ingest incomplete training state.","Serving can read a stable parameter version without a training round trip.","Random fallback is not required when last good serving state exists."] },
       {
         q: 'Interviewer: "Features aur actions ko kaise jodoge?"',
-        choices: [
-          'Do topics; recommendation id se stream join, window ke baad negative emit, late actions ke liye correction, aur unmatched features ko age-out',
-          'Raat ko dono tables ka SQL join',
-          'Client hi dono ek saath bheje',
-          'Actions ko features ke bina train karo',
-        ],
+        choices: ["ID join, delay window aur correction","Client ko future action pehle likhna","Only actions se feature context infer","Night batch ko instant update maano"],
         answer: 0,
         explain: 'Raat ka join = batch. Client par bharosa = action baad mein hota hai, features pehle.',
-      },
+       choiceExplanations: ["Raat ka join = batch. Client par bharosa = action baad mein hota hai, features pehle.","Recommendation ke baad user action aata hai; client future event nahi jaanta.","Features ke bina training/serving context mismatch ho sakta hai.","Batch join valid alternative hai, but minute-level online contract se slower hai."] },
     ],
   },
   success: [
@@ -553,8 +414,8 @@ Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit ka
        khud banaya aur hamesha maintain karna.</li>
        <li>Lagatar training = lagatar tootne wala system: training crash, sync lag, Kafka backlog, Flink
        drops — sab automatic pakadna aur theek karna, warna quality chupchaap girti hai.</li>
-       <li><b>Reproducibility gayi</b>: 5 minute pehle jo model galat recommend kar raha tha, woh ab hai
-       hi nahi — incident ka root cause dhoondhna mushkil.</li>
+       <li><b>Reproducibility ka extra kaam</b>: versioned checkpoints, training data/feature logs aur serving snapshots preserve karo;
+       bina inke continuously changing model ka incident reproduce karna mushkil hai.</li>
      </ul>`,
   ],
   stages: [
@@ -585,7 +446,7 @@ Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit ka
           q: '1 arab videos, ek fine-ranking score = 10 microseconds. Ek request par sab videos ko score karne mein kitne SECOND?',
           unit: 'second', given: ['1,00,00,00,000 videos', '10 µs per score'],
           answer: 10000, tol: 0.3,
-          steps: ['1e9 × 10e-6 s = 10,000 s', '≈ 2.8 ghante — ek swipe ke liye!'],
+          steps: ['1e9 × 10e-6 s = 10,000 s', "≈ 2.8 ghante — ek swipe ke liye!"],
           lesson: 'Budget 200 ms hai. Isliye pehle kuch sau candidates.',
         },
         {
@@ -604,26 +465,16 @@ Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit ka
     questions: [
       {
         q: 'Interviewer: "Product chahta hai feed mein zyada diversity. Model retrain karoge?"',
-        choices: [
-          'Pehle multi-objective weights/rules se — diversity ya repetition penalty score mein jodo; retrain ki zaroorat nahi, turant A/B test',
-          'Haan, naya model diversity ke liye',
-          'Random videos mix kar do',
-          'Users se poochho',
-        ],
+        choices: ["Re-rank constraints ka measured A/B test","Immediate retrain bina metric design","Only random items se relevance prove","Only likes ko diversity metric maano"],
         answer: 0,
         explain: 'Multi-objective scoring isi liye hai: product ke knobs bina retrain.',
-      },
+       choiceExplanations: ["Multi-objective scoring isi liye hai: product ke knobs bina retrain.","Retraining useful ho sakti hai, lekin objective and candidate coverage diagnose karo.","Random mixing diversity aur user utility ka acceptable balance prove nahi karti.","Likes diversity, exposure, repetition and satisfaction ka complete measure nahi."] },
       {
         q: 'Interviewer: "Likes kam hain, toh model kya seekhega?"',
-        choices: [
-          'Implicit signals — completion rate, rewatch, scroll speed — ghane aur fake karna mushkil; likes sirf ek virla signal',
-          'Kuch nahi, likes chahiye',
-          'Users ko like karne ke liye force karo',
-          'Sirf popular videos dikhao',
-        ],
+        choices: ["Implicit behavior, bias aur abuse evaluate","Only explicit likes se training possible","Force-like UX ko unbiased labels maano","Popularity ko every user intent maano"],
         answer: 0,
-        explain: '"Mind nahi, angootha padh raha hai."',
-      },
+        explain: "Implicit behavior dense feedback de sakta hai, lekin position bias, exposure, bots aur accidental behavior labels ko distort kar sakte hain. Explicit likes ke saath guardrails, counterfactual evaluation aur abuse monitoring use karo.",
+       choiceExplanations: ["Implicit behavior dense feedback de sakta hai, lekin position bias, exposure, bots aur accidental behavior labels ko distort kar sakte hain. Explicit likes ke saath guardrails, counterfactual evaluation aur abuse monitoring use karo.","Completion, dwell and other actions bhi noisy feedback de sakte hain.","Forced interaction natural preference labels ko distort kar sakti hai.","Popularity cold-start baseline hai, individual intent ka universal proxy nahi."] },
     ],
   },
   success: [
@@ -637,7 +488,7 @@ Window:        tay waqt tak action nahi aaya → NEGATIVE ("dekha nahi") emit ka
   cards: [
     { front: 'Serving ke do kadam?', back: 'Candidate generation (arabon → kuch sau, tez andaaza; TikTok: Deep Retrieval tree) → fine ranking (bhaari model, multi-objective score).' },
     { front: 'Multi-objective score ka faayda?', back: 'Watch, like, share, completion ka weighted sum (share ≈ 5× like). Product weights badal ke feed chala sakta hai — bina retrain.' },
-    { front: 'Implicit vs explicit signals?', back: 'Implicit (completion, rewatch, scroll speed) ghane aur fake karna mushkil; explicit (like) virle. "Angootha padh raha hai."' },
+    { front: 'Implicit vs explicit signals?', back: 'Implicit completion/rewatch/scroll signals dense ho sakte hain; explicit likes sparse ho sakti hain. Dono exposure bias, bots aur accidental behavior se distort hote hain; quality aur abuse evaluate karo.' },
   ],
 },
 ]);

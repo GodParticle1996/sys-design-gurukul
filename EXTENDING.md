@@ -9,6 +9,9 @@ Har badlaav ke baad:
 ```bash
 node validate.js          # structure + missions + render
 node validate.js <levelid>  # sirf ek level ke missions (tez loop)
+node tools/replay-exercises.js  # static intended actions, wrong paths, single-action omissions
+node tools/quiz-quality.js --check  # har option ka reason, length/position audit
+node tools/tradeoff-test.js  # metric feedback aur required workload contracts
 ```
 
 ---
@@ -101,9 +104,10 @@ Ek file per company: `data-st-NN-company.js`, poori file IIFE mein, `VISUALS[...
 - **`quiz`** — `answer` index `choices` ki range mein
 - **`design`** — har slot mein kam se kam ek positive-score option, aur
   `pass` ≤ max possible score
-- **`tradeoff`** — validator **poora knob sweep** chalata hai: agar ek bhi
-  combination `check()` ko `true` nahi karta toh lab **unsolvable** hai. Aur
-  starting values par `check()` `false` hona chahiye, warna goal shuru mein hi
+- **`tradeoff`** — 400,000 combinations tak validator **poora knob sweep** chalata hai;
+  bada sweep warning ke saath skip hota hai, isliye static fixture replay bhi chalao.
+  Agar ek bhi combination numeric check aur required workload ko satisfy nahi karta
+  toh lab **unsolvable** hai. Starting values par live goal `false` hona chahiye, warna goal shuru mein hi
   poora hai. Aur **har** combination par `verdict().ok` wahi bole jo `check()` —
   warna player "✅" padhta hai par level aage nahi badhta (5 labs mein yahi bug tha)
 - **`replay` / `estimate` / `archdiff`** — validator inhe render karke **poora
@@ -126,8 +130,10 @@ Ek file per company: `data-st-NN-company.js`, poori file IIFE mein, `VISUALS[...
   sys: SD.sys.txn({ api: { countTotal: false } }),   // system preset + overrides
   tasks: T_MY_MISSION,
   success: allOf(T_MY_MISSION),
+  verify: s => s.sys.api.countTotal === false && SD.mission.current(s, 'http', r => r.status === 200),
+  solution: ['GET /api/v1/orders', /* exact commands, final one proves outcome */],
   successText: 'HTML — jeetne par kya seekha',
-  hints: ['Prose: <command>', ...],
+  hints: ['Diagnosis ka nudge', 'Relevant constraint/measurement', 'Near-answer commands'],
 }
 ```
 
@@ -151,12 +157,14 @@ tasks: T_MY_MISSION,
 success: allOf(T_MY_MISSION),   // allOf har data file ke top par defined hai
 ```
 
-Isse woh bug **structurally impossible** ho jaata hai.
+Renderer har task, success aur verify ko completion se pehle check karta hai. Historical
+records learning checkpoints hain; current-state verify stale results ko win nahi banne deta.
+Callback bhi guarded hai: task/success/verify error diagnostic deta hai, completion nahi.
 
 ### `sim` object — checks kis par likhein
 
 ```js
-sim.records   // har command ka STRUCTURED result — checks YAHIN par likho
+sim.records   // historical structured evidence; current configuration bhi verify karo
 sim.last      // aakhri record
 sim.history   // raw command strings (fallback)
 sim.sys       // live system state
@@ -182,19 +190,22 @@ Record shapes:
 { kind: 'health' } { kind: 'status' } { kind: 'showTables' } { kind: 'showIndexes', rows }
 ```
 
-### Hint convention — **laazmi**
+### Solution aur progressive hints — **laazmi**
 
-Validator har hint se command **nikaal ke chalata hai**. Isliye hint aisa likho ki
-usse command copy-paste ho sake:
+`solution` exact ordered commands ka data hai; test hints se commands guess nahi karta.
+Final step ke pehle `done` false aur final par true hona chahiye. Har single-step omission,
+reset/stale evidence aur malformed command ka expected result regression suite mein add karo.
+Equivalent valid approaches allow karo: predicate outcome check kare, spelling ritual nahi.
 
-```js
-'Ab index banao: CREATE INDEX ix ON transactions(created_at)'   ✅
-'Index bana lo'                                                  ❌ (koi command nahi)
-```
+Hint1 diagnosis ka nudge, hint2 relevant mechanism/observation, hint3 near-answer
+walkthrough ho. Near-answer exact solution ke saath agree kare; expected HTTP failure bhi
+useful result ho sakta hai (for example bounded timeout504), parser crash kabhi win nahi.
 
-Format: `Prose: <command>`. Validator har `': '` par baayen-se-daayen try karta hai,
-isliye command ke **andar** colon hona bhi theek hai
-(`POST /v1/payments -H 'Idempotency-Key: abc'`).
+Har nonterminal stage/interview ka `exercise-solutions.json` fixture maintain karo.
+`tools/replay-exercises.js` static answers se actual renderer drive karta hai; fixture ko
+runtime answer fields se generate karke test pass karna regression evidence nahi.
+MCQ ke `choiceExplanations` mein choices jitne reasons mandatory hain; right reason
+ke saath each wrong alternative ka specific tradeoff/error explain karo.
 
 ### System presets
 
@@ -337,10 +348,9 @@ Chaar renderer: `replay` · `tradeoff` · `estimate` · `archdiff`.
 Contract wahi hai: `(stage, arena, onDone) → onDone({ firstTry, total })`.
 
 > ⚠️ **`labs.js` poori file ek IIFE ke andar hai — aur rehni chahiye.**
-> `games.js` apne top level par `const el, shuffle, shake, escapeHtml` declare
-> karti hai. Do script ek hi naam ko top level par `const` nahi kar sakte —
-> browser poori file par **SyntaxError** de dega. Yahi baat har naye
-> `data-*.js` chunk par bhi laagu hai (`data-flow.js` mein `const allOf` hai).
+> `games.js`, `app.js` aur helper-heavy files IIFE ke andar local aliases rakhte hain.
+> Public helpers `SD` par register karo (`SD.ui`, `SD.makeInteractive`, `SD.choiceFeedback`).
+> Naye top-level `const` names data files se collide kar sakte hain; local closure use karo.
 
 ```js
 /* replay — asli outage ki timeline */
@@ -355,6 +365,7 @@ Contract wahi hai: `(stage, arena, onDone) → onDone({ firstTry, total })`.
 /* tradeoff — knob ghumao, number live compute ho */
 { type: 'tradeoff', goal, scenario,
   knobs: [{ id: 'M', label, min: 4, max: 64, step: 4, value: 8, unit: '', note }],
+  workload: { /* demandKnobId: minimumRequiredDemand — optional */ },
   readouts: k => [{ label, value, tone: 'ok'|'warn'|'bad' }],
   bars:     k => [{ label, pct, text, tone }],
   verdict:  k => ({ ok: bool, text }),
@@ -373,6 +384,13 @@ Contract wahi hai: `(stage, arena, onDone) → onDone({ firstTry, total })`.
   fine:  { 'ch': 'yeh box theek kyun hai' }, // har non-flaw node ke liye
   lesson }
 ```
+
+Tradeoff ke goal mein exact inclusive/exclusive budgets aur required workload likho.
+Demand slider explore karne ke liye hai; incident ko traffic ghata kar pass mat karao.
+`workload` minimum, valid range/step, numeric `check()` aur `verdict().ok` sab live
+state par pass hone chahiye. Toy model assumptions dikhao; resharding mein data copy
+ko zero, ya 100% utilization ko spare capacity mat batao. Intended knob actions
+`exercise-solutions.json` mein manually author karo; runtime check se solution generate mat karo.
 
 ### Do niyam jo yahan seekhe gaye
 
@@ -398,8 +416,8 @@ Har command ko `rec({ kind: '...', ... })` se ek **structured record** lautana c
 
 Naye command ke saath:
 1. `cmdHelp()` mein ek line jodo
-2. `validate.js` ke `CMD_START` regex mein uska pehla shabd jodo (warna hints se
-   woh command nikal hi nahi paayega)
+2. Explicit mission `solution` aur expected live-state predicate add karo; parser
+   boundary, reordered flags, malformed values aur reset recovery regression bhi jodo.
 
 Ek-off cheezon ke liye poora command banane ki zaroorat nahi — stage mein
 `responses: [{ re: /regex/, out: 'text' | fn(sim, m), mutate?: fn }]` de do.

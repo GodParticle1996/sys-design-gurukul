@@ -36,14 +36,9 @@ SD.extendLevel('scheduling', {
      <b>dono</b> machines wahi billing job chalayengi → double charge, duplicate emails,
      galat aggregates. Tum do buraiyon ke beech phanse ho: <b>single point of failure</b>
      ek taraf, <b>duplicate execution</b> doosri taraf.</p>
-     <h3>🧱 Pehla niyam: exactly-once namumkin hai</h3>
-     <p>Worker ne aadha kaam kiya aur bataane se pehle mar gaya. Scheduler ko pata hi nahi ki
-     job hua ya nahi. Dobara chalaya → duplicate. Nahi chalaya → job kho gaya. <b>Teesra
-     raasta hai hi nahi.</b></p>
-     <p>Jo mil sakta hai woh hai <b>at-least-once + idempotent jobs</b>: email wala job pehle
-     poochhe "yeh email ja chuka hai?", invoice wala poochhe "yeh invoice process ho chuka
-     hai?". Yeh maan lene ke baad design aasan ho jaata hai — ab tum duplicates ko kam karte
-     ho aur failure ko sambhalte ho, "exactly once" ka peechha nahi karte.</p>
+     <h3>🧱 Pehla niyam: effect aur ACK ka crash gap samjho</h3>
+     <p>External payment accept hua par response store hone se pehle worker crash hua. Scheduler outcome ko locally infer nahi kar sakta: blind retry duplicate kar sakta hai; retry chhodna lost work la sakta hai.</p>
+     <p><b>At-least-once attempts + atomic idempotency</b> common design hai. Stable run ID payment provider ko bhejo, supported dedupe contract verify karo aur ambiguous outcomes reconcile karo. Ek shared transactional boundary mein exactly-once observable state possible hai; arbitrary external effect us boundary mein automatically include nahi hota.</p>
      <h3>💥 Single-node scheduler ke teen tareeke marne ke</h3>
      <table>
        <tr><th>Failure</th><th>Kya hota hai</th><th>Ilaaj</th></tr>
@@ -57,7 +52,7 @@ SD.extendLevel('scheduling', {
           SET scheduler-leader nodeA NX PX 30000      ← NX = sirf tab jab koi aur na ho
 standby:  lock dekhte rehte hain
 leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-ta hai</pre>
-     <p><b>Failover ka waqt = lock ka TTL.</b> Chhota rakho, par itna chhota nahi ki ek
+     <p><b>Lab ka failover budget TTL hai.</b> Actual failover last renewal, detection/poll, lock acquisition aur startup se depend karta hai; TTL universal exact duration nahi. Chhota rakho, par itna chhota nahi ki ek
      network blip par leader badalta rahe.</p>
      <p class="tip">🎯 Sabse aam galti: jab renewal fail ho, purana leader <b>turant</b>
      scheduling band kare. Jo node abhi bhi khud ko leader samajh raha hai jabki naya leader
@@ -68,8 +63,7 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
      fire kar sakta hai. Ilaaj: har scheduled execution ki <b>idempotency key</b> =
      <code>hash(job_id + schedule window)</code>. Execution record insert karo; duplicate
      unique constraint se takra kar gir jaata hai (<code>ON CONFLICT DO NOTHING</code>).
-     Window zaroori hai — dedupe <b>ek window ke andar</b> hota hai, hamesha ke liye nahi;
-     agle ghante wahi job phir chalna chahiye.</p>
+     Schedule window run identity ka hissa hai, isliye agle ghante new run ID banti hai. Old run ka dedupe record retry/replay retention tak preserve karo. Execution-row uniqueness alone remote charge ko atomic nahi banaati; recoverable claims aur effect-side dedupe chahiye.</p>
      <h3>🚦 Priority lanes + SKIP LOCKED</h3>
      <p>Backlog saaf hone ke baad flat queue mein critical billing job 500 thumbnail tasks ke
      peechhe phans jaata hai — flat queue mein <b>aane ka kram</b> decide karta hai, priority
@@ -78,7 +72,9 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
  WHERE status = 'pending' AND run_at &lt;= now()
  ORDER BY priority, run_at
  LIMIT 1
- FOR UPDATE SKIP LOCKED;      ← kai workers bina takrav, koi do ek hi row nahi uthaate</pre>
+ FOR UPDATE SKIP LOCKED;
+-- Isi transaction mein claimed status/owner update karo, phir COMMIT.</pre>
+     <p>Row lock transaction tak hai. Claim update atomic rakho; crash recovery, lease renewal aur effect-side dedupe separate concerns hain. Lock hold karke unbounded remote call mat karo.</p>
      <h3>💓 Heartbeat + watchdog</h3>
      <p>Worker job ke beech mar gaya → row hamesha <code>status='running'</code> par atki.
      Isliye worker har 10 s par <code>last_heartbeat</code> update karta hai, aur ek
@@ -108,25 +104,15 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
         { t: '00:07', event: 'Machine ki disk mar gayi. Cron process gaya. <b>Koi alert nahi.</b>', metrics: { missed: 4, dup: 0 }, tone: 'bad' },
         { t: '03:00', event: 'Teen ghante se koi job nahi chala.', metrics: { missed: 180, dup: 0 }, tone: 'bad',
           ask: { q: 'Is sthiti ka sabse bada system-design sabak kya hai?',
-                 choices: [
-                   'Scheduler khud ek single point of failure hai — aur uska marna chupchaap hota hai, isliye "job chala ya nahi" ka alag monitor chahiye',
-                   'Disk better leni chahiye thi',
-                   'Cron purani technology hai',
-                   'Jobs kam karne chahiye the',
-                 ], answer: 0,
-                 explain: 'Machine kabhi bhi mar sakti hai. Asli galti yeh thi ki na koi standby tha, na koi "job pichhle 15 minute mein chala?" wala alert.',
-                 wrongHints: ['Behtar disk bhi marti hai — sawaal yeh hai ki marne par kya hota hai.', 'Technology se farq nahi padta, design se padta hai.', 'Jobs zaroori the — invoices bhejni hi thin.'] } },
+                 choices: ["Scheduler failure detect karo; missed-run monitor independent ho","Only faster scheduler disk lo; failover design baad mein","Only job logs dekho; jobs run na hon toh silence safe hai","Only worker count badhao; scheduler recovery automatic hai"], answer: 0,
+                 explain: "Scheduler availability aur scheduled outcomes separate monitor karo; durable schedule/state aur tested failover execution gap reduce karte hain. Better disk failure risk eliminate nahi karti. Missing execution logs khud alert nahi banenge. More workers dead dispatch/control plane recover nahi karte.",
+                 wrongHints: ['Behtar disk bhi marti hai — sawaal yeh hai ki marne par kya hota hai.', 'Technology se farq nahi padta, design se padta hai.', 'Jobs zaroori the — invoices bhejni hi thin.'] , choiceExplanations: ["Scheduler availability aur scheduled outcomes separate monitor karo; durable schedule/state aur tested failover execution gap reduce karte hain.","Better disk failure risk eliminate nahi karti.","Missing execution logs khud alert nahi banenge.","More workers dead dispatch/control plane recover nahi karte."] } },
         { t: '08:00', event: 'Customer email: "meri invoice kahan hai?" Team ne jaldi mein <b>doosri machine par bhi</b> cron chala diya.', metrics: { missed: 320, dup: 0 }, tone: 'warn' },
         { t: '09:00', event: 'Ab dono machines ek hi billing job chala rahi hain.', metrics: { missed: 320, dup: 140 }, tone: 'bad',
           ask: { q: 'Duplicate charges rokne ke liye sabse sahi combination?',
-                 choices: [
-                   'Leader election (TTL lock, renewal fail par turant ruk jaana) + har execution ki idempotency key + idempotent billing job',
-                   'Doosri machine band kar do, ek hi rakho',
-                   'Billing job ko dheere chalao',
-                   'Dono machines ke clock sync kar do',
-                 ], answer: 0,
-                 explain: 'Leader election do schedulers ko rokta hai, idempotency key ek leader ke double fire ko, aur idempotent job us bache hue kone ko jahan dono fail ho jaayein.',
-                 wrongHints: ['Ek machine = wahi single point of failure jisse shuru hua tha.', 'Speed se duplicate nahi rukta.', 'Clock sync se dono schedulers ek hi waqt par ek hi kaam karenge — aur saaf duplicate.'] } },
+                 choices: ["Recoverable claims + stable run ID + atomic effect dedupe","Renewable leader lease alone payment duplication solve kare","Clock sync + leader lease billing uniqueness enforce kare","One scheduler process + retries without stable execution ID"], answer: 0,
+                 explain: "Durable schedule/recovery missed work address kare; lease-loss par stop plus resource fencing where supported stale owners restrict kare; billing idempotency key atomic side-effect boundary par enforce karo. A paused holder expiry ke baad resume kar sakta hai. Synchronized time side-effect uniqueness constraint nahi. A single process restart/ambiguous retry bhi duplicate effect de sakta hai.",
+                 wrongHints: ['Ek machine = wahi single point of failure jisse shuru hua tha.', 'Speed se duplicate nahi rukta.', 'Clock sync se dono schedulers ek hi waqt par ek hi kaam karenge — aur saaf duplicate.'] , choiceExplanations: ["Durable schedule/recovery missed work address kare; lease-loss par stop plus resource fencing where supported stale owners restrict kare; billing idempotency key atomic side-effect boundary par enforce karo.","A paused holder expiry ke baad resume kar sakta hai.","Synchronized time side-effect uniqueness constraint nahi.","A single process restart/ambiguous retry bhi duplicate effect de sakta hai."] } },
         { t: 'Fix', event: 'Teen scheduler nodes, Redis lock (TTL 30 s), idempotency key per window, heartbeat + watchdog. Chhoote jobs wapas chale, <b>kisi ka double charge nahi</b>.', metrics: { missed: 0, dup: 0 }, tone: 'ok' },
       ],
       lesson: 'Scheduler ka design do buraiyon ke beech ka santulan hai: <b>kabhi na chalna</b> (single point of failure) aur <b>do baar chalna</b> (duplicate). Leader election pehla rokta hai, idempotency doosra.',
@@ -135,13 +121,13 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
       type: 'tradeoff',
       title: 'Lease lab — TTL, renew aur watchdog',
       instructions: 'Teen timers ghumao. Failover ka waqt, false failover aur duplicate risk dekho.',
-      goal: 'Aisi setting dhoondho jahan leader marne par failover <b>45 s se kam</b> ho, network blips par <b>bekaar leader change na ho</b>, aur dheema (par zinda) worker <b>maara na jaaye</b>.',
+      goal: "Leader marne par failover <b>45 s ya kam</b> ho, network blips par bekaar leader change na ho, aur dheema (par zinda) worker maara na jaaye.",
       scenario: `Network mein kabhi-kabhi <b>8 second</b> tak ke blips aate hain. Kuch jobs
         <b>40 second</b> tak GC pause ya bhaari query mein atak jaate hain par zinda rehte hain.`,
       knobs: [
-        { id: 'ttl', label: 'Leader lock TTL', min: 5, max: 90, step: 5, value: 5, unit: ' s', note: 'Failover ka waqt = TTL.' },
+        { id: 'ttl', label: 'Leader lock TTL', min: 5, max: 90, step: 5, value: 5, unit: ' s', note: 'Simplified upper-budget model; real detection/activation delays alag measure karo.' },
         { id: 'renew', label: 'Renew har kitne second', min: 2, max: 30, step: 1, value: 4, unit: ' s', note: 'TTL ke andar kam se kam 2-3 renew hone chahiye.' },
-        { id: 'watch', label: 'Watchdog timeout (heartbeat har 10 s)', min: 20, max: 180, step: 10, value: 20, unit: ' s', note: '40 s tak atakne wale zinda workers ka dhyan rakho.' },
+        { id: 'watch', label: 'Watchdog timeout (heartbeat har 10 s)', min: 20, max: 180, step: 10, value: 20, unit: ' s', note: 'Observed 40 s pause plus heartbeat/scheduling margin cover karo; suspicion definite death proof nahi.' },
       ],
       readouts: k => {
         const m = leaseModel(k);
@@ -170,10 +156,10 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
       lesson: 'Har lease-based system ke teen number hote hain: <b>TTL</b> (kitni der mein failover), <b>renew interval</b> (blip se kitna margin), aur <b>watchdog</b> (dheema vs mara hua). Teeno ko ek saath socho.',
       quiz: {
         q: 'Renew fail hone par purana leader kya kare?',
-        choices: ['Turant scheduling band kare — naya leader ban chuka ho sakta hai', 'Agla renew try kare aur tab tak scheduling chalu rakhe', 'Lock ka TTL badha de', 'Doosre nodes ko message bheje'],
+        choices: ["Ownership uncertain: new work stop, safe recovery follow karo","Renew response missing ho toh old ownership valid maan lo","Local TTL badhaao; remote lease bhi extended maan lo","Peer message bhejo; response tak unbounded jobs dispatch karo"],
         answer: 0,
-        explain: 'Khud ko leader samajhne wala purana node hi duplicate execution ka sabse bada source hai.',
-      },
+        explain: "Renew failure ownership loss ya unknown status ho sakta hai; new side effects stop karo aur authoritative lease/fence policy follow karo. Failure timeout service state ka definite proof nahi. Client-local variable server lease extend nahi karti. Ad hoc peer messaging exclusive ownership establish nahi karti.",
+       choiceExplanations: ["Renew failure ownership loss ya unknown status ho sakta hai; new side effects stop karo aur authoritative lease/fence policy follow karo.","Failure timeout service state ka definite proof nahi.","Client-local variable server lease extend nahi karti.","Ad hoc peer messaging exclusive ownership establish nahi karti."] },
     },
     {
       type: 'docker',
@@ -194,41 +180,26 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
       ],
       observe: {
         q: 'STOP_ON_LOSS=1 (sahi mode) ke baad bhi ek double charge hua. Kyun, aur ilaaj kya hai?',
-        choices: [
-          'Pause se jaagne aur agle renew check ke beech ek chhoti khidki hai jisme purana node khud ko leader samajhta hai — isliye leader election ke saath idempotency key (ya fencing token) bhi chahiye',
-          'Lock server mein bug hai',
-          'TTL bahut bada tha',
-          'Billing service ne galti se do baar likha',
-        ],
+        choices: ["Lease check aur effect mein gap; atomic dedupe/fence chahiye","Stop flag set ho toh already-issued remote effects cancel hote","Renew interval chhota ho toh pause window remove ho jaati","Perfect wall clocks purane owner ke writes revoke karte"],
         answer: 0,
-        explain: 'Leader election kabhi 100% nahi hota — zombie leader ki khidki hamesha rehti hai. Output mein IDEMP=1 ne wahi 8 duplicates ko rok diya. Isi liye Locks level ka fencing token aur yahan ki idempotency key dono zaroori hain.',
-      },
+        explain: "Check ke baad pause/delay ho sakti hai; payment service stable operation ID atomically dedupe kare. Fencing ordered ownership reject kar sakti hai where the resource validates it; payment dedupe separate requirement hai. Local flag remote accepted work undo nahi karta. Smaller interval gap reduce kar sakta hai, eliminate nahi. Clock agreement outstanding work cancel nahi karti.",
+       choiceExplanations: ["Check ke baad pause/delay ho sakti hai; payment service stable operation ID atomically dedupe kare. Fencing ordered ownership reject kar sakti hai where the resource validates it; payment dedupe separate requirement hai.","Local flag remote accepted work undo nahi karta.","Smaller interval gap reduce kar sakta hai, eliminate nahi.","Clock agreement outstanding work cancel nahi karti."] },
       lesson: 'Leader election <b>zyadatar</b> duplicates rokta hai; idempotency key <b>baaki</b> rokti hai. Dono saath chahiye.',
     },
   ],
   interview: [
     {
       q: 'Interviewer: "Distributed cron design karo — koi job miss na ho aur double na chale."',
-      choices: [
-        'Kai scheduler nodes + TTL lock se leader election (renewal fail par turant ruko), har execution ki idempotency key, idempotent jobs, heartbeat + watchdog se atke jobs wapas',
-        'Ek bada reliable server aur uska backup',
-        'Har node par cron, aur database mein "last run" check',
-        'Kafka par sab jobs daal do',
-      ],
+      choices: ["Durable runs, recoverable claims, leases aur atomic dedupe","Leader election use karo; job state only scheduler RAM mein","Queue use karo; acknowledge dispatch se pehle effect baad mein","Last-run timestamp read karke unlocked concurrent insert karo"],
       answer: 0,
-      explain: 'Har hissa ek alag failure mode ka jawab hai — dead scheduler, double fire, aur lost job.',
-    },
+      explain: "Stable run IDs aur durable claims/heartbeat recovery support karte hain; retries possible hain, so effect boundary ko idempotent/transactional banao aur missed-run monitoring rakho. Leader failure par volatile scheduled work lose ho sakta hai. Early acknowledgement worker crash par work lose kar sakti hai. Separate check-then-write race duplicate dispatch allow karti hai.",
+     choiceExplanations: ["Stable run IDs aur durable claims/heartbeat recovery support karte hain; retries possible hain, so effect boundary ko idempotent/transactional banao aur missed-run monitoring rakho.","Leader failure par volatile scheduled work lose ho sakta hai.","Early acknowledgement worker crash par work lose kar sakti hai.","Separate check-then-write race duplicate dispatch allow karti hai."] },
     {
-      q: 'Interviewer: "Exactly-once guarantee de sakte ho?"',
-      choices: [
-        'Nahi — worker kaam karke bataane se pehle mar sakta hai. At-least-once + idempotent jobs hi practical guarantee hai',
-        'Haan, transactions se',
-        'Haan, Kafka exactly-once se',
-        'Haan, agar retries band kar do',
-      ],
+      q: "Scheduler ne external payment API call ki, phir response persist karne se pehle crash hua. Exactly-once claim kaise assess karoge?",
+      choices: ["External effect/ACK gap ko scope karo; bounded EOS possible","Kafka transaction unrelated payment API ko atomic banaati","Local transaction separate remote effect ko bhi commit karti","Retry disable karke both no-loss aur no-duplicate milte hain"],
       answer: 0,
-      explain: 'Retries band karne se at-most-once milta hai (jobs khoenge). Exactly-once side-effects ke liye idempotency hi raasta hai.',
-    },
+      explain: "Arbitrary external effect aur acknowledgement ke beech crash ambiguous ho sakta hai. Shared transactional boundary mein exactly-once observable state possible hai; remote payment ke liye supported idempotency/reconciliation contract chahiye. Kafka EOS external systems ko automatically include nahi karta. Independent remote service local DB transaction mein automatically participate nahi karti. At-most-once dispatch loss risk accept karta hai.",
+     choiceExplanations: ["Arbitrary external effect aur acknowledgement ke beech crash ambiguous ho sakta hai. Shared transactional boundary mein exactly-once observable state possible hai; remote payment ke liye supported idempotency/reconciliation contract chahiye.","Kafka EOS external systems ko automatically include nahi karta.","Independent remote service local DB transaction mein automatically participate nahi karti.","At-most-once dispatch loss risk accept karta hai."] },
   ],
   success: [
     'Main scheduler ke teen failure modes aur unke ilaaj bata sakta hoon',
@@ -278,16 +249,16 @@ SD.extendLevel('locks', {
       questions: [
         {
           q: 'Booking service 3 machines par hai. Code mein critical section par synchronized hai. Double booking hogi?',
-          choices: ['Haan — har machine ka lock sirf apne process ke threads ko rokta hai', 'Nahi, synchronized sab rokta hai', 'Sirf tab jab machines alag region mein hon', 'Sirf high load par'],
+          choices: ["Double booking possible: process locks independent hain","Same Java keyword hosts ke across shared mutex deta hai","Same region processes common heap lock share karte hain","Low traffic par database constraint ki need khatam hoti hai"],
           answer: 0,
-          explain: 'Teen processes = teen alag locks. Shared cheez (database row) par lock ya version chahiye.',
-        },
+          explain: "synchronized same JVM ke monitor ko protect karta hai; separate processes concurrent booking kar sakte hain unless shared invariant enforce ho. Language-level monitor distributed lock service nahi. Region shared process memory establish nahi karti. Race low frequency par bhi possible hai.",
+         choiceExplanations: ["synchronized same JVM ke monitor ko protect karta hai; separate processes concurrent booking kar sakte hain unless shared invariant enforce ho.","Language-level monitor distributed lock service nahi.","Region shared process memory establish nahi karti.","Race low frequency par bhi possible hai."] },
         {
           q: 'Double booking rokne ka sabse seedha tareeka jab data ek database mein ho?',
-          choices: ['Database ke andar — SELECT ... FOR UPDATE ya version column ke saath conditional UPDATE', 'Har machine par bada synchronized block', 'Ek hi machine par service chalao', 'Client side par button disable karo'],
+          choices: ["Atomic conditional booking/constraint transaction mein karo","Available row read karo; later unlocked update bhej do","Each host par process mutex lo; shared DB write plain rakho","UI button disable karo; API duplicate checks hata do"],
           answer: 0,
-          explain: 'Jo cheez sab processes share karte hain (DB row), wahi lock ya version ka sahi ghar hai. SQL Gurukul ke Database Internals track mein yeh asli MySQL/Postgres par chalta hai.',
-        },
+          explain: "Availability predicate/version and update atomically enforce karo; row lock plus recheck/update in one transaction ya suitable unique constraint booking invariant enforce kar sakta hai. Read aur later write ke beech another request book kar sakti hai. Other hosts independent lock use karte hain. Clients retries/multiple clients server invariant bypass kar sakte hain.",
+         choiceExplanations: ["Availability predicate/version and update atomically enforce karo; row lock plus recheck/update in one transaction ya suitable unique constraint booking invariant enforce kar sakta hai.","Read aur later write ke beech another request book kar sakti hai.","Other hosts independent lock use karte hain.","Clients retries/multiple clients server invariant bypass kar sakte hain."] },
       ],
     },
   ],
@@ -326,10 +297,11 @@ T2: B padha (lock B) ... ab A likhna hai → A par T1 ka lock → ruka
   ],
   stages: [
     {
+      workload: {"conflict":40},
       type: 'tradeoff',
       title: 'Optimistic vs pessimistic lab',
       instructions: 'Conflict rate aur tareeka badlo. Throughput, retries aur deadlocks dekho.',
-      goal: 'Dono situations ke liye sahi tareeka chuno: aisi setting dhoondho jahan throughput <b>800/s se zyada</b> ho, retries <b>5% se kam</b> aur deadlocks <b>1% se kam</b> hon.',
+      goal: "Hot-event workload: conflict rate kam se kam <b>40%</b> rakho. Throughput <b>800/s ya zyada</b>, retries <b>5% ya kam</b>, deadlocks <b>1% ya kam</b> chahiye. Pehle low-conflict case explore kar sakte ho; mission hot-event case par pass hoga.",
       scenario: `Ek booking service. Kabhi traffic alag-alag seats par hota hai (conflict kam),
         kabhi ek hi hot event ki kuch seats par (conflict zyada).`,
       knobs: [
@@ -364,10 +336,10 @@ T2: B padha (lock B) ... ab A likhna hai → A par T1 ka lock → ruka
       lesson: 'Faisla ek sawaal se: <b>kitne transactions ek hi row par takraate hain?</b> Kam → optimistic. Zyada → pessimistic, aur locks hamesha ek hi kram mein.',
       quiz: {
         q: 'Deadlock se bachne ka sabse sasta tareeka?',
-        choices: ['Har transaction locks ek hi kram mein le (jaise id ke kram mein)', 'Lock timeout bahut bada kar do', 'Har transaction ko serializable kar do', 'Retry band kar do'],
+        choices: ["Shared lock order follow karo; deadlock retries bhi rakho","Lock timeout bada karo; wait graph cycle khud tootegi","Serializable isolation choose; conflicting locks ab nahi honge","Retries hataao; database deadlock detection unnecessary hai"],
         answer: 0,
-        explain: 'Deadlock ek chakra hai — A ke baad B aur B ke baad A. Ek hi kram mein lock lene se chakra ban hi nahi sakta.',
-      },
+        explain: "Consistent acquisition order resource-order cycles prevent kar sakta hai; hidden/other locks and engines ke deadlocks still handle and retry appropriately karo. Long timeout cyclic dependency resolve nahi karta. Serializable implementations conflicts/deadlocks/aborts la sakti hain. Victim rollback ke baad safe retry needed ho sakti hai.",
+       choiceExplanations: ["Consistent acquisition order resource-order cycles prevent kar sakta hai; hidden/other locks and engines ke deadlocks still handle and retry appropriately karo.","Long timeout cyclic dependency resolve nahi karta.","Serializable implementations conflicts/deadlocks/aborts la sakti hain.","Victim rollback ke baad safe retry needed ho sakti hai."] },
     },
   ],
   cards: [
@@ -483,9 +455,8 @@ SD.extendLevel('migrations', {
       type: 'tradeoff',
       title: 'CDC pipeline lab — partitions, consumers aur ordering',
       instructions: 'Partition key, partitions aur consumers ghumao. Lag aur ordering dono dekho.',
-      goal: 'Aisi setting dhoondho jahan consumer lag <b>2 second se kam</b> ho aur <b>kisi user ke events ka kram na toote</b>.',
-      scenario: `CDC se <b>1,00,000 events/second</b> aa rahe hain. Ek consumer lagbhag
-        <b>4,000 events/second</b> process kar sakta hai.`,
+      goal: 'Is model mein 20k-event burst ko <b>2 second se kam</b> mein catch up karo, ongoing <b>100k events/s</b> ko kam kiye bina. Per-user ordered apply ke liye user-id partition key rakho.',
+      scenario: `CDC se <b>100,000 events/s</b> continuously aa rahe hain, aur ek extra <b>20,000-event burst</b> drain karna hai. Har active consumer ki modeled capacity <b>4,000 events/s</b>. Uniform partition load, serial per-partition apply aur fixed <b>0.1 s</b> baseline delay assume karo. Catch-up = 0.1 + burst/(capacity − arrivals); production Kafka lag measurement nahi.`,
       knobs: [
         { id: 'parts', label: 'Kafka partitions', min: 1, max: 64, step: 1, value: 4, unit: '', note: 'Consumers partitions se zyada ho toh bekaar baithte hain.' },
         { id: 'cons', label: 'Consumers', min: 1, max: 64, step: 1, value: 4, unit: '', note: 'Har consumer ~4,000 events/s.' },
@@ -495,32 +466,33 @@ SD.extendLevel('migrations', {
         const m = cdcModel(k);
         return [
           { label: 'Kaam karne wale consumers', value: m.active + '', tone: 'ok' },
-          { label: 'Throughput', value: (m.tput / 1000).toFixed(0) + 'k/s', tone: m.tput >= 100000 ? 'ok' : 'bad' },
-          { label: 'Consumer lag', value: m.lag, tone: m.tput >= 100000 ? 'ok' : 'bad' },
+          { label: 'Modeled processing capacity', value: (m.tput / 1000).toFixed(0) + 'k/s', tone: m.headroom > 0 ? 'ok' : 'bad' },
+          { label: 'Burst catch-up time', value: Number.isFinite(m.lag) ? m.lag.toFixed(2) + ' s' : 'drain impossible at this capacity', tone: m.lag < 2 ? 'ok' : 'bad' },
           { label: 'Per-user ordering', value: k.key === 1 ? 'bani rahegi' : 'toot sakti hai', tone: k.key === 1 ? 'ok' : 'bad' },
         ];
       },
       bars: k => {
         const m = cdcModel(k);
         return [
-          { label: 'Throughput vs 100k/s', pct: Math.min(100, m.tput / 1000), text: (m.tput / 1000).toFixed(0) + 'k/s', tone: m.tput >= 100000 ? 'ok' : 'bad' },
+          { label: 'Throughput vs 100k/s', pct: Math.min(100, m.tput / 1000), text: (m.tput / 1000).toFixed(0) + 'k/s', tone: m.headroom > 0 ? 'ok' : 'bad' },
           { label: 'Idle consumers', pct: Math.min(100, ((k.cons - m.active) / Math.max(1, k.cons)) * 100), text: (k.cons - m.active) + '', tone: k.cons > k.parts ? 'warn' : 'ok' },
         ];
       },
       verdict: k => {
         const m = cdcModel(k);
         if (k.key === 0) return { ok: false, text: 'Random partitioning se load toh barabar hai, par ek user ke "profile update" aur "password change" alag partitions mein jaa kar ulte kram mein lag sakte hain. User id se partition karo.' };
-        if (m.tput < 100000) return { ok: false, text: `Sirf <b>${m.active}</b> consumers kaam kar rahe hain (${k.parts} partitions, ${k.cons} consumers) — throughput <b>${(m.tput / 1000).toFixed(0)}k/s</b>, lag badhta ja raha hai. Partitions aur consumers dono badhao.` };
-        return { ok: true, text: `Sahi: user id se <b>${k.parts}</b> partitions, <b>${m.active}</b> kaam karte consumers — ${(m.tput / 1000).toFixed(0)}k/s, lag kaabu mein, har user ka kram bana rahega.` };
+        if (m.headroom <= 0) return { ok: false, text: `<b>${m.active}</b> active consumers ki capacity ${(m.tput / 1000).toFixed(0)}k/s hai. Ongoing 100k/s ke upar spare capacity nahi, isliye extra burst drain nahi hoga. Partitions aur consumers dono mein headroom chahiye.` };
+        if (m.lag >= 2) return { ok: false, text: `Ordering key sahi hai, par burst catch-up <b>${m.lag.toFixed(2)} s</b> hai. 2 s se neeche ke liye current ${(m.headroom / 1000).toFixed(0)}k/s headroom badhao; arrivals reduce mat karo.` };
+        return { ok: true, text: `User-id key, ${m.active} active consumers, ${(m.tput / 1000).toFixed(0)}k/s capacity: modeled burst catch-up <b>${m.lag.toFixed(2)} s</b>. Per-user ordering serial partition apply par depend karti hai; hot-key skew aur rebalances production mein verify karo.` };
       },
-      check: k => { const m = cdcModel(k); return k.key === 1 && m.tput >= 100000; },
-      lesson: 'Parallelism ki hadd <b>partitions</b> hain (consumers usse zyada ho toh bekaar), aur ordering ki hadd <b>partition key</b> hai. Dono ek saath tay karo.',
+      check: k => { const m = cdcModel(k); return k.key === 1 && m.headroom > 0 && m.lag < 2; },
+      lesson: 'Classic consumer group mein useful parallelism partitions se bounded hai. Same-user key partition log order deti hai only with correct ordered apply; rebalances, partition-count changes aur redelivery handle karo. Arrival rate ke barabar capacity burst drain nahi karti: measured headroom chahiye.',
       quiz: {
-        q: 'Kafka ek event do baar de de. Kaunsa event safe hai?',
-        choices: ['"balance = 50" (poori state)', '"balance mein se 10 ghatao" (delta)', 'Dono', 'Koi nahi'],
+        q: "Kafka redelivery/reordering ke saath kaunsa consumer update bina separate delta-event dedupe ke safe ban sakta hai?",
+        choices: ["Versioned snapshot; atomic newer-version guard ke saath","Unkeyed balance-minus-10 delta har delivery par apply karo","Snapshot arrival order ko source version order maan lo","Event key sirf log karo; update dedupe se alag commit karo"],
         answer: 0,
-        explain: 'State wala event idempotent hai; delta wala nahi. Isliye CDC mein jahan ho sake poori row ki state bhejo.',
-      },
+        explain: "Versioned snapshot same/older version atomically ignore kare toh duplicate/reordered delivery stale overwrite avoid kar sakti hai. Delta bhi atomic event-ID dedupe ke saath safe ban sakta hai. Duplicate delta duplicate debit karega. Network redelivery/reordering possible hai. Log and update separate commits crash gap chhodte hain.",
+       choiceExplanations: ["Versioned snapshot same/older version atomically ignore kare toh duplicate/reordered delivery stale overwrite avoid kar sakti hai. Delta bhi atomic event-ID dedupe ke saath safe ban sakta hai.","Duplicate delta duplicate debit karega.","Network redelivery/reordering possible hai.","Log and update separate commits crash gap chhodte hain."] },
     },
     {
       type: 'docker',
@@ -541,24 +513,19 @@ SD.extendLevel('migrations', {
       ],
       observe: {
         q: 'CDC state mode 10% redelivery ke baad bhi 0 galat raha, par CDC delta mode 280 galat. Farq kya hai?',
-        choices: ['State event ("balance = X", version ke saath) dobara aaye toh purana version ignore ho jaata hai; delta ("10 ghatao") dobara aaye toh do baar lag jaata hai', 'Delta mode dheema hai', 'State mode mein kam events the', 'Delta mode ne snapshot nahi liya'],
+        choices: ["State handler version guard karta; delta handler dedupe nahi","Delta semantics intrinsically impossible to make idempotent","Snapshot event se consumer order handling unnecessary hoti","Both modes mein source data necessarily different tha"],
         answer: 0,
-        explain: 'At-least-once delivery ke saath sirf idempotent events safe hain. Isiliye video kehta hai: jahan ho sake poori row ki state bhejo. Aur dual write (93 galat) mein toh "dobara padhne" ka koi raasta hi nahi — har fail permanent farq hai.',
-      },
+        explain: "Lab versioned snapshot stale/duplicate versions ignore karta hai; plain delta redelivery repeat apply karti hai. Atomic event-ID dedupe transactional delta ko bhi correct bana sakti hai. Delta plus atomic dedupe valid design hai. Unguarded older snapshot newer state overwrite kar sakti hai. Observed difference handler behavior ka hai, source difference ka evidence nahi.",
+       choiceExplanations: ["Lab versioned snapshot stale/duplicate versions ignore karta hai; plain delta redelivery repeat apply karti hai. Atomic event-ID dedupe transactional delta ko bhi correct bana sakti hai.","Delta plus atomic dedupe valid design hai.","Unguarded older snapshot newer state overwrite kar sakti hai.","Observed difference handler behavior ka hai, source difference ka evidence nahi."] },
     },
   ],
   interview: [
     {
       q: 'Interviewer: "50 TB, 100k writes/sec wale DB ko zero downtime ke saath migrate karo."',
-      choices: [
-        'CDC se log tail karo (Kafka buffer), snapshot + log position se history, user id se partition, idempotent state events, shadow traffic se compare, key-wise 1%→100% cutover, aur zaroorat ho toh reverse CDC — har kadam proxy flag se reversible',
-        'Weekend par dump-restore',
-        'App mein dual writes aur ek nightly reconcile job',
-        'Naya DB lo jo apne aap migrate kar de',
-      ],
+      choices: ["Consistent snapshot/log boundary; catch-up, verify, ownership","Live dump lo; capture position aur ongoing writes ignore karo","Two independent DB writes synchronous hon toh atomic maano","New DB enable karo; old writes stop kiye bina rollback promise"],
       answer: 0,
-      explain: 'Offline physics se namumkin hai, dual writes consistency todti hain. Log ko sach maan kar replicate karo.',
-    },
+      explain: "Snapshot and CDC boundary coordinate karo; partition/order, idempotent apply, lag/invariant comparison aur staged single-writer ownership cutover design karo. Rollback after new writes needs reverse replication or another tested reconciliation strategy. Snapshot alone ongoing commits miss kar sakta hai. Dual writes one atomic transaction automatically nahi. Divergent writers simple flag rollback ko unsafe bana sakte hain.",
+     choiceExplanations: ["Snapshot and CDC boundary coordinate karo; partition/order, idempotent apply, lag/invariant comparison aur staged single-writer ownership cutover design karo. Rollback after new writes needs reverse replication or another tested reconciliation strategy.","Snapshot alone ongoing commits miss kar sakta hai.","Dual writes one atomic transaction automatically nahi.","Divergent writers simple flag rollback ko unsafe bana sakte hain."] },
   ],
   success: [
     'Main bada online migration CDC + snapshot + shadow + percentage cutover se plan kar sakta hoon',
@@ -579,8 +546,11 @@ SD.extendLevel('migrations', {
 function cdcModel(k) {
   const active = Math.min(k.parts, k.cons);
   const tput = active * 4000;
-  const lag = tput >= 100000 ? '< 1 s' : 'badhta ja raha hai';
-  return { active, tput, lag };
+  // Scoped fluid model: a 20k-event burst drains using spare throughput,
+  // while 100k events/s continue arriving. 100% utilization cannot drain it.
+  const headroom = tput - 100000;
+  const lag = headroom > 0 ? 0.1 + 20000 / headroom : Infinity;
+  return { active, tput, headroom, lag };
 }
 
 /* =====================================================================
@@ -595,13 +565,13 @@ VISUALS['consensus'] = {
       <span class="dg-pill good" data-hs="leader">👑 leader (heartbeats)</span>
     </div>
     <div class="dg-cap">Sab ek hi timeout rakhte toh sab ek saath candidate bante aur vote bant jaate.
-      <b>Random timeout</b> se pehla jaagne wala jeet jaata hai.</div>
+      <b>Random timeout</b> split votes ka risk kam karta hai; candidate ko majority votes phir bhi chahiye.</div>
 
     <div class="dg-rule"></div>
     <div class="dg-ladder">
       <div class="dg-rung"><span class="lv">1</span><span class="cmd">client: x = 10 → leader</span><span class="q">leader apne log mein UNCOMMITTED likhta hai</span></div>
       <div class="dg-rung"><span class="lv">2</span><span class="cmd">AppendEntries → followers</span><span class="q">followers apne log mein likh kar ack</span></div>
-      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">3</span><span class="cmd">QUORUM ack (khud samet)</span><span class="q">5 mein se 3 — tabhi data "sach"</span></div>
+      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">3</span><span class="cmd">QUORUM ack (khud samet)</span><span class="q">current-term entry: durable majority → commit prefix</span></div>
       <div class="dg-rung g"><span class="lv">4</span><span class="cmd">COMMIT → apply → client ko success</span><span class="q">agli heartbeat followers ko batati hai "entry 100 committed"</span></div>
     </div>
 
@@ -609,7 +579,7 @@ VISUALS['consensus'] = {
     <div class="dg-split">
       <div class="dg-box is-accent" data-hs="term"><span class="bx-label">🗳️ Term = logical time</span>
         <div class="dg-cap">Apne se bada term dikha → tum purane ho → follower ban jao.
-          Isi se purana leader naye ke baad hukm nahi de sakta.</div></div>
+          Higher term observe hone par old leader step down karta hai; quorum ke bina new writes commit nahi kar sakta.</div></div>
       <div class="dg-box is-good" data-hs="quorum"><span class="bx-label">🔢 Majority kyun</span>
         <div class="dg-cap">Kisi set ki do majorities hamesha kam se kam ek node par milti hain —
           isliye ek term mein do leader namumkin.</div></div>
@@ -635,11 +605,10 @@ VISUALS['consensus-split'] = {
     <div class="dg-rule"></div>
     <div class="dg-grid">
       <div class="dg-box" data-hs="n3"><span class="bx-label">3 nodes</span><div class="dg-cap">quorum 2 · 1 failure</div></div>
-      <div class="dg-box is-bad" data-hs="n4"><span class="bx-label">4 nodes</span><div class="dg-cap">quorum 3 · phir bhi 1 failure — paisa bekaar</div></div>
-      <div class="dg-box is-good" data-hs="n5"><span class="bx-label">5 nodes</span><div class="dg-cap">quorum 3 · 2 failures — zyadatar companies yahin rukti hain</div></div>
+      <div class="dg-box is-bad" data-hs="n4"><span class="bx-label">4 nodes</span><div class="dg-cap">quorum 3 · 1 unavailable voter tolerate</div></div>
+      <div class="dg-box is-good" data-hs="n5"><span class="bx-label">5 nodes</span><div class="dg-cap">quorum 3 · 2 unavailable voters tolerate</div></div>
     </div>
-    <div class="dg-cap">Consensus <b>metadata</b> ke liye hai (kaun leader, DB ka address, maintenance flag) —
-      comments aur clicks ke liye nahi.</div>`,
+    <div class="dg-cap">Consensus metadata aur <b>user data</b> dono ke liye valid hai. Many independent Raft shard groups user-data capacity distribute kar sakte hain; product consistency, latency aur cost evaluate karo.</div>`,
 };
 
 SD.registerLevelsAfter('dist', 'clocks', [
@@ -686,8 +655,7 @@ SD.registerLevelsAfter('dist', 'clocks', [
     `<h3>🗳️ Term — election ka saal</h3>
      <p>Distributed system mein deewar ki ghadi bekaar hai (Clocks level yaad karo). Raft
      <b>logical time</b> use karta hai: term 1, term 2, term 3. Agar tumhe apne se <b>bada
-     term</b> dikha → tum purane ho → term update karo aur follower ban jao. Yahi rokta hai ki
-     naya leader banne ke baad purana leader hukm deta rahe.</p>
+     term</b> dikha → tum purane ho → term update karo aur follower ban jao. Higher term observe hone tak old leader khud ko leader maan sakta hai; quorum rules usko new conflicting committed history banane se rokte hain.</p>
      <p>Follower vote tab deta hai jab (1) is term mein pehle kisi ko vote nahi diya, aur (2)
      candidate ka log kam se kam uske jitna up-to-date hai.</p>
      <h3>🔢 Quorum — majority hi kyun</h3>
@@ -703,8 +671,7 @@ SD.registerLevelsAfter('dist', 'clocks', [
 5. COMMIT → apni state machine par apply → client ko "success"
 6. agli heartbeat → followers ko "entry 100 committed", woh bhi apply karte hain</pre>
      <p class="tip">🎯 Junior soch: "leader disk par likh ke done bol dega." Nahi — leader
-     tabhi mara toh followers ko x = 10 pata hi nahi. Data tabhi sach hai jab <b>majority</b>
-     ke paas pahunch jaaye. Yahi CAP ka C hai.</p>`,
+     tabhi mara toh followers ko x = 10 pata hi nahi. Current-term entry <b>durable majority</b> par leader commit index advance kar sakta hai; older-term entries directly replica-count se commit nahi hoti, committed prefix ke through hoti hain (Raft §5.4.2). Linearizable reads ko appropriate read protocol bhi chahiye; majority count alone complete CAP proof nahi.</p>`,
   ],
   stages: [
     {
@@ -746,10 +713,10 @@ SD.registerLevelsAfter('dist', 'clocks', [
       ],
       observe: {
         q: 'Sab nodes ka timeout barabar karne par election mein kya hota hai?',
-        choices: ['Sab ek saath candidate bante hain, sab khud ko vote dete hain, kisi ko majority nahi milti — output mein 10 s mein 105 elections aur koi leader nahi', 'Election tez ho jaata hai', 'Koi farq nahi', 'Do leader ban jaate hain'],
+        choices: ["Lab synchronized candidates se repeated split votes hue","Equal timers har possible network mein two leaders banate","Equal timers sab nodes ko one shared vote bana dete","Equal timers leader recovery latency zero kar dete"],
         answer: 0,
-        explain: 'Isliye Raft random timeouts use karta hai — ek chhoti si chaal jiske bina cluster khud ko rok leta hai. (Do leader ek term mein quorum ki wajah se kabhi nahi bante.)',
-      },
+        explain: "Deterministic run mein same timeout candidates ko align karta hai aur votes split hote hain; real scheduling/network variation outcome change kar sakti hai. Randomization correlated elections reduce karti hai. Raft same-term election safety quorum/voting rules se aati hai. Each server apna one vote per term records karta hai. Competing candidates progress delay kar sakte hain.",
+       choiceExplanations: ["Deterministic run mein same timeout candidates ko align karta hai aur votes split hote hain; real scheduling/network variation outcome change kar sakti hai. Randomization correlated elections reduce karti hai.","Raft same-term election safety quorum/voting rules se aati hai.","Each server apna one vote per term records karta hai.","Competing candidates progress delay kar sakte hain."] },
     },
   ],
   interview: {
@@ -758,16 +725,16 @@ SD.registerLevelsAfter('dist', 'clocks', [
     questions: [
       {
         q: 'Interviewer: "Raft mein data kab committed maana jaata hai?"',
-        choices: ['Jab leader ke log se woh entry majority nodes ke logs mein pahunch jaaye', 'Jab leader apni disk par likh de', 'Jab saare nodes ack karein', 'Jab client ack kare'],
+        choices: ["Current-term entry durable majority par; prior prefix commits","Any older-term entry count majority ho toh direct commit","Leader local append kare toh cluster commit complete hai","Every follower plus client ACK ke bina commit nahi hota"],
         answer: 0,
-        explain: 'Majority par pahunchne ke baad leader mar bhi jaaye toh naya leader (up-to-date log ki shart ki wajah se) woh entry rakhta hai.',
-      },
+        explain: "Raft leader current-term entry majority par replicate karke commit index advance karta hai; prior entries us committed prefix ke through commit hoti hain. Older-term entries ko sirf replica count se direct commit nahi karte (paper section 5.4.2). Election safety ke liye current-term restriction important hai. One local copy quorum durability nahi. Majority sufficient hai; every node/client acknowledgement unnecessary.",
+       choiceExplanations: ["Raft leader current-term entry majority par replicate karke commit index advance karta hai; prior entries us committed prefix ke through commit hoti hain. Older-term entries ko sirf replica count se direct commit nahi karte (paper section 5.4.2).","Election safety ke liye current-term restriction important hai.","One local copy quorum durability nahi.","Majority sufficient hai; every node/client acknowledgement unnecessary."] },
       {
         q: 'Interviewer: "Election timeout random kyun hote hain?"',
-        choices: ['Taaki sab followers ek saath candidate na bane aur vote na bante', 'Taaki security badhe', 'Taaki clock skew theek ho', 'Taaki leader zyada der chale'],
+        choices: ["Election starts spread karke split-vote risk reduce kare","Physical clocks ko bounded-uncertainty service bana de","Random timeout network partition ko synchronously heal kare","Random timeout membership/quorum requirement replace kare"],
         answer: 0,
-        explain: 'Ek chhoti si chaal jo split votes ko lagbhag khatam kar deti hai.',
-      },
+        explain: "Random election timeout candidates ko different start times dekar one candidate ko majority collect karne ka chance improve karta hai; bounded timing assumptions liveness ko affect karte hain. Clock synchronization separate problem hai. Random delay network reachability restore nahi karta. Votes and quorum rules remain necessary.",
+       choiceExplanations: ["Random election timeout candidates ko different start times dekar one candidate ko majority collect karne ka chance improve karta hai; bounded timing assumptions liveness ko affect karte hain.","Clock synchronization separate problem hai.","Random delay network reachability restore nahi karta.","Votes and quorum rules remain necessary."] },
     ],
   },
   success: [
@@ -779,10 +746,10 @@ SD.registerLevelsAfter('dist', 'clocks', [
     (Wahi cheezein jo is level mein padhin.)</p>`,
   cards: [
     { front: 'Raft ke teen states?', back: 'Follower (sunta hai), candidate (timeout ke baad — term+1, khud ko vote, RequestVote), leader (majority mili — heartbeats bhejta hai).' },
-    { front: 'Random election timeout kyun?', back: 'Sab ka timeout ek jaisa ho toh sab ek saath candidate bante hain aur vote bant jaate hain. Random (150–300 ms) se pehla jaagne wala jeet jaata hai.' },
-    { front: 'Term kya hai?', back: 'Logical time / election ka saal. Apne se bada term dikhe toh tum purane ho → follower ban jao. Isi se purana leader hukm nahi de paata.' },
+    { front: 'Random election timeout kyun?', back: 'Sab ka timeout ek jaisa ho toh sab ek saath candidate bante hain aur vote bant jaate hain. Random start times split-vote risk reduce karte hain; majority election phir bhi chahiye. 150–300 ms paper ka example hai, universal setting nahi.' },
+    { front: 'Term kya hai?', back: 'Logical time / election ka saal. Apne se bada term dikhe toh tum purane ho → follower ban jao. Higher term observe hone par step down hota hai; quorum ke bina old leader new writes commit nahi kar sakta.' },
     { front: 'Majority quorum kyun?', back: 'Koi bhi do majorities kam se kam ek node par overlap karti hain — ek term mein do leader ya do alag committed values namumkin.' },
-    { front: 'Raft write path?', back: 'Leader log mein uncommitted → AppendEntries → majority ack → commit + apply + client ko success → agli heartbeat followers ko commit batati hai.' },
+    { front: 'Raft write path?', back: 'Current-term entry: leader durable append → follower durable replication → majority → commit prefix → apply/client success. Older-term entries directly replica-count se commit nahi; committed prefix ke through hoti hain.' },
   ],
 },
 {
@@ -795,7 +762,7 @@ SD.registerLevelsAfter('dist', 'clocks', [
     'Partition mein purana leader minority mein — woh commit kyun nahi kar sakta',
     'Network theek hone par purana leader kaise hat-ta hai',
     'Kitne nodes: 3, 5, 7 — aur 4 kyun bekaar',
-    'Consensus kab NAHI: metadata vs user data',
+    'Consensus fit: metadata/user data, sharding, latency aur consistency budget',
   ],
   lesson: [
     `<h3>💀 Scene 1: leader mar gaya</h3>
@@ -832,9 +799,7 @@ NETWORK THEEK:
        <tr><td>5</td><td>3</td><td>2</td></tr>
        <tr><td>7</td><td>4</td><td>3</td></tr>
      </table>
-     <p>Even numbers paisa bekaar hain. Zyadatar companies <b>5</b> par rukti hain: har extra
-     node latency ka tax badhata hai, aur kisi ek dheeme node ke har write ko kheenchne ka mauka
-     badhta hai.</p>
+     <p>Odd voting counts often same failure tolerance ke liye efficient hain. Three versus five voter choice failure domains, recovery objective, write cost aur measured quorum latency se karo. More nodes har workload mein strictly slower hain aisa theorem nahi.</p>
      <h3>🧰 Khud mat banao</h3>
      <p>Raft sahi likhna bahut mushkil hai — disk corruption, network reordering, membership
      changes ke hazaar kone. Isliye <b>coordination services</b> use hote hain:</p>
@@ -845,13 +810,8 @@ NETWORK THEEK:
        ne ZooKeeper poori tarah chhod kar apna Raft-based <b>KRaft</b> le liya.</li>
        <li><b>Google Spanner</b> — har shard ek Paxos group: sharded consensus.</li>
      </ul>
-     <h3>🐢 Aur imaandaar chetavni</h3>
-     <p>Consensus ek akele Postgres se <b>dheema</b> hai: har write par network hop, ack se
-     pehle log ka <code>fsync</code>, aur saare writes ek leader CPU se — ek Raft group mein
-     writes parallel nahi ho sakte. Isliye comments aur analytics clicks Raft mein nahi daalte.
-     Consensus <b>metadata</b> ke liye hai: shard ka leader kaun hai, database ka address kya
-     hai, maintenance mode on hai ya nahi — woh chhoti chaabiyan jo galat hon toh sab toot jaaye.
-     Baaki ke liye eventual consistency.</p>`,
+     <h3>🐢 Coordination cost aur sharding</h3>
+     <p>Durable consensus writes mein quorum communication aur persistence ka cost hai. Same Raft group ek ordered log maintain karta hai, par batching/pipelining possible hain; many independent groups writes distribute kar sakte hain. CockroachDB user-data ranges Raft use karti hain. Comments/clicks ko automatically eventual consistency assign mat karo: product invariants, read protocol, latency, durability aur capacity needs choose karo.</p>`,
   ],
   stages: [
     {
@@ -870,18 +830,18 @@ NETWORK THEEK:
         { t: 'T1', event: 'Switch fail: <b>{1, 2}</b> ek taraf, <b>{3, 4, 5}</b> doosri taraf.', metrics: { leaders: 1, committed: 0 }, tone: 'warn' },
         { t: 'T2', event: 'Client ne node 1 ko <code>y = 20</code> bheja. Node 2 ne ack kiya.', metrics: { leaders: 1, committed: 0 }, tone: 'warn',
           ask: { q: 'Node 1 y = 20 commit karega?',
-                 choices: ['Nahi — 2/5 acks majority nahi hain; client ko timeout milega', 'Haan — woh leader hai', 'Haan — node 2 ne ack kiya', 'Aadha commit'],
+                 choices: ["2/5 quorum nahi; timeout future outcome ambiguous ho sakta","2/5 durable copies cluster commit ke liye enough hain","Client timeout prove karta entry later commit nahi hogi","Old leader hona minority ko valid commit privilege deta"],
                  answer: 0,
-                 explain: 'Majority ke bina commit nahi. System jhooth bolne ke bajaye chup rehta hai — yahi consistency over availability hai.',
-                 wrongHints: ['Leader hona kaafi nahi, quorum chahiye.', 'Do ack 5 ki majority nahi.', 'Raft mein "aadha commit" jaisa kuch nahi.'] } },
+                 explain: "Five-member fixed configuration majority three hai; currently only two replicas se commit nahi. Client timeout alone final outcome prove nahi karta: some uncommitted entries later commit ho sakti hain; this lab conflict later replace hota hai. Two copies majority nahi. Request outcome query/idempotency ambiguity handle kare. Leadership quorum requirement bypass nahi karti.",
+                 wrongHints: ['Leader hona kaafi nahi, quorum chahiye.', 'Do ack 5 ki majority nahi.', 'Raft mein "aadha commit" jaisa kuch nahi.'] , choiceExplanations: ["Five-member fixed configuration majority three hai; currently only two replicas se commit nahi. Client timeout alone final outcome prove nahi karta: some uncommitted entries later commit ho sakti hain; this lab conflict later replace hota hai.","Two copies majority nahi.","Request outcome query/idempotency ambiguity handle kare.","Leadership quorum requirement bypass nahi karti."] } },
         { t: 'T3', event: '{3, 4, 5} ko heartbeat nahi aati. Node 3 <b>term 3</b> ka leader bana.', metrics: { leaders: 2, committed: 0 }, tone: 'warn' },
         { t: 'T4', event: 'Client ne node 3 ko <code>y = 30</code> bheja → 3/5 acks → <b>committed</b>.', metrics: { leaders: 2, committed: 1 }, tone: 'ok' },
         { t: 'T5', event: 'Network theek. Node 1 ko term 3 ki heartbeat dikhi.', metrics: { leaders: 2, committed: 1 }, tone: 'warn',
           ask: { q: 'Ab node 1 kya karega?',
-                 choices: ['Bada term dekh kar follower banega, uncommitted y = 20 phenkega, aur node 3 se y = 30 copy karega', 'Node 3 se ladai karega', 'Apna y = 20 sab par thopega', 'Band ho jaayega'],
+                 choices: ["Higher term: step down; conflicting suffix repair on append","Higher term alone entire uncommitted log erase kar deta","Old local value ko higher-term leader par force karo","Old leader restart ke bina follower ban hi nahi sakta"],
                  answer: 0,
-                 explain: 'Term ka niyam purane leader ko hata deta hai, aur uncommitted entry kabhi "sach" thi hi nahi.',
-                 wrongHints: ['Raft mein ladai nahi — bada term jeet-ta hai.', 'y = 20 kabhi committed nahi tha.', 'Node band nahi hota, sirf follower banta hai.'] } },
+                 explain: "Higher term observe karna follower transition karta hai. AppendEntries matching-index/term conflict par conflicting suffix delete/replace karta hai; merely higher term every uncommitted entry erase nahi karta. Nonconflicting entries remain kar sakti hain. Leader elected with log rules governs replication. Role transition normal protocol behavior hai.",
+                 wrongHints: ['Raft mein ladai nahi — bada term jeet-ta hai.', 'y = 20 kabhi committed nahi tha.', 'Node band nahi hota, sirf follower banta hai.'] , choiceExplanations: ["Higher term observe karna follower transition karta hai. AppendEntries matching-index/term conflict par conflicting suffix delete/replace karta hai; merely higher term every uncommitted entry erase nahi karta.","Nonconflicting entries remain kar sakti hain.","Leader elected with log rules governs replication.","Role transition normal protocol behavior hai."] } },
         { t: 'T6', event: 'Ek leader (node 3), sabka log <code>y = 30</code>. Split brain bina kisi insaan ke hal.', metrics: { leaders: 1, committed: 1 }, tone: 'ok' },
       ],
       lesson: 'Partition mein consensus <b>availability chhodta hai, consistency nahi</b>. Minority side ruk jaati hai; majority side chalti rehti hai; aur theek hone par term + log ka niyam sab ko ek sach par le aata hai.',
@@ -890,7 +850,7 @@ NETWORK THEEK:
       type: 'tradeoff',
       title: 'Cluster size lab',
       instructions: 'Nodes ki ginti aur ek dheema node — failures aur latency dekho.',
-      goal: 'Aisa cluster chuno jo <b>2 failures</b> jhel sake aur write latency <b>15 ms se kam</b> rahe.',
+      goal: "Aisa cluster chuno jo <b>2 failures</b> jhel sake aur write latency <b>15 ms ya kam</b> rakhe.",
       scenario: 'Har ack ~2 ms ka network + fsync. Ek node kabhi-kabhi dheema (20 ms) ho jaata hai.',
       knobs: [
         { id: 'n', label: 'Nodes', min: 1, max: 9, step: 1, value: 4, unit: '', note: 'Even numbers par dhyan do.' },
@@ -919,13 +879,13 @@ NETWORK THEEK:
         return { ok: true, text: `<b>${k.n}</b> nodes: quorum ${m.q}, ${m.f} failures jhelta hai, write latency <b>${m.lat} ms</b>.` };
       },
       check: k => { const m = raftSizeModel(k); return m.f >= 2 && m.lat <= 15; },
-      lesson: 'Odd numbers chuno. 3 = ek failure, 5 = do. Zyada nodes = zyada acks ka intezaar aur kisi dheeme node ke quorum mein aane ka zyada mauka.',
+      lesson: 'Fixed majority mein 3 voters one failure, 5 voters two failures tolerate karte hain. Odd counts often efficient hain. Model latency toy estimate hai; quorum placement, leader disk, network aur correlated failures actual latency/availability decide karte hain.',
       quiz: {
-        q: '4-node cluster 3-node se behtar kyun nahi?',
-        choices: ['Quorum 3 ho jaata hai — failures phir bhi sirf 1, bas mehenga aur dheema', '4 nodes mein leader nahi banta', '4 nodes zyada failures jhelta hai', 'Farq nahi, dono same cost'],
+        q: "Fixed-membership majority Raft mein 4 voting nodes versus 3 ka fault-tolerance tradeoff kya hai?",
+        choices: ["Same one-failure tolerance; quorum three versus two hai","Fourth voter same quorum se two failures tolerate kare","Fourth voter cluster mein election impossible kar deta","Fourth voter latency har workload mein exactly double kare"],
         answer: 0,
-        explain: 'Even number koi extra fault tolerance nahi deta.',
-      },
+        explain: "3 voters need 2; 4 voters need 3; both tolerate one unavailable voter for majority. Fourth node costs more and may change latency, but topology/performance evidence se tradeoff assess karo. Four voters with two alive majority lose karte hain. Three votes election possible hai. Latency fixed doubling theorem nahi.",
+       choiceExplanations: ["3 voters need 2; 4 voters need 3; both tolerate one unavailable voter for majority. Fourth node costs more and may change latency, but topology/performance evidence se tradeoff assess karo.","Four voters with two alive majority lose karte hain.","Three votes election possible hai.","Latency fixed doubling theorem nahi."] },
     },
     {
       type: 'docker',
@@ -940,10 +900,10 @@ NETWORK THEEK:
       ],
       observe: {
         q: 'Heal hone ke baad minority side ka likha y = 20 kahan gaya?',
-        choices: ['Phenk diya gaya — woh kabhi committed tha hi nahi; sab nodes majority wala y = 30 rakhte hain', 'Sab nodes par y = 20', 'Dono values rakhi gayin', 'Cluster band ho gaya'],
+        choices: ["Conflicting y=20 suffix replace hui; y=30 committed raha","Every uncommitted entry higher term par blindly delete hoti","Minority y=20 older leader ke karan majority value ban gayi","Conflicting values same log index par both committed hue"],
         answer: 0,
-        explain: 'Uncommitted entry sach nahi hoti. Isliye client ko uska "success" kabhi mila hi nahi tha.',
-      },
+        explain: "Lab new leader ki y=30 entry same position par conflict karti hai, so AppendEntries old uncommitted y=20 suffix replace karta hai. All uncommitted entries universally discarded nahi. Nonconflicting uncommitted entries future mein commit ho sakti hain. Old role committed majority history override nahi karta. Raft log safety same committed index par conflicting commands forbid karti hai.",
+       choiceExplanations: ["Lab new leader ki y=30 entry same position par conflict karti hai, so AppendEntries old uncommitted y=20 suffix replace karta hai. All uncommitted entries universally discarded nahi.","Nonconflicting uncommitted entries future mein commit ho sakti hain.","Old role committed majority history override nahi karta.","Raft log safety same committed index par conflicting commands forbid karti hai."] },
     },
   ],
   interview: {
@@ -952,22 +912,22 @@ NETWORK THEEK:
     questions: [
       {
         q: 'Interviewer: "5-node Raft cluster 2 | 3 mein bat gaya. Kya hoga?"',
-        choices: ['Majority side (3) leader chunti hai aur writes commit karti hai; minority side (2) koi write commit nahi kar sakti; heal par minority ke uncommitted entries hat jaati hain', 'Dono taraf leader, dono taraf writes', 'Cluster poora ruk jaata hai', 'Minority side jeet-ti hai kyunki purana leader wahan hai'],
+        choices: ["Three can form quorum; two cannot commit new writes","Old leader with two retains quorum by historical ownership","Both sides can commit same index using local majority","Heal par majority bhi conflicting minority value accept kare"],
         answer: 0,
-        explain: 'Quorum ka niyam split brain ko physically namumkin bana deta hai.',
-      },
+        explain: "Fixed five-node configuration mein three reachable voters eligible leader elect/replicate kar sakte hain; two cannot commit. Heal par conflict repair log safety maintain karta hai; read linearizability also requires appropriate leader/quorum protocol. Leader title quorum absence overcome nahi karta. Local two-member partition majority of configured five nahi. Committed history leader completeness/log matching protect karte hain.",
+       choiceExplanations: ["Fixed five-node configuration mein three reachable voters eligible leader elect/replicate kar sakte hain; two cannot commit. Heal par conflict repair log safety maintain karta hai; read linearizability also requires appropriate leader/quorum protocol.","Leader title quorum absence overcome nahi karta.","Local two-member partition majority of configured five nahi.","Committed history leader completeness/log matching protect karte hain."] },
       {
-        q: 'Interviewer: "User comments ko Raft cluster mein store karein?"',
-        choices: ['Nahi — consensus har write par network hop + fsync + single leader CPU leta hai; woh metadata ke liye hai. Comments ke liye sharded/eventually consistent store', 'Haan, consistency sabse zaroori hai', 'Haan, bas nodes badha do', 'Haan, agar 7 nodes ho'],
+        q: "Interviewer: user comments ke storage mein Raft use karna automatically galat hai?",
+        choices: ["Workload assess karo; sharded user-data Raft valid hai","Consensus metadata-only hai; comments store karna invalid","One group mein voters add karna write sharding ke equal hai","Eventual consistency har comments product ki requirement hai"],
         answer: 0,
-        explain: 'Consensus "chaabiyon" ke liye hai — kaun leader hai, kahan kya rehta hai.',
-      },
+        explain: "Consensus user data ke liye bhi valid hai: CockroachDB ranges Raft use karti hain. Capacity/latency/consistency evaluate karo; one global group versus many shard groups different architecture hain. Metadata-only restriction Raft protocol ka rule nahi. More replicas same group ko independent writers/shards nahi banati. Consistency choice product invariants and UX se decide hoti hai.",
+       choiceExplanations: ["Consensus user data ke liye bhi valid hai: CockroachDB ranges Raft use karti hain. Capacity/latency/consistency evaluate karo; one global group versus many shard groups different architecture hain.","Metadata-only restriction Raft protocol ka rule nahi.","More replicas same group ko independent writers/shards nahi banati.","Consistency choice product invariants and UX se decide hoti hai."] },
       {
         q: 'Interviewer: "Apna Raft likhoge?"',
-        choices: ['Nahi — etcd/ZooKeeper/KRaft jaise tested coordination service use karunga', 'Haan, 200 lines ka kaam hai', 'Haan, Paxos se aasan hai', 'Haan, library ki zaroorat nahi'],
+        choices: ["Mature implementation/service; domain fit aur durability test","Simpler paper se complete production correctness infer karo","Toy in-memory lab ko fsync crash-safe implementation maano","Coordination API ko arbitrary user DB ka drop-in maano"],
         answer: 0,
-        explain: 'Disk corruption, reordering aur membership changes ke edge cases hi asli kaam hain.',
-      },
+        explain: "Mature protocol implementations and operationally suitable services evaluate karo. etcd Raft, ZooKeeper ZAB and Kafka KRaft related coordination choices hain, identical general storage products nahi. Reconfiguration, recovery, persistence and failure tests substantial hain. Teaching model real durable write guarantees establish nahi karta. API/data model/capacity/security contract separately evaluate karo.",
+       choiceExplanations: ["Mature protocol implementations and operationally suitable services evaluate karo. etcd Raft, ZooKeeper ZAB and Kafka KRaft related coordination choices hain, identical general storage products nahi.","Reconfiguration, recovery, persistence and failure tests substantial hain.","Teaching model real durable write guarantees establish nahi karta.","API/data model/capacity/security contract separately evaluate karo."] },
     ],
   },
   success: [
@@ -979,10 +939,10 @@ NETWORK THEEK:
     (leader kaun, config, feature flag). Likho ki aaj woh kahan rehti hain — aur kya woh jagah
     partition mein do alag jawab de sakti hai?</p>`,
   cards: [
-    { front: 'Leader marne par Raft kitni der mein theek hota hai?', back: 'Lagbhag ek election timeout (~200 ms) — sabse pehle jaagne wala follower naye term ka candidate banta hai aur majority se leader.' },
-    { front: 'Partition mein minority side ka leader?', back: 'Writes ko majority ack nahi milta, isliye kuch commit nahi hota — client timeout paata hai. Heal par bada term dekh kar woh follower banta hai aur uncommitted entries phenkta hai.' },
-    { front: '4 nodes kyun nahi?', back: 'Quorum 3 — sirf 1 failure jhelta hai (3 nodes jitna), par mehenga aur dheema. Odd numbers chuno; zyadatar 5.' },
-    { front: 'Consensus kiske liye?', back: 'Metadata — shard ka leader, DB address, maintenance flag. User data (comments, clicks) ke liye nahi: har write par hop + fsync + single leader.' },
+    { front: 'Leader marne par Raft kitni der mein theek hota hai?', back: 'Configured timeout, RPC/fsync delay, vote splits aur majority reachability determine recovery. 150–300 ms paper example hai; production guarantee nahi. Detection + successful election + catch-up/client routing measure karo.' },
+    { front: 'Partition mein minority side ka leader?', back: 'Without configured majority no new commit. Timeout outcome ambiguous ho sakta hai. Higher term par step down; AppendEntries conflicting suffix replace karta hai. Har uncommitted entry universally erase nahi hoti.' },
+    { front: '4 nodes kyun nahi?', back: '4 voters need 3 votes; 3 voters need 2. Dono one unavailable voter tolerate karte hain. Extra voter same failure tolerance par cost badha sakta hai; latency actual placement/implementation se assess karo.' },
+    { front: 'Consensus kiske liye?', back: 'Metadata aur user data dono. CockroachDB ranges independent Raft groups use karti hain. One global group bottleneck ho sakta hai; shards capacity distribute karte hain. API/data model aur consistency need fit karo.' },
     { front: 'etcd, ZooKeeper, KRaft, Spanner?', back: 'etcd = Kubernetes ka Raft store; ZooKeeper (ZAB) = purana Kafka coordinator; Kafka 4.0 (2025) ne apna Raft-based KRaft liya; Spanner = har shard ek Paxos group.' },
   ],
 },

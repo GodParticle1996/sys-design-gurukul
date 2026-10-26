@@ -95,16 +95,11 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
           vars: { a: '9 (#1–#9)', only: '?', ord: '#7, #8, #9 ✓ "ho gaya"' },
           ask: {
             q: '#7, #8 aur #9 ko "ho gaya" mil chuka hai. Yeh teen orders abhi kahan-kahan rakhe hain?',
-            choices: [
-              'Sirf region A mein. Agla backup 6.00 s par jaayega — tab tak yeh teeno kisi doosri jagah nahi hain',
-              'Region A mein aur backup mein — "ho gaya" ka matlab hi hai ki backup ho chuka',
-              'Region A aur region B, dono mein',
-              'Sirf backup mein',
-            ],
+            choices: ["A mein hain; next backup tak doosri copy nahi","A aur backup dono mein hain; ACK copy ka proof hai","A aur B mein hain; har write synchronous hoti hai","Backup mein hain; A se save ke baad hat jaate hain"],
             answer: 0,
             hint: 'Backup kab-kab chalta hai? Pichhla backup kab chala tha, aur yeh orders kab aaye?',
-            explain: 'Slow motion ki line: <code>4.00 s #9 → A ✓ A mein: 9 · S3 tak pahunche: 6 · raaste mein: 3</code>. "Ho gaya" sirf itna kehta hai ki region A ne order rakh liya.',
-          },
+            explain: "Lab ka ACK local save par hai; #7–#9 last completed backup ke baad aaye hain. Acknowledgment ka durability scope implementation contract se aata hai. Yahan synchronous cross-region write configured nahi. Local save backup ko transfer-and-delete nahi karta.",
+           choiceExplanations: ["Lab ka ACK local save par hai; #7–#9 last completed backup ke baad aaye hain.","Acknowledgment ka durability scope implementation contract se aata hai.","Yahan synchronous cross-region write configured nahi.","Local save backup ko transfer-and-delete nahi karta."] },
         },
         {
           clock: '4.00 s',
@@ -114,16 +109,11 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
           vars: { a: '💥 gaya (4.00 s par)', only: '3 (#7–#9) — A ke saath gaye', ord: '#10 ✗ (A band hai)' },
           ask: {
             q: 'Router orders ko region B par kab bhejna shuru karega?',
-            choices: [
-              '5.50 s par. Router har 0.5 second par poochhta hai, aur lagataar 3 baar jawab na aane par hi maanta hai ki region A gaya: 4.50, 5.00, 5.50',
-              'Turant — 4.00 s par hi',
-              'Kabhi nahi — kisi insaan ko button dabana padega',
-              '10 minute baad',
-            ],
+            choices: ["5.50 s; teesra consecutive failed check tab hai","4.00 s; region death turant router ko push hoti hai","4.50 s; pehla failed check threshold poora karta hai","5.00 s; do failures par configured switch hota hai"],
             answer: 0,
             hint: 'Router ka niyam kya tha: kitni baar "jawab nahi"? Aur sawaal kitni der par poochha jaata hai?',
-            explain: 'Slow motion: <code>5.50 s 🩺 A ✗ (lagataar fail 3/3) → FAILOVER</code>. A ke jaane aur router ko pata chalne ke beech 1.50 second gaye — us beech #10 aur #11 fail hue.',
-          },
+            explain: "Given checks 4.50, 5.00, 5.50 par threshold 3 complete hota hai. Failure event aur router observation alag timestamps hain. Threshold 3 hai, 1 nahi. 5.00 s tak sirf do consecutive failures hue hain.",
+           choiceExplanations: ["Given checks 4.50, 5.00, 5.50 par threshold 3 complete hota hai.","Failure event aur router observation alag timestamps hain.","Threshold 3 hai, 1 nahi.","5.00 s tak sirf do consecutive failures hue hain."] },
         },
         {
           clock: '5.50 s',
@@ -139,16 +129,11 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
           vars: { ord: '—' },
           ask: {
             q: 'Backup se region B mein kaunse orders aayenge?',
-            choices: [
-              '#1 se #6 — jo 3.00 s wale backup mein the. #7, #8, #9 kisi backup mein gaye hi nahi the',
-              '#1 se #9 — saare, kyunki sab ko "ho gaya" mila tha',
-              '#1 se #11',
-              'Koi nahi',
-            ],
+            choices: ["#1–#6; last completed 3.00 s backup mein yehi the","#1–#9; local ACK ne backup bhi confirm kiya","#1–#11; restore latest live data kheenchta hai","#7–#9; restore sirf newest pending batch leta hai"],
             answer: 0,
             hint: 'Aakhri backup kab chala tha? Us backup mein kaunse orders the?',
-            explain: 'Slow motion: <code>11.50 s 🚪 B ban gaya · S3 se restore: 6 order wapas (#1–#6) · app chalu</code>. #7, #8, #9 ke grahakon ko "ho gaya" dikha tha — aur ab in orders ka kahin koi record nahi.',
-          },
+            explain: "Restore completed snapshot ka data laata hai; snapshot ke baad acknowledged writes is backup mein nahi hain. Local ACK cross-region snapshot completion nahi hai. Dead source se future writes restore nahi ho sakti. Snapshot existing data ka record hai, pending queue ka replacement nahi.",
+           choiceExplanations: ["Restore completed snapshot ka data laata hai; snapshot ke baad acknowledged writes is backup mein nahi hain.","Local ACK cross-region snapshot completion nahi hai.","Dead source se future writes restore nahi ho sakti.","Snapshot existing data ka record hai, pending queue ka replacement nahi."] },
         },
         {
           clock: '11.50 s · wapas chalu',
@@ -202,16 +187,11 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
           vars: { a: '0', b: '0', only: '0', ord: '—' },
           ask: {
             q: 'Is badlaav se kya sudhrega?',
-            choices: [
-              'Kam orders khoyenge (copy ab 3 ki jagah har 1 second par hai), aur wapsi tez hogi (B ko banana nahi, sirf app chalana hai). Par dono nuksaan zero nahi honge',
-              'Ab ek bhi order nahi khoyega',
-              'Orders bilkul fail nahi honge',
-              'Kuch nahi badlega',
-            ],
+            choices: ["Data window aur startup delay dono kam honge","Data loss zero; startup delay pehle jaisa rahega","Startup zero; data copy interval irrelevant hoga","Kharcha kam; existing RPO aur RTO wahi rahenge"],
             answer: 0,
             hint: 'Copy ke do chakkaron ke beech jo orders aate hain, woh kahan hote hain? Aur B ka app chalu hone mein waqt lagega ya nahi?',
-            explain: 'Copy jaldi-jaldi → "sirf A mein" wale orders kam. B ka DB pehle se hai → banana nahi padta. Par copy turant nahi hai, aur app ko chalu hone mein waqt lagta hai.',
-          },
+            explain: "Frequent copy recovery point fresh karti hai; prepared standby recovery steps kam karta hai, zero guarantee nahi. Async copy interval ab bhi loss window chhodta hai. Ready infrastructure data lag ko eliminate nahi karti. Warm resources aur frequent copying additional cost la sakte hain.",
+           choiceExplanations: ["Frequent copy recovery point fresh karti hai; prepared standby recovery steps kam karta hai, zero guarantee nahi.","Async copy interval ab bhi loss window chhodta hai.","Ready infrastructure data lag ko eliminate nahi karti.","Warm resources aur frequent copying additional cost la sakte hain."] },
         },
         {
           clock: '0.00–4.00 s',
@@ -253,16 +233,11 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
           vars: { a: 'gaya', b: '#1–#8 + naye', only: '1 order kho gaya (#9)', ord: '8 fail · 1 kho gaya' },
           ask: {
             q: 'Copy har second chal rahi thi. Phir bhi #9 kyun khoya?',
-            choices: [
-              'Region A ne #9 ko rakhte hi "ho gaya" keh diya — copy ka intezaar nahi kiya. Agli copy 5.00 s par jaati, par A 4.00 s par hi chala gaya',
-              'Copy mein bug tha',
-              'Region B ka DB bhara hua tha',
-              'Router ne #9 ko gira diya',
-            ],
+            choices: ["Local ACK copy se pehle tha; next copy miss hui","B ke full storage ne already copied order mita diya","Router ne successfully copied order rollback kar diya","Health check ne last completed backup replace kiya"],
             answer: 0,
             hint: '"Ho gaya" kab bola gaya: copy se pehle, ya copy ke baad?',
-            explain: 'Jab tak "ho gaya" copy se <b>pehle</b> bola jaata hai, kuch orders hamesha "raaste mein" honge. Copy tez karne se yeh ginti ghat-ti hai, zero nahi hoti. (Zero karne ka tareeka aur uski keemat: agla level.)',
-          },
+            explain: "Asynchronous acknowledgment aur next replication ke beech region failure loss window hai. Is scenario mein storage capacity failure nahi diya gaya. Traffic router stored data rollback nahi karta. Health detection backup content rewrite nahi karti.",
+           choiceExplanations: ["Asynchronous acknowledgment aur next replication ke beech region failure loss window hai.","Is scenario mein storage capacity failure nahi diya gaya.","Traffic router stored data rollback nahi karta.","Health detection backup content rewrite nahi karti."] },
         },
         {
           clock: 'asli raftaar',
@@ -299,16 +274,11 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
           say: 'Seth ki ek doosri branch bhi hai, doosre mohalle mein.',
           ask: {
             q: 'Agli baar dono nuksaan kam kaise honge?',
-            choices: [
-              'Munshi har entry thodi-thodi der mein doosri branch ke khate mein bhi likhe (khoya data kam), aur doosri branch pehle se khuli rahe (wapsi tez). Dono ka kharcha hai: ek munshi, aur ek chalti dukaan',
-              'Photocopy ko dukaan mein hi tijori mein rakhe',
-              'Khata likhna hi band kar de',
-              'Aag bujhane ka sylinder kharid le — bas itna kaafi hai',
-            ],
+            choices: ["Offsite entries aur ready branch; dono par kharcha","Local safe mein fresh photocopy; offsite branch nahi","Ready branch rakho; entries copy karna taal do","Fresh remote copy rakho; restore kabhi test mat karo"],
             answer: 0,
             hint: 'Pehla nuksaan kis cheez se bana: photocopy kitni purani thi? Doosra nuksaan kis cheez se: nayi dukaan kab tayyar thi?',
-            explain: 'Khoya data = doosri jagah ki copy kitni purani hai. Band rehne ka samay = doosri jagah kitni tayyar hai. Slow motion mein yahi dikha: 3 → 1 khoye orders, 7.50 → 4.50 second.',
-          },
+            explain: "Fresh offsite data loss reduce karta hai; prepared recovery location downtime reduce karti hai. Same failure domain ka safe region disaster coverage nahi deta. Infrastructure readiness data freshness ka substitute nahi. Untested recovery se achieved RTO unknown rahta hai.",
+           choiceExplanations: ["Fresh offsite data loss reduce karta hai; prepared recovery location downtime reduce karti hai.","Same failure domain ka safe region disaster coverage nahi deta.","Infrastructure readiness data freshness ka substitute nahi.","Untested recovery se achieved RTO unknown rahta hai."] },
         },
         {
           title: '4. In cheezon ke naam',
@@ -349,26 +319,16 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
     questions: [
       {
         q: '"Humara DR plan: har raat ka backup doosre region mein rakha jaata hai. Region chala jaaye, toh kya hoga?"',
-        choices: [
-          'Do alag nuksaan honge. Data: aakhri backup ke baad ka sab kuch jaayega — zyada se zyada ek din ka. Samay: doosre region mein kuch chal nahi raha, toh machines aur DB banana, phir restore — ghante. Pehle business se poochho ki kitna data aur kitna samay manzoor hai; phir dekho ki raat ka backup un lakshyon mein aata hai ya nahi',
-          'Kuch nahi — backup hai, toh turant wapas aa jaayenge',
-          'Sirf thoda dheema chalega',
-          'Backup se region wapas nahi aata, isliye backup bekaar hai',
-        ],
+        choices: ["Last backup se loss window; restore time alag naapo","Nightly copy se zero loss aur immediate recovery maano","Backup duration ko service recovery time maan lo","New region launch se latest acknowledged data maan lo"],
         answer: 0,
-        explain: 'Lab (samay chhota kiya hua): sirf backup → 16.3–16.4 s band, 50 orders kho gaye. Lagataar copy + B ka DB chalu → 6.4–6.5 s, 5 kho gaye.',
-      },
+        explain: "Daily snapshot up to roughly a day ka data gap chhod sakta hai; actual recovery deploy/restore/test steps par depend karti hai. Snapshot frequency continuous synchronous protection nahi. Backup creation aur end-to-end restore different operations hain. Fresh infrastructure source ka missing data invent nahi karti.",
+       choiceExplanations: ["Daily snapshot up to roughly a day ka data gap chhod sakta hai; actual recovery deploy/restore/test steps par depend karti hai.","Snapshot frequency continuous synchronous protection nahi.","Backup creation aur end-to-end restore different operations hain.","Fresh infrastructure source ka missing data invent nahi karti."] },
       {
         q: '"RTO aur RPO mein farak kya hai?"',
-        choices: [
-          'RTO samay ka lakshya hai: aafat ke baad kitni der mein wapas chalu. RPO data ka lakshya hai: kitne samay ka data khona manzoor. RTO is par nirbhar hai ki doosri jagah kitni tayyar hai; RPO is par ki doosri jagah ki copy kitni purani ho sakti hai. Dono business tay karta hai',
-          'Dono ek hi cheez ke do naam hain',
-          'RTO data ke liye hai, RPO samay ke liye',
-          'RTO backup ka size hai, RPO uski speed',
-        ],
+        choices: ["RTO downtime target; RPO recoverable data age","RTO recoverable data age; RPO downtime target","RTO restore throughput; RPO backup archive size","RTO replica count; RPO standby instance capacity"],
         answer: 0,
-        explain: 'Slow motion: sirf backup → band 7.50 s, khoye 3. Lagataar copy → band 4.50 s, khoya 1. Do alag number, do alag wajah.',
-      },
+        explain: "Business RTO se service recovery deadline aur RPO se acceptable data-loss time window define karta hai. Yeh dono definitions reverse karti hain. Throughput aur size implementation inputs hain, objective definitions nahi. Resources objectives meet karne ke means hain.",
+       choiceExplanations: ["Business RTO se service recovery deadline aur RPO se acceptable data-loss time window define karta hai.","Yeh dono definitions reverse karti hain.","Throughput aur size implementation inputs hain, objective definitions nahi.","Resources objectives meet karne ke means hain."] },
     ],
   },
   success: [

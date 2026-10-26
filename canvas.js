@@ -55,8 +55,10 @@ SD.renderers.design = function renderDesign(stage, arena, onDone) {
         <span class="dsn-slot-label">${slot.label}</span></div>
       ${slot.note ? `<div class="dsn-slot-note">${slot.note}</div>` : ''}`;
     const opts = SD.el('div', 'dsn-opts');
-    slot.options.forEach(o => {
+    SD.shuffle(slot.options).forEach(o => {
       const b = SD.el('button', 'dsn-opt', o.label);
+      b.dataset.slot = slot.id;
+      b.dataset.option = o.id;
       b.onclick = () => {
         if (board.classList.contains('reviewed')) return;
         picks[slot.id] = o.id;
@@ -75,7 +77,7 @@ SD.renderers.design = function renderDesign(stage, arena, onDone) {
     board.appendChild(card);
   });
 
-  const reviewBtn = SD.el('button', 'btn big', `Abhi ${slots.length} decision baaki`);
+  const reviewBtn = SD.el('button', 'btn big dsn-review', `Abhi ${slots.length} decision baaki`);
   reviewBtn.disabled = true;
   const btnrow = SD.el('div', 'btnrow center');
   btnrow.appendChild(reviewBtn);
@@ -86,6 +88,7 @@ SD.renderers.design = function renderDesign(stage, arena, onDone) {
 
   /* ---------- review ---------- */
   reviewBtn.onclick = () => {
+    if (reviewBtn.disabled || board.classList.contains('reviewed') || slots.some(slot => !slot.options.some(o => o.id === picks[slot.id]))) return;
     submitted++;
     let score = 0, good = 0;
     const rows = [];
@@ -119,7 +122,10 @@ SD.renderers.design = function renderDesign(stage, arena, onDone) {
     board.classList.add('reviewed');
 
     const pct = maxScore ? Math.max(0, Math.round((score / maxScore) * 100)) : 0;
-    const passed = score >= passMark;
+    /* Positive tradeoffs can be combined. A requirement-breaking decision
+       cannot be cancelled out by unrelated good decisions elsewhere. */
+    const unsafe = rows.filter(row => row.chosen.score <= 0);
+    const passed = score >= passMark && unsafe.length === 0;
     const verdicts = stage.verdicts || {};
     const verdict = passed
       ? (score === maxScore ? (verdicts.great || 'Har decision sahi. Yeh design production mein tikega.')
@@ -131,7 +137,7 @@ SD.renderers.design = function renderDesign(stage, arena, onDone) {
         <div class="dsn-score">${score} <span>/ ${maxScore}</span></div>
         <div class="dsn-bar"><div class="dsn-bar-fill" style="width:${pct}%"></div></div>
         <div class="dsn-verdict">${passed ? '✅' : '⚠️'} ${verdict}</div>
-        <div class="dsn-detail">${good}/${slots.length} decisions best-in-class · pass mark ${passMark}</div>
+        <div class="dsn-detail">${good}/${slots.length} decisions best-in-class · pass mark ${passMark}${unsafe.length ? ` · ${unsafe.length} decision scenario ki requirement todte hain; pehle unhe theek karo` : ''}</div>
       </div>`;
 
     btnrow.innerHTML = '';
@@ -155,9 +161,12 @@ SD.renderers.design = function renderDesign(stage, arena, onDone) {
       };
       btnrow.appendChild(again);
     }
-    const nextBtn = SD.el('button', 'btn big' + (passed ? '' : ' ghost'), passed ? 'Aage badho →' : 'Chhodo, aage badho →');
-    nextBtn.onclick = () => onDone({ firstTry: firstTryGood, total: slots.length });
-    btnrow.appendChild(nextBtn);
+    if (passed) {
+      const nextBtn = SD.el('button', 'btn big dsn-next', 'Aage badho →');
+      let continued = false;
+      nextBtn.onclick = () => { if (continued) return; continued = true; onDone({ firstTry: firstTryGood, total: slots.length }); };
+      btnrow.appendChild(nextBtn);
+    }
     reportEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 };

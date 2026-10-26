@@ -118,15 +118,10 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Micro mode mein total kaam ~50 video-seconds/sec par kyun atak gaya — chahe streams 5 hon ya 100?',
-        choices: [
-          'Orchestrator ki limit 200 transitions/s ÷ 4 transitions per video-second = 50 — busiest path par ek managed service ki chhat poore system ki chhat ban gayi',
-          'Store dheema tha',
-          'Detectors dheeme the',
-          'Network full tha',
-        ],
+        choices: ["Transition budget per work unit","Detector CPU without measurements","Object storage bytes without model","Network only from stream count"],
         answer: 0,
         explain: '"Pahunch hi nahi paaya" — throttle se pehle hi. Aur har frame 3 baar network par padha gaya.',
-      },
+       choiceExplanations: ["\"Pahunch hi nahi paaya\" — throttle se pehle hi. Aur har frame 3 baar network par padha gaya.","Labka known constraint orchestration transition rate hai.","Storage possible bottleneck hai par given200/4limit direct ceiling deta hai.","Stream count alone network saturation establish nahi."] },
       lesson: 'Har boundary ke liye poochho: kitna data paar karta hai aur kitni baar? Busiest path par boundary = sabse bada bill.',
     },
     {
@@ -157,26 +152,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Hamara ML pipeline har frame ko S3 se detectors tak bhejta hai. Bill aasman par."',
-        choices: [
-          'Busiest path par boundary hatao — decode + detectors ek process mein, frames memory mein; scale ke liye poori pipeline ki copies',
-          'S3 ki jagah sasta storage',
-          'Frames compress karo',
-          'Detectors kam karo',
-        ],
+        choices: ["Hot frame path co-locate, units replicate","Only storage vendor rate badlo","Only frames ka encoding badlo","All detectors permanently remove karo"],
         answer: 0,
-        explain: 'Prime Video: 90%+ bill kam.',
-      },
+        explain: "Prime Video case ek audio/video quality-monitoring subsystem ka redesign tha, poori streaming service ka universal monolith result nahi. Frame handoff/orchestration cost profile karke localize ki gayi; reported savings us case tak hain.",
+       choiceExplanations: ["Prime Video case ek audio/video quality-monitoring subsystem ka redesign tha, poori streaming service ka universal monolith result nahi. Frame handoff/orchestration cost profile karke localize ki gayi; reported savings us case tak hain.","Price change repeated boundary work/coordination overhead retain karta hai.","Compression tradeoff hai; high frequency handoff fir bhi rehta hai.","Detectors remove product correctness contract badal sakta hai."] },
       {
         q: 'Interviewer: "Step Functions kab sahi hai?"',
-        choices: [
-          'Business workflows — kam transitions (checkout ~20 poori zindagi), human steps, retries; high-frequency data path ke liye nahi',
-          'Hamesha',
-          'Kabhi nahi',
-          'Sirf video ke liye',
-        ],
+        choices: ["Bounded orchestration, workflow economics","High-rate frames, no transition budget","Every pixel ka separate workflow","Human approvals ko manual state only"],
         answer: 0,
         explain: 'Tool galat nahi tha — galat jagah laga tha.',
-      },
+       choiceExplanations: ["Tool galat nahi tha — galat jagah laga tha.","Service quotas aur transition cost high frequency path ko constrain kar sakte hain.","Extremely fine-grained work orchestration overhead magnify karta hai.","Workflow engine retries/audit/longwait manage kar sakta hai."] },
     ],
   },
   success: [
@@ -246,15 +231,10 @@ copy-type 2: av-sync (2.5), freeze (2), caption-sync (2), audio-clipping (1.5)</
       ],
       observe: {
         q: '2× copies = lagbhag 2× kaam. Yeh linear scaling kis shart par tiki hai?',
-        choices: [
-          'Streams independent hain — koi shared state/join/coordination nahi; router sirf baant-ta hai',
-          'Copies ek dusre se frames share karti hain',
-          'Monolith hamesha linear scale karta hai',
-          'Bade instances',
-        ],
+        choices: ["Independent units aur spare capacity","All copies ek shared lock wait karein","Router sirf one copy ko work de","Same downstream already saturated ho"],
         answer: 0,
-        explain: 'Jahan independence nahi, wahan copies bhi linear nahi hongi.',
-      },
+        explain: "Independent stream work, enough hardware aur no shared bottleneck ho toh copies throughput badha sakti hain. Linear gain measured workload/saturation range tak hai; shared storage/network/coordination cap de sakte hain.",
+       choiceExplanations: ["Independent stream work, enough hardware aur no shared bottleneck ho toh copies throughput badha sakti hain. Linear gain measured workload/saturation range tak hai; shared storage/network/coordination cap de sakte hain.","Shared serialized state scaling limit ban sakti hai.","Unbalanced routing new capacity use nahi karegi.","Downstream capacity fixedho toh extra copies linear throughput nahi detin."] },
       lesson: 'Independent units + patla router = monolith bhi horizontally scale.',
     },
     {
@@ -263,26 +243,16 @@ copy-type 2: av-sync (2.5), freeze (2), caption-sync (2), audio-clipping (1.5)</
       questions: [
         {
           q: 'Models RAM mein fit nahi hue toh Prime Video ne kya kiya?',
-          choices: [
-            'Same code ki copies, par config se alag detector subsets load — dobara services mein nahi toda',
-            'Har detector ki alag microservice',
-            'Bade instances',
-            'Detectors hata diye',
-          ],
+          choices: ["Config se detector subsets specialize","Video frames ko global DB join do","All copies same oversized set load","Model overflow ko retries se solve"],
           answer: 0,
           explain: '"Replication se scale, configuration se specialize."',
-        },
+         choiceExplanations: ["\"Replication se scale, configuration se specialize.\"","Global joins RAM footprint problem ka direct solution nahi.","Same oversized set same fit failure repeat karega.","Retries resource fit constraint remove nahi kartin."] },
         {
           q: 'Bill ke alawa asli jeet kya thi?',
-          choices: [
-            'Ab saare streams monitor karna afford ho gaya — maqsad hi economically mumkin hua',
-            'Deploy tez hue',
-            'Team chhoti hui',
-            'Latency kam',
-          ],
+          choices: ["Affordable monitoring coverage badhi","Bill se semantic accuracy prove hui","Costs gire toh ops risk zero hua","All architecture choices universal hue"],
           answer: 0,
           explain: 'Architecture ne product ka dayra badha diya.',
-        },
+         choiceExplanations: ["Architecture ne product ka dayra badha diya.","Cheaper execution model accuracy prove nahi karta.","Cost improvement availability/rollout risks eliminate nahi.","Workload-specific success universal pattern nahi banata."] },
       ],
     },
   ],
@@ -292,26 +262,16 @@ copy-type 2: av-sync (2.5), freeze (2), caption-sync (2), audio-clipping (1.5)</
     questions: [
       {
         q: 'Interviewer: "Monolith scale nahi hota, isliye microservices." Sahi?',
-        choices: [
-          'Nahi — agar kaam ki ikaaiyan independent hain (tenants, streams, jobs), poori pipeline ki copies + router se linear scale; tukde ownership ke liye karo, scale ke liye nahi',
-          'Haan, bilkul',
-          'Monolith sirf vertically scale',
-          'Sirf read replicas se',
-        ],
+        choices: ["Independent work ko copies mein baanto","Deployment unit se scaling decide","Every monolith sirf one host use","More services se linear gain maano"],
         answer: 0,
         explain: 'Lab: 1 → 4 copies = 0.88× → 3.47×.',
-      },
+       choiceExplanations: ["Lab: 1 → 4 copies = 0.88× → 3.47×.","Deployment boundary alone workload parallelism define nahi karti.","Monolith instances multiple hosts par replicate ho sakti hain.","Services coordination/downstream bottlenecks gain limit karte hain."] },
       {
         q: 'Interviewer: "Ek copy mein saare models nahi aate."',
-        choices: [
-          'Copy-types banao — same binary, config se model subsets; router stream/kaam ko sahi copy-type par bheje',
-          'Har model alag service',
-          'Model chhote karo sabke',
-          'Swap memory',
-        ],
+        choices: ["Subset config aur capability routing","Same full modelset har node par","Swap ko predictable latency maano","Every request par all models reload"],
         answer: 0,
         explain: 'Bin packing by config.',
-      },
+       choiceExplanations: ["Bin packing by config.","Same full set memory constraint repeat karta hai.","Swapping latency variance aur throughput cost la sakti hai.","Per-request reload startup cost ko hotpath par laata hai."] },
     ],
   },
   success: [
@@ -419,26 +379,16 @@ copy-type 2: av-sync (2.5), freeze (2), caption-sync (2), audio-clipping (1.5)</
     questions: [
       {
         q: 'Interviewer: "Hum microservices mein kyun jaayein?"',
-        choices: [
-          'Agar teams ko independent build/deploy/operate chahiye aur alag scaling/blast radius — tab; performance ke liye nahi. Har boundary ka tax (size × frequency) pehle naapo',
-          'Kyunki modern hai',
-          'Kyunki tez hota hai',
-          'Kyunki Amazon karta hai',
-        ],
+        choices: ["Ownership aur isolation boundaries","Only modern naming ka benefit","Every network hop faster hoga","Company precedent ko sole reason"],
         answer: 0,
         explain: 'Vogels: architecture jo workload fit kare.',
-      },
+       choiceExplanations: ["Vogels: architecture jo workload fit kare.","Naming benefit measurable architecture goal nahi.","Network hop serialization, latency aur failure cost add kar sakta hai.","Other company constraints tumhari workload ka proof nahi."] },
       {
         q: 'Interviewer: "Monolith mein merge ki keemat?"',
-        choices: [
-          'Coupled deploys, bada blast radius, capacity planning khud, kamzor isolation, config ki galtiyan — jaan-boojh ke liya sauda',
-          'Koi keemat nahi',
-          'Sirf deploy time',
-          'Code bada',
-        ],
+        choices: ["Deployment aur failure coupling assess","Merge se all operations simple","One process se isolation stronger","Config se all resource conflicts solve"],
         answer: 0,
         explain: 'Har faisle ka bill hota hai — naam lo.',
-      },
+       choiceExplanations: ["Har faisle ka bill hota hai — naam lo.","Fewer boundaries ke saath deploy coupling risk rehta hai.","Shared process faults aur resources couple kar sakta hai.","Configuration helps, hardware/process isolation ki universal replacement nahi."] },
     ],
   },
   success: [

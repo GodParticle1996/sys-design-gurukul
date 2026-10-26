@@ -222,8 +222,7 @@ writes ≈ reads     →  har user action 20 database writes mein phatta hai
      <p>Reddit ke har object ke liye do tables the:</p>
      <pre>thing table   id · ups · downs · created · deleted        ← jin par SORT/FILTER hota hai
 data  table   (thing_id, key, value)                     ← title, url, author, subreddit …</pre>
-     <p>Kyun? 2010 ke aas-paas bade Postgres table par <code>ALTER TABLE</code> poori
-     table lock kar deta tha, aur Reddit har hafte naye features de raha tha. Toh
+     <p>Kyun? Historical setup mein kuch <code>ALTER TABLE</code> operations lamba lock ya rewrite la sakte the; har operation aisa nahi, aur Reddit har hafte naye features de raha tha. Toh
      Reddit ne aisa model banaya jisme naya attribute jodna = <b>data table mein
      ek nayi key likhna</b>, migration bilkul nahi.</p>
      <p>Keemat turant dikhi: id se uthana aasan raha, par kisi attribute par
@@ -272,10 +271,11 @@ data  table   (thing_id, key, value)                     ← title, url, author,
       ],
     },
     {
+      workload: {"reads":40,"fanout":20},
       type: 'tradeoff',
       title: 'Precompute ka ganit — kab faayda, kab ghaata',
       instructions: 'Teen knob ghumao. Read/write ratio badlo aur dekho precompute kab jeetta hai.',
-      goal: 'Aisi setting dhoondho jahan read p99 <b>50 ms se kam</b> ho AUR roz ka CPU kharcha <b>1,00,000 CPU-second se kam</b> ho.',
+      goal: "Har vote par kam se kam <b>40 reads</b> aur <b>20 affected listings</b> handle karo. Read p99 <b>50 ms ya kam</b> aur daily CPU budget <b>1,00,000 CPU-second ya kam</b> rakho.",
       scenario: `Roz <b>10 lakh vote</b> aate hain. Har vote kai answers ko galat kar
         deta hai (score, hot list, top-week, controversial, karma, caches). Tumhe
         tay karna hai: answer <b>vote ke waqt</b> banega (precompute) ya
@@ -319,15 +319,10 @@ data  table   (thing_id, key, value)                     ← title, url, author,
         <b>apne ratio</b> se lo.`,
       quiz: {
         q: 'Ek naya product hai jahan har user din mein 30 baar likhta hai aur sirf 2 baar padhta hai. Reddit wala precompute model kaisa rahega?',
-        choices: [
-          'Bura — har write 20 updates mein phategi aur reads itne hain hi nahi ki woh kharcha wasool ho',
-          'Achha — precompute hamesha reads tez karta hai',
-          'Farq nahi padta, dono ek jaise hain',
-          'Achha, bas queue thodi badi kar do',
-        ],
+        choices: ["Write cost ke liye reads bahut kam hain","Read latency ke liye writes mehengi karo","Queue se write amplification ghatao","Reads par bhi precomputed copies banao"],
         answer: 0,
-        explain: 'Precompute ek exchange hai: write par extra kaam karo taaki read muft ho. Jab reads hi kam hain, exchange ghaate ka hai.',
-      },
+        explain: "Precompute read path ka work kam karta hai, free nahi. Given write-heavy workload mein maintenance cost read savings se zyada ho sakti hai; dono rates aur fanout measure karo.",
+       choiceExplanations: ["Precompute read path ka work kam karta hai, free nahi. Given write-heavy workload mein maintenance cost read savings se zyada ho sakti hai; dono rates aur fanout measure karo.","Reads kam hain, isliye unki saving extra writes ko justify nahi karti.","Queue timing badalti hai; updates ki sankhya nahi.","Read par materialization write-heavy economics ko khud nahi sudharta."] },
     },
     {
       type: 'quiz',
@@ -335,48 +330,28 @@ data  table   (thing_id, key, value)                     ← title, url, author,
       questions: [
         {
           q: 'Reddit ne thing + data model kyun banaya tha?',
-          choices: [
-            'Kyunki bade Postgres table par ALTER TABLE lock leta tha aur Reddit lagatar naye features de raha tha',
-            'Kyunki key-value store SQL se hamesha tez hota hai',
-            'Kyunki Postgres mein JOIN kaam nahi karta',
-            'Kyunki disk bachana tha',
-          ],
+          choices: ["Schema changes ko attributes se alag rakhna","Joins ko application se hata dena","Har entity ko disk par compress karna","Postgres queries ko cache se serve karna"],
           answer: 0,
-          explain: 'Model ka maqsad tha: naya attribute jodne ke liye migration na karni pade. 2010 ke Postgres mein bade table ka schema change poori table rok deta tha.',
-        },
+          explain: "Historical thing/data model flexible attributes aur schema-change operations ki cost ke liye tha. Har ALTER TABLE full rewrite nahi karta: operation/version/locks alag hain; modern PostgreSQL constant-default ADD COLUMN ko rewrite ke bina kar sakta hai.",
+         choiceExplanations: ["Historical thing/data model flexible attributes aur schema-change operations ki cost ke liye tha. Har ALTER TABLE full rewrite nahi karta: operation/version/locks alag hain; modern PostgreSQL constant-default ADD COLUMN ko rewrite ke bina kar sakta hai.","Flexible attributes migrations ka pressure kam karte the; har join hatana iska maqsad nahi tha.","Compression is model ka principal tradeoff nahi tha.","Cache read acceleration alag layer hai."] },
         {
           q: 'Us model ki sabse badi keemat kya thi?',
-          choices: [
-            'Kisi attribute par filter/sort karna mehenga ho gaya — value row ke andar chhupi thi, column nahi thi',
-            'Data kho jaata tha',
-            'Writes slow ho gaye',
-            'Comment tree nahi ban sakta tha',
-          ],
+          choices: ["Attribute filter aur sort mehenga hona","Attribute write har baar reject hona","Comment parent relation kho jaana","Id lookup har baar full scan hona"],
           answer: 0,
           explain: 'Id se uthana sasta raha, par "sabse zyada score wale posts dikhao" mehenga ho gaya. Isiliye sort wale fields wapas thing table ke indexed columns bane.',
-        },
+         choiceExplanations: ["Id se uthana sasta raha, par \"sabse zyada score wale posts dikhao\" mehenga ho gaya. Isiliye sort wale fields wapas thing table ke indexed columns bane.","Model writes accept karta tha; flexible attributes querying mehengi banate hain.","Parent references se tree ab bhi represent ho sakta hai.","Known id lookup aur arbitrary attribute search alag access patterns hain."] },
         {
           q: '"Types ke beech koi JOIN nahi" niyam ne kya unlock kiya?',
-          choices: [
-            'Har type apne alag database cluster par ja saka — links, comments, aur votes alag-alag',
-            'Query planner tez ho gaya',
-            'Cassandra ki zaroorat khatam ho gayi',
-            'Schema migrations aasan ho gaye',
-          ],
+          choices: ["Entity types ko alag clusters par rakhna","Saare queries ko ek cache mein rakhna","Har type ka schema ek saath badalna","Cross-type writes ko atomic bana dena"],
           answer: 0,
           explain: 'Join hota toh clusters ko ek doosre se baat karni padti. Join hai hi nahi, isliye type se sharding mumkin hua — aur votes, jinka volume sabse zyada tha, ko apna cluster mil gaya.',
-        },
+         choiceExplanations: ["Join hota toh clusters ko ek doosre se baat karni padti. Join hai hi nahi, isliye type se sharding mumkin hua — aur votes, jinka volume sabse zyada tha, ko apna cluster mil gaya.","Cache placement aur database join boundary alag decisions hain.","Alag ownership global schema migration ki shart kam karta hai.","Cluster separation cross-type atomicity khud nahi deta."] },
         {
           q: 'Dikhne wala score jaan-boojh kar thoda fuzzed kyun rakha gaya tha?',
-          choices: [
-            'Taaki vote manipulation karne wale apne votes ka asar naap na sakein',
-            'Taaki database ka load kam ho',
-            'Taaki cache invalidation na karni pade',
-            'Taaki ranking formula chhupi rahe',
-          ],
+          choices: ["Vote manipulation ka feedback chhupana","Ranking calculation ka CPU bachana","Cache expiry ko predict karna","Vote writes ko batch mein badalna"],
           answer: 0,
           explain: 'Ek hi fact ke do jawab, do alag standards: ranking wala score exact (warna order galat ho jaayega), screen wala score sirf "kareeb".',
-        },
+         choiceExplanations: ["Ek hi fact ke do jawab, do alag standards: ranking wala score exact (warna order galat ho jaayega), screen wala score sirf \"kareeb\".","Display fuzzing ranking CPU bachane ka mechanism nahi.","Cache expiry display score noise se solve nahi hoti.","Fuzzed display aur write batching independent hain."] },
       ],
     },
     {
@@ -397,15 +372,10 @@ data  table   (thing_id, key, value)                     ← title, url, author,
       ],
       observe: {
         q: 'Async mode mein vote ka p50 15 ms se 3 ms par aa gaya, par dono modes mein 3000 answers repair hue. Kaam kahan gaya?',
-        choices: [
-          'Kaam khatam nahi hua — wahi 20 updates ab worker background mein kar raha hai, user ke jaane ke baad',
-          'Kaam khatam ho gaya, async mode updates skip kar deta hai',
-          'Database tez ho gaya kyunki queue use hui',
-          'Reads ne kaam apne upar le liya',
-        ],
+        choices: ["Wahi updates worker ne baad mein kiye","Queue ne redundant updates hata diye","Reads ne ranking khud repair kar li","Database ne saare updates skip kiye"],
         answer: 0,
         explain: 'Tool dono modes mein 3000 repairs ginta hai. Farq sirf itna hai ki kaun intezaar karta hai — async mein user nahi, worker karta hai.',
-      },
+       choiceExplanations: ["Tool dono modes mein 3000 repairs ginta hai. Farq sirf itna hai ki kaun intezaar karta hai — async mein user nahi, worker karta hai.","Output dono modes mein same repair count dikhata hai; deduplication nahi hui.","Lab mein repair worker ka kaam hai, reads ka nahi.","Async response ka matlab writes skip hona nahi."] },
       lesson: 'Async ka matlab "kam kaam" nahi hota. Async ka matlab hai <b>kaam ka waqt badal dena</b> — user ke saamne se hata kar background mein.',
     },
   ],
@@ -415,37 +385,22 @@ data  table   (thing_id, key, value)                     ← title, url, author,
     questions: [
       {
         q: 'Interviewer: "Tumhare feed ka p99 800 ms hai kyunki har request par ranking calculate hoti hai. Pehla kadam?"',
-        choices: [
-          'Ranking ko write ke waqt calculate karke store karo, aur har naye event par usi stored answer ko repair karo',
-          'Server bade kar do',
-          'Har request par calculate karo par 5 second ka cache laga do',
-          'Ranking formula simple kar do',
-        ],
+        choices: ["Ranking ko events par maintain karo","Read replicas se ranking karwao","Request timeout ko bada kar do","Har request par ranking repeat karo"],
         answer: 0,
         explain: 'Yahi Reddit ka core move hai: answer ko read ke waqt banane ke bajaye write ke waqt banao aur maintain karo. Cache madad karta hai par pehle sawaal yeh hai ki jawab banta kab hai.',
-      },
+       choiceExplanations: ["Yahi Reddit ka core move hai: answer ko read ke waqt banane ke bajaye write ke waqt banao aur maintain karo. Cache madad karta hai par pehle sawaal yeh hai ki jawab banta kab hai.","Replicas expensive calculation ko sirf distribute karte hain.","Timeout badhana 800ms computation ko kam nahi karta.","Repeated ranking read-heavy load ka root cost rakhti hai."] },
       {
         q: 'Interviewer: "Ek hi fact ke do alag jawab kab theek hai?"',
-        choices: [
-          'Jab dono jawabon ka correctness standard alag ho — jaise ranking ka score exact aur screen par dikhta score sirf kareeb',
-          'Kabhi theek nahi, data hamesha ek hi hona chahiye',
-          'Sirf tab jab do teams alag ho',
-          'Sirf analytics mein',
-        ],
+        choices: ["Alag views ki accuracy contract ho","Har replica apna sach choose kare","Har team apna score publish kare","Sirf analytics ko duplicates dikhein"],
         answer: 0,
         explain: 'Reddit internal score exact rakhta tha (ranking usi par tiki thi) aur bahar fuzzed dikhata tha. Pehle poochho: is jawab ko kitna sahi hona hai?',
-      },
+       choiceExplanations: ["Reddit internal score exact rakhta tha (ranking usi par tiki thi) aur bahar fuzzed dikhata tha. Pehle poochho: is jawab ko kitna sahi hona hai?","View contract intentional hai; uncontrolled replica disagreement alag defect hai.","Team boundary correctness requirement define nahi karti.","Approximate views analytics ke bahar bhi valid ho sakte hain."] },
       {
         q: 'Interviewer: "Tum queue ko kai chhoti queues mein kyun baantoge?"',
-        choices: [
-          'Taaki alag-alag kaam ke workers ek hi hot row par lock ke liye na ladein',
-          'Taaki messages jaldi delete ho',
-          'Kyunki ek queue ki size limit hoti hai',
-          'Taaki ordering guarantee mil jaaye',
-        ],
+        choices: ["Hot-row contention ko isolate karna","Queue splitting se ordering paana","Message retention ko hata dena","Saare workers ko ek saath badhana"],
         answer: 0,
         explain: 'Reddit ne votes, listings aur karma/cache ki alag queues rakhin. Alag queues = ek popular post par takrav kam.',
-      },
+       choiceExplanations: ["Reddit ne votes, listings aur karma/cache ki alag queues rakhin. Alag queues = ek popular post par takrav kam.","Separate queues apne aap per-key ordering guarantee nahi kartin.","Retention aur shared-row lock contention alag concerns hain.","Workers badhane se ek hot row par contention badh sakta hai."] },
     ],
   },
   success: [
@@ -498,7 +453,7 @@ SD.registerLevels('stories', [
     'Kab tumhara stored answer apne aap purana ho jaata hai',
   ],
   lesson: [
-    `<h3>🧮 Formula jo Reddit ne khud open source ki</h3>
+    `<h3>🧮 Historical open-source hot formula ka positive-score example</h3><p>Yeh archived Reddit implementation ka simplified positive net-score case hai, current proprietary ranking ka claim nahi. Full version zero/negative score ke liye absolute value, minimum aur sign handle karti hai.</p>
      <pre>rank = log10(score) + t_submitted / 45000</pre>
      <p>Do hisse hain. Pehla hissa <b>popularity</b> hai (log10 par), doosra hissa
      <b>post kab submit hua</b> (Reddit ke apne epoch se seconds, 45,000 se bhaag).</p>
@@ -518,14 +473,14 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
      <table>
        <tr><th>Reddit (submission time)</th><th>Agar current time hota</th></tr>
        <tr><td>Ghadi chalti rahe, rank <b>nahi</b> badalta</td><td>Har second har post ka rank badal jaata</td></tr>
-       <tr><td>Rank sirf <b>vote</b> aane par recalculate hota hai</td><td>Har request par dobara calculate karna padta</td></tr>
-       <tr><td>Stored listing mahino sahi rehti hai</td><td>Stored listing seconds mein purani</td></tr>
+       <tr><td>Rank sirf <b>vote</b> aane par recalculate hota hai</td><td>Age-dependent ordering ko timed refresh ya invalidation chahiye ho sakti</td></tr>
+       <tr><td>Relevant inputs aur listing membership same hon toh order stable</td><td>Lab ke age-decay example mein stored ordering stale ho sakti</td></tr>
      </table>
      <p class="tip">🎯 Yahi is video ka sabse bada system-design sabak hai:
      <b>apna derived data aisa design karo ki woh pade-pade galat na ho jaaye</b>.
      Hacker News ka rank waqt ke saath decay karta hai — isiliye HN ko rebuild karna
      padta hai. Reddit ka nahi karta — isiliye Reddit maintain karta hai.</p>
-     <h3>🆕 Naya post aaye toh?</h3>
+     <p><b>Contract pehle:</b> har now() term relative order nahi badalti; sab scores mein common additive offset cancel ho sakta hai. Required time decay ko sirf compute bachane ke liye remove mat karo. Yeh lab ek age-dependent formula compare karta hai, mathematical equivalence prove nahi karta.</p><h3>🆕 Naya post aaye toh?</h3>
      <p>Reddit intezaar nahi karta ki koi subreddit khole. Submit hote hi post ko
      har relevant listing mein uski jagah par daal diya jaata hai — hot, new, top,
      top-of-week, top-of-year, controversial… lagbhag <b>15 sort orders</b>.</p>`,
@@ -576,7 +531,7 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
       type: 'tradeoff',
       title: 'Rank formula lab — decay kis cheez par ho',
       instructions: 'Formula badlo aur dekho ki stored listing kitni der sahi rehti hai.',
-      goal: 'Aisi setting dhoondho jahan roz ka rebuild kaam <b>1 lakh se kam</b> ho, listing <b>90% se zyada</b> waqt sahi rahe, aur nayi post ko purani post se jeetne ka mauka mile (freshness weight 0 na ho).',
+      goal: "Daily rebuild work <b>1 lakh ya kam</b>, listing correctness <b>90% ya zyada</b>, aur freshness weight <b>0 se zyada</b> rakho. Listing ka bounded size choose karna valid product policy hai.",
       scenario: `1 lakh active posts, roz 10 lakh votes. Tumhe tay karna hai ki rank
         formula <b>submission time</b> par chale ya <b>current time</b> par, aur
         freshness kitni strong ho.`,
@@ -619,15 +574,10 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
         bina limit ke badhta jaayega.`,
       quiz: {
         q: 'Reddit purane version mein listing sirf ~1000 entries tak jaati thi. Iska asli kaaran?',
-        choices: [
-          'Stored answer ko bounded rakhna — bounded storage aur har repair ka bounded kharcha',
-          'Pagination ka code likhna mushkil tha',
-          'Cassandra 1000 se zyada rows nahi rakh sakta',
-          'Users 1000 se aage scroll nahi karte the',
-        ],
+        choices: ["Bounded listing repair ka cost","Database ki row limit se bachna","Cursor pagination ko avoid karna","Har old post ko archive kar dena"],
         answer: 0,
         explain: '"Listing ek product hai jiska spec hai" — spec mein upper bound daal do, toh storage bhi predictable aur repair bhi predictable.',
-      },
+       choiceExplanations: ["\"Listing ek product hai jiska spec hai\" — spec mein upper bound daal do, toh storage bhi predictable aur repair bhi predictable.","1000 product bound tha; database ki universal row limit nahi.","Bounded lists cursor pagination ke saath bhi chalti hain.","Listing se bahar hona post deletion ya archive ka proof nahi."] },
     },
     {
       type: 'docker',
@@ -646,15 +596,10 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
       ],
       observe: {
         q: 'CLOCK=now mein bina kisi naye vote ke bhi stored listing galat ho gayi. Kyun?',
-        choices: [
-          'Formula ka ek input (current time) apne aap badalta rehta hai, isliye stored answer bina kisi event ke purana ho jaata hai',
-          'Service ne listing delete kar di',
-          'Votes background mein aate rahe',
-          'Cassandra ne data expire kar diya',
-        ],
+        choices: ["Clock input bina event ke badal gaya","Listing cache ne votes hata diye","Workers ne ranking update kar di","Storage ne purane scores drop kiye"],
         answer: 0,
-        explain: 'Stored answer tabhi tikta hai jab uske saare inputs sirf EVENTS par badlein. Ghadi ek aisa input hai jo bina kisi event ke badalta rehta hai.',
-      },
+        explain: "Is lab ka age-dependent formula clock ke saath relative ordering badal sakta hai. Har time term aisa nahi: sab items mein same additive now() offset ranking order cancel kar sakta hai. Actual formula aur freshness contract inspect karo.",
+       choiceExplanations: ["Is lab ka age-dependent formula clock ke saath relative ordering badal sakta hai. Har time term aisa nahi: sab items mein same additive now() offset ranking order cancel kar sakta hai. Actual formula aur freshness contract inspect karo.","CLOCK=now formula invalidation ka issue hai, vote deletion ka nahi.","Question mein naye events nahi; worker updates ka evidence nahi.","Expiry ke bina bhi time-dependent stored score stale ho sakta hai."] },
       lesson: 'Derived data ka niyam: agar formula mein <b>now()</b> hai, toh tum us jawab ko store nahi kar sakte — sirf rebuild kar sakte ho.',
     },
   ],
@@ -664,26 +609,16 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
     questions: [
       {
         q: 'Interviewer: "Tumhare feed ka ranking score har 30 second par poori tarah rebuild hota hai. Kaise bachoge?"',
-        choices: [
-          'Formula se current time hatao — score ko sirf events (vote, view, purchase) par badalne do, phir score store karke maintain karo',
-          'Rebuild ko 5 minute par le jao',
-          'Rebuild ko GPU par chalao',
-          'Score ko cache kar lo 30 second ke liye',
-        ],
+        choices: ["Event-based score contract dekho","Rebuild frequency ko aur badha do","Har rebuild ko naya cache do","Saare ranking jobs serialize karo"],
         answer: 0,
-        explain: 'Cache aur bada interval dono sirf dard ko aage khiskate hain. Asli fix formula ke input badalna hai: waqt ki jagah event.',
-      },
+        explain: "Pehle ranking/freshness contract aur expensive dependency samjho. Event-based equivalent score allowed ho toh maintain karo; required time decay ko bina product approval hataana wrong optimization hai. Scheduled or incremental refresh bhi valid ho sakta hai.",
+       choiceExplanations: ["Pehle ranking/freshness contract aur expensive dependency samjho. Event-based equivalent score allowed ho toh maintain karo; required time decay ko bina product approval hataana wrong optimization hai. Scheduled or incremental refresh bhi valid ho sakta hai.","Frequency badhane se same global recomputation aur zyada hoti hai.","Cache har rebuild ka cost ya continuously changing input nahi hatata.","Serial execution overlap rok sakta hai; computation ka source nahi."] },
       {
         q: 'Interviewer: "Freshness chahiye par rebuild nahi chahiye. Kaise?"',
-        choices: [
-          'Freshness ko submission time ke roop mein score ke andar bake kar do — naya post shuru se hi upar hota hai, purane ko jeetne ke liye ×10 votes chahiye',
-          'Har raat pura index rebuild kar lo',
-          'Sirf pichhle 24 ghante ke post dikhao',
-          'Freshness client side par calculate karo',
-        ],
+        choices: ["Submission time se freshness encode karo","Current time se har score rebuild karo","Har client apna order calculate kare","Purane posts ko fixed TTL par hatao"],
         answer: 0,
-        explain: 'Reddit ne decay ko background job banane ke bajaye formula ke andar daal diya: naye post ko shuruaati advantage, purane ko upar rehne ke liye exponentially zyada votes.',
-      },
+        explain: "Historical positive-score hot formula submission time se newer posts ko relative advantage deti hai. Yeh arbitrary age-dependent ranking ka drop-in equivalent nahi; product ranking contract match karna chahiye.",
+       choiceExplanations: ["Historical positive-score hot formula submission time se newer posts ko relative advantage deti hai. Yeh arbitrary age-dependent ranking ka drop-in equivalent nahi; product ranking contract match karna chahiye.","Is event-maintained formula mein continuous time input rebuild demand rakhega.","Client ordering server ke canonical ranking contract ko badalta hai.","TTL filtering aur smooth freshness ranking alag product choices hain."] },
     ],
   },
   success: [
@@ -767,7 +702,7 @@ SD.registerLevels('stories', [
      <p>Aur jab tree bhi bahut bada ho jaaye? Reddit poora tree nahi bhejta — top
      comments bhejta hai aur "load more comments" button deta hai. <b>Bada jawab
      tukdon mein bhejo.</b></p>
-     <h3>🎯 "Best" sort — percentage ka dhoka</h3>
+     <h3>🎯 Historical Wilson "Best" sort — percentage ka dhoka</h3>
      <p>Do comments:</p>
      <pre>A:   1 upvote,   0 downvote   →  100% positive  (sample = 1)
 B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
@@ -788,8 +723,7 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
      interval chauda hai — do-chaar upvote aate hi lower bound tezi se upar chadhta hai.
      System <b>khud ko theek</b> karta jaata hai.</p>
      <p class="tip">🎯 Posts ka sawaal hai "abhi kya interesting hai" (waqt maayne rakhta
-     hai). Comments ka sawaal hai "kaunsa reply sabse bharosemand hai" (waqt ka koi role
-     nahi). <b>Do alag sawaal = do alag algorithm.</b> Ek hi formula har jagah mat thoko.</p>`,
+     hai). Is historical best-sort ka sawaal hai "vote confidence ke hisaab se kaunsa reply strong hai"; us formula mein age input nahi. Har current comment ranking aisi ho, zaroori nahi. <b>Do alag sawaal = do alag algorithm.</b> Ek hi formula har jagah mat thoko.</p>`,
     `<h3>🧊 Cache ek layer nahi — cache hi architecture hai</h3>
      <p>Reddit ka read path Postgres tak pahunchne se pehle kai jagah rukta hai:</p>
      <table>
@@ -858,10 +792,11 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
       ],
     },
     {
+      workload: {"reqs":10000},
       type: 'tradeoff',
       title: 'Stampede lab — expiry ke baad kya hota hai',
       instructions: 'Concurrency, lock aur stale serving ke knobs ghumao. Database par pahunchne wale rebuilds dekho.',
-      goal: 'Aisi setting dhoondho jahan database par ek waqt mein <b>2 se zyada rebuild</b> na ho aur user-facing p99 <b>200 ms se kam</b> rahe.',
+      goal: "Kam se kam <b>10,000 concurrent requests</b> par DB mein ek waqt par <b>2 ya kam rebuilds</b> aur user p99 <b>200 ms ya kam</b> rakho. Is scenario mein bounded stale listing serve karna allowed hai.",
       scenario: `r/all ki hot listing expire hui hai. Usi instant <b>10,000 requests</b>
         aati hain. Ek rebuild database par lagbhag <b>800 ms</b> leta hai.`,
       knobs: [
@@ -901,15 +836,10 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
         serving (baaki sabko turant jawab).`,
       quiz: {
         q: 'Lock laga diya par stale serving nahi rakhi. Kya hoga?',
-        choices: [
-          'Database toh bach jaayega, par 10,000 users poore rebuild ka intezaar karenge — latency spike wahin rahega',
-          'Sab theek ho jaayega',
-          'Lock bekaar hai, use hata do',
-          'Requests fail ho jaayengi',
-        ],
+        choices: ["Readers rebuild complete hone tak rukenge","Lock readers ko stale copy de dega","Lock se rebuild ka CPU ghatega","Queue rebuild ko turant finish karegi"],
         answer: 0,
         explain: 'Lock database ko bachata hai, stale serving user ko bachati hai. Dono alag problem solve karte hain.',
-      },
+       choiceExplanations: ["Lock database ko bachata hai, stale serving user ko bachati hai. Dono alag problem solve karte hain.","Lock mutual exclusion deta hai; stale-response policy alag chahiye.","Ek rebuild ka compute cost lock se kam nahi hota.","Queue scheduling rebuild duration ko eliminate nahi karti."] },
     },
     {
       type: 'quiz',
@@ -917,48 +847,28 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
       questions: [
         {
           q: 'Comment A: 1 upvote, 0 downvote. Comment B: 300 upvote, 100 downvote. "Best" sort kise upar rakhega aur kyun?',
-          choices: [
-            'B ko — kyunki ranking dikhte hue percentage par nahi, us sabse kam approval rate par hoti hai jise data confidently support karta hai',
-            'A ko — 100% hamesha 75% se behtar hai',
-            'A ko — naya comment hamesha upar',
-            'B ko — kyunki uske paas zyada total votes hain',
-          ],
+          choices: ["B: confidence lower bound zyada hai","A: observed approval ratio zyada hai","B: raw vote count hi ranking hai","A: kam votes ko freshness boost hai"],
           answer: 0,
           explain: 'Wilson lower bound chhote sample par bharosa nahi karta. 1 vote wale comment ka interval bahut chauda hai, isliye uska lower bound neeche rehta hai.',
-        },
+         choiceExplanations: ["Wilson lower bound chhote sample par bharosa nahi karta. 1 vote wale comment ka interval bahut chauda hai, isliye uska lower bound neeche rehta hai.","A ka100% sirf ek observation hai; uncertainty bahut zyada hai.","B jeetta hai, lekin Wilson score raw count nahi; confidence-adjusted approval hai.","Is best-sort question mein time freshness input nahi diya."] },
         {
           q: 'Comment ranking mein waqt ka kya role hai?',
-          choices: [
-            'Koi role nahi — thread ke ghante baad likha gaya shandaar reply bhi top comment ban sakta hai',
-            'Wahi role jo posts mein hai — purana comment neeche chala jaata hai',
-            'Sirf pehle ghante ke comments dikhte hain',
-            'Waqt se comment ka score aadha ho jaata hai',
-          ],
+          choices: ["Best-sort vote confidence use kare","Is best-sort mein post age ka decay hai","Har reply ko fixed age ke baad hatao","Naye replies ko double vote weight do"],
           answer: 0,
-          explain: 'Posts ka sawaal "abhi kya interesting hai" hai, comments ka sawaal "kaunsa reply bharosemand hai". Doosre sawaal mein waqt ka koi kaam nahi.',
-        },
+          explain: "Yahan described historical Wilson best-sort formula vote confidence use karta hai, age nahi. Isse current Reddit ke har ranking mode ya har comment product mein time irrelevant prove nahi hota.",
+         choiceExplanations: ["Yahan described historical Wilson best-sort formula vote confidence use karta hai, age nahi. Isse current Reddit ke har ranking mode ya har comment product mein time irrelevant prove nahi hota.","Yahan described best-sort ka formula comment age decay use nahi karta.","Reply visibility cutoff aur quality ranking alag features hain.","Question ke confidence model mein vote weight age se double nahi hota."] },
         {
           q: 'Reddit ne comment tree ko Cassandra mein "already assembled" kyun rakha?',
-          choices: [
-            'Kyunki har reader ke liye tree walk karke har level sort karna bahut mehenga hai — tree bhi ek ANSWER hai',
-            'Kyunki Postgres tree store nahi kar sakta',
-            'Kyunki comments delete nahi hote',
-            'Kyunki Cassandra sasta hai',
-          ],
+          choices: ["Har reader ka tree assembly cost bachana","Tree relations ko SQL se hata dena","Deleted comments ko permanent banana","Har vote ko synchronous save karna"],
           answer: 0,
           explain: 'Wahi fact/answer batwara: naya comment fact hai (turant likho), juda hua tree answer hai (background mein splice karo).',
-        },
+         choiceExplanations: ["Wahi fact/answer batwara: naya comment fact hai (turant likho), juda hua tree answer hai (background mein splice karo).","SQL tree store kar sakta hai; issue repeated assembly/sorting ka cost hai.","Assembly strategy comment deletion policy decide nahi karti.","Read precomputation synchronous vote writes ki requirement nahi."] },
         {
           q: 'Monster thread par Reddit "load more comments" kyun dikhata hai?',
-          choices: [
-            'Kyunki bada stored answer bhi ek saath bhejna mehenga hai — bade jawab ko tukdon mein bhejo',
-            'Kyunki baaki comments abhi bane nahi hain',
-            'Kyunki users zyada nahi padhte',
-            'Kyunki Cassandra ek baar mein utna data nahi de sakta',
-          ],
+          choices: ["Large response ko bounded chunks mein bhejna","Har chunk ka tree dobara calculate karna","Purane comments ko database se hatana","Sirf browser ki sorting tez karna"],
           answer: 0,
           explain: 'Tree pehle se bana hua hai. Problem bhejne ki hai, banane ki nahi — isliye chunks mein bhejte hain.',
-        },
+         choiceExplanations: ["Tree pehle se bana hua hai. Problem bhejne ki hai, banane ki nahi — isliye chunks mein bhejte hain.","Stored tree ke bawajood transfer/render cost reh sakta hai.","Load-more response control hai; deletion ka evidence nahi.","Browser sorting se network payload ka size khud nahi ghatta."] },
       ],
     },
     {
@@ -978,15 +888,10 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
       ],
       observe: {
         q: 'Sirf lock lagane se database par rebuilds 96 se 1 ho gaye, par p50 abhi bhi 879 ms tha. Stale on karte hi p50 226 ms ho gaya. Kyun?',
-        choices: [
-          'Lock database ko bachata hai, stale serving user ko bachati hai — dono alag problem solve karte hain',
-          'Stale serving se rebuild tez ho jaata hai',
-          'Lock ne latency badha di thi',
-          'Dono ek hi cheez hain, ek hi kaafi tha',
-        ],
+        choices: ["Stale copy se reader ka wait ghata","Stale copy se rebuild tez ho gaya","Lock se saari requests fail hui","Cache ne naya answer turant banaya"],
         answer: 0,
         explain: 'Lock ke saath baaki 499 requests rebuild ka intezaar karti hain (output mein "waited":499). Stale on karte hi unhe turant purani copy mil jaati hai ("stale":499).',
-      },
+       choiceExplanations: ["Lock ke saath baaki 499 requests rebuild ka intezaar karti hain (output mein \"waited\":499). Stale on karte hi unhe turant purani copy mil jaati hai (\"stale\":499).","Rebuild duration aur waiting readers ki response latency alag metrics hain.","Output mein readers wait kar rahe the; failures nahi diye.","Stale copy pehle ka answer hai, instant fresh computation nahi."] },
       lesson: 'Stampede par do sawaal alag hain: "database par kitne rebuild jaayenge?" (lock) aur "baaki users ko kya milega?" (stale copy).',
     },
   ],
@@ -996,37 +901,22 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
     questions: [
       {
         q: 'Interviewer: "Ek popular key ka cache expire hota hai aur DB gir jaata hai. Fix?"',
-        choices: [
-          'Ek distributed lock lagao taaki sirf ek request rebuild kare, aur baaki ko stale copy do',
-          'TTL badha do',
-          'Cache ki memory badha do',
-          'DB ke replicas badha do',
-        ],
+        choices: ["Single-flight aur stale response","Long TTL aur concurrent rebuilds","Extra cache RAM aur same expiry","More DB replicas aur same stampede"],
         answer: 0,
-        explain: 'TTL badhana sirf stampede ko aage khiskata hai. Lock + stale dono chahiye: ek DB ke liye, doosra user ke liye.',
-      },
+        explain: "Single-flight duplicate rebuilds collapse karta hai; allowed stale copy caller wait ghata sakti hai. Staleness policy, timeout aur missing-copy fallback explicit rakho; security-sensitive data ko blindly stale serve mat karo.",
+       choiceExplanations: ["Single-flight duplicate rebuilds collapse karta hai; allowed stale copy caller wait ghata sakti hai. Staleness policy, timeout aur missing-copy fallback explicit rakho; security-sensitive data ko blindly stale serve mat karo.","TTL expiry aage karta hai; expiry par stampede phir aa sakta hai.","Memory badhne se same hot-key expiry coordination solve nahi hoti.","Replicas capacity badhate hain; duplicate rebuild demand ab bhi hai."] },
       {
         q: 'Interviewer: "Tum negative results cache karoge?"',
-        choices: [
-          'Haan — "exist nahi karta" / "vote nahi kiya" jaise jawab bhi utne hi baar poochhe jaate hain, aur unko cache na karna ek chhupa hua leak hai',
-          'Nahi, cache sirf asli data ke liye hota hai',
-          'Sirf tab jab DB slow ho',
-          'Nahi, kyunki row kabhi bhi ban sakti hai',
-        ],
+        choices: ["Short TTL aur create-time invalidation","Negative answers ko permanent rakho","Sirf positive answers ko cache karo","Nayi row ke baad bhi cache na chhedo"],
         answer: 0,
         explain: 'Reddit "nahi" ko cache karta tha. Bas TTL chhota rakho aur create ke waqt entry invalidate kar do.',
-      },
+       choiceExplanations: ["Reddit \"nahi\" ko cache karta tha. Bas TTL chhota rakho aur create ke waqt entry invalidate kar do.","Permanent absence caching new objects ko chhupa sakti hai.","Repeated misses bhi DB load karte hain; negative caching useful hai.","Create ke baad absence entry stale ho sakti hai."] },
       {
         q: 'Interviewer: "Comments ko posts wale ranking formula se rank karein?"',
-        choices: [
-          'Nahi — posts ka sawaal "abhi kya interesting hai" hai (waqt maayne rakhta hai), comments ka sawaal "kaunsa reply bharosemand hai" (sample size maayne rakhta hai)',
-          'Haan, ek hi formula sab jagah rakhna simple rehta hai',
-          'Haan, bas weight badal do',
-          'Nahi, comments ko sirf waqt se sort karo',
-        ],
+        choices: ["Comments ke liye confidence-based rank","Posts wala time decay copy karo","Comments ko raw percentage se rank","Posts aur replies ko sirf age se rank"],
         answer: 0,
-        explain: 'Ek hi algorithm har jagah thokna sabse aam galti hai. Pehle poochho: yeh ranking kis sawaal ka jawab de rahi hai?',
-      },
+        explain: 'Ek hi algorithm har jagah bina ranking contract dekhe apply karna galti hai. Pehle poochho: yeh ranking kis sawaal ka jawab de rahi hai?',
+       choiceExplanations: ["Ek hi algorithm har jagah bina ranking contract dekhe apply karna galti hai. Pehle poochho: yeh ranking kis sawaal ka jawab de rahi hai?","Post freshness aur reply quality alag ranking goals hain.","Raw percentage tiny samples par overconfident ho sakta hai.","Age ordering confidence ya helpfulness ko directly measure nahi karti."] },
     ],
   },
   success: [
@@ -1134,41 +1024,41 @@ Data ka owner badalna  =  saalon ka kaam
         {
           id: 'shape', label: 'Overall approach', icon: '🧭',
           options: [
-            { id: 'strangle', label: 'Strangler fig — naye services purane ke aas-paas ugao, ek-ek raasta shift karo', score: 4, why: 'Reddit, Jira, Slack — teeno ne yahi kiya. Purana system chalta rehta hai, naya hissa-hissa kar ke aata hai, aur har kadam wapas liya ja sakta hai.' },
-            { id: 'rewrite', label: 'Big bang rewrite — naya system poora banao, phir ek din switch', score: -4, why: 'Rewrite ke dauraan purana system bhi badalta rehta hai, isliye target hilta rehta hai. Switch wale din ka blast radius 100% hota hai.' },
-            { id: 'freeze', label: 'Feature freeze karke pehle migration poori karo', score: -2, why: 'Business kabhi maanega nahi, aur migration mahine leti hai. Reddit ne saalon migration ki — freeze ka sawaal hi nahi tha.' },
+            { id: 'strangle', label: "Strangler by owned traffic route", score: 4, why: 'Reddit, Jira, Slack — teeno ne yahi kiya. Purana system chalta rehta hai, naya hissa-hissa kar ke aata hai, aur har kadam wapas liya ja sakta hai.' },
+            { id: 'rewrite', label: "Big-bang all-at-once rewrite", score: -4, why: 'Rewrite ke dauraan purana system bhi badalta rehta hai, isliye target hilta rehta hai. Switch wale din ka blast radius 100% hota hai.' },
+            { id: 'freeze', label: "Freeze every feature until full rewrite", score: -2, why: 'Business kabhi maanega nahi, aur migration mahine leti hai. Reddit ne saalon migration ki — freeze ka sawaal hi nahi tha.' },
           ],
         },
         {
           id: 'front', label: 'Client ke saamne kya rahega', icon: '🚪',
           options: [
-            { id: 'gateway', label: 'Ek gateway/supergraph jo tay kare kaunsa field kahan se aaye', score: 4, why: 'Client ek hi API dekhta hai. Andar ka owner badalne par client ko kuch nahi karna padta — Reddit ne GraphQL federation isi liye chuna.' },
-            { id: 'clients', label: 'Har client app ko naye endpoints par update karo', score: -3, why: 'Mobile apps update hone mein mahine lagte hain aur purane version saalon chalte hain. Client ko migration ka hissa banana sabse dheema raasta hai.' },
-            { id: 'dns', label: 'DNS se poora traffic naye system par bhejo', score: -2, why: 'DNS "sab ya kuch nahi" hai, aur TTL ke kaaran rollback minutes leta hai. Percentage-based shifting nahi ho sakti.' },
+            { id: 'gateway', label: "One routing boundary with stable contract", score: 4, why: 'Client ek hi API dekhta hai. Andar ka owner badalne par client ko kuch nahi karna padta — Reddit ne GraphQL federation isi liye chuna.' },
+            { id: 'clients', label: "Every client knows all service migrations", score: -3, why: 'Mobile apps update hone mein mahine lagte hain aur purane version saalon chalte hain. Client ko migration ka hissa banana sabse dheema raasta hai.' },
+            { id: 'dns', label: "Whole DNS cutover for every endpoint", score: -2, why: 'DNS weighted routing percentage distribution kar sakti hai, par caches, resolver aggregation aur TTL se request-level split/rollback coarse aur delayed ho sakta hai. Field-level ownership shift ke liye gateway useful hai.' },
           ],
         },
         {
           id: 'shift', label: 'Traffic kaise shift hoga', icon: '🚦',
           options: [
-            { id: 'canary', label: 'Percentage se: 1% → 10% → 50% → 100%, error rate dekh kar, instant rollback ke saath', score: 4, why: 'Yahi woh layer hai jo federation spec mein thi hi nahi aur Reddit ko khud banani padi. Rollback ke bina migration plan adhoora hai.' },
-            { id: 'allat', label: 'Ek raat mein poora switch', score: -3, why: 'Blast radius 100%, aur galti raat ko 3 baje milegi.' },
-            { id: 'byteam', label: 'Internal users pehle, phir sab', score: 1, why: 'Bura nahi hai — par internal traffic ka aakaar production jaisa nahi hota, isliye load aur edge cases chhoot jaate hain. Canary ke saath milao.' },
+            { id: 'canary', label: "Measured staged exposure;safe rollback", score: 4, why: 'Yahi woh layer hai jo federation spec mein thi hi nahi aur Reddit ko khud banani padi. Rollback ke bina migration plan adhoora hai.' },
+            { id: 'allat', label: "One-night all-client switch", score: -3, why: 'Blast radius 100%, aur galti raat ko 3 baje milegi.' },
+            { id: 'byteam', label: "Internal-only then immediate global", score: 1, why: 'Bura nahi hai — par internal traffic ka aakaar production jaisa nahi hota, isliye load aur edge cases chhoot jaate hain. Canary ke saath milao.' },
           ],
         },
         {
           id: 'data', label: 'Data ka kya', icon: '🗄️',
           options: [
-            { id: 'owner', label: 'Har naye service ko apni tables ka maalik banao; purane readers ko API ya event stream do', score: 4, why: 'Asli decoupling yahi hai. Warna do services ek hi table par likhengi aur coupling application se database par chali jaayegi.' },
-            { id: 'shared', label: 'Naya service abhi ke liye purani tables hi padhta rahe', score: -1, why: 'Shuruaat ke liye theek hai (Reddit ne bhi kiya), par agar yahin ruk gaye toh monolith sirf naam se toota — coupling database layer par zinda hai.' },
-            { id: 'dual', label: 'Application se dono databases mein likho (dual write)', score: -3, why: 'Ek write success, doosra fail — aur ab do sach hain. Bina coordinator ke dual write consistency bugs paida karta hai; log/CDC se replicate karo.' },
+            { id: 'owner', label: "Owned schema;versioned consumer contracts", score: 4, why: 'Asli decoupling yahi hai. Warna do services ek hi table par likhengi aur coupling application se database par chali jaayegi.' },
+            { id: 'shared', label: "Undocumented reads on private old tables", score: -1, why: 'Shuruaat ke liye theek hai (Reddit ne bhi kiya), par agar yahin ruk gaye toh monolith sirf naam se toota — coupling database layer par zinda hai.' },
+            { id: 'dual', label: "Uncoordinated writes to both databases", score: -3, why: 'Ek write success, doosra fail — aur ab do sach hain. Bina coordinator ke dual write consistency bugs paida karta hai; log/CDC se replicate karo.' },
           ],
         },
         {
           id: 'std', label: 'Naye services ko ek jaisa kaise rakhoge', icon: '🧰',
           options: [
-            { id: 'template', label: 'Ek service template: wahi wiring, wahi logging/metrics/tracing, wahi health checks', score: 3, why: 'Reddit ka baseplate, Jira ka Micros — ek hi seekh. 100 ek jaisi services chalane layak hain, 100 alag-alag nahi.' },
-            { id: 'free', label: 'Har team apni pasand ka stack chune', score: -3, why: 'Azadi acchi lagti hai jab tak 3 baje ek aisi service page kare jiska logging format kisi aur ne banaya tha.' },
-            { id: 'doc', label: 'Ek document likh do "best practices" ka', score: 0, why: 'Document se koi nuksaan nahi, par woh apne aap laagu nahi hota. Template code ban ke aata hai, document nahi.' },
+            { id: 'template', label: "Shared observable service template", score: 3, why: 'Reddit ka baseplate, Jira ka Micros — ek hi seekh. 100 ek jaisi services chalane layak hain, 100 alag-alag nahi.' },
+            { id: 'free', label: "Each team rebuilds infrastructure stack", score: -3, why: 'Azadi acchi lagti hai jab tak 3 baje ek aisi service page kare jiska logging format kisi aur ne banaya tha.' },
+            { id: 'doc', label: "Guidance document without executable defaults", score: 0, why: 'Document se koi nuksaan nahi, par woh apne aap laagu nahi hota. Template code ban ke aata hai, document nahi.' },
           ],
         },
       ],
@@ -1214,15 +1104,10 @@ Data ka owner badalna  =  saalon ka kaam
       ],
       observe: {
         q: '1% par sirf 3 mismatch dikhe, 50% par 98. Bug dono baar wahi tha. Percentage shifting ka asli faayda kya hai?',
-        choices: [
-          'Galti ka blast radius traffic ke percentage jitna hi rehta hai — bug 1% par pakda jaata hai, 100% par nahi',
-          'Naya service 1% par tez chalta hai',
-          'Mismatches sirf zyada load par hote hain',
-          'Gateway 1% par requests cache karta hai',
-        ],
+        choices: ["Chhote slice par damage bound hua","Percentage se naya code tez hua","Low load se bug impossible hua","Gateway ne wrong answers cache kiye"],
         answer: 0,
         explain: 'Shadow compare + chhota percentage = bug tab milta hai jab sirf kuch users prabhavit hon, aur rollback ek flag hai.',
-      },
+       choiceExplanations: ["Shadow compare + chhota percentage = bug tab milta hai jab sirf kuch users prabhavit hon, aur rollback ek flag hai.","Traffic percentage response semantics ko khud tez nahi banata.","Same bug1%par bhi tha; sirf exposure kam tha.","Question mismatch counts dikhata hai, caching ka evidence nahi."] },
       lesson: 'Migration plan ka pehla sawaal "kaise shift karenge" nahi hota — <b>"kitni jaldi wapas aa sakte hain"</b> hota hai.',
     },
   ],
@@ -1232,37 +1117,22 @@ Data ka owner badalna  =  saalon ka kaam
     questions: [
       {
         q: 'Interviewer: "Naya service bana liya hai aur woh monolith ki hi tables padh raha hai. Kya yeh microservice hai?"',
-        choices: [
-          'Nahi — coupling application layer se database layer par chali gayi hai; jab tak data ka owner nahi badla, monolith sirf naam se toota hai',
-          'Haan, code alag hai toh service alag hai',
-          'Haan, agar deployment alag hai',
-          'Nahi, jab tak alag language use na ho',
-        ],
+        choices: ["DB ownership coupling ab bhi shared hai","Alag deployment se data independent hai","Nayi language se ownership alag hai","Same repo hone se migration fail hai"],
         answer: 0,
         explain: 'Reddit ka apna sabak: requests move karna aasan hai, data ka owner badalna saalon ka kaam hai.',
-      },
+       choiceExplanations: ["Reddit ka apna sabak: requests move karna aasan hai, data ka owner badalna saalon ka kaam hai.","Deployment independence data-contract coupling ko khud nahi hatati.","Programming language data ownership boundary nahi.","Repo layout se ownership ka verdict nahi nikalta."] },
       {
         q: 'Interviewer: "Traffic shift karne ka plan?"',
-        choices: [
-          'Gateway par percentage: 1% → 10% → 50% → 100%, har step par error rate aur output compare, aur ek flag se instant rollback',
-          'Raat ko poora switch, subah monitor',
-          'Pehle internal users, phir sab',
-          'DNS change karke',
-        ],
+        choices: ["Small slices, compare aur quick rollback","Full switch, metrics agle din dekho","DNS cutover, cache expiry ka wait","Internal test ke baad full rollout"],
         answer: 0,
         explain: 'Har achhi migration mein rollback pehle banta hai. Reddit ko yeh layer khud likhni padi kyunki federation spec mein thi hi nahi.',
-      },
+       choiceExplanations: ["Har achhi migration mein rollback pehle banta hai. Reddit ko yeh layer khud likhni padi kyunki federation spec mein thi hi nahi.","Full switch sab users ko unproven behavior expose karta hai.","DNS rollback TTL aur client cache ki wajah se instant nahi.","Internal testing useful hai, lekin production ramp/rollback ka substitute nahi."] },
       {
         q: 'Interviewer: "Tum 40 microservices ko manageable kaise rakhoge?"',
-        choices: [
-          'Ek service template jisme wiring, logging, metrics, tracing aur health checks pehle se hon — nayi service us template se bane',
-          'Har team apni pasand ka stack chune, innovation zaroori hai',
-          'Ek best practices document likh do',
-          'Sab services ek hi repo mein rakho',
-        ],
+        choices: ["Shared template aur observable defaults","Har team ki independent plumbing","Central document bina tooling ke","Monorepo mein bas services rakh do"],
         answer: 0,
         explain: 'Reddit ka baseplate, Jira ka Micros, Cloudflare ka homogeneous fleet — ek hi seekh alag-alag shakal mein.',
-      },
+       choiceExplanations: ["Reddit ka baseplate, Jira ka Micros, Cloudflare ka homogeneous fleet — ek hi seekh alag-alag shakal mein.","Freedom useful hai, lekin repeated wiring operational inconsistency laati hai.","Document defaults enforce ya automate nahi karta.","Repo ek hone se metrics/tracing/health conventions nahi milte."] },
     ],
   },
   success: [

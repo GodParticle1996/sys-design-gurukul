@@ -155,15 +155,16 @@
       card.appendChild(el('div', 'rp-ask-q', '⏸ ' + f.ask.q));
       let wrong = false;
       const opts = el('div', 'rp-ask-opts');
-      (f.ask.choices || []).forEach((c, i) => {
+      SD.shuffle((f.ask.choices || []).map((c, i) => ({ c, i }))).forEach(({ c, i }) => {
         const b = el('button', 'rp-opt', c);
+        b.dataset.i = String(i);
         b.onclick = () => {
-          if (answered[at]) return;
+          if (answered[at] || b.disabled) return;
           if (i === f.ask.answer) {
             answered[at] = true;
             if (!wrong) firstTry++;
             b.classList.add('right');
-            card.appendChild(el('div', 'rp-ask-ex', '✅ ' + f.ask.explain));
+            card.appendChild(el('div', 'rp-ask-ex', '✅ ' + SD.choiceFeedback(f.ask, i)));
             const go = el('button', 'btn rp-go', 'Replay aage chalao →');
             go.onclick = () => { askSlot.innerHTML = ''; step(); };
             card.appendChild(go);
@@ -173,8 +174,7 @@
             b.disabled = true;
             shake(card);
             SD.noteMistake(f.ask.q, f.ask.choices[f.ask.answer], '🔥 ' + (stage.incident || 'Postmortem'));
-            if (f.ask.wrongHints && f.ask.wrongHints[i])
-              card.appendChild(el('div', 'rp-ask-wr', '❌ ' + f.ask.wrongHints[i]));
+            card.appendChild(el('div', 'rp-ask-wr', '❌ ' + SD.choiceFeedback(f.ask, i)));
           }
         };
         opts.appendChild(b);
@@ -215,6 +215,24 @@
                verdict:k=>({ok,text}),
                check:k=>bool, lesson, quiz? }
      ===================================================================== */
+  /* Workload sliders explore demand; reducing the incident away is not a fix.
+     The authored minimum workload is part of the exercise's real-state goal. */
+  SD.tradeoffStatus = function (stage, values) {
+    values = values && typeof values === 'object' ? values : {};
+    for (const knob of stage.knobs || []) {
+      const value = values[knob.id], step = knob.step || 1;
+      if (!Number.isFinite(value) || value < knob.min || value > knob.max ||
+          Math.abs((value - knob.min) / step - Math.round((value - knob.min) / step)) > 1e-7)
+        return { ok: false, text: `${knob.label}: slider ki valid range aur step ke andar value chuno.` };
+      const minimum = (stage.workload || {})[knob.id];
+      if (minimum != null && value < minimum)
+        return { ok: false, text: `${knob.label}: is mission mein kam se kam <b>${minimum.toLocaleString('en-IN')}${knob.unit || ''}</b> handle karna hai. Demand ghataane se incident solve nahi hota; design ya capacity badlo.` };
+    }
+    const verdict = stage.verdict ? stage.verdict(values) : { ok: false, text: 'Is setting ka verdict available nahi hai.' };
+    const passed = Boolean(stage.check && stage.check(values));
+    return { ...verdict, ok: passed && Boolean(verdict.ok) };
+  };
+
   SD.renderers.tradeoff = function renderTradeoff(stage, arena, onDone) {
     const knobs = stage.knobs || [];
     const k = {};
@@ -237,6 +255,7 @@
       top.appendChild(vv);
       row.appendChild(top);
       const input = el('input', 'td-slider');
+      input.setAttribute('aria-label', kn.label);
       input.type = 'range';
       input.min = String(kn.min); input.max = String(kn.max);
       input.step = String(kn.step || 1); input.value = String(kn.value);
@@ -287,11 +306,11 @@
         row.appendChild(el('div', 'td-btext', b.text));
         barWrap.appendChild(row);
       });
-      const v = stage.verdict ? stage.verdict(k) : { ok: false, text: '' };
+      const v = SD.tradeoffStatus(stage, k);
       verdict.className = 'td-verdict ' + (v.ok ? 'good' : 'bad');
       verdict.innerHTML = (v.ok ? '✅ ' : '⚠️ ') + v.text;
 
-      if (!solved && stage.check && stage.check(k)) {
+      if (!solved && touched && v.ok) {
         solved = true;
         if (!touched) firstTry = 0; else firstTry = 1;
         win();
@@ -318,15 +337,16 @@
       const card = el('div', 'td-quiz');
       card.appendChild(el('div', 'td-quiz-q', q.q));
       let wrong = false;
-      (q.choices || []).forEach((c, i) => {
+      SD.shuffle((q.choices || []).map((c, i) => ({ c, i }))).forEach(({ c, i }) => {
         const b = el('button', 'rp-opt', c);
+        b.dataset.i = String(i);
         b.onclick = () => {
-          if (card._done) return;
+          if (card._done || b.disabled) return;
           if (i === q.answer) {
             card._done = true;
             b.classList.add('right');
             if (!wrong) firstTry++;
-            card.appendChild(el('div', 'rp-ask-ex', '✅ ' + q.explain));
+            card.appendChild(el('div', 'rp-ask-ex', '✅ ' + SD.choiceFeedback(q, i)));
             const nx = el('button', 'btn big td-next', 'Aage badho →');
             nx.onclick = () => onDone({ firstTry, total });
             card.appendChild(nx);
@@ -336,6 +356,7 @@
             b.disabled = true;
             shake(card);
             SD.noteMistake(q.q, q.choices[q.answer], '🎚️ Tradeoff');
+            card.appendChild(el('div', 'rp-ask-wr', '❌ ' + SD.choiceFeedback(q, i)));
           }
         };
         card.appendChild(b);
@@ -374,8 +395,10 @@
       else if (/[mM]$/.test(s.trim())) { mult = 1e6; s = s.trim().slice(0, -1); }
       else if (/[bB]$/.test(s.trim())) { mult = 1e9; s = s.trim().slice(0, -1); }
       else if (/[tT]$/.test(s.trim())) { mult = 1e12; s = s.trim().slice(0, -1); }
-      const n = parseFloat(s);
-      return isNaN(n) ? NaN : n * mult;
+      s = s.trim();
+      if (!/^[+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s)) return NaN;
+      const n = Number(s) * mult;
+      return Number.isFinite(n) ? n : NaN;
     }
     function fmt(n) {
       if (n >= 1e12) return (n / 1e12).toFixed(2) + ' trillion';
@@ -401,6 +424,7 @@
       const row = el('div', 'es-inrow');
       const input = el('input', 'es-input');
       input.type = 'text';
+      input.setAttribute('aria-label', `${p.q.replace(/<[^>]*>/g, '')} — ${p.unit || 'number'}`);
       input.placeholder = 'apna andaaza — 5k, 2.5M, 1.2 crore, 30000 …';
       const unit = el('span', 'es-unit', p.unit || '');
       const go = el('button', 'btn es-go', 'Andaaza jama karo');
@@ -414,17 +438,19 @@
       go.onclick = () => {
         if (card._done) return;
         const guess = parseNum(input.value);
-        if (isNaN(guess) || guess <= 0) {
+        if (!Number.isFinite(guess) || guess <= 0) {
           fb.innerHTML = '<div class="es-bad">Ek number likho — "5k", "2.5M", "1.2 crore" ya "30000" sab chalte hain.</div>';
           shake(card);
           return;
         }
-        card._done = true;
         const tol = p.tol == null ? 0.5 : p.tol;          /* log10 mein doori */
         const off = Math.abs(Math.log10(guess / p.answer));
         const right = off <= tol;
         if (right && !tried) firstTry++;
-        if (!right) SD.noteMistake(p.q, `${fmt(p.answer)} ${p.unit || ''} — ${(p.steps || []).join(' → ')}`, '🧮 Napkin math');
+        if (!right) {
+          tried = true;
+          SD.noteMistake(p.q, `${fmt(p.answer)} ${p.unit || ''} — ${(p.steps || []).join(' → ')}`, '🧮 Napkin math');
+        }
 
         fb.innerHTML = '';
         fb.appendChild(el('div', 'es-verdict ' + (right ? 'ok' : 'bad'),
@@ -436,8 +462,16 @@
         (p.steps || []).forEach(s => st.appendChild(el('div', 'es-step', s)));
         fb.appendChild(st);
         if (p.lesson) fb.appendChild(el('div', 'es-lesson', p.lesson));
+        if (!right) {
+          fb.appendChild(el('div', 'es-retry', 'Calculation aur units padho. Phir corrected andaaza upar type karke jama karo; sahi paimana milne par agla sawaal khulega.'));
+          go.textContent = 'Corrected andaaza jama karo';
+          return;
+        }
+        card._done = true;
+        input.disabled = true;
+        go.disabled = true;
         const nx = el('button', 'btn big es-next', i + 1 < probs.length ? 'Agla sawaal →' : 'Lab khatam →');
-        nx.onclick = () => { i++; show(); };
+        nx.onclick = () => { if (nx.disabled) return; nx.disabled = true; i++; show(); };
         fb.appendChild(nx);
       };
       input.addEventListener('keydown', e => { if (e.key === 'Enter') go.onclick(); });
@@ -458,16 +492,17 @@
     const flaws = stage.flaws || [];
     const flawIds = flaws.map(f => f.id);
     const fine = stage.fine || {};
-    let found = 0, wrong = 0;
+    let found = 0, wrong = 0, classified = 0;
 
     arena.appendChild(goalBox('🕵️ GALTIYAN PAKDO',
       stage.goal || `Is design mein <b>${flaws.length}</b> galtiyan chhupi hain. Har box par click karke batao ki kaunsa box galat hai.`));
     if (stage.brief) arena.appendChild(el('div', 'lab-scenario', stage.brief));
+    arena.appendChild(el('p', 'instructions', 'Har box ke liye "Galti hai" ya "Theek hai" chuno. Har box ka sahi reason padhne aur classification theek hone ke baad challenge poora hoga.'));
 
     const counter = el('div', 'ad-counter');
     arena.appendChild(counter);
     function paintCount() {
-      counter.innerHTML = `🎯 Mile: <b>${found}</b> / ${flaws.length} &nbsp;·&nbsp; ❌ Galat click: <b>${wrong}</b>`;
+      counter.innerHTML = `🎯 Galtiyan: <b>${found}</b> / ${flaws.length} · Sahi classify: <b>${classified}</b> / ${nodes.length} · Galat attempts: <b>${wrong}</b>`;
     }
     paintCount();
 
@@ -482,25 +517,40 @@
       if (n.sub) card.appendChild(el('div', 'ad-nsub', n.sub));
       const why = el('div', 'ad-why');
       card.appendChild(why);
-      card.onclick = () => {
+      const actions = el('div', 'ad-actions');
+      const badBtn = el('button', 'btn small ad-flaw-btn', 'Galti hai');
+      const safeBtn = el('button', 'btn small ghost ad-safe-btn', 'Theek hai');
+      actions.append(badBtn, safeBtn);
+      card.appendChild(actions);
+      let missed = false;
+      function classify(suspect) {
         if (card._done) return;
-        card._done = true;
         const f = flaws.find(x => x.id === n.id);
+        if (suspect !== !!f) {
+          if (!missed) wrong++;
+          missed = true;
+          why.innerHTML = `❌ ${f ? f.why : fine[n.id] || 'Is box ko badalne ki zaroorat nahi; requirements aur doosre components se iska connection dekho.'} Reason padhkar classification dobara chuno.`;
+          SD.noteMistake(`${stage.title || 'Architecture diff'} — "${n.label}" ko ${suspect ? 'galat' : 'theek'} samjha`, f ? f.why : fine[n.id] || 'Yeh box scenario ki requirement poori karta hai.', '🕵️ Architecture diff');
+          shake(card);
+          paintCount();
+          return;
+        }
+        card._done = true;
+        classified++;
+        badBtn.disabled = safeBtn.disabled = true;
         if (f) {
           found++;
           card.classList.add('flaw');
           why.innerHTML = '🚨 ' + f.why;
         } else {
-          wrong++;
           card.classList.add('fine');
           why.innerHTML = '✅ ' + (fine[n.id] || 'Yeh box theek hai — yahan koi galti nahi.');
-          SD.noteMistake(`${stage.title || 'Architecture diff'} — "${n.label}" ko galti samjha`,
-            fine[n.id] || 'Yeh box theek hai.', '🕵️ Architecture diff');
-          shake(card);
         }
         paintCount();
-        if (found === flaws.length) finish();
-      };
+        if (classified === nodes.length && found === flaws.length) finish();
+      }
+      badBtn.onclick = () => classify(true);
+      safeBtn.onclick = () => classify(false);
       rows[r].appendChild(card);
     });
     arena.appendChild(board);
@@ -511,7 +561,8 @@
     function finish() {
       if (stage.lesson) slot.appendChild(el('div', 'lab-win', stage.lesson));
       const b = el('button', 'btn big ad-done', 'Aage badho →');
-      b.onclick = () => onDone({ firstTry: Math.max(0, flaws.length - wrong), total: flaws.length });
+      let continued = false;
+      b.onclick = () => { if (continued) return; continued = true; onDone({ firstTry: Math.max(0, nodes.length - wrong), total: nodes.length }); };
       slot.appendChild(b);
     }
   };

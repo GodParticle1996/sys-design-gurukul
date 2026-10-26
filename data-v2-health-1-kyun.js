@@ -105,16 +105,11 @@ pods restart hue                    3 (teeno)
           vars: { db: '💥 band (2.50 s se)', orders: '✗ DB nahi mila' },
           ask: {
             q: '3.00 s par checker teeno pods ka <code>/healthz</code> kholega. Kya jawab milega?',
-            choices: [
-              'Teeno "nahi" kahenge — teeno pods /healthz ke andar usi ek DB se poochhte hain',
-              'Sirf pod-3 "nahi" kahega — /orders request pod-3 par hi fail hui thi',
-              'Teeno "haan" kahenge — pods mein koi kharabi nahi hai',
-              'Checker DB ke theek hone tak poochhna band kar dega',
-            ],
+            choices: ["Teeno fail; /healthz shared DB ko call karta hai","Sirf pod-3 fail; last request wahi route hui thi","Teeno pass; process alive se DB check skip hoga","Checker fail; pod endpoints query nahi honge"],
             answer: 0,
             hint: '/healthz ke andar pod kisse poochhta hai? Aur DB kitne pods ke liye ek hi hai?',
-            explain: 'Slow motion ki line: <code>3.00 s 🩺 zinda ho? ✗ ✗ ✗ (lagataar fail 1/3) · traffic bhejein? ✗ ✗ ✗</code>. Ek shared cheez giri, toh teeno jawab ek saath badle.',
-          },
+            explain: "Health handler har pod se same unavailable DB call karta hai, isliye results correlated fail hain. Last business request assignment probe handler ko isolate nahi karti. Endpoint logic explicitly DB dependency include karta hai. Checker endpoint execute karta hai; yahan checker process failure nahi.",
+           choiceExplanations: ["Health handler har pod se same unavailable DB call karta hai, isliye results correlated fail hain.","Last business request assignment probe handler ko isolate nahi karti.","Endpoint logic explicitly DB dependency include karta hai.","Checker endpoint execute karta hai; yahan checker process failure nahi."] },
         },
         {
           clock: '3.00 s',
@@ -131,16 +126,11 @@ pods restart hue                    3 (teeno)
           vars: { fails: '2 / 3' },
           ask: {
             q: '5.00 s par teesra fail hoga. Checker ka niyam: lagataar 3 "nahi" = pod atak gaya. Checker kya karega? Aur isse kya theek hoga?',
-            choices: [
-              'Teeno pods ko restart karega. Isse kuch theek nahi hoga: kharabi DB mein hai, pods mein nahi. Ulta, ab har pod ko dobara shuru hone mein 6 second lagenge',
-              'DB ko restart karega, aur DB theek ho jaayega',
-              'Kuch nahi karega — checker ko pata hai ki kharabi DB mein hai',
-              'Sirf ek pod ko restart karega, taaki baaki do chalte rahein',
-            ],
+            choices: ["Teeno restart; shared DB ki kharabi baaki rahegi","Sirf DB restart; pod startup delay avoid ho jaayega","Ek pod restart; checker automatic quorum use karega","Teeno ready; failed probes sirf warning likhenge"],
             answer: 0,
             hint: 'Checker ko sirf pod ka jawab dikhta hai: "nahi". "Nahi" ki wajah checker ko dikhti hai?',
-            explain: 'Slow motion: <code>5.00 s → pod-1, pod-2, pod-3: RESTART — dobara boot, 6 s lagenge</code>. Checker ko "nahi" ki wajah nahi dikhti. Restart sirf us kharabi ka ilaaj hai jo pod ke andar ho.',
-          },
+            explain: "Given liveness threshold har pod par independently reach hota hai; container restart shared database repair nahi karta. App liveness checker DB process manage nahi karta. Is checker mein coordinated quorum restart policy nahi. Failure threshold ka configured action restart hai.",
+           choiceExplanations: ["Given liveness threshold har pod par independently reach hota hai; container restart shared database repair nahi karta.","App liveness checker DB process manage nahi karta.","Is checker mein coordinated quorum restart policy nahi.","Failure threshold ka configured action restart hai."] },
         },
         {
           clock: '5.00 s',
@@ -209,16 +199,11 @@ pods restart hue                    3 (teeno)
           vars: { live: '—', ready: '—', eps: 'pod-1 · pod-2 · pod-3', home: '—' },
           ask: {
             q: 'Do alag raaston se kya badlega?',
-            choices: [
-              'Restart nahi honge: "zinda ho?" ka jawab ab DB par nirbhar nahi. Par DB band rehne tak teeno pods "traffic bhejein?" par phir bhi "nahi" kahenge',
-              'Sab theek ho jaayega — /home bhi chalti rahegi',
-              'Kuch nahi badlega — pods phir bhi restart honge',
-              'Checker poochhna band kar dega',
-            ],
+            choices: ["Liveness bachegi; dependency-based readiness fail hogi","Dono probes pass; DB failures implicit ignore hongi","Restart continue; liveness ab bhi DB-dependent hai","Readiness pass; naam badalne se handler badal jaata"],
             answer: 0,
             hint: 'Restart kis sawaal ke jawab se hota hai? Aur traffic kis sawaal ke jawab se rukta hai?',
-            explain: '"Zinda ho?" → /livez → seedha "haan" → restart ki koi wajah nahi. "Traffic bhejein?" → /readyz → DB se poochh ke → DB band ho toh "nahi".',
-          },
+            explain: "Liveness ko DB se separate karne se correlated restarts rukte hain; readiness DB check ab bhi traffic affect karta hai. Readiness implementation dependency ab bhi check kar rahi hai. New liveness handler DB touch nahi karta. Endpoint name alone business dependency semantics nahi badalta.",
+           choiceExplanations: ["Liveness ko DB se separate karne se correlated restarts rukte hain; readiness DB check ab bhi traffic affect karta hai.","Readiness implementation dependency ab bhi check kar rahi hai.","New liveness handler DB touch nahi karta.","Endpoint name alone business dependency semantics nahi badalta."] },
         },
         {
           clock: '3.00 s',
@@ -252,16 +237,11 @@ pods restart hue                    3 (teeno)
           vars: { live: 'restart: 0', ready: 'DB ke 0.75 s baad wapas', home: '26 mein se 16 safal' },
           ask: {
             q: '/home ko DB nahi chahiye. /home phir bhi 5 second kyun band rahi?',
-            choices: [
-              '"Traffic bhejein?" ka jawab poore pod ke liye hota hai, ek page ke liye nahi. DB gaya → teeno pods ne "nahi" kaha → load balancer ke paas /home ke liye bhi koi pod nahi bacha',
-              '/home chhupke DB use karti hai',
-              'Load balancer kharab ho gaya tha',
-              'Pods restart ho rahe the',
-            ],
+            choices: ["Pod-level readiness ne DB-free /home bhi hata di","/home ne independent DB connection exhaust kiya","Liveness restarts ne is run mein saare pods boot kiye","Router ne sirf /orders path ka registration hataaya"],
             answer: 0,
             hint: 'Load balancer request kis ko bhejta hai: page ko, ya pod ko? Aur us waqt kitne pods "haan" keh rahe the?',
-            explain: 'Slow motion: <code>/home ✗ koi READY pod nahi</code> — 3.25 s se 7.75 s tak. Pods theek the; bas load balancer ko "haan" kehne wala koi pod nahi dikha.',
-          },
+            explain: "Whole pod not-ready hone se same Service ka /home route bhi endpoints lose kar sakta hai. Prompt /home ko DB-free batata hai. Is separated-probe run mein restart nahi tha. Readiness path-specific application router rule nahi.",
+           choiceExplanations: ["Whole pod not-ready hone se same Service ka /home route bhi endpoints lose kar sakta hai.","Prompt /home ko DB-free batata hai.","Is separated-probe run mein restart nahi tha.","Readiness path-specific application router rule nahi."] },
         },
         {
           clock: 'asli raftaar',
@@ -298,16 +278,11 @@ pods restart hue                    3 (teeno)
           say: 'Socho tum manager ho.',
           ask: {
             q: 'Rasoiye se kaunse sawaal poochhne chahiye — aur har sawaal ke "nahi" par kya karna chahiye?',
-            choices: [
-              'Do alag sawaal. "Hosh mein ho?" — nahi → naya rasoiya bulao. "Abhi order le sakte ho?" — nahi → order mat do, par rasoiye ko nikaalo mat',
-              'Ek hi sawaal kaafi hai: "sab theek?" — nahi → nikaal do',
-              'Koi sawaal nahi — rasoiye khud bata denge',
-              'Har minute gas company ko phone karo',
-            ],
+            choices: ["Liveness fail par replace; readiness fail par pause","Dono failures par replace; role separation ki need nahi","Dono failures par pause; dead worker ko bhi rakho","Readiness fail par replace; liveness fail par pause"],
             answer: 0,
             hint: 'Behosh rasoiye ka ilaaj kya hai? Gas na hone ka ilaaj kya hai? Kya dono ilaaj ek hi hain?',
-            explain: 'Do alag haalat, do alag ilaaj. Behosh rasoiye ko badalna padta hai. Gas na ho toh rasoiya theek hai — bas abhi tandoori mat maango. Aur lassi toh tab bhi ban sakti hai.',
-          },
+            explain: "Process unrecoverably stuck aur temporarily unable-to-serve alag conditions aur actions hain. Shared restart policy transient inability par unnecessary churn karegi. Stuck worker ko replacement/recovery chahiye ho sakta hai. Yeh lifecycle actions reverse karti hai.",
+           choiceExplanations: ["Process unrecoverably stuck aur temporarily unable-to-serve alag conditions aur actions hain.","Shared restart policy transient inability par unnecessary churn karegi.","Stuck worker ko replacement/recovery chahiye ho sakta hai.","Yeh lifecycle actions reverse karti hai."] },
         },
         {
           title: '4. In cheezon ke naam',
@@ -347,26 +322,16 @@ pods restart hue                    3 (teeno)
     questions: [
       {
         q: '"Kal raat DB ka failover 5 second ka tha. Hamari service usse kaafi zyada der band rahi, aur saare pods restart hue. Sabse pehle kya dekhoge?"',
-        choices: [
-          'Liveness probe kya check karta hai. Agar liveness DB (ya kisi bhi shared dependency) se poochhta hai, toh DB ki gadbad par saare pods ek saath fail hote hain aur restart hote hain. Restart se DB theek nahi hota; ulta DB ke lautne ke baad bhi pods boot ho rahe hote hain. Liveness ko sirf app ke apne haal tak rakhna hai',
-          'Pods ki memory badha dunga',
-          'DB ka timeout badha dunga',
-          'Pods ki sankhya dugni kar dunga',
-        ],
+        choices: ["Liveness handler mein shared dependency check dekho","Pehle replica count badhao; probe policy wahi rakho","Pehle DB timeout badhao; restart trigger ignore karo","Pehle CPU scale karo; health handler baad mein dekho"],
         answer: 0,
-        explain: 'Lab: liveness mein DB check → 3 restart, /orders DB ke 4.0–5.0 s baad theek. Liveness seedha (shallow) → 0 restart, 0.9 s baad.',
-      },
+        explain: "DB outage aur all-pod restart correlation dependency-coupled liveness inspect karne ka strong trigger hai. Extra replicas same bad probe par correlated fail hongi. Longer DB wait health check timeout ko aur hurt kar sakta hai. CPU pressure ka evidence prompt mein nahi.",
+       choiceExplanations: ["DB outage aur all-pod restart correlation dependency-coupled liveness inspect karne ka strong trigger hai.","Extra replicas same bad probe par correlated fail hongi.","Longer DB wait health check timeout ko aur hurt kar sakta hai.","CPU pressure ka evidence prompt mein nahi."] },
       {
         q: '"Liveness aur readiness probe mein farak kya hai?"',
-        choices: [
-          'Dono ke fail hone par alag kaam hota hai. Liveness fail → container restart: yeh us haalat ke liye hai jab app atak gaya ho aur khud theek na ho sake. Readiness fail → pod ko traffic milna band, par pod chalta rehta hai: yeh us haalat ke liye hai jab app abhi kaam nahi le sakta, par thodi der mein le sakega',
-          'Liveness shuru mein chalta hai, readiness baad mein',
-          'Dono ek hi hain; bas do naam hain',
-          'Liveness DB ke liye hai, readiness app ke liye',
-        ],
+        choices: ["Liveness restart; readiness traffic eligibility badle","Liveness sirf boot; readiness restart control kare","Liveness DB health; readiness process memory dekhe","Dono restart; bas polling interval alag hota hai"],
         answer: 0,
-        explain: 'Kubernetes ki documentation ke mutabiq: liveness fail → kubelet container ko restart karta hai. Readiness fail → pod ka IP Service ke endpoints se hata diya jaata hai; container chalta rehta hai.',
-      },
+        explain: "Liveness failure threshold container restart drive karta hai; readiness failure endpoint eligibility change karti hai. Startup protection distinct startupProbe responsibility hai. Probe implementation apna handler define karti hai, dependency labels fixed nahi. Readiness failure ko restart action nahi diya gaya.",
+       choiceExplanations: ["Liveness failure threshold container restart drive karta hai; readiness failure endpoint eligibility change karti hai.","Startup protection distinct startupProbe responsibility hai.","Probe implementation apna handler define karti hai, dependency labels fixed nahi.","Readiness failure ko restart action nahi diya gaya."] },
     ],
   },
   success: [

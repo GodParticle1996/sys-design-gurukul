@@ -41,7 +41,7 @@ decorrelated jitter         →   1, 2.1 s    (sabse kam calls: 782)</pre>
        <li><b>Retry budget:</b> retries ≤ asli requests ka 10% → bina backoff ke bhi storm nahi (AWS SDK retry quota, Envoy retry budget).
          Keemat: budget khatam hote hi user ko error.</li>
        <li><b>Layers:</b> client, A, B teeno "3 koshish" → C band ho toh C par <b>27×</b>. Chhoti gadbad (30%) mein wahi setup sirf 1.36×
-         dikhta hai — isi liye har team laga deti hai. Retry sirf edge par.</li>
+         dikhta hai — isi liye har team laga deti hai. Retry ek chosen layer par concentrate karo; SDK/internal retries gino aur total attempt/deadline budget enforce karo.</li>
      </ol>
      <table>
        <tr><th>❌ Aam galatfehmi</th><th>✅ Sach</th></tr>
@@ -76,15 +76,10 @@ decorrelated jitter         →   1, 2.1 s    (sabse kam calls: 782)</pre>
       ],
       observe: {
         q: 'Exp backoff (bina jitter) mein intezaar badhta gaya, phir bhi 120 clients ne haar kyun maani?',
-        choices: [
-          'Sab ek hi pal mein fail hue, isliye sab ek hi pal mein wapas aaye — har lehar mein gateway ne phir sirf 10 liye',
-          'Backoff ka cap bahut chhota tha',
-          'Gateway ne jaan-boojh ke unhe roka',
-          'Network dheema tha',
-        ],
+        choices: ["Identical retry timing ne overload waves align rakhi","Exponential delay se clients automatically spread hue","Gateway capacity har retry round mein double hoti rahi","Network latency alone retry synchronization prevent karti"],
         answer: 0,
-        explain: 'Backoff intezaar badhata hai, bheed nahi todta. Jitter (random intezaar) se har client alag pal mein aata hai — 0–1 ne haar maani.',
-      },
+        explain: "Backoff without jitter equal starting clients ko equal next times de sakta hai; jitter random spread and bounded retry budget synchronized waves reduce karte hain. Lab counts workload-specific hain. Increasing delay and desynchronization different hain. Backoff server hardware capacity increase nahi karti. Latency randomness sufficient dispersion guarantee nahi.",
+       choiceExplanations: ["Backoff without jitter equal starting clients ko equal next times de sakta hai; jitter random spread and bounded retry budget synchronized waves reduce karte hain. Lab counts workload-specific hain.","Increasing delay and desynchronization different hain.","Backoff server hardware capacity increase nahi karti.","Latency randomness sufficient dispersion guarantee nahi."] },
       lesson: 'Retry = backoff + jitter + cap. Jitter ke bina backoff sirf bheed ko aage khiskata hai.',
     },
     {
@@ -114,28 +109,18 @@ decorrelated jitter         →   1, 2.1 s    (sabse kam calls: 782)</pre>
       ],
       observe: {
         q: '"Turant retry, par Retry-After maano" wale clients bhi turant retry karte the. Phir service doosri baar kyun nahi giri?',
-        choices: [
-          'Server bhara hone par crash hone ke bajaye 503 + Retry-After: 1 bolta tha, aur clients ne woh maana — restart ke pal sirf 27 requests shed hui',
-          'Clients ki ginti kam thi',
-          'Service ki capacity zyada thi',
-          'Retry-After ne restart tez kar diya',
-        ],
+        choices: ["Bounded shedding aur cooperating clients ne pressure roka","Retry-After header har client ko obey karna force karta","503 body service boot time automatically shorten karti","Rejected requests retries aur compute consume nahi karti"],
         answer: 0,
-        explain: 'Load shedding + Retry-After server ki taraf ka bachav hai — client kaisa bhi ho. Crash hone se pehle "baad mein aana" bolna.',
-      },
-      lesson: 'Storm todne ke teen raaste: client (backoff + jitter + cap), server (shed + Retry-After), budget (retries ≤ 10%). Retry sirf edge par.',
+        explain: "Lab server overload reject karta aur clients Retry-After honor karte hain, so restart pressure bounded rahi. Header advisory hai; server-side admission remains important for uncooperative clients. Client implementation header ignore kar sakti hai. HTTP metadata process startup accelerate nahi karti. Reject handling/retries still resource use karte hain.",
+       choiceExplanations: ["Lab server overload reject karta aur clients Retry-After honor karte hain, so restart pressure bounded rahi. Header advisory hai; server-side admission remains important for uncooperative clients.","Client implementation header ignore kar sakti hai.","HTTP metadata process startup accelerate nahi karti.","Reject handling/retries still resource use karte hain."] },
+      lesson: 'Storm todne ke teen raaste: client (backoff + jitter + cap), server (shed + Retry-After), budget (retries ≤ 10%). Retry ek chosen layer par concentrate karo; SDK/internal retries gino aur total attempt/deadline budget enforce karo.',
     },
   ],
   interview: [
     { q: 'Interviewer: "Payment gateway rate limit par 429 de raha hai. Humare 1,000 workers exponential backoff se retry karte hain, phir bhi aadhe fail. Kyun?"',
-      choices: [
-        'Backoff mein jitter nahi — sab workers ek hi pal mein fail hote hain aur ek hi pal mein lautte hain. Full/decorrelated jitter + Retry-After maano + retry cap',
-        'Backoff ka base chhota hai',
-        'Gateway kharab hai',
-        'Workers badha do',
-      ],
+      choices: ["Retry-After if present; jitter, budget, payment idempotency","All workers ko same fixed longer delay se align rakho","429 par immediate retries karo; server capacity test hogi","Each retry ko fresh payment ID do; duplicate risk ghategi"],
       answer: 0,
-      explain: 'Lab 37: bina jitter 120/200 ne haar maani; kisi bhi jitter ke saath 0–1.' },
+      explain: "429 mein Retry-After optional hai: present ho toh policy honor karo; otherwise bounded jittered backoff. Overall deadline/retry budget and stable payment idempotency key ambiguous/repeated effects control kare. Longer synchronized delay recurring bursts retain karti hai. Immediate retry overload amplify kar sakti hai. Fresh key repeated operation ko new charge bana sakti hai." , choiceExplanations: ["429 mein Retry-After optional hai: present ho toh policy honor karo; otherwise bounded jittered backoff. Overall deadline/retry budget and stable payment idempotency key ambiguous/repeated effects control kare.","Longer synchronized delay recurring bursts retain karti hai.","Immediate retry overload amplify kar sakti hai.","Fresh key repeated operation ko new charge bana sakti hai."] },
   ],
   cards: [
     { front: 'Full jitter vs equal jitter?', back: 'Full: random(0, base × 2ⁿ) — sabse bikhra. Equal: aadha fixed + aadha random — hamesha ek floor intezaar (jab API turant retry na le).' },
@@ -198,15 +183,10 @@ trials + slow start (3 s ramp)   → B 0 baar gira, 7.0 s par theek, 6× zyada l
       ],
       observe: {
         q: 'Sirf timeout ke saath A bach gaya (/profile theek). Phir breaker kyun chahiye?',
-        choices: [
-          'Timeout ke saath bhi A latke B par 300 calls phenkta raha — B par latki requests jama hui aur B 3 baar gira. Breaker ne calls 30 kar di aur B bacha',
-          'Timeout se /profile dheema tha',
-          'Breaker timeout se tez hai',
-          'Breaker ke bina cache nahi chalta',
-        ],
+        choices: ["Timeout wait bound karta; breaker repeated calls limit kare","Timeout remote request cancellation guarantee karta hai","Breaker same offered load dependency tak forward karta","Breaker upstream response cache mandatory implement karta"],
         answer: 0,
-        explain: 'Timeout A ko bachata hai, breaker B ko bhi — bimaar dependency ko saans lene ka waqt deta hai.',
-      },
+        explain: "Lab timeout caller resource release karta par repeated attempts/remote outstanding work persist karti hai; open breaker dependency pressure reduce kar sakta hai with calibrated policy. Local timeout remote computation always cancel nahi karta. Open state fail-fast rejects selected attempts. Circuit breaking and caching separate mechanisms hain.",
+       choiceExplanations: ["Lab timeout caller resource release karta par repeated attempts/remote outstanding work persist karti hai; open breaker dependency pressure reduce kar sakta hai with calibrated policy.","Local timeout remote computation always cancel nahi karta.","Open state fail-fast rejects selected attempts.","Circuit breaking and caching separate mechanisms hain."] },
       lesson: 'Pehle timeout (A ke workers bachao), phir breaker (B ko bachao), aur fallback (user ko kuch toh dikhao).',
     },
     {
@@ -236,28 +216,18 @@ trials + slow start (3 s ramp)   → B 0 baar gira, 7.0 s par theek, 6× zyada l
       ],
       observe: {
         q: 'Half-open ke 3 trial calls safal hue, breaker band hua — phir bhi B 3 baar kyun gira (naive reset jitna hi)?',
-        choices: [
-          'Trials sirf "B zinda hai?" poochhte hain. Band hote hi poora 200 req/s ek saath thande B par — B abhi garam nahi hua tha',
-          'Trial calls ne B ko thaka diya',
-          'Breaker ka timer galat tha',
-          'A ka pool chhota tha',
-        ],
+        choices: ["Small probe success full-load capacity prove nahi karti","Three probe successes every cold cache fully warm karti","Half-open counts memory and CPU capacity certify karte","Slow start ke baad overload protection unnecessary hoti"],
         answer: 0,
-        explain: 'Isi liye slow start: band hone ke baad 3 s mein 10% → 100% traffic (Envoy / load balancers ka slow start mode). Lab: sirf trials → B 3 baar gira (19.9 s), trials + slow start → 0 baar (7.0 s).',
-      },
+        explain: "Few trial successes reachability/basic health evidence hain; cold dependency ko full traffic suddenly dena overload la sakta hai. Bounded ramp and actual readiness/headroom measure karo. Cache warmup workload and key coverage par depend hai. Sampled success full resource capacity proof nahi. Ongoing admission and observability still needed hain.",
+       choiceExplanations: ["Few trial successes reachability/basic health evidence hain; cold dependency ko full traffic suddenly dena overload la sakta hai. Bounded ramp and actual readiness/headroom measure karo.","Cache warmup workload and key coverage par depend hai.","Sampled success full resource capacity proof nahi.","Ongoing admission and observability still needed hain."] },
       lesson: 'Breaker 5xx/timeout gine, har endpoint ka alag ho, aur band hone ke baad traffic dheere lautaye.',
     },
   ],
   interview: [
     { q: 'Interviewer: "Ek purana mobile app version galat requests bhej raha hai (400s). Usi din humara breaker khul gaya aur sab users ko error. Kyun?"',
-      choices: [
-        'Breaker 4xx ko bhi failure gin raha tha — client ki galti ko dependency ki bimaari samjha. Sirf 5xx, timeout, connection error gino',
-        'Dependency sach mein down thi',
-        'Breaker ka threshold chhota tha',
-        'Mobile app ko block karo',
-      ],
+      choices: ["Caller-invalid 400 ko dependency-health failures se separate","Every 4xx including 429 ko every breaker policy ignore kare","400 rise ho toh downstream crash definitely ho chuka hai","Threshold badhaao; error class/version diagnose mat karo"],
       answer: 0,
-      explain: 'Lab 38: 4xx gine → naye app ke 87/90 price requests roki; sirf 5xx gine → 90/90.' },
+      explain: "Malformed caller requests dependency unavailability ka good signal nahi; classify by operation/status/cause. 429 throttling or 408 timeout handling depends downstream contract and policy. Some statuses meaningful overload/dependency signals ho sakte hain. Healthy service invalid request reject kar sakti hai. Threshold-only change root classification bug hide karta hai." , choiceExplanations: ["Malformed caller requests dependency unavailability ka good signal nahi; classify by operation/status/cause. 429 throttling or 408 timeout handling depends downstream contract and policy.","Some statuses meaningful overload/dependency signals ho sakte hain.","Healthy service invalid request reject kar sakti hai.","Threshold-only change root classification bug hide karta hai."] },
   ],
   cards: [
     { front: 'Timeout vs circuit breaker?', back: 'Timeout A ke workers bachata hai. Breaker bimaar B par calls rok ke B ko bhi bachata hai (lab 38: 300 vs 30 calls, B 3 baar vs 0 baar gira).' },
@@ -330,15 +300,10 @@ fair queuing (baari-baari)      24 ms     41 ms      0/580      1046 /    0 / 11
       ],
       observe: {
         q: 'Autoscale ne naye workers t=10.1 s par de diye. Phir bhi ek line wale setup mein B aur C ki 354/472 requests kyun fail hui?',
-        choices: [
-          'Bheed t=2 s par aayi, naye workers 8 s baad (3 s pehchaan + 5 s boot) — us trigger window mein ek line A ne bhar rakhi thi',
-          'Autoscaler kharab tha',
-          'B aur C ne quota tod diya',
-          'Naye workers dheeme the',
-        ],
+        choices: ["Detection/boot lag mein shared queue head-of-line blocked","Worker creation t10.1 previous t2 requests ko undo karti","Autoscale lag proves all autoscaling designs unusable hain","Fair queue unused hardware capacity automatically create kare"],
         answer: 0,
-        explain: 'Autoscale hamesha der se aata hai. Fair queuing ne window ko bekaar kiya: B, C ko 0 error — scale se pehle bhi.',
-      },
+        explain: "Lab burst before scale arrival shared queue fill karti hai; tenant scheduling/admission can isolate waiting while scale catches up. Prewarming and prediction lag reduce kar sakti hain; zero-lag universal assumption nahi. Earlier deadlines already expire ho sakti hain. Reactive scaling still sustained load ke liye useful hai. Fairness available capacity distribute karti hai, invent nahi.",
+       choiceExplanations: ["Lab burst before scale arrival shared queue fill karti hai; tenant scheduling/admission can isolate waiting while scale catches up. Prewarming and prediction lag reduce kar sakti hain; zero-lag universal assumption nahi.","Earlier deadlines already expire ho sakti hain.","Reactive scaling still sustained load ke liye useful hai.","Fairness available capacity distribute karti hai, invent nahi."] },
       lesson: 'Tenants ko alag lines (fair queuing) ya quotas; batch job ko concurrency cap; autoscale uske upar — uske badle nahi.',
     },
     {
@@ -424,15 +389,10 @@ frame mein ek baar, naye 20      47 fps · click 6 ms   · 11 ms purana, ~81% ch
       ],
       observe: {
         q: 'Teeno streams modes ~8 s mein khatam hue. Toh write() ka jawab maanne se kya bacha?',
-        choices: [
-          'RAM — nazarandaaz karne par poori 120 MB file writer ki line mein jama hui; drain/pipeline mein 1 MB. Badi file par process out-of-memory se marta',
-          'Samay — drain wala tez tha',
-          'CPU — pipeline kam CPU leta hai',
-          'Kuch nahi, teeno barabar hain',
-        ],
+        choices: ["Buffered RAM bounded hui; downstream throughput same tha","Equal duration se each mode ka memory footprint equal hai","write false ignore karna producer ko pause kar deta hai","pipeline every workload ko exactly one MB RAM cap deti"],
         answer: 0,
-        explain: 'Raftaar hamesha dheeme writer ki thi (~16 MB/s). Backpressure sirf yeh tay karta hai ki farak RAM mein jama hoga ya producer rukega.',
-      },
+        explain: "Node write false means buffer pressure; drain await ya pipeline backpressure obey karte hain. Lab 120 MB versus 1 MB measured setup-specific hai, exact universal cap nahi. Time and memory separate metrics hain. Caller ko production pause/control karna padta hai. High-water marks/chunk sizes/transforms memory affect karte hain.",
+       choiceExplanations: ["Node write false means buffer pressure; drain await ya pipeline backpressure obey karte hain. Lab 120 MB versus 1 MB measured setup-specific hai, exact universal cap nahi.","Time and memory separate metrics hain.","Caller ko production pause/control karna padta hai.","High-water marks/chunk sizes/transforms memory affect karte hain."] },
       lesson: 'Node mein pipeline() use karo; frontend mein har frame ek hadd (aur baaki chhodo ya "+N aur" dikhao).',
     },
   ],
@@ -498,15 +458,10 @@ multi-site active-active  poora region, aadha traffic             1.5 s       36
       ],
       observe: {
         q: 'Active-active mein bhi 3 orders kho gaye jinhe "ho gaya" bola ja chuka tha. Kyun?',
-        choices: [
-          'Replication async hai — A ne order save karke "ho gaya" bola, par woh 300 ms ke lag mein B tak pahunchne se pehle A gayab',
-          'Router ne orders gira diye',
-          'Region B mein jagah nahi thi',
-          'Health check galat tha',
-        ],
+        choices: ["ACK local tha; async copy se pehle region loss hua","Active-active label cross-region durable quorum prove karta","Routing switch unreplicated writes automatically recreate kare","Zero-loss target independent replicas ke bina achieve hua"],
         answer: 0,
-        explain: 'Async replication mein RPO kabhi zero nahi. Zero chahiye toh har write par doosre region ka intezaar (sync / quorum) — har order par ek poora cross-region RTT.',
-      },
+        explain: "Lab local acknowledged write remote copy se pehle lost hoti hai. RPO loss budget and durability fault model define karo; synchronous cross-region quorum can reduce covered loss risk with latency/availability tradeoffs. Topology label replication acknowledgement policy nahi. Traffic routing missing data recover nahi karti. Fault-domain durable copies/coordination relevant hain.",
+       choiceExplanations: ["Lab local acknowledged write remote copy se pehle lost hoti hai. RPO loss budget and durability fault model define karo; synchronous cross-region quorum can reduce covered loss risk with latency/availability tradeoffs.","Topology label replication acknowledgement policy nahi.","Traffic routing missing data recover nahi karti.","Fault-domain durable copies/coordination relevant hain."] },
       lesson: 'RTO = pata chalna + banana/boot/scale. RPO = snapshot ka antar ya replication lag. Kharcha ulta chalta hai.',
     },
     {
@@ -525,20 +480,15 @@ multi-site active-active  poora region, aadha traffic             1.5 s       36
         { text: 'B2B SaaS — contract mein 1 ghanta RTO, 5 minute RPO', bin: 'pilot', explain: 'DB replica chalu (RPO chhota), app band (kharcha kam), failover par boot.' },
         { text: 'E-commerce checkout — kuch minute ka outage bardasht, par us se zyada nahi', bin: 'warm', explain: 'Chhota app pehle se chalu — minutes mein serve, phir scale.' },
         { text: 'Payments / trading — seconds ka outage bhi karodon ka', bin: 'active', explain: 'Dono regions hamesha serve karte hain. Sabse mehnga — aur conflicts ka hisaab bhi chahiye.' },
-        { text: 'Global app jiske users do mahadweepon mein hain — latency bhi ghatani hai', bin: 'active', explain: 'Geo-routing se dono regions pehle se kaam aate hain; DR muft mein.' },
+        { text: 'Global app jiske users do mahadweepon mein hain — latency bhi ghatani hai', bin: 'active', explain: 'Geo-routing latency help kar sakti hai; survivor headroom, replicated state, conflict policy aur tested failover ka cost phir bhi hai.' },
       ],
     },
   ],
   interview: [
     { q: 'Interviewer: "Humara DR plan: raat ko backup doosre region mein. Region gaya toh kitni der mein wapas?"',
-      choices: [
-        'Ghante — region B mein kuch chal hi nahi raha: machines, DB, network banana + restore. RPO = aakhri backup se ab tak ka data. RTO/RPO business se poochh ke pilot light / warm standby socho',
-        'Minutes, backup tez hota hai',
-        'Turant, cloud khud failover karta hai',
-        'Kabhi nahi, backup se region wapas nahi aata',
-      ],
+      choices: ["Restore drill se RTO naapo; backup age RPO inform kare","Nightly backup se universal two-minute recovery guaranteed","Backup presence se network/secrets/services ready prove hain","Pilot-light label current recoverable data guarantee karta"],
       answer: 0,
-      explain: 'Lab 40: backup & restore — RTO 16.3 s (asli: ghante), 50 orders kho gaye; pilot light 6.4 s / 5; active-active 1.5 s / 3.' },
+      explain: "Provisioning, dependencies, restore size/rate and integrity verify karke achieved RTO measure karo. RPO latest usable recovery point se decide hota hai; lab seconds real universal hours estimate nahi. Data volume/preparation performance affect karte hain. Recovery workflow storage artifact se broader hai. Replication/log/backup freshness independently test karo." , choiceExplanations: ["Provisioning, dependencies, restore size/rate and integrity verify karke achieved RTO measure karo. RPO latest usable recovery point se decide hota hai; lab seconds real universal hours estimate nahi.","Data volume/preparation performance affect karte hain.","Recovery workflow storage artifact se broader hai.","Replication/log/backup freshness independently test karo."] },
   ],
   cards: [
     { front: 'RTO vs RPO?', back: 'RTO = kitni der mein wapas chalu. RPO = kitna data khona manzoor. Dono business tay karta hai, phir sabse sasti strategy jo fit ho.' },
@@ -573,7 +523,7 @@ power of two choices (apni ginti)    204 ms       1            602 ms          2
          Least connections khud sambhalta hai — dheeme par requests der tak andar rehti hain, ginti badi dikhti hai.</li>
        <li><b>Purani jaankari par "sabse kam load":</b> sab ek hi "sabse khaali" ko chunte hain → wahi backend bhar jaata hai → agli baar doosra. Ginti mein
          har backend ko lagbhag barabar milta hai (476 / 486 / 485 / 464 / 489) — par dher mein: ek ki line 92–106. Ise <b>herding</b> kehte hain.</li>
-       <li><b>Power of two choices:</b> do random mein se behtar — herding nahi, har baar saare backends dekhne ki zaroorat nahi. Envoy
+       <li><b>Power of two choices:</b> do random mein se behtar — herding risk reduce ho sakta hai; har baar saare backends dekhne ki zaroorat nahi. Signal quality aur selection distribution still matter karti hai. Envoy
          (<code>LEAST_REQUEST</code>, 2 choices) aur NGINX (<code>random two least_conn</code>) yahi karte hain.</li>
      </ol>
      <table>
@@ -606,15 +556,10 @@ power of two choices (apni ginti)    204 ms       1            602 ms          2
       ],
       observe: {
         q: 'Resource-based ke paas har backend ka load tha, phir bhi resource-based ki sabse lambi line (123) round robin (113) jitni buri kyun rahi?',
-        choices: [
-          'Load ki jaankari 500 ms purani thi: har request usi backend par gayi jo 500 ms pehle sabse khaali tha — agli heartbeat tak sab usi par (herding)',
-          'Heartbeat galat number bhej rahi thi',
-          'Backend 5 band tha',
-          'Resource-based random chunta hai',
-        ],
+        choices: ["Stale minimum-load signal ne requests same target pe bheji","Every load-aware algorithm inherent round-robin se worse hai","Same heartbeat interval fresh per-request feedback deta hai","Two choices cluster capacity measurement se unrelated hai"],
         answer: 0,
-        explain: 'Purani jaankari par "sabse accha" chunna herding banata hai. Power of two choices wahi jaankari par bhi line 123 se 25 kar deta hai (sab ek jaise: 92 se 29).',
-      },
+        explain: "500ms old shared minimum repeatedly selecting same backend herding la sakta hai; random candidates plus feedback can spread arrivals. Lab result specific telemetry/workload ka hai. Fresh feedback and better policy useful ho sakte hain. Sampling delay remains between observations. Power-of-two availability/load signal quality still matter karti hai.",
+       choiceExplanations: ["500ms old shared minimum repeatedly selecting same backend herding la sakta hai; random candidates plus feedback can spread arrivals. Lab result specific telemetry/workload ka hai.","Fresh feedback and better policy useful ho sakte hain.","Sampling delay remains between observations.","Power-of-two availability/load signal quality still matter karti hai."] },
       lesson: 'Default: least-request / P2C (LB ki apni taaza ginti). Random / round robin tabhi jab machines aur requests ek jaisi hon.',
     },
   ],
@@ -721,15 +666,10 @@ SD.registerLevelsAfter('resil', 'slo', [
       ],
       observe: {
         q: '3 instances the, phir bhi bina health check 201 requests (12.6%) fail kyun hui?',
-        choices: [
-          'Load balancer mare hue instance ko bhi round robin mein har teesri request bhejta raha — use pata hi nahi tha ki instance mara hai',
-          'Baaki do instances bhi dheeme ho gaye',
-          'Monkey ne teeno ek saath maare',
-          'Retry ki wajah se bojh badha',
-        ],
+        choices: ["Dead endpoint routing mein tha; detection/removal missing","Three copies automatically load-balancer health update karti","Round-robin request failures se list intrinsically edit karta","Each retry inherently safe hai, so no policy assess chahiye"],
         answer: 0,
-        explain: 'Redundancy tabhi kaam ki jab koi mare hue ko pehchaane (health check) aur fail request ko doosre par bheje (retry). Monkey ne dono kami dikha di.',
-      },
+        explain: "Replica availability use karne ke liye routing unhealthy endpoint remove kare; safe retries need deadlines, budget and operation semantics. Health detection and propagation delays still leave windows. Replica count control-plane policy nahi. Round robin scheduler alone health detector nahi. Non-idempotent retries duplicate effects cause kar sakti hain.",
+       choiceExplanations: ["Replica availability use karne ke liye routing unhealthy endpoint remove kare; safe retries need deadlines, budget and operation semantics. Health detection and propagation delays still leave windows.","Replica count control-plane policy nahi.","Round robin scheduler alone health detector nahi.","Non-idempotent retries duplicate effects cause kar sakti hain."] },
       lesson: 'Chaos ka kaam kami dikhana hai: har setup "kaam karta hai" jab tak kuch toote nahi.',
     },
     {
@@ -749,9 +689,9 @@ SD.registerLevelsAfter('resil', 'slo', [
       type: 'quiz',
       title: 'Chaos ki samajh',
       questions: [
-        { q: 'Chaos Monkey production mein kyun, staging mein kyun nahi?', choices: ['Staging mein asli traffic, config aur dependencies nahi hote — asli jawab production se milta hai (chhote blast radius ke saath)', 'Production sasta hai', 'Staging mein monkey nahi chalta', 'Netflix ke paas staging nahi tha'], answer: 0, explain: 'Shuruaat staging / game day se theek hai; par asli bharosa production ke chhote, kaabu wale experiments se aata hai.' },
-        { q: 'Experiment ke beech steady state toot gayi (success 97%). Kya karo?', choices: ['Turant abort, kami likho, theek karke dobara', 'Experiment poora hone do', 'Blast radius badhao', 'SLO badal do'], answer: 0, explain: 'Chaos experiment kabhi incident nahi banna chahiye — abort button pehle se.' },
-        { q: 'Lab 42 mein "3 instances, health check nahi" ke errors "sabse lamba error ka daur 0 ms" kyun dikhate hain?', choices: ['Errors lagatar nahi, bikhre hue the — har teesri request (round robin) mare instance par', 'Koi error nahi tha', 'Monkey ne kuch nahi maara', 'Health check chal raha tha'], answer: 0, explain: 'Bikhre errors dashboards par "noise" jaise dikhte hain — isi liye yeh kami chhup jaati hai. Success rate dekho, sirf spikes nahi.' },
+        { q: "Staging tests ke baad scoped production chaos experiment kya additional evidence de sakta hai?", choices: ["Real traffic/config failure interactions ka extra evidence","Staging experiments production learning value zero karte","Production test pe rollback/stop limits less important hain","Real users present ho toh experiment baseline optional hai"], answer: 0, explain: "Staging valuable first step hai; controlled production experiments real routing, dependencies and traffic interactions reveal kar sakte hain. Authorization, tight scope and abort/recovery readiness essential hain. Staging many defects safely reveal kar sakti hai. Customer impact makes control requirements stronger. Measured steady-state and hypothesis needed hain." , choiceExplanations: ["Staging valuable first step hai; controlled production experiments real routing, dependencies and traffic interactions reveal kar sakte hain. Authorization, tight scope and abort/recovery readiness essential hain.","Staging many defects safely reveal kar sakti hai.","Customer impact makes control requirements stronger.","Measured steady-state and hypothesis needed hain."] },
+        { q: "Experiment ka predeclared abort floor success 98% hai. Observed success 97% ho gayi. Ab kya?", choices: ["Abort fault, recover, record gap; fix karke retest karo","Floor ko 97% set karo; current experiment successful maano","Fault intensity badhaao; threshold crossing evidence ignore karo","Full scheduled duration tak authorized stop rule defer karo"], answer: 0, explain: "Predeclared 98% abort floor cross hua hai, so stop injection and verify recovery. Preserve evidence, fix issue and repeat under approved experiment controls. Threshold after result change goalpost hai. Wider fault increases already unacceptable impact. Stop rule duration target se higher priority hai." , choiceExplanations: ["Predeclared 98% abort floor cross hua hai, so stop injection and verify recovery. Preserve evidence, fix issue and repeat under approved experiment controls.","Threshold after result change goalpost hai.","Wider fault increases already unacceptable impact.","Stop rule duration target se higher priority hai."] },
+        { q: 'Lab 42 mein "3 instances, health check nahi" ke errors "sabse lamba error ka daur 0 ms" kyun dikhate hain?', choices: ["Isolated failures the; contiguous-run metric zero tha","Zero-ms streak means successful responses 100% the","Zero-ms streak dead instance ki absence prove karti hai","Zero-ms streak retry duplication count measure karti hai"], answer: 0, explain: "Lab longest consecutive-error interval isolated failed requests ke liye 0 ms report karta hai; aggregate success/error rate actual impact reveal karti hai. Metric definition samjho. 201 isolated errors still present the. Dead instance round robin pattern explain karti hai. This metric effect uniqueness track nahi karti." , choiceExplanations: ["Lab longest consecutive-error interval isolated failed requests ke liye 0 ms report karta hai; aggregate success/error rate actual impact reveal karti hai. Metric definition samjho.","201 isolated errors still present the.","Dead instance round robin pattern explain karti hai.","This metric effect uniqueness track nahi karti."] },
       ],
     },
   ],
@@ -760,21 +700,11 @@ SD.registerLevelsAfter('resil', 'slo', [
     instructions: 'SRE / platform round. 🎤',
     questions: [
       { q: 'Interviewer: "Humare paas har service ke 3 replicas hain. Chaos engineering ki zaroorat kyun?"',
-        choices: [
-          'Replicas hona aur replicas ka kaam aana alag hai — bina health check / retry ke mara replica bhi traffic khata hai (lab 42: 3 replicas par bhi 12.6% fail). Chaos yahi saabit karta hai',
-          'Zaroorat nahi, 3 replicas kaafi hain',
-          'Sirf compliance ke liye',
-          'Replicas 5 kar do',
-        ],
-        answer: 0, explain: 'Monkey ne dikhaya: redundancy ka faayda health check + retry ke saath hi.' },
+        choices: ["Replica count ke saath detection, failover aur capacity test","Three replicas se all shared config failures isolated hote","Retry enable hone se unsafe writes automatically dedupe hote","Healthy count alone full-load survival evidence deta hai"],
+        answer: 0, explain: "Fault experiment routing/detection lag, safe retry policy, survivor headroom and shared dependencies validate karta hai; count recovery outcome guarantee nahi. Common rollout/dependency failures replicas affect kar sakte hain. Operation-level idempotency/transactional semantics chahiye. Remaining instances overload ho sakti hain." , choiceExplanations: ["Fault experiment routing/detection lag, safe retry policy, survivor headroom and shared dependencies validate karta hai; count recovery outcome guarantee nahi.","Common rollout/dependency failures replicas affect kar sakte hain.","Operation-level idempotency/transactional semantics chahiye.","Remaining instances overload ho sakti hain."] },
       { q: 'Interviewer: "Pehla chaos experiment kaise shuru karoge?"',
-        choices: [
-          'Steady state ka number + hypothesis, staging ya ek chhota cell, abort button, sabse aam failure (ek instance band) — phir dheere badhao',
-          'Seedha production mein poora region band',
-          'Bina bataye friday shaam',
-          'Pehle saare tools khareedo',
-        ],
-        answer: 0, explain: 'Chhota blast radius, saaf hypothesis, turant abort — aur jo seekha use theek karke dobara.' },
+        choices: ["Baseline, hypothesis, small scope, stop rules, rollback verify","Failure inject pehle; success metric later output se choose","All replicas stop karo; realistic result ke liye scope full ho","Automation tool buy karo; recovery ownership baad mein do"],
+        answer: 0, explain: "Observable baseline and clear hypothesis define karo; authorized small scope, bounded duration, abort thresholds and tested recovery choose karo. Observe, restore, learn, fix then expand. Post-hoc metrics experiment validity weaken karti hain. Minimal controlled blast radius useful first step hai. Tool adoption recovery ownership replace nahi karti." , choiceExplanations: ["Observable baseline and clear hypothesis define karo; authorized small scope, bounded duration, abort thresholds and tested recovery choose karo. Observe, restore, learn, fix then expand.","Post-hoc metrics experiment validity weaken karti hain.","Minimal controlled blast radius useful first step hai.","Tool adoption recovery ownership replace nahi karti."] },
     ],
   },
   success: [

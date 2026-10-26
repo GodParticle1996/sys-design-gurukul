@@ -94,16 +94,11 @@ SD.registerLevels('sdd-resil', [
           vars: { calls: '24' },
           ask: {
             q: 'payment-service 2.40 s par wapas aayegi. Chhe phones abhi bhi har 300 ms par retry kar rahe hain. 2.40 s ke baad kya hoga?',
-            choices: [
-              'Chhe ki chhe retries lagbhag ek saath pahunchengi. Hadd 5 hai — 6vi par payment-service phir crash',
-              'Chhe ke chhe order lag jaayenge — payment-service theek ho chuki hai',
-              'Pehla phone andar jaayega, baaki paanch line mein khade rahenge',
-              'Phones tab tak retry karna band kar chuke honge',
-            ],
+            choices: ["Synchronized six retries capacity five ko phir todengi","Recovered service six calls ko unlimited buffer karegi","Client retries recovery time se pehle khud ruk jaayengi","Server ka restart client jitter automatically add karega"],
             answer: 0,
             hint: 'Kitne phones retry kar rahe hain? payment-service ek saath kitne orders sambhal sakti hai?',
             explain: 'Chhe phones, hadd paanch. payment-service ke liye "uthte hi" ka matlab hai: <b>saari atki hui retries ek saath</b>.',
-          },
+           choiceExplanations: ["Chhe phones, hadd paanch. payment-service ke liye \"uthte hi\" ka matlab hai: <b>saari atki hui retries ek saath</b>.","Shown fragile service cap exceed par crashes; unlimited queue configured nahi.","Clients fixed retries karte rehte hain; recovery se retry loop stop nahi hota.","Server recovery client timer phase ko automatically decorrelate nahi karti."] },
         },
         {
           clock: '2.50–2.58 s',
@@ -188,16 +183,11 @@ SD.registerLevels('sdd-resil', [
           vars: { svc: 'DOWN — 2.40 s par wapas', wait: 'abhi tay nahi', calls: '0', crashes: '1 (deploy)', orders: '6 mein se 0' },
           ask: {
             q: 'App ke retry niyam mein sabse seedha pehla sudhaar kya hoga?',
-            choices: [
-              'Har fail ke baad pichhli baar se dugna ruko (300, 600, 1200 … ms), aur 5 koshish ke baad ruk jao',
-              'Retry poori tarah hata do',
-              'payment-service ko bada server de do',
-              'Jo phone 3 baar fail ho, use block kar do',
-            ],
+            choices: ["Bounded exponential backoff; phir jitter aur deadline jodo","Retries hatao; har transient failure final error bana do","Server RAM badhao; client retry schedule same rakho","Three failures par user ban; transient recovery ignore karo"],
             answer: 0,
             hint: 'Dikkat yeh thi ki phones bahut jaldi-jaldi aur bina ruke bhejte rahe.',
             explain: 'Har baar zyada rukne ka naam <b>backoff</b> hai; har baar dugna = <b>exponential backoff</b>. (Retry hata dena bhi theek nahi: ek chhoti si blip par bhi user ko error milega.)',
-          },
+           choiceExplanations: ["Har baar zyada rukne ka naam <b>backoff</b> hai; har baar dugna = <b>exponential backoff</b>. (Retry hata dena bhi theek nahi: ek chhoti si blip par bhi user ko error milega.)","Safe bounded retries transient blips mask kar sakti hain; all retry removal necessary nahi.","Capacity relief useful ho sakti hai, par client attempt amplification policy fix nahi.","Transient infrastructure failure user abuse ka proof nahi; ban debugging fix nahi."] },
         },
         {
           clock: '1.30–1.40 s',
@@ -227,16 +217,11 @@ SD.registerLevels('sdd-resil', [
           vars: { svc: 'UP — khaali' },
           ask: {
             q: 'Chhe phones 1200 ms ruk ke 3.40–3.50 s par lautenge. Chhe ke chhe ek hi pal fail hue the aur ek hi formula se ruke. Kya hoga?',
-            choices: [
-              'Chhe phir se lagbhag ek saath pahunchenge → 6vi par payment-service crash',
-              'Itna rukne ke baad chhe ke chhe order lag jaayenge',
-              'Sirf Asha ka order lagega',
-              'Phones 1200 ms mein bhool jaayenge ki order bhejna tha',
-            ],
+            choices: ["Same backoff phase se synchronized herd phir aayegi","Longer wait se six-client herd five capacity mein fit hogi","Only first client return karega; formula usko priority deta","Backoff automatically shuffled queue mein requests rakhega"],
             answer: 0,
             hint: 'Sab ek saath fail hue. Sab ne ek hi sankhya (1200 ms) gini. Toh sab kab lautenge?',
             explain: 'Ek hi pal + ek hi formula = <b>ek hi pal par wapsi</b>. Zyada rukne se bheed chhoti nahi hoti — bas der se aati hai.',
-          },
+           choiceExplanations: ["Ek hi pal + ek hi formula = <b>ek hi pal par wapsi</b>. Zyada rukne se bheed chhoti nahi hoti — bas der se aati hai.","Wait time change simultaneous concurrency count ko necessarily nahi badalta.","Shared deterministic formula first-client priority protocol nahi.","Exponential backoff alone independent randomization/admission queue add nahi karta."] },
         },
         {
           clock: '3.40–3.50 s',
@@ -296,16 +281,11 @@ SD.registerLevels('sdd-resil', [
           say: 'Doctor ke clinic par receptionist bolti hai: <b>"15 se 30 minute ke beech kabhi bhi aa jaana."</b><br><br>Koi 16 minute mein aata hai, koi 22 mein, koi 29 mein. Log wahi hain, doctor wahi hai — par sab ek saath nahi aate.',
           ask: {
             q: 'payment-service 2.40 s par uthegi. Chhe phones ko kaise lautana chahiye?',
-            choices: [
-              'Har phone apna alag random waqt chune — koi 2.5 s par, koi 2.8 s par, koi 3.4 s par',
-              'Chhe ke chhe theek 2.40 s par',
-              'Chhe ke chhe theek 5.00 s par, taaki payment-service ko aaraam mile',
-              'Koi kabhi na laute',
-            ],
+            choices: ["Independent bounded jitter; return times spread karo","All six fixed 2.40 s par; recovery boundary align karo","All six fixed 5.00 s par; same phase later shift karo","One shared random delay; sab clients wahi value use karein"],
             answer: 0,
             hint: 'Dikkat rukne ki lambai mein nahi thi. Dikkat yeh thi ki sab ek hi pal par laute.',
             explain: 'Der se lautna kaafi nahi; <b>alag-alag</b> lautna zaroori hai. Random hi woh cheez hai jo chhe phones ko ek doosre se alag karti hai.',
-          },
+           choiceExplanations: ["Der se lautna kaafi nahi; <b>alag-alag</b> lautna zaroori hai. Random hi woh cheez hai jo chhe phones ko ek doosre se alag karti hai.","Capacity-five service ko six synchronized requests phir overwhelm kar sakti hain.","All clients ko same later time dena herd ko shift karta, break nahi.","Shared random value clients ko same time phir laayegi; independent choices chahiye."] },
         },
         {
           title: '4. In cheezon ke naam',
@@ -342,26 +322,16 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Hamari service sirf 2 second ke liye giri thi, par outage kai minute chala. Aisa kaise ho sakta hai?"',
-        choices: [
-          'Clients ki atki hui retries service ke uthte hi ek saath pahunchi aur service ko dobara gira diya — baar-baar. Retry storm. Ilaaj: backoff + jitter + koshish ki hadd, aur server bhara ho toh crash ke bajaye 503 + Retry-After',
-          'Service ka restart hi kai minute leta hoga',
-          'Database corrupt ho gaya hoga',
-          'Load balancer ne traffic rok diya hoga',
-        ],
+        choices: ["Retry storm check; attempts, jitter aur admission maapo","Restart time assume; client request amplification skip karo","DB corruption assume; latency/error traces skip karo","Load balancer bug assume; retry schedule inspect na karo"],
         answer: 0,
         explain: 'Lab: akela crash hota toh service 7.0 s par theek. Turant retries ke saath 5 crash, aur 12 s ke run mein theek hui hi nahi; har user action par ~19 calls.',
-      },
+       choiceExplanations: ["Lab: akela crash hota toh service 7.0 s par theek. Turant retries ke saath 5 crash, aur 12 s ke run mein theek hui hi nahi; har user action par ~19 calls.","Observed long outage restart duration se ho sakti hai, par repeated re-crash/client amplification evidence separately trace karo.","Corruption additional evidence maangti hai; synchronized overload alternative shown mechanism hai.","Retry waves without routing bug bhi recovery ko destabilize kar sakti hain."] },
       {
         q: '"Humne exponential backoff laga diya hai. Phir bhi restart ke baad traffic ki ek deewar aati hai. Kyun?"',
-        choices: [
-          'Saare clients ek hi pal fail hue aur ek hi formula se ruke, isliye ek hi pal par laute. Backoff rukna badhata hai, bheed nahi todta. Rukne mein random (jitter) chahiye',
-          'Backoff ka base bahut chhota hai, use badha do',
-          'Clients ki ghadiyan galat hain',
-          'Backoff sirf GET requests par kaam karta hai',
-        ],
+        choices: ["Backoff deterministic; independent jitter missing ho sakti","Backoff GET-only; POST failures ka timing random hota","Server clocks synchronized; client timing guaranteed safe","Cap badhao; all clients same later phase par lautne do"],
         answer: 0,
         explain: 'Lab: 200 clients, backoff bina random → 120 ne haar maani, aakhri safal call 5.3 s par. Slow motion: calls 132 → 30, par crash phir bhi 3.',
-      },
+       choiceExplanations: ["Lab: 200 clients, backoff bina random → 120 ne haar maani, aakhri safal call 5.3 s par. Slow motion: calls 132 → 30, par crash phir bhi 3.","Backoff scheduling method HTTP method se random nahi hota; side-effect safety separately evaluate karo.","Synchronized timing herd ka source ho sakti; safe spread ki guarantee nahi.","Larger common wait phase correlation nahi hataata."] },
     ],
   },
   success: [

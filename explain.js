@@ -146,7 +146,7 @@
           done = true;
           b.classList.add('right');
           fb.className = 'ms-ask-fb good';
-          fb.innerHTML = '✅ ' + (q.explain || 'Sahi!');
+          fb.innerHTML = '✅ ' + SD.choiceFeedback(q, i);
           onRight(!wrong);
         } else {
           if (!wrong) SD.noteMistake(q.q, `<b>${q.choices[q.answer]}</b><br>${q.explain || ''}`, '🔍 Dry run');
@@ -155,7 +155,7 @@
           b.disabled = true;
           shake(card);
           fb.className = 'ms-ask-fb bad';
-          fb.innerHTML = '❌ Nahi. ' + (q.hint || 'Upar ka haal dobara dekho, phir ek aur try karo.');
+          fb.innerHTML = '❌ ' + SD.choiceFeedback(q, i) + (q.hint ? '<br>Hint: ' + q.hint : '');
         }
       };
       card.appendChild(b);

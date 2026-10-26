@@ -88,16 +88,11 @@ SD.registerLevels('sdd-resil', [
           vars: { win: ['ok', 'ok', 'ok', 'ok', 'bad', 'bad'], rate: '6 mein se 2 = 33%', sent: '2' },
           ask: {
             q: 'Hadd 50% hai. Do calls lagataar fail hui hain. Breaker ab kya karega?',
-            choices: [
-              'Kuch nahi badlega — 33% hadd se kam hai, breaker CLOSED rahega',
-              'OPEN ho jaayega — do baar lagataar fail ho gaya',
-              'HALF-OPEN ho jaayega',
-              'recs-service ko restart kar dega',
-            ],
+            choices: ["Closed rahega; window failure ratio abhi lagbhag 33%","Open hoga; do consecutive failures threshold hain","Half-open hoga; failure ratio minimum sample se kam","Window clear hogi; failure pair naya interval shuru kare"],
             answer: 0,
             hint: '"Kitni fail?" wali line dekho aur 50% se milao.',
             explain: 'Yeh breaker <b>lagataar</b> failures nahi ginta — window mein fail ka <b>hissa</b> ginta hai. 6 mein se 2 = 33% &lt; 50%. Ek-do blip par breaker nahi girna chahiye.',
-          },
+           choiceExplanations: ["Yeh breaker <b>lagataar</b> failures nahi ginta — window mein fail ka <b>hissa</b> ginta hai. 6 mein se 2 = 33% &lt; 50%. Ek-do blip par breaker nahi girna chahiye.","Configured policy rolling ratio hai, consecutive-failure threshold nahi.","Half-open previous open state ke cooldown ke baad aata hai.","Window reset karne ka aisa branch shown code mein nahi."] },
         },
         {
           clock: '2.3 s',
@@ -113,16 +108,11 @@ SD.registerLevels('sdd-resil', [
           vars: { win: 'khaali (OPEN hote hi saaf)', rate: 'lagu nahi' },
           ask: {
             q: '#8 ka kya hoga?',
-            choices: [
-              'recs-service tak jaayegi hi nahi — breaker turant mana karega aur user ko cache se jawab milega',
-              'recs-service tak jaayegi aur 300 ms baad timeout hoga',
-              'User ko error dikhega',
-              'Line mein khadi rahegi jab tak breaker CLOSED na ho',
-            ],
+            choices: ["Open breaker C ko skip karega; configured fallback mile","Call C tak jaayegi; normal dependency timeout wait ho","Request queue hogi; breaker close hone tak hold ho","Call alternate C node ko jaayegi; routing auto badlegi"],
             answer: 0,
             hint: 'OPEN = taar kata hua. Kate hue taar mein current jaata hai?',
             explain: 'OPEN = <b>poochho hi mat</b>. Asli run mein #8 ko jawab <b>0 ms</b> mein mila (timeout wale raaste par 302 ms lagte). recs-service par koi naya bojh nahi.',
-          },
+           choiceExplanations: ["OPEN = <b>poochho hi mat</b>. Asli run mein #8 ko jawab <b>0 ms</b> mein mila (timeout wale raaste par 302 ms lagte). recs-service par koi naya bojh nahi.","Open guard dependency action execute hone se pehle short-circuit karta hai.","Is breaker mein unbounded waiting queue design nahi; immediate fallback hai.","Automatic alternate routing configured nahi. Breaker fallback aur failover alag choices hain."] },
         },
         {
           clock: '4.0 s',
@@ -138,16 +128,11 @@ SD.registerLevels('sdd-resil', [
           vars: { state: 'HALF-OPEN — sirf trial calls', timer: 'poora', trials: '2 mein se 0 safal', sent: '4' },
           ask: {
             q: 'recs-service abhi bhi latki hai: #11 par 300 ms mein jawab nahi aaya. Ab?',
-            choices: [
-              'Breaker phir OPEN, aur 2 second ka timer dobara shuru',
-              'Breaker CLOSED — ek trial toh bhej di',
-              'Breaker HALF-OPEN hi rahega aur agli 5 calls bhi bhejega',
-              'Breaker hamesha ke liye OPEN ho jaayega',
-            ],
+            choices: ["Probe fail: open aur cooldown timer phir shuru hoga","Probe bheji: closed, baaki traffic live kar diya jaaye","Probe fail: half-open, unrestricted probes aate rahein","Probe fail: permanently open, engineer ka wait kare"],
             answer: 0,
             hint: 'MCB uthaya, geyser abhi bhi kharab. MCB kya karta hai?',
             explain: 'Ek bhi trial fail → phir OPEN. Is jaanch ki keemat: sirf <b>ek</b> call ne 303 ms khoye — poora traffic nahi.',
-          },
+           choiceExplanations: ["Ek bhi trial fail → phir OPEN. Is jaanch ki keemat: sirf <b>ek</b> call ne 303 ms khoye — poora traffic nahi.","Probe attempt hona recovery proof nahi; successful result chahiye.","Failed half-open test ke baad restricted cooldown reopen hota hai.","Is code mein automatic timer-based future probes hain; permanent latch nahi."] },
         },
         {
           clock: '4.8 s',
@@ -256,15 +241,10 @@ SD.registerLevels('sdd-resil', [
       ],
       observe: {
         q: 'mini.js mein #13 ke waqt (6.2 s) recs-service theek ho chuki thi. Phir bhi #13 ko cache kyun mila?',
-        choices: [
-          'Breaker OPEN tha aur timer mein 0.6 s baaki the. OPEN mein breaker koi call bhejta hi nahi, isliye breaker ko service ke theek hone ka pata hi nahi chala',
-          'recs-service ne #13 ko reject kar diya',
-          'Timeout 300 ms se kam tha',
-          'Cache hamesha live se tez hota hai, isliye app-api cache hi deta hai',
-        ],
+        choices: ["Cooldown baaki tha; breaker ko recovery probe nahi mili","Healthy C ne is call ko reject karke cache maanga","Timeout budget badal kar 0 ms kar diya gaya tha","Cache policy har request ko live path se pehle rokhti"],
         answer: 0,
         explain: 'OPEN ka waqt bimaar service ke liye aaraam hai, par theek ho chuki service ke liye bekaar ki deri. 7.0 s par trial call ne khabar laayi.',
-      },
+       choiceExplanations: ["OPEN ka waqt bimaar service ke liye aaraam hai, par theek ho chuki service ke liye bekaar ki deri. 7.0 s par trial call ne khabar laayi.","Call remote service tak gayi hi nahi; rejection ka evidence nahi.","Stated 300 ms timeout badla nahi; open guard pehle return karta hai.","Cache is scenario mein fallback hai, unconditional first source nahi."] },
       lesson: 'Slow motion ki ginti: latki recs-service ko <b>4 calls</b> (breaker) banam <b>8</b> (sirf timeout). Asli raftaar par (ex1): <b>30</b> banam <b>300</b>.',
     },
   ],
@@ -274,26 +254,16 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Breaker ko kaise pata chalta hai ki dependency bimaar hai?"',
-        choices: [
-          'Breaker har call ka nateeja ek window mein rakhta hai (pichhli N calls ya pichhle N second). Fail ka hissa hadd se upar gaya aur kam se kam M nateeje ho chuke hain → OPEN',
-          'Dependency khud breaker ko message bhejti hai',
-          'Breaker dependency ka CPU aur memory dekhta hai',
-          'Breaker har second dependency ka health-check endpoint call karta hai',
-        ],
+        choices: ["Observed call results; sample gate aur failure threshold","Dependency push message; caller results count na kare","CPU telemetry; request success ratio observe na kare","Periodic health URL; user call failures count na kare"],
         answer: 0,
         explain: 'Breaker sirf apni calls ke <b>nateeje</b> dekhta hai. Lab: 2/6 = 33% par CLOSED raha, 3/6 = 50% par OPEN hua.',
-      },
+       choiceExplanations: ["Breaker sirf apni calls ke <b>nateeje</b> dekhta hai. Lab: 2/6 = 33% par CLOSED raha, 3/6 = 50% par OPEN hua.","Dependency notifications possible custom design hain; yahan breaker action results record karta hai.","CPU alone caller-observed failures ya timeout impact nahi dikhata.","Separate health probes useful ho sakti hain, par shown breaker ka detection signal call outcomes hai."] },
       {
         q: '"Breaker OPEN hai aur dependency theek ho gayi. Users ko live data kab milega?"',
-        choices: [
-          'OPEN ka timer poora hone ke baad, jab trial calls safal ho jaayein. Tab tak fallback. Isiliye OPEN ka waqt chhota rakhte hain',
-          'Turant — breaker ko dependency ke theek hone ka pata chal jaata hai',
-          'Jab koi engineer breaker ko haath se reset kare',
-          'Service restart ke baad hi',
-        ],
+        choices: ["Cooldown aur successful probes ke baad live data aayega","Remote recovery hote hi local breaker ko signal milega","Manual reset ke baad; automatic probes configured nahi","Caller restart ke baad; breaker state badal nahi sakti"],
         answer: 0,
         explain: 'Lab: service 5.6 s par theek hui, pehla live jawab 7.0 s par (pehli trial). 6.2 s wali request ko purana cache mila.',
-      },
+       choiceExplanations: ["Lab: service 5.6 s par theek hui, pehla live jawab 7.0 s par (pehli trial). 6.2 s wali request ko purana cache mila.","Local breaker remote recovery telepathically detect nahi karta; probe traffic chahiye.","Shown design cooldown ke baad half-open probes allow karta hai.","Breaker state machine running process mein recovery par change hoti hai."] },
     ],
   },
   success: [

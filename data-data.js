@@ -1,3 +1,4 @@
+(() => {
 /* =====================================================================
    TRACK 3 — Data & Storage
    modeling · btree · composite · indextypes · nplus1 · pool ·
@@ -29,11 +30,11 @@ const T_COMPOSITE = [
 
 const T_POOL = [
   { text: 'Normal load daalo — sab theek dikhna chahiye',
-    check: s => s.records.some(r => r.kind === 'load' && !r.poolStarved) },
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 400 && !r.poolStarved) },
   { text: 'Ek lambi transaction 45 connections pakad leti hai',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'long-tx') },
   { text: 'Wahi load dobara — ab pool bhar jaayega',
-    check: s => s.records.some(r => r.kind === 'load' && r.poolStarved) },
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 400 && r.poolStarved) },
   { text: 'Trace se prove karo ki waqt pool.acquire() mein gaya',
     check: s => s.records.some(r => r.kind === 'trace' && /pool/.test(r.worst)) },
   { text: 'Metrics dekho — CPU 10% par pool wait aasman par',
@@ -168,27 +169,17 @@ order_items.price    ← ✅ HISTORICAL FACT
       title: 'Modeling ki samajh',
       questions: [
         {
-          q: 'order_items mein price copy karna denormalization hai?',
-          choices: [
-            'Nahi — woh HISTORICAL FACT hai. Product ka price badalne par purane order ka amount nahi badalna chahiye',
-            'Haan, aur woh galat hai',
-            'Haan, par performance ke liye theek hai',
-            'Depend karta hai DB par',
-          ],
+          q: "Order item mein purchase-time price kyun store karte hain?",
+          choices: ["Purchase-time price is a historical fact","Current catalog price drives past bills","Snapshot is justified only for speed","DB brand decides invoice correctness"],
           answer: 0,
-          explain: 'Yeh farak bahut zaroori hai. Agar tum order total ko products table se JOIN karke nikaaloge, toh price badalte hi <b>saare purane invoices galat</b> ho jaayenge. Order ka price ek alag fact hai — product ke current price ki copy nahi.',
-        },
+          explain: "Order item ka purchase-time price independent historical fact hai. Current product price se later invoice recompute karna incorrect ho sakta hai. Isse snapshot/denormalization kehna terminology choice hai; key correctness requirement agreed historical amount preserve karna hai.",
+         choiceExplanations: ["Order item ka purchase-time price independent historical fact hai. Current product price se later invoice recompute karna incorrect ho sakta hai. Isse snapshot/denormalization kehna terminology choice hai; key correctness requirement agreed historical amount preserve karna hai.","Current catalog changes must not rewrite agreed historical charges.","Snapshot preserves business semantics even when performance is irrelevant.","Invoice price semantics come from domain rules, not the chosen DB."] },
         {
           q: 'Soft delete ka sabse bada khatra?',
-          choices: [
-            'Har query mein deleted_at IS NULL lagana padta hai — ek bhool aur deleted data user ko dikh jaata hai',
-            'Disk space zyada lagta hai',
-            'Queries dheemi ho jaati hain',
-            'Backup bada ho jaata hai',
-          ],
+          choices: ["Missed visibility filter leaks deleted rows","Soft delete guarantees physical erasure","A backup excludes all soft-deleted rows","Every query automatically hides deleted rows"],
           answer: 0,
-          explain: 'Yeh <b>opt-out safety</b> hai, jo hamesha kharaab idea hai — kabhi na kabhi koi bhool jaayega, aur woh bug production mein deleted user ka data dikhayega. Archive table isliye behtar hai: live table mein sirf live data hai, koi filter yaad rakhne ki zaroorat nahi.',
-        },
+          explain: "Soft-deleted rows retained hain; missing visibility predicate deleted/private records expose kar sakta hai. Default ORM scopes, views/RLS aur audit tests help karte hain. Archive vssoftdelete business retention/restore/access needs se choose karo; universal winner nahi.",
+         choiceExplanations: ["Soft-deleted rows retained hain; missing visibility predicate deleted/private records expose kar sakta hai. Default ORM scopes, views/RLS aur audit tests help karte hain. Archive vssoftdelete business retention/restore/access needs se choose karo; universal winner nahi.","A marked row is retained until separate purge/retention process removes it.","Backups can retain marked records; retention must be managed separately.","ORM defaults can be bypassed; raw queries/admin paths still need policy."] },
       ],
     },
   ],
@@ -198,15 +189,10 @@ order_items.price    ← ✅ HISTORICAL FACT
     questions: [
       {
         q: '"Ek e-commerce ka schema design karo."',
-        choices: [
-          'Pehle poochhunga ki app kaunse sawaal poochhegi aur unki frequency/latency kya hai — phir un patterns ke hisaab se tables aur indexes banaunga',
-          'User, Product, Order, OrderItem tables banaunga aur 3NF tak normalize karunga',
-          'Sab kuch ek JSON document mein rakhunga',
-          'Microservices ke hisaab se har entity ka apna DB',
-        ],
+        choices: ["Access patterns and invariants first","Every entity gets a service first","Document DB removes relationship questions","Normalize without reading requirements"],
         answer: 0,
         explain: 'Entity list to har koi bana leta hai. <b>Access patterns poochhna</b> hi seniority ka signal hai — kyunki wahi batate hain ki kaunsa index chahiye, kya denormalize karna hai, aur kaunsa sawaal shayad ek alag analytics system ka kaam hai.',
-      },
+       choiceExplanations: ["Entity list to har koi bana leta hai. <b>Access patterns poochhna</b> hi seniority ka signal hai — kyunki wahi batate hain ki kaunsa index chahiye, kya denormalize karna hai, aur kaunsa sawaal shayad ek alag analytics system ka kaam hai.","Service boundaries need ownership/deployment reasons, not just entity count.","Relationships and consistency requirements remain with document storage.","Normalization is a tool; workload and domain invariants guide the schema."] },
     ],
   },
   success: [
@@ -243,8 +229,7 @@ order_items.price    ← ✅ HISTORICAL FACT
      <p>B-tree ek sorted tree hai. Har node mein ~100 entries aati hain,
      isliye:</p>
      <pre>2,42,86,450 rows → log₁₀₀(24286450) ≈ 3.6 → ~4 hops</pre>
-     <p>Isiliye index lookup <b>hamesha</b> tez hai, chahe table 1 lakh ki ho
-     ya 10 crore ki. Table 100x badi karo, hops sirf 1 badhega.</p>
+     <p>Tree navigation dheere grow karti hai; given fanout 100 mein table 100x badi hone par roughly ek hop add hota hai. Actual latency selectivity, cache, heap fetches aur I/O par depend hai; index every query ko faster nahi banata.</p>
      <p>Aur kyunki leaves <b>sorted</b> hain, index sirf equality nahi —
      range aur sort bhi deta hai:</p>
      <table>
@@ -284,17 +269,20 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
       goal: 'Ek 2.4 crore rows wali table par user ki transactions dhoondhni hain. Pehle plan dekho, phir index banao, phir plan dobara dekho — aur farak naapo.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_BTREE,
-      success: allOf(T_BTREE),
+      success: SD.allTasks(T_BTREE),
       successText: `<b>Seq Scan → Index Scan.</b> Rows examined 2.4 crore se seedha neeche.
-        <br><br>Aur yaad rakho: index tabhi lagega jab woh <b>90%+ rows kaat de</b>.
-        Agar tumne <code>is_active</code> (2 values) par index banaya hota, toh optimizer
-        use ignore kar deta — aur woh <b>sahi</b> hota, kyunki 99% rows ke liye random
-        lookups karne se seq scan sasta hai.`,
+        <br><br>Aur yaad rakho: index selection ka universal <b>90% cutoff nahi</b>. Statistics, selectivity, table size, ordering, covering aur storage cost se planner choose karta hai. Agar 99% rows match karein toh seq scan cheaper ho sakta hai; rare boolean value par index useful ho sakta hai. Real workload par EXPLAIN ANALYZE dekho.`,
+      solution: [
+        "EXPLAIN SELECT * FROM transactions WHERE user_id = 5",
+        "CREATE INDEX ix_txn_user ON transactions(user_id)",
+        "EXPLAIN SELECT * FROM transactions WHERE user_id = 5",
+        "GET /api/v1/transactions?user_id=5&limit=50",
+      ],
+      verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['user_id']) && m.current(s, 'http', r => r.resource === 'transactions' && r.rowsExamined < 100000 && r.status === 200); },
       hints: [
-        'Pehle bina index ke plan: EXPLAIN SELECT * FROM transactions WHERE user_id = 5',
-        'Ab index banao: CREATE INDEX ix_txn_user ON transactions(user_id)',
-        'Plan dobara dekho: EXPLAIN SELECT * FROM transactions WHERE user_id = 5',
-        'Aur asli request se naapo: GET /api/v1/transactions?user_id=5&limit=50',
+        "Pehle observation: Bina index ke plan dekho — Seq Scan milna chahiye. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Request bhej ke asli farak naapo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nCREATE INDEX ix_txn_user ON transactions(user_id)\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nGET /api/v1/transactions?user_id=5&limit=50",
       ],
     },
     {
@@ -331,26 +319,16 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
       questions: [
         {
           q: 'Table 1 lakh se 10 crore ho gayi. Index lookup kitna dheema hoga?',
-          choices: [
-            'Lagbhag utna hi — B-tree ki depth log se badhti hai, ~4 hops se ~5 hops',
-            '1000x dheema',
-            '100x dheema',
-            'Linearly dheema',
-          ],
+          choices: ["Tree depth grows logarithmically","Lookup latency becomes exactly 1000x","Lookup latency becomes exactly 100x","Tree height grows linearly with rows"],
           answer: 0,
-          explain: 'Yahi B-tree ka poora jaadu hai. Har node mein ~100 entries hoti hain, isliye depth <code>log₁₀₀(n)</code> hai. Data 1000x badhne par depth sirf 1.5 badhti hai. <b>Isiliye indexed lookup badi tables par bhi tez rehta hai.</b>',
-        },
+          explain: "Balanced B-tree search depth logarithmic hoti hai; exact latency/depth node fanout, caching, storage aur index width par depend hai.1000x rows se lookup automatically 1000x slow nahi.",
+         choiceExplanations: ["Balanced B-tree search depth logarithmic hoti hai; exact latency/depth node fanout, caching, storage aur index width par depend hai.1000x rows se lookup automatically 1000x slow nahi.","1000x rows do not imply 1000x B-tree search depth.","Measured latency depends on caching/IO; fixed 100x is unsupported.","Branching reduces remaining search range at each level."] },
         {
-          q: 'Optimizer tumhara index "ignore" kar raha hai. Sabse aam wajah?',
-          choices: [
-            'Query bahut zyada rows laa rahi hai (low selectivity) — index se random lookups karne se seq scan sasta hai',
-            'Index corrupt hai',
-            'Statistics purane hain, hamesha yahi hota hai',
-            'Optimizer mein bug hai',
-          ],
+          q: "Index plan mein use nahi hua. Agla diagnostic step?",
+          choices: ["Compare selectivity, estimates and IO cost","An unused index is necessarily corrupt","An unused index proves optimizer bug","A scan means no statistics were used"],
           answer: 0,
           explain: 'Index scan mein har match ke liye ek <b>random</b> row lookup hota hai — jo sequential read se kaafi mehenga hai. Agar query 30% rows la rahi hai, toh 30% random lookups karne se poori table sequentially padh lena sasta hai. Optimizer sahi kar raha hai. (Haan, purane statistics bhi wajah ho sakte hain — par pehla shak selectivity par karo.)',
-        },
+         choiceExplanations: ["Index scan mein har match ke liye ek <b>random</b> row lookup hota hai — jo sequential read se kaafi mehenga hai. Agar query 30% rows la rahi hai, toh 30% random lookups karne se poori table sequentially padh lena sasta hai. Optimizer sahi kar raha hai. (Haan, purane statistics bhi wajah ho sakte hain — par pehla shak selectivity par karo.)","Sequential scan can be cheapest valid plan; corruption needs evidence.","Planner may correctly prefer scanning many adjacent pages.","Planner uses statistics to estimate scan/index costs."] },
       ],
     },
   ],
@@ -360,26 +338,16 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
     questions: [
       {
         q: '"Ek query slow hai. Pehla kadam?"',
-        choices: [
-          'EXPLAIN chalaunga aur plan dekhunga — Seq Scan hai ya Index Scan, kitni rows examine ho rahi hain vs return, aur sort/filesort ho raha hai kya',
-          'created_at par index laga dunga',
-          'Server ki RAM badha dunga',
-          'Query ko do queries mein tod dunga',
-        ],
+        choices: ["Plan and actual work inspect karo","Random column par index add karo","RAM bina plan check double karo","Query split bina bottleneck check karo"],
         answer: 0,
         explain: '<b>Naapo, phir theek karo.</b> EXPLAIN bole bina koi performance jawab poora nahi hota. Aur sabse kaam ka number hai <b>rows examined ÷ rows returned</b> — agar woh 1000:1 hai, toh index ya query mein kuch galat hai.',
-      },
+       choiceExplanations: ["<b>Naapo, phir theek karo.</b> EXPLAIN bole bina koi performance jawab poora nahi hota. Aur sabse kaam ka number hai <b>rows examined ÷ rows returned</b> — agar woh 1000:1 hai, toh index ya query mein kuch galat hai.","Wrong index can add write cost without helping measured query.","RAM may help IO pressure; first locate rows, sort, wait or CPU work.","Splitting can add network round trips; measure before redesign."] },
       {
         q: '"Har column par index kyun na laga dein?"',
-        choices: [
-          'Kyunki har index ek write tax hai — har INSERT/UPDATE/DELETE ko har index update karna padta hai, aur woh disk aur memory bhi khaate hain. Saath hi zyada indexes se optimizer confuse ho sakta hai',
-          'Index disk space leta hai, bas',
-          'Har column par index se queries dheemi ho jaati hain',
-          'Kuch problem nahi, laga dena chahiye',
-        ],
+        choices: ["Indexes add write and storage cost","Index sirf disk space use karta","Every update changes every index entry","More indexes guarantee every query faster"],
         answer: 0,
-        explain: 'Index ek <b>trade</b> hai: read tez, write dheema. Ek write-heavy table par 8 indexes ka matlab hai ki har INSERT sach mein 9 writes hai. Aur woh sab buffer pool mein jagah lete hain — jo tumhare asli data ke liye kam pad jaati hai.',
-      },
+        explain: "Indexes relevant write maintenance, storage, cache aur vacuum overhead add karte hain. Every UPDATE har index entry rewrite kare yeh universal nahi; PostgreSQL HOT changes optimization example hai. Workload se useful indexes justify karo.",
+       choiceExplanations: ["Indexes relevant write maintenance, storage, cache aur vacuum overhead add karte hain. Every UPDATE har index entry rewrite kare yeh universal nahi; PostgreSQL HOT changes optimization example hai. Workload se useful indexes justify karo.","Indexes also consume cache and relevant write maintenance/IO.","Unchanged indexed values and HOT optimizations can avoid some updates.","Indexes only help matching workloads; planner and write costs remain."] },
     ],
   },
   success: [
@@ -391,7 +359,7 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
   homework: `Apne slow query log se sabse dheemi query lo aur <code>EXPLAIN ANALYZE</code> chalao.
     Dekho: <b>rows examined ÷ rows returned</b> kitna hai? 1000:1 ho toh index ya query galat hai.`,
   cards: [
-    { front: 'B-tree ki depth?', back: '<code>log₁₀₀(n)</code> — 2.4 crore rows par ~4 hops. Table 1000x badhe toh depth sirf 1.5 badhti hai. Isliye indexed lookup <b>hamesha</b> tez.' },
+    { front: 'B-tree ki depth?', back: '<code>log₁₀₀(n)</code> — 2.4 crore rows par ~4 hops. Table 1000x badhe toh depth sirf 1.5 badhti hai. Exact latency caching,IO,selectivity aurrow lookups par depend hai;depth alone runtime guarantee nahi.' },
     { front: 'Selectivity?', back: 'distinct values ÷ total rows. <code>email</code> = 1.0 (perfect) · <code>is_active</code> = ~0 (bekaar). <b>Index tabhi laga jab 90%+ rows kaate.</b>' },
     { front: '4 patterns jo index maar dete hain?', back: '<b>1.</b> <code>LIKE &#39;%abc&#39;</code> (leading wildcard) <b>2.</b> <code>YEAR(col)</code> (function) <b>3.</b> <code>!=</code> <b>4.</b> low selectivity column.' },
     { front: 'Optimizer index ignore kyun karta hai?', back: 'Query bahut zyada rows laa rahi hai. Index scan mein har match par <b>random</b> lookup hota hai — 30% rows ke liye seq scan sasta hai. Woh sahi kar raha hai.' },
@@ -424,35 +392,33 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
 
 ✅ WHERE user_id = ?                              1/3 — lagega
 ✅ WHERE user_id = ? AND created_at > ?           2/3 — aur gehra
-✅ WHERE user_id = ? ORDER BY created_at          sort bhi MUFT
-❌ WHERE created_at > ?                           FULL SCAN 💀
-❌ WHERE id = ? (is index se)                     FULL SCAN 💀</pre>
+✅ WHERE user_id = ? ORDER BY created_at          matching order; explicit sort may avoid
+⚠️ WHERE created_at > ?                           broad scan/skip scan:EXPLAIN
+⚠️ WHERE id = ? (is index se)                     plan/cardinality dependent</pre>
      <p>Aakhri do mein <code>created_at</code> aur <code>id</code> index ke
      <b>andar</b> toh hain — par woh <b>leading column</b> nahi hain, isliye
-     index bekaar hai.</p>`,
+     leading equality filter jitna direct seek nahi milta.PostgreSQL 18 mein skip scan low-cardinality leading values par help kar sakta hai;plan dekho.</p>`,
     `<h3>🔬 Column ka kram kaise chuno</h3>
      <pre>1️⃣  Equality columns PEHLE     (WHERE x = ?)
 2️⃣  Sort column BEECH mein     (ORDER BY)
 3️⃣  Range column AAKHIR mein   (> < BETWEEN)</pre>
      <p><b>Range aakhir mein kyun?</b> Kyunki range ke <b>baad</b> ka koi bhi
-     column index se filter nahi hota. Dekho:</p>
+     column narrow contiguous seek ko zaroor reduce nahi karta;index predicate check,bitmap combination ya skip scan still help kar sakte hain.Dekho:</p>
      <pre>INDEX (status, created_at, merchant)
 WHERE status = 'done' AND created_at > '2026-01-01' AND merchant = 'amazon'
        ─────────────────  ──────────────────────────  ─────────────────
-       ✅ index se           ✅ index se (range)          ❌ ab sirf
-                                                            rows padh ke
-                                                            chhaanta hai
+       ✅ index se           ✅ index se (range)          ⚠️ index predicate check ho sakta hai;
+                                                            narrow seek necessarily nahi
 
 Behtar: INDEX (status, merchant, created_at)
         dono equality pehle, range aakhir mein → teenon index se</pre>
      <h3>🏆 Covering index</h3>
-     <p>Agar query ke <b>saare</b> columns index mein hain, toh DB heap
-     (asli table) chhue bina jawab de deta hai:</p>
+     <p>Query ke <b>saare</b> required columns supported index mein hon toh index-only scan possible hai. PostgreSQL mein visibility map all-visible na ho toh heap fetches phir bhi lag sakte hain:</p>
      <pre>INDEX (user_id, created_at, amount)
 SELECT amount FROM transactions WHERE user_id = ? ORDER BY created_at
-→ "Index Only Scan" / "Using index"  — 2-3x tez</pre>
+→ "Index Only Scan" / "Using index" candidate; heap fetches and timing measure karo</pre>
      <p class="tip">💸 <b>Index muft nahi — woh write par TAX hai.</b>
-     8 indexes wali table par har INSERT sach mein 9 writes hai. Aur woh sab
+     8 indexes wali table par INSERT ko heap aur affected indexes maintain karne padte hain; physical writes/WAL/page splits fixed 9 I/O nahi. Aur woh sab
      buffer pool mein jagah lete hain, jo tumhare asli data ke liye kam pad
      jaati hai. Aur yaad rakho: <b>5 alag single-column indexes ≠ ek
      composite index</b> — DB aksar ek hi chunta hai.</p>`,
@@ -464,17 +430,23 @@ SELECT amount FROM transactions WHERE user_id = ? ORDER BY created_at
       goal: 'Ek composite index banao, phir dikhao ki leading column ke saath woh lagta hai aur usko chhodte hi bilkul bekaar ho jaata hai — chahe doosra column index ke ANDAR hi kyun na ho.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_COMPOSITE,
-      success: allOf(T_COMPOSITE),
+      success: SD.allTasks(T_COMPOSITE),
       successText: `Dekha? <code>created_at</code> index ke <b>ANDAR</b> hai — phir bhi
         akele uspar filter karne se <b>full scan</b> hua.
         <br><br>Yahi left-most prefix rule hai, aur yahi wajah hai ki composite index mein
         <b>column ka kram sab kuch</b> hai. Kram chunne ka niyam:
         <b>equality → sort → range</b>. Range ke baad ka koi column index se filter nahi hota.`,
+      solution: [
+        "CREATE INDEX ix_user_time ON transactions(user_id, created_at)",
+        "EXPLAIN SELECT * FROM transactions WHERE user_id = 5",
+        "EXPLAIN SELECT * FROM transactions WHERE created_at > 2026",
+        "show indexes on transactions",
+      ],
+      verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['user_id', 'created_at']) && m.current(s, 'showIndexes', r => r.rows > 0); },
       hints: [
-        'Composite index banao: CREATE INDEX ix_user_time ON transactions(user_id, created_at)',
-        'Leading column ke saath: EXPLAIN SELECT * FROM transactions WHERE user_id = 5',
-        'Ab bina leading column ke: EXPLAIN SELECT * FROM transactions WHERE created_at > 2026',
-        'Aur index ki shakl dekho: show indexes on transactions',
+        "Pehle observation: Composite index banao — (user_id, created_at). System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Index list dekho — Seq_in_index samjho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nCREATE INDEX ix_user_time ON transactions(user_id, created_at)\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nEXPLAIN SELECT * FROM transactions WHERE created_at > 2026\nshow indexes on transactions",
       ],
     },
     {
@@ -520,38 +492,23 @@ CREATE INDEX ix ON transactions(
       title: 'Composite ki samajh',
       questions: [
         {
-          q: 'INDEX (a, b, c) hai. WHERE b = 1 AND c = 2 — kya hoga?',
-          choices: [
-            'Full scan — leading column `a` par filter nahi hai, isliye index laga hi nahi',
-            'Index lagega kyunki b aur c dono usme hain',
-            'Index aadha lagega',
-            'DB apne aap a ko ignore kar dega',
-          ],
+          q: "PostgreSQL 18 INDEX(a, b, c); WHERE b=1 AND c=2. Kya keh sakte ho?",
+          choices: ["Plan-dependent; skip scan bhi possible","Missing a means index is unusable","b, c presence guarantees narrow seek","SQL predicate order sets index order"],
           answer: 0,
-          explain: 'Left-most prefix rule. Index <code>a</code> se sorted hai; <code>b</code> ka order sirf ek <code>a</code> ke andar hai. Bina <code>a</code> ke DB ko pata hi nahi ki kahan se shuru kare. <b>Column index ke andar hona kaafi nahi — usse pehle wale sab chahiye.</b>',
-        },
+          explain: "PostgreSQL 18 B-tree skip scan low distinct leading a values par b, c predicates exploit kar sakta hai. Otherwise large index/table scan cheaper ho sakta hai. Missing leading predicate index unusable hone ka universal proof nahi; EXPLAIN aur version check karo.",
+         choiceExplanations: ["PostgreSQL 18 B-tree skip scan low distinct leading a values par b, c predicates exploit kar sakta hai. Otherwise large index/table scan cheaper ho sakta hai. Missing leading predicate index unusable hone ka universal proof nahi; EXPLAIN aur version check karo.","PostgreSQL 18 skip scan may exploit low distinct leading values.","Index ordering and leading cardinality decide how much is scanned.","Index definition order matters; WHERE text order does not."] },
         {
-          q: 'Column ka sahi kram kya hai?',
-          choices: [
-            'Equality columns pehle → sort column → range column aakhir mein',
-            'Sabse selective column pehle, hamesha',
-            'Alphabetical order',
-            'Jo WHERE mein pehle likha hai',
-          ],
+          q: "Composite B-tree column order choose karne ka defensible tareeka?",
+          choices: ["Query equality, sort and range se test","Most selective column first every time","WHERE mein text order hi copy karo","Column names alphabetically sort karo"],
           answer: 0,
-          explain: 'Range column ke <b>baad</b> ka koi bhi column index se filter nahi hota — woh sirf rows padh ke chhaanta hai. Isliye range hamesha aakhir mein. (Equality columns ke beech mein selectivity se decide karo, par range ka aakhir hona pehla niyam hai.)',
-        },
+          explain: "Equality-leading columns common useful startingpoint hain; ORDER BY, range selectivity, index direction aur DBplanner support ke tradeoff ko actual queries se EXPLAIN karo. Equality-sort-range ek heuristic hai, universal order theorem nahi.",
+         choiceExplanations: ["Equality-leading columns common useful startingpoint hain; ORDER BY, range selectivity, index direction aur DBplanner support ke tradeoff ko actual queries se EXPLAIN karo. Equality-sort-range ek heuristic hai, universal order theorem nahi.","Sorting and ranges can make a less-selective leading equality useful.","Equivalent predicates can be reordered by SQL optimizer.","Lexical column names have no access-pattern meaning."] },
         {
-          q: '5 single-column indexes vs 1 composite index — farak?',
-          choices: [
-            'DB aksar ek hi index chunta hai, isliye 5 alag indexes ek multi-column query ko utna nahi bachate — par unka write tax paanch guna hai',
-            'Dono barabar hain',
-            '5 single indexes behtar hain, zyada flexible',
-            'Composite sirf tab jab teen se kam columns hon',
-          ],
+          q: "Five single-column indexes vs matching composite:kaunsa statement sahi?",
+          choices: ["Composite may avoid merge and sort cost","Five single indexes equal one composite","DB cannot combine indexes in any plan","Composite has zero write-maintenance cost"],
           answer: 0,
-          explain: 'Kuch DBs "index intersection" karte hain par woh aksar composite se dheema hai. Aur asli nuksaan write side par hai: 5 indexes = har INSERT par 6 writes. <b>Query patterns dekh ke ek sahi composite banana</b> 5 randomly banaye single indexes se hamesha behtar hai.',
-        },
+          explain: "Composite index matching filter+order ko directly serve kar sakta hai. PostgreSQL bitmap scans multiple indexes combine kar sakte hain, par bitmap scan index ordering lose karke explicit sort require kar sakta hai. Read/write/storage cost compare karo.",
+         choiceExplanations: ["Composite index matching filter+order ko directly serve kar sakta hai. PostgreSQL bitmap scans multiple indexes combine kar sakte hain, par bitmap scan index ordering lose karke explicit sort require kar sakta hai. Read/write/storage cost compare karo.","Ordered multi-column access often differs from intersecting bitmap scans.","PostgreSQL can combine indexes via bitmap AND/OR.","Composite index still consumes storage and relevant write maintenance."] },
       ],
     },
   ],
@@ -560,27 +517,17 @@ CREATE INDEX ix ON transactions(
     instructions: 'Yeh sawaal bahut discriminating hota hai. 🎤',
     questions: [
       {
-        q: '"INDEX (user_id, created_at) hai. WHERE created_at > ? kyun slow hai?"',
-        choices: [
-          'Left-most prefix rule — index user_id se sorted hai, created_at ka order sirf ek user_id ke andar hai. Bina user_id ke DB ko pata nahi kahan se shuru kare, isliye full scan',
-          'created_at par alag index nahi hai',
-          'Range queries index use nahi karti',
-          'created_at aakhri column hai isliye dheema hai',
-        ],
+        q: "INDEX(user_id, created_at); time-only query slow. Kya inspect karoge?",
+        choices: ["Leading user groups weaken time-only scan","Range predicates cannot use B-trees","created_at last means unusable index","Missing user filter guarantees full scan"],
         answer: 0,
-        explain: 'Phone book waali analogy bolna yahan sabse achha hai: <code>(lastName, firstName)</code> par sorted kitaab mein "Priya" dhoondhna poori kitaab padhna hai. Sahi hai ki column index ke andar hai — par woh <b>sorted</b> sirf pehle column ke andar hai.',
-      },
+        explain: "Index(user_id, created_at) pehle user groups banata hai. Time-only query ko all users traverse karna pad sakta hai; PostgreSQL 18 skip scan suitable leading cardinality par help kar sakta hai. Plan aur version se decide karo; range indexable hai.",
+       choiceExplanations: ["Index(user_id, created_at) pehle user groups banata hai. Time-only query ko all users traverse karna pad sakta hai; PostgreSQL 18 skip scan suitable leading cardinality par help kar sakta hai. Plan aur version se decide karo; range indexable hai.","B-trees support range predicates when order permits useful scan bounds.","Trailing column can be checked and may help with skip scan.","Plan/version/cardinality matter; skip scan or index scan may still help."] },
       {
-        q: '"Ek query 200ms le rahi hai aur index laga hua hai. Aur tez kaise karoge?"',
-        choices: [
-          'Dekhunga ki woh covering ban sakti hai ya nahi — SELECT ke saare columns index mein daal do toh heap chhuna hi nahi padega ("Index Only Scan"), aksar 2-3x tez',
-          'Aur indexes laga dunga',
-          'Query ko cache kar dunga',
-          'Table ko partition kar dunga',
-        ],
+        q: "Index ke baad query 200 ms hai. Next step kaise choose karoge?",
+        choices: ["Profile plan; test coverage and row count","Index exists toh SQL cannot improve","Covering index always avoids all heap IO","Every indexed query needs partitioning"],
         answer: 0,
-        explain: 'Index scan mein do kaam hote hain: index walk + har match ke liye ek <b>random heap lookup</b>. Doosra hissa aksar mehenga hai. Agar saare maange gaye columns index mein hain, toh woh poora hissa gayab ho jaata hai. Yeh sabse under-used optimization hai.',
-      },
+        explain: "Indexexistence ke baad remaining rows, heap fetches, sorts, joins aur waits profile karo. Coverage possible ho toh test karo; PostgreSQL index-only scan visibility map checks ki wajah se heap access still require kar sakta hai.2-3 xspeedup guarantee nahi.",
+       choiceExplanations: ["Indexexistence ke baad remaining rows, heap fetches, sorts, joins aur waits profile karo. Coverage possible ho toh test karo; PostgreSQL index-only scan visibility map checks ki wajah se heap access still require kar sakta hai.2-3 xspeedup guarantee nahi.","Index existence does not prove selectivity, coverage or bounded result work.","PostgreSQL visibility checks may still visit heap pages.","Partitioning helps matching pruning/management, not every slow query."] },
     ],
   },
   success: [
@@ -593,11 +540,11 @@ CREATE INDEX ix ON transactions(
     Har composite index ke saamne likho: kaunsi query iska leading column use karti hai?
     Jo index kisi query ka leading column match nahi karta, woh <b>sirf write tax</b> hai — hata do.`,
   cards: [
-    { front: 'Left-most prefix rule?', back: 'INDEX (a,b,c) tabhi lagega jab WHERE mein <b>a</b> ho. Phone book <code>(lastName, firstName)</code> par sorted hai — "Priya" dhoondhna poori kitaab padhna hai.' },
+    { front: 'Left-most prefix rule?', back: "INDEX(a,b,c) leading equality se often narrow seek deta hai. Missing a index ko universally unusable nahi banata; PostgreSQL 18 skip scan, cardinality aur actual plan verify karo. Analogy mein firstName-only lookup ka seek less direct hai." },
     { front: 'Column ka kram?', back: '<b>Equality → sort → range.</b> Range ke BAAD ka koi column index se filter nahi hota — woh sirf rows padh ke chhaanta hai.' },
     { front: 'Covering index?', back: 'Query ke SAARE columns index mein → heap chhuna hi nahi padta (<code>Index Only Scan</code>). Random lookups bach jaate hain — 2-3x tez.' },
     { front: '5 single vs 1 composite?', back: 'DB aksar <b>ek hi</b> index chunta hai, toh 5 single multi-column query ko nahi bachate — par unka write tax 5 guna hai.' },
-    { front: 'Index ka tax?', back: 'Har INSERT/UPDATE/DELETE ko <b>har</b> index update karna padta hai. 8 indexes = har insert sach mein 9 writes. Plus buffer pool mein jagah.' },
+    { front: 'Index ka tax?', back: "Indexes insert/delete maintenance, WAL aur cache space add karte hain. UPDATE ki index cost changed columns/engine par depend hai; PostgreSQL HOT kuch updates mein new index entries avoid karta hai. 8 indexes ko fixed 9 physical I/O mat maano." },
   ],
 },
 
@@ -692,27 +639,17 @@ CREATE INDEX ix_pending ON orders(created_at)
       title: 'Index types ki samajh',
       questions: [
         {
-          q: 'Hash index B-tree se kab behtar hai?',
-          choices: [
-            'Bahut kam cases mein — sirf pure equality par thoda tez, par range, sort aur prefix kuch nahi kar sakta. Isliye default hamesha B-tree',
-            'Hamesha, woh O(1) hai',
-            'Bade tables par',
-            'String columns par',
-          ],
+          q: "PostgreSQL hash vs B-tree index ka defensible distinction?",
+          choices: ["Hash suits equality; B-tree also ranges","Hash supports ordered range scans","Hash suits every text search query","O(1)means hash wins every workload"],
           answer: 0,
-          explain: 'Theory mein hash O(1) hai aur B-tree O(log n) — par B-tree ka log n sirf ~4 hops hai, aur woh <b>range + sort + prefix</b> bhi deta hai. Ek chhote se speedup ke liye teen capabilities khona bura sauda hai. Isliye practice mein hash index bahut kam use hota hai.',
-        },
+          explain: "PostgreSQL hash equality-only access support karta hai; B-tree equality plus ordering/ranges ke liye versatile default hai. DB implementation aur measured workload se choice karo; O(1)average lookup alone real performance decide nahi karta.",
+         choiceExplanations: ["PostgreSQL hash equality-only access support karta hai; B-tree equality plus ordering/ranges ke liye versatile default hai. DB implementation aur measured workload se choice karo; O(1)average lookup alone real performance decide nahi karta.","Hash bucket equality does not provide sorted range traversal.","Full-text search needs token/inverted indexing semantics.","Cache, collisions, IO, ordering and maintenance affect real performance."] },
         {
           q: 'Partial index ka sabse bada faayda kya hai?',
-          choices: [
-            'Woh 1000x chhota ho sakta hai — memory mein poora aa jaata hai aur baaki 99.9% inserts par koi write tax nahi',
-            'Woh tez lookup deta hai',
-            'Woh automatically maintain hota hai',
-            'Woh multiple columns support karta hai',
-          ],
+          choices: ["Index only relevant predicate subset","Partial index skips every future write","Partial index serves any WHERE clause","Partial index removes uniqueness rules"],
           answer: 0,
-          explain: 'Lookup speed lagbhag same hai (dono B-tree hain). Asli faayda <b>size</b> hai: chhota index = memory mein fit, aur <b>write tax sirf matching rows par</b>. 5 crore orders mein se 50,000 pending — us index ko maintain karna lagbhag muft hai.',
-        },
+          explain: "Partial index predicate matching subset par rows store karta hai; subset small ho toh size/write work kam ho sakta hai. Query must imply predicate, qualifying writes still maintenance karte hain;1000 ximprovement unconditional nahi.",
+         choiceExplanations: ["Partial index predicate matching subset par rows store karta hai; subset small ho toh size/write work kam ho sakta hai. Query must imply predicate, qualifying writes still maintenance karte hain;1000 ximprovement unconditional nahi.","Qualifying inserts/updates still maintain the index.","Planner must establish query predicate implies index predicate.","Unique partial indexes can enforce uniqueness within their predicate."] },
       ],
     },
   ],
@@ -722,15 +659,10 @@ CREATE INDEX ix_pending ON orders(created_at)
     questions: [
       {
         q: '"Product search banana hai — Postgres ya Elasticsearch?"',
-        choices: [
-          'Postgres full-text se shuru karunga — woh kaafi achha hai. Elasticsearch tab jab sach mein typo tolerance, relevance tuning, facets ya multi-language chahiye — kyunki woh ek naya system, naya sync pipeline aur naya failure mode laata hai',
-          'Elasticsearch, woh search ke liye bana hai',
-          'Postgres, hamesha',
-          'Dono, ek fallback ke liye',
-        ],
+        choices: ["Start requirements; compare search quality","Elasticsearch removes sync pipeline need","Postgres cannot do full-text search","Search system choice depends only on RPS"],
         answer: 0,
-        explain: 'Sabse achha jawab <b>operational keemat</b> ko pehchaanta hai. Elasticsearch add karne ka matlab hai: indexing pipeline, consistency lag, ek aur cluster ko chalana, aur ek aur cheez jo 3 baje raat ko toot sakti hai. Woh keemat tabhi do jab Postgres ki seema sach mein aa gayi ho.',
-      },
+        explain: "Search requirements pehle:relevance, typo handling, language, facets, scale aur consistency. PostgreSQL full text baseline ya dedicated search engine dono valid hain; extra engine sync/reindex/operations cost laata hai. Naam se choice mat karo.",
+       choiceExplanations: ["Search requirements pehle:relevance, typo handling, language, facets, scale aur consistency. PostgreSQL full text baseline ya dedicated search engine dono valid hain; extra engine sync/reindex/operations cost laata hai. Naam se choice mat karo.","Separate search index introduces ingestion, sync lag and recovery work.","PostgreSQL supports full-text search; advanced needs may justify other engines.","Relevance, language, facets, latency, consistency and operations also matter."] },
     ],
   },
   success: [
@@ -842,26 +774,16 @@ total: 701 queries — EK request mein</pre>
       questions: [
         {
           q: 'GraphQL mein N+1 itna bura kyun ho jaata hai?',
-          choices: [
-            'Woh nested ho jaata hai — 100 orders × 5 items × 1 product = 501+ queries ek hi request mein. Isliye DataLoader lagbhag laazmi hai',
-            'GraphQL dheema hai',
-            'GraphQL indexes use nahi karta',
-            'GraphQL mein caching nahi hoti',
-          ],
+          choices: ["Nested resolvers multiply DB round trips","GraphQL disables database indexes","GraphQL forbids caching query results","DataLoader makes all queries one call"],
           answer: 0,
           explain: 'REST mein N+1 ek level par hota hai. GraphQL mein client nesting decide karta hai, isliye woh <b>multiply</b> hota hai — aur tumhe pehle se pata bhi nahi ki client kya maangega. <b>DataLoader</b> (per-request batching + dedupe) isliye GraphQL ka standard hissa hai.',
-        },
+         choiceExplanations: ["REST mein N+1 ek level par hota hai. GraphQL mein client nesting decide karta hai, isliye woh <b>multiply</b> hota hai — aur tumhe pehle se pata bhi nahi ki client kya maangega. <b>DataLoader</b> (per-request batching + dedupe) isliye GraphQL ka standard hissa hai.","Resolvers can use ordinary indexed database queries.","Caching exists but keys, permissions and invalidation need design.","Batching helps compatible keys; all dependencies cannot always merge."] },
         {
           q: 'N+1 fix karne ke baad sabse zaroori kadam?',
-          choices: [
-            'Test mein query count assert karo — warna agla developer wahi natural code likhega aur N+1 chup-chaap wapas aa jaayega',
-            'Documentation mein likh do',
-            'Code comment add kar do',
-            'Team ko bata do',
-          ],
+          choices: ["Regression assert DB query count","Only document the previous fix","Only add comment near resolver","Only tell current team verbally"],
           answer: 0,
           explain: 'N+1 isliye baar-baar aata hai kyunki use likhna <b>natural</b> hai — <code>o.user.name</code> bilkul saaf code hai. Sirf ek automated check hi ise rok sakta hai. Comments aur docs 3 mahine mein bhula diye jaate hain.',
-        },
+         choiceExplanations: ["N+1 isliye baar-baar aata hai kyunki use likhna <b>natural</b> hai — <code>o.user.name</code> bilkul saaf code hai. Sirf ek automated check hi ise rok sakta hai. Comments aur docs 3 mahine mein bhula diye jaate hain.","Docs do not prevent future code from issuingN+1 queries.","Comments can drift; executable regression checks catch recurrence.","Team turnover/refactors need observable automated safeguards."] },
       ],
     },
   ],
@@ -870,16 +792,11 @@ total: 701 queries — EK request mein</pre>
     instructions: 'Yeh sawaal aksar "ORM ke saath kya problem hai" ke roop mein aata hai. 🎤',
     questions: [
       {
-        q: '"Ek list endpoint 400ms le raha hai. DB metrics theek hain. Kya dekhoge?"',
-        choices: [
-          'Query COUNT dekhunga — shayad ek query nahi, 101 chhoti queries chal rahi hain. Har ek tez hai isliye DB "theek" dikhta hai, par total latency jud jaati hai',
-          'Slow query log dekhunga',
-          'Index add karunga',
-          'DB ki CPU dekhunga',
-        ],
+        q: "\"Ek list endpoint 400 ms le raha hai. DB metrics theek hain. Kya dekhoge?\"",
+        choices: ["Count queries and sequential waits","Only inspect single slow query log","Only add indexes to every table","Only inspect database average CPU"],
         answer: 0,
         explain: 'Yeh jawab isliye achha hai ki woh <b>DB theek dikhne</b> wali baat ko explain karta hai. Slow query log kuch nahi dikhayega — har query 1 ms ki hai. Sirf query <b>count</b> se pata chalta hai. Isiliye "queries per request" ek monitoring metric honi chahiye.',
-      },
+       choiceExplanations: ["Yeh jawab isliye achha hai ki woh <b>DB theek dikhne</b> wali baat ko explain karta hai. Slow query log kuch nahi dikhayega — har query 1 ms ki hai. Sirf query <b>count</b> se pata chalta hai. Isiliye \"queries per request\" ek monitoring metric honi chahiye.","101 individually fast queries may not cross slow-log threshold.","Round-trip multiplicity survives even when each query indexed.","Low CPU can coexist with cumulative network wait."] },
     ],
   },
   success: [
@@ -994,7 +911,7 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
       goal: 'Ek service normal load par theek chal rahi hai. Ek lambi transaction 45 connections pakad legi. Dikhao ki CPU 10% par bhi sab timeout ho jaata hai — aur prove karo ki wajah pool hai, query nahi.',
       sys: SD.sys.orders(),
       tasks: T_POOL,
-      success: allOf(T_POOL),
+      success: SD.allTasks(T_POOL),
       successText: `Tumne abhi woh poora incident jiya jo har production team ek din dekhti hai:
         <br><br>• <code>load</code> ne dikhaya ki capacity <b>2,500 rps se 250 rps</b> par aa gayi — kyunki
         effective pool 50 se 5 ho gaya
@@ -1003,12 +920,18 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
         <br><br>Yaad rakho: query optimize karna yahan bilkul bekaar hota.
         Aur pool 500 kar dena ulta padta — har connection DB par ek process hai.
         Sahi kadam tha: <b>dhoondho ki connections kaun pakde baitha hai.</b>`,
+      solution: [
+        "load --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'",
+        "sim inject long-tx --holds 45",
+        "load --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'",
+        "trace GET /api/v1/orders",
+        "metrics",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.db.longTxHolding === 45 && m.current(s, 'metrics', r => r.poolWaitHigh); },
       hints: [
-        "Baseline: load --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'",
-        'Ab ek lambi transaction: sim inject long-tx --holds 45',
-        "Wahi load dobara: load --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'",
-        'Ek request ka peecha karo: trace GET /api/v1/orders',
-        'Aur metrics dekho: metrics',
+        "Pehle observation: Normal load daalo — sab theek dikhna chahiye. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Metrics dekho — CPU 10% par pool wait aasman par. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'\nsim inject long-tx --holds 45\nload --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'\ntrace GET /api/v1/orders\nmetrics",
       ],
     },
     {
@@ -1024,28 +947,28 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
         first: {
           text: 'Pehla kadam?',
           choices: [
-            { t: 'Ek slow request ko end-to-end trace karo — dekho waqt kis span mein gaya', good: true, next: 'found', explain: 'Bilkul. Machine metrics ne bata diya ki app BUSY nahi hai. Ab pata karna hai ki woh kis cheez ka INTEZAAR kar rahi hai — aur woh sirf trace batayega.' },
-            { t: 'Aur app instances add karo', good: false, explain: 'CPU 11% hai — instances ki kami nahi hai. Aur agar bottleneck shared DB pool hai, toh naye instances aur connections maangenge aur haalat BIGADENGE.' },
-            { t: 'Slow queries optimize karo', good: false, explain: 'Slow query log KHAALI hai. DB ke paas queries pahunch hi nahi rahi — problem uske saamne hai.' },
-            { t: 'Deploy rollback karo', good: false, explain: 'Deploy 6 ghante pehle tha aur problem 40 minute purani hai. Ho sakta hai kuch aur badla ho — pehle diagnose karo.' },
+            { t: "Trace one slow request end-to-end", good: true, next: 'found', explain: 'Bilkul. Machine metrics ne bata diya ki app BUSY nahi hai. Ab pata karna hai ki woh kis cheez ka INTEZAAR kar rahi hai — aur woh sirf trace batayega.' },
+            { t: "Add app instances immediately", good: false, explain: 'CPU 11% hai — instances ki kami nahi hai. Aur agar bottleneck shared DB pool hai, toh naye instances aur connections maangenge aur haalat BIGADENGE.' },
+            { t: "Tune SQL without wait evidence", good: false, explain: 'Slow query log KHAALI hai. DB ke paas queries pahunch hi nahi rahi — problem uske saamne hai.' },
+            { t: "Rollback without change evidence", good: false, explain: 'Deploy 6 ghante pehle tha aur problem 40 minute purani hai. Ho sakta hai kuch aur badla ho — pehle diagnose karo.' },
           ],
         },
         found: {
           sitrep: '🔍 Trace: app 5ms · <b>pool.acquire() 9,900ms</b> · SQL 20ms · serialize 2ms.',
           text: 'Ab kya karoge?',
           choices: [
-            { t: 'Pool ke stats dekho — active vs idle, aur pata karo ki connections KAUN pakde baitha hai', good: true, next: 'why', explain: 'Sahi. Ab problem confirm ho gayi (pool), par WAJAH nahi. Kya sach mein load zyada hai, ya kuch connections bandhak bana ke baitha hai?' },
-            { t: 'Pool size 50 se 500 kar do', good: false, explain: 'Ruko. Har connection DB par ek process hai — 500 connections aksar 50 se DHEEME hote hain. Aur agar wajah ek leak hai, toh 500 bhi 10 minute mein khatam ho jaayenge.' },
-            { t: 'Query par index laga do', good: false, explain: 'SQL sirf 20 ms le raha hai. Use 10 ms karne se 9,900 ms ke wait par lagbhag kuch asar nahi hoga.' },
+            { t: "Inspect pool holders and age", good: true, next: 'why', explain: 'Sahi. Ab problem confirm ho gayi (pool), par WAJAH nahi. Kya sach mein load zyada hai, ya kuch connections bandhak bana ke baitha hai?' },
+            { t: "Increase pool50to500 now", good: false, explain: 'Ruko. Har connection DB par ek process hai — 500 connections aksar 50 se DHEEME hote hain. Aur agar wajah ek leak hai, toh 500 bhi 10 minute mein khatam ho jaayenge.' },
+            { t: "Add another query index now", good: false, explain: 'SQL sirf 20 ms le raha hai. Use 10 ms karne se 9,900 ms ke wait par lagbhag kuch asar nahi hoga.' },
           ],
         },
         why: {
           sitrep: '📊 pool: 50/50 active, 0 idle. Ek query 40 minute se chal rahi hai — ek <b>analytics report</b> jo galti se prod par chala di gayi thi. Usne 45 connections ka ek batch job khola tha.',
           text: 'Ab turant kya?',
           choices: [
-            { t: 'Us lambi transaction/job ko maaro, phir statement_timeout aur idle_in_transaction_timeout lagao', good: true, next: 'end', explain: 'Turant relief + permanent guard. Timeouts ke bina ek galat query kabhi bhi poora pool bandhak bana sakti hai.' },
-            { t: 'DB restart kar do', good: false, explain: 'Connections toh chhoot jaayenge — par saare in-flight transactions bhi maare jaayenge aur outage lamba hoga. Aur wajah kal phir aa jaayegi.' },
-            { t: 'Analytics team ko subah bata denge', good: false, explain: 'Abhi 60% users fail ho rahe hain. Bleeding pehle roko.' },
+            { t: "Safely cancel bad job;bound future holds", good: true, next: 'end', explain: 'Turant relief + permanent guard. Timeouts ke bina ek galat query kabhi bhi poora pool bandhak bana sakti hai.' },
+            { t: "Restart DB without holder analysis", good: false, explain: 'Connections toh chhoot jaayenge — par saare in-flight transactions bhi maare jaayenge aur outage lamba hoga. Aur wajah kal phir aa jaayegi.' },
+            { t: "Leave saturation until next morning", good: false, explain: 'Abhi 60% users fail ho rahe hain. Bleeding pehle roko.' },
           ],
         },
         end: {
@@ -1080,38 +1003,23 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
       title: 'Pool ki samajh',
       questions: [
         {
-          q: 'Trace: app 5ms, pool.acquire 9900ms, SQL 20ms. Query optimize karne se kitna faayda?',
-          choices: [
-            'Lagbhag zero — SQL sirf 20ms hai. Use 10ms karne se 9,925ms se 9,915ms ho jaayega',
-            'Aadha time bach jaayega',
-            'Bahut faayda hoga, query hi bottleneck hai',
-            'Depend karta hai index par',
-          ],
+          q: "Trace: app 5 ms, pool.acquire 9900 ms, SQL 20 ms. Query optimize karne se kitna faayda?",
+          choices: ["10 ms saved if SQL 20 ms becomes 10 ms","About half total time gets saved","Pool wait automatically drops to zero","20 ms SQL implies 9900 ms CPU work"],
           answer: 0,
           explain: 'Yahi is level ka dil hai. Trace saaf batata hai ki 99.7% waqt <b>intezaar</b> mein gaya. Query ko infinitely tez kar do, phir bhi 9,900 ms ka wait bacha rahega. Bina trace ke log ghanto query tuning karte rehte hain.',
-        },
+         choiceExplanations: ["Yahi is level ka dil hai. Trace saaf batata hai ki 99.7% waqt <b>intezaar</b> mein gaya. Query ko infinitely tez kar do, phir bhi 9,900 ms ka wait bacha rahega. Bina trace ke log ghanto query tuning karte rehte hain.","Total 9925 ms to9915 ms saves only 10 ms in given trace.","Connection holder/root cause may be elsewhere; one query speedup not guarantee.","Acquire wait and CPU execution are different spans."] },
         {
           q: 'Pool exhaustion ki 3 sabse aam wajahein?',
-          choices: [
-            'Lambi transactions (batch job, analytics query), connection leaks (code jo release nahi karta), aur sach mein slow queries (service time badh gaya)',
-            'Kam RAM, kam CPU, kam disk',
-            'Galat index, galat query, galat schema',
-            'Zyada users, zyada data, zyada features',
-          ],
+          choices: ["Long holds, leaks or excess demand","Only low RAM can exhaust pool","Only query syntax can exhaust pool","Low CPU rules out any pool problem"],
           answer: 0,
-          explain: 'Teenon ka lakshan ek jaisa hai (pool wait high) par ilaaj alag: lambi transaction → timeout lagao aur job ko replica par bhejo; leak → code theek karo; slow query → index/query theek karo. <b>Isliye pehle wajah dhoondo, pool badhao mat.</b>',
-        },
+          explain: "Pool full tab hota hai jab concurrent connection demand capacity exceed kare:long transactions, slow queries, leaks, external waits ya offered load. Long holds/leaks aur request admission ko metrics/traces se distinguish karo.",
+         choiceExplanations: ["Pool full tab hota hai jab concurrent connection demand capacity exceed kare:long transactions, slow queries, leaks, external waits ya offered load. Long holds/leaks aur request admission ko metrics/traces se distinguish karo.","Pool is bounded concurrency; memory shortage is not required.","Valid slow/external-wait transactions can hold all connections.","Waiting connections may consume little CPU while queues grow."] },
         {
-          q: 'Health check green rehne ki asli wajah?',
-          choices: [
-            'Woh jaan-boojh ke sasta hai — usne na pool se connection liya, na dependency chhui. Woh sirf "process zinda hai" batata hai',
-            'Health check cache ho gaya tha',
-            'Load balancer ne purana result use kiya',
-            'Health check bug hai',
-          ],
+          q: "Shallow health probe DB pool ko touch nahi karta; pool blocked hai. Probe 200 kyun?",
+          choices: ["Probe path skips blocked dependency","Every 200 probe proves all requests healthy","Green health proves DB latency is low","Health response measures all tenant data"],
           answer: 0,
-          explain: 'Health checks sasta hona <b>zaroori</b> hai — warna woh khud load banayenge aur outage mein sabse pehle fail honge. Par isi wajah se woh pool exhaustion nahi pakadte. <b>"Health pass" ≠ "traffic serve ho raha hai."</b>',
-        },
+          explain: "Given probe shallow hai aur blocked DB pool ko touch nahi karta, toh 200 process availability show karta hai, user request capacity nahi. Readiness/liveness/dependency probes ka scope explicit rakho.",
+         choiceExplanations: ["Given probe shallow hai aur blocked DB pool ko touch nahi karta, toh 200 process availability show karta hai, user request capacity nahi. Readiness/liveness/dependency probes ka scope explicit rakho.","Success on shallow path does not validate request dependency path.","If probe never touchesDB, it provides no DB latency evidence.","Probe workload can be much smaller than customer requests."] },
       ],
     },
   ],
@@ -1121,40 +1029,36 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
     questions: [
       {
         q: '"Requests timeout ho rahi hain. CPU 10%, memory theek, health green. Kya ho raha hai?"',
-        choices: [
-          'App busy nahi hai, toh woh kisi cheez ka INTEZAAR kar rahi hai. Ek request trace karunga. Sabse aam wajah DB connection pool exhaustion hai — aur health green isliye hai kyunki woh check pool chhuta hi nahi',
-          'CPU limit hit ho gayi hogi',
-          'Database down hoga',
-          'Load balancer ki problem hogi',
-        ],
+        choices: ["Trace waits; inspect pool and dependencies","CPU 10%means API cannot timeout","Green health means customer is wrong","Add CPU until unknown waits disappear"],
         answer: 0,
         explain: 'Sahi jawab do cheezein karta hai: pehle <b>metrics kya khaarij kar rahe hain</b> woh padhta hai, phir <b>ek request ka peecha</b> karta hai. "Connection pool" bolna achha hai — par "main trace karunga" bolna behtar hai, kyunki production mein tumhe options ki list nahi milti.',
-      },
+       choiceExplanations: ["Sahi jawab do cheezein karta hai: pehle <b>metrics kya khaarij kar rahe hain</b> woh padhta hai, phir <b>ek request ka peecha</b> karta hai. \"Connection pool\" bolna achha hai — par \"main trace karunga\" bolna behtar hai, kyunki production mein tumhe options ki list nahi milti.","Timeout can be caused by IO, locks, pool queues or downstream waits.","Probe can skip the failing resource.","CPU scaling does not directly release leaked/held connections."] },
       {
         terminal: {
           goal: 'Interviewer: "Yeh raha woh system. 2 minute mein prove karo ki problem kahan hai — sirf batao mat, DIKHAO."',
           sys: SD.sys.orders({ db: { longTxHolding: 46 } }),
           tasks: T_IV_POOL,
-          success: allOf(T_IV_POOL),
+          success: SD.allTasks(T_IV_POOL),
           successText: 'Zabardast. Load se problem paida ki, trace se jagah dhoondhi, metrics se prove kiya ki CPU nahi — <b>pool wait</b> hai.',
+          solution: [
+            "load --rps 400 --duration 6",
+            "trace GET /api/v1/orders",
+            "metrics",
+          ],
+          verify: s => { const m = SD.mission; return m.current(s, 'metrics', r => r.poolWaitHigh); },
           hints: [
-            'Load daalo: load --rps 400 --duration 6',
-            'Trace karo: trace GET /api/v1/orders',
-            'Aur prove karo: metrics',
+            "Pehle observation: Load daal ke problem paida karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+            "Checklist ko kram se dekho. Aakhri proof: Metrics se prove karo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+            "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 400 --duration 6\ntrace GET /api/v1/orders\nmetrics",
           ],
         },
       },
       {
         q: '"Pool size 50 se 500 kar dein toh?"',
-        choices: [
-          'Aksar ulta padta hai — har connection DB par ek process/thread hai, toh 500 connections context switching aur lock contention badha ke DHEEME kar dete hain. Pehle wajah dhoondo aur service time ghatao',
-          'Haan, 10x capacity mil jaayegi',
-          'Haan, par memory dekhni padegi',
-          'Nahi, kyunki DB max connections limit hai',
-        ],
+        choices: ["Measure DB capacity and hold times first","Pool 10x guarantees throughput 10x","Pool growth has no memory cost","Max connections alone picks ideal size"],
         answer: 0,
         explain: 'Yeh jawab dikhata hai ki tumne yeh production mein dekha hai. Pool badhana <b>DB par</b> load badhata hai. Sahi kram: wajah dhoondo (lambi tx? leak?) → service time ghatao → phir pool tune karo. Aur pool ke saath hamesha <code>acquireTimeout</code>.',
-      },
+       choiceExplanations: ["Yeh jawab dikhata hai ki tumne yeh production mein dekha hai. Pool badhana <b>DB par</b> load badhata hai. Sahi kram: wajah dhoondo (lambi tx? leak?) → service time ghatao → phir pool tune karo. Aur pool ke saath hamesha <code>acquireTimeout</code>.","DB CPU, IO, locks or provider limits may remain bottleneck.","Backend connections consume memory/resources; cost is engine-specific.","A permitted maximum is not an optimal operating point."] },
     ],
   },
   success: [
@@ -1254,17 +1158,23 @@ WRITE-BEHIND
       goal: 'Ek dheemi list query hai. Pehle uska cost dekho, phir cache lagao, phir load daal ke dekho ki capacity kitni badh gayi.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_CACHE,
-      success: allOf(T_CACHE),
+      success: SD.allTasks(T_CACHE),
       successText: `Cache ne do cheezein di: <b>latency</b> (~1 ms) aur <b>capacity</b>
         (service time gira toh Little's Law se capacity badh gayi).
         <br><br>Par yaad rakho ki tumne ek naya sawaal bhi khareed liya:
         <b>"yeh data stale kab tak reh sakta hai?"</b> Aur ek naya khatra —
         agla level uske baare mein hai.`,
+      solution: [
+        "GET /api/v1/transactions?page=1&limit=50",
+        "sim add cache --ttl 60 --jitter 15",
+        "GET /api/v1/transactions?page=1&limit=50",
+        "load --rps 500 --duration 5",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.cache?.ttlSec === 60 && s.sys.api.cache.jitterPct === 15 && m.current(s, 'load', r => r.rps === 500); },
       hints: [
-        'Pehle bina cache ke: GET /api/v1/transactions?page=1&limit=50',
-        'Cache lagao: sim add cache --ttl 60 --jitter 15',
-        'Ab dobara maango: GET /api/v1/transactions?page=1&limit=50',
-        'Aur capacity dekho: load --rps 500 --duration 5',
+        "Pehle observation: Bina cache ke request ka cost dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Load daal ke capacity ka farak dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nsim add cache --ttl 60 --jitter 15\nGET /api/v1/transactions?page=1&limit=50\nload --rps 500 --duration 5",
       ],
     },
     {
@@ -1301,27 +1211,17 @@ WRITE-BEHIND
       title: 'Cache ki samajh',
       questions: [
         {
-          q: 'Cache lagane ki teen shartein?',
-          choices: [
-            'Mehenga + baar-baar maanga jaaye + kam badle — teenon chahiye',
-            'Sirf slow hona kaafi hai',
-            'Data public hona chahiye',
-            'Data chhota hona chahiye',
-          ],
+          q: "Cache decision ka useful criterion?",
+          choices: ["Expected reuse vs freshness and cost","Every slow result deserves caching","Private data cannot be cached anywhere","Tiny object implies a useful hit rate"],
           answer: 0,
-          explain: 'Teenon zaroori hain. Mehenga par kabhi-kabhi maanga jaata hai? Cache lagbhag hamesha miss karega. Baar-baar maanga jaata hai par har baar badalta hai? Cache ek extra hop banke reh jaayega — aur stale bugs bhi dega.',
-        },
+          explain: "Cache decision reuse, miss cost, freshness, working-set size aur cold-path safety par hai. Frequently changing data bhi versioning/invalidation aur sufficient reuse ke saath cache ho sakta hai; teen fixed shartein universal law nahi.",
+         choiceExplanations: ["Cache decision reuse, miss cost, freshness, working-set size aur cold-path safety par hai. Frequently changing data bhi versioning/invalidation aur sufficient reuse ke saath cache ho sakta hai; teen fixed shartein universal law nahi.","One-off expensive queries may yield no cache reuse.","Per-user scoped caches can safely cache private data.","Key cardinality and request locality determine reuse."] },
         {
           q: 'Explicit invalidation ka sabse bada khatra?',
-          choices: [
-            'Har write path yaad rakhna padta hai — ek bhool aur woh key HAMESHA ke liye stale ho jaayegi',
-            'Woh dheema hota hai',
-            'Woh cache ko bhar deta hai',
-            'Woh sirf Redis mein kaam karta hai',
-          ],
+          choices: ["Missing write invalidation can stale data","Invalidation must scan the entire cache","Invalidation works only in Redis","One missed write always stales forever"],
           answer: 0,
-          explain: 'TTL apne aap theek ho jaata hai — galti bhi 5 minute mein mit jaati hai. Explicit delete <b>kabhi</b> theek nahi hota agar tum ek code path bhool gaye. Isliye dono use karo: explicit delete + chhota TTL <b>safety net</b> ki tarah.',
-        },
+          explain: "Explicit invalidation mein missing write path stale entry leave kar sakta hai; TTL/eviction/reconciliation ho toh forever necessarily nahi. Every mutation path, ordering, races aur recovery test karo.",
+         choiceExplanations: ["Explicit invalidation mein missing write path stale entry leave kar sakta hai; TTL/eviction/reconciliation ho toh forever necessarily nahi. Every mutation path, ordering, races aur recovery test karo.","Targeted keys/versioning avoid whole-cache scans when designed.","Application caches of many kinds support invalidation.","TTL, eviction or later invalidation can eventually replace stale entry."] },
       ],
     },
   ],
@@ -1331,15 +1231,10 @@ WRITE-BEHIND
     questions: [
       {
         q: '"Yeh endpoint slow hai — cache laga dein?"',
-        choices: [
-          'Pehle poochhunga: yeh data kitna stale reh sakta hai? kitne alag keys banengi (hit rate)? aur cache poora chala jaaye toh DB jhel lega? Uske baad hi decide karunga',
-          'Haan, Redis laga dete hain',
-          'Nahi, pehle query optimize karo',
-          'Haan, CDN par daal dete hain',
-        ],
+        choices: ["Staleness, keys and cold-path capacity","Redis name alone justifies caching","CDN can share every authenticated result","Query optimization removes all cache needs"],
         answer: 0,
         explain: 'Teeno sawaal alag khatre pakadte hain: <b>staleness</b> (correctness), <b>key cardinality</b> (agar har request ki alag key hai toh hit rate ~0), aur <b>cold start</b> (agar cache ke bina DB gir jaata hai toh cache ek <i>dependency</i> hai, optimization nahi).',
-      },
+       choiceExplanations: ["Teeno sawaal alag khatre pakadte hain: <b>staleness</b> (correctness), <b>key cardinality</b> (agar har request ki alag key hai toh hit rate ~0), aur <b>cold start</b> (agar cache ke bina DB gir jaata hai toh cache ek <i>dependency</i> hai, optimization nahi).","Engine choice cannot define data correctness or expected reuse.","Shared personalized responses need explicit safe cache policy/key isolation.","Efficient queries may still benefit from caching; measure workload tradeoffs."] },
     ],
   },
   success: [
@@ -1353,8 +1248,8 @@ WRITE-BEHIND
     Phir poochho: cache poora flush ho jaaye toh DB zinda rahega?`,
   cards: [
     { front: 'Cache ki 3 shartein?', back: '<b>Mehenga</b> + <b>baar-baar maanga jaaye</b> + <b>kam badle</b>. Teenon chahiye — sirf "slow hai" kaafi wajah nahi.' },
-    { front: 'Layer kaise chunein?', back: '<b>Data ke maalik se</b>, speed se nahi. Public+immutable → CDN. Per-user → app cache. Computed aggregate → materialized view. <b>Per-user CDN par kabhi nahi.</b>' },
-    { front: '3 cache patterns?', back: '<b>Cache-aside</b> (aam, resilient) · <b>write-through</b> (hamesha fresh, write dheema) · <b>write-behind</b> (tez, par crash par data gaya).' },
+    { front: 'Layer kaise chunein?', back: '<b>Data ke maalik se</b>, speed se nahi. Public+immutable → CDN. Per-user → app cache. Computed aggregate → materialized view. <b>Personalized shared reuse ko explicit policy aur authorization-aware key isolation chahiye.</b>' },
+    { front: '3 cache patterns?', back: "<b>Cache-aside:</b> miss par DB; invalidation race/TTL policy chahiye. <b>Write-through:</b> cache+store write path, atomicity/failure policy explicit. <b>Write-behind:</b> async persistence; acknowledged durability queue/log/recovery contract par depend hai." },
     { front: 'Invalidation?', back: 'Do tareeke: <b>TTL</b> (aasan, apne aap theek) aur <b>explicit delete</b> (fresh, par ek bhool = hamesha stale). Practical: <b>dono</b> — delete + chhota TTL safety net.' },
     { front: 'Cache key ka shape?', back: '<code>user:5:orders:page:1:<b>v2</b></code> — namespace : id : kis cheez ka : variant : <b>version</b>. Version badlo aur poora cache ek constant se invalid ho jaata hai.' },
   ],
@@ -1426,7 +1321,7 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
       goal: 'Pehle bina jitter ke cache lagao aur warning padho, phir jitter ke saath lagao. Phir sawaal ka jawab dhoondo: cache ke bina yeh system zinda rahega?',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_STAMPEDE,
-      success: allOf(T_STAMPEDE),
+      success: SD.allTasks(T_STAMPEDE),
       successText: `Jitter ek line ka fix hai jo poore stampede ko rok deta hai —
         <code>ttl = 300 + random(0, 60)</code>. 10,000 keys ab 60 second mein bikhar ke
         expire hongi, ek saath nahi.
@@ -1434,10 +1329,17 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
         Agar system cache ke bina gir jaata hai, toh cache ek <b>optimization nahi,
         dependency</b> hai — aur uska matlab hai ki tumhare paas ek aur SPOF hai
         jise tumne kabhi failure mode ki tarah treat hi nahi kiya.`,
+      solution: [
+        "sim add cache --ttl 300",
+        "sim add cache --ttl 300 --jitter 20",
+        "sim set api.cache null",
+        "load --rps 500 --duration 5",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.cache === null && m.current(s, 'load', r => r.rps === 500); },
       hints: [
-        'Pehle bina jitter: sim add cache --ttl 300',
-        'Ab jitter ke saath: sim add cache --ttl 300 --jitter 20',
-        'Aur cache ke bina capacity dekho: load --rps 500 --duration 5',
+        "Pehle observation: Bina jitter ke cache lagao — warning padho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Cache ke bina system zinda rahega? — load daal ke dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nsim add cache --ttl 300\nsim add cache --ttl 300 --jitter 20\nsim set api.cache null\nload --rps 500 --duration 5",
       ],
     },
     {
@@ -1469,27 +1371,17 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
       title: 'Stampede ki samajh',
       questions: [
         {
-          q: 'Stampede ka sabse aam trigger kya hota hai?',
-          choices: [
-            'Deploy — cache ek saath bharti hai, isliye ek saath khaali bhi hoti hai',
-            'Traffic spike',
-            'Redis ka slow hona',
-            'Bade objects cache karna',
-          ],
+          q: "Stampede ka underlying trigger kya hai?",
+          choices: ["Many misses recompute same hot key","Only deployment can cause stampede","Only oversized objects cause stampede","More clients automatically share one refresh"],
           answer: 0,
-          explain: 'Yeh counterintuitive hai par bilkul sach: deploy ke baad saari keys lagbhag <b>ek hi pal</b> par set hoti hain, isliye TTL bhi ek saath khatam hota hai. Isliye jitter sirf achha idea nahi — deploy-heavy teams ke liye woh zaroori hai.',
-        },
+          explain: "Stampede tab jab same expensive work bahut requests simultaneously recompute karein. Expiry, cold start, invalidation aur burst sab triggers hain. Jitter keys ko spread karta hai; single flight per key concurrent refresh combine karta hai.",
+         choiceExplanations: ["Stampede tab jab same expensive work bahut requests simultaneously recompute karein. Expiry, cold start, invalidation aur burst sab triggers hain. Jitter keys ko spread karta hai; single flight per key concurrent refresh combine karta hai.","Expiry, cold start, invalidation and traffic bursts can trigger concurrent misses.","Tiny hot key can create huge origin concurrency too.","Single-flight/locking must coordinate refresh; clients do not do it automatically."] },
         {
           q: '"Cache ke bina DB gir jaata hai" ka matlab?',
-          choices: [
-            'Cache ek dependency hai, optimization nahi — aur woh ek SPOF hai jise tumne kabhi failure mode nahi maana',
-            'Cache achha kaam kar raha hai',
-            'DB ko scale karna chahiye',
-            'Normal hai, sab systems aise hi hote hain',
-          ],
+          choices: ["Cache is load-bearing; plan cold failure","Cache down means business DB is corrupt","High hit rate proves failover is safe","HA cache removes need for load shedding"],
           answer: 0,
-          explain: 'Yeh farak zaroori hai. <b>Optimization</b> = chala jaaye toh dheema ho jaayega. <b>Dependency</b> = chala jaaye toh down ho jaayega. Agar cache dependency hai toh use waisa hi treat karo: HA, backups, aur ek plan ki cold start par kya hoga (jaise load shedding ya progressive warm-up).',
-        },
+          explain: "DBallmissload handle nahi karta toh cache load-bearing dependency hai. HA, admission control, fallback concurrency, cold start/warmup aur failure tests design karo. Load-bearing automatically single point of failure nahi; topology matter karti hai.",
+         choiceExplanations: ["DBallmissload handle nahi karta toh cache load-bearing dependency hai. HA, admission control, fallback concurrency, cold start/warmup aur failure tests design karo. Load-bearing automatically single point of failure nahi; topology matter karti hai.","Capacity failure and data corruption are different claims.","Hit rate says little about backend ability to serve all misses.","Correlated cache outage/cold start still requires bounded fallback load."] },
       ],
     },
   ],
@@ -1499,15 +1391,10 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
     questions: [
       {
         q: '"Redis restart hua aur poora system gir gaya. Kya galat tha?"',
-        choices: [
-          'Cache optimization nahi, dependency ban chuka tha. Fix: cache ke bina ka load naapo, load shedding/circuit breaker lagao, progressive warm-up karo, aur cache ko HA banao',
-          'Redis ko restart nahi karna chahiye tha',
-          'Aur Redis nodes chahiye',
-          'DB ko scale karna chahiye tha',
-        ],
+        choices: ["Bound fallback load and warm gradually","Never restart cache so outage impossible","Retry every cache miss without a bound","Double cache nodes and skip failure tests"],
         answer: 0,
         explain: 'Sahi jawab pehle problem ka <b>naam</b> deta hai (dependency vs optimization), phir chaar alag ilaaj deta hai. "Aur Redis nodes" sirf isi failure ko kam sambhav banata hai — us din ke liye tayyari nahi karta jab woh phir bhi ho jaaye.',
-      },
+       choiceExplanations: ["Sahi jawab pehle problem ka <b>naam</b> deta hai (dependency vs optimization), phir chaar alag ilaaj deta hai. \"Aur Redis nodes\" sirf isi failure ko kam sambhav banata hai — us din ke liye tayyari nahi karta jab woh phir bhi ho jaaye.","Failures and maintenance still happen; recovery must be designed.","Unbounded retries amplify origin load while cache cold.","Replication helps availability but not every correlated/capacity failure."] },
     ],
   },
   success: [
@@ -1613,26 +1500,16 @@ arrays, ranges → bahut se special cases</pre>
       questions: [
         {
           q: 'Purana data archive karne ka sabse bada faayda kya hai?',
-          choices: [
-            'Indexes chhote ho jaate hain aur memory mein fit hote hain — isse HAR query tez ho jaati hai, sirf purani nahi',
-            'Disk space bachta hai',
-            'Backup chhota ho jaata hai',
-            'Compliance ke liye zaroori hai',
-          ],
+          choices: ["Live working set and indexes may shrink","Archive makes every query faster","Archive guarantees lower total storage","Archive deletes all compliance obligations"],
           answer: 0,
-          explain: 'Disk sasta hai — woh asli wajah nahi. Asli faayda yeh hai ki chhota index memory mein fit ho jaata hai aur buffer pool mein asli data ke liye jagah banti hai. <b>Archiving ek performance fix hai, cleanup task nahi.</b>',
-        },
+          explain: "Archiving active rows/indexes/working-set reduce kar sakta hai; benefit query pattern aur storage engine par depend hai. Every query faster ya total storage smaller guaranteed nahi; retention/access/recovery plan bhi chahiye.",
+         choiceExplanations: ["Archiving active rows/indexes/working-set reduce kar sakta hai; benefit query pattern aur storage engine par depend hai. Every query faster ya total storage smaller guaranteed nahi; retention/access/recovery plan bhi chahiye.","Queries unrelated to archived rows may not improve.","Copying archive retains data elsewhere; total storage depends on policy.","Retention, deletion and access obligations apply to archived data too."] },
         {
           q: '"Har kaam ke liye best DB" — is soch mein problem?',
-          choices: [
-            '5 databases = 5 backup plans, 5 failure modes, 5 upgrade cycles aur 5 cheezein jo 3 baje raat ko toot sakti hain. Operational keemat aksar technical faayde se badi hoti hai',
-            'Koi problem nahi, yahi best practice hai',
-            'Sirf cost badhta hai',
-            'Sirf latency badhti hai',
-          ],
+          choices: ["Operational surface grows with engines","Specialized engine has no recovery cost","Five DBs share identical upgrade plans","DB brand alone decides project success"],
           answer: 0,
-          explain: 'Har naya datastore ek naya <b>operational</b> system hai — backups, monitoring, upgrades, on-call knowledge. Ek team jo Postgres achhe se chala sakti hai, woh 5 stores kharab chalayegi. Ek se shuru karo aur naya tab lo jab access pattern sach mein fit na ho.',
-        },
+          explain: "Har naya data store ek naya <b>operational</b> system hai — backups, monitoring, upgrades, on-call knowledge. Ek team jo Postgres achhe se chala sakti hai, woh 5 stores kharab chalayegi. Ek se shuru karo aur naya tab lo jab access pattern sach mein fit na ho.",
+         choiceExplanations: ["Har naya data store ek naya <b>operational</b> system hai — backups, monitoring, upgrades, on-call knowledge. Ek team jo Postgres achhe se chala sakti hai, woh 5 stores kharab chalayegi. Ek se shuru karo aur naya tab lo jab access pattern sach mein fit na ho.","Every engine needs backup, recovery, monitoring and expertise.","Different engines can have different failure and upgrade contracts.","Workload, team capacity and correctness matter more than slogans."] },
       ],
     },
   ],
@@ -1642,15 +1519,10 @@ arrays, ranges → bahut se special cases</pre>
     questions: [
       {
         q: '"SQL ya NoSQL?"',
-        choices: [
-          'Access pattern par depend karta hai. Rishte + transactions + ad-hoc queries → relational. Ek key se poora object, bahut zyada scale, simple access → KV/document. Aur aaj Postgres JSONB se document use-cases bhi kar leta hai',
-          'NoSQL, woh scale karta hai',
-          'SQL, woh reliable hai',
-          'Dono use karo',
-        ],
+        choices: ["Model access, invariants and operations","NoSQL alone guarantees linear scaling","SQL alone guarantees app correctness","Use both before access patterns are known"],
         answer: 0,
         explain: 'Yeh sawaal ka framing hi galat hai, aur sabse achha jawab use theek karta hai: sawaal "SQL ya NoSQL" nahi, <b>"access pattern kya hai"</b> hai. Aur "NoSQL scale karta hai" ek purana myth hai — modern Postgres bahut door tak jaata hai.',
-      },
+       choiceExplanations: ["Yeh sawaal ka framing hi galat hai, aur sabse achha jawab use theek karta hai: sawaal \"SQL ya NoSQL\" nahi, <b>\"access pattern kya hai\"</b> hai. Aur \"NoSQL scale karta hai\" ek purana myth hai — modern Postgres bahut door tak jaata hai.","Partitioning, hot keys and consistency choices still constrain NoSQL scale.","Schema constraints help; application contracts still need correct design.","Unneeded engines add sync and operational burden."] },
     ],
   },
   success: [
@@ -1758,7 +1630,7 @@ arrays, ranges → bahut se special cases</pre>
         { text: 'Read replicas add karo', explain: 'Agar load read-heavy hai (aksar hota hai) toh yeh problem lagbhag khatam kar deta hai.' },
         { text: 'Vertical scale — badi machine', explain: 'Aaj ek machine 100 TB aur lakhon IOPS kar leti hai. "Vertical scale kaam nahi karta" ek purana myth hai, aur woh sabse sasta option hai.' },
         { text: 'Partition karo', explain: 'Ek hi server par table ko tukdon mein baanto — chhote indexes, purane tukde drop karna aasan.' },
-        { text: 'PHIR shard karo', explain: 'Aakhri option. Yeh 6-mahine ka project hai jo har future feature ko mehenga bana deta hai — cross-shard JOIN, transactions aur global counts sab chale jaate hain.' },
+        { text: 'PHIR shard karo', explain: "Aakhri option. Migration effort workload/team par depend hai; ownership, routing aur failure recovery ko explicit plan chahiye — cross-shard JOIN, transactions aur global counts ko engine-specific support, coordination aur extra cost chahiye." },
       ],
     },
     {
@@ -1778,38 +1650,23 @@ arrays, ranges → bahut se special cases</pre>
       title: 'Sharding ki samajh',
       questions: [
         {
-          q: 'Read replicas add karne se write throughput kitna badhega?',
-          choices: [
-            'Bilkul nahi — saare writes phir bhi primary par jaate hain. Replicas sirf read scale aur HA dete hain',
-            'Double ho jaayega',
-            'Replicas ki sankhya jitna',
-            'Thoda badhega',
-          ],
+          q: "Single-primary DB mein read replicas ka write throughput par effect?",
+          choices: ["Read offload may indirectly help primary","Every replica adds a new write leader","Two read replicas triple write capacity","Replica count removes same-row contention"],
           answer: 0,
-          explain: 'Yeh sabse aam galatfehmi hai. Har replica ko <b>wahi saare writes</b> apply karne padte hain — matlab woh write load ghatate nahi, balki har replica use dobara karta hai. Write scale ke liye <b>sharding</b> hi raasta hai.',
-        },
+          explain: "Single-primary asynchronous read replicas primary ke writes ko direct shard nahi karti. Read offload freed resources se indirect write headroom improve ho sakta hai; write capacity replica count se linearly nahi badhti.",
+         choiceExplanations: ["Single-primary asynchronous read replicas primary ke writes ko direct shard nahi karti. Read offload freed resources se indirect write headroom improve ho sakta hai; write capacity replica count se linearly nahi badhti.","Single-primary replication still commits writes on the primary.","Read replicas do not directly multiply primary write execution resources.","Primary hot-row serialization remains even with replicas."] },
         {
           q: 'Shard key chunne mein sabse bada khatra?',
-          choices: [
-            'Woh lagbhag irreversible hai — badalne ke liye poora data live traffic ke saath dobara baantna padta hai',
-            'Galat key se queries slow hongi',
-            'Galat key se storage zyada lagega',
-            'Koi khaas khatra nahi, baad mein badal sakte hain',
-          ],
+          choices: ["Bad key makes live redistribution costly","Changing key is metadata-only operation","Balanced row count guarantees balanced load","Shard key choice affects only disk bytes"],
           answer: 0,
           explain: 'Index galat ho toh naya bana lo. Shard key galat ho toh tumhe <b>poora dataset re-shard</b> karna padega — live traffic ke saath, dual-write ke saath, mahino ka project. Isiliye yeh din 1 ka sabse zyada sochne wala faisla hai.',
-        },
+         choiceExplanations: ["Index galat ho toh naya bana lo. Shard key galat ho toh tumhe <b>poora dataset re-shard</b> karna padega — live traffic ke saath, dual-write ke saath, mahino ka project. Isiliye yeh din 1 ka sabse zyada sochne wala faisla hai.","Different routing may require moving live records and coordinating writers.","Hot tenants/keys can concentrate traffic despiteequal row counts.","Routing, cross-shard queries, transactions and resharding also depend on key."] },
         {
           q: 'Read-after-write problem ka sabse simple ilaaj?',
-          choices: [
-            'Write ke baad kuch second us user ke reads primary se karo (sticky reads)',
-            'Replica lag zero kar do',
-            'Sab reads primary se karo',
-            'Cache laga do',
-          ],
+          choices: ["Read primary or wait for replica position","Wait fixed 2s and freshness guaranteed","Add cache so all reads become current","Send read to any replica immediately"],
           answer: 0,
-          explain: 'Replica lag zero karna namumkin hai (physics). Sab reads primary se karna replicas ka poora point khatam kar deta hai. <b>Sticky reads</b> beech ka sahi raasta hai: sirf usi user ke, sirf kuch second ke liye — baaki sab replica se chalta rahega.',
-        },
+          explain: "Strong read-after-write ke liye primary read ya committed replication position tak wait/route karo. Fixed sticky time practical heuristic hai, lag usse badhe toh guarantee fail. Consistency token/session policy stronger evidence de sakti hai.",
+         choiceExplanations: ["Strong read-after-write ke liye primary read ya committed replication position tak wait/route karo. Fixed sticky time practical heuristic hai, lag usse badhe toh guarantee fail. Consistency token/session policy stronger evidence de sakti hai.","Replica lag can exceed fixed delay; causal position/freshness proof is stronger.","Cache may be stale too; invalidations and consistency still needed.","Async replica may not yet have applied committed write."] },
       ],
     },
   ],
@@ -1819,26 +1676,16 @@ arrays, ranges → bahut se special cases</pre>
     questions: [
       {
         q: '"DB load nahi jhel raha. Shard karein?"',
-        choices: [
-          'Pehle poochhunga: read-heavy hai ya write-heavy? Indexes theek hain? Koi N+1 ya deep offset chal raha hai? Read-heavy hai toh replicas + cache. Vertical scale bhi bacha hai kya? Sharding aakhri option hai',
-          'Haan, sharding se scale ho jaayega',
-          'Nahi, bas badi machine le lo',
-          'Read replicas add kar do',
-        ],
+        choices: ["Locate bottleneck before changing topology","More shards fix every inefficient query","Read replicas solve any write bottleneck","Larger machine has unlimited headroom"],
         answer: 0,
         explain: 'Sabse achha jawab pehle <b>diagnose</b> karta hai. Zyadatar "shard karna padega" wali situations sach mein ek missing index ya ek N+1 hoti hain. Aur sharding ki keemat — cross-shard JOIN, transactions, global counts sab chale jaate hain — use aakhri option banati hai.',
-      },
+       choiceExplanations: ["Sabse achha jawab pehle <b>diagnose</b> karta hai. Zyadatar \"shard karna padega\" wali situations sach mein ek missing index ya ek N+1 hoti hain. Aur sharding ki keemat — cross-shard JOIN, transactions, global counts sab chale jaate hain — use aakhri option banati hai.","Scatter-gather, N+1 and skew can remain or worsen across shards.","Replicas offload reads; hot primary writes may remain bottleneck.","Vertical resources are finite; measure remaining headroom and economics."] },
       {
-        q: '"User bolta hai profile save nahi hua, par DB mein data hai. Kya hua?"',
-        choices: [
-          'Read-after-write — write primary par gaya, read replica se aaya jo peeche tha. Fix: us user ke reads kuch second primary se, ya write timestamp track karo',
-          'Cache stale hai',
-          'Transaction commit nahi hua',
-          'Frontend bug hai',
-        ],
+        q: "Write primary committed hai; followingread laggingreplica se aaya. Profile purana kyun?",
+        choices: ["Check serving replica and freshness proof","Committed primary row rules out stale read","Profile save automatically waits all replicas","Frontend cache cannot ever cause this"],
         answer: 0,
-        explain: 'Yeh replica-based architecture ka <b>sabse aam</b> user-facing bug hai. Aur woh intermittent hota hai (lag kabhi zyada, kabhi kam) — isliye reproduce karna mushkil hai aur log ise frontend bug samajh lete hain. Cache stale hona bhi possible hai, par replica lag pehla shak hona chahiye.',
-      },
+        explain: "Given write primary mein committed aur following read laggingreplica se hai, toh stale read visible ho sakta hai. Primary read or causal position check se confirm/repair karo. Bina read path evidence cache/frontend cause bhi possible hai.",
+       choiceExplanations: ["Given write primary mein committed aur following read laggingreplica se hai, toh stale read visible ho sakta hai. Primary read or causal position check se confirm/repair karo. Bina read path evidence cache/frontend cause bhi possible hai.","Committed primary data may not yet be visible on async replica.","Application must explicitly request stronger synchronization where supported.","Cache/client state is another plausible cause; trace serving path to distinguish."] },
     ],
   },
   success: [
@@ -1891,7 +1738,7 @@ arrays, ranges → bahut se special cases</pre>
       goal: '2.4 crore transactions par dashboard 12 second le raha hai. Sahi kram se theek karo: naapo → index → rows bounded → cache → prove karo.',
       sys: SD.sys.txn({ api: { countTotal: true } }),
       tasks: T_BOSS_DATA,
-      success: allOf(T_BOSS_DATA),
+      success: SD.allTasks(T_BOSS_DATA),
       successText: `Poora track ek problem par:
         <br><br><b>1.</b> Naapa — rows examined vs returned ne bata diya ki index chahiye
         <br><b>2.</b> Composite index — access pattern se match karta hua
@@ -1900,12 +1747,18 @@ arrays, ranges → bahut se special cases</pre>
         <br><b>5.</b> Load se prove kiya — ab capacity ke andar
         <br><br><b>Kram hi sab kuch tha.</b> Agar tum cache se shuru karte, toh tumhe ek dheema
         system stale-data bugs ke saath milta — aur pehle cache flush par sab wapas gir jaata.`,
+      solution: [
+        "GET /api/v1/transactions?user_id=5&page=1&limit=50",
+        "CREATE INDEX ix_dash ON transactions(user_id, created_at, id)",
+        "sim set api.countTotal false",
+        "sim add cache --ttl 60 --jitter 20",
+        "load --rps 500 --duration 5 --path '/api/v1/transactions?user_id=5&page=1&limit=50'",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.countTotal === false && s.sys.api.cache?.jitterPct > 0 && m.index(s, 'transactions', ['user_id', 'created_at', 'id']) && m.current(s, 'load', r => r.rps === 500 && !r.saturated); },
       hints: [
-        'Pehle naapo: GET /api/v1/transactions?user_id=5&page=1&limit=50',
-        'Sahi composite index: CREATE INDEX ix_dash ON transactions(user_id, created_at, id)',
-        'Chhupa hua COUNT hatao: sim set api.countTotal false',
-        'Cache lagao jitter ke saath: sim add cache --ttl 60 --jitter 20',
-        "Aur prove karo: load --rps 500 --duration 5 --path '/api/v1/transactions?user_id=5&page=1&limit=50'",
+        "Pehle observation: Baseline: dashboard query kitni dheemi hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Load daal ke prove karo ki ab capacity theek hai. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?user_id=5&page=1&limit=50\nCREATE INDEX ix_dash ON transactions(user_id, created_at, id)\nsim set api.countTotal false\nsim add cache --ttl 60 --jitter 20\nload --rps 500 --duration 5 --path '/api/v1/transactions?user_id=5&page=1&limit=50'",
       ],
     },
     {
@@ -1914,26 +1767,16 @@ arrays, ranges → bahut se special cases</pre>
       questions: [
         {
           q: 'Optimization ka sahi kram kya hai?',
-          choices: [
-            'Naapo → index/query theek karo → rows bounded karo → phir cache. Cache aakhir mein, kyunki woh sirf lakshan chhupata hai',
-            'Cache pehle, woh sabse tez faayda deta hai',
-            'Hardware upgrade pehle',
-            'Sharding pehle',
-          ],
+          choices: ["Measure; bound work; then test tradeoffs","Cache before identifying correctness needs","Shards before measuring query or load","Hardware before identifying blocked resource"],
           answer: 0,
-          explain: 'Cache se shuru karne par tum ek <b>dheema system</b> ko ek cache layer ke peeche chhupa dete ho. Pehle cache flush par sab wapas gir jaata hai — aur ab tumhare paas stale-data bugs bhi hain. Pehle asli query theek karo; cache uske BAAD ek multiplier hai, band-aid nahi.',
-        },
+          explain: "Naapo bottleneck aur correctness first, work bound karo, phir index/query/cache/hardware/topology candidates ko SLO, cost aur failure behavior se test karo. Cache hamesha last ya always merelysymptom universal rule nahi.",
+         choiceExplanations: ["Naapo bottleneck aur correctness first, work bound karo, phir index/query/cache/hardware/topology candidates ko SLO, cost aur failure behavior se test karo. Cache hamesha last ya always merelysymptom universal rule nahi.","Cache without freshness/cold-path design can hide or amplify problems.","Sharding adds routing, rebalance and operational complexity.","More hardware does not resolve every lock, leak or query-shape issue."] },
         {
           q: 'Ek query 12 second le rahi thi aur index lagane se 380 ms ho gayi. Aage kya?',
-          choices: [
-            'Dekhunga ki kya woh covering ban sakti hai, aur kya koi chhupa hua COUNT(*) ya extra column hai — phir cache',
-            'Bas ho gaya, 380 ms theek hai',
-            'Sharding shuru karunga',
-            'Aur indexes laga dunga',
-          ],
+          choices: ["Compare 380 ms to SLO; profile remaining work","380 ms means every user SLO is met","Existing index means next step sharding","Add indexes without checking current plan"],
           answer: 0,
-          explain: '380 ms par tum SLO (200 ms) se abhi bhi upar ho. Covering index heap lookups hata deta hai (2-3x), aur <code>total</code> jaisa chhupa hua COUNT alag se seconds kha sakta hai. <b>Har kadam ke baad dobara naapo</b> — agla bottleneck aksar pehle wale se alag hota hai.',
-        },
+          explain: "380 ms acceptable hai ya slow yehSLO aur percentile target se compare karo. Remaining plan work, coverage, count, serialization aur cache tradeoffs measure karke choose karo; faster possible hone ka matlab necessary nahi.",
+         choiceExplanations: ["380 ms acceptable hai ya slow yehSLO aur percentile target se compare karo. Remaining plan work, coverage, count, serialization aur cache tradeoffs measure karke choose karo; faster possible hone ka matlab necessary nahi.","SLO and percentiles determine whether 380 ms is acceptable.","Coverage, row count, joins, sorts or cache may offer simpler improvements.","Extra indexes add cost; test measured plan changes."] },
       ],
     },
   ],
@@ -1943,15 +1786,10 @@ arrays, ranges → bahut se special cases</pre>
     questions: [
       {
         q: '"Ek dashboard query 12 second le rahi hai. Poora approach batao."',
-        choices: [
-          'EXPLAIN se plan dekhunga (rows examined vs returned), access pattern se match karta composite index banaunga, covering banane ki koshish karunga, COUNT(*) aur extra columns hataunga, phir jitter wala cache — aur har kadam ke baad dobara naapunga',
-          'Index laga dunga',
-          'Cache laga dunga',
-          'Read replica par bhej dunga',
-        ],
+        choices: ["Trace and EXPLAIN; change then remeasure","Only add index; skip measuring response","Only add cache; skip cold-path capacity","Only add replica; skip query complexity"],
         answer: 0,
         explain: 'Sabse achha jawab ek <b>kram</b> deta hai aur "har kadam ke baad naapunga" bolta hai. Yeh dikhata hai ki tum jaante ho ki agla bottleneck pehle wale se alag hota hai — aur ki cache ek <b>multiplier</b> hai, band-aid nahi.',
-      },
+       choiceExplanations: ["Sabse achha jawab ek <b>kram</b> deta hai aur \"har kadam ke baad naapunga\" bolta hai. Yeh dikhata hai ki tum jaante ho ki agla bottleneck pehle wale se alag hota hai — aur ki cache ek <b>multiplier</b> hai, band-aid nahi.","One index may help but count, sort, N+1 and serialization can remain.","Cache miss/outage still needs safe backend behavior.","Replica isolates reads but does not change scan algorithm/work."] },
     ],
   },
   success: [
@@ -2069,20 +1907,25 @@ saath mein:       5,000 miss  →      1 DB query    ✅
              ek stampede sambhaalo. <b>Numbers khud dekho.</b>`,
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_EVICT,
-      success: allOf(T_EVICT),
+      success: SD.allTasks(T_EVICT),
       successText: `Ab tum "Redis laga dete hain" se aage ho.
         Policy access pattern se aati hai, hot key ko sharding nahi <b>replication</b> bachaati hai,
         aur stampede ke do alag taale hain — <b>jitter</b> (keys bikhero) aur
         <b>coalescing</b> (ek key ke saare miss ek saath samet lo).`,
+      solution: [
+        "cache sim --policy fifo --size 3 --keys 'a b a b a b c d e f a b'",
+        "cache sim --policy lru --size 3 --keys 'a b a b a b c d e f a b'",
+        "cache sim --policy lfu --size 3 --keys 'a b a b a b c d e f a b'",
+        "cache hotkey --key match:live:score --rps 50000",
+        "cache hotkey --key match:live:score --rps 50000 --replicas 8",
+        "cache coalesce --misses 5000",
+        "cache coalesce --misses 5000 --on",
+      ],
+      verify: s => { const m = SD.mission; return m.latest(s, 'cache', 'coalesce')?.on === true && m.latest(s, 'cache', 'coalesce')?.dbQueries === 1; },
       hints: [
-        "Yeh pattern do hot keys + ek scan hai. FIFO se shuru: cache sim --policy fifo --size 3 --keys 'a b a b a b c d e f a b'",
-        "Wahi keys LRU par: cache sim --policy lru --size 3 --keys 'a b a b a b c d e f a b'",
-        "Ab LFU par: cache sim --policy lfu --size 3 --keys 'a b a b a b c d e f a b'",
-        "LFU jeet gaya kyunki usne a aur b ki GINTI yaad rakhi — scan (c,d,e,f) unhe nikaal nahi paaya. LRU ke liye scan ki har key 'sabse recent' thi.",
-        "Ab hot key: cache hotkey --key match:live:score --rps 50000",
-        "Key ki 8 copies banao: cache hotkey --key match:live:score --rps 50000 --replicas 8",
-        "Stampede bina coalescing: cache coalesce --misses 5000",
-        "Ab single-flight on: cache coalesce --misses 5000 --on",
+        "Pehle observation: FIFO ke saath hit rate dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Single-flight on karo — 5,000 queries sirf 1 reh jaani chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\ncache sim --policy fifo --size 3 --keys 'a b a b a b c d e f a b'\ncache sim --policy lru --size 3 --keys 'a b a b a b c d e f a b'\ncache sim --policy lfu --size 3 --keys 'a b a b a b c d e f a b'\ncache hotkey --key match:live:score --rps 50000\ncache hotkey --key match:live:score --rps 50000 --replicas 8\ncache coalesce --misses 5000\ncache coalesce --misses 5000 --on",
       ],
     },
     {
@@ -2119,38 +1962,23 @@ saath mein:       5,000 miss  →      1 DB query    ✅
       title: 'Cache internals',
       questions: [
         {
-          q: 'Ek nightly analytics job chalta hai aur uske baad subah tak API slow rehti hai. Sabse sambhaavit wajah?',
-          choices: [
-            'Job ne LRU cache ko dho diya — lakhon "ek baar padhi" keys ne hot keys ko bahar nikaal diya',
-            'Job ne DB lock kar diya',
-            'Cache server restart ho gaya',
-            'TTL bahut chhota hai',
-          ],
+          q: "Nightly scan ke baad morningAPI slow hai. Cache hypothesis kaise validate karoge?",
+          choices: ["Check eviction and cache-hit evidence","Nightly timing alone proves DB locks","Morning slowness proves Redis restarted","Daily periodicity proves TTL too short"],
           answer: 0,
-          explain: '<b>Cache pollution.</b> LRU ke liye scan ki har key "abhi use hui" hai, isliye woh sabse zyada bachaane laayak lagti hai — jabki woh dobara kabhi nahi maangi jaayegi. Isiliye analytics ko hamesha <b>alag</b> replica/cache do. Yeh "subah tak slow" wala pattern iska signature hai.',
-        },
+          explain: "Nightly job scan hot working-set evict kar sakta hai; eviction count, hit/miss rate aurDBIO evidence correlate karo. Timing alone root cause proven nahi; locks, lag, GC ya resource exhaustion investigate karo.",
+         choiceExplanations: ["Nightly job scan hot working-set evict kar sakta hai; eviction count, hit/miss rate aurDBIO evidence correlate karo. Timing alone root cause proven nahi; locks, lag, GC ya resource exhaustion investigate karo.","Locks need wait/holder evidence; timing alone is not diagnosis.","Restart requires process/uptime evidence.","Expiry is plausible; distinguish expiry from evictions with metrics."] },
         {
           q: 'TTL par jitter laga diya hai. Phir bhi ek popular key expire hote hi DB spike karta hai. Kya missing hai?',
-          choices: [
-            'Request coalescing (single-flight) — ek key par ek saath aaye saare miss ko ek query mein samet leta hai',
-            'TTL aur badhao',
-            'Aur jitter lagao',
-            'Cache size badhao',
-          ],
+          choices: ["Single-flight per hot-key refresh","Only TTLjitter across many keys","Only larger cache for same expiry","Only extra DB connections per miss"],
           answer: 0,
           explain: 'Jitter <b>alag-alag keys</b> ko ek saath expire hone se rokta hai. Par <b>ek</b> key toh kisi na kisi pal expire hogi hi — aur agar us key par 5,000 rps hai, toh us ek pal mein 5,000 miss ek saath honge. Coalescing unhe ek query mein baandh deta hai. Dono chahiye.',
-        },
+         choiceExplanations: ["Jitter <b>alag-alag keys</b> ko ek saath expire hone se rokta hai. Par <b>ek</b> key toh kisi na kisi pal expire hogi hi — aur agar us key par 5,000 rps hai, toh us ek pal mein 5,000 miss ek saath honge. Coalescing unhe ek query mein baandh deta hai. Dono chahiye.","Jitter spreads different keys; one hot key can still have concurrent misses.","Capacity does not prevent simultaneous expiry of that key.","More concurrent queries can overload origin ratherthan coalesce work."] },
         {
           q: '8-node Redis cluster hai. Ek key par 50,000 rps aa raha hai aur ek node 100% CPU par hai. Node badhane se kya hoga?',
-          choices: [
-            'Kuch nahi — ek key hamesha ek hi node par hash hoti hai. Key ki copies banani padengi',
-            'Load 9 nodes par bant jaayega',
-            'Consistent hashing khud sambhaal legi',
-            'Redis apne aap hot key replicate kar deta hai',
-          ],
+          choices: ["One hot key stays on its serving shard","New node splits every hot key equally","Vnodes parallelize one key operation","Cluster auto-copies read load everywhere"],
           answer: 0,
-          explain: 'Sharding <b>keys ko</b> baantti hai, <b>ek key ko nahi</b>. Yeh woh scaling limit hai jo log sabse aakhir mein samajhte hain: cluster ki total capacity chahe kitni ho, <b>ek key ki capacity ek node ki capacity hai</b>. Isliye ya toh key ko N copies mein todo, ya use app ke local cache mein rakh lo.',
-        },
+          explain: "Redis Cluster mein one hash slot ek serving primary par hai; extra primary node same key writes/read routing automatically split nahi karta. Local caches, replica reads, explicit replicated keys or value partitioning ke correctness tradeoffs consider karo.",
+         choiceExplanations: ["Redis Cluster mein one hash slot ek serving primary par hai; extra primary node same key writes/read routing automatically split nahi karta. Local caches, replica reads, explicit replicated keys or value partitioning ke correctness tradeoffs consider karo.","Standard sharding assigns one key/hash slot toa serving primary.","Vnodes balance many keys; one key still has one route.","Replica reads/local caches require explicit routing and consistency design."] },
       ],
     },
     {
@@ -2171,26 +1999,16 @@ saath mein:       5,000 miss  →      1 DB query    ✅
     questions: [
       {
         q: '"Cache hit rate 40% hai. Kaise badhaoge?"',
-        choices: [
-          'Pehle poochhunga ki miss kis wajah se hai — size (evictions), TTL (expiry), ya invalidation. Teenon ka ilaaj alag hai. Eviction rate aur expiry rate alag metrics honi chahiye',
-          'Cache size double kar dunga',
-          'TTL badha dunga',
-          'LRU se LFU par shift karunga',
-        ],
+        choices: ["Separate cold, expiry, eviction miss causes","Always double memory before measuring","Always raiseTTL regardless of freshness","Always switch to LFU without traffic data"],
         answer: 0,
         explain: 'Teenon "sudhaar" bina diagnosis ke tukka hain. Agar miss <b>eviction</b> se hain toh size badhao. <b>Expiry</b> se hain toh TTL dekho. Aur agar keys itni bikhri hui hain ki har key sirf ek baar maangi jaati hai, toh cache is data ke liye galat aujaar hi hai — key design badlo. Isiliye evictions aur expirations ko <b>alag-alag</b> count karo.',
-      },
+       choiceExplanations: ["Teenon \"sudhaar\" bina diagnosis ke tukka hain. Agar miss <b>eviction</b> se hain toh size badhao. <b>Expiry</b> se hain toh TTL dekho. Aur agar keys itni bikhri hui hain ki har key sirf ek baar maangi jaati hai, toh cache is data ke liye galat aujaar hi hai — key design badlo. Isiliye evictions aur expirations ko <b>alag-alag</b> count karo.","More memory helps capacity misses, not unique-key/expiry/invalidation misses.","Freshness budget may forbid longerTTL.","Eviction policy helps specific locality patterns; measure cause first."] },
       {
         q: '"Cache (Redis) poora down ho gaya. API ka kya hoga?"',
-        choices: [
-          'Sab traffic seedha DB par — aur DB us load ke liye size kiya hi nahi gaya tha. Isliye cache-down par load shedding + local fallback cache + DB par concurrency limit chahiye',
-          'Thoda slow ho jaayega',
-          'Redis HA hai, yeh hoga hi nahi',
-          'Requests fail ho jaayengi',
-        ],
+        choices: ["Protect DB with bounded fallback work","HA means total cache failure impossible","Every miss can safely pass through toDB","Retries make unavailable cache cheaper"],
         answer: 0,
         explain: 'Yeh sabse under-rated failure mode hai. 95% hit rate ka matlab hai DB sirf 5% traffic dekh raha tha — cache girte hi woh <b>20x</b> ho jaata hai, aur DB turant girta hai. Cache ko "optional speedup" maano, "chhupa hua load-bearing wall" nahi: DB par concurrency cap lagao, aur cache-down mode mein degrade karo.',
-      },
+       choiceExplanations: ["Yeh sabse under-rated failure mode hai. 95% hit rate ka matlab hai DB sirf 5% traffic dekh raha tha — cache girte hi woh <b>20x</b> ho jaata hai, aur DB turant girta hai. Cache ko \"optional speedup\" maano, \"chhupa hua load-bearing wall\" nahi: DB par concurrency cap lagao, aur cache-down mode mein degrade karo.","Correlated failures/config errors/cold restarts remain possible.","DB maybesized for normal miss traffic, not all requests.","Retries consume more work and can amplify failure."] },
     ],
   },
   success: [
@@ -2316,19 +2134,25 @@ COLUMNAR (OLAP):    [id id id...] [name name...] [amount amount...]
              aur phir woh kharch dhoondo jo LSM ne chhupa rakha tha.`,
       sys: SD.sys.txn({ db: { engine: 'postgres' }, api: { countTotal: false } }),
       tasks: T_ENGINE,
-      success: allOf(T_ENGINE),
+      success: SD.allTasks(T_ENGINE),
       successText: `Ab tum "NoSQL tez hota hai" jaisi baat nahi karoge.
         LSM writes par tez hai kyunki usne kaam <b>taal</b> diya —
         aur woh kaam compaction ke roop mein wapas aata hai.
         Chunav workload se hota hai: <b>write-heavy + range scans → LSM,
         read-heavy + chhote random updates → B-tree.</b>`,
+      solution: [
+        "bench write --rows 100000",
+        "bench read --rows 100000",
+        "sim set db.engine lsm",
+        "bench write --rows 100000",
+        "bench read --rows 100000",
+        "bench compact",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.db.engine === 'lsm' && m.current(s, 'bench', r => r.op === 'compact' && r.ran); },
       hints: [
-        'Pehle B-tree par writes: bench write --rows 100000',
-        'Ab usi engine par reads: bench read --rows 100000',
-        'Engine badlo: sim set db.engine lsm',
-        'LSM par writes: bench write --rows 100000',
-        'LSM par reads — ab ulta natija dekho: bench read --rows 100000',
-        'Aur ab chhupa hua bill: bench compact',
+        "Pehle observation: B-tree par 1 lakh writes chalao — write amplification dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Compaction chalao — LSM ka chhupa hua bill dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nbench write --rows 100000\nbench read --rows 100000\nsim set db.engine lsm\nbench write --rows 100000\nbench read --rows 100000\nbench compact",
       ],
     },
     {
@@ -2355,37 +2179,22 @@ COLUMNAR (OLAP):    [id id id...] [name name...] [amount amount...]
       questions: [
         {
           q: 'LSM par writes tez kyun hain?',
-          choices: [
-            'Woh disk par kuch dhoondte hi nahi — memtable + sequential append. Kharch (merge/cleanup) baad mein compaction mein chukta hai',
-            'LSM data compress karta hai',
-            'LSM writes ko skip kar deta hai',
-            'LSM ke paas zyada memory hoti hai',
-          ],
+          choices: ["Buffer writes; flush sorted runs; compact later","LSM skips persistence of most writes","LSMnever reads disk while writing","Sequential append removes compaction cost"],
           answer: 0,
-          explain: 'Yahi poora idea hai: <b>random I/O ko sequential I/O mein badal do</b>, aur ordering ka kaam baad ke liye taal do. B-tree ko har write par woh page dhoondna padta hai jahan row baithti hai. LSM bas aage likh deta hai. Kharch mita nahi — sirf <b>khiska</b> diya gaya.',
-        },
+          explain: "LSM writes commonly WALappend aur memtable se buffer hoti hain; sorted SSTables flush aur later compaction costs pay hote hain. Writes never read disk ya Postgres always slower blanket claim nahi; write/read/space amplification measured hai.",
+         choiceExplanations: ["LSM writes commonly WALappend aur memtable se buffer hoti hain; sorted SSTables flush aur later compaction costs pay hote hain. Writes never read disk ya Postgres always slower blanket claim nahi; write/read/space amplification measured hai.","Durable LSMtypically logs writes and flushes memtables; it does not skip them.","Conditional operations and compaction may read; write-path efficiency is not no-reads theorem.","Merging sorted runs addswrite/space/IO amplification later."] },
         {
-          q: 'Cassandra cluster mein har kuch ghante p99 read latency 3x ho jaati hai. Sabse sambhaavit wajah?',
-          choices: [
-            'Compaction chal rahi hai — woh disk I/O kha jaati hai aur reads uske peechhe lagti hain',
-            'Network problem',
-            'GC pause',
-            'Ek node down hai',
-          ],
+          q: "Cassandra readp 99 periodically 3x hai. Compaction hypothesis kaise validate karoge?",
+          choices: ["Correlate spikes with compaction andIO","Periodic spike proves disk compaction","p99 spike alone rules out GCpause","Adding nodes proves no storage cause"],
           answer: 0,
-          explain: 'Periodic + I/O-heavy + sirf p99 par dikhna = compaction ka signature. (GC pause bhi periodic hota hai par woh milliseconds ka hota hai aur CPU par dikhta hai, disk par nahi.) Ilaaj: compaction throttle, off-peak scheduling, aur compaction I/O ko dashboard par rakho.',
-        },
+          explain: "Compaction saturation periodic read tail cause ho sakti hai; IOlatency/queue and compaction metrics correlatekaro. GCpause, repair, cache miss aur network competing hypotheses hain; p99 spike alone cause prove nahi.",
+         choiceExplanations: ["Compaction saturation periodic read tail cause ho sakti hai; IOlatency/queue and compaction metrics correlatekaro. GCpause, repair, cache miss aur network competing hypotheses hain; p99 spike alone cause prove nahi.","GC, repair, cache and network can also cause periodic spikes.","GC remains plausible until pause/trace evidence excludes it.","Topology changes do not substitute for IO and compaction measurements."] },
         {
           q: 'LSM mein ek row DELETE karne se disk par kya hota hai?',
-          choices: [
-            'Ek "tombstone" likhi jaati hai — yaani delete karne se disk BADHTA hai, ghatta nahi. Jagah compaction ke baad khaali hoti hai',
-            'Row turant hat jaati hai',
-            'Kuch nahi hota',
-            'Poori SSTable dobara likhi jaati hai',
-          ],
+          choices: ["Tombstone now; safe reclamation later","Delete immediately rewrites every SSTable","Delete instantly removes all disk copies","Tombstone makes replica repair unnecessary"],
           answer: 0,
-          explain: 'Chaunkane wala par bilkul sach. LSM mein purani SSTables <b>immutable</b> hain — unhe badla nahi ja sakta. Isliye delete bhi ek naya record hai: "yeh key ab nahi hai". Isiliye Cassandra mein "bahut saare deletes" ek jaana-maana problem hai, aur tombstones ki apni GC period hoti hai.',
-        },
+          explain: "LSM deletion marker tombstone likhta hai; old versions compaction aur replica/retention safety conditions tak remain kar sakti hain. Space immediate free hone ki guarantee nahi; delete work ke baad temporary space badh sakti hai.",
+         choiceExplanations: ["LSM deletion marker tombstone likhta hai; old versions compaction aur replica/retention safety conditions tak remain kar sakti hain. Space immediate free hone ki guarantee nahi; delete work ke baad temporary space badh sakti hai.","LSMusually adds delete marker; compaction merges old versions later.","Old versions may remain until compaction/retention/safety conditions.","Replicas andtombstone retention must prevent deleted data resurrection."] },
       ],
     },
     {
@@ -2410,27 +2219,17 @@ COLUMNAR (OLAP):    [id id id...] [name name...] [amount amount...]
     instructions: 'Yeh sawaal alag karta hai ki tumne DB <b>use</b> kiya hai ya <b>samjha</b> hai. 🎤',
     questions: [
       {
-        q: '"Time-series metrics store karne hain — 10 lakh writes/sec. Kaunsa DB?"',
-        choices: [
-          'LSM-based (Cassandra/ScyllaDB) ya purpose-built TSDB. Write-heavy + append-only + range-scan by time — sab LSM ke favour mein. Postgres yahan write amplification par mar jaayega',
-          'Postgres — woh sab kuch kar leta hai',
-          'MongoDB',
-          'Redis',
-        ],
+        q: "Metrics 10 lakh writes/sec; DB short list kaise choose karoge?",
+        choices: ["Benchmark TSDB/LSM and partitioned options","Postgres cannot store any time-series data","Redisram is irrelevant to retained data","One million RPS alone picks exactDB"],
         answer: 0,
-        explain: 'Yahan har signal ek hi taraf ishara karta hai: writes bahut, updates lagbhag zero, reads range-scan by time, aur purana data drop hota rehta hai. Yeh LSM ki definition hai. (Aur agar bolo "Postgres + TimescaleDB" toh woh bhi sahi jawab hai — woh chunking + compression laga ke usi problem ko alag tareeke se hal karta hai.)',
-      },
+        explain: "10 lakh writes/sec headline enough nahi:bytes/write, retention, cardinality, query pattern, durability, hardware and operational budget chahiye. TSDB/LSM/wide column aur partitioned relational options benchmark karo; Postgres incapable universal claim nahi.",
+       choiceExplanations: ["10 lakh writes/sec headline enough nahi:bytes/write, retention, cardinality, query pattern, durability, hardware and operational budget chahiye. TSDB/LSM/wide column aur partitioned relational options benchmark karo; Postgres incapable universal claim nahi.","Postgres/time-series extensions can fit some workloads; blanket exclusion unsupported.","Retention and cardinality affect memory and durability cost.","Row size, retention, queries, hardware and consistency are also required."] },
       {
         q: '"Ek hi Postgres par OLTP aur analytics dono chal rahe hain. Kya galat hai?"',
-        choices: [
-          'Do bilkul ulte access patterns ek hi engine par hain — analytics ke bade scans buffer pool dho dete hain aur OLTP ka p99 chadh jaata hai. Alag karo: read replica se shuru, phir columnar store',
-          'Kuch galat nahi, bas machine badi kar do',
-          'Index add kar do',
-          'Analytics raat mein chalao',
-        ],
+        choices: ["Isolate large scans if OLTP SLO hurts","AnalyticsandOLTP can never sharean engine","Night schedule prevents all contention","Any index makes full analytics scans free"],
         answer: 0,
-        explain: 'Asli nuksaan latency nahi, <b>cache pollution</b> hai — ek analytics scan buffer pool mein se saara hot OLTP data nikaal deta hai (bilkul wahi jo tumne LRU level mein dekha). Machine badi karna sirf line aage khiskata hai. Read replica pehla practical kadam hai; par jab query "crore rows par aggregate" ban jaayein toh row store hi galat aujaar hai — columnar chahiye.',
-      },
+        explain: "Broad analytics OLTP ke CPU, I/O, memory/cache aur lock budgets compete kar sakti hai; cache pollution ek possible mechanism hai. Query plan, working set aur SLO measure karo. Read replica/warehouse isolation useful candidates hain; columnar storage broad column aggregates fit kar sakti hai, universal row-count cutoff nahi.",
+       choiceExplanations: ["Broad analytics OLTP ke CPU, I/O, memory/cache aur lock budgets compete kar sakti hai; cache pollution ek possible mechanism hai. Query plan, working set aur SLO measure karo. Read replica/warehouse isolation useful candidates hain; columnar storage broad column aggregates fit kar sakti hai, universal row-count cutoff nahi.","Sharing is valid while capacity/isolation meetsSLO; measure tradeoff.","Jobs can overrun or leave cache/IO pressure; night is not hard isolation.","Broad aggregations may still read large fractions despiteindexes."] },
     ],
   },
   success: [
@@ -2448,7 +2247,7 @@ COLUMNAR (OLAP):    [id id id...] [name name...] [amount amount...]
     { front: 'Cassandra par periodic p99 spike?', back: '<b>Compaction.</b> Woh LSM ka taala hua bill hai — disk I/O saturate karti hai. Throttle karo, off-peak chalao, uski I/O monitor karo.' },
     { front: 'LSM mein DELETE se disk?', back: '<b>Badhta hai</b> — ek tombstone likhi jaati hai. SSTables immutable hain. Jagah compaction ke baad milti hai.' },
     { front: 'Row vs columnar?', back: '<b>Row</b> = thodi rows ki saari columns (OLTP). <b>Columnar</b> = saari rows ki thodi columns (OLAP) + 10x compression. Layout hi ulta hai — ek DB dono achha nahi kar sakta.' },
-    { front: 'OLTP DB par analytics chalane ka asli nuksaan?', back: 'Latency nahi — <b>cache pollution</b>. Bada scan buffer pool se hot OLTP data nikaal deta hai. Replica → phir columnar store.' },
+    { front: 'OLTP DB par analytics chalane ka asli nuksaan?', back: "Broad scans CPU/I/O/cache aur isolation budgets compete kar sakti hain. Actual OLTP SLO impact measure karo; replica/warehouse aur columnar storage access pattern ke hisaab se evaluate karo." },
   ],
 },
 ]);
@@ -2543,20 +2342,26 @@ WHILE (rows bache):                            ← chhote batches
              kaise gayab hota hai. Phir rollback karke sahi kram se karo.`,
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_DBMIGRATE,
-      success: allOf(T_DBMIGRATE),
+      success: SD.allTasks(T_DBMIGRATE),
       successText: `Tumne dono raaste dekhe. Farak sirf ek kadam ke <b>kram</b> ka tha —
         aur usi se 41,204 rows chup-chaap kho gayi thi.
         <b>dual-write → backfill → verify → cutover.</b> Aur rollback ka darwaza
         tabhi tak khula hai jab tak purani table source of truth hai.`,
+      solution: [
+        "migrate status",
+        "migrate backfill --batch 5000",
+        "migrate verify",
+        "migrate rollback",
+        "migrate dual-write on",
+        "migrate backfill --batch 5000",
+        "migrate verify",
+        "migrate cutover",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.migration?.dualWrite === true && s.sys.migration.verified === true && s.sys.migration.cutover === true && s.sys.migration.drift === 0 && s.sys.migration.backfilled === s.sys.migration.total && s.sys.migration.batch <= 50000; },
       hints: [
-        'Pehle haalat dekho: migrate status',
-        'Ab galat kram — seedha backfill: migrate backfill --batch 5000',
-        'Ab verify karo aur nuksaan dekho: migrate verify',
-        'Wapas jao: migrate rollback',
-        'Ab sahi kram — pehle dual-write: migrate dual-write on',
-        'Phir chhote batch mein backfill: migrate backfill --batch 5000',
-        'Ab verify saaf hona chahiye: migrate verify',
-        'Aur ab surakshit cutover: migrate cutover',
+        "Pehle observation: Migration ki haalat dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Aur ab cutover — surakshit. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nmigrate status\nmigrate backfill --batch 5000\nmigrate verify\nmigrate rollback\nmigrate dual-write on\nmigrate backfill --batch 5000\nmigrate verify\nmigrate cutover",
       ],
     },
     {
@@ -2582,25 +2387,25 @@ WHILE (rows bache):                            ← chhote batches
         q1: {
           text: 'Cutover kal raat hua tha. Backfill "successful" dikha tha. Pehla kadam?',
           choices: [
-            { t: 'Turant flag palat ke reads wapas purani table par karo', good: true, next: 'q2', explain: 'Sahi. Cutover ek flag tha, isliye rollback 20 second ka kaam hai. Pehle <b>khoon roko</b>, diagnosis baad mein — kyunki purani table abhi bhi source of truth hai aur wahan poora data hai.' },
-            { t: 'Pehle root cause dhoondo ki kitne rows gayab hain', good: false, explain: 'Diagnosis zaroori hai — par abhi users ka data gayab dikh raha hai. Rollback ek flag door hai aur uska koi nuksaan nahi. Pehle bleeding roko.' },
-            { t: 'Gayab rows manually copy kar do', good: false, explain: 'Tumhe abhi pata bhi nahi ki kitni aur kaunsi rows gayab hain. Manual patch bina verify ke naya, aur gehra, corruption bana sakta hai.' },
+            { t: "Rollback reads if old data is current", good: true, next: 'q2', explain: 'Sahi. Cutover ek flag tha, isliye rollback 20 second ka kaam hai. Pehle <b>khoon roko</b>, diagnosis baad mein — kyunki purani table abhi bhi source of truth hai aur wahan poora data hai.' },
+            { t: "Find full root cause before relief", good: false, explain: 'Diagnosis zaroori hai — par abhi users ka data gayab dikh raha hai. Rollback ek flag door hai aur uska koi nuksaan nahi. Pehle bleeding roko.' },
+            { t: "Copy rows manually during live writes", good: false, explain: 'Tumhe abhi pata bhi nahi ki kitni aur kaunsi rows gayab hain. Manual patch bina verify ke naya, aur gehra, corruption bana sakta hai.' },
           ],
         },
         q2: {
           text: 'Reads wapas purani table par hain, users theek hain. Ab wajah dhoondo.',
           choices: [
-            { t: 'migrate verify chalao — count aur checksum compare karo', good: true, next: 'q3', explain: 'Yahi woh kadam tha jo cutover se pehle chhoot gaya tha. Ab yeh exact number dega — anumaan nahi.' },
-            { t: 'Backfill dobara chala do', good: false, explain: 'Bina jaane ki drift kyun hai, dobara backfill wahi galti dohra sakta hai. Aur agar dual-write abhi bhi off hai toh natija wahi rahega.' },
-            { t: 'Application logs padho', good: false, explain: 'Logs madad karenge, par yahan seedha sawaal hai "dono tables mein kitna farak hai" — aur uska seedha jawab count + checksum hai.' },
+            { t: "Verify counts,keys and checksums", good: true, next: 'q3', explain: 'Yahi woh kadam tha jo cutover se pehle chhoot gaya tha. Ab yeh exact number dega — anumaan nahi.' },
+            { t: "Rerun backfill without diagnosis", good: false, explain: 'Bina jaane ki drift kyun hai, dobara backfill wahi galti dohra sakta hai. Aur agar dual-write abhi bhi off hai toh natija wahi rahega.' },
+            { t: "Read logs without data comparison", good: false, explain: 'Logs madad karenge, par yahan seedha sawaal hai "dono tables mein kitna farak hai" — aur uska seedha jawab count + checksum hai.' },
           ],
         },
         q3: {
           text: 'Verify: 41,204 rows ka farak. Sab timestamps backfill wale 3-ghante ke window ke hain. Kya hua tha?',
           choices: [
-            { t: 'Dual-write backfill ke BAAD on kiya gaya tha — us window ke naye writes sirf purani table mein gaye', good: true, next: 'end', explain: 'Bilkul. Backfill ne ek snapshot copy kiya, aur us snapshot ke baad aaye writes nayi table mein kabhi pahunche hi nahi. Isiliye kram hamesha <b>dual-write pehle</b> hai. Ab: dual-write on karo, backfill dobara (idempotent upsert se), verify, phir 1% traffic se cutover.' },
-            { t: 'Backfill script mein bug tha', good: false, explain: 'Mumkin hai, par saboot iske khilaaf hai: gayab rows <b>ek hi time window</b> ki hain, bikhri hui nahi. Bug hota toh nuksaan random hota. Time-window ka pattern hamesha "us doraan aaye writes" ki taraf ishara karta hai.' },
-            { t: 'Replica lag ki wajah se rows dikh nahi rahi', good: false, explain: 'Replica lag 6 ghante nahi rehta, aur woh rows ko <b>gayab</b> nahi karta — sirf der se dikhata hai. Yahan checksum bhi mismatch hai, toh data sach mein nahi hai.' },
+            { t: "Check write capture during snapshot", good: true, next: 'end', explain: 'Bilkul. Backfill ne ek snapshot copy kiya, aur us snapshot ke baad aaye writes nayi table mein kabhi pahunche hi nahi. Snapshot se pehle concurrent writes capture hona zaroori hai:coordinated dual-write,CDC ya equivalent recovery protocol. Ab: dual-write on karo, backfill dobara (idempotent upsert se), verify, phir 1% traffic se cutover.' },
+            { t: "Assume any backfill script corrupted", good: false, explain: 'Mumkin hai, par saboot iske khilaaf hai: gayab rows <b>ek hi time window</b> ki hain, bikhri hui nahi. Bug hota toh nuksaan random hota. Time-window ka pattern hamesha "us doraan aaye writes" ki taraf ishara karta hai.' },
+            { t: "Assume all missing rows replica lag", good: false, explain: 'Replica lag 6 ghante nahi rehta, aur woh rows ko <b>gayab</b> nahi karta — sirf der se dikhata hai. Yahan checksum bhi mismatch hai, toh data sach mein nahi hai.' },
           ],
         },
         end: {
@@ -2622,38 +2427,23 @@ WHILE (rows bache):                            ← chhote batches
       title: 'Migration ki samajh',
       questions: [
         {
-          q: 'Backfill se PEHLE dual-write on karna kyun zaroori hai?',
-          choices: [
-            'Backfill ek snapshot copy karta hai. Uske chalte waqt aaye naye writes nayi table mein tabhi jaayenge jab dual-write pehle se on ho',
-            'Isse backfill tez hota hai',
-            'Yeh convention hai',
-            'Warna DB error deta hai',
-          ],
+          q: "Backfill snapshot ke dauraan concurrent writes miss na hon. Kya chahiye?",
+          choices: ["Capture concurrent changes before snapshot","Dual-write is the only capture mechanism","Snapshot copies future changes automatically","Backfill speed guarantees no missed writes"],
           answer: 0,
-          explain: 'Dono kadam milke ek poora cover dete hain: <b>backfill</b> ateet sambhaalta hai, <b>dual-write</b> vartaman. Kram ulta karne se beech mein ek khaali khidki ban jaati hai — aur us khidki ka data chup-chaap kho jaata hai. Yeh galti error nahi deti, isliye sirf verify hi ise pakadta hai.',
-        },
+          explain: "Snapshot start se changes capture karo taaki concurrent writes miss na hon. Coordinated dual write, CDC/log stream ya other correct migration protocol valid hain. Plain dual writes mein partial failures aur ordering handle karna hoga.",
+         choiceExplanations: ["Snapshot start se changes capture karo taaki concurrent writes miss na hon. Coordinated dual write, CDC/log stream ya other correct migration protocol valid hain. Plain dual writes mein partial failures aur ordering handle karna hoga.","CDC/log-based capture or other coordinated migration can also cover changes.","Point-in-time copy does not include subsequent mutations.","Fast copy still has concurrency window unless captured/reconciled."] },
         {
           q: 'Cutover ko feature flag se karna kyun behtar hai, deploy se nahi?',
-          choices: [
-            'Flag 20 second mein palat jaata hai aur uska blast radius chhota hai; deploy rollback mein 20 minute lagte hain — jo ek incident mein bahut lamba hai',
-            'Flags tez chalte hain',
-            'Deploy mein bug aa sakta hai',
-            'Flag se code saaf rehta hai',
-          ],
+          choices: ["Flag makes controlled switch and rollback","Flag rollback always takes exactly 20 seconds","Deploy rollback always takes 20 minutes","Feature flag eliminates data compatibility"],
           answer: 0,
-          explain: 'Migration mein sabse zaroori sawaal yeh hai: <b>"galat hua toh wapas aane mein kitna waqt lagega?"</b> Flag se woh jawab seconds mein hota hai, aur tum 1% traffic par pehle test bhi kar sakte ho. Isiliye risky changes hamesha flag ke peechhe jaate hain.',
-        },
+          explain: "Feature flag rollout/routing control aur quick rollback de sakta hai; exact propagation time implementation-specific hai. Old/new path compatibility aur data reversal remain required; deploy rollback always 20 minutes nahi.",
+         choiceExplanations: ["Feature flag rollout/routing control aur quick rollback de sakta hai; exact propagation time implementation-specific hai. Old/new path compatibility aur data reversal remain required; deploy rollback always 20 minutes nahi.","Propagation/caching/failure behavior depend on implementation.","Deployment rollback time is environment-specific.","Old/new code and data must remain compatible during rollout."] },
         {
-          q: 'Rollback ka darwaza kab band ho jaata hai?',
-          choices: [
-            'Jis pal purani table par likhna band ho jaata hai — uske baad wapas jaane ka matlab naya data khona',
-            'Cutover ke turant baad',
-            'Jab purani table drop ho',
-            'Jab backfill poora ho',
-          ],
+          q: "Old store par new writes bandh hue. Safe rollback ki requirement?",
+          choices: ["Old store stale unless replay path exists","Stopping dual writes always loses data","Backfill complete means rollback impossible","Feature flag alone restores missed writes"],
           answer: 0,
-          explain: 'Cutover ke baad bhi <b>reads</b> nayi jagah se aa rahe hain par <b>writes</b> dono jagah ja rahe hain — isliye purani table abhi bhi poori aur wapas laayak hai. Woh rishta tabhi tootta hai jab tum dual-write band karte ho. Isiliye "contract" phase hamesha aakhir mein aur jaan-boojh ke der se aata hai.',
-        },
+          explain: "Old store updates stop hon toh stale hoga; rollback ko preserved changelog/reverse replication/replay chahiye. Without that path rollback data loss risk rakhta hai; stopping dual write universally irreversible nahi.",
+         choiceExplanations: ["Old store updates stop hon toh stale hoga; rollback ko preserved changelog/reverse replication/replay chahiye. Without that path rollback data loss risk rakhta hai; stopping dual write universally irreversible nahi.","CDC/reverse replication/replay can keep rollback possible if designed.","Backfill completion does not itself stop old store updates.","Flag changes read routing, not missing data propagation."] },
       ],
     },
   ],
@@ -2663,26 +2453,16 @@ WHILE (rows bache):                            ← chhote batches
     questions: [
       {
         q: '"2 crore rows wali table ko naye schema par le jaana hai, bina downtime. Plan bolo."',
-        choices: [
-          'Expand-contract: naya column/table banao → dual-write on → chhote batches mein backfill (sleep ke saath) → count + checksum + shadow read se verify → flag se 1%→100% cutover → kuch din baad purana likhna band → drop',
-          'Maintenance window lo aur ek raat mein migrate kar do',
-          'Nayi table banao, data copy karo, app switch kar do',
-          'ALTER TABLE chala do, Postgres handle kar lega',
-        ],
+        choices: ["Expand; capture; backfill; verify; cutover","Copy live table then instant read switch","Large blocking ALTERwithout lock analysis","Drop old schema before checking new reads"],
         answer: 0,
-        explain: 'Jo cheez interviewer sun-na chahta hai woh <b>kram</b> aur <b>rollback</b> hai. Doosra option chhote systems mein chalta hai par global product mein window hai hi nahi. Teesra wahi galti hai jo tumne mission mein ki — backfill ke doraan ke writes kho jaayenge. Aur chautha ek 20-minute lock hai jo poora site gira dega.',
-      },
+        explain: "Concurrent-change capture pehle, phir bounded backfill, parity verification aur controlled cutover. Purani read/write compatibility aur rollback path verify karo. Bare dual writes partial failures/order ko solve nahi karti; coordinated CDC ya another recoverable protocol bhi valid hai. DDL lock/rewrite operation aur version par depend karta hai.",
+       choiceExplanations: ["Concurrent-change capture pehle, phir bounded backfill, parity verification aur controlled cutover. Purani read/write compatibility aur rollback path verify karo. Bare dual writes partial failures/order ko solve nahi karti; coordinated CDC ya another recoverable protocol bhi valid hai. DDL lock/rewrite operation aur version par depend karta hai.","Concurrent changes can bemissed without capture/reconciliation.","DDLlock/rewrite behavior depends on operation/version; test bounded plan.","Drop removes rollback path before parity/consumer validation."] },
       {
         q: '"Cutover ke baad tumhe kaise pata chalega ki sab theek hai?"',
-        choices: [
-          'Cutover se PEHLE shadow reads chalunga aur mismatch rate log karunga; cutover 1% traffic par karunga aur error rate + business metric (orders/min) dono dekhunga — sirf latency nahi',
-          'Error rate dekhunga',
-          'QA se test karwaunga',
-          'Support tickets ka intezaar karunga',
-        ],
+        choices: ["Parity plus errors, business and latency","Only latency proves migration correctness","Zero support tickets proves data parity","QAonce replaces canary and monitoring"],
         answer: 0,
         explain: 'Silent data bugs <b>error rate par dikhte hi nahi</b> — API 200 lauta rahi hai, bas galat data ke saath. Isiliye business metric chahiye (orders/min, revenue/hour): agar woh gir jaaye toh kuch toota hai chahe har request 200 ho. Aur shadow read cutover se pehle hi jawab de deta hai.',
-      },
+       choiceExplanations: ["Silent data bugs <b>error rate par dikhte hi nahi</b> — API 200 lauta rahi hai, bas galat data ke saath. Isiliye business metric chahiye (orders/min, revenue/hour): agar woh gir jaaye toh kuch toota hai chahe har request 200 ho. Aur shadow read cutover se pehle hi jawab de deta hai.","Fast incorrect results can still lose orders ormoney.","Customers may not notice/report immediately; compare actual data.","Live workloads, lag and scale need observable rollout checks."] },
     ],
   },
   success: [
@@ -2735,44 +2515,39 @@ SD.registerLevelsAfter('data', 'composite', [
   title: 'IDs — Random Primary Key Ki Chhupi Hui Keemat',
   badge: 'ID Shilpi',
   objectives: [
-    'Random UUID primary key B-tree ko kaise todta hai',
-    'Snowflake ka 64-bit kaise tootta hai — aur woh coordination-free kyun hai',
-    'Sortable id se cursor pagination <b>muft</b> mein theek ho jaati hai',
+    "Random UUID primary key ka locality/write-cost tradeoff",
+    "Snowflake ke 64 bits, worker-ID allocation aur clock rollback policy",
+    'Chronological id aur unique cursor tie-breaker alag properties hain',
     'External id aur primary key alag ho sakte hain — aur honi chahiye',
   ],
   lesson: [
     `<h3>📖 "UUID hi use kar lete hain" — aur uska bill</h3>
      <p>UUIDv4 ka waada bahut achha hai: koi coordination nahi, koi central counter
-     nahi, takraane ka darr nahi, aur URL mein daalne par koi guess nahi kar sakta
+     nahi; collision probability tiny hai, mathematically zero nahi. Good random generation guessing harder banati hai; authorization phir bhi chahiye
      (<code>/orders/1247</code> se <code>/orders/1248</code> maang lena aasan hai).</p>
      <p>Par jab woh <b>primary key</b> ban jaata hai, tab ek chhupa hua bill aata hai —
      aur woh seedha B-tree se aata hai, jo tumne pichhle levels mein dekha:</p>
      <pre>Sortable id (autoinc/Snowflake):
    har naya row  →  B-tree ke AAKHRI page par
                  →  woh page pehle se memory mein garam hai
-                 →  koi split nahi, koi random I/O nahi
+                 →  locality often better; page splits still possible
 
 Random id (UUIDv4):
    har naya row  →  B-tree mein KAHIN BHI
                  →  woh page shayad disk se laana pade
                  →  page bhara hua ho toh SPLIT
                  →  index bikhar jaata hai (fragmentation)</pre>
-     <p class="tip">🎯 Aur ek doosri, kam dikhne wali kami: <b>UUIDv4 se sort karne ka
-     koi matlab nahi</b>. Isliye woh cursor pagination ka tie-breaker nahi ban sakta —
-     <code>(created_at, id)</code> wala keyset tab hi kaam karta hai jab <code>id</code>
-     ka kram <b>waqt</b> ke kram jaisa ho. Random id ke saath ek hi millisecond ke
-     do rows ka kram har baar alag ho sakta hai.</p>`,
+     <p class="tip">🎯 <b>Chronology aur stable ordering alag hain.</b> UUIDv4 akeli creation-time order nahi deti, par unique aur stable hone ke kaaran <code>(created_at, id)</code> cursor ka tie-breaker ban sakti hai. ORDER BY aur cursor comparison dono mein wahi columns, direction aur collation chahiye; matching index bhi banao. Ek timestamp par do rows ka order unique id se deterministic hota hai.</p>`,
     `<h3>❄️ Snowflake — 64 bits mein sab kuch</h3>
      <pre>┌─1─┬────────── 41 ──────────┬──── 10 ────┬──── 12 ────┐
 │ 0 │      timestamp (ms)     │ machine id │  sequence  │
 └───┴─────────────────────────┴────────────┴────────────┘
 
 41 bit timestamp  →  69 saal (ek custom epoch se)
-10 bit machine    →  1024 machines, kabhi nahi takraayengi
+10 bit machine    →  1024 assigned worker IDs;duplicate assignment prevent karo
 12 bit sequence   →  4096 ids per machine PER MILLISECOND</pre>
      <p>Timestamp <b>sabse aage</b> hai — isliye jab tum ids ko number ki tarah sort
-     karte ho, woh apne aap <b>waqt ke kram</b> mein aa jaati hain. Aur koi central
-     service nahi chahiye: har machine apni id khud bana leti hai.</p>
+     karte ho, woh apne aap <b>waqt ke kram</b> mein aa jaati hain. Per-ID central request zaroori nahi, par unique worker-ID allocation, clock policy aur state recovery coordinate karne padte hain. Timestamp order global causality guarantee nahi.</p>
      <p><b>Ek asli khatra:</b> agar server ki clock <b>peechhe</b> chali jaaye (NTP
      adjustment), toh woh ids dobara ban sakti hain. Isiliye asli implementations
      clock peeche jaane par <b>ruk jaati hain</b> ya ek logical counter aage badha
@@ -2788,9 +2563,7 @@ Random id (UUIDv4):
      <h3>🎯 Practical raasta: do alag ids</h3>
      <pre>id            BIGINT (Snowflake / autoinc)   ← PRIMARY KEY, index-friendly
 public_id     UUID / short code              ← API aur URL mein yahi jaata hai</pre>
-     <p class="tip">🎯 Isse dono cheezein mil jaati hain: index sequential rehta hai
-     (writes tez, cursor pagination sahi), aur bahar koi tumhara row count guess
-     nahi kar sakta na hi <code>/orders/1248</code> maang sakta hai.
+     <p class="tip">🎯 Internal sortable key locality improve kar sakti hai; stable unique public key API ko decouple karti hai. Public UUID guessing harder banati hai, par authorization checks replace nahi karti. Cursor correctness ko explicit total order aur matching predicate chahiye.
      Kharch: ek extra unique index. Woh lagbhag hamesha manzoor hai.</p>`,
   ],
   stages: [
@@ -2800,18 +2573,23 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
       goal: `Do id schemes par 10 lakh inserts chalao aur B-tree ka farak khud dekho.`,
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_IDS,
-      success: allOf(T_IDS),
+      success: SD.allTasks(T_IDS),
       successText: `Ek "chhota sa" faisla — kaunsi id — ne write throughput,
         index size aur cursor pagination teenon badal diye.
         Aur yeh koi naya sabak nahi tha: yeh wahi <b>B-tree</b> hai jo tum
         pehle se jaante ho, ab primary key ki taraf se dekha gaya.`,
+      solution: [
+        "id gen uuid4 --n 5",
+        "id gen snowflake --n 5",
+        "id bench --type uuid4 --rows 1000000",
+        "id bench --type snowflake --rows 1000000",
+        "id bench --type ulid --rows 1000000",
+      ],
+      verify: s => { const m = SD.mission; return m.latest(s, 'id', 'bench')?.type === 'ulid'; },
       hints: [
-        'Pehle UUIDv4 dekho: id gen uuid4 --n 5',
-        'Ab Snowflake — badhte hue numbers: id gen snowflake --n 5',
-        'UUIDv4 par 10 lakh inserts: id bench --type uuid4 --rows 1000000',
-        'Wahi Snowflake par: id bench --type snowflake --rows 1000000',
-        'Ab ULID bhi: id bench --type ulid --rows 1000000',
-        'Aur baseline ke liye autoinc: id bench --type autoinc --rows 1000000',
+        "Pehle observation: Kuch UUIDv4 dekho — koi kram hai?. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: ULID bhi dekh lo — UUID jitna bada, par sortable. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nid gen uuid4 --n 5\nid gen snowflake --n 5\nid bench --type uuid4 --rows 1000000\nid bench --type snowflake --rows 1000000\nid bench --type ulid --rows 1000000",
       ],
     },
     {
@@ -2829,7 +2607,7 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
         { text: '5 services alag-alag jagah se ek hi table mein likh rahi hain', bin: 'sort', explain: 'Coordination-free chahiye <b>aur</b> index-friendly bhi. Snowflake dono deta hai — har service apni id banati hai, aur woh phir bhi waqt ke kram mein rehti hain.' },
         { text: 'Client offline mein rows banata hai, baad mein sync karta hai', bin: 'uuid', explain: 'Client ko server se poochhe bina id chahiye, aur takraana bilkul nahi chahiye. ULID bhi chalega aur sortable bhi hoga — par agar client ki clock par bharosa nahi toh UUIDv4 zyada surakshit hai.' },
         { text: 'Events table jahan 50,000 inserts/sec aate hain', bin: 'sort', explain: 'Yahan random id ka page-split tax seedha throughput khaa jaayega. Sortable id se har insert aakhri (garam) page par jaata hai.' },
-        { text: 'Ek row jise cursor pagination se page karna hai', bin: 'sort', explain: '<code>(created_at, id)</code> tie-breaker tabhi sahi hai jab id ka kram waqt ka kram ho. Random id ke saath ek hi millisecond ke rows ka order har baar badal sakta hai — aur woh rows skip ya duplicate karta hai.' },
+        { text: 'ID akeli roughly creation-time order de; alag timestamp sort field nahi hai', bin: 'sort', explain: 'Snowflake/ULID time component ke saath roughly chronological ordering deti hain; clock aur same-timestamp guarantees implementation par depend hain. Agar created_at alag sort column hai, unique stable UUIDv4 bhi valid tie-breaker hai.' },
       ],
     },
     {
@@ -2838,37 +2616,22 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
       questions: [
         {
           q: 'UUIDv4 primary key par writes dheeme kyun hote hain?',
-          choices: [
-            'Har insert B-tree mein random jagah jaata hai — woh page disk se laana pad sakta hai, aur bharne par split hota hai. Sortable id hamesha aakhri (garam) page par jaata hai',
-            'UUID bada hota hai isliye',
-            'UUID generate karna mehenga hai',
-            'Database UUID support nahi karta',
-          ],
+          choices: ["Random keys weaken B-tree locality","UUID size alone explains all slow writes","Sortable key never causes page splits","UUIDgeneration is always dominant cost"],
           answer: 0,
-          explain: 'Size ka thoda asar hai (16 vs 8 bytes) par asli kharch <b>random insert order</b> ka hai. Yeh bilkul wahi baat hai jo tumne B-tree level mein seekhi thi: sorted structure mein sequential insert sasta hai, random insert mehenga. Bas ab woh baat primary key ke faisle par lag rahi hai.',
-        },
+          explain: "RandomUUIDv4 inserts index pages mein spread hote hain; locality/cache/page splits write cost badha sakte hain. Time ordered IDs bhi split/hotspot create kar sakti hain; keywidth/storage engine and workload matter karte hain.",
+         choiceExplanations: ["RandomUUIDv4 inserts index pages mein spread hote hain; locality/cache/page splits write cost badha sakte hain. Time ordered IDs bhi split/hotspot create kar sakti hain; keywidth/storage engine and workload matter karte hain.","Keywidth matters, but random insert locality and cache behavior also matter.","Increasing keys can still splitrightmost pages and create hotspots.","Generation cost is implementation-specific; profile DBIO and index work."] },
         {
           q: 'Snowflake ka timestamp sabse aage kyun rakha jaata hai?',
-          choices: [
-            'Taaki id ko number ki tarah sort karne par woh WAQT ke kram mein aa jaaye — index bhi sequential rehta hai aur cursor tie-breaker bhi sahi ho jaata hai',
-            'Taaki id chhoti rahe',
-            'Taaki uniqueness bane',
-            'Taaki debugging aasan ho',
-          ],
+          choices: ["High timestamp bits give rough time order","Timestamp alone guarantees unique IDs","Clock skew cannot affect IDordering","Numeric order proves global eventcausality"],
           answer: 0,
-          explain: 'Bit order hi poora design hai. Timestamp aage ho toh sorting = time ordering. Agar machine id aage hota, toh saari ids machine ke hisaab se group ho jaati aur woh sequential-insert wala faayda khatam ho jaata.',
-        },
+          explain: "Timestamp high bits numeric IDs ko approximate time order dete hain. Unique worker assignment plus sequence aur clock rollback handling chahiye; globally causal or strictly monotonic order guaranteed nahi.",
+         choiceExplanations: ["Timestamp high bits numeric IDs ko approximate time order dete hain. Unique worker assignment plus sequence aur clock rollback handling chahiye; globally causal or strictly monotonic order guaranteed nahi.","Same timestamp needs distinct worker/sequence coordination.","Clock rollback and skew can break monotonicity unlesshandled.","Physical timestamps do not prove causal order across nodes."] },
         {
-          q: 'API mein UUID chahiye par index sequential rakhna hai. Kya karoge?',
-          choices: [
-            'Do ids: internal BIGINT primary key (Snowflake/autoinc) + ek public UUID column jispar unique index ho. API sirf public id dikhaaye',
-            'UUID ko hi primary key rakho',
-            'UUID ko string ki jagah binary(16) mein rakho',
-            'Autoinc use karo aur URL mein encode kar do',
-          ],
+          q: "InternalPK sequential rakhni hai, public API UUIDv4 mandatory. Kaunsa valid model?",
+          choices: ["Internal sequential; public UUID","Binary UUIDv4 makes inserts sequential","Base64 counter makes IDs unguessable","Public UUID removes authorization need"],
           answer: 0,
-          explain: 'Yeh standard hal hai kyunki yeh dono zaroorton ko <b>alag</b> kar deta hai: index ki zaroorat sequential id ki hai, API ki zaroorat guess-proof id ki. (binary(16) UUID ko chhota kar deta hai — achha hai — par random insert ka problem wahi rehta hai.)',
-        },
+          explain: "Given internalPK sequential aurpublicUUID constraint, dual-ID model valid hai; public UUID unique index still random write cost rakhega. UUIDv7/time-ordered UUID alternative ho sakta hai agar constraints allow karein. Encoding counter secrecy ya authorization nahi.",
+         choiceExplanations: ["Given internalPK sequential aurpublicUUID constraint, dual-ID model valid hai; public UUID unique index still random write cost rakhega. UUIDv7/time-ordered UUID alternative ho sakta hai agar constraints allow karein. Encoding counter secrecy ya authorization nahi.","Binary format reduceswidth, but random value ordering staysrandom.","Encoding does not hide predictable counter; use appropriate randomization if needed.","Opaque identifiers do not authorize access; server permission checks required."] },
       ],
     },
     {
@@ -2879,7 +2642,7 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
         { text: 'Abhi ka time lo aur usme se custom epoch ghatao', explain: 'Custom epoch (jaise 2020) isliye ki 41 bits mein 69 saal aa jaayein. Unix epoch se ginte toh bits jaldi khatam ho jaate.' },
         { text: 'Check karo ki clock peechhe toh nahi chali gayi', explain: 'Sabse zaroori kadam, aur sabse zyada bhoola jaane wala. NTP clock peeche kar sakta hai — aur tab wahi ids dobara ban jaayengi. Yahan ruk jao ya logical counter aage badhao.' },
         { text: 'Agar wahi millisecond hai toh sequence ++ karo', explain: '12 bits = 4096 ids per ms per machine. Yeh ek machine ke liye 40 lakh ids/second hai — lagbhag hamesha kaafi.' },
-        { text: 'Agar sequence bhar gaya toh agle millisecond ka intezaar karo', explain: 'Ek millisecond mein 4096 se zyada chahiye? Ruko. Yeh takraane se behtar hai — aur practically kabhi nahi hota.' },
+        { text: 'Agar sequence bhar gaya toh agle millisecond ka intezaar karo', explain: 'Ek millisecond mein 4096 se zyada chahiye? Ruko. Yeh takraane se behtar hai — workload bursts mein possible hai;generation wait/backpressure ka SLA test karo.' },
         { text: 'Teenon hisson ko shift karke jodo', explain: '<code>(ts &lt;&lt; 22) | (machine &lt;&lt; 12) | sequence</code>. Timestamp sabse upar ke bits mein — isiliye sorting waqt ke hisaab se hoti hai.' },
       ],
     },
@@ -2889,27 +2652,17 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
     instructions: 'Chhota sawaal, gehra jawab. 🎤',
     questions: [
       {
-        q: '"Ek distributed system mein unique IDs kaise banaoge?"',
-        choices: [
-          'Snowflake-style: timestamp + machine id + sequence. Coordination-free, sortable (isliye index-friendly), aur 64 bits mein aa jaata hai. Clock skew ka handling batana zaroori hai',
-          'UUIDv4 — simple aur unique',
-          'Ek central ID service banaunga',
-          'Database ka auto-increment',
-        ],
+        q: "64 bit approximate-time-sortable IDs distributed nodes par chahiye. Kaunsa fit?",
+        choices: ["For 64 bit sortable IDs, manage worker+clock","UUIDv4 gives timestamp ordering by default","Per-node sequence alone globally unique","Timestamp alone handles every concurrent insert"],
         answer: 0,
-        explain: 'UUIDv4 galat nahi hai — par woh index par kya karta hai, yeh <b>bolna</b> chahiye. Central ID service ek single point of failure aur ek network hop hai har insert par. Autoinc distributed writes mein chalta hi nahi. Aur woh aakhri line — clock skew — hi yeh dikhati hai ki tumne ise sach mein socha hai.',
-      },
+        explain: "Given 64 bit sortable distributed IDs, worker namespace+timestamp+sequence valid Snowflake-style choice hai. Worker namespace allocation aur clock rollback handling coordinated requirements hain; fully coordination-free universal claim nahi.",
+       choiceExplanations: ["Given 64 bit sortable distributed IDs, worker namespace+timestamp+sequence valid Snowflake-style choice hai. Worker namespace allocation aur clock rollback handling coordinated requirements hain; fully coordination-free universal claim nahi.","UUIDv4 is random, not time ordered; otherUUID versions differ.","Two nodes can generate same local sequence unless namespace assigned.","Same clock tick can contain many inserts; worker+sequence or other uniqueness needed."] },
       {
-        q: '"URL shortener ke liye kaunsi id?"',
-        choices: [
-          'Ek counter (ya Snowflake) ko base62 mein encode karo — chhota code, koi collision check nahi. Agar sequential codes se dusron ke links guess honay ka darr ho, toh counter ko encode karne se pehle scramble kar do',
-          'Random 7-character string, aur collision par retry',
-          'URL ka hash',
-          'UUID',
-        ],
+        q: "Deterministic compact URL codes aur counter allocation acceptable hai. Kaunsa fit?",
+        choices: ["Counter+base62; handle predictability","Base62 hash has no collisionpossibility","Seven random chars never need constraint","UUIDtext is shortest possible public code"],
         answer: 0,
-        explain: 'Random string ke saath har insert par ek <b>"yeh code pehle se hai kya?"</b> lookup karna padta hai — aur jaise-jaise space bharta hai, collisions badhte jaate hain. Counter + base62 mein woh lookup <b>hai hi nahi</b>, aur code chhote se chhota rehta hai. Hash ka problem yeh hai ki ek hi URL do baar shorten karne par wahi code milega — jo kabhi feature hai, kabhi bug.',
-      },
+        explain: "Given compact deterministic counter coding goal, base62 counter/Snowflake valid hai. Random code plus atomic collision retry bhi valid alternative in other requirements. Predictable code privacy/authorization separate issue; hashtruncation collisions handle karo.",
+       choiceExplanations: ["Given compact deterministic counter coding goal, base62 counter/Snowflake valid hai. Random code plus atomic collision retry bhi valid alternative in other requirements. Predictable code privacy/authorization separate issue; hashtruncation collisions handle karo.","Truncated/hash code collisions require check/uniqueness handling.","Finite random space can collide; atomic constraint+retry protects correctness.","UUIDtext is generally longer than short base62 counter; constraints decide tradeoff."] },
     ],
   },
   success: [
@@ -2923,7 +2676,7 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
     Phir poochho: kya us UUID ko <code>public_id</code> banake primary key
     bigint kiya ja sakta hai?`,
   cards: [
-    { front: 'Random UUID primary key ka bill?', back: 'Har insert B-tree mein <b>random jagah</b> → page disk se laana + splits + fragmentation. Sortable id hamesha aakhri (garam) page par jaata hai. Aur UUIDv4 sort ka <b>koi matlab nahi</b> — cursor tie-breaker nahi ban sakta.' },
+    { front: 'Random UUID primary key ka bill?', back: 'Har insert B-tree mein <b>random jagah</b> → page disk se laana + splits + fragmentation. Time-ordered id aksar right edge ke paas insert hoti hai; hot-page contention bhi dekhna padta hai. UUIDv4 chronological nahi hai, par (created_at, id) cursor mein stable unique tie-breaker ban sakti hai.' },
     { front: 'Snowflake ka layout?', back: '<code>1 bit | 41 bit timestamp | 10 bit machine | 12 bit sequence</code> = 64 bit. Timestamp <b>sabse aage</b>, isliye sorting = time ordering. 1024 machines × 4096 ids/ms.' },
     { front: 'Snowflake ka asli khatra?', back: '<b>Clock peeche jaana</b> (NTP). Tab wahi ids dobara ban sakti hain. Implementation ko ruk jaana chahiye ya logical counter badhana chahiye — chupchaap dohraana nahi.' },
     { front: 'API mein UUID + index sequential?', back: '<b>Do ids:</b> internal BIGINT primary key + public UUID column (unique index). Index sequential rehta hai, aur bahar koi count ya doosre records guess nahi kar sakta.' },
@@ -2975,9 +2728,9 @@ SD.registerLevelsAfter('data', 'engines', [
      <pre>Bloom filter kehta hai sirf do cheezein:
    "PAKKA nahi hai"  ← yeh hamesha SACH hai
    "SHAYAD hai"      ← yeh 1% baar jhooth ho sakta hai</pre>
-     <p>Yaani <b>false negative kabhi nahi</b>, false positive kabhi-kabhi.
+     <p>Healthy complete insert-only filter mein inserted items ke false negatives nahi; false positives possible hain. Lag, corruption aur unsafe deletion alag failure paths hain.
      Aur yeh asymmetry hi use kaam ka banati hai:
-     agar woh kahe "nahi hai", toh tum bina DB gaye seedha jawab de sakte ho.
+     agar woh kahe "nahi hai" aur filter complete/freshness contract meet karta ho, toh negative lookup skip kar sakte ho. Username allocation ko atomic DB uniqueness se protect karo.
      Agar kahe "shayad hai", toh tum DB dekh lo — par tab tak
      <b>99% bekaar lookups kat chuke honge</b>.</p>
      <h3>🔬 Andar kya hai</h3>
@@ -3029,18 +2782,23 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
              aur HLL ki fixed memory dekh ke maano.`,
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_PROB,
-      success: allOf(T_PROB),
+      success: SD.allTasks(T_PROB),
       successText: `Ab tum ek naya sawaal poochhna jaante ho:
         <b>"kya yahan exact jawab ki zaroorat hai?"</b>
         Jab jawab "nahi" ho, to approximation 20x–1,00,000x memory bacha deti hai —
         aur yeh sirf ek optimization nahi, aksar woh cheez hai jo kaam ko
         <b>mumkin</b> banati hai.`,
+      solution: [
+        "bloom --items 1000000 --fp 0.01",
+        "bloom --items 1000000 --bits 4000000 --hashes 3",
+        "hll --items 100000000",
+        "hll --items 1000000",
+      ],
+      verify: s => { const m = SD.mission; return m.latest(s, 'probabilistic', 'hll')?.items === 1000000; },
       hints: [
-        '10 lakh items, 1% false positive: bloom --items 1000000 --fp 0.01',
-        'Ab aadhi memory do aur jhooth dekho: bloom --items 1000000 --bits 4000000 --hashes 3',
-        'Aur bahut kam memory: bloom --items 1000000 --bits 2000000 --hashes 2',
-        '10 crore unique ka HLL: hll --items 100000000',
-        'Ab 10 lakh ka HLL — memory dekho: hll --items 1000000',
+        "Pehle observation: 10 lakh items ke liye 1% false-positive wala bloom filter banao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Aur dekho ki uski memory items ki sankhya se nahi badhti. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nbloom --items 1000000 --fp 0.01\nbloom --items 1000000 --bits 4000000 --hashes 3\nhll --items 100000000\nhll --items 1000000",
       ],
     },
     {
@@ -3065,38 +2823,23 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
       title: 'Probabilistic ki samajh',
       questions: [
         {
-          q: 'Bloom filter false NEGATIVE kabhi kyun nahi deta?',
-          choices: [
-            'Add karte waqt uske saare bits 1 kar diye gaye the, aur bits kabhi 0 nahi hote — isliye maujood item ke saare bits hamesha 1 milenge',
-            'Kyunki hash functions perfect hain',
-            'Kyunki woh sab kuch store karta hai',
-            'Deta hai, kabhi-kabhi',
-          ],
+          q: "Healthy standard insert-only Bloom filter mein insertedkey absent kyun nahi aati?",
+          choices: ["Insert sets bits; normal query cannot clear","Perfect hash functions store exact membership","Bloom stores every original item","False positive proves false negatives exist"],
           answer: 0,
-          explain: 'Yahi asymmetry poore structure ko kaam ka banati hai. "Nahi hai" par tum <b>pakka</b> bharosa kar sakte ho — aur wahi case fast path hai. Isi wajah se bloom ko <b>filter</b> kehte hain: woh "pakka nahi" wale ko turant kaat deta hai.',
-        },
+          explain: "Standard insert-only Bloom filter bitset:insertedkey ke hash bits set hote hain aur delete/bit loss nahi, is scope mein false negatives nahi. Corruption, concurrent publication, filter lag or deletions operational false-negatives la sakte hain; contract distinguish karo.",
+         choiceExplanations: ["Standard insert-only Bloom filter bitset:insertedkey ke hash bits set hote hain aur delete/bit loss nahi, is scope mein false negatives nahi. Corruption, concurrent publication, filter lag or deletions operational false-negatives la sakte hain; contract distinguish karo.","Hash collisions cause false positives; perfect hashing not assumed.","Bitsummarize membership; original items not stored.","All required bits set forinserted items; false positive is different error direction."] },
         {
-          q: 'Bloom filter se item delete kyun nahi kar sakte?',
-          choices: [
-            'Uske bits kisi DOOSRE item ne bhi set kiye ho sakte hain — 0 karne se us item ka jawab galat (false negative) ho jaayega',
-            'Woh immutable hota hai',
-            'Delete slow hai',
-            'Delete kar sakte hain',
-          ],
+          q: "Standard bit Bloom filter mein bits clear karke deletion unsafe kyun?",
+          choices: ["Clearing shared bits can hide other items","Every Bloom variant forbids any deletion","Deletion requires rewriting original items","Deletingonebit cannot affect other keys"],
           answer: 0,
-          explain: 'Bits <b>share</b> hote hain — yahi to memory bachaane ka poora tareeka hai. Isliye ek bit 0 karne se doosre items toot sakte hain, aur false negative aa jaayega — jo bloom ki ek guarantee hai. Uske liye <b>counting bloom filter</b> chahiye (bits ki jagah 4-bit counters), jo ~4x memory leta hai.',
-        },
+          explain: "Ordinary Bloom filter bits shares karta hai; one key ke bits clear karne se other insertedkey false-negative ho sakti hai. Counting Bloom or Cuckoo filters deletion support kar sakte hain; variant contract specify karo.",
+         choiceExplanations: ["Ordinary Bloom filter bits shares karta hai; one key ke bits clear karne se other insertedkey false-negative ho sakti hai. Counting Bloom or Cuckoo filters deletion support kar sakte hain; variant contract specify karo.","Counting Bloom filters support deletion with appropriate counters/contracts.","Standard bit filter does not store original items to rewrite.","Different items may share hash positions; clearing creates false negatives."] },
         {
-          q: 'HLL ki memory 10 lakh aur 10 crore items ke liye ek jaisi kyun hai?',
-          choices: [
-            'Woh items store hi nahi karta — sirf fix registers rakhta hai jinme "sabse zyada kitne leading zeros dekhe" ka nishaan hota hai',
-            'Woh compression karta hai',
-            'Woh sample leta hai',
-            'Woh disk par overflow karta hai',
-          ],
+          q: "Fixed precision HLL ka core memory cardinality ke saath kyun nahi badhta?",
+          choices: ["Fixed register count bounds core memory","HLLstores every unique value compressed","HLLkeeps fixed percentage of all values","HLLoffloads excess exact values to disk"],
           answer: 0,
-          explain: 'Yeh cheez pehli baar sunne mein namumkin lagti hai, aur asli idea bahut khoobsurat hai: agar tumne kisi hash mein shuru mein 20 zero dekhe, toh shayad tumne ~2²⁰ cheezein dekhi hain — kyunki utne zero itni hi kam baar aate hain. Bahut saare registers ka average is anumaan ko ±0.81% tak le aata hai. Data kahin store nahi hota.',
-        },
+          explain: "Fixed precision HLL core register count independent of cardinality hota hai; approximate error chosen precision se aata hai. Sparse implementation encoding memory small sets par vary kar sakti hai; exact item list store nahi hoti.",
+         choiceExplanations: ["Fixed precision HLL core register count independent of cardinality hota hai; approximate error chosen precision se aata hai. Sparse implementation encoding memory small sets par vary kar sakti hai; exact item list store nahi hoti.","HLL estimates cardinality with register statistics, not exact value list.","Register precision fixed; stored sample count does not grow with set size.","Core HLL algorithm has no exact set spill store."] },
       ],
     },
     {
@@ -3116,27 +2859,17 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
     instructions: 'Yeh jawab dikhata hai ki tum tradeoffs sochte ho. 🎤',
     questions: [
       {
-        q: '"Ek URL shortener mein check karna hai ki short code pehle se use hua hai. 100 crore codes hain."',
-        choices: [
-          'Memory mein bloom filter — "nahi hai" par turant aage badho (99% cases), "shayad hai" par hi DB check karo. Ya isse behtar: counter+base62 use karo taaki yeh check chahiye hi na',
-          'Har baar DB mein check karo',
-          'Saare codes memory mein rakho',
-          'Redis SET use karo',
-        ],
+        q: "Random code allocation mein Bloom filter ka safe role?",
+        choices: ["Bloom negative hint; DBunique insert final","Bloom positive means keydefinitelyexists","Bloom negative replaces DBuniqueness","Bloom alone detects concurrent code claim"],
         answer: 0,
-        explain: 'Achha jawab dono deta hai: <b>bloom</b> (agar random codes hi chahiye) <b>aur</b> yeh soch ki asli hal is check ko <b>khatam</b> kar dena hai. Sequential counter ko base62 mein encode karne se collision mumkin hi nahi — aur tab yeh poora problem gayab ho jaata hai. Sabse achha optimization woh hai jo kaam hi hata de.',
-      },
+        explain: "Complete insert-only Bloom negative expensive existence lookup skip karne ka hint hai; positive false ho sakta hai. Concurrent writers/filter lag ke against authoritative DB unique insert/claim required hai. Bloom filter alone unique allocation oracle nahi.",
+       choiceExplanations: ["Complete insert-only Bloom negative expensive existence lookup skip karne ka hint hai; positive false ho sakta hai. Concurrent writers/filter lag ke against authoritative DB unique insert/claim required hai. Bloom filter alone unique allocation oracle nahi.","False positives exist; positive requires authoritative check if needed.","Filter lag/concurrent allocation can race; atomic unique claim needed.","Approximate filter is not atomic cross-writer ownership record."] },
       {
         q: '"Bloom filter ka size kaise chunoge?"',
-        choices: [
-          'Ulta chalunga: pehle poochhunga ki false positive ka DAAM kya hai. Agar ek extra DB lookup hai toh 1-5% theek hai; agar user ko dikhne wali galti hai toh 0.01% chahiye. Phir m = -n·ln(p)/(ln2)² se bits nikaal lunga',
-          'Jitni memory available hai',
-          '10 bits per item',
-          'Trial and error se',
-        ],
+        choices: ["ChooseN and false positive cost; derive bits","Ten bits per item satisfies any error budget","Memory available alone defines correctness","More hash functions always improve error rate"],
         answer: 0,
-        explain: 'Formula yaad hona achha hai, par asli jawab pehle vaakya mein hai: <b>false positive ka daam kya hai?</b> LSM ke liye ek extra disk read hai (1% bilkul theek). Safe Browsing ke liye ek extra server call hai (theek). Agar false positive ka matlab user ko galat cheez dikhana hai, toh bloom yahan galat aujaar hi hai.',
-      },
+        explain: "Expected cardinality n aur acceptable false-positive probability p se m=-n ln(p)/(ln2)^2 bits derive karo; hash count bhi size se choose karo. Bloom positive kabhi user-visible correctness decision directly mat banao, authoritative verification chahiye.",
+       choiceExplanations: ["Expected cardinality n aur acceptable false-positive probability p se m=-n ln(p)/(ln2)^2 bits derive karo; hash count bhi size se choose karo. Bloom positive kabhi user-visible correctness decision directly mat banao, authoritative verification chahiye.","Bits per item corresponds toaparticular error target, not every target.","Expected cardinality and acceptable false positive cost determine required size.","Optimal hash count depends onm/n; excesshashing canworsen occupancy/cost."] },
     ],
   },
   success: [
@@ -3150,7 +2883,7 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
     Ginti karo ki kitne percent jawab "nahi" hote hain. Agar 90%+ hain,
     wahan ek bloom filter poore load ka 90% kaat sakta hai.`,
   cards: [
-    { front: 'Bloom filter kya bolta hai?', back: '<b>"Pakka nahi hai"</b> (hamesha sach) ya <b>"shayad hai"</b> (kabhi-kabhi jhooth). False negative <b>kabhi nahi</b>. Isi asymmetry se woh kaam ka hai.' },
+    { front: 'Bloom filter kya bolta hai?', back: "<b>\"Pakka nahi hai\"</b> (hamesha sach) ya <b>\"shayad hai\"</b> (kabhi-kabhi jhooth). Healthy,complete insert-only filter mein false negative nahi;lag,corruption aur unsafe deletion scope ke bahar hain. Isi asymmetry se woh kaam ka hai." },
     { front: 'Bloom se delete kyun nahi?', back: 'Bits doosre items ke saath <b>share</b> hote hain — 0 karne se unka jawab toot jaayega (false negative). Uske liye <b>counting bloom</b> (~4x memory).' },
     { front: 'Bloom ka size kaise chunein?', back: 'Pehle poochho: <b>false positive ka daam kya hai?</b> Ek extra DB lookup → 1-5% theek. User ko dikhne wali galti → bloom galat aujaar hai. Formula: <code>m = -n·ln(p)/(ln2)²</code>.' },
     { front: 'HyperLogLog?', back: '"Kitne <b>unique</b>?" — 16,384 registers = <b>12 KB</b>, ±0.81%, chahe 10 crore ho. Items store hi nahi hote — sirf "sabse zyada kitne leading zeros dekhe".' },
@@ -3256,18 +2989,23 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
              ring aur <code>% N</code> ka farak <b>naapo</b>.`,
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_RING,
-      success: allOf(T_RING),
+      success: SD.allTasks(T_RING),
       successText: `Do numbers yaad rakhne laayak hain: <b>~80% vs ~20%</b> keys move,
         aur <b>skew 1.9x se 1.01x</b> virtual nodes ke saath.
         Aur ek baat jo log bhool jaate hain — <b>ring bina vnodes ke aadha hi kaam
         karta hai</b>: distribution bekaar rehti hai aur node girne par uska poora
         load ek padosi par pad jaata hai.`,
+      solution: [
+        "ring show",
+        "ring set vnodes 150",
+        "ring add node-5",
+        "ring remove node-2",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.ring?.vnodes === 150 && s.sys.ring.nodes.includes('node-5') && !s.sys.ring.nodes.includes('node-2') && m.current(s, 'ring', r => r.op === 'remove' && r.movedPct < 40); },
       hints: [
-        'Pehle haalat dekho: ring show',
-        'Skew dikha? Ab virtual nodes: ring set vnodes 150',
-        'Ek naya node jodo: ring add node-5',
-        'Ab ek hatao: ring remove node-2',
-        'Aur ek aur jodo, farak pakka karne ke liye: ring add node-6',
+        "Pehle observation: Ring ki haalat dekho — 4 nodes, 1 vnode each. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab ek node hatao — sirf uski keys bantni chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nring show\nring set vnodes 150\nring add node-5\nring remove node-2",
       ],
     },
     {
@@ -3276,48 +3014,28 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
       questions: [
         {
           q: '4 se 5 nodes karne par <code>hash % N</code> kitni keys hila deta hai?',
-          choices: [
-            '~80% — kyunki har key ka modulo badal jaata hai. Cache mein iska matlab 80% turant thanda',
-            '~20%, sirf naye node ki',
-            '~25%',
-            'Koi nahi, hash wahi rehta hai',
-          ],
+          choices: ["About 80% under uniform h modulo 20","About 20% becauseonlynewnode changes","About 25%becauseoldnode count is four","0%becauseunderlying hashstays same"],
           answer: 0,
           explain: 'Hash toh wahi rehta hai — par <b>modulo</b> badal gaya, aur wahi node decide karta hai. Sirf woh keys apni jagah rehti hain jinka <code>hash % 4 === hash % 5</code> ho, jo lagbhag 1/5 hain. Baaki sab hil jaati hain.',
-        },
+         choiceExplanations: ["Hash toh wahi rehta hai — par <b>modulo</b> badal gaya, aur wahi node decide karta hai. Sirf woh keys apni jagah rehti hain jinka <code>hash % 4 === hash % 5</code> ho, jo lagbhag 1/5 hain. Baaki sab hil jaati hain.","h%4 andh%5 differ for 16 of20 residues, not 4.","Modulo remaps many old node to old node routes aswell.","Hash constant canyield different remainder whenmodulus changes."] },
         {
           q: 'Consistent hashing mein node add karne par kitni keys move honi chahiye?',
-          choices: [
-            '~1/N — sirf utni jitni naye node ko milni hi thi. Baaki ring ko pata bhi nahi chalta',
-            'Aadhi',
-            'Koi nahi',
-            'Sab',
-          ],
+          choices: ["New node target share about 1/(N+1)","Exactly half keys for any node count","Exactly zero keys on new node","All keys must move to new node"],
           answer: 0,
-          explain: 'Yahi poori technique ka maksad hai: rebalancing ko <b>kam se kam</b> rakhna. Naya node ring par ek jagah baithta hai aur sirf apne se pehle wale arc ki keys leta hai. Baaki nodes bilkul nahi chhue jaate — aur "chhue jaana" ka matlab hai cache miss ya data transfer.',
-        },
+          explain: "Noldbalanced nodes tonewN+1 node ideal share 1/(N+1) move hoga. Real ring skew/weights/vnodes se variance hoti hai;1/Ndefinition meinNpost-add total ho toh notation explicit rakho.",
+         choiceExplanations: ["Noldbalanced nodes tonewN+1 node ideal share 1/(N+1) move hoga. Real ring skew/weights/vnodes se variance hoti hai;1/Ndefinition meinNpost-add total ho toh notation explicit rakho.","BalancedN-to-N+1 expansion allocates new node oneofN+1 shares.","New node needs keys or stores no load; zero movement cannot populateit.","Existing nodes keep most ownership under consistent hashing."] },
         {
           q: 'Virtual nodes ke bina consistent hashing mein kya galat hai?',
-          choices: [
-            'Distribution skew ho jaati hai (koi node 45%, koi 5%) — aur node girne par uska POORA load uske ek padosi par pad jaata hai, jisse cascade ho sakta hai',
-            'Kuch galat nahi',
-            'Woh slow ho jaati hai',
-            'Keys kho jaati hain',
-          ],
+          choices: ["Unequal ring intervals concentrate failover","All physical nodes get exact equal traffic","Losingonenode cannot affect neighbors","More keys automatically remove token skew"],
           answer: 0,
           explain: 'Do alag problems ek hi ilaaj se hal hote hain. <b>Skew</b> dikh jaata hai (koi node garam rehta hai). <b>Cascade</b> nahi dikhta jab tak hota nahi: ek node gira, uski saari keys ek padosi ko mili, woh dab ke gira, aur uska load agle ko... 150 vnodes ke saath gire hue node ka load <b>sabme</b> bant jaata hai.',
-        },
+         choiceExplanations: ["Do alag problems ek hi ilaaj se hal hote hain. <b>Skew</b> dikh jaata hai (koi node garam rehta hai). <b>Cascade</b> nahi dikhta jab tak hota nahi: ek node gira, uski saari keys ek padosi ko mili, woh dab ke gira, aur uska load agle ko... 150 vnodes ke saath gire hue node ka load <b>sabme</b> bant jaata hai.","Random tokens leave unequal intervals; more keys do not fix node geometry.","Failed interval responsibility typicallyfalls to next owner.","More keys sample unequal intervals moreaccurately; vnodes improve distribution."] },
         {
           q: 'Consistent hashing hot key ka problem hal karti hai?',
-          choices: [
-            'Nahi — woh KEYS ko baantti hai, ek key ko nahi. Ek popular key phir bhi ek hi node par jaati hai',
-            'Haan, poori tarah',
-            'Haan, vnodes ke saath',
-            'Haan agar nodes zyada hon',
-          ],
+          choices: ["Many keys balance; one hot key stayshot","Vnodes split one key amongallnodes","Addingnodes shards any single value","Hashuniformity guarantees uniform request load"],
           answer: 0,
           explain: 'Yeh bilkul wahi baat hai jo tumne <b>eviction</b> level mein dekhi thi, ab doosri taraf se. Consistent hashing <b>rebalancing</b> ka problem hal karti hai, <b>skew</b> ka nahi jo ek hi key se aata ho. Hot key ke liye ilaaj alag hai: key ki N copies, ya local cache.',
-        },
+         choiceExplanations: ["Yeh bilkul wahi baat hai jo tumne <b>eviction</b> level mein dekhi thi, ab doosri taraf se. Consistent hashing <b>rebalancing</b> ka problem hal karti hai, <b>skew</b> ka nahi jo ek hi key se aata ho. Hot key ke liye ilaaj alag hai: key ki N copies, ya local cache.","Vnodes partition keyspace; single key still has one owner for writes.","Single value split needs application/replication design, not node count alone.","Keys can have skewed popularity even when hash distribution uniform."] },
       ],
     },
     {
@@ -3350,27 +3068,17 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
     instructions: 'Yeh lagbhag har sharding sawaal mein aata hai. 🎤',
     questions: [
       {
-        q: '"Tumhara Redis cluster 4 se 8 nodes karna hai. Kya hoga?"',
-        choices: [
-          'Consistent hashing ke saath ~50% keys move hongi (naye nodes ka hissa) — par woh cache miss hain, data loss nahi. Isliye rebalancing dheere karo aur DB par concurrency cap rakho, warna miss ka spike DB gira dega',
-          '~50% keys move hongi, koi problem nahi',
-          'Sab keys move hongi',
-          'Kuch nahi hoga',
-        ],
+        q: "Redis Cluster 4 se 8 primaries expand karna hai. Kya monitor/plan karoge?",
+        choices: ["Hash slots move; rate-limit cold path pressure","Redis Cluster expands by consistent hash ring","Moving half keys means half the data is lost","Rebalance cannot increase origin load"],
         answer: 0,
-        explain: 'Pehla hissa hisaab hai, doosra hissa <b>anubhav</b> hai. Cache mein "key move ho gayi" ka matlab hai "miss" — aur agar 50% keys ek saath miss karein toh DB par load achanak dugna ho jaata hai. Isiliye asli teams rebalancing ko dheere karti hain aur us doraan DB par ek concurrency cap rakhti hain.',
-      },
+        explain: "Redis Cluster consistent hash ring use nahi karta;16384 fixed hash slots ka ownership reshard hota hai. Balanced 4 to8 primaries mein new nodes~half slot share le sakte hain. Key skew/migration/cold cache origin pressure measure aur bound karo.",
+       choiceExplanations: ["Redis Cluster consistent hash ring use nahi karta;16384 fixed hash slots ka ownership reshard hota hai. Balanced 4 to8 primaries mein new nodes~half slot share le sakte hain. Key skew/migration/cold cache origin pressure measure aur bound karo.","Redis Cluster uses 16384 hash slots, not consistent hashing; planned slot moves assign new nodes.","Migration moves ownership; data loss is not necessary outcome.","Cold local caches/migration bursts can increase fallback work; measure and bound it."] },
       {
         q: '"Consistent hashing kab NAHI chahiye?"',
-        choices: [
-          'Jab shards ka set stable ho aur tum explicit mapping rakh sakte ho (jaise tenant → shard ek table mein) — woh zyada flexible hai: hot tenants ko haath se move kar sakte ho, aur "yeh data kahan hai" ka jawab pakka hota hai',
-          'Kabhi nahi, woh hamesha behtar hai',
-          'Chhote systems mein',
-          'Jab keys kam hon',
-        ],
+        choices: ["Explicit tenant mapping may fit control needs","Consistent hashing required for every table","Few keys makes any routing scheme invalid","Stable cluster needs none of the data routing"],
         answer: 0,
-        explain: 'Yeh jawab isliye achha hai ki yeh technique ko uski <b>jagah</b> par rakhta hai. Consistent hashing tab chamakti hai jab nodes <b>apne aap</b> aate-jaate hain (cache clusters, Cassandra). Par ek explicit lookup table (tenant → shard) tumhe woh cheez deti hai jo ring nahi de sakti: <b>control</b> — hot tenant ko uthake alag shard par rakh dena.',
-      },
+        explain: "Yeh jawab isliye achha hai ki yeh technique ko uski <b>jagah</b> par rakhta hai. Consistent hashing tab chamakti hai jab nodes <b>apne aap</b> aate-jaate hain (cache clusters, Cassandra). Par ek explicit lookup table (tenant → shard) tumhe woh cheez deti hai jo ring nahi de sakti: <b>control</b> — hot tenant ko utha ke alag shard par rakh dena.",
+       choiceExplanations: ["Yeh jawab isliye achha hai ki yeh technique ko uski <b>jagah</b> par rakhta hai. Consistent hashing tab chamakti hai jab nodes <b>apne aap</b> aate-jaate hain (cache clusters, Cassandra). Par ek explicit lookup table (tenant → shard) tumhe woh cheez deti hai jo ring nahi de sakti: <b>control</b> — hot tenant ko utha ke alag shard par rakh dena.","Directory-based mappings, range/hash partitioning are valid alternatives.","Small key count may fit single instance or explicit routing.","Stable membership stillneedsa way to find owner; algorithm is achoice."] },
     ],
   },
   success: [
@@ -3393,3 +3101,5 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
   ],
 },
 ]);
+
+})();

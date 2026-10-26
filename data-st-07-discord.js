@@ -27,13 +27,11 @@ VISUALS['st-discord-model'] = {
     <div class="dg-rule"></div>
     <div class="dg-grid">
       <div class="dg-box is-good"><span class="bx-label">✅ Co-location</span>
-        <div class="dg-cap">Channel kholna = ek node ki ek partition. Na fan-out, na join.</div></div>
+        <div class="dg-cap">Common channel/bucket read bounded partitions target karta hai; replicas/consistency policy multiple nodes involve kar sakti hai.</div></div>
       <div class="dg-box is-good"><span class="bx-label">✅ Append-friendly</span>
-        <div class="dg-cap">Messages sirf jud-te hain — update lagbhag kabhi nahi,
-          delete kabhi nahi. Engine ko in-place rewrite karna hi nahi padta.</div></div>
+        <div class="dg-cap">Workload append-heavy hai; edits/deletes supported hain. LSM writes, compaction aur tombstone handling ka cost bhi hota hai.</div></div>
       <div class="dg-box is-good"><span class="bx-label">✅ Linear scaling</span>
-        <div class="dg-cap">Node jodo, data redistribute, capacity badhi — theory mein
-          hamesha ke liye.</div></div>
+        <div class="dg-cap">Node jodo, data redistribute, capacity badh sakti hai — skew, rebalancing, repair aur shared resources limits hain.</div></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -120,8 +118,7 @@ SD.registerLevels('stories', [
      searchable, aur pehle message tak scroll karne layak.</p>
      <p>Yeh chhota product detail nahi hai. Iska matlab hai ki Discord ek messaging system
      nahi chala raha — woh <b>duniya ke sabse tezi se badhte databases mein se ek</b>
-     chala raha hai: ek trillion messages paar, roz arabon naye, aur kuch bhi kabhi
-     nahi hataya jaata.</p>
+     chala raha hai: ek trillion messages paar, roz arabon naye, aur history ko product policy ke mutabiq retain kiya jaata hai; users messages edit/delete bhi kar sakte hain.</p>
      <h3>📜 Do migrations — aur kahani ka spine</h3>
      <pre>2015: MongoDB, ek replica set — chhoti team ke liye bilkul sahi
       end-2015: ~10 crore messages, data + index memory mein aana band,
@@ -141,11 +138,11 @@ SD.registerLevels('stories', [
      <b>"is channel ke sabse naye messages do."</b> Isliye storage usi ke aas-paas bana:</p>
      <pre>PARTITION KEY   =  channel   (aur waqt ke buckets mein bata hua)
 CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
-     <p>Matlab: ek query, ek partition, ek node — aur naye messages seedha upar se.</p>
+     <p>Matlab: common query ke liye bounded channel/time partitions; replication policy ke mutabiq nodes — aur naye messages seedha upar se.</p>
      <table>
        <tr><th>Faayda</th><th>Kya milta hai</th></tr>
        <tr><td><b>Co-location</b></td><td>Channel kholna — product ka sabse aam kaam, jo din mein hazaron baar hota hai — database ka sabse sasta kaam ban gaya. Na fan-out, na cross-machine join.</td></tr>
-       <tr><td><b>Append-friendly</b></td><td>Messages sirf jud-te hain; purane ko update karna lagbhag kabhi nahi hota aur delete kabhi nahi. Cassandra isi shakal ke liye bana hai — writes sasti appends, koi mehenga in-place rewrite nahi.</td></tr>
+       <tr><td><b>Append-friendly</b></td><td>Dominant workload append-heavy hai, par edits/deletes bhi hain. LSM writes ko append-friendly rakhta hai; compaction, tombstones aur repair ka cost rehta hai.</td></tr>
        <tr><td><b>Linear scaling</b></td><td>Capacity chahiye? Node jodo, data redistribute ho jaata hai. Na re-architecting, na data model badalna.</td></tr>
      </table>
      <h3>🪤 Har model ke andar ek maanyata chhupi hoti hai</h3>
@@ -177,17 +174,18 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
       ],
     },
     {
+      workload: {"skew":45},
       type: 'tradeoff',
       title: 'Partition key lab',
       instructions: 'Partition key aur traffic skew badlo. Dekho kaunsa model kab tootta hai.',
-      goal: 'Aisi setting dhoondho jahan sabse bhaari node par load <b>25% se kam</b> ho aur channel kholne mein <b>2 se zyada partitions</b> na chhuni padein.',
+      goal: "Hot channel traffic share kam se kam <b>45%</b> rahe. Busiest-node load <b>25% ya kam</b> aur channel page ke liye <b>2 ya kam partitions</b> padho. Toy read workload multiple time buckets mein spread hai; ek current hot bucket ki writes isse automatically split nahi hoti.",
       scenario: `10,000 channels, ek node par lagbhag 1,000 partitions. Traffic bahut
         uneven hai — kuch channels par bhaari bheed.`,
       knobs: [
         { id: 'skew', label: 'Sabse bade channel ka traffic hissa', min: 1, max: 60, step: 1, value: 45, unit: '%',
           note: 'Game launch ya viral moment par ek channel poora traffic kha sakta hai.' },
         { id: 'key', label: 'Partition key (0 = channel · 1 = channel + time bucket · 2 = random hash)', min: 0, max: 2, step: 1, value: 0, unit: '',
-          note: 'Time bucket ek bade channel ko kai partitions mein baant deta hai.' },
+          note: 'History multiple time buckets mein banti hai. One current hot bucket ki writes split nahi hoti.' },
         { id: 'buckets', label: 'Ek channel ke kitne time buckets active rehte hain', min: 1, max: 12, step: 1, value: 1, unit: '',
           note: 'Zyada buckets = load bata, par ek page ke liye zyada partitions.' },
       ],
@@ -220,15 +218,10 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
         hi asli design hai.`,
       quiz: {
         q: 'Random hash partitioning load barabar kar deta hai. Discord ne usse kyun nahi chuna?',
-        choices: [
-          'Kyunki tab "is channel ke latest messages" wali sabse aam query kai partitions se data laakar merge karti — product ka sabse sasta kaam sabse mehenga ban jaata',
-          'Kyunki hashing slow hai',
-          'Kyunki Cassandra hash support nahi karta',
-          'Kyunki messages ka order kho jaata',
-        ],
+        choices: ["Channel reads ka cross-partition fanout","Cassandra hashing ko support nahi","Hash cost message parse se zyada","Sorted results merge nahi ho sakte"],
         answer: 0,
         explain: 'Har partitioning scheme ka faisla access pattern se hota hai. Discord ka access pattern "ek channel, latest pehle" hai.',
-      },
+       choiceExplanations: ["Har partitioning scheme ka faisla access pattern se hota hai. Discord ka access pattern \"ek channel, latest pehle\" hai.","Cassandra partition keys hash karti hai; logical access pattern main issue hai.","Cost yahan query fanout/merge ka hai, hashCPU ka nahi.","Merge possible hai; extra partitions ka cost concern hai."] },
     },
     {
       type: 'docker',
@@ -247,15 +240,10 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
       ],
       observe: {
         q: 'Hash partitioning ne load sabse achha bata, phir bhi woh sahi jawab kyun nahi hai?',
-        choices: [
-          'Kyunki har page ab 8 partitions se merge hota hai — sabse aam query ka kharcha 8 guna ho gaya',
-          'Kyunki hash slow hai',
-          'Kyunki data duplicate ho jaata hai',
-          'Kyunki order galat aata hai aur theek nahi ho sakta',
-        ],
+        choices: ["Read fanout ne common page mehenga kiya","Hashing se messages duplicate hue","Distributed order repair impossible","Balanced load hi enough condition"],
         answer: 0,
         explain: 'Partitioning ka faisla hamesha do taraf se dekho: load ka batwara aur read ka kharcha.',
-      },
+       choiceExplanations: ["Partitioning ka faisla hamesha do taraf se dekho: load ka batwara aur read ka kharcha.","Hash placement data duplicate karna imply nahi.","Sorting/merge order restore kar sakte hain; cost baaki rehta hai.","Partitioning ko common read shape aur skew dono match karne chahiye."] },
       lesson: 'Partition key chunte waqt dono sawaal saath poochho: <b>load kitna barabar bantega</b> aur <b>ek aam read kitni partitions chhoo-egi</b>.',
     },
   ],
@@ -265,26 +253,16 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
     questions: [
       {
         q: 'Interviewer: "Messages store karne ka data model batao."',
-        choices: [
-          'Partition key = channel (bade channels ke liye time bucket ke saath), clustering key = time-ordered message id — taaki sabse aam query ek partition se poori ho',
-          'Ek hi table, primary key message id, aur channel par index',
-          'User se partition karo, kyunki users zyada hain',
-          'Random hash se partition karo taaki load barabar rahe',
-        ],
+        choices: ["Channel/time bucket plus ordered id","Random message id as partition only","User id par channel history baanto","One global partition, all channels"],
         answer: 0,
         explain: 'Data model us sawaal ke aas-paas banta hai jo tum sabse zyada poochhte ho — aur skew ke liye ek escape hatch (time bucket) saath rakho.',
-      },
+       choiceExplanations: ["Data model us sawaal ke aas-paas banta hai jo tum sabse zyada poochhte ho — aur skew ke liye ek escape hatch (time bucket) saath rakho.","Random key channel range reads scatter karti hai.","Channel history many users ko span karti hai; user partition fanout laati hai.","Global partition capacity/hotspot bound laata hai."] },
       {
         q: 'Interviewer: "Tumhare data model ki chhupi maanyata kya hai?"',
-        choices: [
-          'Yeh ki traffic partitions par lagbhag barabar bata hoga — jo asli duniya mein aksar galat hota hai',
-          'Yeh ki data kabhi delete nahi hoga',
-          'Yeh ki nodes kabhi fail nahi honge',
-          'Yeh ki queries hamesha index use karengi',
-        ],
+        choices: ["Hot-key skew ka capacity assumption","Every row ko cache hit guarantee","Every delete ko full table rewrite","Every query ko same user guarantee"],
         answer: 0,
-        explain: 'Har partitioned design ke andar "even distribution" wali maanyata hoti hai. Uske galat hone ka naam hai hot partition.',
-      },
+        explain: "Capacity planning mein manageable key skew ki assumption inspect karo. Partitioning alone even load guarantee nahi karti; hot keys/channel locality aur bounded buckets ko workload se evaluate karo.",
+       choiceExplanations: ["Capacity planning mein manageable key skew ki assumption inspect karo. Partitioning alone even load guarantee nahi karti; hot keys/channel locality aur bounded buckets ko workload se evaluate karo.","Cache hit ratio workload assumption alag hai; yahan key skew issue hai.","Deletion cost universal full rewrite nahi.","Different users same hot channel ko concurrently read kar sakte hain."] },
     ],
   },
   success: [
@@ -296,8 +274,8 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
     is roop mein ho: "yeh model tab tak theek hai jab tak ______ sach rahe." Phir poochho:
     aaj woh vaakya kitna sach hai?</p>`,
   cards: [
-    { front: 'Discord ka core product faisla?', back: 'Message kabhi delete nahi hoga — sab kuch turant available. Isi se woh ek trillion+ messages wala, roz arabon badhta database chalate hain.' },
-    { front: 'Discord ka partition/clustering key?', back: 'Partition = channel (time buckets ke saath), clustering = message id jisme waqt encoded hai. Isliye "latest messages" = ek query, ek partition, ek node.' },
+    { front: 'Discord ka core product faisla?', back: 'Long-lived history ko low-latency read dena; edit/delete behavior phir bhi support karna. Isi se woh ek trillion+ messages wala, roz arabon badhta database chalate hain.' },
+    { front: 'Discord ka partition/clustering key?', back: 'Partition = channel (time buckets ke saath), clustering = message id jisme waqt encoded hai. Isliye "latest messages" = common query ke liye bounded channel/time partitions; replication policy ke mutabiq nodes.' },
     { front: 'Is model ke teen faayde?', back: 'Co-location (sabse aam kaam sabse sasta), append-friendly writes (koi in-place rewrite nahi), aur linear scaling (node jodo, data redistribute).' },
     { front: 'Us model ki chhupi maanyata?', back: 'Ki traffic channels par lagbhag barabar bata hoga. Asli duniya mein zyadatar channels chup aur kuch par laakhon log — yahi hot partition banata hai.' },
   ],
@@ -408,10 +386,11 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
       ],
     },
     {
+      workload: {"conc":6000},
       type: 'tradeoff',
       title: 'Coalescing lab',
       instructions: 'Concurrency, routing aur coalescing badlo. Database par jaane wali queries dekho.',
-      goal: 'Aisi setting dhoondho jahan database par <b>50 se kam</b> queries jaayein aur user ko jawab <b>200 ms se kam</b> mein mile.',
+      goal: "Kam se kam <b>6,000 requests/s</b> handle karo: DB queries <b>50 ya kam</b> aur user p99 <b>200 ms ya kam</b>. Routing aur coalescing ko saath evaluate karo.",
       scenario: `Ek viral channel par ek second mein hazaron log aa rahe hain. Ek query
         database par lagbhag <b>80 ms</b> leti hai.`,
       knobs: [
@@ -450,15 +429,10 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
         mein badalna, bina data purana kiye.`,
       quiz: {
         q: 'Coalescing aur caching mein farq?',
-        choices: [
-          'Coalescing ek hi waqt par aa rahi ek jaisi requests ko merge karti hai (jawab utna hi taza rehta hai); cache purana jawab bhi de sakta hai',
-          'Dono bilkul ek hi cheez hain',
-          'Cache tez hai, coalescing dheemi',
-          'Coalescing sirf writes ke liye hoti hai',
-        ],
+        choices: ["In-flight sharing vs stored reuse","Dono sirf persistent storage hain","Cache only writes ko merge karta","Coalescing old results forever rakhti"],
         answer: 0,
         explain: 'Isi liye dono saath use hote hain — coalescing thundering herd rokti hai, cache repeat demand rokta hai.',
-      },
+       choiceExplanations: ["Isi liye dono saath use hote hain — coalescing thundering herd rokti hai, cache repeat demand rokta hai.","Coalescing result retain kiye bina current work share kar sakti hai.","Caching stored read results bhi serve karti hai.","Coalescing lifetime in-flight work hai, permanent result store nahi."] },
     },
     {
       type: 'docker',
@@ -478,15 +452,10 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
       ],
       observe: {
         q: 'Retries ke saath database par 7,505 queries gayin aur 2,844 clients fail hue. Coalescing on karte hi sirf 9 queries aur 0 failures. Kya badla?',
-        choices: [
-          'Ek hi channel ki chal rahi query ko baaki requests ne share kar liya — duplicate demand database tak pahunchi hi nahi, isliye partition dooba nahi aur retries bhi nahi bane',
-          'Coalescing ne data cache kar liya, isliye purana jawab mila',
-          'Coalescing ne requests ko rate limit kar diya',
-          'Database tez ho gaya',
-        ],
+        choices: ["Concurrent identical queries share hui","Expired results forever serve hue","Input requests ko silently drop kiya","DB hardware capacity badh gayi"],
         answer: 0,
-        explain: 'Ek instance ke andar jo requests ek hi cheez maang rahi thin, woh ek hi query ka jawab share kar gayin ("merged: 2,991"). Aur routing? Random par har instance apni query bhejta hai — yahan 3 instances the isliye farq chhota (9 vs 8), par 100 instances par random routing 100 guna queries bhejti. Isi liye Discord channel id par consistent hashing karta hai.',
-      },
+        explain: "Lab duplicate same-key demand per process coalesce karta hai. Consistent routing coalescing scope concentrate kar sakti hai; random routing amplification active instances aur arrival overlap par depend hai, fixed 100x guarantee nahi.",
+       choiceExplanations: ["Lab duplicate same-key demand per process coalesce karta hai. Consistent routing coalescing scope concentrate kar sakti hai; random routing amplification active instances aur arrival overlap par depend hai, fixed 100x guarantee nahi.","Cache staleness ka evidence nahi; sharing ongoing queryki hai.","Shared result clients tak pahunchta hai; request drop nahi.","Changed variable coalescing hai, hardware nahi."] },
       lesson: 'Thundering herd ke do hathiyaar: <b>wahan duplicate ko merge karo</b> (coalescing) aur <b>duplicate ko ek jagah laao</b> (consistent-hash routing) — jitne zyada instances, doosra utna zaroori.',
     },
   ],
@@ -496,26 +465,16 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
     questions: [
       {
         q: 'Interviewer: "Ek key par bahut bheed hai aur woh node dab raha hai. Pehla kadam?"',
-        choices: [
-          'Database ke aage duplicate demand ko merge karo (single-flight/coalescing) aur us key ki requests ko ek hi jagah route karo',
-          'Us node ko bada kar do',
-          'Poore cluster mein nodes badha do',
-          'Client se kaho ki kam requests bhejein',
-        ],
+        choices: ["Duplicate reads coalesce, load bound karo","Extra shards se same key split maano","Unbounded retries se node recover karo","One larger node ko permanent fix maano"],
         answer: 0,
         explain: 'Node badhane se ek key ka bhaar nahi bat-ta. Pehle duplicate demand khatam karo, phir storage par socho.',
-      },
+       choiceExplanations: ["Node badhane se ek key ka bhaar nahi bat-ta. Pehle duplicate demand khatam karo, phir storage par socho.","Same partition key new shards par khud divide nahi hoti.","Retries overload feedback loop bana sakti hain.","Vertical scaling temporary help ho sakti hai; demand/root constraint rehta hai."] },
       {
         q: 'Interviewer: "Timeout ke baad clients retry karte hain. Kya khatra hai?"',
-        choices: [
-          'Retry amplification — jo node pehle se doob raha hai uspar aur load, isliye retries ko budget, jitter aur circuit breaker chahiye',
-          'Koi khatra nahi, retry hamesha achhi hai',
-          'Sirf duplicate writes ka khatra hai',
-          'Latency thodi badh jaayegi, bas',
-        ],
+        choices: ["Retry load aur duplicate effects","Retries se offered load ghatta hai","Read retries ka resource cost zero","Timeout proof hai work hua hi nahi"],
         answer: 0,
         explain: 'Discord ke hot partition ka ek bada hissa yahi tha: retries ne slow node ko aur gehra dhakel diya.',
-      },
+       choiceExplanations: ["Discord ke hot partition ka ek bada hissa yahi tha: retries ne slow node ko aur gehra dhakel diya.","Retries extra attempts create karti hain, capacity nahi.","Reads bhi CPU/network/storage consume karti hain.","Timeout mein server complete kar chuka ho sakta hai."] },
     ],
   },
   success: [
@@ -530,7 +489,7 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
     { front: 'Hot partition ka chain?', back: 'Ek partition ek node par → viral channel → node dheema → timeouts → clients retry → aur load → padosi resources tak latency → system-wide slowdown.' },
     { front: 'Discord ne pehla ilaaj kahan kiya?', back: 'Database ke AAGE — data services layer with request coalescing. "Data kaise store karein" aur "traffic storage tak kaise pahunche" do alag sawaal hain.' },
     { front: 'Coalescing ki shart?', back: 'Consistent hashing se ek channel ki saari requests ek hi instance par pahunchein — tabhi duplicate requests merge ho sakti hain.' },
-    { front: 'Rust kyun chuna?', back: 'Java ke GC pauses se bachne ke liye — koi garbage collector nahi, concurrency par poora control, aur hot path mein koi random freeze nahi.' },
+    { front: 'Rust kyun chuna?', back: 'Java ke GC pauses se bachne ke liye — koi garbage collector nahi, concurrency par poora control, aur JVM GC pause nahi, lekin allocator, scheduler aur I/O stalls phir bhi assess karo.' },
   ],
 },
 ]);
@@ -576,7 +535,7 @@ SD.registerLevels('stories', [
      <table>
        <tr><th>Feature</th><th>Kyun maayne rakhta hai</th></tr>
        <tr><td>Wahi query language (Cassandra-compatible)</td><td>Data model bina poore redesign ke aa sakta tha</td></tr>
-       <tr><td>C++ mein likha (koi GC nahi)</td><td>Random freeze wali poori category gayab</td></tr>
+       <tr><td>C++ mein likha (koi GC nahi)</td><td>JVM GC pauses absent; I/O, scheduling aur contention stalls phir bhi possible</td></tr>
        <tr><td>Shard-per-core architecture</td><td>Har CPU core ka apna data aur memory — load uneven ho tab bhi zyada sthir</td></tr>
      </table>
      <p class="tip">🎯 Dhyan do — do alag problem, do alag layers: <b>traffic</b> ka ilaaj
@@ -643,7 +602,7 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
       type: 'tradeoff',
       title: 'Backfill lab — 3 mahine ya 9 din',
       instructions: 'Concurrency, range size aur checkpointing badlo. Time aur risk dono dekho.',
-      goal: 'Aisi setting dhoondho jahan backfill <b>15 din se kam</b> mein poora ho, source par load <b>60% se kam</b> rahe, aur ek failure par kaam <b>shuru se dobara</b> na karna pade (checkpoint se resume).',
+      goal: "Backfill <b>15 days ya kam</b>, source load <b>60% ya kam</b>, aur failure ke baad checkpoint se resume hona chahiye.",
       scenario: `Backfill karna hai <b>1 trillion</b> messages. Source cluster live traffic
         bhi serve kar raha hai — usse marna nahi hai.`,
       knobs: [
@@ -684,15 +643,10 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
         aur <b>checkpointing</b> (fail hone par kahan se shuru).`,
       quiz: {
         q: 'Discord ne off-the-shelf migrator chhod kar apna Rust migrator kyun likha?',
-        choices: [
-          'Kyunki 3 mahine ka backfill matlab 3 mahine aur us cluster ko chalana jise woh hataana chahte the — migration ka waqt khud ek risk hai',
-          'Kyunki off-the-shelf tool kaam hi nahi karta tha',
-          'Kyunki Rust unko pasand hai',
-          'Kyunki data corrupt ho raha tha',
-        ],
+        choices: ["Long backfill ka operating risk ghata","Rust name se correctness guaranteed","Old tool ne source rows delete ki","Language change se checkpoint hata"],
         answer: 0,
         explain: 'Tool stable tha, bas dheema tha. Migration jitni lambi chalegi, utni der do systems ka dard jhelna padega.',
-      },
+       choiceExplanations: ["Tool stable tha, bas dheema tha. Migration jitni lambi chalegi, utni der do systems ka dard jhelna padega.","Language choice behavior parity prove nahi karti.","Question oldtool ko slow kehta hai; deletion ka evidence nahi.","Faster backfill bhi failure/resume strategy maangta hai."] },
     },
     {
       type: 'docker',
@@ -712,15 +666,10 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
       ],
       observe: {
         q: 'Checkpointing ne kya bachaya?',
-        choices: [
-          'Failure ke baad shuru se karne ka kaam — bade backfill mein failure hogi hi, isliye resume ki suvidha migration plan ka hissa honi chahiye',
-          'Data corruption',
-          'Source par load',
-          'Duplicate rows',
-        ],
+        choices: ["Last safe progress se backfill resume","Every row ki checksum verification","Source load ka automatic throttle","Duplicate effects ka global lock"],
         answer: 0,
         explain: 'Discord ke custom migrator ki yahi "clever operational bit" thi: progress ek chhote local database mein checkpoint karna.',
-      },
+       choiceExplanations: ["Discord ke custom migrator ki yahi \"clever operational bit\" thi: progress ek chhote local database mein checkpoint karna.","Checkpoint progress jaanta hai; data correctness checksum alag hai.","Throttling separate mechanism hai.","Resume repeated work kar sakta hai; idempotent writes/dedupe chahiye."] },
       lesson: 'Har lambi migration ka pehla feature <b>resume</b> hona chahiye, speed baad mein.',
     },
   ],
@@ -730,26 +679,16 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
     questions: [
       {
         q: 'Interviewer: "Trillions rows ka database badalna hai, zero downtime. Plan?"',
-        choices: [
-          'Dual writes se "abhi" sambhalo, checkpointed backfill se "pehle" laao, dono ko verify karo, phir reads shift karke primary badlo',
-          'Raat ko dump-restore kar lo',
-          'Naye database par sirf naya data rakho aur purana wahin chhod do',
-          'Application ko dono databases se padhna sikha do, hamesha ke liye',
-        ],
+        choices: ["Capture changes, backfill, verify, cutover","One offline dump, writes chalte rahein","New writes only, history unreachable","Both stores read, no retirement plan"],
         answer: 0,
         explain: 'Dual writes + backfill + verify + cutover — yahi pattern Airtable, Jira aur 50 TB wale migration mein bhi dikhta hai.',
-      },
+       choiceExplanations: ["Dual writes + backfill + verify + cutover — yahi pattern Airtable, Jira aur 50 TB wale migration mein bhi dikhta hai.","Live changes capture bina dump stale ho sakta hai.","User history contract preserve nahi hota.","Permanent dualread cost aur ownership ambiguity retain karti hai."] },
       {
         q: 'Interviewer: "Tumhara purana data model naye database ke liye ideal nahi hai. Kya karoge?"',
-        choices: [
-          'Model ki keemat maano: aksar compatible engine chunna hi practical hota hai, kyunki trillions rows ka model badalna alag (aur bada) project hai',
-          'Naye database ke liye model dobara design karo aur saath mein data transform karo',
-          'Dono models rakho',
-          'Migration mat karo',
-        ],
+        choices: ["Compatibility aur redesign risk alag karo","Engine switch mein all models rewrite","New engine ko old invariants chhodo","Migration cost bina product freeze"],
         answer: 0,
-        explain: 'Discord ne yahi kiya — Cassandra-compatible engine, taaki ek waqt par ek hi badi cheez badle. Model redesign apna alag project hota.',
-      },
+        explain: "Cassandra-compatible API migration surface reduce karti hai; timestamps, deletes, TTLs, consistency and failure behavior phir bhi verify karo. Simultaneous model redesign ko separate decision rakhna risk bound kar sakta hai.",
+       choiceExplanations: ["Cassandra-compatible API migration surface reduce karti hai; timestamps, deletes, TTLs, consistency and failure behavior phir bhi verify karo. Simultaneous model redesign ko separate decision rakhna risk bound kar sakta hai.","Simultaneous model+engine change risk multiply kar sakta hai.","Compatibility contract verify kiye bina behavior badal sakta hai.","Freeze apne aap transformation/cutover correctness nahi deta."] },
     ],
   },
   success: [

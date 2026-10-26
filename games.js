@@ -7,6 +7,7 @@
    Galat jawab → SD.noteMistake(...) → Revision Dojo mein card ban jaata hai.
    ===================================================================== */
 
+(function () {
 SD.renderers = {};
 const el = SD.el, shuffle = SD.shuffle, shake = SD.shake, escapeHtml = SD.escapeHtml;
 
@@ -32,7 +33,7 @@ SD.renderers.bins = function renderBins(stage, arena, onDone) {
       const chip = pool.querySelector(`[data-id="${id}"]`);
       if (chip) attempt(chip, b.id, z);
     });
-    z.addEventListener('click', () => { if (selected) attempt(selected, b.id, z); });
+    SD.makeInteractive(z, () => { if (selected) attempt(selected, b.id, z); }, `Category: ${b.label.replace(/<[^>]*>/g, '')}`);
     zones[b.id] = z;
     binsRow.appendChild(z);
   });
@@ -48,26 +49,27 @@ SD.renderers.bins = function renderBins(stage, arena, onDone) {
       e.dataTransfer.setData('text/plain', chip.dataset.id);
       selectChip(chip);
     });
-    chip.addEventListener('click', e => {
-      e.stopPropagation();
-      selectChip(selected === chip ? null : chip);
-    });
+    SD.makeInteractive(chip, () => selectChip(selected === chip ? null : chip), item.text.replace(/<[^>]*>/g, ''));
     pool.appendChild(chip);
   });
 
   function selectChip(chip) {
+    if (chip && chip.classList.contains('placed')) return;
     pool.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
     selected = chip;
     if (chip) chip.classList.add('selected');
   }
 
   function attempt(chip, binId, zone) {
+    if (!chip || chip.classList.contains('placed') || !pool.contains(chip)) return;
     const item = chip._item;
     if (item.bin === binId) {
       if (!wrongOnce.has(item.text)) { firstTry++; SD.addXP(SD.XP_PER_ITEM); }
       chip.classList.remove('selected');
       chip.classList.add('placed');
       chip.draggable = false;
+      chip.tabIndex = -1;
+      chip.setAttribute('aria-disabled', 'true');
       zone.querySelector('.bin-items').appendChild(chip);
       zone.classList.add('flash-good');
       setTimeout(() => zone.classList.remove('flash-good'), 500);
@@ -84,7 +86,7 @@ SD.renderers.bins = function renderBins(stage, arena, onDone) {
         `<b>${correctBin ? correctBin.label : item.bin}</b> — ${item.explain}`);
       shake(chip); shake(zone);
       feedback.className = 'feedback bad';
-      feedback.innerHTML = `❌ <b>${item.text}</b> yahan nahi aata — phir se try karo!`;
+      feedback.innerHTML = `❌ <b>${item.text}</b> — ${item.explain} Category ka rule dobara dekho, phir chuno.`;
     }
   }
 
@@ -116,7 +118,7 @@ SD.renderers.fill = function renderFill(stage, arena, onDone) {
         const chip = pool.querySelector(`[data-id="${id}"]`);
         if (chip) attempt(chip, idx, slot);
       });
-      slot.addEventListener('click', () => { if (selected) attempt(selected, idx, slot); });
+      SD.makeInteractive(slot, () => { if (selected) attempt(selected, idx, slot); }, `Blank ${idx + 1}: token select karke yahan Enter dabao`);
       tpl.appendChild(slot);
     } else if (seg) {
       tpl.appendChild(document.createTextNode(seg));
@@ -132,7 +134,7 @@ SD.renderers.fill = function renderFill(stage, arena, onDone) {
     chip.dataset.id = String(i);
     chip._tok = tok;
     chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', chip.dataset.id); selectChip(chip); });
-    chip.addEventListener('click', e => { e.stopPropagation(); selectChip(selected === chip ? null : chip); });
+    SD.makeInteractive(chip, () => selectChip(selected === chip ? null : chip), tok);
     pool.appendChild(chip);
   });
 
@@ -143,8 +145,9 @@ SD.renderers.fill = function renderFill(stage, arena, onDone) {
   }
 
   function attempt(chip, idx, slot) {
-    if (slot.classList.contains('filled')) return;
+    if (slot.classList.contains('filled') || !chip || !pool.contains(chip)) return;
     const blank = stage.blanks[idx];
+    if (!blank) return;
     if (chip._tok === blank.answer) {
       if (!wrongOnce.has(idx)) { firstTry++; SD.addXP(SD.XP_PER_ITEM); }
       // ek hi blank index template mein kai baar aa sakta hai
@@ -165,7 +168,7 @@ SD.renderers.fill = function renderFill(stage, arena, onDone) {
         `<code>${escapeHtml(blank.answer)}</code> — ${blank.explain}`);
       shake(chip); shake(slot);
       feedback.className = 'feedback bad';
-      feedback.innerHTML = `❌ <b>${escapeHtml(chip._tok)}</b> wahan fit nahi hota — doosra blank ya token try karo.`;
+      feedback.innerHTML = `❌ <b>${escapeHtml(chip._tok)}</b> is blank ka rule poora nahi karta. ${blank.explain}`;
     }
   }
 
@@ -203,11 +206,12 @@ SD.renderers.order = function renderOrder(stage, arena, onDone) {
     chip.dataset.id = String(step.idx);
     chip._step = step;
     chip.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', chip.dataset.id));
-    chip.addEventListener('click', () => attempt(chip));
+    SD.makeInteractive(chip, () => attempt(chip), step.text.replace(/<[^>]*>/g, ''));
     pool.appendChild(chip);
   });
 
   function attempt(chip) {
+    if (!chip || !pool.contains(chip) || current >= stage.steps.length) return;
     const step = chip._step;
     const slot = slotsCol.children[current];
     if (step.idx === current) {
@@ -236,7 +240,7 @@ SD.renderers.order = function renderOrder(stage, arena, onDone) {
       mistakeOnCurrent = true;
       shake(chip); shake(slot);
       feedback.className = 'feedback bad';
-      feedback.innerHTML = `❌ Abhi nahi — step ${current + 1} par kuch aur hota hai.`;
+      feedback.innerHTML = `❌ Is action ki baari abhi nahi aayi. Step ${current + 1} ka rule: ${stage.steps[current].explain}`;
     }
   }
 
@@ -260,13 +264,13 @@ SD.renderers.match = function renderMatch(stage, arena, onDone) {
   stage.pairs.forEach((p, i) => {
     const card = el('div', 'mcard left', p.left);
     card.dataset.idx = String(i);
-    card.onclick = () => pick(card, 'L');
+    SD.makeInteractive(card, () => pick(card, 'L'), p.left.replace(/<[^>]*>/g, ''));
     card.addEventListener('dragover', e => e.preventDefault());
     card.addEventListener('drop', e => {
       e.preventDefault();
       const id = e.dataTransfer.getData('text/plain');
       const r = rightCol.querySelector(`[data-idx="${id}"]:not(.done)`);
-      if (r) { selLeft = card; selRight = r; check(); }
+      if (r && !card.classList.contains('done')) { selLeft = card; selRight = r; check(); }
     });
     leftCol.appendChild(card);
   });
@@ -276,7 +280,7 @@ SD.renderers.match = function renderMatch(stage, arena, onDone) {
     card.dataset.idx = String(p.idx);
     card.draggable = true;
     card.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', card.dataset.idx));
-    card.onclick = () => pick(card, 'R');
+    SD.makeInteractive(card, () => pick(card, 'R'), p.right.replace(/<[^>]*>/g, ''));
     rightCol.appendChild(card);
   });
 
@@ -293,6 +297,7 @@ SD.renderers.match = function renderMatch(stage, arena, onDone) {
   }
 
   function check() {
+    if (!selLeft || !selRight || selLeft.classList.contains('done') || selRight.classList.contains('done')) return;
     const li = selLeft.dataset.idx, ri = selRight.dataset.idx;
     const pair = stage.pairs[li];
     if (li === ri) {
@@ -310,7 +315,7 @@ SD.renderers.match = function renderMatch(stage, arena, onDone) {
       shake(selLeft); shake(selRight);
       [selLeft, selRight].forEach(c => c.classList.remove('selected'));
       feedback.className = 'feedback bad';
-      feedback.innerHTML = '❌ Yeh jodi nahi bani — koi aur combination try karo.';
+      feedback.innerHTML = `❌ Is pair ka role match nahi hota. <b>${pair.left}</b>: ${pair.explain}`;
     }
     selLeft = selRight = null;
   }
@@ -339,6 +344,7 @@ SD.renderers.quiz = function renderQuiz(stage, arena, onDone) {
     const order = shuffle(q.choices.map((c, i) => ({ c, i })));
     order.forEach(({ c, i }) => {
       const btn = el('button', 'choice', c);
+      btn.dataset.i = String(i);
       btn.onclick = () => {
         if (btn.disabled) return;
         if (i === q.answer) {
@@ -346,9 +352,12 @@ SD.renderers.quiz = function renderQuiz(stage, arena, onDone) {
           btn.classList.add('correct');
           choices.querySelectorAll('.choice').forEach(b => b.disabled = true);
           feedback.className = 'feedback good';
-          feedback.innerHTML = `💡 ${q.explain}`;
-          const next = el('button', 'btn', qi + 1 < stage.questions.length ? 'Agla sawal →' : 'Ho gaya ✓');
+          feedback.innerHTML = `💡 ${SD.choiceFeedback(q, i)}`;
+          const next = el('button', 'btn arena-next', qi + 1 < stage.questions.length ? 'Agla sawal →' : 'Ho gaya ✓');
+          let advanced = false;
           next.onclick = () => {
+            if (advanced) return;
+            advanced = true;
             qi++;
             if (qi < stage.questions.length) renderQuestion();
             else onDone({ firstTry, total: stage.questions.length });
@@ -362,7 +371,7 @@ SD.renderers.quiz = function renderQuiz(stage, arena, onDone) {
           btn.disabled = true;
           shake(btn);
           feedback.className = 'feedback bad';
-          feedback.innerHTML = '❌ Nahi — ek aur baar socho.';
+          feedback.innerHTML = `❌ ${SD.choiceFeedback(q, i)}`;
         }
       };
       choices.appendChild(btn);
@@ -380,9 +389,9 @@ SD.renderers.quiz = function renderQuiz(stage, arena, onDone) {
    Diagram ke clickable nodes par data-hs="<target>" hona chahiye.
    ============================================================ */
 SD.renderers.hotspot = function renderHotspot(stage, arena, onDone) {
-  let qi = 0, firstTry = 0, mistake = false;
+  let qi = 0, firstTry = 0, mistake = false, locked = false;
   const v = VISUALS[stage.visual];
-  if (!v) { onDone({ firstTry: 0, total: 0 }); return; }
+  if (!v) { arena.appendChild(el('div', 'feedback bad', 'Diagram load nahi hua. Is challenge ko complete nahi maana gaya; page reload karke dobara kholo.')); return; }
 
   const wrap = el('div', 'hotspot-wrap');
   const dia = el('div', 'diagram hs-target');
@@ -394,19 +403,20 @@ SD.renderers.hotspot = function renderHotspot(stage, arena, onDone) {
   arena.appendChild(wrap);
 
   function showQ() {
+    locked = false;
     mistake = false;
     prog.textContent = `Sawal ${qi + 1} / ${stage.questions.length}`;
     qBox.innerHTML = `🎯 ${stage.questions[qi].q}`;
     dia.querySelectorAll('[data-hs]').forEach(n => n.classList.remove('hs-good', 'hs-bad'));
   }
 
-  dia.addEventListener('click', e => {
-    const node = e.target.closest('[data-hs]');
-    if (!node || qi >= stage.questions.length) return;
+  function attempt(node) {
+    if (!node || locked || qi >= stage.questions.length) return;
     const q = stage.questions[qi];
     if (node.dataset.hs === q.target) {
       if (!mistake) { firstTry++; SD.addXP(SD.XP_PER_ITEM); }
       node.classList.add('hs-good');
+      locked = true;
       feedback.className = 'feedback good';
       feedback.innerHTML = `✅ ${q.explain}`;
       qi++;
@@ -418,10 +428,11 @@ SD.renderers.hotspot = function renderHotspot(stage, arena, onDone) {
       node.classList.add('hs-bad');
       shake(node);
       feedback.className = 'feedback bad';
-      feedback.innerHTML = '❌ Galat component — dhyaan se dekho, kaun kya karta hai.';
+      feedback.innerHTML = `❌ Is situation mein is component ka role match nahi hota. ${q.explain}`;
       setTimeout(() => node.classList.remove('hs-bad'), 700);
     }
-  });
+  }
+  dia.querySelectorAll('[data-hs]').forEach(node => SD.makeInteractive(node, () => attempt(node), `Diagram component: ${node.textContent.trim()}`));
 
   showQ();
 };
@@ -445,6 +456,7 @@ SD.renderers.incident = function renderIncident(stage, arena, onDone) {
     const n = stage.nodes[id];
     mistakeHere = false;
     nodeBox.innerHTML = '';
+    if (!n) { nodeBox.appendChild(el('div', 'feedback bad', 'Incident ka agla decision load nahi hua. Challenge complete nahi maana gaya; page reload karke dobara kholo.')); return; }
 
     if (n.end) {
       const done = el('div', 'stage-summary pop');
@@ -465,6 +477,7 @@ SD.renderers.incident = function renderIncident(stage, arena, onDone) {
 
     shuffle(n.choices.map((c, i) => ({ ...c, i }))).forEach(c => {
       const btn = el('button', 'choice', c.t);
+      btn.dataset.i = String(c.i);
       btn.onclick = () => {
         if (btn.disabled) return;
         if (c.good) {
@@ -475,8 +488,9 @@ SD.renderers.incident = function renderIncident(stage, arena, onDone) {
           feedback.innerHTML = `💡 ${c.explain}`;
           trail.push(c.t);
           log.innerHTML = trail.map(t => `<div class="ok">✔ ${t}</div>`).join('');
-          const next = el('button', 'btn', stage.nodes[c.next] && stage.nodes[c.next].end ? 'Incident band karo 🧯' : 'Aage badho →');
-          next.onclick = () => showNode(c.next);
+          const next = el('button', 'btn arena-next', stage.nodes[c.next] && stage.nodes[c.next].end ? 'Incident band karo 🧯' : 'Aage badho →');
+          let advanced = false;
+          next.onclick = () => { if (advanced) return; advanced = true; showNode(c.next); };
           nodeBox.appendChild(next);
           next.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else {
@@ -498,3 +512,4 @@ SD.renderers.incident = function renderIncident(stage, arena, onDone) {
 
   showNode(stage.start);
 };
+})();

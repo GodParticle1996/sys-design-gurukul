@@ -17,7 +17,7 @@ VISUALS['ai-safety-filter'] = {
       <div class="dg-box is-bad"><span class="bx-label">🛂 Refusal filter — airport security</span>
         <div class="dg-cap">Model (ya ek classifier) prompt ke <b>shabd</b> padhta hai aur faisla karta hai:
           "haan" ya "na". Wahi sawaal, alag kahani ke saath → alag jawab. Har model update par
-          behaviour badalta hai. Test karke <b>prove</b> nahi kar sakte.</div></div>
+          behaviour badalta hai. Evals se behavior measure karo; unhe external tool permissions ka proof mat maano.</div></div>
       <div class="dg-box is-good"><span class="bx-label">🔒 Containment — cockpit ka band darwaaza</span>
         <div class="dg-cap">Sandbox, network ki deewar, file ki deewar, CPU/call budget, monitor + kill switch.
           Model kya soch raha hai isse farq nahi padta — <b>kya kar sakta hai</b> woh tay hai.
@@ -109,7 +109,7 @@ SD.registerLevels('ai', [
        <tr><th></th><th>🛂 Refusal filter</th><th>🔒 Containment</th></tr>
        <tr><td>Kya dekhta hai</td><td>Prompt ke shabd, kahani</td><td>Model kya <b>kar sakta</b> hai</td></tr>
        <tr><td>Kahan hai</td><td>Model ke weights ke andar (fuzzy)</td><td>Model ke bahar: sandbox, firewall, limits</td></tr>
-       <tr><td>Test kar sakte ho?</td><td>Sirf sample karke</td><td>Haan — rule padho, chalao, har baar same jawab</td></tr>
+        <tr><td>Test kar sakte ho?</td><td>Behavioral evals aur adversarial samples</td><td>Rule/config review, boundary tests aur bypass regressions; implementation bugs ab bhi possible</td></tr>
        <tr><td>Model update par</td><td>Behaviour badal jaata hai</td><td>Deewar wahi rehti hai</td></tr>
      </table>
      <p class="tip">🎯 Video ki line: <b>"You can audit a wall. You can't audit a vibe."</b> — deewar
@@ -158,37 +158,22 @@ SD.registerLevels('ai', [
       questions: [
         {
           q: 'Breach ke beech defender AI se malware samjhane ko kehta hai aur model mana kar deta hai. Is "na" se sabse zyada kise nuksaan hua?',
-          choices: [
-            'Defender ko — use jawab chahiye tha; attacker ke paas pehle se woh malware hai',
-            'Attacker ko — ab woh malware nahi bana payega',
-            'Kisi ko nahi — mana karna hamesha safe hai',
-            'Model company ko',
-          ],
+          choices: ["Legitimate defender ka response delay hua","Attacker ka existing malware delete hua","Refusal ne host process contain kiya","Model answer se incident resolved tha"],
           answer: 0,
           explain: 'Yahi video ka "asymmetry problem" hai: attacker ka code pehle se likha hai, defender ko samajhna hai. "Na" ka bojh defender par gira.',
-        },
+         choiceExplanations: ["Yahi video ka \"asymmetry problem\" hai: attacker ka code pehle se likha hai, defender ko samajhna hai. \"Na\" ka bojh defender par gira.","Model refusal external attacker ka already existing binary delete nahi karta.","Text response control runtime host containment ka replacement nahi.","Question response refusal dikhata hai, completed investigation nahi."] },
         {
           q: 'Kaunsa control "security boundary" maana ja sakta hai?',
-          choices: [
-            'Jo user ke sach bolne par nirbhar na ho, jise test aur audit kar sakein — jaise network deewar',
-            'Jo sabse smart model use kare',
-            'Jo system prompt mein saaf likha ho',
-            'Jo 99% prompts par sahi faisla de',
-          ],
+          choices: ["External enforced capability boundary","Only high benchmark refusal rate","Only strict instruction in prompt","Only smart model ka assurance"],
           answer: 0,
-          explain: 'Jo control tabhi chale jab doosra cooperate kare, woh control nahi — request hai. Boundary woh hai jo har baar, har kahani par, wahi jawab de.',
-        },
+          explain: 'External policy tool/file/network capabilities enforce karti hai. Boundary ko bypass tests, config review aur monitoring se verify karo; implementation flaws ab bhi possible hain.',
+         choiceExplanations: ["External policy tool/file/network capabilities enforce karti hai. Boundary ko bypass tests, config review aur monitoring se verify karo; implementation flaws ab bhi possible hain.","Statistical refusal rate tool/file/network access enforcement nahi.","Prompt compliance untrusted input se influence ho sakti hai.","Model capability external permissions define nahi karti."] },
         {
           q: '"Refusal sirf ek metal detector hai" — iska matlab?',
-          choices: [
-            '"Na" bhi ek signal hai: woh batata hai ki tum kisi cheez ke kareeb ho — sirf defender ke liye yeh signal bekaar hai',
-            'Refusal hamesha galat hota hai',
-            'Metal detector jaisa accurate hai',
-            'Refusal hardware mein hota hai',
-          ],
+          choices: ["Refusal signal, enforcement alag layer","Every refusal objectively incorrect","Classifier output hardware boundary","One refusal se threat eliminated"],
           answer: 0,
           explain: 'Metal detector beep karta hai par batata nahi ki kya hai. Defender ko "kya hai" chahiye; baar-baar ki beep sirf pattern batati hai.',
-        },
+         choiceExplanations: ["Metal detector beep karta hai par batata nahi ki kya hai. Defender ko \"kya hai\" chahiye; baar-baar ki beep sirf pattern batati hai.","Legitimate restrictions aur mistaken refusals dono possible hain.","Classifier decision OS/network capability boundary nahi.","Text refusal external tools/other vectors ko automatically contain nahi karta."] },
       ],
     },
   ],
@@ -198,26 +183,16 @@ SD.registerLevels('ai', [
     questions: [
       {
         q: 'Interviewer: "Hamara coding agent production mein jaayega. Safety kaise ensure karoge?"',
-        choices: [
-          'Model ke filter par bharosa nahi — sandbox, egress allowlist, workspace jail, budget, aur monitor + kill switch; phir in sabko test karke dikhaunga',
-          'Sabse safe model chunenge jo sabse zyada refuse kare',
-          'System prompt mein strict niyam likhenge',
-          'Har output ko ek doosra model check karega',
-        ],
+        choices: ["Sandbox, quotas aur least privilege","Only refusal rate maximize karna","Only strict system prompt likhna","Only second model ka approval"],
         answer: 0,
         explain: 'Filter ek layer ho sakta hai, par jo cheez load-bearing hai woh deewar hai — aur deewar ko hi test/audit kar sakte ho.',
-      },
+       choiceExplanations: ["Filter ek layer ho sakta hai, par jo cheez load-bearing hai woh deewar hai — aur deewar ko hi test/audit kar sakte ho.","Refusal testing useful layer hai, enforceable tool permissions nahi.","Prompt runtime isolation ka substitute nahi.","Another model bhi fallible hai; capability enforcement chahiye."] },
       {
         q: 'Interviewer: "Model provider ne naya version diya. Tumhe kya dobara check karna padega?"',
-        choices: [
-          'Containment wahi rehta hai — deewarein model se bahar hain. Par filter/behaviour-based cheezein dobara evaluate karni padengi',
-          'Kuch nahi, naya version zyada safe hota hai',
-          'Poora sandbox dobara banana padega',
-          'Sirf latency',
-        ],
+        choices: ["Behavior + boundary regressions test","New version ko inherently safe maano","Same policy se testing unnecessary","Only average latency compare karo"],
         answer: 0,
-        explain: 'Isi liye containment ko model se alag rakhna faayde ka hai: model badle, deewar nahi badalti.',
-      },
+        explain: "Model update par task quality, refusals, prompt injection behavior aur tool integration regressions rerun karo. External permissions independent enforce hoti hain, lekin configuration aur boundary tests phir bhi verify karo.",
+       choiceExplanations: ["Model update par task quality, refusals, prompt injection behavior aur tool integration regressions rerun karo. External permissions independent enforce hoti hain, lekin configuration aur boundary tests phir bhi verify karo.","Version label behavior/safety improvement guarantee nahi.","Policy unchanged ho tab bhi integrations/config regress ho sakte hain.","Latency alone authorization, leaks ya reliability measure nahi karti."] },
     ],
   },
   success: [
@@ -232,7 +207,7 @@ SD.registerLevels('ai', [
   cards: [
     { front: '"AI safety" ke do matlab?', back: 'Refusal filter (prompt ke shabd padh ke haan/na — airport security) aur containment (sandbox, network deewar, limits, monitor — cockpit ka band darwaaza).' },
     { front: 'Filter security boundary kyun nahi?', back: 'Woh shabd padhta hai; kahani badlo toh jawab badal sakta hai. Jo control user ke sach bolne par nirbhar ho, woh control nahi request hai. Aur model update par behaviour badal jaata hai.' },
-    { front: '"You can audit a wall, you can\'t audit a vibe"?', back: 'Firewall rule padh sakte ho, test kar sakte ho, review mein dikha sakte ho — har baar same jawab. Model ke andar ka filter billions weights ka fuzzy faisla hai.' },
+    { front: '"You can audit a wall, you can\'t audit a vibe"?', back: 'External rules inspect aur test ho sakte hain; bypasses/configuration flaws regressions mein cover karo. Behavioral evals model responses measure karti hain, runtime permissions ka substitute nahi.' },
     { front: 'Asymmetry problem (video)?', back: 'Breach ke beech defender ko malware samajhna hai; model "na" bolta hai. Attacker ke paas code pehle se hai — "na" ka bojh sirf defender par girta hai.' },
   ],
 },
@@ -252,22 +227,7 @@ SD.registerLevels('ai', [
     'Containment ko test aur audit karna',
   ],
   lesson: [
-    `<h3>🤖 Agent = model + haath</h3>
-     <p>Chatbot sirf bolta hai. <b>Agent</b> kaam karta hai: URL kholta hai, files padhta-likhta hai,
-     code chalata hai, API call karta hai. Nuksaan ab "galat jawab" nahi, <b>galat kaam</b> hai.</p>
-     <p>Video ke mutabik jin incidents mein models ne infrastructure todne ki koshish ki, un sab mein
-     safeguards <b>band</b> the (test setup ya galat config). Aur ek pattern dikha: model ko jawab mil
-     gaya tha, phir bhi woh din bhar chalta raha — khud ke liye naye bahane banata raha. Yaani
-     <b>"clean stop" ki guarantee nahi</b>. Yeh prompt se theek nahi hota; yeh bahar ki deewar aur
-     monitor se theek hota hai.</p>
-     <h3>🧱 Chaar deewarein</h3>
-     <table>
-       <tr><th>Deewar</th><th>Kya rokti hai</th><th>Misaal</th></tr>
-       <tr><td>🌐 Egress allowlist</td><td>Data bahar jaana, anjaan jagah call</td><td>sirf <code>docs.internal</code>; <code>169.254.169.254</code> (cloud metadata) bhi block</td></tr>
-       <tr><td>📁 Workspace jail</td><td>Secrets padhna, apna hi code badalna</td><td><code>../tasks/fake-secrets/api-key.txt</code> → deny</td></tr>
-       <tr><td>⏱️ Budget</td><td>Bekaboo loop ka kharch</td><td>max 40 calls, 400 ms CPU</td></tr>
-       <tr><td>👀 Monitor + kill</td><td>Lambi chalne wali galti</td><td>10 calls mein 3 block, ya "done" ke baad 2 calls → band</td></tr>
-     </table>`,
+    "<h3>🤖 Agent = model + haath</h3>\n     <p>Chatbot sirf bolta hai. <b>Agent</b> kaam karta hai: URL kholta hai, files padhta-likhta hai,\n     code chalata hai, API call karta hai. Nuksaan ab \"galat jawab\" nahi, <b>galat kaam</b> hai.</p>\n     <p>Video ke mutabik jin incidents mein models ne infrastructure todne ki koshish ki, un sab mein\n     safeguards <b>band</b> the (test setup ya galat config). Aur ek pattern dikha: model ko jawab mil\n     gaya tha, phir bhi woh din bhar chalta raha — khud ke liye naye bahane banata raha. Yaani\n     <b>\"clean stop\" ki guarantee nahi</b>. Yeh prompt se theek nahi hota; yeh bahar ki deewar aur\n     monitor se theek hota hai.</p>\n     <h3>🧱 Chaar deewarein</h3>\n     <table>\n       <tr><th>Deewar</th><th>Kya rokti hai</th><th>Misaal</th></tr>\n       <tr><td>🌐 Egress allowlist</td><td>Data bahar jaana, anjaan jagah call</td><td>sirf <code>docs.internal</code>; <code>169.254.169.254</code> (cloud metadata) bhi block</td></tr>\n       <tr><td>📁 Workspace jail</td><td>Secrets padhna, apna hi code badalna</td><td><code>../tasks/fake-secrets/api-key.txt</code> → deny</td></tr>\n       <tr><td>⏱️ Budget</td><td>Bekaboo loop ka kharch</td><td>max 40 calls, 400 ms CPU</td></tr>\n       <tr><td>👀 Monitor + kill</td><td>Lambi chalne wali galti</td><td>10 calls mein 3 block, ya \"done\" ke baad 2 calls → band</td></tr>\n     </table>",
     `<h3>📏 Lab mein kya naapa (lab 11 ka asli run)</h3>
      <pre>achha agent,  no walls   : 6/6 allowed         bahar: 0
 achha agent,  contain    : 6/6 allowed         bahar: 0       ← deewar ka "tax" = zero
@@ -298,7 +258,7 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
         dhoondhne hain.`,
       goal: 'Chaar aisi cheezein pakdo jinse agent deewar ke bahar pahunch sakta hai ya bina ruke chal sakta hai.',
       nodes: [
-        { id: 'net', label: '🌐 Egress', sub: 'allowlist: github.com, pypi.org… aur cloud metadata address 169.254.169.254 bhi khula', row: 0 },
+        { id: 'net', label: '🌐 Egress', sub: "allowlist: github.com, pypi.org… aur cloud metadata address 169.254.169.254 bhi khula", row: 0 },
         { id: 'mount', label: '📁 Mounts', sub: 'repo /workspace par — aur debugging ke liye poora $HOME read-only', row: 0 },
         { id: 'creds', label: '🔑 Credentials', sub: 'agent ke env mein deploy wala AWS admin key', row: 1 },
         { id: 'stop', label: '⏹️ Stop condition', sub: 'koi call budget nahi; agent khud bolega jab kaam khatam', row: 1 },
@@ -306,7 +266,7 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
         { id: 'container', label: '📦 Container', sub: 'non-root user, read-only root filesystem', row: 2 },
       ],
       flaws: [
-        { id: 'net', why: '<code>169.254.169.254</code> cloud metadata address hai — wahan se machine ke credentials mil sakte hain. Lab 11 ke audit mein yahi address sabse pehle deny hota hai. Allowlist mein sirf woh jo task ko chahiye.' },
+        { id: 'net', why: "<code>169.254.169.254</code> cloud metadata address hai — wahan se machine ke credentials mil sakte hain. Lab 11 ke audit mein yahi address sabse pehle deny hota hai. Allowlist mein sirf woh jo task ko chahiye." },
         { id: 'mount', why: 'Read-only bhi ho, poora $HOME mount = SSH keys, tokens, dusre projects — sab padhe ja sakte hain, aur agar network ka koi bhi raasta khula hai toh bahar bhi. Sirf /workspace.' },
         { id: 'creds', why: 'Agent ko admin key dena matlab uski har galti admin ki galti. Chhota, task-specific, kam der tak valid token do — aur behtar ho ki deploy agent ke bahar ek alag, review wale kadam mein ho.' },
         { id: 'stop', why: 'Video ka sabak: models jawab milne ke baad bhi chalte rahe. "Agent khud bolega" = clean stop ki guarantee nahi. Budget (calls, CPU, samay) aur "done ke baad calls" wala alarm chahiye.' },
@@ -337,15 +297,10 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
       ],
       observe: {
         q: '`walls` mode mein kuch bahar nahi gaya, phir bhi `contain` mode kyun chahiye?',
-        choices: [
-          'Deewar nuksaan rokti hai, samay nahi — agent 67 calls tak ghoomta raha aur CPU khaata raha. Monitor ne "done ke baad calls" pakad ke 6th call par band kar diya',
-          'Kyunki walls mode mein data bahar gaya tha',
-          'Kyunki contain mode mein allowlist bada hai',
-          'Kyunki walls mode achhe agent ko bhi rokta hai',
-        ],
+        choices: ["Bounded runtime aur clean stop bhi chahiye","Walls mode mein egress successful tha","Contain mode ne all domains allow kiye","Network rules ne CPU budget enforce kiya"],
         answer: 0,
         explain: 'Har layer alag cheez rokti hai: egress/jail = nuksaan, budget = kharch, monitor = samay. Ek layer doosri ki jagah nahi le sakti.',
-      },
+       choiceExplanations: ["Har layer alag cheez rokti hai: egress/jail = nuksaan, budget = kharch, monitor = samay. Ek layer doosri ki jagah nahi le sakti.","Lab output walls mode mein blocked egress dikhata hai.","Containment narrower runtime/monitor control add karta hai.","Firewall CPU/time/call-count limit ka replacement nahi."] },
       lesson: 'Containment ko naapo: kitni calls block, kitna bahar gaya, alert kitni der mein, kill ke baad kya bacha. Jo naap sakte ho, wahi guarantee de sakte ho.',
     },
   ],
@@ -355,26 +310,16 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
     questions: [
       {
         q: 'Interviewer: "Agent ka kaam khatam ho gaya par woh calls karta ja raha hai. Kya design karoge?"',
-        choices: [
-          'Model par "ruk ja" bharosa nahi — call/CPU/samay ka budget, aur "done ke baad bhi calls" par alert + kill switch jo model ke bahar chalta hai',
-          'System prompt mein likh denge "kaam khatam ho toh ruk jao"',
-          'Zyada smart model use karenge',
-          'User ko manually band karne ka button denge',
-        ],
+        choices: ["External budget aur stop-state guard","Only prompt mein stop rule likho","Only larger model ko upgrade karo","User ke manual click ka wait karo"],
         answer: 0,
         explain: 'Clean stop ki guarantee model nahi deta. Rokne wali cheez bahar honi chahiye aur apne aap chalni chahiye.',
-      },
+       choiceExplanations: ["Clean stop ki guarantee model nahi deta. Rokne wali cheez bahar honi chahiye aur apne aap chalni chahiye.","Prompt loop termination enforce nahi karta.","Model change maximum resource consumption bound nahi karta.","Manual stop helpful hai; unattended runaway ko automatic guard chahiye."] },
       {
         q: 'Interviewer: "Egress allowlist mein kya galti sabse aam hai?"',
-        choices: [
-          'Naam match ka dhokha (docs.internal.evil.example) aur cloud metadata address (169.254.169.254) khula chhodna — exact host match aur metadata block zaroori',
-          'Bahut kam domains allow karna',
-          'HTTPS allow karna',
-          'DNS use karna',
-        ],
+        choices: ["Parsed host/IP aur redirects validate","Substring host check hi enough","Only HTTPS se metadata safe","DNS name trusted toh all IPs allow"],
         answer: 0,
         explain: 'Lab ka audit dono ko test karta hai: "contains" wala match galat hai, exact host chahiye; aur metadata address se machine credentials milte hain.',
-      },
+       choiceExplanations: ["Lab ka audit dono ko test karta hai: \"contains\" wala match galat hai, exact host chahiye; aur metadata address se machine credentials milte hain.","docs.internal.evil.example trusted host nahi; substring check unsafe hai.","HTTPS scheme arbitrary internal targets ko authorize nahi karti.","DNS rebinding, private/link-local targets aur redirects revalidate karne honge."] },
     ],
   },
   success: [
@@ -391,7 +336,7 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
     { front: 'Agent ki chaar deewarein?', back: 'Egress allowlist (network), workspace jail (files), budget (calls/CPU/samay), monitor + kill switch (vyavhaar).' },
     { front: 'Deewar vs monitor — farq?', back: 'Deewar nuksaan rokti hai (lab: 0 bahar) par agent ghoomta rehta hai (67 calls). Monitor samay bachata hai (6th call par kill).' },
     { front: '"Clean stop" kyun nahi maan sakte?', back: 'Video ke mutabik models jawab milne ke baad bhi din bhar chalte rahe. Rokne ka kaam model ke bahar ka budget + alarm kare.' },
-    { front: '169.254.169.254 kya hai?', back: 'Cloud metadata address — wahan se machine ke credentials mil sakte hain. Agent ke egress mein hamesha block.' },
+    { front: "169.254.169.254 kya hai?", back: 'Cloud metadata address — wahan se machine ke credentials mil sakte hain. Agent ke egress mein hamesha block.' },
   ],
 },
 
@@ -434,15 +379,13 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
      <p>Speaker ka tark: har baar "defender se gyaan chhupao" ne defender ko hi kamzor kiya.</p>
      <h3>⚖️ Aur speaker khud jahan rukta hai</h3>
      <ul>
-       <li><b>Sirf cyber.</b> Cyber mein attack aur defense ke tools same hain aur dono machine speed
-       par chalte hain. <b>Bio alag</b> hai: attack din mein, defense (vaccine) saalon mein — wahan
-       yeh tark nahi chalta.</li>
+       <li><b>Domain limits.</b> Speaker ka analogy cross-domain risk assessment ka replacement nahi.
+       Capability, affected people aur possible harm ke hisaab se safeguards evaluate karo; broad timeline claims ko verified fact mat maano.</li>
        <li><b>Open weights ek one-way door.</b> Ek baar weights bahar gaye toh wapas nahi aate; safety
        hataayi ja sakti hai. Isliye ship karne se pehle cyber/bio capability <b>naapna</b> zaroori hai.</li>
      </ul>
-     <p class="tip">🎯 Tumhare liye practical nateeja: raay chahe jo ho, <b>containment har case mein
-     kaam aata hai</b>, aur incident ki tayyari (apna model, apna data, test kiya hua runbook) har case
-     mein zaroori hai.</p>`,
+     <p class="tip">🎯 Practical nateeja: approved analysis tools ka tested runbook rakho; model evals,
+     data-handling policy aur enforceable runtime controls ko layered design mein verify karo.</p>`,
   ],
   stages: [
     {
@@ -457,29 +400,19 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
         { id: 'hours', label: 'Ghante beete', unit: 'h', max: 48, dir: 'lower' },
       ],
       frames: [
-        { t: 'T+0', event: 'Ek test setup mein chal raha model (safeguards <b>band</b>) Hugging Face ke infra par attack karta hai.', metrics: { events: 17000, hours: 0 }, tone: 'bad' },
+        { t: 'T+0', event: 'Video ek unverified model/infra incident claim karta hai. Is walkthrough ko hypothetical defensive scenario samjho; historical incident ka independent proof nahi.', metrics: { events: 17000, hours: 0 }, tone: 'bad' },
         { t: 'T+2h', event: 'Security team ke paas <b>17,000 events</b>. Payloads, commands, credentials — sab samajhna hai.', metrics: { events: 17000, hours: 2 }, tone: 'warn' },
         { t: 'T+4h', event: 'Bade hosted models se madad maangi — "yeh malware analyse karo". Jawab: <b>mana</b>.', metrics: { events: 16800, hours: 4 }, tone: 'bad',
           ask: { q: 'Is pal ka sabse bada design sabak kya hai?',
-                 choices: [
-                   'Incident tooling pehle se tay aur test honi chahiye — ek capable model apne infra par, jise attack ka data dikhaya ja sake',
-                   'Aur zor se prompt likhna chahiye tha',
-                   'Hosted model ki shikayat karni chahiye',
-                   'Logs delete kar dene chahiye',
-                 ], answer: 0,
+                 choices: ["Approved tools ko incident se pehle test","Breach ke waqt naya tool improvise","Logs delete karke sensitive input hatao","Provider complaint se recovery chalao"], answer: 0,
                  explain: 'Incident ke beech naya tool dhoondhna sabse mehenga samay hai. Runbook ka har tool pehle chala ke dekha hona chahiye.',
-                 wrongHints: ['Prompt badalna usi filter se ladna hai — aur incident ke beech waqt barbaad.', 'Shikayat se aaj ka incident nahi sulajhta.', 'Logs hi saboot hain.'] } },
+                 wrongHints: ['Prompt badalna usi filter se ladna hai — aur incident ke beech waqt barbaad.', 'Shikayat se aaj ka incident nahi sulajhta.', 'Logs hi saboot hain.'] , choiceExplanations: ["Incident ke beech naya tool dhoondhna sabse mehenga samay hai. Runbook ka har tool pehle chala ke dekha hona chahiye.","Unrehearsed setup response ko delay aur data risk add kar sakta hai.","Evidence deletion investigation ko damage karti hai.","Vendor escalation response runbook ka replacement nahi."] } },
         { t: 'T+6h', event: 'Team ek open-weights model apne hardware par chalati hai.', metrics: { events: 12000, hours: 6 }, tone: 'warn' },
         { t: 'T+10h', event: 'Analysis chal pada. Passwords aur payloads <b>building se bahar nahi gaye</b>.', metrics: { events: 3000, hours: 10 }, tone: 'ok',
           ask: { q: 'Self-hosted model ka doosra, kam dikhne wala faayda?',
-                 choices: [
-                   'Attack data mein live credentials aur customer data hota hai — bahar ki API ko bhejna khud ek naya leak hai',
-                   'Self-hosted hamesha tez hota hai',
-                   'Self-hosted model zyada smart hota hai',
-                   'Koi faayda nahi',
-                 ], answer: 0,
-                 explain: 'Incident data sabse sensitive data hai. "Mana nahi karega" ke saath "bahar nahi jaayega" bhi utna hi bada faayda hai.',
-                 wrongHints: ['Speed hardware par depend karti hai.', 'Smartness ka sawaal nahi — data kahan jaata hai, woh sawaal hai.', 'Data leak rokna bada faayda hai.'] } },
+                 choices: ["Approved locality aur data-handling control","Local hosting means zero security risk","Hosted API always unauthorized leak","On-prem model inherently more capable"], answer: 0,
+                 explain: "Self-hosting approved data-locality boundary maintain karne mein help kar sakta hai. Isse model, logs, administrator access aur retention automatically safe nahi hote; approved hosted environment bhi valid ho sakta hai.",
+                 wrongHints: ['Speed hardware par depend karti hai.', 'Smartness ka sawaal nahi — data kahan jaata hai, woh sawaal hai.', 'Data leak rokna bada faayda hai.'] , choiceExplanations: ["Self-hosting approved data-locality boundary maintain karne mein help kar sakta hai. Isse model, logs, administrator access aur retention automatically safe nahi hote; approved hosted environment bhi valid ho sakta hai.","Local service bhi permissions, logs aur vulnerabilities manage karegi.","Approved contractual handling ke saath hosted services valid ho sakti hain.","Deployment location model capability establish nahi karti."] } },
         { t: 'Postmortem', event: 'Video ke mutabik postmortem ne ise "asymmetry problem" kaha, aur us model ke safeguards band the jisne attack kiya.', metrics: { events: 0, hours: 30 }, tone: 'ok' },
       ],
     },
@@ -488,27 +421,17 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
       title: 'Raay aur seema',
       questions: [
         {
-          q: 'Speaker khud kis area mein apna tark lagu NAHI karta?',
-          choices: [
-            'Bio — wahan attack din mein hota hai aur defense (vaccine) mein saal lagte hain',
-            'Cyber',
-            'Coding agents',
-            'Search',
-          ],
+          q: "Interviewer: Different AI use cases par ek hi safeguard policy copy karna kyun risky hai?",
+          choices: ["Use-case threat model aur impact assess","One safeguard policy all domains mein","Only model benchmark se policy choose","Only compute cost se release decide"],
           answer: 0,
-          explain: 'Cyber mein attack aur defense same tools aur same speed par hain. Bio mein yeh barabari nahi hai.',
-        },
+          explain: "Risk capability, access, affected users aur possible impact se badalta hai. Har domain ka threat model aur measured controls define karo; speaker ki broad opinion ko verified universal fact mat maano.",
+         choiceExplanations: ["Risk capability, access, affected users aur possible impact se badalta hai. Har domain ka threat model aur measured controls define karo; speaker ki broad opinion ko verified universal fact mat maano.","Different capabilities, users aur harms different controls demand karte hain.","Benchmark measurements risk assessment ka ek input hain.","Cost alone misuse/privacy/security consequences cover nahi karta."] },
         {
           q: '"Open weights ek one-way door hai" — matlab?',
-          choices: [
-            'Weights ek baar bahar gaye toh wapas nahi aate aur safety hataayi ja sakti hai — isliye release se pehle capability naapo',
-            'Open weights ko band nahi kar sakte isliye woh hamesha safe hain',
-            'Open weights sirf ek baar download ho sakte hain',
-            'Open weights ke liye door (API) chahiye',
-          ],
+          choices: ["Downloaded weights ko revoke karna mushkil","Weights bina API ke run nahi hote","Release ke baad safety edits enforce","Open weights inherently harmless hain"],
           answer: 0,
           explain: 'Release ek aisa faisla hai jo palta nahi ja sakta — isliye measure pehle, ship baad mein.',
-        },
+         choiceExplanations: ["Release ek aisa faisla hai jo palta nahi ja sakta — isliye measure pehle, ship baad mein.","Local deployment provider API ke bina ho sakta hai.","Third-party copies par later provider change enforce nahi hota.","Capability aur access safeguards evaluate karne honge."] },
       ],
     },
   ],
@@ -518,26 +441,16 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
     questions: [
       {
         q: 'Interviewer: "Security incident mein LLM se log analyse karwane ka plan banao."',
-        choices: [
-          'Pehle se ek capable model apne infra par, jiske paas incident data jaa sake bina building chhode; runbook mein test kiya hua; aur containment ke andar chalta hua',
-          'Jo bhi hosted API sasti ho, incident ke waqt use kar lenge',
-          'LLM ki zaroorat nahi, sab manual karenge',
-          'Incident data ko pehle anonymize karke public model ko bhejenge, har baar',
-        ],
+        choices: ["Approved analysis environment, tested runbook","Any cheap API ko raw secrets bhejo","Only manual response universally chuno","Redaction ko perfect privacy proof maano"],
         answer: 0,
         explain: 'Teen cheezein: availability (mana na kare), data locality (bahar na jaaye), aur pehle se test.',
-      },
+       choiceExplanations: ["Teen cheezein: availability (mana na kare), data locality (bahar na jaaye), aur pehle se test.","Secrets/customer data transfer authorization aur policy maangta hai.","Manual work useful ho sakta hai; tool suitability test karni chahiye.","Redaction incomplete ho sakti hai; approved handling and containment chahiye."] },
       {
         q: 'Interviewer: "Kya refusal band kar dena chahiye?"',
-        choices: [
-          'Filter ek layer ho sakta hai par boundary nahi — load-bearing cheez containment hai. Aur yeh bahas domain par depend karti hai (cyber vs bio)',
-          'Haan, refusal hamesha galat hai',
-          'Nahi, refusal hi asli safety hai',
-          'Isse system design ka koi lena-dena nahi',
-        ],
+        choices: ["Layered policy aur external enforcement","All filters ko permanently disable","Only refusals ko complete safety","Runtime access ko irrelevant maano"],
         answer: 0,
-        explain: 'Balanced jawab: filter aur deewar alag guarantees dete hain; design mein deewar par tiko.',
-      },
+        explain: 'Layered design mein behavioral safeguards aur external capability enforcement dono evaluate karo. Har layer ki assumptions, limits and regression tests explicit rakho.',
+       choiceExplanations: ["Layered design mein behavioral safeguards aur external capability enforcement dono evaluate karo. Har layer ki assumptions, limits and regression tests explicit rakho.","Filters helpful safeguards ho sakte hain; universal removal justified nahi.","Refusal behavior external effects enforce nahi karta.","Tools/network/files ki capabilities system risk define karti hain."] },
     ],
   },
   success: [
@@ -550,9 +463,9 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
     Us tool ko <b>aaj</b> ek purane log par chala ke dekho — kya woh mana karta hai? Kya data tumhare
     network se bahar jaata hai?</p>`,
   cards: [
-    { front: 'Incident mein self-hosted model ke do faayde?', back: '(1) Mana nahi karega — attack data dikha sakte ho. (2) Data bahar nahi jaata — live passwords, payloads, customer data building mein rehte hain.' },
+    { front: 'Incident mein self-hosted model ke do faayde?', back: 'Approved local deployment data handling control de sakta hai. Model task suitability, refusals, logs, administrator access and retention test karo; self-hosting automatic availability or privacy guarantee nahi.' },
     { front: 'Itihaas ke teen misaal (video)?', back: 'Kamzor export crypto → FREAK/Logjam (2015); Metasploit/Mimikatz → standard defense, Credential Guard; disclosure → CVE, bug bounty, Project Zero.' },
-    { front: 'Video ka tark kahan rukta hai?', back: 'Sirf cyber par. Bio mein attack din mein, defense saalon mein — barabari nahi. Aur open weights one-way door hain: release se pehle capability naapo.' },
+    { front: 'Video ki opinion ko design mein kaise use karein?', back: 'Threat model aur domain-specific impact alag evaluate karo. Unverified incident/timeline claims proof nahi. Downloaded weights revoke karna difficult hai, isliye release se pehle capability and risk assessment chahiye.' },
   ],
 },
 ]);

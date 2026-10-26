@@ -97,16 +97,11 @@ SD.registerLevels('sdd-resil', [
           vars: { fn: 'leastLoaded([3, 0, 1], random)', in: 'least = 0 · tied = ?', ret: '?' },
           ask: {
             q: '<code>loads = [3, 0, 1]</code>. <code>leastLoaded</code> kya lautayega — aur agli 999 baar kya lautayega, jab tak <code>loads</code> na badle?',
-            choices: [
-              '1 (yaani S2), har baar. <code>tied</code> mein sirf ek server hai; random sirf tab kaam aata hai jab list mein kai hon',
-              'Kabhi S2, kabhi S3 — function mein <code>random</code> jo hai',
-              '0 (S1) — list ka pehla server',
-              '2 (S3) — aakhri server jeetta hai',
-            ],
+            choices: ["S2 each time: unchanged loads ka unique minimum wahi","S2/S3 alternate: random function unequal loads mix kare","S1 each time: first array index leastLoaded default hai","S3 each time: last array index tie-break default hai"],
             answer: 0,
             hint: '0 load kitne servers par hai? Line 28 mein <code>tied.length</code> kitna hoga?',
             explain: '<code>tied</code> = [1] — sirf S2. Line 28: ek hi server hai, toh wahi. Wahi <code>loads</code>, wahi jawab — hazaar baar. Lab: <code>0 / 1000 / 0</code>.',
-          },
+           choiceExplanations: ["<code>tied</code> = [1] — sirf S2. Line 28: ek hi server hai, toh wahi. Wahi <code>loads</code>, wahi jawab — hazaar baar. Lab: <code>0 / 1000 / 0</code>.","Random tie breaking sirf minimum-equal candidates par apply hoti; 0 and 1 tie nahi.","Function values compare karta hai, first index preference nahi.","Unique minimum hai; last-index tie handling relevant nahi."] },
         },
         {
           clock: 'leastLoaded · barabari',
@@ -138,16 +133,11 @@ SD.registerLevels('sdd-resil', [
           vars: { in: 'loads[0] = 3 · loads[2] = 1', ret: '2 — S3' },
           ask: {
             q: 'Agli baar sikke a = 1 (S2) aur b = 2 (S3) nikle. Line 37 kya lautayegi?',
-            choices: [
-              '1 (S2) — <code>loads[1]</code> = 0, <code>loads[2]</code> = 1, aur 0 ≤ 1',
-              '2 (S3) — doosra sikka jeetta hai',
-              '0 (S1) — S1 ki baari hai',
-              'Sikke dobara uchhaale jaayenge',
-            ],
+            choices: ["S2: candidate load 0, S3 ka 1; lower S2 choose","S3: second random candidate ko fixed preference mile","S1: global round-robin turn candidate pair ko override","Resample: candidate loads unequal ho toh draw repeat"],
             answer: 0,
             hint: '<code>loads[a]</code> aur <code>loads[b]</code> nikaalo, phir <code>&lt;=</code> lagao.',
             explain: 'Teen jodiyan: (S1, S2) → S2. (S1, S3) → S3. (S2, S3) → S2. S1 kisi mein nahi jeetta. Lab: <code>0 / 694 / 306</code>.',
-          },
+           choiceExplanations: ["Teen jodiyan: (S1, S2) → S2. (S1, S3) → S3. (S2, S3) → S2. S1 kisi mein nahi jeetta. Lab: <code>0 / 694 / 306</code>.","Comparison lower load select karti hai; draw ordering ke kaaran second automatic winner nahi.","S1 sampled pair mein hai hi nahi.","Unequal sample load decision clear banaata hai; resample requirement nahi."] },
         },
         {
           clock: 'jaankari kahan se aati hai?',
@@ -195,16 +185,11 @@ finally { inflight[i]--; }                       // jawab aaya (ya fail hua) →
             </table></div>`,
           ask: {
             q: 'Ek team ne NGINX mein <code>upstream</code> ke andar sirf teen <code>server</code> lines likhi, tareeka nahi likha. Ek server ki disk dheemi ho gayi. Kya hoga?',
-            choices: [
-              'Dheeme server ko barabar hissa milta rahega — default baari-baari hai, aur baari-baari load nahi dekhta',
-              'NGINX apne aap dheeme server ko kam bhejega',
-              'NGINX dheeme server ko hata dega',
-              'NGINX random chunega',
-            ],
+            choices: ["Default weighted round robin; slow healthy node share paaye","Default least_conn; slow node ko observed load se kam mile","Default health removal; slow response node ko exclude kare","Default random two; lower in-flight count candidate jeete"],
             answer: 0,
             hint: 'Table ki pehli line dekho. Aur level 1 mein baari-baari ne dheeme S3 ke saath kya kiya tha?',
-            explain: 'Default sabse seedha tareeka hota hai, sabse samajhdaar nahi. Lab: baari-baari ne dheeme server ko barabar 480 requests di; dheeme server ki line 91–113.',
-          },
+            explain: "NGINX upstream default weighted round robin hai. Listed equal-weight healthy servers ko equal request opportunity milegi, successful-but-slow node ko automatic latency-aware weighting nahi. Passive failures, active health checks aur chosen method ka support/config alag verify karo.",
+           choiceExplanations: ["NGINX upstream default weighted round robin hai. Listed equal-weight healthy servers ko equal request opportunity milegi, successful-but-slow node ko automatic latency-aware weighting nahi. Passive failures, active health checks aur chosen method ka support/config alag verify karo.","least_conn explicitly configure karna padta hai; default method nahi.","Slow success response automatically failure threshold cross nahi karti.","random two method explicit upstream configuration hai."] },
         },
         {
           title: '2. Envoy: "do mein se behtar" pehle se laga hai',
@@ -258,15 +243,10 @@ finally { inflight[i]--; }                       // jawab aaya (ya fail hua) →
       ],
       observe: {
         q: '"resource-based" aur "least connections" dono ka niyam ek hi hai: sabse kam load wale ko bhejo. Ek ki sabse lambi line 92 hai, doosre ki 0. Farak kahan se aaya?',
-        choices: [
-          'Jaankari ki umar se. "resource-based" servers ka bheja haal dekhta hai, jo 0.5 s tak purana hota hai; "least connections" load balancer ki apni ginti dekhta hai, jo hamesha taaza hai',
-          '"least connections" zyada servers use karta hai',
-          '"resource-based" random hai',
-          'Dono mein requests ki sankhya alag thi',
-        ],
+        choices: ["Signals alag: stale CPU snapshot vs local tracked in-flight","Proxy count method extra servers laaya; capacity badhi","CPU snapshot method random tha; candidate set same nahi","Client trace second run mein chhoti; fewer arrivals aaye"],
         answer: 0,
-        explain: 'Code mein dono ek hi function hain: <code>leastLoaded</code>. Sirf pehla argument alag hai: <code>reported</code> ya <code>inflight</code>.',
-      },
+        explain: "Lab remote resource snapshots periodic hain; own in-flight request counter event-updated hai. Local freshness global correctness nahi: other proxies ka work, background tasks aur connections vs requests mismatch baaki rehta hai. Same comparison formula ko input signal semantics badalne se alag results milte hain.",
+       choiceExplanations: ["Lab remote resource snapshots periodic hain; own in-flight request counter event-updated hai. Local freshness global correctness nahi: other proxies ka work, background tasks aur connections vs requests mismatch baaki rehta hai. Same comparison formula ko input signal semantics badalne se alag results milte hain.","Given experiment same fleet capacity compare karta hai.","Resource-based method deterministic stale-min selection tha, pure random nahi.","Same arrival workload ke result ko signals ki different freshness explain karti hai."] },
       lesson: 'Tareeka chunne se pehle poochho: is tareeke ko load ki jaankari kahan se milegi, aur yeh jaankari kitni purani hogi?',
     },
   ],
@@ -276,26 +256,16 @@ finally { inflight[i]--; }                       // jawab aaya (ya fail hua) →
     questions: [
       {
         q: '"NGINX ke peeche paanch app servers hain. Ek ka response time baaki se teen guna hai, aur p99 kharab ho gaya. Config mein sabse pehle kya dekhoge?"',
-        choices: [
-          'upstream mein chunne ka tareeka. Kuch nahi likha toh default round robin hai, jo dheeme server ko barabar hissa deta hai. least_conn ya random two least_conn dheeme server ko apne aap kam bhejenge — aur saath mein yeh bhi pata karna hai ki server dheema kyun hua',
-          'Server ki RAM',
-          'NGINX ka version',
-          'Timeout badha dunga',
-        ],
+        choices: ["Upstream method aur slow-node cause; measured policy compare","Proxy timeout badhao; slow server share same rakho","RAM add karo; node response traces baad mein dekho","Round robin weight equal rakho; p99 ko average se replace"],
         answer: 0,
-        explain: 'Lab: ek server teen guna dheema → round robin ne dheeme server ko 480 requests di (line 91–113). Load balancer ki apni ginti se "sabse kam load wala" → 201–245 requests, line 0–1.',
-      },
+        explain: "Default round robin unequal service times ko adapt nahi karta. Workload ke hisaab se least_conn ya supported random two least_conn test karo; persistent/multiplexed traffic mein connection count perfect request-cost signal nahi. Slow node ka CPU, disk, network, errors aur traces bhi investigate karo.",
+       choiceExplanations: ["Default round robin unequal service times ko adapt nahi karta. Workload ke hisaab se least_conn ya supported random two least_conn test karo; persistent/multiplexed traffic mein connection count perfect request-cost signal nahi. Slow node ka CPU, disk, network, errors aur traces bhi investigate karo.","Longer timeout tail latency goal ko relax karta hai; routing imbalance fix nahi.","RAM pressure evidence bina scaling cause miss kar sakti hai.","Average p99 requirement hide karega; slow-node traffic policy inspect karo."] },
       {
         q: '"Do tareekon ka code bilkul ek jaisa hai — dono \'sabse kam load wale ko bhejo\'. Ek production mein theek chalta hai, doosra spike banata hai. Kaise?"',
-        choices: [
-          'Farak code mein nahi, code ko di gayi jaankari mein hai. Load balancer ki apni ginti hamesha taaza hai. Servers ka bheja haal (CPU, queue) kuch der purana hota hai; us beech ki saari requests ko wahi "sabse khaali" server dikhta hai',
-          'Ek mein bug hoga',
-          'Ek tez language mein likha hoga',
-          'Ek mein servers zyada honge',
-        ],
+        choices: ["Same comparison, different-age signals; correlation badli","Compiler bug assume; input load snapshots inspect na karo","Faster language assume; routing telemetry identical maano","Fleet size assume; input signal semantics ignore karo"],
         answer: 0,
         explain: 'Lab mein dono ek hi function hain (leastLoaded). Apni ginti → sabse lambi line 0. 0.5 s purana haal → 92–106.',
-      },
+       choiceExplanations: ["Lab mein dono ek hi function hain (leastLoaded). Apni ginti → sabse lambi line 0. 0.5 s purana haal → 92–106.","Bad routing behavior input staleness se bhi aa sakta hai; code bug assume karna enough evidence nahi.","Implementation language snapshot age/meaning equality prove nahi karti.","Fleet size possible factor hai, but stated experiment input freshness demonstrates difference."] },
     ],
   },
   success: [

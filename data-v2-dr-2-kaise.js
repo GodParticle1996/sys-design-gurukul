@@ -68,16 +68,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { bday: 'DB + ek chhota app', back: '?', fail: '?', lost: '?' },
           ask: {
             q: 'Orders har 0.5 second par aate hain. B ka chhota app 1 second mein 1 hi order le sakta hai. Failover ke turant baad kya hoga?',
-            choices: [
-              'Har doosra order chalega aur har doosra fail hoga — jab tak app bada na ho jaaye',
-              'Saare orders chalenge — app chalu jo hai',
-              'Saare orders fail honge',
-              'Router orders ko rok ke rakhega',
-            ],
+            choices: ["Alternate arrivals fail; standby 1/s hi serve karta","Saare arrivals pass; app live hona capacity proof hai","Saare arrivals fail; small standby koi work nahi karta","Router overflow ko lossless queue mein hold karta"],
             answer: 0,
             hint: '1 second mein kitne orders aate hain? Chhota app unme se kitne le sakta hai?',
-            explain: 'Slow motion: 5.50 s par #12 → B ✓, phir <code>6.00 s #13 → B ✗ (B ka chhota app: 1 s mein 1 hi order)</code>, #14 ✓, #15 ✗. 7.50 s par <code>📈 B bada ho gaya: ab poori capacity</code>.',
-          },
+            explain: "Offered 2/s versus single-order 1 s service lab schedule mein har doosra arrival capacity miss karta hai. Running aur sufficient capacity alag conditions hain. Small app apni available capacity par work kar sakta hai. Given router mein buffering rule nahi hai.",
+           choiceExplanations: ["Offered 2/s versus single-order 1 s service lab schedule mein har doosra arrival capacity miss karta hai.","Running aur sufficient capacity alag conditions hain.","Small app apni available capacity par work kar sakta hai.","Given router mein buffering rule nahi hai."] },
         },
         {
           clock: '5.50–7.50 s',
@@ -94,16 +89,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { bday: 'poora region, aadha traffic', back: '?', fail: '?', lost: '?' },
           ask: {
             q: 'Region A 4.00 s par gaya; router ko 5.50 s par pata chalega. #10 (4.50 s) ki baari B ki hai, #11 (5.00 s) ki baari A ki. Dono ka kya hoga?',
-            choices: [
-              '#10 chalega — region B theek hai. #11 fail hoga — router ne #11 ko A par bheja, aur router ko abhi pata nahi ki A gaya',
-              'Dono fail honge',
-              'Dono chalenge',
-              '#10 fail hoga, #11 chalega',
-            ],
+            choices: ["#10 B par pass; #11 stale A route par fail","#10 aur #11 pass; failover pehle hi complete hai","#10 aur #11 fail; ek region gaya toh dono band","#10 fail; #11 A se B par automatically retry hoga"],
             answer: 0,
             hint: 'Pata chalne se pehle router kya badalta hai? Kuch nahi. Toh har order apni baari wale region par hi jaayega.',
-            explain: 'Slow motion: <code>5.00 s #11 → A ✗ (A band hai)</code>, phir <code>5.50 s 🚀 B pehle se poora chal raha hai — ab A ka hissa bhi B ko</code>. Sirf 1 order fail hua.',
-          },
+            explain: "5.50 s detection se pehle round-robin assignment hi use hoti hai: B available hai, A nahi. Router ne threshold abhi complete nahi kiya. Region B healthy diya gaya hai. Is trace mein automatic per-request rerouting nahi hai.",
+           choiceExplanations: ["5.50 s detection se pehle round-robin assignment hi use hoti hai: B available hai, A nahi.","Router ne threshold abhi complete nahi kiya.","Region B healthy diya gaya hai.","Is trace mein automatic per-request rerouting nahi hai."] },
         },
         {
           clock: 'chaaron ek saath',
@@ -120,16 +110,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { bday: 'kuch nahi → DB → DB + chhota app → poora', back: '7.50 → 4.50 → 3.50 → 1.50 s', fail: '14 → 8 → 4 → 1', lost: '3 → 1 → 1 → 1' },
           ask: {
             q: 'Aakhri teen tareekon mein "kho gaye" 1 par hi atka raha. Region B mein itna kuch chalu kiya — khoya data kyun nahi ghata?',
-            choices: [
-              'Khoya data is par nirbhar hai ki copy kitni der mein jaati hai — aur teeno mein copy har 1 second par hi thi. B mein kitna chalu hai, isse sirf wapsi ka samay badalta hai',
-              'Kyunki region B ka DB chhota tha',
-              'Kyunki router dheema tha',
-              'Yeh sirf sanyog hai',
-            ],
+            choices: ["Copy interval same; standby readiness RTO badalti hai","Standby app size hi acknowledged data loss tay karta","Router speed hi completed replica data count tay karti","Standby boot delay data ko source par undo karta hai"],
             answer: 0,
             hint: 'Pichhle level mein khoya data 3 se 1 kab hua tha — B mein kuch chalu karne se, ya copy jaldi karne se?',
-            explain: 'Do alag knob hain. <b>Copy ki raftaar</b> → khoya data. <b>B mein kitna chalu</b> → wapsi ka samay. Ek ko ghumane se doosra nahi hilta.',
-          },
+            explain: "Teeno runs ka async copy schedule same hai; standby deployment readiness recovery time ka independent axis hai. App scaling data replication freshness nahi badalti. Routing delay loss exposure affect kar sakti hai, par given identical copy loss ka cause interval hai. Boot delay earlier writes rollback nahi karta.",
+           choiceExplanations: ["Teeno runs ka async copy schedule same hai; standby deployment readiness recovery time ka independent axis hai.","App scaling data replication freshness nahi badalti.","Routing delay loss exposure affect kar sakti hai, par given identical copy loss ka cause interval hai.","Boot delay earlier writes rollback nahi karta."] },
         },
         {
           clock: 'asli raftaar',
@@ -167,16 +152,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { how: '—', ack: '—', lost: '—', bdown: '—' },
           ask: {
             q: 'Region B tak ek chakkar mein 0.20 second lagte hain. Is badlaav ki keemat kya hogi?',
-            choices: [
-              'Har order ko B ke jawab ka intezaar karna padega (0.20 s). Aur B tak pahunchna band ho jaaye, toh region A theek hote hue bhi "ho gaya" nahi keh paayega',
-              'Koi keemat nahi — bas ek line badalni hai',
-              'Sirf region B ka kharcha badhega',
-              'Orders pehle se tez ho jaayenge',
-            ],
+            choices: ["Remote ACK wait; link failure writes block kar sakta","Sirf standby bill; primary write latency same rahegi","Faster ACK; remote copy local disk wait hata degi","Async queue jaisa; remote response wait nahi hoga"],
             answer: 0,
             hint: '"Ho gaya" ab kis cheez ka intezaar karega? Aur B ka jawab na mile toh?',
-            explain: 'Do keematein: har order par ek chakkar ka samay, aur region A ab region B par nirbhar. Dono abhi dikhenge.',
-          },
+            explain: "Synchronous remote confirmation cross-region latency aur remote availability ko write path mein laati hai. Remote round trip acknowledgment se pehle complete karna hai. Extra dependency local wait ko magically remove nahi karti. Response wait remove karna synchronous contract badal deta hai.",
+           choiceExplanations: ["Synchronous remote confirmation cross-region latency aur remote availability ko write path mein laati hai.","Remote round trip acknowledgment se pehle complete karna hai.","Extra dependency local wait ko magically remove nahi karti.","Response wait remove karna synchronous contract badal deta hai."] },
         },
         {
           clock: 'pehle "ho gaya"',
@@ -196,16 +176,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { how: 'pehle copy, phir "ho gaya"', ack: '0.20 s (har order)', lost: '?' },
           ask: {
             q: '#7 B ke jawab ka intezaar kar raha tha jab region A gaya. Kya #7 "kho gaya"?',
-            choices: [
-              'Nahi. #7 ko "ho gaya" mila hi nahi: grahak ko error dikha, aur grahak dobara order kar sakta hai. Jin orders ko "ho gaya" mila tha, woh sab region B mein hain',
-              'Haan — #7 bhi kho gaya',
-              '#7 region B mein hai, par grahak ko pata nahi',
-              '#7 backup se wapas aa jaayega',
-            ],
+            choices: ["Confirmed-loss metric mein nahi; ACK mila hi nahi","Confirmed-loss metric mein haan; client ne send kiya","Confirmed-loss metric mein haan; source unavailable tha","Confirmed-loss metric mein nahi; retry duplicate nahi hota"],
             answer: 0,
             hint: '"Kho gaya" ka matlab is topic mein kya tha: jise "ho gaya" mila, par jo B mein nahi hai. #7 ko kya mila?',
-            explain: 'Slow motion: <code>"ho gaya" mila par B mein nahi: koi nahi (0 order)</code>. Fail hona aur kho jaana alag hain: fail hue order ka grahak jaanta hai ki order nahi hua.',
-          },
+            explain: "Lab lost-confirmed metric acknowledged orders ginti hai. Unacknowledged outcome ko status/idempotency ke saath resolve karo; reply missing se effect absent prove nahi hota. Client send server confirmation nahi hai. Source failure alone unacknowledged operation ko confirmed nahi banati. Retry duplicate ho sakta hai; same idempotency key/status check chahiye.",
+           choiceExplanations: ["Lab lost-confirmed metric acknowledged orders ginti hai. Unacknowledged outcome ko status/idempotency ke saath resolve karo; reply missing se effect absent prove nahi hota.","Client send server confirmation nahi hai.","Source failure alone unacknowledged operation ko confirmed nahi banati.","Retry duplicate ho sakta hai; same idempotency key/status check chahiye."] },
         },
         {
           clock: 'B tak pahunchna band',
@@ -213,16 +188,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { lost: '0', bdown: '?' },
           ask: {
             q: '"Pehle copy" wale tareeke mein, is 2 second ke dauraan aane wale orders ka kya hoga?',
-            choices: [
-              'Orders fail honge. Region A ko B ka jawab chahiye, aur jawab aa nahi raha — toh A "ho gaya" nahi keh sakta',
-              'Orders chalte rahenge — region A theek hai',
-              'Orders 4.00 s tak line mein khade rahenge aur phir sab chal jaayenge',
-              'Router orders ko region B par bhej dega',
-            ],
+            choices: ["Sync ACK nahi aayega; new orders fail honge","Primary healthy hai; sync ACK turant de sakta hai","Router durable buffer mein orders store karega","Two seconds ke baad har request auto-success hogi"],
             answer: 0,
             hint: '"Ho gaya" kis ke baad bola jaata hai? B ka jawab abhi mil sakta hai?',
-            explain: 'Slow motion: <code>2.40 s #5 → ✗ FAIL (0.40 s baad): B ka jawab nahi aaya · "ho gaya" NAHI bola</code>. #5 se #8, chaaron fail — jabki region A mein koi kharabi nahi thi.',
-          },
+            explain: "B unreachable hone par lab ka synchronous confirmation dependency complete nahi hota. Primary health required remote acknowledgment ko replace nahi karti. Router mein durable application queue nahi diya gaya. Client deadline aur retry policy ke bina later success promise nahi.",
+           choiceExplanations: ["B unreachable hone par lab ka synchronous confirmation dependency complete nahi hota.","Primary health required remote acknowledgment ko replace nahi karti.","Router mein durable application queue nahi diya gaya.","Client deadline aur retry policy ke bina later success promise nahi."] },
         },
         {
           clock: 'dono tareeke, dono gadbad',
@@ -266,16 +236,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { ttl: '6 second', g: '—', total: '—' },
           ask: {
             q: 'Grahak-1 ne pata 5.00 s par poochha tha (jawab: A) aur 6 second tak yaad rakhega. Jawab 5.50 s par badal ke B ho gaya. Grahak-1 ke orders kab tak fail honge?',
-            choices: [
-              '11.00 s tak. Grahak-1 ka phone 11.00 s se pehle dobara poochhega hi nahi; tab tak orders purane pate (A) par jaate rahenge',
-              '5.50 s tak — jawab badalte hi sab theek',
-              '6.00 s tak',
-              'Kabhi theek nahi honge',
-            ],
+            choices: ["11.00 s tak cached A use hoga; phir refresh","5.50 s par cache push se turant B ban jaayega","6.00 s par fixed global cache expiry ho jaayegi","5.00 s par failed request DNS record delete karegi"],
             answer: 0,
             hint: 'Phone ne pata kab poochha tha? Aur kitni der yaad rakhega?',
-            explain: 'Slow motion: <code>5.00 s 🔎 grahak-1 ne DNS se dobara poochha → A (pata abhi badla nahi; A band hai) · ab 11.00 s tak yaad</code>. Jawab aadhe second baad badla — par grahak-1 ko yeh 11.00 s par pata chala.',
-          },
+            explain: "Given client 5.00 + 6 s tak old answer hold karta hai; lab ka modeled refresh 11.00 s par hai. DNS answer change ordinary client cache ko push invalidate nahi karta. TTL receipt time se count hota hai. HTTP/connect failure DNS cache deletion ka specified rule nahi.",
+           choiceExplanations: ["Given client 5.00 + 6 s tak old answer hold karta hai; lab ka modeled refresh 11.00 s par hai.","DNS answer change ordinary client cache ko push invalidate nahi karta.","TTL receipt time se count hota hai.","HTTP/connect failure DNS cache deletion ka specified rule nahi."] },
         },
         {
           clock: 'lambi yaad (6 s)',
@@ -321,16 +286,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { a: '0 (pehle 16 the)', b: '14', s3: 'koi nahi', back: '—' },
           ask: {
             q: 'Region B mein abhi 14 orders hain. Agli copy 8.00 s par jaayegi. Region B ke orders ka kya hoga?',
-            choices: [
-              '8.00 s ki copy ke saath yeh "mita do" bhi region B tak pahunchega, aur B ke orders bhi mit jaayenge. Copy ke liye yeh bhi bas ek badlaav hai',
-              'Region B ke 14 orders bache rahenge — B ek alag region hai',
-              'Region B copy lena band kar dega',
-              'Region B galti ko pehchaan ke rok dega',
-            ],
+            choices: ["Delete bhi replicate hogi; B ka data mit sakta","B region alag hai; application deletes isolate rahengi","Replica SQL intent samajhkar accidental delete rokega","Delete se replication subscription khud band hogi"],
             answer: 0,
             hint: 'Copy ka kaam kya hai: jo A mein hua, wahi B mein karna. Kya copy "sahi badlaav" aur "galti" mein farak jaanti hai?',
-            explain: 'Slow motion: <code>8.00 s ☠️ DELETE B tak bhi pahunch gayi: B ke saare orders gaye (14 → 0) — B ne galti ko bhi sahi badlav maana</code>. 16 orders gaye, aur wapas laane ko kuch nahi.',
-          },
+            explain: "Is generic lab replicator mein delete application change ki tarah ship hoti hai. S3 marker rules alag hain. Geographic isolation logical mutation propagation nahi rokta. Replicator user intent automatically infer nahi karta. Delete replication ko self-disable nahi karti.",
+           choiceExplanations: ["Is generic lab replicator mein delete application change ki tarah ship hoti hai. S3 marker rules alag hain.","Geographic isolation logical mutation propagation nahi rokta.","Replicator user intent automatically infer nahi karta.","Delete replication ko self-disable nahi karti."] },
         },
         {
           clock: 'sirf copy thi',
@@ -344,16 +304,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { a: '0 (pehle 16 the)', b: '0', s3: '3.00 s (6) · 6.00 s (12) · 9.00 s (2)', back: '?' },
           ask: {
             q: 'Teen backup hain. Galti 7.75 s par hui thi. Kaunsa backup wapas chalaoge?',
-            choices: [
-              '6.00 s wala: galti se pehle ka aakhri backup. 9.00 s wala galti ke baad ka hai — usme purane orders hain hi nahi',
-              '9.00 s wala — sabse naya',
-              '3.00 s wala — sabse purana, sabse surakshit',
-              'Teeno ek saath',
-            ],
+            choices: ["6.00 s snapshot; last point before 7.75 s mistake","9.00 s snapshot; newest hone se deleted rows milengi","3.00 s snapshot; oldest se minimum loss milega","Teeno snapshots merge; correct rows khud identify hongi"],
             answer: 0,
             hint: 'Kis backup mein galti se pehle ka sabse zyada data hai?',
-            explain: 'Slow motion: <code>10.25 s 🛟 restore: sabse naya snapshot (9.00 s) galti ke BAAD ka hai, wapas nahi chalega. Galti se pehle ka aakhri: 6.00 s wala → 12 order wapas (#1–#12)</code>.',
-          },
+            explain: "Latest known clean snapshot minimal additional rollback ke saath pre-mistake state deta hai. Post-delete snapshot already unwanted state contain kar sakta hai. Older snapshot extra legitimate writes lose karega. Merge semantics aur conflict recovery explicit design chahiye.",
+           choiceExplanations: ["Latest known clean snapshot minimal additional rollback ke saath pre-mistake state deta hai.","Post-delete snapshot already unwanted state contain kar sakta hai.","Older snapshot extra legitimate writes lose karega.","Merge semantics aur conflict recovery explicit design chahiye."] },
         },
         {
           clock: 'nateeja',
@@ -385,15 +340,10 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
       ],
       observe: {
         q: 'Doosre slow motion mein region A poore waqt theek tha. Phir bhi 4 orders fail hue. Kyun?',
-        choices: [
-          '"Ho gaya" bolne se pehle region A ko region B ka jawab chahiye tha, aur 2 second tak region B tak pahunchna band tha',
-          'Region A dheema ho gaya tha',
-          'Router ne orders galat jagah bheje',
-          'Orders bahut zyada the',
-        ],
+        choices: ["Remote confirmation missing thi; primary healthy tha","Primary app capacity kam thi; remote ACK available tha","Router ne B ko traffic diya; A writer use nahi hua","Replica delay primary ko process restart karwata hai"],
         answer: 0,
-        explain: '"Pehle copy" mein khoya data zero hota hai — par region A ki sehat ab region B ki sehat se judi hai.',
-      },
+        explain: "Synchronous dependency unavailable ho toh otherwise healthy primary bhi ACK contract complete nahi kar sakti. Given failure remote connectivity ki hai. Write still A ke synchronous path par aati hai. Code remote wait ko process restart mein convert nahi karta.",
+       choiceExplanations: ["Synchronous dependency unavailable ho toh otherwise healthy primary bhi ACK contract complete nahi kar sakti.","Given failure remote connectivity ki hai.","Write still A ke synchronous path par aati hai.","Code remote wait ko process restart mein convert nahi karta."] },
       lesson: 'Har bachav ek nuksaan ghatata hai aur ek keemat maangta hai. Pehle likho ki kaunsa nuksaan kitna manzoor hai.',
     },
   ],
@@ -403,26 +353,16 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
     questions: [
       {
         q: '"Hume zero data loss chahiye: region jaaye toh ek bhi confirmed order na khoye. Kya karna hoga, aur keemat kya hai?"',
-        choices: [
-          'Order ko "ho gaya" tabhi bolna hoga jab doosre region ne order ko rakh liya ho (synchronous replication). Keemat do hain: har order par doosre region ka chakkar judta hai, aur doosre region tak pahunchna band ho toh pehla region theek hote hue bhi orders nahi le sakta',
-          'Backup har minute le lo',
-          'Region B mein bada server laga do',
-          'Zero data loss mumkin hi nahi hai',
-        ],
+        choices: ["ACK se pehle durable remote copy; latency tradeoff","Minute backups; short interval zero loss guarantee","Standby app scale-up; copy schedule wahi rehne do","DNS threshold kam; source ACK policy wahi rakho"],
         answer: 0,
-        explain: 'Lab: pehle "ho gaya" → 5 kho gaye, order 2 ms. Pehle copy → 0 kho gaye, order 45 ms; aur B tak pahunchna band ho toh 75 mein se 75 orders fail.',
-      },
+        explain: "Specified region-loss scope mein acknowledged writes ki surviving durable copy chahiye; synchronous path latency aur availability cost la sakta hai. Periodic async copies ke beech loss window rahegi. App capacity data acknowledgment durability change nahi karti. Fast detection unsent acknowledged data recover nahi karti.",
+       choiceExplanations: ["Specified region-loss scope mein acknowledged writes ki surviving durable copy chahiye; synchronous path latency aur availability cost la sakta hai.","Periodic async copies ke beech loss window rahegi.","App capacity data acknowledgment durability change nahi karti.","Fast detection unsent acknowledged data recover nahi karti."] },
       {
         q: '"Do tareeke: (1) doosre region mein sirf DB chalu, app band. (2) doosre region mein DB aur ek chhota app chalu. Farak kya hai?"',
-        choices: [
-          'Pehle mein failover ke baad app ko chalu karna padta hai, tab tak saare orders fail. Doosre mein orders turant chalne lagte hain, par chhota app sab nahi le pata — bada hone tak kuch fail hote hain. Khoya data dono mein barabar hai, kyunki copy wahi hai. Doosre ka roz ka kharcha zyada hai',
-          'Koi farak nahi',
-          'Doosre mein data kam khota hai',
-          'Pehla hamesha behtar hai kyunki sasta hai',
-        ],
+        choices: ["Warm app jaldi serve karega; small capacity limit hogi","Warm app zero data loss dega; replication same rahegi","Pilot-light app pehle se full traffic serve karta hai","Warm standby restore ke liye fresh deploy hi maangta hai"],
         answer: 0,
-        explain: 'Lab: sirf DB → 6.4–6.5 s, 283–286 fail. DB + chhota app → 4.0–4.5 s, 112–133 fail. Kho gaye: 5 banaam 5.',
-      },
+        explain: "Warm standby mein working scaled-down application hai; pilot light mein additional start/deploy steps hote hain. Same replication se RPO automatically improve nahi hota. Pilot light full working app ready hone ke barabar nahi. Already deployed app ko aam taur par scale karna hota hai, complete fresh deploy nahi.",
+       choiceExplanations: ["Warm standby mein working scaled-down application hai; pilot light mein additional start/deploy steps hote hain.","Same replication se RPO automatically improve nahi hota.","Pilot light full working app ready hone ke barabar nahi.","Already deployed app ko aam taur par scale karna hota hai, complete fresh deploy nahi."] },
     ],
   },
   success: [

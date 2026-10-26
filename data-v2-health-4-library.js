@@ -95,16 +95,11 @@ SD.registerLevels('sdd-resil', [
           vars: { q: '"shuru ho gaye?"', k8s: 'startupProbe', num: '1 s × 30 = 30 s ki chhoot', fail: 'container restart' },
           ask: {
             q: 'Is app ko kabhi-kabhi khulne mein 45 second lagte hain. Is YAML ke saath us din kya hoga?',
-            choices: [
-              '30 fail ke baad Kubernetes container ko restart karega — app khulne se pehle. Naya container phir 45 second lega: wahi loop. failureThreshold ko sabse lambe boot se zyada rakhna hai',
-              'Kubernetes 45 second tak intezaar karega',
-              'Kuch nahi — startupProbe kabhi fail nahi hota',
-              'Pod READY ho jaayega, bas der se',
-            ],
+            choices: ["Startup budget boot se chhota; restart ho sakta","Startup probe 45 s boot ko automatically detect karega","Readiness fail startup failure count ko reset karegi","Startup timeout app boot hone tak suspend rahega"],
             answer: 0,
             hint: '1 s × 30 = kitne second ki chhoot? Aur boot kitne second ka hai?',
-            explain: 'Yeh hisaab hai, naapa hua nahi: 30 second ki chhoot, 45 second ka boot. Kubernetes ki documentation ka niyam: <code>failureThreshold × periodSeconds</code> ko sabse bure boot ke samay se lamba rakho. Lab ne chhote paimaane par yahi dikhaya: delay 10 s, boot 12 s → 2 restart.',
-          },
+            explain: "Given 1 s period × 30 failures roughly 30 s budget 45 s startup se chhota hai; worst-case boot ke liye budget badhao. Probe arbitrary startup duration infer nahi karta. Startup gate ke dauraan readiness successful counter reset nahi karti. Startup probe khud finite timeout/failure rules follow karti hai.",
+           choiceExplanations: ["Given 1 s period × 30 failures roughly 30 s budget 45 s startup se chhota hai; worst-case boot ke liye budget badhao.","Probe arbitrary startup duration infer nahi karta.","Startup gate ke dauraan readiness successful counter reset nahi karti.","Startup probe khud finite timeout/failure rules follow karti hai."] },
         },
         {
           clock: 'jo likha nahi',
@@ -120,16 +115,11 @@ SD.registerLevels('sdd-resil', [
           vars: { q: 'jo likha nahi', k8s: 'defaults', num: '10 s × 3', fail: '—' },
           ask: {
             q: 'Ek team ne <code>livenessProbe</code> mein sirf raasta likha: <code>/healthz</code>, jo DB mein query chalata hai. Baaki sab default. Ek din DB band nahi hua, bas <b>dheema</b> ho gaya: har query 2 second. Kya hoga?',
-            choices: [
-              'Har sawaal ka jawab 2 second mein aayega, par intezaar sirf 1 second ka hai (default timeout) → har sawaal fail. Lagataar 3 fail (~30 second) → saare pods restart. DB band bhi nahi hua tha',
-              'Kuch nahi — DB chal toh raha hai',
-              'Sirf ek pod restart hoga',
-              'Kubernetes timeout apne aap badha dega',
-            ],
+            choices: ["1 s default timeout; repeated DB waits restart laayengi","2 s DB query successful hai toh probe pass hi hoga","Probe timeout DB latency ke saath auto-increase hoga","Readiness liveness ki failed checks ignore karwaayegi"],
             answer: 0,
             hint: '<code>timeoutSeconds</code> ka default kitna hai? 2 second wala jawab pass ginayega ya fail?',
-            explain: 'Yeh documentation ke defaults se nikala hisaab hai (timeout 1 s, fasla 10 s, hadd 3) — is lab mein Kubernetes par naapa nahi gaya. Baat wahi hai jo level 1 mein naapi gayi: liveness mein DB ho, toh DB ki gadbad restart ban jaati hai.',
-          },
+            explain: "Default timeoutSeconds 1 aur failureThreshold 3 par 2 s probe handler repeated timeout de sakta hai; exact restart wall time phase par depend hai. Eventually successful query deadline miss kar sakti hai. Kubernetes fixed timeout ko automatically tune nahi karta. Liveness action readiness se veto nahi hota.",
+           choiceExplanations: ["Default timeoutSeconds 1 aur failureThreshold 3 par 2 s probe handler repeated timeout de sakta hai; exact restart wall time phase par depend hai.","Eventually successful query deadline miss kar sakti hai.","Kubernetes fixed timeout ko automatically tune nahi karta.","Liveness action readiness se veto nahi hota."] },
         },
         {
           clock: 'band hone se pehle',
@@ -197,16 +187,11 @@ SD.registerLevels('sdd-resil', [
           vars: { who: 'hamari file: 200 · 503 · 200', livez: '?', readyz: '503', home: '200' },
           ask: {
             q: 'Hamari file mein SIGTERM ke baad /livez 200 rehta tha, aur /readyz 503. Terminus ke asli run mein /livez par kya aaya hoga?',
-            choices: [
-              '503 — band hote waqt Terminus apne saare health raaston par 503 deta hai, /livez par bhi',
-              '200 — hamari file ki tarah',
-              'Connection band',
-              '404',
-            ],
+            choices: ["Lab Terminus run mein /livez ne 503 diya","Lab Terminus run mein /livez ne 200 diya","Lab Terminus run mein /livez route 404 bana","Lab Terminus run mein /livez permanent 301 bana"],
             answer: 0,
             hint: 'Library ke liye /livez aur /readyz mein koi farak hai? Dono bas "healthChecks" ke raaste hain.',
-            explain: 'Asli run: <code>6.75 s 503 503 200</code>. Library ki setting <code>sendFailuresDuringShutdown</code> ka default true hai: band hote waqt har health raasta 503. Yeh farak padhne se nahi, chalane se dikha.',
-          },
+            explain: "Recorded library run shutdown health response 503 dikhata hai; custom handler semantics ko library config se compare karo. Handwritten lab live() true aur library shutdown response different hain. Recorded status missing route nahi. Recorded response redirect nahi hai.",
+           choiceExplanations: ["Recorded library run shutdown health response 503 dikhata hai; custom handler semantics ko library config se compare karo.","Handwritten lab live() true aur library shutdown response different hain.","Recorded status missing route nahi.","Recorded response redirect nahi hai."] },
         },
         {
           clock: 'band',
@@ -227,16 +212,11 @@ SD.registerLevels('sdd-resil', [
           vars: { who: '@godaddy/terminus (default settings)', livez: '?', readyz: '?', home: '?' },
           ask: {
             q: 'Team ne Terminus laga li, par <code>beforeShutdown</code> nahi likha. 6.50 s par SIGTERM aaya. Kya hoga?',
-            choices: [
-              'App usi pal naye connection lena band kar dega. Load balancer ko khabar pahunchne tak jo requests aayengi, fail hongi — jaise "turant band" mein',
-              'Library apne aap 2 second rukegi',
-              'App band hi nahi hoga',
-              '/readyz 503 dega aur app 30 second chalta rahega',
-            ],
+            choices: ["Recorded app serving stop karega; LB update baaki","Library measured propagation ka wait khud choose karegi","Library default mein readiness ko healthy rakhegi","BeforeShutdown absent ho toh SIGTERM ignore hoga"],
             answer: 0,
             hint: 'Library ka naam "graceful shutdown" hai. Par load balancer ki khabar wali der ka library ko pata hai?',
-            explain: 'Asli run (<code>--no-delay</code>): <code>6.50 s 🛑 SIGTERM</code>, aur usi line ke neeche <code>6.50 s app band</code>. 503 wala daur aaya hi nahi. Library chalte kaam poore hone deti hai, par naye connection turant band. Library ka apna README Kubernetes ke liye yahi rukna lagane ko kehta hai.',
-          },
+            explain: "Shown default run mein pre-close delay absent hai; stale routing window ab bhi handle karni hai. Automatic environment-specific propagation measurement default feature nahi. Shutdown health response healthy rakhna shown behavior nahi. Signal handler still shutdown begin karta hai.",
+           choiceExplanations: ["Shown default run mein pre-close delay absent hai; stale routing window ab bhi handle karni hai.","Automatic environment-specific propagation measurement default feature nahi.","Shutdown health response healthy rakhna shown behavior nahi.","Signal handler still shutdown begin karta hai."] },
         },
         {
           clock: 'kisi bhi library se paanch sawaal',
@@ -279,16 +259,11 @@ SD.registerLevels('sdd-resil', [
             </table></div>`,
           ask: {
             q: 'In defaults ke saath ek target theek ho gaya. Load balancer us target ko dobara traffic kitni der mein bhejega?',
-            choices: [
-              'Lagbhag 2 se 2.5 minute: lagataar 5 pass chahiye, aur sawaal har 30 second par poochha jaata hai',
-              'Turant',
-              '5 second mein',
-              '30 second mein',
-            ],
+            choices: ["Roughly 120–150 s; five successes, 30 s interval","Roughly 0–5 s; first response restores old target","Roughly 30 s; one success threshold complete karta","Roughly 300 s; ten failures recovery ko gate karte"],
             answer: 0,
             hint: 'Kitne pass chahiye? Do sawaalon ke beech kitna fasla hai?',
-            explain: 'Yeh documentation ke defaults se nikala hisaab hai (5 pass, har 30 s), is lab mein naapa nahi gaya. "Wapas aane" ki bhi ek hadd hoti hai — aur default mein yeh hadd "bahar jaane" wali hadd se badi hai.',
-          },
+            explain: "Already unhealthy instance/IP target recovery needs five consecutive passes at 30 s intervals; initial registration aur real timing details alag hain. Configured recovery threshold five hai. One pass initial registration se confuse hota hai. Recovery healthy-pass threshold use karti hai, ten-failure setting nahi.",
+           choiceExplanations: ["Already unhealthy instance/IP target recovery needs five consecutive passes at 30 s intervals; initial registration aur real timing details alag hain.","Configured recovery threshold five hai.","One pass initial registration se confuse hota hai.","Recovery healthy-pass threshold use karti hai, ten-failure setting nahi."] },
         },
         {
           title: '3. Jab saare ek saath "nahi" kahein',
@@ -329,15 +304,10 @@ SD.registerLevels('sdd-resil', [
       ],
       observe: {
         q: 'Default settings wale run mein 6.75 s wali line aayi hi nahi. Kyun?',
-        choices: [
-          'App 6.50 s par hi band ho gaya: default mein band hone se pehle koi rukna nahi hai. 6.75 s par poochhne ke liye app bacha hi nahi tha',
-          'Tool mein bug hai',
-          'DB band tha',
-          'Library ne /livez hata diya',
-        ],
+        choices: ["Process 6.50 s par exit; later probe possible nahi","DB unavailable thi; probe request log suppress hua","Library ne /livez route runtime par delete kar diya","Probe scheduler ne extra check randomly skip kiya"],
         answer: 0,
-        explain: 'Deploy ke waqt yahi pal hota hai jab load balancer ko abhi khabar nahi mili. Lab ne naapa: turant band → har deploy par 75 requests fail; rukne ke saath → 0.',
-      },
+        explain: "Recorded default shutdown run mein 6.75 s tak service process available nahi tha. Trace exit ko cause dikhata hai, DB state ko nahi. Route removal ka evidence nahi; process gone hai. No random scheduling branch described hai.",
+       choiceExplanations: ["Recorded default shutdown run mein 6.75 s tak service process available nahi tha.","Trace exit ko cause dikhata hai, DB state ko nahi.","Route removal ka evidence nahi; process gone hai.","No random scheduling branch described hai."] },
       lesson: 'Library ka naam "graceful" hone se deploy graceful nahi ho jaata. Rukne ki setting tumhe likhni hai.',
     },
   ],
@@ -347,26 +317,16 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Humne graceful shutdown ki library laga li hai. Ab deploy par requests nahi girni chahiye — phir bhi gir rahi hain. Kyun?"',
-        choices: [
-          'Graceful shutdown ke do hisse hain: chalte kaam poore karna, aur naye traffic ke rukne tak jawab dete rehna. Library pehla hissa deti hai. Doosre hisse ke liye band hone se pehle rukna padta hai (app mein delay, ya Kubernetes ka preStop), kyunki load balancer ko "yeh pod gaya" ki khabar der se pahunchti hai',
-          'Library mein bug hai',
-          'Pods zyada hone chahiye',
-          'Deploy raat ko karna chahiye',
-        ],
+        choices: ["Routing propagation aur in-flight drain dono cover karo","Library install ko full rollout no-loss proof maano","Replica count badhao; shutdown timing ignore karo","Drain timeout badhao; readiness state same rakho"],
         answer: 0,
-        explain: 'Asli run: terminus default settings → SIGTERM aur "app band" dono 6.50 s par. Lab: turant band → har deploy par 75 fail; 2 s jawab dete rehna → 0.',
-      },
+        explain: "Graceful rollout mein new traffic quiesce hone ka window aur accepted requests finish karne ka budget alag chahiye. Library behavior ko actual LB/client lifecycle se integrate karna padta hai. More replicas stale-endpoint requests ko prevent nahi karti. Existing work drain alone new work old endpoint tak aana nahi rokta.",
+       choiceExplanations: ["Graceful rollout mein new traffic quiesce hone ka window aur accepted requests finish karne ka budget alag chahiye.","Library behavior ko actual LB/client lifecycle se integrate karna padta hai.","More replicas stale-endpoint requests ko prevent nahi karti.","Existing work drain alone new work old endpoint tak aana nahi rokta."] },
       {
-        q: '"AWS load balancer ke peeche saare targets ek saath health check fail kar dein — users ko kya dikhega?"',
-        choices: [
-          'Load balancer fail open karta hai: jab target group mein sirf unhealthy targets hon, toh requests sab targets ko bheji jaati hain. Agar targets asal mein theek hain (bas health check ki shared dependency giri thi), toh zyadatar requests chalti rahengi. Kubernetes ka Service aisa nahi karta',
-          'Sab users ko turant 503',
-          'Load balancer naye targets bana leta hai',
-          'Load balancer band ho jaata hai',
-        ],
+        q: '"AWS Application Load Balancer ke target group ke saare targets health check fail kar dein — users ko kya dikhega?"',
+        choices: ["ALB all-unhealthy fail-open; actual routes test karo","ALB all-unhealthy par unconditional 503 return karega","ALB health failure par new target instances launch karega","ALB Kubernetes Service ki tarah no endpoints banega"],
         answer: 0,
-        explain: 'AWS ki documentation: saare targets unhealthy → load balancer sab ko bhejta hai (fails open). Lab ka slow motion, fail open ke saath: /home 26 mein se 26 safal; bina fail open: 26 mein se 16.',
-      },
+        explain: "Application Load Balancer all registered unhealthy targets ke case mein traffic un targets ko route kar sakta hai; availability route behavior par depend hai. ALB documented fail-open is blanket 503 claim se different hai. Autoscaling separate service/policy hai. Kubernetes Service endpoint readiness semantics ko ALB rule par apply nahi karna chahiye.",
+       choiceExplanations: ["Application Load Balancer all registered unhealthy targets ke case mein traffic un targets ko route kar sakta hai; availability route behavior par depend hai.","ALB documented fail-open is blanket 503 claim se different hai.","Autoscaling separate service/policy hai.","Kubernetes Service endpoint readiness semantics ko ALB rule par apply nahi karna chahiye."] },
     ],
   },
   success: [

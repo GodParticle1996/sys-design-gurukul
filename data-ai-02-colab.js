@@ -10,40 +10,12 @@
 
 VISUALS['colab-isolation'] = {
   t: 'Container, VM, aur beech ka raasta (gVisor)',
-  html: `
-    <div class="dg-grid">
-      <div class="dg-node is-bad"><span class="ni">📦</span><span class="nl">Container</span>
-        <span class="ns">apni files/processes dikhte hain, par saare containers ka EK host kernel.<br>Ek kernel bug = poori building</span></div>
-      <div class="dg-node is-gold"><span class="ni">🖥️</span><span class="nl">Poori VM</span>
-        <span class="ns">apna kernel — sabse mazboot.<br>Par boot, reserved RAM/CPU: laakhon 10-min muft sessions ke liye bhaari</span></div>
-      <div class="dg-node is-good"><span class="ni">🛡️</span><span class="nl">gVisor</span>
-        <span class="ns">user-space "application kernel" (Sentry, Go mein).<br>Code ki syscall Sentry pakadta hai; host kernel tak sirf chhota, jaancha hua set</span></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-flow">
-      <span class="dg-pill">🐍 notebook code</span><span class="dg-arrow">→ syscall →</span>
-      <span class="dg-pill acc">🛡️ Sentry (emulate)</span><span class="dg-arrow">→ chhota set →</span>
-      <span class="dg-pill good">🐧 host kernel</span>
-    </div>
-    <div class="dg-cap">Bahar nikalne ke liye ab <b>do alag taale</b> todne padenge: Sentry ka bug AUR host kernel ka alag bug.
-      Tax sirf syscall par lagta hai — isliye ML (matrix math) ke liye lagbhag muft, database ke liye bhaari.</div>`,
+  html: "\n    <div class=\"dg-grid\">\n      <div class=\"dg-node is-bad\"><span class=\"ni\">📦</span><span class=\"nl\">Container</span>\n        <span class=\"ns\">apni files/processes dikhte hain, par saare containers ka EK host kernel.<br>Reachable host vulnerability/config flaw isolation risk</span></div>\n      <div class=\"dg-node is-gold\"><span class=\"ni\">🖥️</span><span class=\"nl\">Poori VM</span>\n        <span class=\"ns\">apna kernel — sabse mazboot.<br>Par boot, reserved RAM/CPU: laakhon 10-min muft sessions ke liye bhaari</span></div>\n      <div class=\"dg-node is-good\"><span class=\"ni\">🛡️</span><span class=\"nl\">gVisor</span>\n        <span class=\"ns\">user-space \"application kernel\" (Sentry, Go mein).<br>Code ki syscall Sentry pakadta hai; host kernel tak sirf chhota, jaancha hua set</span></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">🐍 notebook code</span><span class=\"dg-arrow\">→ syscall →</span>\n      <span class=\"dg-pill acc\">🛡️ Sentry (emulate)</span><span class=\"dg-arrow\">→ chhota set →</span>\n      <span class=\"dg-pill good\">🐧 host kernel</span>\n    </div>\n    <div class=\"dg-cap\">gVisor host syscall exposure kam karke defense layers add karta hai. Escape ke liye exact vulnerability chain configuration and attack surface par depend karti hai; fixed two-bug guarantee nahi.\n      Tax sirf syscall par lagta hai — isliye ML (matrix math) ke liye lagbhag muft, database ke liye bhaari.</div>",
 };
 
 VISUALS['colab-disposable'] = {
   t: 'Recipe hamesha ki, rasoi udhaar ki',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-good"><span class="bx-label">📓 Notebook (.ipynb) — durable</span>
-        <div class="dg-cap">Drive mein JSON: cells, code, outputs. Yeh <b>recipe</b> hai — kal bhi wahi.</div></div>
-      <div class="dg-box is-gold"><span class="bx-label">🍳 Runtime — phenkne layak</span>
-        <div class="dg-cap">Variables, <code>pip install</code>, downloaded files. Yeh <b>udhaar ki rasoi</b> hai —
-          disconnect / idle / time limit par <b>delete</b>, pause nahi.</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-ladder">
-      <div class="dg-rung"><span class="lv">📍</span><span class="cmd">Jagah mein chhota</span><span class="q">gVisor sandbox — bahar nikalna do taale todna</span></div>
-      <div class="dg-rung g"><span class="lv">⏳</span><span class="cmd">Samay mein chhota</span><span class="q">har session saaf image se, khatam hote hi machine delete — pair jamaane ki jagah nahi</span></div>
-    </div>`,
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">📓 Notebook (.ipynb) — durable</span>\n        <div class=\"dg-cap\">Drive mein JSON: cells, code, outputs. Yeh <b>recipe</b> hai — kal bhi wahi.</div></div>\n      <div class=\"dg-box is-gold\"><span class=\"bx-label\">🍳 Runtime — phenkne layak</span>\n        <div class=\"dg-cap\">Variables, <code>pip install</code>, downloaded files. Yeh <b>udhaar ki rasoi</b> hai —\n          disconnect / idle / time limit par <b>delete</b>, pause nahi.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-ladder\">\n      <div class=\"dg-rung\"><span class=\"lv\">📍</span><span class=\"cmd\">Jagah mein chhota</span><span class=\"q\">gVisor: host syscall exposure ghataane ki extra boundary</span></div>\n      <div class=\"dg-rung g\"><span class=\"lv\">⏳</span><span class=\"cmd\">Samay mein chhota</span><span class=\"q\">har session saaf image se, khatam hote hi machine delete — pair jamaane ki jagah nahi</span></div>\n    </div>",
 };
 
 VISUALS['colab-rationing'] = {
@@ -75,45 +47,8 @@ SD.registerLevels('ai', [
     'Threat model ke hisaab se isolation chunna',
   ],
   lesson: [
-    `<h3>😬 Problem: laakhon anjaan log, tumhari machines par, apna code</h3>
-     <p>Colab mein koi bhi login karke apna Python chala sakta hai — Google ke hardware par, muft GPU
-     ke saath, bina kisi review ke. Woh code files mita sakta hai, network scan kar sakta hai, crypto
-     mine kar sakta hai. Do mushkil sawaal ek saath:</p>
-     <ul>
-       <li><b>Security</b> — anjaan code ko band kaise rakhein?</li>
-       <li><b>Economics</b> — muft GPU dene ka paisa kaise bachayein?</li>
-     </ul>
-     <p>Google ka jawab ek hi faisla hai: <b>har session ek phenkne layak sandbox</b>. Pehle security
-     wala hissa.</p>
-     <h3>📨 Syscall = darwaaze ke neeche se parchi</h3>
-     <p>Program khud disk, network ya memory nahi chhoota. Jab bhi use kuch "asli" karna ho — file
-     kholni ho, packet bhejna ho — woh kernel ko ek parchi bhejta hai: <b>system call (syscall)</b>.
-     Isolation ka poora khel isi parchi ke raaste ka hai.</p>
-     <table>
-       <tr><th></th><th>📦 Container</th><th>🖥️ VM</th><th>🛡️ gVisor</th></tr>
-       <tr><td>Kernel</td><td>Sab containers ka ek hi host kernel</td><td>Har VM ka apna</td><td>User-space "Sentry" beech mein</td></tr>
-       <tr><td>Escape ke liye</td><td>Ek kernel bug</td><td>Hypervisor bug</td><td>Sentry bug + alag host kernel bug</td></tr>
-       <tr><td>Kharcha</td><td>Sabse sasta</td><td>Boot + reserved RAM/CPU</td><td>Sirf syscalls par tax</td></tr>
-       <tr><td>Kiske liye</td><td>Apna bharosemand code</td><td>Paranoid / multi-tenant bhaari</td><td>Anjaan code, container ki keemat par</td></tr>
-     </table>`,
-    `<h3>🛡️ gVisor ka jugaad</h3>
-     <p>gVisor (open source) ek <b>application kernel</b> hai jo user space mein chalta hai. Uska
-     hissa <b>Sentry</b> Linux ka bada hissa Go mein dobara likhta hai (memory-safe). Notebook ka code
-     syscall karta hai → Sentry beech mein pakad leta hai → khud emulate karta hai → host kernel tak
-     sirf ek <b>chhota, fixed, jaancha hua</b> set pahunchta hai. Aur Sentry khud bhi sandbox mein,
-     kam privileges ke saath.</p>
-     <p>Bahar nikalne ke liye attacker ko ab <b>do alag taale</b> todne padenge — Sentry ka bug aur
-     host kernel ka alag bug. Dono ka code alag hai, toh ek bug doosre ka darwaaza nahi kholta.</p>
-     <h3>💸 Tax kahan lagta hai? Workload batata hai</h3>
-     <p>Har syscall ab ek extra hop hai. Jo software <b>bahut syscalls</b> karta hai (database, load
-     balancer — video: ~10–30% dheema) usko dard hota hai. Colab ka kaam? Matrix math — hot loop mein
-     OS ko pukaar hi nahi, aur GPU asli accelerator par poori speed se chalta hai. Sandbox code ke
-     <b>chaaron taraf</b> hai, math ke <b>andar</b> nahi.</p>
-     <p>Lab 12 mein yahi naapa (toy sentry, ek TCP hop):</p>
-     <pre>compute (matrix math, 4 syscalls):  direct 1750 ms   sentry 1610 ms   ← farq noise hai
-io (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11× dheema</pre>
-     <p class="tip">🎯 "Sandbox X% dheema karta hai" — yeh sawaal adhoora hai. Poora sawaal: <b>kis
-     kaam ko?</b> Wahi deewar database ke liye bhaari, ML ke liye lagbhag muft.</p>`,
+    "<h3>😬 Problem: laakhon anjaan log, tumhari machines par, apna code</h3>\n     <p>Colab mein koi bhi login karke apna Python chala sakta hai — Google ke hardware par, muft GPU\n     ke saath, bina kisi review ke. Woh code files mita sakta hai, network scan kar sakta hai, crypto\n     mine kar sakta hai. Do mushkil sawaal ek saath:</p>\n     <ul>\n       <li><b>Security</b> — anjaan code ko band kaise rakhein?</li>\n       <li><b>Economics</b> — muft GPU dene ka paisa kaise bachayein?</li>\n     </ul>\n     <p>Google ka jawab ek hi faisla hai: <b>har session ek phenkne layak sandbox</b>. Pehle security\n     wala hissa.</p>\n     <h3>📨 Syscall = darwaaze ke neeche se parchi</h3>\n     <p>Program ordinary mapped user memory directly load/store kar sakta hai. File open, network operations aur address-space management jaise privileged services kernel interface se jaate hain: <b>system calls</b>.\n     Isolation ka poora khel isi parchi ke raaste ka hai.</p>\n     <table>\n       <tr><th></th><th>📦 Container</th><th>🖥️ VM</th><th>🛡️ gVisor</th></tr>\n       <tr><td>Kernel</td><td>Sab containers ka ek hi host kernel</td><td>Har VM ka apna</td><td>User-space \"Sentry\" beech mein</td></tr>\n       <tr><td>Escape ke liye</td><td>Reachable host-kernel/runtime/config flaw</td><td>Guest/host or hypervisor escape path</td><td>Sandbox/host/config attack path; fixed bug-count nahi</td></tr>\n       <tr><td>Kharcha</td><td>Sabse sasta</td><td>Boot + reserved RAM/CPU</td><td>Workload/platform-dependent syscall, memory, network aur runtime overhead</td></tr>\n       <tr><td>Kiske liye</td><td>Apna bharosemand code</td><td>Paranoid / multi-tenant bhaari</td><td>Anjaan code, container ki keemat par</td></tr>\n     </table>",
+    "<h3>🛡️ gVisor ka jugaad</h3>\n     <p>gVisor (open source) ek <b>application kernel</b> hai jo user space mein chalta hai. Uska\n     hissa <b>Sentry</b> Linux ka bada hissa Go mein dobara likhta hai (memory-safe). Notebook ka code\n     syscall karta hai → Sentry beech mein pakad leta hai → khud emulate karta hai → host kernel tak\n     sirf ek <b>chhota, fixed, jaancha hua</b> set pahunchta hai. Aur Sentry khud bhi sandbox mein,\n     kam privileges ke saath.</p>\n     <p>Application kernel host interfaces ko restrict karke defense in depth deta hai. Actual escape chain implementation, host/config privileges, platform aur exposed services par depend karti hai. Har escape ke liye exactly two independent bugs required hain: yeh guarantee nahi.</p>\n     <h3>💸 Tax kahan lagta hai? Workload batata hai</h3>\n     <p>gVisor syscall transitions, memory, networking and filesystem paths par workload/platform-dependent overhead laata hai. CPU-heavy user-space loops aur syscall-heavy work alag behavior dikha sakte hain. Video ke percentages historical examples hain, universal ratio nahi. Is Node lab mein real gVisor ya GPU acceleration benchmark nahi hua.</p>\n     <p>Lab 12 mein yahi naapa (toy sentry, ek TCP hop):</p>\n     <pre>compute (matrix math, 4 syscalls):  direct 1750 ms   sentry 1610 ms   ← farq noise hai\nio (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11× dheema</pre>\n     <p class=\"tip\">🎯 \"Sandbox X% dheema karta hai\" — yeh sawaal adhoora hai. Poora sawaal: <b>kis\n     kaam ko?</b> Representative database/ML workload, runtime platform, memory/network paths aur security assumptions ke saath measure karo; ML overhead zero assume mat karo.</p>",
   ],
   stages: [
     {
@@ -122,7 +57,7 @@ io (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11
       instructions: 'Har halat ko sahi isolation se jodo.',
       pairs: [
         { left: '🏢 Apni team ke microservices, apne CI se bane images', right: 'Container — bharosemand code, sabse sasta', explain: 'Threat model chhota hai: code tumhara hai. Container ki halki deewar kaafi hai.' },
-        { left: '🐍 Laakhon anjaan logon ke notebooks, muft', right: 'gVisor — VM jaisi deewar, container ki keemat', explain: 'Anjaan code par ek kernel bug poori building hai; poori VM har 10-min session ke liye bahut bhaari.' },
+        { left: '🐍 Laakhon anjaan logon ke notebooks, muft', right: "gVisor — application-kernel boundary, measured overhead", explain: "Threat model se container/application-kernel/VM boundary choose karo. Startup, compatibility and resource cost measure karo; equal protection/cost universal nahi." },
         { left: '🏦 Alag-alag bank customers ke bhaari workloads ek hardware par', right: 'Poori VM (ya microVM) — sabse mazboot deewar', explain: 'Paranoid threat model aur lambe sessions — boot ka kharcha chal jaata hai.' },
         { left: '🗄️ Database jo har second hazaron syscalls karta hai', right: 'Sandbox ka tax bhaari — dhyan se naapo', explain: 'Syscall-heavy kaam par gVisor jaisi deewar ~10–30% (video) — yahan workload faisla karta hai.' },
       ],
@@ -143,15 +78,10 @@ io (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11
       ],
       observe: {
         q: 'Compute par sentry ka farq noise jitna, IO par 8–11×. Colab ke liye iska matlab?',
-        choices: [
-          'Colab ka kaam compute-bound hai (matrix math, GPU) — hot loop mein syscalls hi nahi, isliye mazboot deewar lagbhag muft',
-          'Sandbox hamesha 10× dheema karta hai',
-          'Colab ko sandbox nahi lagana chahiye',
-          'IO kaam hamesha tez hota hai',
-        ],
+        choices: ["Syscall-light work ka tax kam dikha","Every sandbox ka constant 10x tax","All notebooks compute-bound hote","Compute overhead always zero hota"],
         answer: 0,
-        explain: 'Tax sirf syscall par lagta hai. Jis kaam mein syscalls kam, uspar deewar ki keemat kam.',
-      },
+        explain: "Is toy TCP-sentry experiment mein repeated file operations extra round trips se expensive hue; compute difference noise tha. Actual gVisor ka overhead platform, syscall/memory/network paths aur workload par depend karta hai; yeh gVisor benchmark nahi.",
+       choiceExplanations: ["Is toy TCP-sentry experiment mein repeated file operations extra round trips se expensive hue; compute difference noise tha. Actual gVisor ka overhead platform, syscall/memory/network paths aur workload par depend karta hai; yeh gVisor benchmark nahi.","Overhead platform, syscall mix aur implementation par depend karta hai.","Notebooks I/O-heavy ya syscall-heavy bhi ho sakti hain.","Lab ka small difference universal zero-overhead proof nahi."] },
       lesson: 'Isolation ki keemat workload se naapo, benchmark se nahi.',
     },
   ],
@@ -161,26 +91,16 @@ io (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11
     questions: [
       {
         q: 'Interviewer: "Online code judge banana hai — users ka C++ code chalega. Isolation?"',
-        choices: [
-          'Container akela nahi (shared kernel); gVisor ya microVM jaisi mazboot deewar, bina network, CPU/memory/time limits, aur har run ke baad sandbox phenk do',
-          'Docker container mein chala do, kaafi hai',
-          'Code ko pehle ek AI se check karwa lo',
-          'Sirf bharosemand users ko allow karo',
-        ],
+        choices: ["Isolated, bounded, disposable runs","Only image name ko isolation maano","Only AI review se hostile code safe","Only trusted user checkbox enough"],
         answer: 0,
         explain: 'Anjaan code ka threat model = kernel bug bhi. Deewar + limits + disposability.',
-      },
+       choiceExplanations: ["Anjaan code ka threat model = kernel bug bhi. Deewar + limits + disposability.","Container configuration shared host-kernel exposure leave kar sakti hai.","Review runtime escapes/resource abuse ko reliably enforce nahi karta.","Trust label accidental bugs aur account compromise eliminate nahi karta."] },
       {
         q: 'Interviewer: "gVisor lagane se hamari API 25% dheemi hui. Kya galat hua?"',
-        choices: [
-          'Kuch galat nahi — API server syscall-heavy hai (network, files); tax wahi lagta hai. Poochho: kya is service ka threat model is deewar ko justify karta hai?',
-          'gVisor mein bug hai',
-          'Server chhota hai',
-          'Sandbox ko GPU chahiye',
-        ],
+        choices: ["Syscall cost vs isolation profile","25% from one run proves gVisor bug","GPU add se all syscall cost remove","Disable sandbox bina threat review"],
         answer: 0,
-        explain: 'Workload faisla karta hai. Bharosemand code ke liye container kaafi ho sakta hai.',
-      },
+        explain: "Profile representative workload: syscall transitions, filesystem/network path, memory and CPU overhead separate measure karo. Risk/compatibility requirements se isolation choose karo; one 25% measurement bug ya universal sandbox tax prove nahi.",
+       choiceExplanations: ["Profile representative workload: syscall transitions, filesystem/network path, memory and CPU overhead separate measure karo. Risk/compatibility requirements se isolation choose karo; one 25% measurement bug ya universal sandbox tax prove nahi.","Measurement regression cause platform/I/O/config se vary kar sakta hai.","GPU unrelated system-call interception cost remove nahi karta.","Performance tuning security requirements ko preserve karke evaluate karo."] },
     ],
   },
   success: [
@@ -193,8 +113,8 @@ io (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11
     line mein tark likho. Lab 12 ke "Khud try karo" #3 bhi karo: 10 file ops ko ek message mein batch
     karo — sentry ka tax kitna gira?</p>`,
   cards: [
-    { front: 'Container ki kamzori?', back: 'Saare containers ek hi host kernel share karte hain — ek kernel bug = container escape = poori building.' },
-    { front: 'gVisor kya karta hai?', back: 'User-space "application kernel": Sentry (Go) code ki syscalls pakad ke khud emulate karta hai; host kernel tak sirf chhota jaancha hua set. Escape = do alag bugs.' },
+    { front: 'Container ki kamzori?', back: "Containers host kernel share kar sakte hain; reachable kernel/runtime vulnerabilities and misconfiguration isolation risk hain. Har kernel bug exploitable escape nahi; privileges and defense layers matter karte hain." },
+    { front: 'gVisor kya karta hai?', back: "User-space application kernel guest syscall interface implement karke host exposure reduce karta hai. Independent sandboxing layers useful hain, lekin escape ka fixed two-bug rule nahi; configuration and implementation threat model verify karo." },
     { front: 'Sandbox tax kahan lagta hai?', back: 'Sirf syscalls par. DB/load balancer (syscall-heavy): ~10–30% (video). ML/matrix math: lagbhag zero. Lab: compute noise, IO 8–11×.' },
   ],
 },
@@ -270,26 +190,16 @@ io (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11
       questions: [
         {
           q: 'Session khatam hone par machine PAUSE karne ki jagah DELETE kyun?',
-          choices: [
-            'Security (attacker ke liye tika rehne ki jagah nahi) aur economics (GPU turant pool mein wapas) — ek hi faisle se dono',
-            'Delete karna pause se tez hai',
-            'Pause Linux mein nahi hota',
-            'Users ko delete pasand hai',
-          ],
+          choices: ["Clean lifecycle aur resources release","Pause state automatically erase kare","Delete se durable notebooks bhi lose","VM disposal se all attacks impossible"],
           answer: 0,
           explain: 'Samay mein chhota blast radius + recycle hone wala GPU. Yahi Colab ka core faisla hai.',
-        },
+         choiceExplanations: ["Samay mein chhota blast radius + recycle hone wala GPU. Yahi Colab ka core faisla hai.","Paused memory/files malicious state retain kar sakte hain.","Notebooks/checkpoints ko separate durable store mein preserve karo.","Clean runners blast duration reduce karte hain; other boundaries phir bhi chahiye."] },
         {
           q: 'Notebook ka JavaScript output alag origin ke iframe mein kyun?',
-          choices: [
-            'Taaki anjaan notebook ka code tumhare account ki cookies/Drive tak na pahunche',
-            'Taaki output jaldi load ho',
-            'Taaki GPU use ho',
-            'Iframe mein chart sundar dikhta hai',
-          ],
+          choices: ["Output ko account origin se alag","Iframe tag se access always blocked","Same origin script inherently safe","GPU acceleration ke liye iframe"],
           answer: 0,
           explain: 'Browser bhi ek deewar hai. Same origin par hota toh notebook ka script tumhare naam se kaam kar sakta tha.',
-        },
+         choiceExplanations: ["Browser bhi ek deewar hai. Same origin par hota toh notebook ka script tumhare naam se kaam kar sakta tha.","Origin, sandbox flags aur messaging policy enforce karni hoti hai.","Same-origin untrusted script account privileges abuse kar sakti hai.","Browser origin isolation GPU execution ka mechanism nahi."] },
       ],
     },
   ],
@@ -299,26 +209,16 @@ io (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11
     questions: [
       {
         q: 'Interviewer: "CI runners mein ek build ne malware chhoda jo agle builds mein secrets chura raha tha. Fix?"',
-        choices: [
-          'Har job ek naye, saaf, phenkne layak runner par — job ke baad delete. Durable cheezein (cache, artifacts) alag, jaanchi hui jagah',
-          'Antivirus laga do',
-          'Runner ko har hafte reboot karo',
-          'Sirf senior engineers builds chalayein',
-        ],
+        choices: ["Clean ephemeral runner per build","Weekly reboot ko job isolation maano","Antivirus se persistent state safe","Senior-only builds se execution trusted"],
         answer: 0,
         explain: 'Samay mein blast radius: kuch tik hi na paaye. Colab ka hi pattern.',
-      },
+       choiceExplanations: ["Samay mein blast radius: kuch tik hi na paaye. Colab ka hi pattern.","Malware reboot interval ke beech multiple jobs affect kar sakta hai.","Detection defense layer hai; clean lifecycle/isolation replace nahi.","Build dependencies untrusted ho sakti hain, user seniority independent hai."] },
       {
         q: 'Interviewer: "Users shikayat karte hain ki har session mein 5 min install lagta hai."',
-        choices: [
-          'Aam cheezein base image mein pehle se pakao; kam use wali on-demand; data/model Drive jaisi durable jagah se mount',
-          'Machines delete karna band kar do',
-          'Users ko ek hi machine hamesha de do',
-          'Install ko background mein chupa do',
-        ],
+        choices: ["Prebuilt image, durable user state","Every user ko permanent GPU host","Same dirty runner ko forever retain","Install wait ko only UI se hide"],
         answer: 0,
         explain: 'Disposable tabhi chalta hai jab shuru hona sasta ho.',
-      },
+       choiceExplanations: ["Disposable tabhi chalta hai jab shuru hona sasta ho.","Permanent assignment pooling/utilization aur isolation cost badhata hai.","Persistent mutable environment cross-session contamination retain karta hai.","Hidden work startup resource cost ko remove nahi karta."] },
     ],
   },
   success: [
@@ -368,30 +268,14 @@ io (4,050 chhoti file ops):         direct  680 ms   sentry 5787 ms   ← 8–11
      runtimes, background execution. Do kaam hote hain: paise se free tier ka kharcha chalta hai, aur
      bhaari users (lambi training) <b>free pool se bahar</b> chale jaate hain. Free tier = funnel +
      goodwill, ek soch-samajh ke liya gaya ghaata.</p>`,
-    `<h3>📏 Lab 12 — ek din, 150 GPUs</h3>
-     <p>900 interactive users (thoda kaam, phir tab khula chhod diya), 40 trainers (10–30 ghante),
-     30 miners (24 ghante 100% GPU). Teen policies:</p>
-     <pre>policy | interactive 5 min mein GPU | kabhi nahi mila | avg wait | GPU time: kaam / idle pakda / miner / khaali
-none   |                      12.6% |             412 |  319 min | 29.1% / 46.4% / 19.2% / 5.2%
-idle   |                      20.7% |              19 |   74 min | 45%   / 30.3% / 19.2% / 5.4%
-colab  |                       100% |               0 |    0 min | 41.9% / 33.5% /  0.8% / 23.7%</pre>
-     <ul>
-       <li><b>none</b>: GPU ka <b>46%</b> waqt khule tabs ne pakda, 19% miners ne khaaya. 412 students ko
-       din bhar GPU mila hi nahi.</li>
-       <li><b>idle reclaim</b> akela: "kabhi nahi mila" 412 → 19.</li>
-       <li><b>Colab ke saare niyam</b>: har interactive user ko 5 minute ke andar GPU.</li>
-     </ul>
-     <p>Aur 100 GPUs par? Colab niyam bhi sabko turant nahi de paate (12.2% in 5 min, avg 48 min wait) —
-     par koi khaali haath nahi lauta. Isi liye free tier <b>"no guarantees"</b> kehta hai, aur paid tier
-     usi line mein aage ki jagah bechta hai.</p>
-     <p class="tip">🎯 Hardware wahi, niyam badle — aur 412 log se 0. <b>Scale par scheduler hi product hai.</b></p>`,
+    "<h3>📏 Lab 12 — ek din, 150 GPUs</h3>\n     <p>900 interactive users (thoda kaam, phir tab khula chhod diya), 40 trainers (10–30 ghante),\n     30 miners (24 ghante 100% GPU). Teen policies:</p>\n     <pre>policy | interactive 5 min mein GPU | kabhi nahi mila | avg wait | GPU time: kaam / idle pakda / miner / khaali\nnone   |                      12.6% |             412 |  319 min | 29.1% / 46.4% / 19.2% / 5.2%\nidle   |                      20.7% |              19 |   74 min | 45%   / 30.3% / 19.2% / 5.4%\ncolab  |                       100% |               0 |    0 min | 41.9% / 33.5% /  0.8% / 23.7%</pre>\n     <ul>\n       <li><b>none</b>: GPU ka <b>46%</b> waqt khule tabs ne pakda, 19% miners ne khaaya. 412 students ko\n       din bhar GPU mila hi nahi.</li>\n       <li><b>idle reclaim</b> akela: \"kabhi nahi mila\" 412 → 19.</li>\n       <li><b>Colab ke saare niyam</b>: har interactive user ko 5 minute ke andar GPU.</li>\n     </ul>\n     <p>Aur 100 GPUs par? Colab niyam bhi sabko turant nahi de paate (12.2% in 5 min, avg 48 min wait) —\n     par koi khaali haath nahi lauta. Isi liye free tier <b>\"no guarantees\"</b> kehta hai, aur paid tier\n     usi line mein aage ki jagah bechta hai.</p>\n     <p class=\"tip\">🎯 Hardware wahi, niyam badle — aur 412 log se 0. <b>Scale par scheduler hi product hai.</b></p>",
   ],
   stages: [
     {
       type: 'tradeoff',
       title: 'Rashan ke niyam',
       instructions: 'Idle timeout, time cap aur abuse detection badlo — dekho kaun GPU paata hai.',
-      goal: 'Aisi setting dhoondho jahan interactive users ka wait <b>10 min se kam</b>, "khule tab" wala waste <b>40% se kam</b>, aur ek normal user ka kaam beech mein <b>na toote</b> (idle timeout ≥ 45 min).',
+      goal: "Interactive wait <b>10 min ya kam</b>, idle-tab waste <b>40% se kam</b>, aur normal user ke liye idle timeout <b>45 min ya zyada</b> rakho.",
       scenario: `Tumhare paas 150 GPUs hain aur ek din mein 900 students, 40 lambi trainings,
         30 miners. Niyam tum banao.`,
       knobs: [
@@ -427,15 +311,10 @@ colab  |                       100% |               0 |    0 min | 41.9% / 33.5%
         abuse detection <b>miners</b>. Ek niyam doosre ka kaam nahi karta.`,
       quiz: {
         q: 'Abuse detection ke niyam public kyun nahi kiye jaate?',
-        choices: [
-          'Niyam batana = unse bachne ka tareeka batana; yeh cat-and-mouse ka khel hai',
-          'Google ko khud nahi pata',
-          'Legal wajah se',
-          'Niyam bahut lambe hain',
-        ],
+        choices: ["Detection thresholds ko adapt karna","Secret thresholds ko sole defense","Opaque rules se auditing impossible","Public rules se enforcement useless"],
         answer: 0,
         explain: 'Security by obscurity akela kaafi nahi, par detection ke thresholds chhupana abuse ko mehenga banata hai.',
-      },
+       choiceExplanations: ["Security by obscurity akela kaafi nahi, par detection ke thresholds chhupana abuse ko mehenga banata hai.","Rate/resource boundaries measured aur enforced hon; obscurity alone insufficient.","Internal auditing aur user-visible threshold disclosure different hain.","Published safeguards bhi strong ho sakte hain; thresholds adaptive rakhna alag concern hai."] },
     },
     {
       type: 'docker',
@@ -452,16 +331,11 @@ colab  |                       100% |               0 |    0 min | 41.9% / 33.5%
         { text: 'Kami ho toh? 100 GPUs.', cmd: 'node tools/pool-report.js --gpus 100', expect: 'colab  |                      12.2% |               0 |   48 min | 46.9% / 48.4% / 1.3% / 3.4% | 701' },
       ],
       observe: {
-        q: '100 GPUs par Colab niyam bhi sirf 12.2% users ko 5 min mein GPU dete hain. Product ke liye iska matlab?',
-        choices: [
-          'Free tier "no guarantees" kehta hai — aur paid tier usi line mein aage ki jagah bechta hai',
-          'Colab ke niyam kaam nahi karte',
-          'Aur GPUs khareedna hi ek raasta hai',
-          'Idle timeout hata dena chahiye',
-        ],
+        q: "100 GPUs par Colab niyam bhi sirf 12.2% users ko 5 min mein GPU dete hain. Product ke liye iska matlab?",
+        choices: ["Lab shows scarcity; SLA assume na karo","All paid requests guaranteed GPU","One simulation proves current pricing","Idle reclaim ko always disable karo"],
         answer: 0,
-        explain: 'Kami mein bhi koi khaali haath nahi lauta (avg 48 min) — par guarantee nahi. Priority hi paid product hai.',
-      },
+        explain: "Yeh simulated GPU pool ka result hai, current Colab SLA ya pricing ka proof nahi. Priority scheduling wait reduce kar sakti hai, guaranteed capacity ke liye explicit service commitment chahiye.",
+       choiceExplanations: ["Yeh simulated GPU pool ka result hai, current Colab SLA ya pricing ka proof nahi. Priority scheduling wait reduce kar sakti hai, guaranteed capacity ke liye explicit service commitment chahiye.","Paid prioritization availability guarantee ke barabar nahi.","Toy workload current service terms/pricing establish nahi karta.","Reclaim utilization improve kar sakta hai; user-state recovery design karo."] },
       lesson: 'Hardware wahi, niyam badle — "kabhi GPU nahi mila" 412 se 0. Scheduler hi product hai.',
     },
   ],
@@ -471,26 +345,16 @@ colab  |                       100% |               0 |    0 min | 41.9% / 33.5%
     questions: [
       {
         q: 'Interviewer: "Company ke 80 GPUs, 300 data scientists. Log GPU pakad ke baithe rehte hain. Design?"',
-        choices: [
-          'Pool + idle reclaim (utilization se, sirf time se nahi) + max session length + lambi training alag queue/cluster par; notebooks/checkpoints durable storage par taaki reclaim se kaam na khoye',
-          'Har data scientist ko ek GPU de do',
-          'Pehle aao pehle pao',
-          'GPU ke liye Slack par request',
-        ],
+        choices: ["Quota, idle reclaim, checkpoints","Every user ko dedicated GPU reserve","Only first-come forever occupation","Manual chat messages as scheduler"],
         answer: 0,
         explain: 'Colab ka pattern: rashan + interactive priority + bhaari kaam alag. Aur reclaim tabhi theek hai jab durable state alag ho.',
-      },
+       choiceExplanations: ["Colab ka pattern: rashan + interactive priority + bhaari kaam alag. Aur reclaim tabhi theek hai jab durable state alag ho.","Limited80GPUs300users ke liye universal reservation fit nahi.","No-reclaim occupancy idle users ko scarce capacity hold karne deti hai.","Manual process admission fairness/utilization predictably enforce nahi karta."] },
       {
         q: 'Interviewer: "Idle timeout 15 minute kar dein? Utilization badhega."',
-        choices: [
-          'Utilization badhega par users ka kaam bar-bar tootega (variables gaye) — metric sudhra, product bigda. Timeout ko user behaviour se tay karo aur checkpoint aasaan banao',
-          'Haan, jitna chhota utna accha',
-          'Nahi, timeout hona hi nahi chahiye',
-          'Timeout se koi farq nahi padta',
-        ],
+        choices: ["Utilization vs interrupted work compare","Shortest timeout is best by definition","Timeout has no user-visible effect","Only RAM utilization se decide karo"],
         answer: 0,
         explain: 'Har rashan ka niyam kisi ko dukh deta hai — sawaal hai kisko aur kitna.',
-      },
+       choiceExplanations: ["Har rashan ka niyam kisi ko dukh deta hai — sawaal hai kisko aur kitna.","Short timeout interactive work repeatedly interrupt kar sakta hai.","Variables/checkpoints loss and restart latency product cost hain.","GPU demand, session patterns aur restart cost bhi maapne honge."] },
     ],
   },
   success: [

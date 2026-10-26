@@ -93,16 +93,11 @@ ab:     6 mein se 6 order · 1 crash (sirf deploy wala) · 28 calls</pre>
           vars: { n: '3 — fail', cap: '0 se 1200 ms', pick: '830 ms', next: '2.83 s' },
           ask: {
             q: 'Maan lo koshish 4 bhi fail ho jaati. Paanchvi koshish se pehle hadd kya hoti?',
-            choices: [
-              '0 se 2400 ms — hadd har fail par dugni hoti hai: 300, 600, 1200, 2400',
-              '0 se 1200 ms — hadd wahi rehti hai',
-              '0 se 4800 ms',
-              'Theek 2400 ms — random ke bina',
-            ],
+            choices: ["Full jitter 0-2400 ms; configured cap reached hai","Full jitter 0-1200 ms; previous bound repeat hoti","Full jitter 0-4800 ms; cap ko ignore karte hain","Fixed 2400 ms; random selection band ho jaati hai"],
             answer: 0,
             hint: 'Ab tak ki haddein dekho: 300, 600, 1200. Agli?',
             explain: 'Hadd = 300 × 2ⁿ: 300, 600, 1200, 2400. Aur 2400 par <b>chhat</b> lagi hai (cap): chhathi koshish hoti toh bhi hadd 2400 hi rehti, 4800 nahi. Chhat ke bina hadd minutes tak pahunch jaati.',
-          },
+           choiceExplanations: ["Hadd = 300 × 2ⁿ: 300, 600, 1200, 2400. Aur 2400 par <b>chhat</b> lagi hai (cap): chhathi koshish hoti toh bhi hadd 2400 hi rehti, 4800 nahi. Chhat ke bina hadd minutes tak pahunch jaati.","Fourth failure ke baad exponential bound next capped level 2400 hota hai.","Configured max 2400 hai; raw doubling ko clamp karna hai.","Cap upper bound limit karta hai, random selection remove nahi."] },
         },
         {
           clock: '2.40 s',
@@ -134,16 +129,11 @@ ab:     6 mein se 6 order · 1 crash (sirf deploy wala) · 28 calls</pre>
           vars: { n: 'sab phones: 4 ya 5 koshish', inside: EMPTY5 },
           ask: {
             q: '"Har baar dugna ruko" mein chhe phones 3.40–3.50 s par ek saath aaye the. Yahan chhe phones 2.51 se 4.22 s tak bikhre hain. Kyun?',
-            choices: [
-              'Fail sab ek saath hue the, par har phone ne apni hadd ke andar alag random waqt chuna — isliye lautne ke pal alag ho gaye',
-              'Random wale phones kam baar koshish karte hain',
-              'payment-service ne phones ko line mein laga diya',
-              'Is baar payment-service ki hadd 5 se badha di gayi thi',
-            ],
+            choices: ["Har client ne same bound mein independent delay chuna","Jitter clients ki attempt count configured se kam kar de","Server ne all arrivals ek hidden FIFO mein serialize kiye","Random mode ne server concurrency budget badha diya"],
             answer: 0,
             hint: 'Dono baar hadd wahi thi (300, 600, 1200, 2400). Farq sirf yeh hai ki hadd ke andar kya chuna gaya.',
             explain: 'Fail hone ka pal tum nahi badal sakte: service giri toh sab ek saath fail honge. <b>Lautne ka pal</b> tum badal sakte ho. Random wahi karta hai.',
-          },
+           choiceExplanations: ["Fail hone ka pal tum nahi badal sakte: service giri toh sab ek saath fail honge. <b>Lautne ka pal</b> tum badal sakte ho. Random wahi karta hai.","Different sampled times cause hain; max attempts same reh sakte hain.","Client scheduling change experiment hai; hidden server queue introduced nahi.","Server capacity fixed rakh kar jitter compare hua hai."] },
         },
         {
           clock: 'random ki keemat',
@@ -215,16 +205,11 @@ ab:     6 mein se 6 order · 1 crash (sirf deploy wala) · 28 calls</pre>
           vars: { shed: '1 (Farhan)' },
           ask: {
             q: 'Farhan ke phone ko 503 ke saath "Retry-After: 1" mila hai. Phone ko kya karna chahiye?',
-            choices: [
-              'Kam se kam 1 second ruke (server ne khud bataya hai), thoda random jode, phir dobara bheje',
-              'Apne niyam ke hisaab se 300 ms baad dobara bheje',
-              'Turant dobara bheje — shayad ab jagah ho',
-              'Kabhi dobara na bheje',
-            ],
+            choices: ["At least stated delay; remaining deadline aur jitter dekho","Local 300 ms backoff use karo; server hint ignore karo","Immediate retry karo; 503 ka wait behavior defined nahi","Permanent abort karo; Retry-After retry forbid karta hai"],
             answer: 0,
             hint: 'Kab jagah hogi, yeh kaun behtar jaanta hai: phone ya payment-service?',
-            explain: 'Server ko pata hai woh kab khaali hoga; phone sirf andaaza lagata hai. Isliye server ka bataya waqt phone ke apne formule se <b>upar</b> hai. Thoda random isliye, taaki jin-jin ko "1 second" mila, woh sab theek 1 second baad ek saath na laut aayein.',
-          },
+            explain: "Retry-After: 1 delay-seconds mein one second hai. Retrying policy server delay ko respect kare, optional bounded jitter jode aur total caller deadline/budget exceed ho toh return kare. Header HTTP-date bhi ho sakta hai; parser ko units/format samajhna chahiye.",
+           choiceExplanations: ["Retry-After: 1 delay-seconds mein one second hai. Retrying policy server delay ko respect kare, optional bounded jitter jode aur total caller deadline/budget exceed ho toh return kare. Header HTTP-date bhi ho sakta hai; parser ko units/format samajhna chahiye.","Server delay hint ko knowingly undercut karna overload protection fail kar sakta hai.","503 ke saath explicit Retry-After guidance di hai; compliant policy should account for it.","Header wait-before-follow-up suggestion hai, permanent prohibition nahi."] },
         },
         {
           clock: '2.80–2.88 s',
@@ -341,15 +326,10 @@ ab:     6 mein se 6 order · 1 crash (sirf deploy wala) · 28 calls</pre>
       ],
       observe: {
         q: 'Jitter wale output mein Dev ki doosri koshish pehli ke sirf 12 ms baad gayi (1.36 s → 1.37 s). Kya yeh bug hai?',
-        choices: [
-          'Nahi. "0 se hadd tak random" mein 0 ke paas ki sankhya bhi aa sakti hai. Jahan kam se kam kuch rukna zaroori ho, wahan "aadha pakka + aadha random" (equal jitter) lete hain',
-          'Haan, random generator kharab hai',
-          'Haan, Dev ka phone niyam tod raha hai',
-          'Nahi, Dev ka phone tez hai',
-        ],
+        choices: ["Full jitter zero ke paas aa sakta; floor policy alag hai","Random generator broken; valid delay 300 se neeche nahi","Client fast CPU delay ko policy se neeche divide karta","HTTP retry timer zero-near delays ko silently drop karta"],
         answer: 0,
-        explain: 'Full jitter ausatan sabse accha bikherta hai, par uska sabse chhota intezaar 0 ho sakta hai. Equal jitter mein hamesha ek floor hota hai (hadd ka aadha).',
-      },
+        explain: "Full jitter uniform 0..bound mein near-zero delay mumkin hai. Minimum delay requirement ho toh explicit floor ya equal-jitter policy consider karo; server Retry-After floor aur overall deadline preserve karo. Different jitter policies workload ke hisaab se compare hoti hain, universal winner nahi.",
+       choiceExplanations: ["Full jitter uniform 0..bound mein near-zero delay mumkin hai. Minimum delay requirement ho toh explicit floor ya equal-jitter policy consider karo; server Retry-After floor aur overall deadline preserve karo. Different jitter policies workload ke hisaab se compare hoti hain, universal winner nahi.","0..bound sampling small positive values allow karti hai; number alone RNG bug evidence nahi.","Timer policy arithmetic processor speed se divide nahi hoti.","Shown trace actual second dispatch dikhata hai; silently dropped request explanation wrong hai."] },
       lesson: 'Slow motion ki ginti: turant <b>0/6 order, 5 crash</b> · dugna <b>0/6, 3 crash</b> · random <b>6/6, 1 crash</b> · server ka Retry-After <b>6/6, 1 crash</b>.',
     },
   ],
@@ -359,26 +339,16 @@ ab:     6 mein se 6 order · 1 crash (sirf deploy wala) · 28 calls</pre>
     questions: [
       {
         q: '"Exponential backoff with jitter" mein agli koshish ka waqt kaise nikalta hai?',
-        choices: [
-          'Hadd = base × 2ⁿ (n = ab tak ki failures), ek chhat (cap) tak. Phir 0 aur hadd ke beech random waqt (full jitter). Server ne Retry-After diya ho toh pehle wahi maano',
-          'Hamesha base × 2ⁿ rukte hain, random sirf pehli baar',
-          'Har baar ek hi random sankhya rukte hain',
-          'Jitna server ka CPU bhara ho, utna rukte hain',
-        ],
+        choices: ["Capped exponential bound; har attempt independent sample","First attempt random; baad mein fixed doubled delay","One random value sample; har retry wahi wait repeat","CPU percent multiply; failure count aur cap ignore karo"],
         answer: 0,
-        explain: 'Slow motion mein Asha: hadd 300 → 151 ms · hadd 600 → 550 ms · hadd 1200 → 830 ms. Chhat 2400 ms thi.',
-      },
+        explain: "First failure ko attempt index n=0 maan kar bound=min(cap,base*2^n); full jitter 0..bound mein independent sample le. Attempts, safe-error classification, idempotency aur caller deadline bhi bound hon. Server delay hint applicable ho toh use undercut na karo.",
+       choiceExplanations: ["First failure ko attempt index n=0 maan kar bound=min(cap,base*2^n); full jitter 0..bound mein independent sample le. Attempts, safe-error classification, idempotency aur caller deadline bhi bound hon. Server delay hint applicable ho toh use undercut na karo.","Only first random delay later retry waves ko necessarily decorrelate nahi rakhta.","Same delay reuse retry phase correlation preserve kar sakta hai.","This backoff algorithm attempt index, base and cap use karta hai; server CPU formula nahi."] },
       {
         q: '"Server overload mein hai. Use clients ko kaise batana chahiye, aur clients ko kya karna chahiye?"',
-        choices: [
-          'Server girne se pehle 503 (ya 429) ke saath Retry-After bheje. Client utna to ruke hi, thoda random jod ke — apne backoff formule se pehle server ki baat maane',
-          'Server connection kaat de; client turant dobara aaye',
-          'Server 200 OK de aur body mein "busy" likhe',
-          'Server kuch na bole; clients khud samajh jaayenge',
-        ],
+        choices: ["Overload response plus retry guidance; client budget follow kare","Connection close karo; client immediate retry loop chalaaye","200 body mein busy likho; retry classifier status ignore kare","Response hold karo; unlimited pending handlers retain karo"],
         answer: 0,
         explain: 'Lab: clients "turant retry" wale hi the. Server ke 503 + Retry-After se crash 5 se 1 ho gaye aur users ko 0 error mile (27 requests ko mana kiya gaya).',
-      },
+       choiceExplanations: ["Lab: clients \"turant retry\" wale hi the. Server ke 503 + Retry-After se crash 5 se 1 ho gaye aur users ko 0 error mile (27 requests ko mana kiya gaya).","Immediate reconnects service recovery capacity aur sockets consume kar sakti hain.","False success status clients, metrics aur admission semantics confuse karta hai.","Waiting unbounded handlers resource exhaustion ko shift karte hain; bounded admission chahiye."] },
     ],
   },
   success: [

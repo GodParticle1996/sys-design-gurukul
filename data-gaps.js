@@ -1,3 +1,4 @@
+(() => {
 /* =====================================================================
    GAP LEVELS — maujooda tracks ke BEECH mein daale gaye levels
 
@@ -68,10 +69,10 @@ SD.registerLevelsAfter('builds', 'youtube', [
   title: 'Build #7 — File Storage & Sync',
   badge: 'Sync Shilpi',
   objectives: [
-    'File kabhi bhi app server se hokar nahi jaani chahiye — presigned URL',
+    'Large-file bytes ka direct path aur metadata ka control path alag karo',
     'Chunking + fingerprinting: resumable upload aur dedup, ek hi design se',
-    'Content-defined chunking kyun fixed-size se behtar hai',
-    'Sync ka jhagda: websocket push + periodic poll, dono chahiye',
+    'Content-defined chunking insertion ke baad dedup reuse kaise sudhaarti hai',
+    'Low-latency push ke saath durable cursor-based catch-up kyun chahiye',
   ],
   lesson: [
     `<h3>📖 Requirements</h3>
@@ -95,9 +96,7 @@ NON-FUNCTIONAL
    Client → S3 seedha                  (app server sirf permission deta hai)
    S3 → App Server: notification       (metadata update)</pre>
      <p class="tip">🎯 Yeh pattern har jagah dikhta hai — YouTube upload,
-     Instagram photo, resume upload, sab. App server ka kaam <b>ijazat dena</b>
-     hai, <b>bytes dhona</b> nahi. Aur presigned URL ki expiry <b>minute</b>
-     mein rakho, din mein nahi.</p>`,
+     Instagram photo, resume upload, sab. Is large-file design mein app metadata aur authorization sambhalta hai; bytes direct storage par jaati hain. Presigned URL bearer capability hai: <b>shortest practical expiry</b>, scoped key/method, checksum aur renewal/resume design karo. Fixed one-minute expiry universal rule nahi; credentials pehle expire ho sakte hain.</p>`,
     `<h3>🧩 Chunking — ek design, teen faayde</h3>
      <p>File ko 5-10 MB ke chunks mein todo aur har chunk ka
      <b>fingerprint</b> (SHA-256) nikalo. Ek hi faisla teen problem hal karta hai:</p>
@@ -114,16 +113,10 @@ NON-FUNCTIONAL
 Content-defined (rolling hash se boundary chuno):
    file ke shuru mein ek byte joda  →  sirf AAS-PAAS ke chunk badle
                                     →  baaki sab dedup ho gaye</pre>
-     <p class="tip">🎯 Content-defined chunking hi delta sync ko kaam ka banata
-     hai. Ek 2 GB video file mein ek metadata tag badla — fixed-size chunking
-     mein 2 GB dobara jaata hai, content-defined mein lagbhag 10 MB.</p>
-     <h3>🔄 Sync — websocket aur polling, dono</h3>
-     <p>Websocket se change turant push hota hai. Par websocket toot-ta hai —
-     laptop band hua, network badla, phone sleep mein gaya. Isliye <b>saath mein</b>
-     har kuch minute ka polling bhi chahiye, jo chhoote hue changes utha laaye.</p>
-     <p>Yeh "push + periodic poll" wala jodi-pattern har reliable sync system
-     mein hai. Push <b>latency</b> deta hai; poll <b>guarantee</b> deta hai.
-     Akela push kabhi kaafi nahi hota.</p>`,
+     <p class="tip">🎯 Content-defined boundaries insertion ke baad resynchronize ho sakti hain, isliye later unchanged chunks reuse hote hain. Exact bytes changed content, chunk-size bounds aur algorithm par depend hain; fixed universal 10 MB claim nahi. Fingerprint matching, hash verification aur dedup authorization bhi chahiye.</p>
+     <h3>🔄 Sync — live push aur durable catch-up</h3>
+     <p>WebSocket low-latency notification de sakta hai, par disconnected interval ka history store nahi karta. Server par durable change log aur client ka last-applied cursor rakho.</p>
+     <p>Reconnect par cursor se missing changes fetch/replay karo; duplicates aur expired cursors handle karo. Periodic polling ek recovery option hai; retained streaming replay bhi valid hai. Reliability <b>history + cursor + apply contract</b> se aati hai, transport name se nahi.</p>`,
   ],
   stages: [
     {
@@ -138,40 +131,40 @@ Content-defined (rolling hash se boundary chuno):
         {
           id: 'path', label: 'File ka raasta', icon: '🚪',
           options: [
-            { id: 'presigned', label: 'Client seedha blob storage par, presigned URL se', score: 3, why: 'App server sirf <b>ijazat</b> deta hai, bytes nahi dhota. Har byte ek hi baar chalti hai, aur app servers ko bandwidth ke liye scale karne ki zaroorat hi nahi rehti.' },
-            { id: 'proxy', label: 'Client → app server → blob storage', score: -3, why: 'Har byte <b>do baar</b> chalti hai aur app servers bandwidth ke liye khareede jaate hain. 50 GB ki file par ek hi upload poora server bhar deta hai. Yeh sabse aam aur sabse mehengi galti hai.' },
-            { id: 'db', label: 'File ko database mein BLOB ki tarah rakho', score: -3, why: 'Database bade objects ke liye bana hi nahi hai — backup, replication aur buffer pool sab tabaah ho jaate hain. Blobs blob storage mein, database mein sirf <b>metadata</b>.' },
+            { id: 'presigned', label: 'Direct blob upload; app metadata/permissions sambhale', score: 3, why: 'Direct upload app data-plane traffic bachata hai. Authorization, metadata finalization, integrity checks aur signed-capability expiry still design karni hain.' },
+            { id: 'proxy', label: 'Proxy upload; app bytes aur metadata dono sambhale', score: -3, why: 'Har byte <b>do baar</b> chalti hai aur app servers bandwidth ke liye khareede jaate hain. 50 GB ki file par ek hi upload poora server bhar deta hai. Yeh sabse aam aur sabse mehengi galti hai.' },
+            { id: 'db', label: 'Database BLOB; file bytes aur metadata saath rakho', score: -3, why: 'Database BLOB support possible hai, par is 50-GB-file workload mein backup/replication/storage path costly ho sakta hai. Object storage bytes aur indexed DB metadata intentional separation hai.' },
           ],
         },
         {
           id: 'chunk', label: 'Badi files kaise', icon: '🧩',
           options: [
-            { id: 'cdc', label: 'Content-defined chunking + har chunk ka fingerprint', score: 3, why: 'Ek hi faisla teen cheezein deta hai: resumable upload, dedup, aur parallel transfer. Aur rolling-hash boundaries ki wajah se file ke beech mein badlav sirf <b>aas-paas ke</b> chunks badalta hai.' },
-            { id: 'fixed', label: 'Fixed 5 MB chunks + fingerprint', score: 1, why: 'Resumable aur parallel mil jaata hai, aur poori-file dedup bhi. Par file ke <b>shuru</b> mein ek byte jodne se saare boundaries khisak jaate hain aur poori file dobara upload hoti hai — delta sync yahin marta hai.' },
-            { id: 'whole', label: 'Poori file ek hi request mein', score: -3, why: '50 GB ki ek request ka matlab hai: network toota toh shuru se, koi progress nahi, koi dedup nahi, aur koi parallelism nahi. Har load balancer aur proxy ka timeout bhi is raaste mein aayega.' },
+            { id: 'cdc', label: 'Content-defined chunks; fingerprint se reuse karo', score: 3, why: 'Ek hi faisla teen cheezein deta hai: resumable upload, dedup, aur parallel transfer. Aur rolling-hash boundaries ki wajah se file ke beech mein badlav sirf <b>aas-paas ke</b> chunks badalta hai.' },
+            { id: 'fixed', label: 'Fixed-size chunks; offset aur fingerprint rakho', score: 1, why: 'Resumable aur parallel mil jaata hai, aur poori-file dedup bhi. Par file ke <b>shuru</b> mein ek byte jodne se saare boundaries khisak jaate hain aur poori file dobara upload hoti hai — delta sync yahin marta hai.' },
+            { id: 'whole', label: 'Single upload request; final file checksum rakho', score: -3, why: '50 GB ki ek request ka matlab hai: network toota toh shuru se, koi progress nahi, koi dedup nahi, aur koi parallelism nahi. Har load balancer aur proxy ka timeout bhi is raaste mein aayega.' },
           ],
         },
         {
           id: 'sync', label: 'Change device tak kaise pahunche', icon: '🔄',
           options: [
-            { id: 'both', label: 'Websocket push + har kuch minute polling', score: 3, why: 'Push <b>latency</b> deta hai, poll <b>guarantee</b> deta hai. Websocket toot-ta hai (laptop band, network badla, phone sleep) — polling wahi chhoote hue changes uthata hai. Reliable sync mein dono hote hain.' },
-            { id: 'push', label: 'Sirf websocket push', score: -1, why: 'Tez hai, par connection toot-ne par change <b>hamesha ke liye</b> chhoot jaata hai — aur user ko pata bhi nahi chalega. "Kabhi-kabhi ek file sync nahi hoti" wale bug isi se aate hain.' },
-            { id: 'poll', label: 'Sirf polling, har 5 minute', score: 0, why: 'Bharosemand hai aur simple hai — par 5 minute ki deri collaboration ke liye bahut zyada hai. Aur karodon devices ka polling khud ek load problem ban jaata hai.' },
+            { id: 'both', label: 'Push plus durable cursor catch-up aur reconciliation', score: 3, why: 'Live push low latency deta hai; durable cursor-based catch-up missing interval recover karta hai. Retention, cursor expiry, dedupe aur authorization explicit chahiye.' },
+            { id: 'push', label: 'WebSocket push; reconnect par next live event suno', score: -1, why: 'Is option mein no history/cursor recovery hai. Disconnect interval ke changes miss ho sakte hain; reconnect par sirf naye events sunna enough nahi.' },
+            { id: 'poll', label: 'Five-minute polling; har cycle full metadata padho', score: 0, why: 'Bharosemand hai aur simple hai — par 5 minute ki deri collaboration ke liye bahut zyada hai. Aur karodon devices ka polling khud ek load problem ban jaata hai.' },
           ],
         },
         {
           id: 'meta', label: 'Metadata aur sharing', icon: '🗂️',
           options: [
-            { id: 'nosql', label: 'Files table + alag SharedFiles table (user → file mapping)', score: 3, why: 'Do sawaal alag-alag tez rehte hain: "is file ka access kise hai" aur "is user ko kaunsi files dikhti hain". Alag mapping table dono ko index se seedha jawab deti hai.' },
-            { id: 'array', label: 'File document ke andar hi shared users ka array', score: -2, why: '"Mujhe kaunsi files shared hui hain" ka jawab ab poore collection ka scan hai. Aur ek popular file par woh array badhta jaata hai — ek hi document par write contention.' },
-            { id: 'acl', label: 'Har request par permission service se pooch lo', score: 0, why: 'Saaf hai aur bade systems mein hota bhi hai — par har file operation par ek extra network hop jodta hai. Chhote paimane par yeh extra hop ki keemat wasool nahi hoti.' },
+            { id: 'nosql', label: 'Indexed file metadata + indexed user/file mapping', score: 3, why: 'Do sawaal alag-alag tez rehte hain: "is file ka access kise hai" aur "is user ko kaunsi files dikhti hain". Alag mapping table dono ko index se seedha jawab deti hai.' },
+            { id: 'array', label: 'File document array; users ke liye no reverse index', score: -2, why: '"Mujhe kaunsi files shared hui hain" ka jawab ab poore collection ka scan hai. Aur ek popular file par woh array badhta jaata hai — ek hi document par write contention.' },
+            { id: 'acl', label: 'Remote permission service; mapping schema baad mein', score: 0, why: 'Saaf hai aur bade systems mein hota bhi hai — par har file operation par ek extra network hop jodta hai. Chhote paimane par yeh extra hop ki keemat wasool nahi hoti.' },
           ],
         },
       ],
       verdicts: {
         great: '🏆 Bytes app server se nahi guzarti, chunking ne teen problem ek saath hal kiye, aur sync mein push aur poll dono hain. Yahi is problem ka aakaar hai.',
         ok: '👍 Zyadatar sahi. Ek chunav ya toh bytes ko app server se guzaar raha hai ya sync ki guarantee kamzor kar raha hai — dono production mein mehenge padte hain.',
-        bad: '🤔 Do baaton par wapas jao: file kabhi app server se nahi guzarni chahiye, aur akela websocket kabhi kaafi nahi hota.',
+        bad: '🤔 Is large-file workload ka direct byte path aur durable missing-change recovery check karo. WebSocket alone retained history/cursor protocol define nahi karta.',
       },
     },
     {
@@ -186,20 +179,26 @@ Content-defined (rolling hash se boundary chuno):
         api: { countTotal: false, pagination: 'cursor' },
       }),
       tasks: T_DROPBOX,
-      success: allOf(T_DROPBOX),
+      success: SD.allTasks(T_DROPBOX),
       successText: `Dhyan do ki mission mein <b>file ki bytes</b> kahin naapi hi
         nahi gayin — kyunki woh bytes tumhare servers se guzarti hi nahi. Asli
         service <b>metadata</b> hai, aur uske teen dabav yahi the: dedup ka index,
         peak read load, aur ek viral shared link.`,
+      solution: [
+        "estimate --users 500000000 --rps 12000 --bytes 500",
+        "bloom --items 100000000 --fp 0.01",
+        "id bench --type ulid --rows 1000000",
+        "load --rps 12000 --duration 8",
+        "sim add cache --ttl 300 --jitter 20",
+        "cache hotkey --key file:qtr-report --rps 50000",
+        "cache hotkey --key file:qtr-report --rps 50000 --replicas 8",
+        "net compare --assets 60",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.cache?.jitterPct > 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
       hints: [
-        'Pehle numbers: estimate --users 500000000 --rps 12000 --bytes 500',
-        'Chunk dedup ka index kitna bada hoga: bloom --items 100000000 --fp 0.01',
-        'Chunk id sortable chahiye: id bench --type ulid --rows 1000000',
-        'Metadata API par peak load: load --rps 12000 --duration 8',
-        'Metadata cache lagao: sim add cache --ttl 300 --jitter 20',
-        'Ek shared link viral ho gaya: cache hotkey --key file:qtr-report --rps 50000',
-        'Us key ko phailao: cache hotkey --key file:qtr-report --rps 50000 --replicas 8',
-        'Ek badi file = bahut saare chunks: net compare --assets 60',
+        "Pehle observation: Traffic aur storage ka andaaza lagao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ek badi file = bahut saare chunks — protocol ka farak dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 500000000 --rps 12000 --bytes 500\nbloom --items 100000000 --fp 0.01\nid bench --type ulid --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20\ncache hotkey --key file:qtr-report --rps 50000\ncache hotkey --key file:qtr-report --rps 50000 --replicas 8\nnet compare --assets 60",
       ],
     },
     {
@@ -208,48 +207,28 @@ Content-defined (rolling hash se boundary chuno):
       questions: [
         {
           q: 'Presigned URL ka sabse bada faayda kya hai?',
-          choices: [
-            'File ki bytes app server se guzarti hi nahi — app server sirf IJAZAT deta hai, isliye usko bandwidth ke liye scale karne ki zaroorat nahi rehti',
-            'Security behtar ho jaati hai',
-            'Upload tez ho jaata hai',
-            'S3 ka bill kam aata hai',
-          ],
+          choices: ["Bytes direct object storage; app authorization sambhale","Presigned access se application authorization hat jaaye","Direct upload se storage/network billing zero ho jaaye","Signed URL se file integrity check unnecessary ho jaaye"],
           answer: 0,
-          explain: 'Upload tez hona aur security dono <b>side effects</b> hain. Asli baat architecture ki hai: proxy wale design mein har byte <b>do baar</b> chalti hai aur app servers bandwidth ke hisaab se khareede jaate hain. Presigned URL us poore aayam ko hata deta hai.',
-        },
+          explain: "Authorized client direct transfer se app data-plane bandwidth bottleneck avoid kar sakti hai; metadata/finalization validate karo. Capability issue karne se pehle access control chahiye. Storage requests, storage capacity aur network costs remain karte hain. Checksum, size/type aur finalized upload validate karna separate hai.",
+         choiceExplanations: ["Authorized client direct transfer se app data-plane bandwidth bottleneck avoid kar sakti hai; metadata/finalization validate karo.","Capability issue karne se pehle access control chahiye.","Storage requests, storage capacity aur network costs remain karte hain.","Checksum, size/type aur finalized upload validate karna separate hai."] },
         {
           q: 'Content-defined chunking fixed-size chunking se behtar kyun hai?',
-          choices: [
-            'File ke SHURU mein ek byte jodne par fixed-size ke saare boundaries khisak jaate hain (poori file dobara), jabki content-defined mein sirf aas-paas ke chunks badalte hain',
-            'Content-defined chunks chhote hote hain',
-            'Content-defined chunking tez hai',
-            'Content-defined chunking mein fingerprint ki zaroorat nahi',
-          ],
+          choices: ["Local insert ke baad later chunk boundaries resync kar sakti","Content-defined method har workload mein CPU faster hai","Content-defined method fingerprints ke bina match karta","Fixed chunks insert ke baad offsets automatically reset karte"],
           answer: 0,
-          explain: 'Yeh <b>delta sync</b> ka poora khel hai. Ek 2 GB video mein ek metadata tag badla: fixed-size par 2 GB dobara jaata hai, content-defined par lagbhag 10 MB. Rolling hash boundary ko <b>content</b> se tay karta hai, position se nahi — isliye boundaries khisakti nahi.',
-        },
+          explain: "Content-defined boundaries file content par depend karti hain, isliye insertion ke baad later region mein dedup reuse improve ho sakta hai. Rolling fingerprint ka extra CPU bhi hota hai. Boundary/content matching hash/fingerprint semantics maangte hain. Fixed offsets insertion ke baad shifted content ko misalign karte hain.",
+         choiceExplanations: ["Content-defined boundaries file content par depend karti hain, isliye insertion ke baad later region mein dedup reuse improve ho sakta hai.","Rolling fingerprint ka extra CPU bhi hota hai.","Boundary/content matching hash/fingerprint semantics maangte hain.","Fixed offsets insertion ke baad shifted content ko misalign karte hain."] },
         {
           q: 'Sync ke liye sirf websocket push kaafi kyun nahi hai?',
-          choices: [
-            'Websocket toot-ta hai (laptop band, network badla, phone sleep) aur us dauraan ka change HAMESHA ke liye chhoot jaata hai — polling woh chhoote hue changes uthata hai',
-            'Websocket dheema hai',
-            'Websocket mehenga hai',
-            'Websocket sabhi devices par nahi chalta',
-          ],
+          choices: ["Push ke saath durable cursor-based catch-up chahiye","WebSocket reliable transport offline history store karta","Reconnect se server missed changes khud replay karega","Polling add karte hi consumer progress durable ho jaati"],
           answer: 0,
-          explain: 'Push <b>latency</b> deta hai, poll <b>guarantee</b>. "Kabhi-kabhi ek file sync nahi hoti" wale bug lagbhag hamesha sirf-push wale design se aate hain — aur unhe reproduce karna bhi bahut mushkil hota hai, kyunki woh connection toot-ne par hi hote hain.',
-        },
+          explain: "Disconnected interval ke events durable change history/cursor se recover karo; catch-up polling ya streaming replay dono ho sakte hain. TCP/WebSocket disconnected clients ke liye application history nahi store karte. Replay explicit server retention/offset protocol maangta hai. Delivery transport alone stored cursor/dedup guarantee nahi.",
+         choiceExplanations: ["Disconnected interval ke events durable change history/cursor se recover karo; catch-up polling ya streaming replay dono ho sakte hain.","TCP/WebSocket disconnected clients ke liye application history nahi store karte.","Replay explicit server retention/offset protocol maangta hai.","Delivery transport alone stored cursor/dedup guarantee nahi."] },
         {
           q: 'Presigned URL ki expiry kitni honi chahiye?',
-          choices: [
-            'Minute mein — presigned URL ek bearer token hai; jiske paas URL hai uske paas access hai, chahe woh user ho ya na ho',
-            'Din mein, taaki user aaram se upload kar sake',
-            'Kabhi expire na ho, warna resume tootega',
-            'Ghante mein, yeh standard hai',
-          ],
+          choices: ["Least practical TTL; resume/renew aur threat model dekho","Har workload ke liye fixed one-minute TTL standard hai","Long-lived bearer URL ko user login jitna safe maano","Expiry se pehle credential expiry ko ignore kar sakte"],
           answer: 0,
-          explain: 'Presigned URL ke andar hi authorization hai — usme koi login check nahi hota. Woh URL logs mein, browser history mein, ya kisi screenshot mein ja sakta hai. Resumable upload ke liye lambi expiry ki zaroorat nahi hai: client naya presigned URL <b>maang</b> sakta hai jab purana khatam ho jaaye.',
-        },
+          explain: "Presigned URL bearer capability hai; short practical lifetime choose karo, renewal/resume design karo. Credential lifetime aur policy earlier expire kar sakti hain. Universal minute-based TTL requirement nahi. URL leak holder ko scoped capability de sakta hai. Temporary signing credentials ki expiry URL lifetime cap karti hai.",
+         choiceExplanations: ["Presigned URL bearer capability hai; short practical lifetime choose karo, renewal/resume design karo. Credential lifetime aur policy earlier expire kar sakti hain.","Universal minute-based TTL requirement nahi.","URL leak holder ko scoped capability de sakta hai.","Temporary signing credentials ki expiry URL lifetime cap karti hai."] },
       ],
     },
   ],
@@ -257,7 +236,7 @@ Content-defined (rolling hash se boundary chuno):
     'Presigned URL wala raasta bata sakte ho aur uski wajah bhi',
     'Chunking se milne wale teenon faayde ek saath samjha sakte ho',
     'Content-defined chunking ka delta-sync faayda bol sakte ho',
-    'Push + poll wali jodi ko sync ki guarantee ke roop mein samjha sakte ho',
+    'Durable history/cursor catch-up ko transport se alag reliability contract samjha sakte ho',
   ],
   homework: `Koi bhi file-upload wala product kholo aur browser ka Network tab
     dekho. Do cheezein dhoondho: kya upload request tumhare product ke domain par
@@ -267,7 +246,7 @@ Content-defined (rolling hash se boundary chuno):
     { front: 'File upload ka sabse bada faisla?', back: 'File <b>app server se guzarni hi nahi chahiye</b>. App server presigned URL deta hai, client seedha blob storage par upload karta hai. Proxy wale design mein har byte <b>do baar</b> chalti hai.' },
     { front: 'Chunking se kaunse teen faayde?', back: '<b>Resumable</b> (sirf bache hue chunks bhejo) · <b>Dedup</b> (fingerprint pehle se hai toh bhejo hi mat) · <b>Parallel</b> (kai chunks ek saath). Ek faisla, teen problem hal.' },
     { front: 'Content-defined vs fixed-size chunking?', back: 'File ke shuru mein ek byte jodo: fixed-size ke <b>saare boundaries khisak</b> jaate hain (poori file dobara), content-defined mein sirf <b>aas-paas</b> ke chunks badalte hain. Delta sync yahi banata hai.' },
-    { front: 'Sync mein push aur poll dono kyun?', back: '<b>Push</b> = latency, <b>poll</b> = guarantee. Websocket toot-ta hai (laptop band, network badla) aur us dauraan ka change hamesha ke liye chhoot jaata hai. Sirf-push wale design "kabhi-kabhi sync nahi hota" wale bug dete hain.' },
+    { front: 'Sync mein push aur poll dono kyun?', back: 'Push live latency reduce karta hai. Disconnect recovery ke liye durable change history, last-applied cursor aur replay/dedup contract chahiye. Periodic polling ya retained stream replay dono recovery mechanisms ho sakte hain.' },
     { front: 'Presigned URL ki expiry?', back: '<b>Minute mein</b>, din mein nahi. Presigned URL ek <b>bearer token</b> hai — jiske paas URL hai uske paas access hai. Resume ke liye client naya URL maang sakta hai.' },
   ],
   interview: {
@@ -276,26 +255,16 @@ Content-defined (rolling hash se boundary chuno):
     questions: [
       {
         q: '"Dropbox design karo." Pehla design faisla kya hai?',
-        choices: [
-          'File ki bytes app server se nahi guzregi — presigned URL se client seedha blob storage par jaayega, aur app server sirf metadata aur permissions sambhalega',
-          'Kaunsa database use karenge',
-          'Sharding kaise karenge',
-          'Sync protocol kaunsa hoga',
-        ],
+        choices: ["Transfer path, metadata aur permissions pehle define karo","Database brand pehle choose; transfer contracts baad mein","Shard count pehle freeze; workload requirements baad mein","Sync channel choose; data correctness contract baad mein"],
         answer: 0,
-        explain: 'Yeh pehla faisla poore design ka aakaar tay kar deta hai: uske baad tumhari service ek <b>metadata service</b> hai, ek file service nahi — aur uska scale, uska database aur uske bottleneck sab us ek line se nikalte hain.',
-      },
+        explain: "Large-file transfer ke data/control paths define karna early high-impact decision hai; direct signed upload ek common option hai. Technology name requirements ka substitute nahi. Shard sizing traffic/data evidence se aati hai. Notifications reliable source-of-truth/catch-up ko replace nahi karti.",
+       choiceExplanations: ["Large-file transfer ke data/control paths define karna early high-impact decision hai; direct signed upload ek common option hai.","Technology name requirements ka substitute nahi.","Shard sizing traffic/data evidence se aati hai.","Notifications reliable source-of-truth/catch-up ko replace nahi karti."] },
       {
-        q: '"50 GB ki file upload ho rahi thi aur 40 GB par network toot gaya. Ab kya?"',
-        choices: [
-          'Client server se poochta hai ki kaunse chunks pahunch chuke hain (multipart upload ki part list), aur sirf bache hue chunks bhejta hai — kyunki file pehle se chunks mein ja rahi thi',
-          'Upload shuru se dobara hoga',
-          'Server upload ko background mein poora karega',
-          'Client 40 GB se aage byte-range se resume karega',
-        ],
+        q: "S3 multipart upload mein 50 GB file ke 40 GB parts pahunchne ke baad connection toota. Ab kya?",
+        choices: ["Upload ID/parts verify; missing parts retry, phir complete","Stored part list ignore karke complete object upload karo","App server client ke missing bytes background mein banaye","Multipart endpoint ko arbitrary byte-offset PUT bhej do"],
         answer: 0,
-        explain: 'Byte-range resume theoretically theek lagta hai par usme server ko poori partial file ka state rakhna padta hai. <b>Chunks + part list</b> wala raasta simple hai, blob storage usko natively deta hai (multipart upload), aur wahi chunking dedup aur parallelism bhi muft mein de deti hai.',
-      },
+        explain: "S3 multipart upload mein upload ID aur uploader-ke-recorded part numbers/ETags preserve karo. ListParts verification se progress reconcile karo, missing parts retry karo; completion request maintained upload records se banao. Already successful parts reuse kiye ja sakte hain. Server unreceived bytes invent nahi kar sakta. Multipart parts aur arbitrary resumable byte-offset protocol alag contracts hain.",
+       choiceExplanations: ["S3 multipart upload mein upload ID aur uploader-ke-recorded part numbers/ETags preserve karo. ListParts verification se progress reconcile karo, missing parts retry karo; completion request maintained upload records se banao.","Already successful parts reuse kiye ja sakte hain.","Server unreceived bytes invent nahi kar sakta.","Multipart parts aur arbitrary resumable byte-offset protocol alag contracts hain."] },
     ],
   },
 },
@@ -308,7 +277,7 @@ Content-defined (rolling hash se boundary chuno):
   objectives: [
     'Politeness: per-domain rate limit, jabki kul throughput bahut zyada ho',
     'Do tarah ka dedup — URL ka aur CONTENT ka',
-    'DNS crawler ka sabse bada aur sabse chhupa hua bottleneck',
+    'DNS, TLS, parsing aur storage mein actual bottleneck measure karo',
     'Crawler traps: infinite space se bachne ka sasta tareeka',
   ],
   lesson: [
@@ -329,10 +298,7 @@ NON-FUNCTIONAL
    30% practical utilization    = lagbhag 3,750 pages/sec
 
 10,000,000,000 pages ÷ 3,750 ÷ 86,400 ÷ 5 din  =  lagbhag 8 machines</pre>
-     <p class="tip">🎯 Sirf <b>8 machines</b>. Yeh number lagbhag hamesha logon ko
-     chaunkata hai, aur wahi is problem ka asli sabak hai: crawler ka bottleneck
-     <b>bandwidth ya CPU nahi</b> hai. Bottleneck <b>politeness</b> aur <b>DNS</b>
-     hai — yaani coordination, capacity nahi.</p>
+     <p class="tip">🎯 Rounded estimate <b>7–8 machines</b> ka bandwidth floor deta hai, measured sufficiency proof nahi. 10 billion × 2 MB lagbhag <b>20 PB</b> transfer hai. CPU parsing, storage writes, DNS/TLS latency aur actual domain mix separately benchmark karo; slowest resource real limit banega.</p>
      <h3>🚦 Politeness — asli seema</h3>
      <p>Ek domain par 1 request/second ka matlab hai ki wikipedia.org se tum roz
      sirf 86,400 pages le sakte ho, chahe tumhare paas 1000 machines hon.
@@ -340,7 +306,7 @@ NON-FUNCTIONAL
      <pre>1 request/sec/domain × 20 lakh alag domains  =  20 lakh pages/sec (sambhavit)
 Par un domains mein se zyadatar chhote hain — asli mix aisa hota hai:
    kuch hazaar bade domains (rate limit hi seema)
-   crore chhote domains (yahan koi seema nahi)</pre>
+   crore chhote domains (phir bhi DNS, network aur server budgets lagu)</pre>
      <p>Isliye frontier queue ko <b>domain ke hisaab se</b> partition karna padta
      hai — har domain ka apna lock/delay, warna 8 machines ek hi site par toot padengi.</p>`,
     `<h3>🔁 Do alag dedup</h3>
@@ -354,16 +320,11 @@ Par un domains mein se zyadatar chhote hain — asli mix aisa hota hai:
      <p>Content dedup ke bina crawler apni storage ka bada hissa <b>ek hi page ke
      alag-alag URLs</b> par kharch kar deta hai — aur woh baad mein har downstream
      system (index, training data) mein bhi ghusta hai.</p>
-     <h3>🌐 DNS — chhupa hua sabse bada kharcha</h3>
-     <p>Scale par DNS resolution crawler ke <b>70% tak</b> waqt kha sakta hai.
-     Wajah seedhi hai: har naya domain ek naya DNS lookup hai, aur woh lookup
-     network par jaata hai.</p>
+     <h3>🌐 DNS — chhupa hua kharcha measure karo</h3>
+     <p>Cache misses par DNS lookup, phir TCP/TLS setup har nayi origin ki latency aur resource cost badha sakte hain. Koi universal 70% figure nahi; traces se DNS time, resolver cache hit aur connection reuse dekho.</p>
      <pre>Thanda connection:  DNS  +  TCP handshake  +  TLS handshake  +  request
 Warm connection:                                             request</pre>
-     <p class="tip">🎯 Teen ilaaj: <b>DNS ko local cache karo</b> (aur TTL se
-     zyada der rakho, crawler ke liye woh theek hai), <b>kai DNS providers</b>
-     mein load baanto, aur <b>connection reuse</b> karo — ek hi domain ke kai
-     pages ek hi connection par lo.</p>
+     <p class="tip">🎯 TTL-aware caching resolver aur connection reuse test karo. Stale DNS sirf explicit bounded serve-stale policy mein use karo; arbitrary TTL overrun changed endpoints ko miss kara sakta hai. Resolver capacity/redundancy aur per-origin connection budget actual load se size karo.</p>
      <h3>🕳️ Traps</h3>
      <p>Kuch sites anant space bana deti hain — calendar jo har agli tareekh ka
      link deta hai, ya faceted search jo har filter combination ka URL banata hai.
@@ -384,33 +345,33 @@ Warm connection:                                             request</pre>
         {
           id: 'frontier', label: 'Frontier queue', icon: '📥',
           options: [
-            { id: 'domain', label: 'Distributed queue + per-domain lock aur delay', score: 3, why: 'Politeness ek <b>per-domain</b> shart hai, isliye woh queue mein hi honi chahiye. Domain ka lock (Redis mein) aur message ko delay karke wapas daalna — dono milkar 1 req/sec/domain guarantee dete hain, chahe kitne bhi workers hon.' },
-            { id: 'plain', label: 'Ek simple FIFO queue, workers uthate rahenge', score: -2, why: 'Ek popular domain ke hazaaron URLs queue mein aas-paas honge, aur saare workers ek saath us domain par toot padenge. Politeness worker ke andar nahi, <b>queue</b> mein lagti hai.' },
-            { id: 'db', label: 'URLs ek database table mein, workers SELECT karte rahein', score: -1, why: 'Chal jaata hai chhote paimane par, par 10 arab rows par yeh table ek contention hotspot ban jaata hai — har worker usi table par lock le raha hai. Queue exactly isi kaam ke liye bani hai.' },
+            { id: 'domain', label: 'Durable frontier + shared per-domain rate budget', score: 3, why: 'Domain owner/shared atomic rate budget aggregate dispatch coordinate karta hai. Durable scheduling, lease recovery aur failure races test karo; queue ya Redis ka naam alone guarantee nahi.' },
+            { id: 'plain', label: 'Plain FIFO frontier + independent worker throttles', score: -2, why: 'Ek popular domain ke hazaaron URLs queue mein aas-paas honge, aur saare workers ek saath us domain par toot padenge. Politeness worker ke andar nahi, <b>queue</b> mein lagti hai.' },
+            { id: 'db', label: 'Database URL table + unlocked SELECT and dispatch', score: -1, why: 'Database-backed queue valid ho sakti hai, par is option mein unlocked SELECT duplicate dispatch aur no shared rate budget chhodta hai. Atomic claiming, indexing, partitioning aur domain scheduling chahiye.' },
           ],
         },
         {
           id: 'dedup', label: 'Dedup', icon: '🔁',
           options: [
-            { id: 'both', label: 'URL dedup (queue se pehle) + content hash dedup (fetch ke baad)', score: 3, why: 'Do alag problem, do alag jagah. URL dedup ek hi page ko baar-baar fetch hone se rokta hai; content dedup un pages ko pakadta hai jo alag URL par ek jaisa content dete hain (session id, tracking params, mirrors).' },
-            { id: 'url', label: 'Sirf URL dedup', score: 0, why: 'Zaroori hissa hai par aadha. Bina content dedup ke storage ka bada hissa ek hi page ke alag-alag URLs par jaayega — aur woh gandagi har downstream system mein bhi pahunchegi.' },
-            { id: 'none', label: 'Dedup ki zaroorat nahi, links to unique hote hain', score: -3, why: 'Web par ek hi content darjan URLs par milta hai (tracking params, session ids, http/https, www/non-www, mirrors). Bina dedup ke crawler apne hi loops mein ghoomta rahega.' },
+            { id: 'both', label: 'URL before enqueue + content hash after fetch', score: 3, why: 'Do alag problem, do alag jagah. URL dedup ek hi page ko baar-baar fetch hone se rokta hai; content dedup un pages ko pakadta hai jo alag URL par ek jaisa content dete hain (session id, tracking params, mirrors).' },
+            { id: 'url', label: 'URL before enqueue; fetched payload sab store karo', score: 0, why: 'Zaroori hissa hai par aadha. Bina content dedup ke storage ka bada hissa ek hi page ke alag-alag URLs par jaayega — aur woh gandagi har downstream system mein bhi pahunchegi.' },
+            { id: 'none', label: 'Raw links enqueue; payload equality skip kar do', score: -3, why: 'Web par ek hi content darjan URLs par milta hai (tracking params, session ids, http/https, www/non-www, mirrors). Bina dedup ke crawler apne hi loops mein ghoomta rahega.' },
           ],
         },
         {
           id: 'dns', label: 'DNS', icon: '🌐',
           options: [
-            { id: 'cache', label: 'Local DNS cache + kai providers + connection reuse', score: 3, why: 'Scale par DNS crawler ke <b>70% tak</b> waqt kha sakta hai. Local cache us kharche ko lagbhag khatam karta hai, kai providers rate limits se bachate hain, aur connection reuse ek hi domain ke kai pages ka handshake bacha leta hai.' },
-            { id: 'default', label: 'System ka default resolver kaafi hai', score: -2, why: 'Har naya domain ek network round trip hai, aur ek hi resolver par 8 machines ka load usko throttle karwa dega. Yeh woh bottleneck hai jo latency graph mein "network dheema hai" jaisa dikhta hai.' },
-            { id: 'prefetch', label: 'Sab domains ka DNS pehle se resolve kar lo', score: 0, why: 'Achhi soch hai aur bade crawlers karte bhi hain — par domains ki list crawl ke dauraan hi badhti hai, isliye prefetch akela kaafi nahi. Cache ke saath jodo, cache ki jagah nahi.' },
+            { id: 'cache', label: 'TTL-aware DNS cache + resolver sizing + reuse', score: 3, why: 'TTL-aware cache repeat lookups kam karti hai; measured resolver sizing aur connection reuse lookup/handshake work reduce karte hain. Exact gain trace aur origin mix se validate karo.' },
+            { id: 'default', label: 'Default DNS config; resolver capacity skip karo', score: -2, why: 'Default resolver sufficient ho sakta hai, par bina capacity/cache/latency measurement usko sufficient assume karna evidence nahi. Is scale par resolver QPS aur error behavior test karo.' },
+            { id: 'prefetch', label: 'One DNS prefetch; later expiry/refetch skip karo', score: 0, why: 'Achhi soch hai aur bade crawlers karte bhi hain — par domains ki list crawl ke dauraan hi badhti hai, isliye prefetch akela kaafi nahi. Cache ke saath jodo, cache ki jagah nahi.' },
           ],
         },
         {
           id: 'trap', label: 'Traps aur infinite space', icon: '🕳️',
           options: [
-            { id: 'depth', label: 'Max depth (15-20 hop) + per-domain page budget', score: 3, why: 'Dono anumaan hain aur dono kaam karte hain. Calendar aur faceted search jaise infinite spaces hamesha <b>gehre</b> hote hain, isliye depth limit unhe kaat deti hai — aur domain budget kisi ek site ko poora crawl kha jaane se rokta hai.' },
-            { id: 'detect', label: 'Pattern detection se traps pehchano', score: 0, why: 'Kaam karta hai aur bade crawlers isko bhi rakhte hain — par yeh mehenga aur naazuk hai, aur naye trap patterns hamesha aate rahenge. Pehle sasta guard (depth + budget) lagao, phir smart detection.' },
-            { id: 'none', label: 'robots.txt kaafi hai', score: -2, why: 'robots.txt <b>ijazat</b> ke baare mein hai, <b>anantata</b> ke baare mein nahi. Ek calendar page jo har agli tareekh ka link deta hai, woh robots.txt mein allowed ho sakta hai aur phir bhi tumhara crawler hamesha ke liye usi mein ghoomta rahega.' },
+            { id: 'depth', label: 'Depth limit plus per-domain page/time budgets', score: 3, why: 'Depth, page aur time budgets exploration bound karte hain. Infinite combinations shallow bhi ho sakti hain; depth limit alone enough nahi. Coverage loss ko measure karo.' },
+            { id: 'detect', label: 'URL pattern detection; crawl budget hata do', score: 0, why: 'Kaam karta hai aur bade crawlers isko bhi rakhte hain — par yeh mehenga aur naazuk hai, aur naye trap patterns hamesha aate rahenge. Pehle sasta guard (depth + budget) lagao, phir smart detection.' },
+            { id: 'none', label: 'Robots allow/disallow; crawl budget hata do', score: -2, why: 'robots.txt <b>ijazat</b> ke baare mein hai, <b>anantata</b> ke baare mein nahi. Ek calendar page jo har agli tareekh ka link deta hai, woh robots.txt mein allowed ho sakta hai aur phir bhi tumhara crawler hamesha ke liye usi mein ghoomta rahega.' },
           ],
         },
       ],
@@ -432,21 +393,27 @@ Warm connection:                                             request</pre>
         api: { countTotal: false, pagination: 'cursor' },
       }),
       tasks: T_CRAWLER,
-      success: allOf(T_CRAWLER),
+      success: SD.allTasks(T_CRAWLER),
       successText: `Dhyan do ki kahin bhi "aur machines daalo" jawab nahi tha.
         Crawler ke chaaron dabav — dedup ka index, partition ka balance, ek bada
         domain, aur DNS ka handshake — <b>coordination</b> ke dabav hain,
-        capacity ke nahi. Isiliye 10 arab pages sirf 8 machines par ho jaate hain.`,
+        capacity ke saath aate hain. Eight-machine NIC estimate actual CPU/storage/latency capacity prove nahi karta.`,
+      solution: [
+        "estimate --users 10000000 --rps 3750 --bytes 2000000",
+        "bloom --items 1000000000 --fp 0.01",
+        "hll --items 1000000000",
+        "stream partitions --partitions 6 --consumers 8",
+        "stream partitions --partitions 12 --consumers 8",
+        "cache hotkey --key domain:wikipedia.org --rps 50000",
+        "cache hotkey --key domain:wikipedia.org --rps 50000 --replicas 8",
+        "net trace --rtt 40",
+        "net trace --rtt 40 --warm",
+      ],
+      verify: s => { const m = SD.mission; return m.latest(s, 'stream', 'partitions')?.idle === 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false && m.latest(s, 'net', 'trace')?.warm === true; },
       hints: [
-        'Paimana pehle: estimate --users 10000000 --rps 3750 --bytes 2000000',
-        'URL dedup ka index: bloom --items 1000000000 --fp 0.01',
-        'Unique pages ginne ka sasta tareeka: hll --items 1000000000',
-        'Frontier ke consumers partitions se zyada: stream partitions --partitions 6 --consumers 8',
-        'Ab partitions theek karo: stream partitions --partitions 12 --consumers 8',
-        'Ek bada domain saara traffic khaa raha hai: cache hotkey --key domain:wikipedia.org --rps 50000',
-        'Us domain ko todo: cache hotkey --key domain:wikipedia.org --rps 50000 --replicas 8',
-        'Thanda connection ka kharcha: net trace --rtt 40',
-        'Ab warm connection: net trace --rtt 40 --warm',
+        "Pehle observation: Crawl ka paimana nikalo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab warm connection — farak dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 10000000 --rps 3750 --bytes 2000000\nbloom --items 1000000000 --fp 0.01\nhll --items 1000000000\nstream partitions --partitions 6 --consumers 8\nstream partitions --partitions 12 --consumers 8\ncache hotkey --key domain:wikipedia.org --rps 50000\ncache hotkey --key domain:wikipedia.org --rps 50000 --replicas 8\nnet trace --rtt 40\nnet trace --rtt 40 --warm",
       ],
     },
     {
@@ -455,48 +422,28 @@ Warm connection:                                             request</pre>
       questions: [
         {
           q: '10 arab pages ke liye sirf 8 machines kaafi nikleen. Is number ka asli sabak kya hai?',
-          choices: [
-            'Crawler ka bottleneck bandwidth ya CPU nahi hai — bottleneck POLITENESS aur DNS hai, yaani coordination, capacity nahi',
-            'Machines bahut powerful ho gayi hain',
-            'Estimate galat hai, aur machines chahiye hongi',
-            '2 MB per page ka anumaan bahut kam hai',
-          ],
+          choices: ["Bandwidth floor nikla; bottleneck ab measure karna hai","Eight machines measured production sufficiency proof hain","DNS har crawler mein CPU/network se pehle limit hai","Storage/parser cost nominal NIC rate mein include hai"],
           answer: 0,
-          explain: 'Yeh estimate ka sabse achha istemaal hai: number khud se zyada zaroori woh <b>disha</b> hai jo number dikhata hai. 8 machines ka matlab hai ki poora design "aur capacity" ke baare mein nahi hai — poora design <b>per-domain scheduling</b>, <b>DNS</b> aur <b>dedup</b> ke baare mein hai.',
-        },
+          explain: "Eight machines stated NIC/utilization assumptions ka estimate hai; bandwidth, CPU parsing, storage, domain mix aur DNS separately validate karo. Calculation benchmark nahi. Bottleneck workload aur actual measurement par depend hai. NIC throughput parser/storage capacity prove nahi karti.",
+         choiceExplanations: ["Eight machines stated NIC/utilization assumptions ka estimate hai; bandwidth, CPU parsing, storage, domain mix aur DNS separately validate karo.","Calculation benchmark nahi.","Bottleneck workload aur actual measurement par depend hai.","NIC throughput parser/storage capacity prove nahi karti."] },
         {
           q: 'Politeness (1 req/sec/domain) worker ke andar lagane mein kya galat hai?',
-          choices: [
-            'Har worker apna hisaab rakhega, par 8 machines ke 500 workers ek hi domain par ek saath aa sakte hain — politeness ek GLOBAL shart hai, isliye woh shared jagah (queue ya Redis lock) mein honi chahiye',
-            'Worker ke andar rate limiting dheemi hoti hai',
-            'Worker ke andar timer nahi chal sakta',
-            'Politeness ki zaroorat hi nahi hai',
-          ],
+          choices: ["Per-domain budget workers ke across coordinate karo","Har worker ka local 1/s global limit enforce karega","Worker count badhe toh domain ki allowed rate badhe","robots.txt allow ho toh concurrency unlimited rakh do"],
           answer: 0,
-          explain: 'Yeh distributed rate limiting ka classic sawaal hai. Local counter tab tak theek hai jab tak ek hi process ho. Kai workers par woh <b>N guna</b> ho jaata hai — 500 workers × 1 req/sec = 500 req/sec ek hi domain par. Shared lock ya per-domain queue hi guarantee de sakta hai.',
-        },
+          explain: "Shared scheduler/partition owner ya coordinated limit all workers ka aggregate domain budget enforce kar sakti hai. N local independent budgets aggregate N/s ho sakte hain. Domain ki agreed/requested politeness worker count se nahi badalti. Allowed crawling bhi bounded respectful request behavior maangta hai.",
+         choiceExplanations: ["Shared scheduler/partition owner ya coordinated limit all workers ka aggregate domain budget enforce kar sakti hai.","N local independent budgets aggregate N/s ho sakte hain.","Domain ki agreed/requested politeness worker count se nahi badalti.","Allowed crawling bhi bounded respectful request behavior maangta hai."] },
         {
           q: 'URL dedup ke baad bhi content dedup kyun chahiye?',
-          choices: [
-            'Ek hi content darjan alag URLs par milta hai — tracking params, session ids, http/https, www/non-www, mirrors. URL alag hai, page wahi hai',
-            'URL dedup galtiyan karta hai',
-            'Content dedup tez hota hai',
-            'Content dedup se storage cost kam hoti hai, aur kuch nahi',
-          ],
+          choices: ["Different URLs same content return kar sakte hain","URL equality se content identity already prove hoti","Content hash robots policy check ko replace karta hai","Content hash fetch bandwidth pehle se bacha deta hai"],
           answer: 0,
-          explain: 'URL normalization bahut madad karta hai par sab kuch nahi pakad sakta — do bilkul alag URLs ek jaisa page de sakte hain. Storage bachana <b>ek</b> faayda hai; bada faayda yeh hai ki duplicate content har downstream system mein ghusta hai (search index, training data, embeddings).',
-        },
+          explain: "Fetch ke baad content fingerprint duplicate/mirror/variant URLs ke same payload identify kar sakta hai. Distinct normalized URLs bhi same page serve kar sakti hain. Content equality access/robots policy nahi. Post-fetch dedup already spent fetch bandwidth recover nahi karta.",
+         choiceExplanations: ["Fetch ke baad content fingerprint duplicate/mirror/variant URLs ke same payload identify kar sakta hai.","Distinct normalized URLs bhi same page serve kar sakti hain.","Content equality access/robots policy nahi.","Post-fetch dedup already spent fetch bandwidth recover nahi karta."] },
         {
           q: 'Crawler traps se bachne ka sabse sasta ilaaj kya hai?',
-          choices: [
-            'Max depth (seed se 15-20 hop) + per-domain page budget — dono anumaan hain par dono infinite spaces ko kaat dete hain',
-            'robots.txt ko dhyan se maano',
-            'Machine learning se trap pages pehchano',
-            'Har page ka content hash rakho',
-          ],
+          choices: ["Depth aur per-domain budget se exploration bound karo","robots.txt allow ho toh every generated URL follow karo","Content hash ko infinite unique calendar ka cap maano","One global FIFO se per-domain trap detect maan lo"],
           answer: 0,
-          explain: 'robots.txt <b>ijazat</b> ke baare mein hai, anantata ke baare mein nahi — calendar page allowed ho sakta hai aur phir bhi anant ho sakta hai. Content hash duplicate pakadta hai par calendar ke har page ka content <b>alag</b> hota hai. Depth aur budget dono mote hathiyaar hain, aur isi wajah se dono kaam karte hain.',
-        },
+          explain: "Budgets/depth/url-pattern controls crawl frontier finite rakhte hain; coverage tradeoff aur content semantics monitor karo. Robots policy infinite URL space ko necessarily bound nahi karti. Calendar genuinely distinct content generate kar sakta hai. Queue ordering trap budget enforce nahi karti.",
+         choiceExplanations: ["Budgets/depth/url-pattern controls crawl frontier finite rakhte hain; coverage tradeoff aur content semantics monitor karo.","Robots policy infinite URL space ko necessarily bound nahi karti.","Calendar genuinely distinct content generate kar sakta hai.","Queue ordering trap budget enforce nahi karti."] },
       ],
     },
   ],
@@ -508,14 +455,13 @@ Warm connection:                                             request</pre>
   ],
   homework: `Kisi bade site ka <code>robots.txt</code> kholo (jaise
     <code>wikipedia.org/robots.txt</code>) aur dekho ki usme kya-kya disallow hai
-    aur kya crawl-delay diya gaya hai. Phir ek sawaal poochho: agar tumhara
-    crawler us crawl-delay ko maane, toh us site ko poora crawl karne mein kitne
+    aur kya site ki published rate policy ya crawler-specific crawl-delay extension hai. <code>crawl-delay</code> RFC 9309 ka standard field nahi. Phir poochho: chosen per-domain budget par us site ko poora crawl karne mein kitne
     din lagenge?`,
   cards: [
     { front: 'Crawler ka asli bottleneck?', back: 'Bandwidth ya CPU nahi — <b>politeness aur DNS</b>. 10 arab pages sirf ~8 machines par ho jaate hain; poora design <b>coordination</b> ka hai, capacity ka nahi.' },
-    { front: 'Politeness kahan lagti hai?', back: '<b>Queue mein</b>, worker ke andar nahi. 500 workers ka local counter = 500 req/sec ek hi domain par. Per-domain lock (Redis) + message delay hi global 1 req/sec guarantee deta hai.' },
+    { front: 'Politeness kahan lagti hai?', back: 'Aggregate per-domain dispatch coordinate karo: partition owner/shared atomic rate budget ek option hai. 500 independent local 1/s budgets 500/s bhej sakte hain. Durable claiming, retries aur scheduler races test karo.' },
     { front: 'Do dedup kaunse?', back: '<b>URL dedup</b> — queue mein daalne se pehle (normalize + hash). <b>Content dedup</b> — fetch ke baad (content hash / simhash). Ek hi content darjan URLs par milta hai: tracking params, session ids, mirrors.' },
-    { front: 'DNS ka kharcha kitna?', back: 'Scale par crawler ke <b>70% tak</b> waqt. Teen ilaaj: <b>local DNS cache</b> (TTL se zyada der rakho), <b>kai providers</b>, aur <b>connection reuse</b> (ek domain ke kai pages ek connection par).' },
+    { front: 'DNS ka kharcha kitna?', back: 'Universal percentage nahi. DNS lookup latency/cache misses aur resolver QPS trace karo; TTL-aware resolver cache, capacity/redundancy aur connection reuse evaluate karo. Arbitrary TTL overrun safe assumption nahi.' },
     { front: 'Crawler traps ka sasta ilaaj?', back: '<b>Max depth</b> (seed se 15-20 hop) + <b>per-domain page budget</b>. robots.txt ijazat ke baare mein hai, anantata ke baare mein nahi — calendar page allowed bhi ho sakta hai aur anant bhi.' },
   ],
   interview: {
@@ -524,26 +470,16 @@ Warm connection:                                             request</pre>
     questions: [
       {
         q: '"Web crawler design karo, 10 arab pages 5 din mein." Pehla kaam?',
-        choices: [
-          'Machines ka number nikalo — 8 nikalta hai, aur wahi number bata deta hai ki design capacity ka nahi, per-domain scheduling aur DNS ka hai',
-          'Frontier queue ka design shuru karo',
-          'Storage ka schema banao',
-          'Parsing pipeline design karo',
-        ],
+        choices: ["Rate, bytes aur domain constraints ka estimate banao","Eight machines freeze karo; parser/storage test chhod do","Database schema finalize; throughput baad mein estimate","Global FIFO banaao; domain scheduling baad mein jodo"],
         answer: 0,
-        explain: 'Estimate pehle karne ka poora faayda yahi hai: 8 machines ka jawab tumhein bata deta hai ki <b>kis cheez par</b> waqt lagana hai. Agar jawab 8,000 machines hota, design bilkul alag hota. Number pehle, design baad mein.',
-      },
+        explain: "10b pages/5 days ke rate, payload, CPU/storage aur politeness assumptions calculate karke design bottlenecks identify karo. Nominal NIC estimate capacity guarantee nahi. Access/storage volume schema design ko inform karte hain. Politeness owner scheduling architectural requirement hai.",
+       choiceExplanations: ["10b pages/5 days ke rate, payload, CPU/storage aur politeness assumptions calculate karke design bottlenecks identify karo.","Nominal NIC estimate capacity guarantee nahi.","Access/storage volume schema design ko inform karte hain.","Politeness owner scheduling architectural requirement hai."] },
       {
         q: '"Tumhara crawler ek hi site par toot pada aur unhone tumhein block kar diya. Kya galat tha?"',
-        choices: [
-          'Politeness worker ke andar thi, queue mein nahi — har worker ne apna 1 req/sec maana, par 500 workers milkar 500 req/sec bhej rahe the',
-          'robots.txt padha nahi gaya',
-          'User-agent set nahi kiya gaya tha',
-          'Crawl bahut tez tha, rate kam karna tha',
-        ],
+        choices: ["Aggregate domain budget aur routing ownership check karo","Sirf user-agent rename karo; aggregate rate wahi rakho","Sirf workers badhao; har worker apni rate maane","Sirf robots allow dekho; arrival burst ignore karo"],
         answer: 0,
-        explain: 'Baaki teenon galtiyan bhi asli hain, par yeh jawab <b>distributed</b> soch dikhata hai: local rate limit N workers par N guna ho jaata hai. Yahi galti API rate limiting, retry budgets aur circuit breakers mein bhi hoti hai — har jagah jahan seema <b>global</b> honi chahiye par lagayi <b>local</b> jaati hai.',
-      },
+        explain: "Multiple workers ke local limits site-wide limit multiply kar sakte hain; global/domain-owned scheduling aur site policy inspect karo. Identity label abusive aggregate traffic fix nahi karti. More independent workers violation amplify kar sakte hain. Allowed URLs aur acceptable aggregate rate different concerns hain.",
+       choiceExplanations: ["Multiple workers ke local limits site-wide limit multiply kar sakte hain; global/domain-owned scheduling aur site policy inspect karo.","Identity label abusive aggregate traffic fix nahi karti.","More independent workers violation amplify kar sakte hain.","Allowed URLs aur acceptable aggregate rate different concerns hain."] },
     ],
   },
 },
@@ -593,21 +529,13 @@ SD.registerLevelsAfter('resil', 'shedding', [
      seedhe-seedhe tez ya saste bhi nahi. Poora faayda ek hi jagah hai: failure
      ka daayra. Isliye cells us system par lagao jiska <b>girna sabse mehenga</b>
      hai, har system par nahi.</p>`,
-    `<h3>🎲 Shuffle sharding — sabse sundar trick</h3>
-     <p>8 cells ke saath har customer ko ek cell dene par blast radius
-     <b>12.5%</b> hai. Ab isko badlo: har customer ko <b>koi bhi do</b> cells
-     do (uske dono cells random chune jaate hain).</p>
-     <pre>8 cells mein se 2 chunne ke tareeke  =  C(8,2)  =  28
-
-Ek customer poori tarah tabhi girta hai jab uske DONO cells kharab hon.
-Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
-     <p>Yaani <b>utne hi 8 cells</b> par blast radius 12.5% se girkar
-     <b>3.6%</b> ho gaya — bina ek bhi naya cell jode. Aur jinke sirf ek cell
-     kharab hua, woh <b>degrade</b> hote hain, marte nahi — unka doosra cell
-     kaam karta rehta hai.</p>
-     <p class="tip">🎯 AWS is technique ko Route 53 aur kai services mein use
-     karta hai. Ganit combinations ka hai, isliye faayda tezi se badhta hai:
-     8 cells mein se 3 chuno toh C(8,3) = 56, yaani 1.8%.</p>
+    `<h3>🎲 Shuffle sharding — full overlap aur partial exposure</h3>
+     <p>8 cells aur uniform random two-cell assignments lo. Ek poison tenant apne <b>dono assigned cells</b> ko unhealthy bana deta hai. Doosra tenant tab poori tarah unavailable hai jab uska <b>exact same pair</b> ho; partial-overlap tenant surviving cell use kar sakta hai, agar retries aur headroom tested hon.</p>
+     <pre>C(8,2) = 28 distinct pairs
+Exact same pair share = 1/28 = 3.6%
+Ek named cell se assigned tenants = 2/8 = 25%
+Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
+     <p class="tip">🎯 <b>3.6% exact-pair full loss</b> single-cell blast radius nahi. Two-cell poison scenario mein partial degradation aur shared dependency failure alag metrics hain. Uniform assignment mathematical assumption hai; actual placement skew, retry success aur survivor capacity measure karo.</p>
      <h3>🪣 Aur ek sawaal jo hamesha chhoot jaata hai</h3>
      <p>Ek cell gira. Uske users ka traffic <b>kahan jaayega?</b> Do hi jawab hain:</p>
      <pre>1. SPARE se absorb karo  →  har cell mein 100/(N-1) % extra capacity chahiye
@@ -623,11 +551,10 @@ Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
     {
       type: 'tradeoff',
       title: 'Cells, shuffle sharding aur spare',
-      instructions: 'Teen knob ghumao. Dekho ki shuffle sharding kitna kaam ka hai.',
-      goal: 'Aisi settings dhoondho jahan ek failure 5% se kam customers ko poori tarah giraaye, ek cell ka load spare se absorb ho jaaye, aur cells 12 se zyada na hon (warna operational bojh sambhalna mushkil).',
+      instructions: 'Pehle tenant-pair isolation dekho; phir alag single-cell-loss drill ki spare capacity check karo.',
+      goal: 'Poison tenant ke poore assigned set fail hone par full-set overlap <b>5% tak</b> ho. Alag single-cell-loss drill mein uniformly redistributed load spare se absorb ho, aur cells <b>12 tak</b> hon. Partial degradation aur common dependencies is full-loss metric mein include nahi.',
       scenario: `Ek multi-tenant API. Aaj sab kuch ek hi bade fleet par hai,
-        isliye koi bhi poison request ya kharab config <b>100%</b> customers ko
-        le doobti hai.`,
+        isliye fleet-wide fault sab customers ko affect kar sakta hai. Model mein poison tenant har assigned cell ko unhealthy karta hai; cells independent aur assignments uniform hain. Load-absorption metric separately one-cell failure ko model karta hai.`,
       knobs: [
         { id: 'cells', label: 'Kitne cells', min: 1, max: 20, step: 1, value: 1, unit: '',
           note: 'Har cell ek poori swatantra copy hai — apna LB, compute, DB, cache.' },
@@ -639,7 +566,7 @@ Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
       readouts: k => {
         const m = cellModel(k);
         return [
-          { label: 'Poora blast radius', value: m.blast.toFixed(1) + '% customers', tone: m.blast <= 5 ? 'ok' : m.blast <= 15 ? 'warn' : 'bad' },
+          { label: 'Poison tenant: exact full-set overlap', value: m.blast.toFixed(1) + '% customers', tone: m.blast <= 5 ? 'ok' : m.blast <= 15 ? 'warn' : 'bad' },
           { label: 'Ek cell ka load absorb hoga?', value: m.absorb ? 'haan, spare kaafi hai' : `nahi — ${m.need.toFixed(0)}% chahiye`, tone: m.absorb ? 'ok' : 'bad' },
           { label: 'Operational bojh', value: m.cells + ' control planes / deploy targets', tone: m.cells <= 12 ? 'ok' : 'bad' },
           { label: 'Capacity ka kharcha', value: '+' + k.spare + '% (spare)', tone: k.spare <= 25 ? 'ok' : 'warn' },
@@ -648,7 +575,7 @@ Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
       bars: k => {
         const m = cellModel(k);
         return [
-          { label: 'Blast radius (budget 5%)', pct: Math.min(100, m.blast), text: m.blast.toFixed(1) + '%', tone: m.blast <= 5 ? 'ok' : 'bad' },
+          { label: 'Full-set overlap (cap 5%)', pct: Math.min(100, m.blast), text: m.blast.toFixed(1) + '%', tone: m.blast <= 5 ? 'ok' : 'bad' },
           { label: 'Spare (chahiye ' + m.need.toFixed(0) + '%)', pct: Math.min(100, (k.spare / 50) * 100), text: k.spare + '%', tone: m.absorb ? 'ok' : 'bad' },
           { label: 'Operational bojh (cap 12)', pct: (m.cells / 20) * 100, text: m.cells + ' cells', tone: m.cells <= 12 ? 'ok' : 'bad' },
         ];
@@ -657,32 +584,21 @@ Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
         const m = cellModel(k);
         const bad = [];
         if (m.blast > 5) bad.push(k.shuffle
-          ? `blast radius <b>${m.blast.toFixed(1)}%</b> hai — shuffle sharding chalu hai par cells kam hain, aur C(${k.cells},2) abhi chhota hai`
-          : `blast radius <b>${m.blast.toFixed(1)}%</b> hai — har customer ek hi cell par hai, isliye woh cell girte hi customer poora gira. <b>Shuffle sharding</b> chalu karke dekho`);
+          ? `exact-pair full-loss share <b>${m.blast.toFixed(1)}%</b> hai — C(${k.cells},2) abhi chhota hai; partial overlap isse alag hai`
+          : `one-cell assignment full-loss share <b>${m.blast.toFixed(1)}%</b> hai. Pair assignment full-set overlap reduce kar sakti hai; partial degradation phir bhi assess karo`);
         if (!m.absorb) bad.push(`ek cell girne par uska load absorb karne ke liye <b>${m.need.toFixed(0)}%</b> spare chahiye, hai sirf ${k.spare}%`);
         if (m.cells > 12) bad.push(`<b>${m.cells} cells</b> ka matlab hai ${m.cells} control planes, deploy targets aur dashboards — operational bojh bahut zyada`);
-        if (!bad.length) return { ok: true, text: `<b>${m.cells} cells</b>${k.shuffle ? ' + shuffle sharding' : ''}, <b>${k.spare}%</b> spare — ek failure sirf <b>${m.blast.toFixed(1)}%</b> customers ko poori tarah giraayegi, aur us cell ka load baaki cells absorb kar lenge.` };
+        if (!bad.length) return { ok: true, text: `<b>${m.cells} cells</b>${k.shuffle ? ' + shuffle sharding' : ''}, <b>${k.spare}%</b> spare — poison tenant ke poore assigned set ka full-overlap share <b>${m.blast.toFixed(1)}%</b> hai. Separate single-cell-loss model mein spare uniformly rerouted load absorb karti hai; actual hotspot/routing constraints test karna baaki hai.` };
         return { ok: false, text: bad.join(' &nbsp;·&nbsp; ') };
       },
       check: k => { const m = cellModel(k); return m.blast <= 5 && m.absorb && m.cells <= 12; },
-      lesson: `🎯 Do numbers is lab se nikalte hain. <b>Ek:</b> bina shuffle
-        sharding ke 5% blast radius ke liye <b>20 cells</b> chahiye — aur 20
-        control planes chalane ka bojh lagbhag har team ke liye bahut zyada hai.
-        Shuffle sharding wahi 5% <b>8 cells</b> par de deta hai, kyunki ganit
-        combinations ka hai: C(8,2) = 28. <b>Do:</b> spare capacity ek optional
-        cheez nahi hai — bina spare ke ek cell ka gira hua load baaki cells ko
-        bhi le doobta hai, aur tab cells ka poora faayda khatam ho jaata hai.`,
+      lesson: `🎯 Dono drill alag rakho. Poison tenant ke assigned pair ka exact overlap <b>1/C(N,2)</b> hai; N=8 par 3.6%. Sirf ek named cell fail ho toh pair tenants ka <b>2/N</b> exposed hai, full pair loss zero under working alternate assumption. Separate uniform single-cell failover mein <b>100/(N-1)%</b> extra base-load headroom estimate hai. Skew, retry limits aur shared dependencies production result badal sakte hain.`,
       quiz: {
         q: 'Shuffle sharding se ek customer ka ek cell kharab ho gaya (doosra theek hai). Us customer ke saath kya hota hai?',
-        choices: [
-          'Woh DEGRADE hota hai, marta nahi — uska doosra cell kaam karta rehta hai, bas capacity aadhi ho jaati hai',
-          'Woh poori tarah gir jaata hai',
-          'Usko apne aap teesre cell par bhej diya jaata hai',
-          'Uska koi asar nahi hota',
-        ],
+        choices: ["Surviving cell use ho sakta; spare/routing zaroori","Surviving cell ho toh latency/capacity unchanged rahegi","Customer automatically unassigned third cell use karega","Single cell loss har shuffle customer ko full fail karega"],
         answer: 0,
-        explain: 'Yeh shuffle sharding ka doosra, kam bola jaane wala faayda hai. Zyadatar failures mein customers <b>poori tarah nahi girte</b> — woh sirf aadhi capacity par aa jaate hain. Isiliye har cell mein spare capacity zaroori hai: aadhi capacity par bhi customer ka poora load sambhalna chahiye.',
-      },
+        explain: "Two assigned resources mein one survives toh retry/routing aur remaining headroom ke saath service continue ho sakti hai; exact capacity workload-specific hai. Remaining capacity aur saturation measure karni padti hai. Additional placement/recovery policy explicit chahiye. Both resources unavailable hona full assigned-set loss ka case hai.",
+       choiceExplanations: ["Two assigned resources mein one survives toh retry/routing aur remaining headroom ke saath service continue ho sakti hai; exact capacity workload-specific hai.","Remaining capacity aur saturation measure karni padti hai.","Additional placement/recovery policy explicit chahiye.","Both resources unavailable hona full assigned-set loss ka case hai."] },
     },
     {
       type: 'archdiff',
@@ -722,48 +638,28 @@ Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
       questions: [
         {
           q: 'Cell-based architecture ka asli faayda kya hai?',
-          choices: [
-            'Blast radius — ek failure sirf 1/N customers ko chhooti hai, aur uske saath deploy ka blast radius bhi 1/N ho jaata hai',
-            'Performance behtar ho jaati hai',
-            'Cost kam ho jaati hai',
-            'Operations aasan ho jaate hain',
-          ],
+          choices: ["Independent cells scoped failures contain kar sakte","Cell label shared config outage ko automatically roke","Equal cell count customers evenly place guarantee kare","Cell design se latency aur cost dono improve guarantee"],
           answer: 0,
-          explain: 'Cells asal mein <b>zyada</b> operational kaam hain (N control planes, N deploy targets, N dashboards) aur seedhe-seedhe tez ya saste bhi nahi. Poora faayda failure ke daayre mein hai — aur uska rozana roop yeh hai ki har <b>release</b> ka blast radius bhi 1/N ho jaata hai.',
-        },
+          explain: "Bounded failure domains aur staged deployment impact scope reduce kar sakte hain; equal 1/N sirf uniform isolated placement model hai. Shared dependencies boundaries cross kar sakti hain. Tenant skew/load placement imbalance possible hai. Additional isolation operational and capacity cost la sakti hai.",
+         choiceExplanations: ["Bounded failure domains aur staged deployment impact scope reduce kar sakte hain; equal 1/N sirf uniform isolated placement model hai.","Shared dependencies boundaries cross kar sakti hain.","Tenant skew/load placement imbalance possible hai.","Additional isolation operational and capacity cost la sakti hai."] },
         {
-          q: '8 cells hain aur blast radius 5% se kam chahiye. Bina naya cell jode kaise?',
-          choices: [
-            'Shuffle sharding — har customer ko 8 mein se koi bhi DO cells do. Poora overlap hone ki sambhavna 1/C(8,2) = 1/28 = 3.6%',
-            'Har cell mein aur replicas daalo',
-            'Cells ko chhota kar do',
-            'Bina naya cell jode yeh mumkin nahi hai',
-          ],
+          q: "8 cells se har customer ko random 2-cell pair milta hai. Do customers ka exact same pair hone ki probability?",
+          choices: ["Uniform pair assignment: 1/C(8,2) = 1/28","Single cell fail ho: 1/C(8,2) = 1/28","Any partial overlap probability bhi 1/28 hoti","Whole-fleet bad config ka exposure bhi 1/28 hai"],
           answer: 0,
-          explain: 'Bina shuffle sharding ke 5% blast radius ke liye <b>20 cells</b> chahiye. Shuffle sharding wahi 5% <b>8 cells</b> par de deta hai, kyunki ganit combinations ka hai — aur combinations tezi se badhte hain: 8 mein se 3 chuno toh C(8,3) = 56, yaani 1.8%.',
-        },
+          explain: "Two independent customers ko uniformly random unordered two-cell sets milen toh exact same pair probability 1/28 hai; partial overlap aur one-cell affected fraction alag hain. One failed cell two-of-eight customers ke roughly 2/8 assignments touch karti hai. Sharing at least one cell exact full-pair equality se zyada likely hai. Shared/global fault pair isolation ko bypass kar sakta hai.",
+         choiceExplanations: ["Two independent customers ko uniformly random unordered two-cell sets milen toh exact same pair probability 1/28 hai; partial overlap aur one-cell affected fraction alag hain.","One failed cell two-of-eight customers ke roughly 2/8 assignments touch karti hai.","Sharing at least one cell exact full-pair equality se zyada likely hai.","Shared/global fault pair isolation ko bypass kar sakta hai."] },
         {
           q: 'Ek cell gir gaya. Uske customers ka traffic kahan jaana chahiye?',
-          choices: [
-            'Ya toh baaki cells ki SPARE capacity mein (8 cells par lagbhag 14% extra chahiye), ya un customers ko saaf 503 + Retry-After — teesra raasta "dekh lenge" hai, aur woh baaki cells ko bhi le doobta hai',
-            'Apne aap baaki cells par redistribute ho jaayega',
-            'Kisi bhi cell par, load balancer sambhal lega',
-            'Ek naya cell turant bana do',
-          ],
+          choices: ["Spare/routing plan ya bounded shedding choose karo","Remaining cells load ko resource cost bina absorb karengi","DNS switch se standby data bhi turant current hoga","New cell startup ko instantaneous recovery maano"],
           answer: 0,
-          explain: 'Bina plan ke redistribution hi cells ka poora faayda khatam karti hai: gira hua load baaki cells ko bhi thap kar deta hai, aur ek cell ka outage poora outage ban jaata hai. Do hi imaandar jawab hain — <b>spare rakho</b> ya <b>shed karo</b>. Aur dono mein se kaunsa, woh business ka faisla hai.',
-        },
+          explain: "Uniform rebalance ideal model N-1 survivors par 1/(N-1) extra base load laata hai; actual placement and data readiness verify karo. Capacity free create nahi hoti. Traffic routing data recovery guarantee nahi. Provisioning, warmup aur state transfer measurable delays hain.",
+         choiceExplanations: ["Uniform rebalance ideal model N-1 survivors par 1/(N-1) extra base load laata hai; actual placement and data readiness verify karo.","Capacity free create nahi hoti.","Traffic routing data recovery guarantee nahi.","Provisioning, warmup aur state transfer measurable delays hain."] },
         {
           q: 'Cells banane ke baad sabse zaroori kaam kya hai?',
-          choices: [
-            'Shared cheezein dhoondhna — config store, auth service, router, deploy pipeline. Jo cells ke BEECH mein hai, wahi blast radius wapas 100% kar deta hai',
-            'Har cell ka size barabar rakhna',
-            'Cells ko alag regions mein daalna',
-            'Cross-cell replication set up karna',
-          ],
+          choices: ["Shared router/config/auth/deploy paths audit karo","Cells separate names se common failures remove hote","More cells se shared auth dependency redundant hoti","Cross-cell replication se every fault isolated ho jaaye"],
           answer: 0,
-          explain: 'Cross-cell replication toh lagbhag ulta kaam hai — woh cells ko jodti hai, alag nahi karti. Cells banane ke baad asli kaam ek hi sawaal hai, har component par: <b>"yeh cell ke ANDAR hai ya cells ke BEECH mein?"</b> Beech waali cheezein hi agla outage layengi.',
-        },
+          explain: "Common critical dependencies aur fleet-wide rollout independent-looking cells ko correlated fail kara sakte hain. Naming physical/control dependencies change nahi karti. Shared service ko actual resilient design chahiye. Replication isolation ya correctness automatically prove nahi karti.",
+         choiceExplanations: ["Common critical dependencies aur fleet-wide rollout independent-looking cells ko correlated fail kara sakte hain.","Naming physical/control dependencies change nahi karti.","Shared service ko actual resilient design chahiye.","Replication isolation ya correctness automatically prove nahi karti."] },
       ],
     },
   ],
@@ -780,8 +676,8 @@ Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
     nahi, sirf <b>cell-dar-cell deploy</b> hota hai.`,
   cards: [
     { front: 'Cell-based architecture ka faayda?', back: 'Sirf <b>blast radius</b> — ek failure 1/N customers ko chhooti hai, aur har <b>release</b> ka blast radius bhi 1/N ho jaata hai. Cells zyada operational kaam hain, kam nahi; tez ya saste bhi nahi.' },
-    { front: 'Shuffle sharding kya hai?', back: 'Har customer ko N mein se <b>K cells</b> do (aam taur par K=2). Poora outage tabhi jab uske saare K cells kharab hon. 8 cells, K=2 → <b>1/C(8,2) = 3.6%</b> blast radius, bina naya cell jode.' },
-    { front: 'Bina shuffle sharding 5% blast radius ke liye?', back: '<b>20 cells</b> — yaani 20 control planes, deploy targets aur dashboards. Shuffle sharding wahi 5% sirf <b>8 cells</b> par de deta hai.' },
+    { front: 'Shuffle sharding kya hai?', back: 'Uniform two-cell assignment mein exact pair overlap <b>1/C(8,2)=3.6%</b>. Poison tenant dono assigned cells ko unhealthy kare toh identical pair full lose karti hai. Single-cell loss par 2/8=25% tenants exposed hain; alternate capacity/retries determine degradation.' },
+    { front: 'Single-cell exposure aur exact pair overlap?', back: 'Uniform one-cell assignment ka share <b>1/N</b>; pair assignment mein named cell exposure <b>2/N</b>, exact pair overlap <b>1/C(N,2)</b>. Alag fault scenarios ko same blast-radius number mat bolo.' },
     { front: 'Cell gira — uska load kahan?', back: 'Do hi imaandar jawab: <b>spare</b> (8 cells par ~14% extra per cell) ya <b>shed</b> (saaf 503 + Retry-After). "Dekh lenge" ka matlab hai baaki cells bhi girenge.' },
     { front: 'Cells ke baad sabse zaroori kaam?', back: '<b>Shared cheezein dhoondhna</b> — config store, auth service, global router, deploy pipeline. Har component par ek sawaal: "cell ke ANDAR hai ya cells ke BEECH mein?"' },
   ],
@@ -791,26 +687,16 @@ Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
     questions: [
       {
         q: '"Ek kharab deploy tumhare kitne customers ko chhoo sakta hai?"',
-        choices: [
-          'Aaj 100%, kyunki ek hi fleet hai — aur usko ghatane ka sabse sasta kadam cell-dar-cell deploy hai, poora cell-based architecture nahi',
-          'Kuch bhi nahi, hamara staged rollout hai',
-          'Yeh depend karta hai ki deploy mein kya tha',
-          '100%, par hamara rollback tez hai',
-        ],
+        choices: ["Worst-case exposed scope aur rollout controls quantify karo","Fast rollback ko zero customer exposure count karo","Replica count ko deployment blast-radius metric maano","Staged name dekar actual release reach ignore karo"],
         answer: 0,
-        explain: 'Yeh jawab do cheezein dikhata hai: tum apna asli number jaante ho (imaandari), aur tum jaante ho ki usko sudharne ka <b>sasta pehla kadam</b> kya hai. "Rollback tez hai" achha hai par woh blast radius nahi ghataata — woh sirf <b>duration</b> ghataata hai. Radius aur duration do alag numbers hain.',
-      },
+        explain: "Radius affected population ka measure hai; duration aur rollback speed separate hain. Fleet layout/rollout evidence se number nikalo. Rollback shorter impact duration de sakta hai, zero exposure nahi. Same bad deploy replicas par bhi propagate ho sakta hai. Actual rollout concurrency and bake policy determine exposure.",
+       choiceExplanations: ["Radius affected population ka measure hai; duration aur rollback speed separate hain. Fleet layout/rollout evidence se number nikalo.","Rollback shorter impact duration de sakta hai, zero exposure nahi.","Same bad deploy replicas par bhi propagate ho sakta hai.","Actual rollout concurrency and bake policy determine exposure."] },
       {
         q: '"Cells banane ka faisla kab lena chahiye?"',
-        choices: [
-          'Jab ek failure ki keemat N control planes chalane ki keemat se zyada ho jaaye — yaani sabse zaroori service par pehle, har service par nahi',
-          'Jitni jaldi ho sake, shuru se hi',
-          'Jab scale bahut bada ho jaaye',
-          'Jab team bade ho jaaye',
-        ],
+        choices: ["Failure-loss budget ko isolation ops cost se compare karo","Har new service ko first day full cells mein deploy karo","Fixed user count cross hote hi cells mandatory maano","Team size ko reliability business objective bana do"],
         answer: 0,
-        explain: 'Cells ek <b>vyapaar</b> hain, ek best practice nahi: tum operational bojh dekar failure ka daayra khareedte ho. Isliye jawab hamesha <b>keemat ki tulna</b> hai. Aur usi tark se cells sabse pehle wahan lagte hain jahan ek ghante ka outage sabse mehenga padta hai.',
-      },
+        explain: "Criticality, failure history, workload partitionability aur operations/capacity cost isolation choice guide karte hain. Early complexity cost product risk se justify honi chahiye. Universal traffic/user threshold nahi. Staff count implementation capacity batata hai, business impact objective nahi.",
+       choiceExplanations: ["Criticality, failure history, workload partitionability aur operations/capacity cost isolation choice guide karte hain.","Early complexity cost product risk se justify honi chahiye.","Universal traffic/user threshold nahi.","Staff count implementation capacity batata hai, business impact objective nahi."] },
     ],
   },
 },
@@ -819,7 +705,7 @@ Do customers ka poora overlap hone ki sambhavna  =  1 / 28  =  3.6%</pre>
 /* Cell / shuffle-sharding ka ganit */
 function cellModel(k) {
   const n = k.cells;
-  /* shuffle sharding (K=2): poora outage tabhi jab customer ke DONO cells kharab hon */
+  /* Poison tenant fails its full assigned set: exact set-overlap, not one-cell exposure. */
   const combos = n >= 2 ? (n * (n - 1)) / 2 : 1;
   const blast = n < 2 ? 100 : (k.shuffle ? 100 / combos : 100 / n);
   /* ek cell gira toh uska load baaki (n-1) cells par — utna spare chahiye */
@@ -879,24 +765,17 @@ SD.registerLevelsAfter('dist', 'eventual', [
        <tr><th>Tareeka</th><th>Kya deta hai</th><th>Keemat</th></tr>
        <tr><td><b>Lamport clock</b></td><td>ek badhta hua counter — agar A ne B ko kaaran diya toh A ka number chhota hoga</td><td>ulta sach nahi: chhota number matlab "pehle hua" zaroori nahi</td></tr>
        <tr><td><b>Vector clock</b></td><td>bata deta hai ki do events <b>concurrent</b> the ya ek doosre par nirbhar</td><td>size nodes ke saath badhta hai; conflicts app ko suljhhane padte hain</td></tr>
-       <tr><td><b>Hybrid (HLC)</b></td><td>wall clock jaisa dikhta hai (padha ja sakta hai) par kram ki guarantee deta hai</td><td>thodi si complexity — par aaj ka aam chunav yahi hai</td></tr>
+       <tr><td><b>Hybrid (HLC)</b></td><td>physical time + logical counter; causal ordering support karta hai</td><td>concurrent writes ka semantic winner ya linearizability alone decide nahi karta</td></tr>
        <tr><td><b>TrueTime (Spanner)</b></td><td>ghadi ke saath uski <b>anishchitta</b> bhi deta hai; commit us anishchitta ka intezaar karta hai</td><td>khaas hardware (atomic clocks + GPS) chahiye</td></tr>
      </table>
-     <p class="tip">🎯 Spanner ka jawab sabse dilchasp hai: usne ghadi ko sahi
-     karne ki koshish nahi ki — usne ghadi ki <b>galti ko naapa</b> aur commit
-     ko utni der rukwa diya. "Mujhe nahi pata ki abhi kya samay hai, par mujhe
-     pata hai ki main 7 ms se zyada galat nahi hoon" — aur wahi ek line poori
-     external consistency de deti hai.</p>
+     <p class="tip">🎯 TrueTime <b>bounded uncertainty interval</b> expose karta hai; accurate clock infrastructure us interval ko useful rakhti hai. Spanner quorum/timestamp protocol ke saath commit wait karta hai jab tak <code>TT.after(commitTimestamp)</code> true na ho. Fixed 7 ms delay ya TrueTime alone linearizability ka proof nahi.</p>
      <h3>⚖️ Last-write-wins kab theek hai?</h3>
      <pre>✅ Theek:   ek hi user ki setting, cache entry, presence/status
             (nuksaan chhota, aur naya write jaldi aa jaata hai)
 
 ❌ Galat:   paise, inventory, order status, collaborative document
             (yahan "haar gaya" write ka matlab hai KHOYA hua data)</pre>
-     <p>Galat wale case mein do hi imaandar raaste hain: writes ko
-     <b>append-only events</b> bana do (kuch overwrite hi nahi hota), ya
-     conflict ko <b>app ke saamne rakh do</b> ("do version hain, kaunsa
-     rakhna hai?").</p>`,
+     <p>Conflict policy domain se choose karo: atomic constraints/transactions, compare-and-swap versions, append-only events ya explicit merge/conflict resolution. Append-only storage bhi invariant enforcement automatically nahi karta.</p>`,
   ],
   stages: [
     {
@@ -915,9 +794,9 @@ SD.registerLevelsAfter('dist', 'eventual', [
         { text: 'Log line par timestamp likhna', bin: 'wall', explain: 'Yahan wall clock hi chahiye — insaan ko "kab hua" jaanna hai, aur usko doosre systems ke logs se milana hai. Skew se woh milana thoda tedha hota hai, par kaam ka rehta hai.' },
         { text: 'User ko "2 ghante pehle" dikhana', bin: 'wall', explain: 'Yeh display hai, decision nahi. Thodi si galti se koi nuksaan nahi hota, aur user ki apni ghadi se milna zaroori hai.' },
         { text: 'Certificate ki expiry check karna', bin: 'wall', explain: 'Expiry ek absolute samay hai jispar sab sehmat hote hain. Isiliye badi ghadi ki galti par TLS toot-ta hai — aur wahi <code>x509: certificate has expired</code> wala outage banti hai.' },
-        { text: 'Do concurrent writes mein se kaunsa naya hai', bin: 'logical', explain: 'Yahan wall clock <b>data loss</b> ka kaaran ban jaati hai: jiski machine ki ghadi aage thi woh jeet gaya, chahe uska write pehle hua ho. Version vector ya HLC chahiye.' },
+        { text: 'Concurrent writes ka version/causal conflict detect karna', bin: 'logical', explain: 'Yahan wall clock <b>data loss</b> ka kaaran ban jaati hai: jiski machine ki ghadi aage thi woh jeet gaya, chahe uska write pehle hua ho. Version vector concurrency detect kar sakta hai; HLC timestamp ordering deta hai, semantic conflict policy app ko chahiye.' },
         { text: 'Distributed lock ki maalikana haq', bin: 'logical', explain: 'Wall clock expiry par bana lock do jagah ja sakta hai (ek node ki ghadi aage, doosri peeche). Sahi tareeka <b>fencing token</b> hai — ek badhta hua number jo storage khud check karta hai.' },
-        { text: 'Replicated data mein event ka kram', bin: 'logical', explain: '"Pehle kya hua" ek <b>kram</b> ka sawaal hai, samay ka nahi. Lamport, vector clock ya HLC — teenon kram dete hain bina ghadiyon par bharosa kiye.' },
+        { text: 'Replicated data mein event ka kram', bin: 'logical', explain: '"Pehle kya hua" ek <b>kram</b> ka sawaal hai, samay ka nahi. Lamport causal order preserve karta hai par converse nahi; vector concurrency identify kar sakta hai; HLC physical time + logical counter use karta hai. Inmein se koi app merge/invariant policy replace nahi karta.' },
       ],
     },
     {
@@ -929,7 +808,7 @@ SD.registerLevelsAfter('dist', 'eventual', [
         { text: '🔒 Us node ne ek distributed lock liya jiski expiry WALL CLOCK par thi', explain: 'Uski ghadi 4 second aage hai, isliye woh maanta hai ki purana lock khatam ho chuka hai — jabki lock ke asli maalik ke hisaab se lock abhi bhi uska hai.' },
         { text: '✍️ Do nodes ek hi record par ek saath likhne lage', explain: 'Ab lock do jagah hai. Yeh wahi <b>split brain</b> hai jo GitHub 2018 mein tha, bas trigger network nahi, ghadi thi.' },
         { text: '🏆 Last-write-wins ne aage wali ghadi ka write chuna — bhale hi woh PEHLE hua tha', explain: 'Yahin data chup-chaap khota hai. Koi error nahi, koi alert nahi — bas naya data purane se "haar" gaya kyunki uske timestamp par ek dheemi ghadi thi.' },
-        { text: '🤷 Customer ne shikayat ki: "maine save kiya tha, par purana data dikh raha hai"', explain: 'Yeh bug hamesha <b>customer</b> se pata chalta hai, monitoring se nahi — kyunki system ke hisaab se kuch fail hi nahi hua. Aur reproduce karna lagbhag namumkin hota hai.' },
+        { text: '🤷 Customer ne shikayat ki: "maine save kiya tha, par purana data dikh raha hai"', explain: 'Request errors zero hone par bhi stale/wrong values possible hain. Version comparison, invariant checks aur request traces se detect karo; controlled skew/concurrency test se reproduce karne ki koshish karo.' },
         { text: '🔧 Fix: lock par FENCING TOKEN, aur conflict ke liye version vector', explain: 'Fencing token ek badhta hua number hai jo storage khud check karti hai — purane token wala write reject ho jaata hai, ghadi chahe kuch bhi kahe. Aur version vector conflict ko chhupane ki jagah <b>saamne</b> le aata hai.' },
       ],
     },
@@ -939,48 +818,28 @@ SD.registerLevelsAfter('dist', 'eventual', [
       questions: [
         {
           q: 'Timeout naapne ke liye wall clock use karne mein kya galat hai?',
-          choices: [
-            'Wall clock PEECHE ja sakti hai (NTP correction, leap second, admin) — aur tab elapsed time rinatmak ho jaata hai, jispar har timeout, rate limiter aur breaker ka ganit toot jaata hai',
-            'Wall clock dheemi hoti hai',
-            'Wall clock ki precision kam hoti hai',
-            'Wall clock har machine par alag hoti hai',
-          ],
+          choices: ["Wall time jump elapsed duration ko corrupt kar sakta","Wall time cross-host comparable hone se timeout best hai","NTP sync duration ko guaranteed monotonic bana deti","Higher clock precision backward jumps prevent karti hai"],
           answer: 0,
-          explain: 'Precision aur skew dono asli dikkatein hain, par asli khatra <b>peeche jaana</b> hai. Monotonic clock kabhi peeche nahi jaati — usko design hi isi liye kiya gaya hai. Niyam simple hai: <b>"kitna beeta"</b> ke liye monotonic, <b>"kab hua"</b> ke liye wall clock.',
-        },
+          explain: "Elapsed timers ke liye monotonic clock use karo; wall clock administrative/time sync adjustment se discontinuities de sakti hai. Calendar timestamps and local elapsed clocks different purposes hain. Time synchronization policy forward/backward correction allow kar sakti hai. Resolution and monotonicity independent properties hain.",
+         choiceExplanations: ["Elapsed timers ke liye monotonic clock use karo; wall clock administrative/time sync adjustment se discontinuities de sakti hai.","Calendar timestamps and local elapsed clocks different purposes hain.","Time synchronization policy forward/backward correction allow kar sakti hai.","Resolution and monotonicity independent properties hain."] },
         {
           q: 'Distributed lock ki expiry wall clock par rakhna khatarnaak kyun hai?',
-          choices: [
-            'Do nodes ki ghadiyon mein farak ho toh ek node maan lega ki lock khatam ho gaya jabki doosre ke hisaab se lock abhi uska hai — dono likhenge. Sahi hal FENCING TOKEN hai',
-            'Lock ki expiry bahut chhoti ho jaati hai',
-            'Wall clock lock service par uplabdh nahi hoti',
-            'Expiry ko sirf lock service hi check kar sakti hai',
-          ],
+          choices: ["Lease expiry ke baad stale holder write kar sakta","Large TTL stale holder ko permanently safe banaati","Linearizable lock server client pauses eliminate karta","More lock replicas target storage ko fence kar dete"],
           answer: 0,
-          explain: 'Fencing token skew ki poori problem ko <b>hata</b> deta hai: har lock ke saath ek badhta hua number aata hai, aur <b>storage khud</b> purane number wale write ko reject kar deti hai. Ab ghadi kya kehti hai isse koi farak nahi padta — aur yahi cheez sahi failover ko bhi surakshit banati hai.',
-        },
+          explain: "Pause, delay ya clock assumptions lease validity ko outlive kar sakte hain; storage-enforced ordered fencing plus operation semantics chahiye. Long lease risk eliminate nahi karti; recovery bhi delay karti hai. Client scheduling/network outside server linearizability scope hain. Target resource ko token validate karna padta hai.",
+         choiceExplanations: ["Pause, delay ya clock assumptions lease validity ko outlive kar sakte hain; storage-enforced ordered fencing plus operation semantics chahiye.","Long lease risk eliminate nahi karti; recovery bhi delay karti hai.","Client scheduling/network outside server linearizability scope hain.","Target resource ko token validate karna padta hai."] },
         {
           q: 'Last-write-wins kab theek hai aur kab nahi?',
-          choices: [
-            'Theek: ek user ki setting, cache entry, presence. Galat: paise, inventory, order status, collaborative document — wahan "haar gaya" write ka matlab KHOYA hua data hai',
-            'Hamesha theek hai, yeh simple hai',
-            'Hamesha galat hai, hamesha vector clock use karo',
-            'Sirf single-region systems mein theek hai',
-          ],
+          choices: ["Lost update tolerance aur business merge rule dekho","User settings mein har lost update acceptable maano","Presence field financial balance ki tarah sum karo","Multiple regions ho toh LWW automatically unsafe hai"],
           answer: 0,
-          explain: 'Sawaal hamesha <b>nuksaan</b> ka hai. Ek user ka theme setting "kho" jaaye toh woh dobara set kar dega. Ek payment ya inventory update kho jaaye toh koi usko pata bhi nahi chalega. Galat wale case mein do imaandar raaste hain: <b>append-only events</b> ya conflict ko <b>app ke saamne</b> rakh dena.',
-        },
+          explain: "LWW tab fit hai jab discarded concurrent update accepted semantics ho; field-specific constraints decide karo. User setting bhi critical/compound invariant ho sakti hai. Presence semantics additive money delta jaisi nahi. Topology alone conflict policy correctness decide nahi karti.",
+         choiceExplanations: ["LWW tab fit hai jab discarded concurrent update accepted semantics ho; field-specific constraints decide karo.","User setting bhi critical/compound invariant ho sakti hai.","Presence semantics additive money delta jaisi nahi.","Topology alone conflict policy correctness decide nahi karti."] },
         {
           q: 'Spanner ne clock ki problem kaise hal ki?',
-          choices: [
-            'Ghadi ko sahi karne ki koshish nahi ki — uski GALTI ko naapa (TrueTime interval deta hai) aur commit ko utni der rukwa diya jitni anishchitta thi',
-            'Atomic clocks se sab machines ki ghadi bilkul sahi kar di',
-            'Wall clock hataakar sirf logical clocks use kiye',
-            'Sab writes ek hi region mein karwa diye',
-          ],
+          choices: ["Bounded clock uncertainty aur commit-wait use kiya","Atomic clock se exact global timestamp guarantee ki","Physical clocks hata kar sirf Lamport term use kiya","All commits one region par serialize karke solve kiya"],
           answer: 0,
-          explain: 'Farak sookshm par gehra hai. Spanner ye nahi kehta "meri ghadi sahi hai" — woh kehta hai <b>"main 7 ms se zyada galat nahi hoon"</b>, aur commit us 7 ms ka intezaar karta hai. Anishchitta ko chhupane ki jagah usko <b>naap kar uske saath jeena</b> — yeh distributed systems ka ek bahut kaam ka soch ka tareeka hai.',
-        },
+          explain: "TrueTime bounded interval return karta hai; Spanner accurate clock infrastructure aur commit-wait se external consistency support karta hai. Bound fixed universal 7 ms nahi. Physical clocks zero uncertainty provide nahi karti. TrueTime physical time uncertainty expose karta hai. Multi-region consistency sirf single-region writes ki restriction nahi.",
+         choiceExplanations: ["TrueTime bounded interval return karta hai; Spanner accurate clock infrastructure aur commit-wait se external consistency support karta hai. Bound fixed universal 7 ms nahi.","Physical clocks zero uncertainty provide nahi karti.","TrueTime physical time uncertainty expose karta hai.","Multi-region consistency sirf single-region writes ki restriction nahi."] },
       ],
     },
   ],
@@ -999,9 +858,9 @@ SD.registerLevelsAfter('dist', 'eventual', [
   cards: [
     { front: 'Wall clock vs monotonic clock?', back: '<b>Wall</b> = "kab hua" (peeche ja sakti hai — NTP, leap second). <b>Monotonic</b> = "kitna beeta" (kabhi peeche nahi jaati, machines ke beech tulna nahi ho sakti). Duration, timeout, breaker, rate limit — sab <b>monotonic</b> par.' },
     { front: 'Clock skew ke teen bug?', back: '<b>1.</b> Negative duration (wall clock peeche gayi) · <b>2.</b> Lock do jagah (wall-clock expiry + skew) · <b>3.</b> Last-write-wins se chup-chaap data loss (aage wali ghadi jeet gayi).' },
-    { front: 'Distributed lock ka sahi tareeka?', back: '<b>Fencing token</b> — har lock ke saath ek badhta hua number, aur <b>storage khud</b> purane number wale write ko reject karti hai. Ab ghadi kya kehti hai isse farak nahi padta.' },
+    { front: 'Distributed lock ka sahi tareeka?', back: '<b>Fencing token</b> — har lock ke saath ek badhta hua number, aur <b>storage khud</b> purane number wale write ko reject karti hai. Paused owner ka stale write reject ho sakta hai only if resource token atomically validates kare. Token service correctness, lease liveness aur duplicate effects ke liye idempotency still chahiye.' },
     { front: 'Last-write-wins kab theek?', back: '✅ ek user ki setting, cache entry, presence (nuksaan chhota) · ❌ paise, inventory, order status, collaborative doc — wahan "haara" write = <b>khoya hua data</b>. Vikalp: append-only events, ya conflict app ke saamne rakho.' },
-    { front: 'Spanner ka TrueTime idea?', back: 'Ghadi ko sahi karne ki jagah uski <b>galti naapo</b>: "main 7 ms se zyada galat nahi hoon". Commit us anishchitta ka <b>intezaar</b> karta hai. Anishchitta chhupao mat — naap kar uske saath jiyo.' },
+    { front: 'Spanner ka TrueTime idea?', back: 'TrueTime current uncertainty interval deta hai. Spanner timestamp/quorum protocol aur commit wait (TT.after(commit timestamp)) se external consistency achieve karta hai. Uncertainty variable hai; universal fixed 7 ms wait nahi.' },
   ],
   interview: {
     title: 'Interview Round — Time in distributed systems',
@@ -1009,28 +868,20 @@ SD.registerLevelsAfter('dist', 'eventual', [
     questions: [
       {
         q: '"Do replicas par ek hi record ke do writes aaye. Kaunsa rakhoge?"',
-        choices: [
-          'Pehle poochunga ki nuksaan kya hai. Agar khoya hua write mehenga hai toh version vector se conflict SAAMNE laaunga ya writes ko append-only events bana dunga — timestamp se decide karna chup-chaap data loss hai',
-          'Jiska timestamp naya hai woh',
-          'Jo baad mein pahuncha woh',
-          'Dono ko merge kar dunga',
-        ],
+        choices: ["Domain conflict/loss contract pehle establish karo","Latest physical timestamp ko semantic order maano","Arrival order ko universal causality proof maano","Dono values blindly merge; constraints ignore karo"],
         answer: 0,
-        explain: 'Timestamp se decide karna <b>ghadi</b> par bharosa karna hai, aur ghadiyan jhooth bolti hain — jiski machine aage thi woh jeet jaata hai, chahe uska write pehle hua ho. Sabse achha jawab pehle <b>nuksaan</b> poochta hai, kyunki uske bina koi bhi conflict policy sahi ya galat nahi kahi ja sakti.',
-      },
+        explain: "Application ko allowed loss, causal conflict detection aur domain merge/invariant policy decide karni hoti hai. Clock order real causal order ko always represent nahi karta. Network delivery reordering possible hai. Arbitrary merge invalid balances/state transitions create kar sakti hai.",
+       choiceExplanations: ["Application ko allowed loss, causal conflict detection aur domain merge/invariant policy decide karni hoti hai.","Clock order real causal order ko always represent nahi karta.","Network delivery reordering possible hai.","Arbitrary merge invalid balances/state transitions create kar sakti hai."] },
       {
         q: '"Tumhara distributed lock kabhi do jagah ja sakta hai kya?"',
-        choices: [
-          'Haan, agar expiry wall clock par hai — skew se ek node lock ko khatam maan lega jabki doosre ke hisaab se woh abhi uska hai. Isiliye lock ke saath FENCING TOKEN chahiye jise storage khud check kare',
-          'Nahi, lock service consistency guarantee karti hai',
-          'Nahi, agar TTL kaafi bada rakha jaaye',
-          'Haan, par woh bahut rare hai',
-        ],
+        choices: ["Stale client possible; resource fencing/idempotency chahiye","Consistent lock service stale client work impossible karti","Very long TTL every GC pause ko safely cover karti","Lease expiry ke baad in-flight I/O khud cancel hoti"],
         answer: 0,
-        explain: 'Yeh jawab dikhata hai ki tum lock ko <b>guarantee</b> nahi, ek <b>optimization</b> maante ho. Lock service consistent ho sakti hai, par uska <b>client</b> GC pause ya skew ki wajah se apne lock ko zinda maan sakta hai. Isliye asli suraksha storage par hoti hai — fencing token, jise storage khud reject kar sakti hai.',
-      },
+        explain: "Correct lock service ke saath paused client old ownership assumption par work resume kar sakta hai; actual storage effect fence karo. Server consistency client already issued I/O revoke nahi karti. Unknown pause/network duration ko fixed lease guarantee nahi. Expiry logical lease change hai, physical I/O cancellation nahi.",
+       choiceExplanations: ["Correct lock service ke saath paused client old ownership assumption par work resume kar sakta hai; actual storage effect fence karo.","Server consistency client already issued I/O revoke nahi karti.","Unknown pause/network duration ko fixed lease guarantee nahi.","Expiry logical lease change hai, physical I/O cancellation nahi."] },
     ],
   },
 },
 ]);
+})();
+
 })();

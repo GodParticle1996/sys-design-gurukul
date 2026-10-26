@@ -106,16 +106,11 @@ ab:     line bhari → order-service ko turant "na" → 16 customers ko "abhi ba
           vars: { rule: 'rok lo (customers aate rehte hain)', told: 'kuch nahi — bas atka hua hai', lost: '4 ruke hue (#13–#16)', age: '—' },
           ask: {
             q: 'Customers aate ja rahe hain: 5 har second. Line har second sirf 1 ko andar leti hai. 5.9 s par order-service ke andar kitne orders ruke honge?',
-            choices: [
-              '16 — har second 4 badh rahe hain. Line ab order-service ke andar ban gayi hai',
-              '0 — tab tak sab line mein chale jaayenge',
-              '8 — line ki hadd jitne',
-              '1 — ek waqt mein ek hi ruk sakta hai',
-            ],
+            choices: ["16: chaar rounds mein net 4 handlers judte hain","0: bounded downstream se upstream bhi bounded hai","8: upstream handlers par bhi wahi queue cap lagti","1: await ki wajah se sirf ek handler ruk sakta hai"],
             answer: 0,
             hint: 'Har second 5 aate hain aur 1 andar jaata hai. Baaki 4 kahan khade hain?',
             explain: 'Ruke hue orders khud ek line hain — aur us par <b>koi hadd nahi</b>. Slow motion: 2.9 s par 4 ruke, 3.9 s par 8, 4.9 s par 12, 5.9 s par <b>16</b>.',
-          },
+           choiceExplanations: ["Ruke hue orders khud ek line hain — aur us par <b>koi hadd nahi</b>. Slow motion: 2.9 s par 4 ruke, 3.9 s par 8, 4.9 s par 12, 5.9 s par <b>16</b>.","Naye HTTP handlers aate rehte hain. Downstream queue bound upstream handler count nahi bound karta.","8 downstream buffer ki hadd hai; upstream blocked-handler list par aisi hadd nahi hai.","Har request ka apna async handler hai; await poore server ko ek handler tak serial nahi karta."] },
         },
         {
           clock: 'jawab 3 · 5.9 s',
@@ -132,16 +127,11 @@ ab:     line bhari → order-service ko turant "na" → 16 customers ko "abhi ba
           vars: { rule: 'rok lo (bhejne wala ruk sakta hai)', told: '"ruk ja" — program khud ruka hua hai', lost: '0', age: '—' },
           ask: {
             q: 'Line bharne se pehle program 5 orders/second de raha tha. Line bharne ke baad program ki raftaar kya ho gayi?',
-            choices: [
-              '1 order/second — jagah tabhi banti hai jab dispatch-service ek order uthati hai',
-              '5 orders/second — program ki raftaar nahi badalti',
-              '0 — program hamesha ke liye ruk gaya',
-              '8 orders/second — line ki hadd jitni',
-            ],
+            choices: ["1/s: har dequeue par ek blocked put aage badhta","5/s: initial producer rate bhari queue mein rehti","0/s: full queue producer ko permanently rok deti","8/s: queue capacity hi producer throughput banegi"],
             answer: 0,
             hint: '2.1 s, 3.1 s, 4.1 s — program ka order andar kab-kab gaya? Usi pal dispatch-service ne kya kiya tha?',
             explain: 'Program har baar tabhi aage badha jab dispatch-service ne ek order uthaya. dispatch-service ki raftaar (1/second) program ki raftaar ban gayi.',
-          },
+           choiceExplanations: ["Program har baar tabhi aage badha jab dispatch-service ne ek order uthaya. dispatch-service ki raftaar (1/second) program ki raftaar ban gayi.","Await se producer demand consumer ki capacity tak throttle hoti hai.","Dequeue waiting producer ko jagata hai, isliye permanent stop nahi hai.","Capacity entries mein hai; throughput entries per second mein. Dono units alag hain."] },
         },
         {
           clock: 'jawab 3 (program) · 5.9 s',
@@ -164,16 +154,11 @@ ab:     line bhari → order-service ko turant "na" → 16 customers ko "abhi ba
           vars: { rule: 'sabse purana girao, naya lo', told: 'kuch nahi', lost: '—', age: '—' },
           ask: {
             q: 'Rider ki location wali line bhari hai aur ek nayi location aayi. Kya girana sahi hai?',
-            choices: [
-              'Line ki sabse purani location — purani location map par galat jagah dikhayegi; kaam ki cheez nayi location hai',
-              'Nayi location — line mein jo pehle aaya, pehle uska haq',
-              'Kuch nahi — rider ke phone ko rok do jab tak jagah na bane',
-              'Koi bhi — location toh location hai',
-            ],
+            choices: ["Purani location replace karo; newest state rakho","Nayi location drop karo; accepted history rakho","Rider block karo; har location reliably bhejo","Random entry drop karo; har sample ko same maano"],
             answer: 0,
             hint: 'Customer map par kya dekhna chahta hai: rider 8 second pehle kahan tha, ya abhi kahan hai?',
             explain: 'Kuch data ki keemat uski <b>taazgi</b> mein hoti hai: location, share ka bhaav, live score. Aise data mein purana girana nuksaan nahi, safai hai.',
-          },
+           choiceExplanations: ["Kuch data ki keemat uski <b>taazgi</b> mein hoti hai: location, share ka bhaav, live score. Aise data mein purana girana nuksaan nahi, safai hai.","Yahan goal current position hai; purana data bachakar naya girana stale map banata hai.","Blocked producer ya longer delivery se freshness goal toot sakta hai. Audit-history workload hota toh choice alag hoti.","Freshness ke liye age matter karti hai; random drop newest sample bhi hata sakta hai."] },
         },
         {
           clock: 'jawab 4 · 5.9 s',
@@ -233,16 +218,11 @@ ab:     line bhari → order-service ko turant "na" → 16 customers ko "abhi ba
           vars: { b: '503 jaisa mila waisa phone ko de do', sent: '—', done: '—', tries: '—', cno: '—' },
           ask: {
             q: 'order-service 503 deti hai, app-api wahi 503 phone ko de deta hai, phone turant dobara bhejta hai. order-service ka zyada waqt kis kaam mein jaayega?',
-            choices: [
-              '"Na" bolne mein — har thukrayi hui request bhi order-service tak pahunchti hai aur jawab maangti hai',
-              'Orders poore karne mein — 503 dene mein koi mehnat nahi lagti',
-              'Soney mein — phones thak ke ruk jaayenge',
-              'Line lambi karne mein',
-            ],
+            choices: ["Rejections handle karne mein; retries phir C tak aati hain","Accepted orders mein; rejection handling free maano","Recovery wait mein; 503 clients ko delay batata hai","Queue append mein; har rejected call queue mein jaati"],
             answer: 0,
             hint: 'Jo request thukrayi gayi, woh kahan tak pahunch chuki thi? Use kisne padha aur jawab diya?',
             explain: '"Na" bolna bhi kaam hai. Jo request order-service tak pahunch gayi, use padhna aur jawab dena padta hi hai.',
-          },
+           choiceExplanations: ["\"Na\" bolna bhi kaam hai. Jo request order-service tak pahunch gayi, use padhna aur jawab dena padta hi hai.","Parsing aur rejection response bhi resources lete hain; tight retry loop useful work ko compete karta hai.","503 akela is lab ke client ko wait nahi karata; explicit retry policy chahiye.","503 response rejected admission hai, successful queue append nahi."] },
         },
         {
           clock: 'tareeka 1 · 15 s ka run',
@@ -270,20 +250,15 @@ ab:     line bhari → order-service ko turant "na" → 16 customers ko "abhi ba
           vars: { b: '429 — par "kab aana hai" nahi bataya', sent: '6,02,805', done: '2,975', tries: '202.6', cno: '0' },
           ask: {
             q: 'app-api ne "na" toh bol diya. 429 ke saath app-api aur kya bheje, jisse phones ki bheed kam ho?',
-            choices: [
-              '<code>Retry-After</code> — "itni der baad aana". Phone utna ruk ke hi dobara bheje',
-              'Ek lamba error message',
-              'order-service ka address, taaki phone seedha wahan chala jaaye',
-              'Kuch nahi — 429 apne aap mein kaafi hai',
-            ],
+            choices: ["Retry-After bhejo; client ko wait policy follow karao","503 body bhejo; client ko fixed local loop chalaane do","C ka URL bhejo; clients se gateway bypass karao","429 status bhejo; client delay ko assume kar lo"],
             answer: 0,
             hint: 'Darwaze wale aadmi ne sirf "jagah nahi hai" nahi kaha tha. Usne aur kya kaha tha?',
-            explain: '"Sir, 20 minute lagenge." Sirf "na" sunke grahak darwaze par hi khada rehta hai aur har pal poochhta hai. "Kab aana hai" sunke woh hat jaata hai.',
-          },
+            explain: "Retry-After standard HTTP mein integer seconds ya HTTP-date hota hai. Client wait guidance ko apne deadline/retry budget ke saath follow kare. Is lab ke subsecond experiments custom retry-after-ms header use karte hain.",
+           choiceExplanations: ["Retry-After standard HTTP mein integer seconds ya HTTP-date hota hai. Client wait guidance ko apne deadline/retry budget ke saath follow kare. Is lab ke subsecond experiments custom retry-after-ms header use karte hain.","Body alone se cooperative delay enforce nahi hota; client ko header aur policy samajhni chahiye.","Gateway bypass protection hata kar downstream par aur direct load daal sakta hai.","429 rate-limit signal hai; delay guidance aur compliant client behavior alag requirements hain."] },
         },
         {
           clock: 'tareeka 3 · 429 + Retry-After',
-          say: `app-api ab bolta hai: <code>429</code> + <code>Retry-After: 250 ms</code>. Phone utna rukta hai (thoda random jod ke), phir bhejta hai.
+          say: `app-api ab <code>429</code> ke saath standard <code>Retry-After: 1</code> aur lab ka custom <code>retry-after-ms: 250</code> bhejta hai. Is lab ka client custom milliseconds header padhta hai (thoda random jod ke). Standard Retry-After mein integer seconds ya HTTP-date hota hai; neeche "250 ms" label lab retry delay ka shorthand hai.
             <div class="dr-scroll"><table>
               <tr><th>app-api ka jawab</th><th>Phones ki requests</th><th>Orders poore</th><th>Ek order par</th><th>order-service ka "na"</th></tr>
               <tr><td>503 aage de do</td><td>73,571</td><td>2,745</td><td>26.8</td><td>70,826</td></tr>
@@ -341,15 +316,10 @@ khabar: order-service bhari → app-api ko pata (44 ki ginti)
       ],
       observe: {
         q: 'Dono "rok lo" wale run mein line ka niyam ek hi tha. Ek mein 16 orders order-service ke andar jama hue, doosre mein kahin kuch jama nahi hua. Farak kahan tha?',
-        choices: [
-          'Bhejne wale mein. Customers aate rahe (har order ka apna ruka hua code), jabki bulk program sach mein ruk gaya — usne agla order padha hi nahi',
-          'Line ki hadd mein — doosre run mein hadd badi thi',
-          'dispatch-service mein — doosre run mein dispatch-service tez thi',
-          'Kismat mein — dobara chalao toh ulta hoga',
-        ],
+        choices: ["Bulk producer ruka; HTTP users naye handlers laate rahe","Doosre run ka downstream buffer zyada bada tha","Doosre run ka consumer zyada workers chala raha tha","Dono runs ke arrival patterns ko same maan sakte hain"],
         answer: 0,
         explain: 'Rokna tabhi backpressure hai jab jise roka, woh kaam <b>paida karna</b> band kar de. Warna line bas ek kadam peeche khisakti hai.',
-      },
+       choiceExplanations: ["Rokna tabhi backpressure hai jab jise roka, woh kaam <b>paida karna</b> band kar de. Warna line bas ek kadam peeche khisakti hai.","Dono queue policies/caps same the; difference upstream source ke ruk sakne ka tha.","Consumer rate same rakhi gayi thi; worker scaling result ka cause nahi hai.","A blocked sequential producer aur independent user arrivals same traffic source nahi."] },
       lesson: 'Bhari line ka niyam likhne se pehle poochho: bhejne wala kaun hai, aur kya woh ruk sakta hai?',
     },
   ],
@@ -359,37 +329,22 @@ khabar: order-service bhari → app-api ko pata (44 ki ginti)
     questions: [
       {
         q: '"Humne queue bounded kar di aur bhari hone par producer ko block kar diya. Phir bhi API server ki memory badhti ja rahi hai. Kyun?"',
-        choices: [
-          'Block hue requests API server ke andar jama ho rahe hain — users nahi ruke, toh ruke hue handlers khud ek bina hadd ki line ban gaye. User-facing raaste par block ki jagah turant "na" (429 + Retry-After) do',
-          'Bounded queue mein memory leak hota hai',
-          'Queue ki hadd aur badha do',
-          'Block karna hamesha galat hai',
-        ],
+        choices: ["Blocked handlers ki queue bound karo; admission reject karo","Bounded queue cap badhao; blocked handlers wait karein","HTTP timeout badhao; handlers ko aur der wait karao","Consumer dequeue logs hatao; RAM pressure ghatne do"],
         answer: 0,
         explain: 'Slow motion: "rok lo" + aate hue customers → 5.9 s par 16 ruke hue, har second 4 aur. Wahi "rok lo" + ek program jo ruk sakta hai → kahin kuch jama nahi, raftaar 5/s → 1/s.',
-      },
+       choiceExplanations: ["Slow motion: \"rok lo\" + aate hue customers → 5.9 s par 16 ruke hue, har second 4 aur. Wahi \"rok lo\" + ek program jo ruk sakta hai → kahin kuch jama nahi, raftaar 5/s → 1/s.","Cap badhaana waiting work ko aur jagah dega; unbounded incoming handlers ka risk baaki rahega.","Longer timeout retained handlers aur memory ko badha sakta hai.","Logs ka cost alag hai; growing pending-handler count yahan primary evidence hai."] },
       {
         q: '"Hamara downstream 503 deta hai, hum wahi client ko de dete hain. Kya yeh kaafi backpressure hai?"',
-        choices: [
-          'Nahi. Client turant dobara bhejega aur downstream ka waqt "na" bolne mein jaayega. Beech wali service downstream ki hadd jaane, hadd par use chhue bina 429 + Retry-After de, aur client us Retry-After ko maane',
-          'Haan — 503 hi backpressure hai',
-          '503 ki jagah 500 bhejo',
-          'Client ko block kar do',
-        ],
+        choices: ["Gateway par admission bound aur client retry delay lagao","503 pass karo; clients ko turant retry karne do","500 return karo; same client retry loop rehne do","C ka timeout badhao; request handlers ko wait karao"],
         answer: 0,
         explain: 'Lab: 503 aage dene par ek order par 26.8 requests, order-service ne 70,826 baar "na" bola. 429 + Retry-After 250 ms par 3.1 requests, "na" 0 baar.',
-      },
+       choiceExplanations: ["Lab: 503 aage dene par ek order par 26.8 requests, order-service ne 70,826 baar \"na\" bola. 429 + Retry-After 250 ms par 3.1 requests, \"na\" 0 baar.","Forwarding alone load ko C tak jaane se nahi rokta, aur immediate retries overload badha sakti hain.","Status number badalne se request rate ya retry budget nahi badalta.","Waiting handlers bhi resource lete hain; timeout badhaana admission control nahi."] },
       {
         q: '"Live location, share ke bhaav jaisa data ek bhari queue mein aa raha hai. Kya giraoge?"',
-        choices: [
-          'Sabse purana. Is data ki keemat taazgi mein hai; line hamesha sabse naye data se bhari rehni chahiye',
-          'Sabse naya — pehle aaya, pehle paya',
-          'Kuch nahi — producer ko block karo',
-          'Queue ki hadd hata do',
-        ],
+        choices: ["Oldest state girao; freshest updates preserve karo","Newest state girao; pehle aaye samples preserve karo","Producer block karo; complete historical log banao","Queue unbound karo; har update RAM mein preserve karo"],
         answer: 0,
         explain: 'Lab, asli raftaar: naya girane par line ka sabse purana kaam 10 s purana; sabse purana girane par sirf 2 s.',
-      },
+       choiceExplanations: ["Lab, asli raftaar: naya girane par line ka sabse purana kaam 10 s purana; sabse purana girane par sirf 2 s.","Current-state display mein old data priority dene se screen stale hoti hai.","History preserve karna alag requirement hai; is freshness-only queue mein latency ko aur badhayega.","Unbounded retention finite memory ko exhaust kar sakti hai. Durable history ke liye alag bounded design chahiye."] },
     ],
   },
   success: [

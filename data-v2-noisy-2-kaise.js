@@ -96,16 +96,11 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           vars: { win: ['free', 'busy:A#2'] },
           ask: {
             q: 'Annapurna ke 10 kaam B#2 se pehle aaye the. Agli baari Bholu Dhaba ki hai. Khidki 1 kise uthayegi?',
-            choices: [
-              'B#2 ko — baari Bholu Dhaba ki hai. "Kaun pehle aaya" ab sirf apni line ke andar maayne rakhta hai',
-              'A#3 ko — Annapurna ke kaam pehle aaye the',
-              'Jiski line lambi hai, uska kaam',
-              'Kisi ko nahi — khidki tab tak rukegi jab tak dono lines barabar na ho jaayein',
-            ],
+            choices: ["B2: per-tenant turn global arrival order ko replace karti","A3: global arrival order fair queue mein bhi primary hai","Longest tenant queue: larger backlog ko priority milti","Neither: unequal queue lengths par scheduler idle rahega"],
             answer: 0,
             hint: 'Niyam 1 dobara padho: khidki pehle kya dekhti hai — line ki lambai, aane ka samay, ya baari?',
             explain: 'Slow motion ki line: <code>khidki 1: A#1 ho gaya → agla: B#2 (baari B ki)</code>. B#2 sirf 0.25 second ruka. Pichhle level mein B#2 ke aage 10 kaam the.',
-          },
+           choiceExplanations: ["Slow motion ki line: <code>khidki 1: A#1 ho gaya → agla: B#2 (baari B ki)</code>. B#2 sirf 0.25 second ruka. Pichhle level mein B#2 ke aage 10 kaam the.","FIFO sirf tenant ki apni queue ke andar bacha hai; cross-tenant turn different hai.","Round robin queue length ko priority weight nahi banaata.","Work-conserving scheduler available work ko process karega; equal length ka wait nahi."] },
         },
         {
           clock: '1.52 s',
@@ -121,16 +116,11 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           vars: { win: ['free', 'busy:A#3'], b: ['ok', 'ok'] },
           ask: {
             q: 'Baari Bholu Dhaba ki hai, par Bholu Dhaba ki line khaali hai. Khidki 1 kya karegi?',
-            choices: [
-              'Annapurna ka agla kaam (A#4) uthayegi — khaali baari aage badh jaati hai, khidki khaali nahi baithti',
-              'Khaali baithegi jab tak Bholu Dhaba ka agla kaam na aaye',
-              'Annapurna ko 429 degi',
-              'Bholu Dhaba ki baari "jama" ho jaayegi; agli baar Bholu Dhaba ke do kaam ek saath uthenge',
-            ],
+            choices: ["A4 le; empty B turn skip karke work continue kare","Worker idle rakhe; B ka next arrival wait kare","A reject kare; B ke liye unused turn preserve rahe","B ko credit de; next turn mein do jobs process kare"],
             answer: 0,
             hint: 'Niyam 3 dekho. Pichhle level ki hadd mein isi jagah khidkiyan khaali baithi thi.',
             explain: 'Slow motion ki line: <code>agla: A#4 (baari B ki thi, par B ki line khaali)</code>. Bholu Dhaba ka jo hissa Bholu Dhaba ne nahi liya, woh Annapurna ko mil gaya. Kuch bekaar nahi gaya.',
-          },
+           choiceExplanations: ["Slow motion ki line: <code>agla: A#4 (baari B ki thi, par B ki line khaali)</code>. Bholu Dhaba ka jo hissa Bholu Dhaba ne nahi liya, woh Annapurna ko mil gaya. Kuch bekaar nahi gaya.","Chosen scheduler work-conserving hai; empty turn worker ko idle nahi rakhni chahiye.","Empty tenant turn hard capacity reservation ya rejection rule nahi hai.","Credit accumulation is simple round robin implementation ka feature nahi."] },
         },
         {
           clock: '2.25–3.00 s',
@@ -146,16 +136,11 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           vars: { turn: '—', la: 'khaali', lb: 'khaali', win: ['free', 'free'], b: ['ok', 'ok', 'ok', 'ok', 'ok'] },
           ask: {
             q: 'Ek line mein Annapurna ka kaam 4.02 s par khatam hua tha. Baari-baari mein 5.02 s par. Yeh 1 second kahan gaya?',
-            choices: [
-              'Bholu Dhaba ke chaar kaam (B#2 se B#5) beech mein baari le gaye: 4 × 0.5 s = 2 s ka kaam, do khidkiyon par = 1 s',
-              'Baari ginne mein partner-api dheema ho gaya',
-              'Annapurna ki do requests mana ho gayi',
-              'Khidkiyan beech-beech mein khaali baithi rahi',
-            ],
+            choices: ["B ke four jobs ne two workers par 1 s capacity li","Scheduler bookkeeping ne har bulk job mein delay add kiya","Bulk jobs mein rejection hui; retry wait se 1 s badha","Workers tenant turn ka wait karke beech mein idle rahe"],
             answer: 0,
             hint: 'Ek line mein Bholu Dhaba ke kaam Annapurna ke baad hue the. Ab Bholu Dhaba ke kaam kab hue?',
             explain: 'Kaam utna hi hua; bas kram badla. Ek line mein Bholu Dhaba Annapurna ke peeche ruka (aur fail hua). Ab Annapurna Bholu Dhaba ki baari ke liye 1 second ruka. <b>Shor ki keemat shor karne wala deta hai.</b>',
-          },
+           choiceExplanations: ["Kaam utna hi hua; bas kram badla. Ek line mein Bholu Dhaba Annapurna ke peeche ruka (aur fail hua). Ab Annapurna Bholu Dhaba ki baari ke liye 1 second ruka. <b>Shor ki keemat shor karne wala deta hai.</b>","Measured service slots quiet tenant ke useful work ko mile; scheduling CPU delay stated cause nahi.","This fair-queue run accepted all selected work; added retry wait explanation match nahi.","Empty turns skip hote hain; work-conserving behavior intentionally workers busy rakhta hai."] },
         },
         {
           clock: 'teeno niyam',
@@ -219,16 +204,11 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           vars: { in: '2 (0.6 s baad)', ans: '?' },
           ask: {
             q: 'Baalti khaali ho chuki thi. 0.6 second beete; har second 2 tokens tapakte hain. In 2 requests mein se kitni andar jaayengi?',
-            choices: [
-              '1 — 1.2 tokens wapas aaye; ek request ek poora token leti hai',
-              '2 — 0.6 second kaafi hai',
-              '0 — poora ek second rukna padta hai',
-              '1.2 — tokens jitni',
-            ],
+            choices: ["1 request: 1.2 tokens mein ek poora token kharch hoga","2 requests: 1.2 tokens ko next integer tak round karo","0 requests: refill sirf integer second boundary par hota","1.2 requests: fractional requests bhi admit ho sakti hain"],
             answer: 0,
             hint: '0.6 second × 2 tokens har second = kitne tokens? Aur ek request ko kitna chahiye?',
             explain: '0.6 × 2 = 1.2 tokens. Pehli request: ek token liya (0.2 bacha). Doosri request: 0.2 se kaam nahi chalta → mana. Lab ka output: <code>true  false</code>.',
-          },
+           choiceExplanations: ["0.6 × 2 = 1.2 tokens. Pehli request: ek token liya (0.2 bacha). Doosri request: 0.2 se kaam nahi chalta → mana. Lab ka output: <code>true  false</code>.","Each request needs full one token; admission ceiling nahi, available whole tokens count hota hai.","Lazy refill continuous elapsed time se fractional tokens add karta hai.","Fractional balance allowed hai, fractional request admission nahi."] },
         },
         {
           clock: '0.6 s',
@@ -241,16 +221,11 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           vars: { in: '4 ek saath (5 s baad)', ans: '?' },
           ask: {
             q: '5 second mein 10 tokens tapke honge. Ab 4 requests ek saath aayi hain. Kitni andar jaayengi?',
-            choices: [
-              '2 — baalti mein 2 se zyada jama nahi hote, chaahe kitni der ruko',
-              '4 — 10 tokens mein chaaron aa jaayengi',
-              '10 — jitne tokens tapke',
-              '0 — itni der baad baalti reset ho jaati hai',
-            ],
+            choices: ["2 requests: burst capacity 2 se balance cap hota hai","4 requests: paanch second ke ten tokens retain hue","10 requests: refill count hi current burst balance hai","0 requests: idle duration se token bucket expire hoti"],
             answer: 0,
             hint: 'Niyam ki pehli line dobara padho. Baalti kitni badi hai?',
             explain: 'Baalti 2 par bhar gayi; baaki 8 tokens beh gaye. Lab ka output: <code>true  true  false  false</code>. Shaant rehne se "bachat" nahi banti — bas baalti jitni.',
-          },
+           choiceExplanations: ["Baalti 2 par bhar gayi; baaki 8 tokens beh gaye. Lab ka output: <code>true  true  false  false</code>. Shaant rehne se \"bachat\" nahi banti — bas baalti jitni.","Refill overflow stored balance burst cap ke upar nahi jaata.","Generated tokens aur retained balance alag hain; bucket finite hai.","This model mein five-second idle par reset/expiry rule nahi."] },
         },
         {
           clock: 'do settings',
@@ -282,16 +257,11 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           say: 'Bholu Dhaba har second sirf ek request bhejta hai, jisme 0.5 second lagta hai. Yaani Bholu Dhaba ki khidki <b>aadhe samay khaali</b> baithi rahi — jabki Annapurna ki line mein 10 kaam khade the.',
           ask: {
             q: 'Annapurna ka kaam 2 second der se hua aur ek khidki aadhe samay khaali rahi. Phir bhi koi "alag khidki" kyun chunega?',
-            choices: [
-              'Jab ek tenant ka kaam doosre ko kisi haal mein chhoona nahi chahiye — pakka bachav chahiye, chaahe khidki khaali baithe. Jaise paise wala kaam, ya woh bada grahak jisne apni alag jagah khareedi hai',
-              'Kyunki alag khidki sabse sasti padti hai',
-              'Kyunki isme kul kaam sabse zyada hota hai',
-              'Koi nahi chunega — baari-baari hamesha behtar hai',
-            ],
+            choices: ["Hard isolation promise ho; idle dedicated capacity accept","Lowest cost chahiye; reserved worker utilization ignore","Highest combined throughput chahiye; fixed split choose","All tenants equal deadlines; shared spare capacity block"],
             answer: 0,
             hint: 'Baari-baari mein Bholu Dhaba ka order accept 0.75 s mein hua, alag khidki mein 0.50 s. Kis tareeke mein Bholu Dhaba par Annapurna ka koi asar hi nahi tha?',
             explain: 'Baari-baari mein Bholu Dhaba ko phir bhi chalte hue kaam ke khatam hone tak rukna pada (0.25 s). Alag khidki mein bilkul nahi. Jitna pakka bachav, utni zyada khaali jagah.',
-          },
+           choiceExplanations: ["Baari-baari mein Bholu Dhaba ko phir bhi chalte hue kaam ke khatam hone tak rukna pada (0.25 s). Alag khidki mein bilkul nahi. Jitna pakka bachav, utni zyada khaali jagah.","Dedicated capacity utilization lower aur cost higher ho sakti hai; cheapest automatically nahi.","Fixed partition spare capacity borrowing rokti hai; max combined throughput ka default answer nahi.","Equal deadlines alone non-work-conserving partition ka reason nahi. Strong isolation requirement chahiye."] },
         },
         {
           title: '3. Teeno tareeke, ek nazar mein',
@@ -322,15 +292,10 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
       ],
       observe: {
         q: 'Hadd wale niyam mein khidkiyon ne 15 second mein sirf 4.50 second kaam kiya; baari-baari mein 9.50 second. Dono mein Bholu Dhaba ka koi order accept fail nahi hua. Yeh 5 second ka kaam kahan gaya?',
-        choices: [
-          'Annapurna ki 10 requests mana ho gayi (10 × 0.5 s = 5 s). Hadd ne in 10 requests ko roka, jabki khidkiyan khaali thi; baari-baari ne in 10 requests ko khaali baari mein kar diya',
-          'Baari-baari mein khidkiyan dheemi chalti hain',
-          'Hadd wale niyam mein Bholu Dhaba ne kam requests bheji',
-          'Yeh farak sirf ghadi ki galti hai',
-        ],
+        choices: ["Rejected ten bulk jobs ka 5 s useful work absent tha","Fair queue ne same jobs ko slower service time diya","Quiet tenant ne limiter run mein fewer jobs bheje the","Clock error tha; accepted work count ko same maan lo"],
         answer: 0,
         explain: 'Shaant tenant dono mein bacha. Farak khaali jagah ka hai: hadd mein bekaar gayi, baari-baari mein Annapurna ke kaam aayi.',
-      },
+       choiceExplanations: ["Shaant tenant dono mein bacha. Farak khaali jagah ka hai: hadd mein bekaar gayi, baari-baari mein Annapurna ke kaam aayi.","Service cost fixed tha; completed-work volume alag tha.","Traffic scenario same hai; difference bulk rejection/admission ka hai.","Ten rejected jobs times 0.5 s measured work difference explain karte hain."] },
       lesson: 'Pehle poochho: khaali jagah ka kya ho? Bekaar jaaye (hadd), doosre ko mile (baari), ya surakshit khaali rahe (alag khidki)?',
     },
   ],
@@ -340,26 +305,16 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
     questions: [
       {
         q: '"Rate limiting aur fair queuing mein kya farak hai? Dono hi toh ek tenant ko rokte hain."',
-        choices: [
-          'Rate limit ginti par chalti hai: hadd se upar mana, chaahe system khaali ho. Fair queuing baari par chalti hai: har tenant ki apni line, kaam baari-baari; jo baari koi nahi leta woh doosre ko mil jaati hai. Pehli khaali jagah bekaar karti hai, doosri nahi',
-          'Koi farak nahi — dono ek hi cheez ke do naam hain',
-          'Rate limit client par lagti hai, fair queuing database par',
-          'Fair queuing sirf network routers mein hoti hai',
-        ],
+        choices: ["Rate cap admissions; fair queue ready work ki turns baante","Dono FIFO sorting rules; overload admissions same hote","Rate cap source-side only; fair queue DB-side only hoti","Fair queue hard reserve; idle turn ko doosra nahi le"],
         answer: 0,
-        explain: 'Lab: hadd (80/s) → A ki 721 hui, 1,453 mana. Baari-baari → A ki 1,046 hui. Dono mein shaant tenants ke fail: 0 aur 0.',
-      },
+        explain: "Rate limiting admissions ko rate/burst budget se bound karti hai. Fair queuing available work ko tenants ke beech schedule karti hai; is model mein idle turns borrow hoti hain. Dono combine ho sakte hain. Variable-cost jobs mein plain request round robin CPU-time fairness guarantee nahi karta; weights/cost-aware scheduling consider karo.",
+       choiceExplanations: ["Rate limiting admissions ko rate/burst budget se bound karti hai. Fair queuing available work ko tenants ke beech schedule karti hai; is model mein idle turns borrow hoti hain. Dono combine ho sakte hain. Variable-cost jobs mein plain request round robin CPU-time fairness guarantee nahi karta; weights/cost-aware scheduling consider karo.","Admission limit aur scheduling order separate controls hain; combine bhi kar sakte hain.","Both service, proxy ya scheduler par implement ho sakte hain; location definition nahi.","This fair scheduler work-conserving hai; empty turns skip hoti hain."] },
       {
         q: '"Token bucket mein rate aur burst alag-alag kyun hote hain?"',
-        choices: [
-          'Rate lambe samay ki raftaar tay karta hai (tokens kitni tezi se tapakte hain). Burst ek saath ki chhoot tay karta hai (baalti kitni badi). Ek tenant thodi der ke liye tez bhej sakta hai, par lagataar nahi',
-          'Burst rate ka doosra naam hai',
-          'Rate requests ke liye hai, burst bytes ke liye',
-          'Burst sirf testing ke liye hota hai',
-        ],
+        choices: ["Rate sustained refill; burst maximum saved allowance hai","Rate aur burst dono requests-per-second ke same aliases","Rate active workers; burst per-worker execution time hai","Rate total queue bytes; burst tenant priority weight hai"],
         answer: 0,
         explain: 'Lab ka mini program (2 har second, baalti 2): 5 ek saath → 2 andar. 0.6 s baad 2 → 1 andar. 5 s ruk ke 4 → phir bhi 2 hi.',
-      },
+       choiceExplanations: ["Lab ka mini program (2 har second, baalti 2): 5 ek saath → 2 andar. 0.6 s baad 2 → 1 andar. 5 s ruk ke 4 → phir bhi 2 hi.","Units alag hain: rate tokens/s, burst tokens.","These worker scheduling parameters nahi; admission-token state hai.","Byte-based tokens possible hain, par configured rate/burst ka relation refill and capacity hai."] },
     ],
   },
   success: [

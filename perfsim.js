@@ -40,6 +40,7 @@
 /* =====================================================================
    DEFAULT SYSTEM — har mission isi ko deep-clone karke tweak karta hai
    ===================================================================== */
+(() => {
 SD.defaultSys = function () {
   return {
     name: 'txn-api',
@@ -349,6 +350,15 @@ function bytes(n) {
 }
 SD.perfFmt = { fmt, ms, bar, bytes };
 
+/* Evidence is structured model output. Historical baselines remain visible;
+   final verification must use the live configuration and a fresh measurement. */
+SD.mission = {
+  latest(s, kind, op) { return [...s.records].reverse().find(r => r.kind === kind && (!op || r.op === op)); },
+  current(s, kind, test) { return s.records.some(r => r.kind === kind && r.revision === s.revision && (!test || test(r))); },
+  index(s, table, cols) { const t = s.sys.db.tables[table]; return !!t && (t.indexes || []).some(i => cols.every((c, n) => i.cols[n] === c)); },
+};
+SD.allTasks = tasks => s => tasks.every(t => t.check(s)) && (!s.stage.verify || !!s.stage.verify(s));
+
 /* =====================================================================
    TERMINAL RENDERER — sim ko UI se jodta hai
    ===================================================================== */
@@ -363,42 +373,68 @@ function deepMerge(base, over) {
 }
 
 /* "--rps 500 --pattern deep-page" -> { rps:'500', pattern:'deep-page', _:[...] } */
-function parseFlags(str) {
+function parseFlags(str, allowed) {
   const out = { _: [] };
   const toks = String(str).match(/'[^']*'|"[^"]*"|\S+/g) || [];
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i];
     if (t.startsWith('--')) {
-      const key = t.slice(2);
+      const eq = t.indexOf('=');
+      const key = t.slice(2, eq < 0 ? undefined : eq).toLowerCase();
+      if (['_', '__proto__', 'prototype', 'constructor'].includes(key)) throw new Error('400 — flag ka naam valid nahi hai');
+      if (eq > -1) { const value = t.slice(eq + 1).replace(/^['"]|['"]$/g, ''); out[key] = key === 'header' ? [].concat(out[key] || [], value) : value; continue; }
       const nx = toks[i + 1];
-      if (nx && !nx.startsWith('--')) { out[key] = nx.replace(/^['"]|['"]$/g, ''); i++; }
+      if (nx && !nx.startsWith('--')) { const value = nx.replace(/^['"]|['"]$/g, ''); out[key] = key === 'header' ? [].concat(out[key] || [], value) : value; i++; }
       else out[key] = true;
     } else if (/^-[a-zA-Z]$/.test(t)) {
       const nx = toks[i + 1];
-      out[t.slice(1)] = nx ? nx.replace(/^['"]|['"]$/g, '') : true; i++;
+      const key = t.slice(1);
+      const value = nx && !nx.startsWith('-') ? nx.replace(/^['"]|['"]$/g, '') : true;
+      if (key === 'H') out.H = [].concat(out.H || [], value); else out[key] = value;
+      if (value !== true) i++;
     } else out._.push(t.replace(/^['"]|['"]$/g, ''));
   }
+  if (allowed) Object.keys(out).filter(k => k !== '_').forEach(k => { if (!allowed.includes(k)) throw new Error(`400 — flag '${k.length === 1 ? '-' : '--'}${k}' is command par supported nahi hai. Supported: ${allowed.join(', ') || 'koi flag nahi'}`); });
+  ['on', 'enable', 'warm', 'write'].forEach(k => {
+    if (out[k] == null || out[k] === true) return;
+    if (!/^(true|false)$/i.test(out[k])) throw new Error(`400 — --${k} boolean flag hai; true ya false do`);
+    out[k] = /^true$/i.test(out[k]);
+  });
+  const numeric = ['rps', 'duration', 'users', 'bytes', 'days', 'peak', 'per-user-per-day', 'n', 'rows', 'size', 'items', 'bits', 'hashes', 'registers', 'precision', 'assets', 'rtt', 'events', 'partitions', 'consumers', 'concurrent', 'ttl', 'misses', 'nodes', 'replicas', 'max', 'max-concurrent', 'queue', 'ms', 'base', 'window', 'half-open', 'burst', 'holds'];
+  numeric.forEach(k => {
+    if (out[k] != null && (out[k] === true || !Number.isFinite(Number(out[k])) || Number(out[k]) <= 0 || Number(out[k]) > 1e15))
+      throw new Error(`400 — --${k} ko finite positive number do; '${out[k]}' valid nahi hai`);
+  });
+  ['jitter', 'watermark', 'late', 'hit-rate', 'threshold', 'fp', 'availability'].forEach(k => {
+    if (out[k] == null || k === 'jitter' && /^(full|none|equal)$/i.test(out[k])) return;
+    if (out[k] === true || !Number.isFinite(Number(out[k])) || Number(out[k]) < 0)
+      throw new Error(`400 — --${k} ko valid non-negative number do`);
+  });
+  if (out['hit-rate'] != null && +out['hit-rate'] > 1) throw new Error('400 — --hit-rate 0 se 1 ke beech do');
+  if (out.late != null && +out.late > 100) throw new Error('400 — --late percentage 0 se 100 ke beech do');
+  if (out.threshold != null && (+out.threshold <= 0 || +out.threshold > 1)) throw new Error('400 — --threshold 0 se bada aur 1 tak do');
+  if (out.availability != null && (+out.availability <= 0 || +out.availability > 100)) throw new Error('400 — availability 0 se badi aur 100 tak ho');
   return out;
 }
 
 SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
+  function initialSystem() {
+    const base = deepMerge(SD.defaultSys(), stage.sys);
+    if (stage.sys && stage.sys.db && stage.sys.db.tables) base.db.tables = JSON.parse(JSON.stringify(stage.sys.db.tables));
+    return base;
+  }
   const sim = {
     /* NOTE: agar mission apne db.tables deta hai toh default tables (transactions/users)
        poori tarah REPLACE hote hain — merge nahi. Warna har mission mein 24M-row
        transactions table chupke se ghus jaati aur `load` galat table pakad leta. */
-    sys: (function () {
-      const base = deepMerge(SD.defaultSys(), stage.sys);
-      if (stage.sys && stage.sys.db && stage.sys.db.tables) {
-        base.db.tables = JSON.parse(JSON.stringify(stage.sys.db.tables));
-      }
-      return base;
-    })(),
+    sys: initialSystem(),
     history: [],
     records: [],
     last: null,
     lastError: null,
     hintsUsed: 0,
     done: false,
+    revision: 0,
     stage,
   };
   sim.responses = stage.responses || [];
@@ -463,7 +499,12 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     sim.hintsUsed++;
   }
   function err(msg) { const e = new Error(msg); e.simerr = true; throw e; }
-  function rec(r) { r.cmd = sim.history[sim.history.length - 1]; sim.records.push(r); sim.last = r; return r; }
+  function rec(r) {
+    r.cmd = sim.history[sim.history.length - 1];
+    r.revision = sim.revision;
+    const result = JSON.parse(JSON.stringify(r));
+    sim.records.push(result); sim.last = result; return result;
+  }
 
   /* ASCII table printer */
   function table(head, rows) {
@@ -484,7 +525,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function refresh() {
     if (stage.tasks) {
       stage.tasks.forEach((t, i) => {
-        if (t.check && t.check(sim)) taskList.children[i].classList.add('done');
+        taskList.children[i].classList.toggle('done', !!(t.check && t.check(sim)));
       });
     }
     if (!sim.done && stage.success && stage.success(sim)) {
@@ -506,15 +547,30 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function run(raw) {
     print('cmd', raw);
     if (sim.done) return;
-    const norm = raw.replace(/\s+/g, ' ').trim().replace(/;+$/, '');
+    let norm = String(raw).trim().replace(/;+$/, '').replace(/^sudo\s+(?:-n\s+)?/i, '');
+    /* Preserve quoted keys/headers while accepting tabs and repeated spaces. */
+    norm = (norm.match(/'[^']*'|"[^"]*"|[^'"\s]+/g) || []).join(' ');
+    norm = norm.replace(/^status$/i, 'sim status').replace(/^ls$/i, 'show tables').replace(/^cls$/i, 'clear').replace(/^\?$/, 'help');
+    if (!norm) return;
     sim.history.push(norm);
     sim.lastError = null;
-    try { exec(norm); }
-    catch (e) {
-      if (e.simerr) { sim.lastError = e.message; print('err', e.message); }
-      else { console.error('perfsim error:', e); print('err', `simulator error: ${e.message} — 'help' dekho`); }
+    try {
+      if (norm.length > 8192) err('400 — command bahut lamba hai (max 8192 characters); chhota workload do');
+      if ((norm.match(/'/g) || []).length % 2 || (norm.match(/"/g) || []).length % 2) err('400 — quote band nahi hui; header/key ko matching quotes mein likho');
+      const before = JSON.stringify(sim.sys);
+      exec(norm);
+      if (before !== JSON.stringify(sim.sys)) {
+        sim.revision++;
+        /* The record describes the state produced by this command. */
+        if (sim.last && sim.last.cmd === norm) sim.last.revision = sim.revision;
+      }
+      refresh();
     }
-    refresh();
+    catch (e) {
+      sim.lastError = e.message;
+      if (e.simerr || /^400 —/.test(e.message)) print('err', e.message);
+      else { console.error('perfsim error:', e); print('err', `simulator error: ${e.message} — 'sim reset' se mission dobara shuru karo`); }
+    }
   }
 
   /* =====================================================================
@@ -532,23 +588,25 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   }
 
   function cmdHttp(cmd) {
-    const m = cmd.match(/^(GET|POST|PUT|PATCH|DELETE)\s+(\S+)(.*)$/i);
+    const m = cmd.match(/^(GET|POST|PUT|PATCH|DELETE)\s+(.+)$/i);
     if (!m) err("400 — request aise likho:  GET /api/v1/transactions?page=1&limit=50");
     const method = m[1].toUpperCase();
-    const url = m[2];
-    const flags = parseFlags(m[3] || '');
+    const flags = parseFlags(m[2], ['H', 'header', 'n']);
+    const url = flags._[0];
+    if (!url || !/^\//.test(url) || flags._.length !== 1) err('400 — ek relative URL do, jaise GET /api/v1/transactions?limit=50; flags URL se pehle ya baad aa sakte hain');
     const headers = {};
     [].concat(flags.H || [], flags.header || []).forEach(h => {
       const hm = String(h).match(/^([^:]+):\s*(.*)$/);
-      if (hm) headers[hm[1].trim().toLowerCase()] = hm[2].trim();
+      if (!hm) err("400 — header aise do: -H 'Authorization: Bearer u7'");
+      headers[hm[1].trim().toLowerCase()] = hm[2].trim();
     });
     const repeat = Math.max(1, parseInt(flags.n, 10) || 1);
     const qs = {};
-    (url.split('?')[1] || '').split('&').filter(Boolean).forEach(kv => {
-      const [k, v] = kv.split('=');
-      qs[decodeURIComponent(k)] = decodeURIComponent(v == null ? '' : v);
-    });
+    Object.assign(qs, queryParams(url));
     const api = sim.sys.api;
+    ['limit', 'per_page', 'page', 'offset'].forEach(k => {
+      if (qs[k] != null && (!/^\d+$/.test(qs[k]) || +qs[k] < (k === 'offset' ? 0 : 1) || !Number.isSafeInteger(+qs[k]))) err(`400 — '${k}' ko ${k === 'offset' ? 'non-negative' : 'positive'} integer do`);
+    });
 
     /* ---- /health hamesha sasta hai — yahi uska poora sabak hai ---- */
     if (/^\/health/.test(url)) {
@@ -618,13 +676,14 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       return rec({ kind: 'http', method, path: url, status: 404 });
     }
 
-    const limit = Math.min(1000, parseInt(qs.limit || qs.per_page, 10) || 50);
+    const requestedLimit = parseInt(qs.limit || qs.per_page, 10) || 50;
+    const limit = Math.min(1000, requestedLimit);
     const hasCursor = qs.cursor != null || qs.after != null;
     const page = parseInt(qs.page, 10) || (qs.offset != null ? Math.floor(parseInt(qs.offset, 10) / limit) + 1 : 1);
     const offset = qs.offset != null ? parseInt(qs.offset, 10) : (page - 1) * limit;
 
     /* --- contract guards: yahi API design ka asli kaam hai --- */
-    if (api.maxLimit && limit > api.maxLimit) {
+    if (api.maxLimit && requestedLimit > api.maxLimit) {
       print('err', `HTTP/1.1 400 Bad Request\n\n{ "type": "/errors/limit-too-large", "title": "limit max ${api.maxLimit} ho sakta hai", "status": 400, "max_limit": ${api.maxLimit} }`);
       print('sys', `🛡️ Bina max ke, koi bhi ?limit=1000000 maang ke DB ko gira sakta hai.`);
       return rec({ kind: 'http', method, path: url, status: 400, guard: 'maxLimit' });
@@ -635,6 +694,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         `woh query jo kabhi chali hi nahi.`);
       return rec({ kind: 'http', method, path: url, status: 400, guard: 'noPage' });
     }
+    if (hasCursor) decodeCursor(qs.cursor != null ? qs.cursor : qs.after);
     if (api.maxPageDepth && page > api.maxPageDepth) {
       print('err', `HTTP/1.1 400 Bad Request\n\n{ "type": "/errors/page-too-deep", "title": "page ${fmt(page)} bahut gehra hai (max ${fmt(api.maxPageDepth)})", "status": 400, "hint": "filter lagao ya export API use karo" }`);
       print('sys', `🛡️ Legacy offset API ke liye max page depth ek achhi bandage hai — poora cursor migration hone tak.`);
@@ -662,11 +722,12 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       totalMs += countCost.ms;
     }
     /* downstream calls */
-    let depMs = 0; const depNotes = [];
+    let depMs = 0; let dependencyOK = true; const depNotes = [];
     Object.keys(sim.sys.deps).forEach(dn => {
       const d = sim.sys.deps[dn];
       if (d.calledBy && d.calledBy !== r.resource) return;
       const dc = SD.depCost(sim.sys, dn);
+      dependencyOK = dependencyOK && dc.ok;
       depMs += dc.ms;
       if (dc.note) depNotes.push(`${dn}: ${dc.note}`);
       /* --- breaker ki state machine: user ise trip hote DEKHE --- */
@@ -698,7 +759,10 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
 
     /* --- response --- */
     const t = r.table;
-    if (r.kind === 'detail') {
+    const status = dependencyOK ? 200 : 504;
+    if (!dependencyOK) {
+      print('err', 'HTTP/1.1 504 Gateway Timeout\n\n{ "type": "/errors/dependency-unavailable", "title": "Downstream call complete nahi hui; timeout, breaker aur fallback inspect karo", "status": 504 }');
+    } else if (r.kind === 'detail') {
       print('ok', `HTTP/1.1 200 OK\n\n{ "id": "${r.id}", "amount": 4999, "status": "captured" }`);
     } else if (keyset) {
       const tok = btoaSafe(JSON.stringify({ t: '2026-04-11T09:22:04Z', id: 8812304, d: 'desc' }));
@@ -737,7 +801,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     depNotes.forEach(n => print('sys', '🔌 ' + n));
 
     return rec({
-      kind: 'http', method, path: url, status: 200, resource: r.resource,
+      kind: 'http', method, path: url, status, repeat, resource: r.resource,
       page, limit, offset, keyset, cursor: keyset,
       rowsExamined: cost.rowsExamined + (countCost ? countCost.rowsExamined : 0),
       rowsSent: cost.rowsSent, plan: cost.plan, indexUsed: cost.key,
@@ -766,11 +830,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
 
   /* ek URL string -> { serviceMs, label } — load ke liye */
   function serviceMsForUrl(url) {
-    const qs = {};
-    (url.split('?')[1] || '').split('&').filter(Boolean).forEach(kv => {
-      const [k, v] = kv.split('=');
-      qs[decodeURIComponent(k)] = decodeURIComponent(v == null ? '' : v);
-    });
+    const qs = queryParams(url);
     const r = route('GET', url);
     if (!r.table) err(`400 — '${url}' ka resource is system mein nahi hai`);
     const limit = Math.min(1000, parseInt(qs.limit || qs.per_page, 10) || 50);
@@ -789,6 +849,27 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     catch (e) { return 'eyJ0IjoiMjAyNi0wNC0xMSJ9'; }
   }
 
+  function queryParams(url) {
+    const qs = Object.create(null);
+    try { (String(url).split('?')[1] || '').split('&').filter(Boolean).forEach(kv => {
+      const at = kv.indexOf('=');
+      const k = at < 0 ? kv : kv.slice(0, at), v = at < 0 ? '' : kv.slice(at + 1);
+      qs[decodeURIComponent(k)] = decodeURIComponent(v);
+    }); } catch (e) { err('400 — URL percent-encoding galat hai; % ke baad do hex digits chahiye (jaise %20)'); }
+    return qs;
+  }
+
+  function decodeCursor(token) {
+    try {
+      if (!/^[A-Za-z0-9+/_-]+={0,2}$/.test(String(token || ''))) throw new Error();
+      const encoded = String(token).replace(/-/g, '+').replace(/_/g, '/');
+      const json = typeof atob === 'function' ? atob(encoded) : Buffer.from(encoded, 'base64').toString();
+      const data = JSON.parse(json);
+      if (!data || typeof data !== 'object' || Array.isArray(data) || data.t == null || data.id == null) throw new Error();
+      return json;
+    } catch (e) { err('400 — cursor valid base64 JSON nahi hai, ya t/id missing hain; response ka next_cursor copy karo'); }
+  }
+
   /* =====================================================================
      EXPLAIN + INDEX — SQL syntax nahi sikha rahe, PLAN padhna sikha rahe hain
      ===================================================================== */
@@ -796,7 +877,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     const s = sql.replace(/\s+/g, ' ').trim();
     const from = s.match(/\bFROM\s+([A-Za-z_][\w]*)/i);
     if (!from) err('400 — EXPLAIN ke baad ek SELECT ... FROM <table> chahiye');
-    const tableName = from[1];
+    const tableName = from[1].toLowerCase();
     const where = s.match(/\bWHERE\s+(.*?)(?:\bGROUP\b|\bORDER\b|\bLIMIT\b|$)/i);
     const t = sim.sys.db.tables[tableName];
     if (!t) err(`400 — table '${tableName}' is system mein nahi hai. 'show tables' dekho.`);
@@ -842,10 +923,12 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdCreateIndex(cmd) {
     const m = cmd.match(/^create\s+(unique\s+)?index\s+(\w+)\s+on\s+(\w+)\s*\(([^)]*)\)/i);
     if (!m) err("400 — aise likho:  CREATE INDEX ix_txn_user_time ON transactions(user_id, created_at)");
-    const [, uniq, name, tn, colStr] = m;
+    const [, uniq, name, tableToken, colStr] = m;
+    const tn = tableToken.toLowerCase();
     const t = sim.sys.db.tables[tn];
     if (!t) err(`400 — table '${tn}' nahi mila`);
     const cols = colStr.split(',').map(c => c.trim().toLowerCase()).filter(Boolean);
+    if (!cols.length) err('400 — index mein kam se kam ek column chahiye; DESCRIBE ke badle show tables se columns dekho');
     const bad = cols.find(c => !(t.cols || []).includes(c));
     if (bad) err(`400 — column '${bad}' table '${tn}' mein nahi hai. Columns: ${(t.cols || []).join(', ')}`);
     if ((t.indexes || []).some(i => i.name === name)) err(`400 — index '${name}' already exists`);
@@ -893,13 +976,27 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
      sim ... — system ko badlo
      ===================================================================== */
   function setPath(obj, path, val) {
+    const enums = { 'api.pagination': ['offset', 'cursor'], 'api.auth': ['body', 'param', 'header', 'null', 'none'], 'db.engine': ['postgres', 'mysql', 'lsm', 'rocksdb', 'cassandra', 'leveldb'], 'booking.mode': ['none', 'optimistic', 'pessimistic', 'reservation'], streamKind: ['log', 'queue', 'sqs', 'rabbit'] };
+    const bools = ['api.countTotal', 'api.idempotency'];
+    const positive = ['api.maxLimit', 'api.maxPageDepth', 'pool.size', 'pool.acquireTimeoutMs', 'app.instances', 'app.cpuMsPerReq', 'db.bufferPoolMB', 'db.replicas'];
+    const nonnegative = ['db.longTxHolding', 'db.replicaLagSec'];
+    if (enums[path]) {
+      val = String(val).toLowerCase();
+      if (!enums[path].includes(val)) err(`400 — ${path}: ${enums[path].join(' | ')} mein se chuno`);
+    } else if (bools.includes(path)) {
+      val = String(val).toLowerCase();
+      if (!['true', 'false'].includes(val)) err(`400 — ${path}: true ya false chahiye`);
+    } else if (positive.includes(path) || nonnegative.includes(path)) {
+      if (!Number.isFinite(Number(val)) || Number(val) < (positive.includes(path) ? 0.01 : 0) || Number(val) > 1e9) err(`400 — ${path}: finite ${positive.includes(path) ? 'positive' : 'non-negative'} number chahiye (max 1e9)`);
+    } else if (path === 'api.cache' && /^(null|none)$/i.test(val)) val = 'null';
+    else err(`400 — '${path}' editable setting nahi hai; sim status aur help dekho. Internal tables, records aur migration state seedha edit nahi hote`);
     const parts = path.split('.');
     let o = obj;
     for (let i = 0; i < parts.length - 1; i++) { if (o[parts[i]] == null) o[parts[i]] = {}; o = o[parts[i]]; }
     let v = val;
     if (/^-?\d+(\.\d+)?$/.test(val)) v = parseFloat(val);
     else if (val === 'true') v = true; else if (val === 'false') v = false;
-    else if (val === 'null' || val === 'none') v = null;
+    else if (val === 'null' || val === 'none' && path !== 'booking.mode') v = null;
     o[parts[parts.length - 1]] = v;
     return v;
   }
@@ -908,11 +1005,16 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     const rest = cmd.replace(/^sim\s+/i, '');
     const verb = rest.split(' ')[0].toLowerCase();
     const args = rest.slice(verb.length).trim();
-    const f = parseFlags(args);
+    const f = parseFlags(args, ['ttl', 'jitter', 'hit-rate', 'ms', 'max', 'backoff', 'base', 'threshold', 'window', 'half-open', 'max-concurrent', 'queue', 'rps', 'burst', 'holds']);
     const sys = sim.sys;
 
     if (verb === 'status') return simStatus();
-    if (verb === 'reset') { sim.sys = deepMerge(SD.defaultSys(), stage.sys); print('ok', 'System reset ho gaya.'); return rec({ kind: 'sim', op: 'reset' }); }
+    if (verb === 'reset') {
+      sim.sys = initialSystem(); sim.history = [cmd]; sim.records = []; sim.last = null;
+      sim.rl = { tokens: 0, at: 0 }; sim.lastError = null;
+      print('ok', 'System aur mission evidence reset ho gaye. Pehle baseline se dobara shuru karo.');
+      return rec({ kind: 'sim', op: 'reset' });
+    }
 
     if (verb === 'set') {
       const [path, ...v] = args.split(' ');
@@ -924,7 +1026,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
 
     if (verb === 'scale') {
       const what = f._[0], n = parseInt(f._[1], 10);
-      if (!what || isNaN(n)) err('400 — aise:  sim scale app 40   |   sim scale replicas 5   |   sim scale pool 200');
+      if (!what || !Number.isSafeInteger(n) || n < 1 || n > 1000000) err('400 — scale count 1 se 1000000 tak integer do: sim scale app 40 | sim scale replicas 5 | sim scale pool 200');
       if (what === 'app') sys.app.instances = n;
       else if (what === 'replicas') sys.db.replicas = n;
       else if (what === 'pool') sys.pool.size = n;
@@ -948,6 +1050,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     if (verb === 'add') {
       const what = String(f._[0] || '').toLowerCase();
       const target = f._[1];
+      if (target && ['__proto__', 'prototype', 'constructor'].includes(target)) err('400 — dependency ka naam reserved hai; ledger jaisa service name do');
       if (what === 'cache') {
         sys.api.cache = { ttlSec: +(f.ttl || 60), jitterPct: +(f.jitter || 0), hitRate: f['hit-rate'] != null ? +f['hit-rate'] : 0.9 };
         print('ok', `Cache on — TTL ${sys.api.cache.ttlSec}s, jitter ${sys.api.cache.jitterPct}%`);
@@ -958,7 +1061,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       }
       if (what === 'timeout') {
         const t = parseInt(f._[2] || f.ms, 10);
-        if (!target || isNaN(t)) err('400 — aise:  sim add timeout ledger 500');
+        if (!target || !Number.isFinite(t) || t < 1 || t > 3600000) err('400 — timeout 1 se 3600000 ms do: sim add timeout ledger 500');
         sys.deps[target] = sys.deps[target] || { p50: 40, p99: 120, errorRate: 0 };
         sys.deps[target].timeoutMs = t;
         print('ok', `${target}: timeout = ${t}ms`);
@@ -968,8 +1071,11 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       }
       if (what === 'retry') {
         if (!target) err('400 — aise:  sim add retry ledger --max 3 --backoff exp --jitter full');
+        if (f.backoff && !/^(exp|fixed)$/i.test(f.backoff)) err('400 — retry --backoff exp ya fixed do');
+        if (f.jitter && !/^(full|none|equal)$/i.test(f.jitter)) err('400 — retry --jitter full, equal ya none do');
+        if (f.max != null && (!Number.isInteger(+f.max) || +f.max > 10)) err('400 — retry --max 1 se 10 tak integer do; bounded retries rakho');
         sys.deps[target] = sys.deps[target] || { p50: 40, p99: 120, errorRate: 0 };
-        sys.deps[target].retry = { max: +(f.max || 3), backoff: f.backoff || 'fixed', jitter: f.jitter || 'none', baseMs: +(f.base || 100) };
+        sys.deps[target].retry = { max: +(f.max || 3), backoff: String(f.backoff || 'fixed').toLowerCase(), jitter: String(f.jitter || 'none').toLowerCase(), baseMs: +(f.base || 100) };
         const R = sys.deps[target].retry;
         print('ok', `${target}: retry max=${R.max} backoff=${R.backoff} jitter=${R.jitter}`);
         if (R.jitter === 'none') print('sys', `🌩️ Jitter ke bina saare clients THEEK ek jaise wait karenge — aur EK SAATH dobara maarenge. ` +
@@ -1029,8 +1135,10 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     if (verb === 'inject') {
       const what = String(f._[0] || '').toLowerCase();
       const target = f._[1];
+      if (['latency', 'down', 'error'].includes(what) && (!target || ['__proto__', 'prototype', 'constructor'].includes(target))) err('400 — dependency ka naam chahiye: sim inject latency ledger 3000 | sim inject down ledger');
       if (what === 'latency') {
         const v = parseInt(f._[2], 10);
+        if (!Number.isFinite(v) || v < 1 || v > 3600000) err('400 — latency 1 se 3600000 ms do: sim inject latency ledger 3000');
         sys.deps[target] = sys.deps[target] || { p50: 40, p99: 120, errorRate: 0 };
         sys.deps[target].p50 = Math.round(v * 0.6); sys.deps[target].p99 = v;
         print('err', `💉 '${target}' ab ${v}ms le raha hai.`);
@@ -1044,6 +1152,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       }
       if (what === 'error') {
         const v = parseFloat(f._[2]);
+        if (!Number.isFinite(v) || v < 0 || v > 1) err('400 — error rate 0 se 1 ke beech do: sim inject error ledger 0.5');
         sys.deps[target] = sys.deps[target] || { p50: 40, p99: 120, errorRate: 0 };
         sys.deps[target].errorRate = v;
         print('err', `💉 '${target}' ka error rate ab ${(v * 100).toFixed(0)}%.`);
@@ -1113,11 +1222,12 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   };
 
   function cmdLoad(cmd) {
-    const f = parseFlags(cmd.replace(/^load\s*/i, ''));
+    const f = parseFlags(cmd.replace(/^load\s*/i, ''), ['rps', 'duration', 'pattern', 'path', 'write']);
+    if (f._.length) err('400 — load ke arguments flags hain: load --rps 500 --duration 8');
     const rps = parseInt(f.rps, 10) || 100;
     const duration = Math.min(30, parseInt(f.duration, 10) || 8);
     const sys = sim.sys;
-    const pname = f.path ? 'path' : (f.pattern || 'shallow');
+    const pname = f.path ? 'path' : String(f.pattern || 'shallow').toLowerCase();
     const p = f.path ? { desc: f.path, build: () => ({}) } : PATTERNS[pname];
     if (!p) err(`400 — pattern '${pname}' pata nahi. Options: ${Object.keys(PATTERNS).join(', ')}  (ya --path '/api/v1/...' do)`);
     const shape = p.build();
@@ -1175,6 +1285,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     return rec({
       kind: 'load', rps, duration, pattern: pname, serviceMs: +serviceMs.toFixed(2),
       capacity: res.capacity, saturated: res.saturated, maxP99, errPct: res.errPct,
+      offeredRps: res.offeredRps, admittedRps: res.admittedRps, queuedRps: res.queuedRps,
       effPool: res.effPool, p99: maxP99, rho: res.rho, maxWait: res.maxWait,
       poolStarved: res.maxWait > 100,
     });
@@ -1186,9 +1297,13 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdTrace(cmd) {
     const sys = sim.sys;
     const target = cmd.replace(/^trace\s*/i, '').trim() || 'GET /api/v1/transactions?page=2&limit=50';
+    const request = target.match(/^GET\s+(\/\S*)$/i);
+    if (!request) err('400 — trace ko GET request do: trace GET /api/v1/orders');
+    if (!route('GET', request[1]).table) err(`404 — trace ka resource '${request[1]}' is system mein nahi hai; show tables dekho`);
     const holds = sys.db.longTxHolding || 0;
     const eff = Math.max(1, sys.pool.size - holds);
     const lastLoad = [...sim.records].reverse().find(r => r.kind === 'load');
+    if (lastLoad && lastLoad.revision !== sim.revision) err('409 — configuration load test ke baad badli hai; wahi load dobara chalao, phir trace lo');
     const serviceMs = lastLoad ? lastLoad.serviceMs : 20;
     const capacity = eff * (1000 / serviceMs);
     const rps = lastLoad ? lastLoad.rps : 100;
@@ -1238,6 +1353,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdMetrics() {
     const sys = sim.sys;
     const lastLoad = [...sim.records].reverse().find(r => r.kind === 'load');
+    if (lastLoad && lastLoad.revision !== sim.revision) err('409 — metrics purane load ki hain; nayi config par wahi load dobara chalao');
     const holds = sys.db.longTxHolding || 0;
     const eff = sys.pool.size - holds;
     const starved = !!(lastLoad && lastLoad.poolStarved);
@@ -1267,7 +1383,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   }
 
   function cmdSlo(cmd) {
-    const f = parseFlags(cmd.replace(/^slo\s*/i, ''));
+    const f = parseFlags(cmd.replace(/^slo\s*/i, ''), ['availability', 'days']);
     const sys = sim.sys;
     const avail = parseFloat(f.availability || sys.slo.availability);
     const days = parseInt(f.days, 10) || 30;
@@ -1290,7 +1406,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   }
 
   function cmdEstimate(cmd) {
-    const f = parseFlags(cmd.replace(/^estimate\s*/i, ''));
+    const f = parseFlags(cmd.replace(/^estimate\s*/i, ''), ['users', 'rps', 'bytes', 'days', 'peak', 'per-user-per-day']);
     const users = parseFloat(f.users || 0);
     const rps = parseFloat(f.rps || 0);
     const bytesPer = parseFloat(f.bytes || 0);
@@ -1326,10 +1442,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     const m = cmd.match(/^cursor\s+(decode|encode)\s+(.*)$/i);
     if (!m) err("400 — aise:  cursor decode eyJ0IjoiMjAyNi0wNC0xMSJ9");
     if (m[1].toLowerCase() === 'decode') {
-      let json;
-      try { json = typeof atob === 'function' ? atob(m[2]) : Buffer.from(m[2], 'base64').toString(); }
-      catch (e) { json = '{"t":"2026-04-11T09:22:04Z","id":8812304,"d":"desc"}'; }
-      if (!/^\s*\{/.test(json)) json = '{"t":"2026-04-11T09:22:04Z","id":8812304,"d":"desc"}';
+      const json = decodeCursor(m[2]);
       print('ok', json);
       print('sys', `🔑 Cursor ke andar: last_seen sort value (t), tie-breaker id, aur direction. ` +
         `Client ise KABHI khud na banaye — server banata hai, server padhta hai. Isi liye ise OPAQUE rakho: ` +
@@ -1412,7 +1525,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdCache(cmd) {
     const rest = cmd.replace(/^cache\s*/i, '');
     const verb = (rest.split(' ')[0] || '').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim());
+    const f = parseFlags(rest.slice(verb.length).trim(), ['policy', 'size', 'keys', 'key', 'rps', 'nodes', 'replicas', 'misses', 'on', 'enable']);
 
     if (verb === 'sim') {
       const policy = String(f.policy || 'lru').toLowerCase();
@@ -1511,7 +1624,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdMigrate(cmd) {
     const rest = cmd.replace(/^migrate\s*/i, '');
     const verb = (rest.split(' ')[0] || 'status').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim());
+    const f = parseFlags(rest.slice(verb.length).trim(), ['batch']);
     const M = migState();
     const pct = () => Math.round(M.backfilled / M.total * 1000) / 10;
 
@@ -1529,6 +1642,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
 
     if (verb === 'dual-write' || verb === 'dualwrite') {
       const on = !/off|false|0/i.test(String(f._[0] || 'on'));
+      if (M.dualWrite !== on) M.verified = false;
       M.dualWrite = on;
       print('ok', `dual-write = ${on ? 'ON' : 'OFF'}`);
       print('sys', on
@@ -1541,7 +1655,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
 
     if (verb === 'backfill') {
       const batch = parseInt(f.batch, 10) || 100000;
-      M.batch = batch;
+      M.batch = batch; M.verified = false;
       const newWrites = 41204;                 // backfill ke doraan aaye naye writes
       M.backfilled = M.total;
       if (!M.dualWrite) { M.drift += newWrites; M.writesDuring += newWrites; }
@@ -1581,7 +1695,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     }
 
     if (verb === 'cutover') {
-      const safe = M.verified && M.drift === 0;
+      const safe = M.verified && M.dualWrite && M.backfilled === M.total && M.drift === 0;
       M.cutover = true;
       print(safe ? 'ok' : 'err', safe
         ? `✅ Reads ab nayi table se. Purani table abhi bhi likhi ja rahi hai (dual-write ON) — rollback ek flag door hai.`
@@ -1613,7 +1727,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdBench(cmd) {
     const rest = cmd.replace(/^bench\s*/i, '');
     const verb = (rest.split(' ')[0] || '').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim());
+    const f = parseFlags(rest.slice(verb.length).trim(), ['rows']);
     const engine = /lsm|rocks|cassandra|leveldb/i.test(String(sim.sys.db.engine || 'postgres')) ? 'lsm' : 'btree';
     const rows = parseInt(f.rows, 10) || 100000;
 
@@ -1736,7 +1850,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdRing(cmd) {
     const rest = cmd.replace(/^ring\s*/i, '');
     const verb = (rest.split(' ')[0] || 'show').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim());
+    const f = parseFlags(rest.slice(verb.length).trim(), []);
     const R = ringState();
 
     if (verb === 'show' || verb === 'status') {
@@ -1757,7 +1871,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
 
     if (verb === 'set' && /vnode/i.test(String(f._[0] || ''))) {
       const n = parseInt(f._[1], 10);
-      if (!n || n < 1) err('400 — aise:  ring set vnodes 150');
+      if (!n || n < 1 || n > 1000) err('400 — vnodes 1 se 1000 tak do: ring set vnodes 150');
       const before = ringSpread(R, ringOwners(R)).skew;
       R.vnodes = n;
       const sp = ringSpread(R, ringOwners(R));
@@ -1775,7 +1889,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       const name = f._[0] || (verb === 'add' ? 'node-' + (R.nodes.length + 1) : R.nodes[R.nodes.length - 1]);
       const before = ringOwners(R);
       const nBefore = R.nodes.length;
-      if (verb === 'add') { if (R.nodes.includes(name)) err(`400 — '${name}' pehle se hai`); R.nodes.push(name); }
+      if (verb === 'add') { if (R.nodes.length >= 64) err('400 — teaching ring mein max 64 nodes hain'); if (R.nodes.includes(name)) err(`400 — '${name}' pehle se hai`); R.nodes.push(name); }
       else { const i = R.nodes.indexOf(name); if (i < 0) err(`400 — '${name}' hai hi nahi`); if (R.nodes.length <= 1) err('400 — aakhri node nahi hata sakte'); R.nodes.splice(i, 1); }
       const after = ringOwners(R);
       let moved = 0;
@@ -1809,7 +1923,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
      BLOOM / HLL — "thoda galat, par 1000x sasta"
      ===================================================================== */
   function cmdBloom(cmd) {
-    const f = parseFlags(cmd.replace(/^bloom\s*/i, ''));
+    const f = parseFlags(cmd.replace(/^bloom\s*/i, ''), ['items', 'fp', 'bits', 'hashes']);
     const n = parseInt(f.items, 10) || 1000000;
     let m, k;
     if (f.fp) {                                   // target false-positive se size nikalo
@@ -1843,9 +1957,10 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   }
 
   function cmdHll(cmd) {
-    const f = parseFlags(cmd.replace(/^hll\s*/i, ''));
+    const f = parseFlags(cmd.replace(/^hll\s*/i, ''), ['items', 'registers']);
     const n = parseInt(f.items, 10) || 100000000;
     const regs = parseInt(f.registers, 10) || 16384;
+    if (regs < 16 || regs > 1048576 || Math.log2(regs) % 1) err('400 — HLL registers 16 se 1048576 tak power of two do (jaise 16384)');
     const errPct = 1.04 / Math.sqrt(regs) * 100;
     const hllBytes = regs * 6 / 8;                 // 6 bits per register
     const exactBytes = n * 16;
@@ -1880,7 +1995,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdId(cmd) {
     const rest = cmd.replace(/^id\s*/i, '');
     const verb = (rest.split(' ')[0] || '').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim());
+    const f = parseFlags(rest.slice(verb.length).trim(), ['n', 'type', 'rows']);
 
     if (verb === 'gen') {
       const kind = String(f._[0] || f.type || 'uuid4').toLowerCase();
@@ -1925,17 +2040,16 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         `page splits      ${fmt(splits)}   ${K.sortable ? '' : '💥'}`,
         `index size       ${idxMB} MB   ${K.sortable ? '' : '(fragmentation ke saath)'}`,
         `kul waqt         ${fmt(ms)} ms   (${fmt(Math.round(rows / (ms / 1000)))} rows/sec)`,
-        `cursor pagination${K.sortable ? '  ✅ id akela tie-breaker kaafi hai' : '  ❌ id se sort ka koi matlab nahi'}`,
+        `cursor pagination  ✅ unique stable id tie-breaker ban sakti hai; chronology alag property hai`,
       ].join('\n'));
       print('sys', K.sortable
         ? `✅ Sorted id ka matlab hai har naya row B-tree ke <b>aakhri page</b> par jaata hai — ` +
-          `wahi page memory mein pehle se garam hai. Koi split nahi, koi random I/O nahi. ` +
+        `wahi page memory mein pehle se garam ho sakta hai. Splits aur I/O kam ho sakte hain, zero guaranteed nahi. ` +
           `Aur bonus: <code>(created_at, id)</code> wala cursor tie-breaker <b>apne aap</b> sahi kaam karta hai, ` +
-          `kyunki id ka kram waqt ka kram hai.`
+        `Unique stable id tie-breaker ka kaam karti hai; timestamp ordering ke liye sortable id zaroori nahi.`
         : `💥 Random id ka matlab hai har insert B-tree mein <b>kahin bhi</b> ja sakta hai. Woh page shayad ` +
           `disk se laana pade, aur bharne par split ho. Isiliye ${fmt(splits)} splits aur ${Math.round(perRow / 0.006)}x dheeme writes. ` +
-          `Aur doosri, chhupi hui kami: UUIDv4 se sort karne ka <b>koi matlab nahi</b> — isliye woh cursor ` +
-          `pagination ka tie-breaker nahi ban sakta. <b>Ilaaj:</b> external id UUID rakho (URL-safe, guess-proof), ` +
+          `UUIDv4 akeli chronological order nahi deti, par <b>(created_at, id)</b> cursor mein unique tie-breaker bilkul ban sakti hai. <b>Ek option:</b> external id UUID rakho (enumeration mushkil hoti hai; authorization phir bhi chahiye), ` +
           `par <b>primary key</b> ko sortable rakho (bigint ya Snowflake/ULID).`);
       return rec({ kind: 'id', op: 'bench', type: kind, rows, splits, ms, idxMB, sortable: K.sortable });
     }
@@ -1954,7 +2068,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdNet(cmd) {
     const rest = cmd.replace(/^net\s*/i, '');
     const verb = (rest.split(' ')[0] || '').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim());
+    const f = parseFlags(rest.slice(verb.length).trim(), ['rtt', 'protocol', 'warm', 'assets', 'layer']);
     const N = netState();
     const rtt = parseInt(f.rtt, 10) || N.rtt;
     const proto = String(f.protocol || N.protocol).toLowerCase();
@@ -2049,7 +2163,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdStream(cmd) {
     const rest = cmd.replace(/^stream\s*/i, '');
     const verb = (rest.split(' ')[0] || '').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim());
+    const f = parseFlags(rest.slice(verb.length).trim(), ['size', 'watermark', 'events', 'late', 'from', 'partitions', 'consumers']);
 
     if (verb === 'window') {
       const size = parseInt(f.size, 10) || 60;
@@ -2141,7 +2255,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdBook(cmd) {
     const rest = cmd.replace(/^book\s*/i, '');
     const verb = (rest.split(' ')[0] || '').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim());
+    const f = parseFlags(rest.slice(verb.length).trim(), ['concurrent', 'ttl']);
     const B = bookState();
 
     if (verb === 'status') {
@@ -2158,7 +2272,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
 
     if (verb === 'seat' || verb === 'hold' || verb === 'confirm') {
       const seat = f._[0];
-      if (!seat) err('400 — aise:  book seat A1 --concurrent 2');
+      if (!seat || ['__proto__', 'prototype', 'constructor'].includes(seat)) err('400 — seat ka valid naam do: book seat A1 --concurrent 2');
       const conc = Math.max(1, parseInt(f.concurrent, 10) || 1);
       const mode = B.mode;
 
@@ -2345,4 +2459,6 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     if (/^book\b/i.test(norm)) return cmdBook(norm);
     err(`command samajh nahi aaya: '${norm.split(' ')[0]}'. 'help' likho.`);
   }
+  return { sim, run };
 };
+})();

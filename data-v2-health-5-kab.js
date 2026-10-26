@@ -91,16 +91,11 @@ DB ko request ke jawab mein rakha       → /home 100% safal · /orders DB ke 0.
           say: 'Spring Boot ki documentation is faisle ko "judgement call" kehti hai. Do sawaal faisla karte hain: app us cheez ke bina kya kar sakta hai, aur aage kaunsa load balancer khada hai.',
           ask: {
             q: 'Ek service ka har page DB maangta hai: DB ke bina yeh service sirf error de sakti hai. Aage AWS load balancer hai. Readiness mein DB (yaad rakhe jawab ke saath) rakhna kaisa hai?',
-            choices: [
-              'Theek ho sakta hai. DB ke bina pods waise bhi sirf error dete. Aur saare targets unhealthy hon, toh AWS load balancer sab ko bhejta hai (fail open). Keemat: DB ke lautne ke baad wapsi thodi der se hoti hai',
-              'Bilkul galat — readiness mein kabhi kuch nahi rakhna chahiye',
-              'Zaroori hai — warna Kubernetes pod ko chalayega hi nahi',
-              'Koi farak nahi padta',
-            ],
+            choices: ["Conditional choice; complete dependency need assess karo","DB readiness hi liveness restart ka required signal hai","ALB fail-open hone se stale health delay zero hai","DB readiness se regional outage automatically repair hogi"],
             answer: 0,
             hint: 'Level 2 mein dikkat /home thi, jise DB chahiye hi nahi tha. Is service mein aisa koi page hai?',
-            explain: 'Kubernetes ki documentation bhi yahi kehti hai: jab app ki kisi backend par "strict dependency" ho, tab readiness us backend ko check kar sakta hai. Lab mein wapsi ki keemat: readiness yaad se → DB ke 2.0–3.0 s baad; DB health mein nahi → 0.0 s baad.',
-          },
+            explain: "Agar har route DB ke bina useless hai toh dependency-aware readiness defend ki ja sakti hai; sampling/cache aur LB behavior measure karo. Readiness restart control nahi. Cache, intervals aur healthy thresholds return timing affect karte hain. Probe eligibility data-plane dependency repair nahi karti.",
+           choiceExplanations: ["Agar har route DB ke bina useless hai toh dependency-aware readiness defend ki ja sakti hai; sampling/cache aur LB behavior measure karo.","Readiness restart control nahi.","Cache, intervals aur healthy thresholds return timing affect karte hain.","Probe eligibility data-plane dependency repair nahi karti."] },
         },
         {
           title: '3. Health ke sawaalon ka bill',
@@ -142,15 +137,10 @@ DB ko request ke jawab mein rakha       → /home 100% safal · /orders DB ke 0.
       ],
       observe: {
         q: 'Pehli aur aakhri row mein DB utni hi der band tha. Pehli mein 3 restart hue aur /orders DB ke 5.0 second baad theek hui; aakhri mein 0 restart, aur 0.0 second. Farak kahan se aaya?',
-        choices: [
-          'Pehli row mein "zinda ho?" ka jawab DB se poochh ke aata tha: DB gaya → teeno pods fail → restart → boot mein 6 second. Aakhri row mein health ka koi jawab DB ko chhuta hi nahi',
-          'Aakhri row mein DB tez tha',
-          'Aakhri row mein pods zyada the',
-          'Pehli row mein requests zyada thi',
-        ],
+        choices: ["Shared DB ko liveness se hataane se restarts bache","DB downtime last run mein zero ho gaya tha","Last run mein duplicate DB write retries enabled the","First run ka scale factor teen guna chhota tha"],
         answer: 0,
-        explain: 'Dono mein /orders DB band rehne ke dauraan fail hui — yeh hona hi tha. Par pehli row mein DB ke lautne ke baad bhi pods boot ho rahe the.',
-      },
+        explain: "Same DB outage par dependency-coupled liveness extra app reboot delay add karti hai; local liveness us amplification ko avoid karti hai. Prompt DB outage duration unchanged rakhta hai. Compared health design difference ko retry setting explain nahi karti. Replica count change supplied nahi hai.",
+       choiceExplanations: ["Same DB outage par dependency-coupled liveness extra app reboot delay add karti hai; local liveness us amplification ko avoid karti hai.","Prompt DB outage duration unchanged rakhta hai.","Compared health design difference ko retry setting explain nahi karti.","Replica count change supplied nahi hai."] },
       lesson: 'Restart sirf us gadbad ka ilaaj hai jo pod ke andar ho.',
     },
 
@@ -170,15 +160,10 @@ DB ko request ke jawab mein rakha       → /home 100% safal · /orders DB ke 0.
       ],
       observe: {
         q: 'Rollout wale tool mein dono baar utni hi requests gayi. Ek baar 75 fail hui, ek baar 0. Dono mein app ko SIGTERM mila tha. Farak?',
-        choices: [
-          'Pehle mein app signal milte hi band ho gaya, jabki Service ko khabar ~1 second der se pahunchi: us beech ki requests band port par gayi. Doosre mein app 2 second tak jawab deta raha',
-          'Doosre mein pods zyada the',
-          'Pehle mein DB band tha',
-          'Doosre mein requests dheere bheji gayi',
-        ],
+        choices: ["Old app ne propagation window tak serving rakhi","Old app ne SIGTERM ignore karke shutdown chhod diya","Second run mein request arrival rate kam ho gayi","Second run mein old pod DB replica ban gaya"],
         answer: 0,
-        explain: 'Requests tab girti hain jab port khabar pahunchne se pehle band ho jaaye. Slow motion mein yahi dikha tha: turant band → 14 mein se 2 fail; 2 s tak jawab → 0.',
-      },
+        explain: "Measured 2 s delay old endpoint still selected hone ke dauraan requests serve karta hai, phir shutdown hota hai. Grace period bounded delay hai, permanent signal ignore nahi. Prompt equal request schedule specify karta hai. No role conversion architecture change hua.",
+       choiceExplanations: ["Measured 2 s delay old endpoint still selected hone ke dauraan requests serve karta hai, phir shutdown hota hai.","Grace period bounded delay hai, permanent signal ignore nahi.","Prompt equal request schedule specify karta hai.","No role conversion architecture change hua."] },
       lesson: 'Sawaal saste rakho, shuruaat ke liye alag sawaal rakho, aur band hote waqt khabar pahunchne tak jawab dete raho.',
     },
 
@@ -209,37 +194,22 @@ DB ko request ke jawab mein rakha       → /home 100% safal · /orders DB ke 0.
     questions: [
       {
         q: '"Ek nayi service ke health checks design karo. Service ek shared database aur ek payment API use karti hai, aur boot mein 20–40 second leti hai."',
-        choices: [
-          'Liveness: ek sasta raasta jo sirf "main jawab de sakta hoon" bataye — DB ya payment API ko chhue bina. Readiness: pod ka apna haal (khul gaya, band nahi ho raha). Startup probe: sabse lambe boot se zyada chhoot. DB aur payment API ki gadbad request ke raaste mein: timeout, 503, circuit breaker. SIGTERM par: readiness "nahi", khabar pahunchne tak jawab, phir band',
-          'Ek /health raasta jo DB aur payment API dono check kare; wahi liveness aur readiness dono mein',
-          'Sirf liveness probe, initialDelaySeconds 60 ke saath',
-          'Koi probe nahi — Kubernetes khud sambhal lega',
-        ],
+        choices: ["Local live/ready, bounded startup, route resilience","Shared DB/API probe ko live aur ready dono mein lagao","Long delay se startup cover; drain path omit karo","Health path fast rakho; route timeout policy hata do"],
         answer: 0,
-        explain: 'Lab ke number isi design ke peechhe hain: liveness mein DB → 3 restart · readiness mein shared DB → DB band ke dauraan /home 17.5–19.5% · boot ka andaaza → 2 restart · turant band → 75 fail har deploy.',
-      },
+        explain: "20–40 s boot ke liye measured margin wala startup budget, meaningful local probes aur dependency request handling/drain design combine karo. Shared dependency liveness correlated restart risk laati hai. Fixed delay graceful routing/drain ka replacement nahi. Fast probe business dependency failure boundaries remove nahi karti.",
+       choiceExplanations: ["20–40 s boot ke liye measured margin wala startup budget, meaningful local probes aur dependency request handling/drain design combine karo.","Shared dependency liveness correlated restart risk laati hai.","Fixed delay graceful routing/drain ka replacement nahi.","Fast probe business dependency failure boundaries remove nahi karti."] },
       {
         q: '"Readiness check mein DB tha. DB 30 second ke liye gaya, aur poori site band ho gayi — un pages samet jinhe DB nahi chahiye. Kaise theek karoge?"',
-        choices: [
-          'Readiness se shared DB hatao: readiness sirf pod ka apna haal bataye. Jin pages ko DB chahiye, wahi pages khud 503 dein (ya purana data dikhayein). Aur dekho ki aage ka load balancer fail open karta hai ya nahi — Kubernetes ka Service nahi karta',
-          'Pods ki sankhya badha do',
-          'Readiness ka fasla 1 second kar do',
-          'DB ko liveness mein daal do, taaki pods restart ho jaayein',
-        ],
+        choices: ["Local readiness; DB routes par bounded degradation","Readiness poll tez; shared DB requirement wahi rakho","Replicas badhao; sabki DB readiness same rakho","DB check liveness mein daalo; restarts se DB theek hogi"],
         answer: 0,
-        explain: 'Lab, DB band ke dauraan /home: readiness mein DB → 17.5–19.5% safal · dono sawaal DB ko chhute hi nahi → 100% · readiness mein DB + fail open → 100%.',
-      },
+        explain: "DB-free routes preserve karne ke liye pod-wide readiness ko shared DB requirement se reconsider karo, actual upstream behavior test karo. Faster polling correlated not-ready decision solve nahi karti. More identical pods same dependency fail par exclude ho sakte hain. App restarts shared DB recovery ka reliable fix nahi.",
+       choiceExplanations: ["DB-free routes preserve karne ke liye pod-wide readiness ko shared DB requirement se reconsider karo, actual upstream behavior test karo.","Faster polling correlated not-ready decision solve nahi karti.","More identical pods same dependency fail par exclude ho sakte hain.","App restarts shared DB recovery ka reliable fix nahi."] },
       {
         q: '"Liveness probe kab kaam ka hai?"',
-        choices: [
-          'Jab app aisi haalat mein phans sakta ho jahan process chal raha ho par kaam na ho raha ho (deadlock, atka hua loop), aur yeh haalat khud theek na hoti ho. Tab restart hi ilaaj hai. Jo process gadbad par khud crash ho jaata hai, us process ke liye liveness utna zaroori nahi',
-          'Hamesha — jitne zyada check, utna achha',
-          'Sirf database wale apps mein',
-          'Kabhi nahi',
-        ],
+        choices: ["Unrecoverable live-process stall mein useful","Har transient DB timeout ko restart mein badlo","Readiness delay ko liveness failure samajhkar use karo","Normal slow startup ko fail karke repeatedly boot karo"],
         answer: 0,
-        explain: 'Kubernetes ki documentation: liveness deadlock jaisi haalat pakadne ke liye hai; aur process khud crash ho sakta ho, toh liveness probe zaroori nahi.',
-      },
+        explain: "Deadlock ya stuck event loop jaisi restart-recoverable process state liveness ke liye appropriate use case hai. Transient external failure app restart se repair nahi hoti. Serving eligibility aur process recovery distinct actions hain. StartupProbe legitimate initialization ko protect karti hai.",
+       choiceExplanations: ["Deadlock ya stuck event loop jaisi restart-recoverable process state liveness ke liye appropriate use case hai.","Transient external failure app restart se repair nahi hoti.","Serving eligibility aur process recovery distinct actions hain.","StartupProbe legitimate initialization ko protect karti hai."] },
     ],
   },
   success: [

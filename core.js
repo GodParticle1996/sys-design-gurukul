@@ -1,5 +1,5 @@
 /* =====================================================================
-   SQL Gurukul — Core: state, XP, streak, spaced repetition, registry
+   System Gurukul — Core: state, XP, streak, spaced repetition, registry
    Loaded FIRST. Everything lives under the global `SD` namespace so
    content files (data-*.js) can self-register levels & cards.
    (Ported from kubegurukul/core.js — SQL & MySQL edition)
@@ -11,6 +11,7 @@ if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView)
 
 const SD = {
   STORE_KEY: 'sysdesigngurukul-v1',
+  SCHEMA_VERSION: 2,
   XP_PER_ITEM: 10,
   PERFECT_BONUS: 20,
   TERMINAL_XP: 30,       // base XP for completing a hands-on mission
@@ -67,27 +68,76 @@ SD.extendLevel = function (levelId, add) {
 /* ---------------- persistence ---------------- */
 SD.defaultState = function () {
   return {
+    schemaVersion: SD.SCHEMA_VERSION,
     xp: 0,
     completed: [],        // level ids
     stars: {},            // levelId -> 1..3
     dojo: {},             // cardId -> { box, due (ms), front, back, tag }
     streak: { last: null, count: 0, best: 0 },
     levelStarts: 0,       // for pop-quiz cadence
+    checkpoint: null,     // challenge boundary; partial answers/sim state are not saved
+    theme: 'system',
+    popBonus: { day: null, keys: [] },
   };
 };
 
-SD.loadState = function () {
-  try {
-    const s = JSON.parse(localStorage.getItem(SD.STORE_KEY));
-    if (s && typeof s.xp === 'number' && Array.isArray(s.completed)) {
-      // forward-compat: fill any missing keys added in later versions
-      return Object.assign(SD.defaultState(), s);
-    }
-  } catch (e) { /* corrupted store — start fresh */ }
-  return SD.defaultState();
+SD.normalizeState = function (s) {
+  const out = SD.defaultState();
+  if (!s || typeof s !== 'object' || Array.isArray(s)) return out;
+  const count = n => Number.isSafeInteger(n) && n >= 0;
+  if (count(s.xp)) out.xp = s.xp;
+  if (Array.isArray(s.completed)) out.completed = [...new Set(s.completed.filter(x => typeof x === 'string'))];
+  if (s.stars && typeof s.stars === 'object' && !Array.isArray(s.stars))
+    Object.entries(s.stars).forEach(([id, n]) => {
+      if (!['__proto__', 'constructor', 'prototype'].includes(id) && Number.isInteger(n) && n >= 1 && n <= 3) out.stars[id] = n;
+    });
+  if (s.dojo && typeof s.dojo === 'object' && !Array.isArray(s.dojo))
+    Object.entries(s.dojo).forEach(([id, c]) => {
+      if (['__proto__', 'constructor', 'prototype'].includes(id) || !c || typeof c !== 'object') return;
+      if (typeof c.front !== 'string' || typeof c.back !== 'string') return;
+      out.dojo[id] = { front: c.front, back: c.back, tag: typeof c.tag === 'string' ? c.tag : '',
+        box: count(c.box) ? Math.min(c.box, SD.SRS_INTERVALS.length - 1) : 0,
+        due: Number.isFinite(c.due) && c.due >= 0 ? c.due : Date.now() };
+    });
+  if (s.streak && typeof s.streak === 'object') {
+    out.streak.last = typeof s.streak.last === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.streak.last) ? s.streak.last : null;
+    out.streak.count = count(s.streak.count) ? s.streak.count : 0;
+    out.streak.best = Math.max(out.streak.count, count(s.streak.best) ? s.streak.best : 0);
+  }
+  if (count(s.levelStarts)) out.levelStarts = s.levelStarts;
+  if (['light', 'dark', 'system'].includes(s.theme)) out.theme = s.theme;
+  if (s.popBonus && typeof s.popBonus.day === 'string' && Array.isArray(s.popBonus.keys))
+    out.popBonus = { day: s.popBonus.day, keys: [...new Set(s.popBonus.keys.filter(x => typeof x === 'string'))] };
+  const cp = s.checkpoint;
+  if (cp && typeof cp.levelId === 'string' && count(cp.stageIdx) && count(cp.firstTry) && count(cp.total) && cp.firstTry <= cp.total)
+    out.checkpoint = { levelId: cp.levelId, stageIdx: cp.stageIdx, firstTry: cp.firstTry, total: cp.total, pendingXP: count(cp.pendingXP) ? cp.pendingXP : 0,
+      stages: Array.isArray(cp.stages) && cp.stages.every(x => typeof x === 'string') ? cp.stages.slice() : [] };
+  return out;
 };
-SD.saveState = function () { localStorage.setItem(SD.STORE_KEY, JSON.stringify(SD.state)); };
+SD.loadState = function () {
+  try { return SD.normalizeState(JSON.parse(localStorage.getItem(SD.STORE_KEY))); }
+  catch (e) { return SD.defaultState(); }
+};
+SD.saveState = function () {
+  try {
+    localStorage.setItem(SD.STORE_KEY, JSON.stringify(SD.state));
+    SD.storageError = false;
+    return true;
+  } catch (e) { SD.storageError = true; return false; }
+};
 SD.state = SD.loadState();
+
+SD.applyTheme = function () {
+  const media = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: light)');
+  const theme = SD.state.theme === 'system' ? (media && media.matches ? 'light' : 'dark') : SD.state.theme;
+  if (document.documentElement) document.documentElement.dataset.theme = theme;
+  return theme;
+};
+SD.applyTheme();
+if (typeof window.matchMedia === 'function') {
+  const media = window.matchMedia('(prefers-color-scheme: light)');
+  if (media.addEventListener) media.addEventListener('change', () => SD.applyTheme());
+}
 
 /* ---------------- DOM helpers ---------------- */
 SD.el = function (tag, cls, html) {
@@ -95,6 +145,26 @@ SD.el = function (tag, cls, html) {
   if (cls) e.className = cls;
   if (html != null) e.innerHTML = html;
   return e;
+};
+/* Tap, Enter and Space share one action, including div-based diagram controls. */
+SD.makeInteractive = function (node, action, label) {
+  node.tabIndex = 0;
+  if (node.setAttribute) node.setAttribute('role', 'button');
+  if (label && node.setAttribute) node.setAttribute('aria-label', label);
+  if (action) node.onclick = action;
+  node.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if (!node.disabled && !(node.getAttribute && node.getAttribute('aria-disabled') === 'true')) node.click();
+  });
+  return node;
+};
+SD.choiceFeedback = function (q, index) {
+  const reasons = q.choiceExplanations || [];
+  if (index !== q.answer) return reasons[index] || q.explain || 'Question ke constraints aur observed result ko compare karo.';
+  const alternatives = q.choices.map((choice, i) => i === q.answer || !reasons[i] ? '' :
+    `<li><b>${choice}</b>: ${reasons[i]}</li>`).join('');
+  return (reasons[index] || q.explain || '') + (alternatives ? `<details class="choice-reasons"><summary>Baaki options kyun nahi?</summary><ul>${alternatives}</ul></details>` : '');
 };
 SD.shuffle = function (arr) {
   const a = arr.slice();
@@ -121,13 +191,29 @@ SD.currentRank = function () {
 };
 SD.nextRank = function () { return RANKS.find(r => r.xp > SD.state.xp) || null; };
 SD.addXP = function (n) {
-  if (SD.session && SD.session.replay) return;
-  if (n <= 0) return;
+  if (!Number.isSafeInteger(n) || n <= 0) return;
+  if (SD.session) {
+    if (SD.session.replay || SD.session.completed) return;
+    SD.session.pendingXP = (SD.session.pendingXP || 0) + n;
+    return;
+  }
+  SD.commitXP(n);
+};
+SD.commitXP = function (n) {
+  if (!Number.isSafeInteger(n) || n <= 0) return;
   SD.state.xp += n;
   SD.touchStreak();
   SD.saveState();
-  if (typeof renderTopbar === 'function') renderTopbar();
+  if (SD.ui) SD.ui.renderTopbar();
   SD.floatXP(n);
+};
+SD.awardPopBonus = function (keys) {
+  const today = SD.todayStr();
+  if (SD.state.popBonus.day !== today) SD.state.popBonus = { day: today, keys: [] };
+  let count = 0;
+  keys.forEach(key => { if (!SD.state.popBonus.keys.includes(key)) { SD.state.popBonus.keys.push(key); count++; } });
+  SD.commitXP(count * SD.POP_XP); SD.saveState();
+  return count * SD.POP_XP;
 };
 SD.floatXP = function (n) {
   const bar = document.getElementById('topbar');

@@ -159,6 +159,8 @@ SD.tracks = [
    Yaad rakho: agar tum db.tables doge toh default tables REPLACE ho jaate
    hain (merge nahi) — perfsim.js ka contract dekho.
    ===================================================================== */
+(function () {
+'use strict';
 SD.sys = {};
 
 /* 24 million transactions — pagination levels ka ghar */
@@ -275,3 +277,4 @@ function deepAssign(base, over) {
   });
   return base;
 }
+})();

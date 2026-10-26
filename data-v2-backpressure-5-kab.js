@@ -105,16 +105,11 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
             <pre>kitni der mein bharegi = (hadd − abhi ki lambai) ÷ badhne ki raftaar</pre>`,
           ask: {
             q: 'Do queues hain. Queue A 90% bhari hai aur ghanton se utni hi hai. Queue B 30% bhari hai aur har second 5% badh rahi hai. Pehle kis par daudoge?',
-            choices: [
-              'B par — 14 second mein bhar jaayegi (70 ÷ 5). A tiki hui hai',
-              'A par — 90% zyada khatarnaak hai',
-              'Dono barabar hain',
-              'Kisi par nahi — jab tak error na aaye',
-            ],
+            choices: ["B: given trend par 14 s headroom; A abhi stable","A: occupancy 90% hai, growth trend ko baad mein dekho","Dono: same urgency maan kar occupancy average nikalo","Neither: rejection error aane tak alerts ko wait karao"],
             answer: 0,
             hint: 'Upar wala formula B par lagao: hadd 100%, abhi 30%, raftaar 5% har second.',
             explain: 'Lambai batati hai ki abhi kahan ho. <b>Badhne ki raftaar</b> batati hai ki kitna samay bacha hai. Alert dono par lagao — sirf lambai par nahi.',
-          },
+           choiceExplanations: ["Lambai batati hai ki abhi kahan ho. <b>Badhne ki raftaar</b> batati hai ki kitna samay bacha hai. Alert dono par lagao — sirf lambai par nahi.","High steady occupancy bhi risk hai, par B ka short time-to-full is stated snapshot mein immediate concern hai.","Occupancy average growth rate aur remaining time ko hide kar dega.","Error ke pehle growth/admission pressure alert useful time deta hai."] },
         },
         {
           title: '4. "Kab aana hai" kitna rakhein?',
@@ -160,15 +155,10 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
       ],
       observe: {
         q: 'Retry-After 250 ms se 3000 ms karne par ek kaam par requests 3.1 se 1.2 ho gayi. Toh 3000 ms behtar kyun nahi hai?',
-        choices: [
-          'Kyunki 150 mein se 96 workers ka ek bhi kaam nahi hua (250 ms par 24). Bekaar requests ghati, par baari bigad gayi. Retry-After utna ho jitni der mein jagah sach mein banti hai',
-          'Kyunki 3000 ms par kul kaam bahut kam ho gaya',
-          'Kyunki 3000 ms par C ne phir "na" bolna shuru kar diya',
-          '3000 ms hi behtar hai — jitna zyada rukwao utna achha',
-        ],
+        choices: ["Fewer retries par fairness bigdi; completion spread bhi maapo","Lamba delay total throughput ko measured run mein ghataata","Lamba delay C ko measured run mein phir crash karaata","Fewest retries hi goal; starving workers ko ignore karo"],
         answer: 0,
         explain: 'Kul kaam har baar lagbhag barabar raha (~2,990). Farak baari ka hai: jo andar hain woh andar hi rehte hain, jo bahar ruke hain woh aur der se lautte hain.',
-      },
+       choiceExplanations: ["Kul kaam har baar lagbhag barabar raha (~2,990). Farak baari ka hai: jo andar hain woh andar hi rehte hain, jo bahar ruke hain woh aur der se lautte hain.","Given runs mein completed work roughly same tha; changed signal per-worker opportunity tha.","Is comparison ka evidence starvation/fairness hai, repeated C crash nahi.","Request count akela success metric nahi; tail wait aur fairness bhi constraints hain."] },
       lesson: 'Khaali 429 downstream ko bachata hai par bheed nahi hatata. Retry-After bheed hatata hai par baari nahi deta. Dono ke number dekh ke chuno.',
     },
 
@@ -186,15 +176,10 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
       ],
       observe: {
         q: '"Frame mein naye 20" ne 20,230 messages chhod diye — lagbhag 81%. Phir bhi yahi tareeka sabse achha kyun hai?',
-        choices: [
-          'Screen ek insaan ke liye hai jo 5,000 messages/second padh nahi sakta. Page smooth raha (47 fps), click 6 ms mein chala, aur jo dikha woh taaza tha (11 ms)',
-          'Kyunki chhode hue messages baad mein dikh jaate hain',
-          'Kyunki is tareeke mein sabse zyada messages dikhe',
-          'Yeh sabse achha nahi hai — har message dikhna chahiye',
-        ],
+        choices: ["Fresh display aur responsive UI; full history goal nahi","Dropped updates backend se baad mein auto replay honge","Is mode mein delivered event count sabse zyada tha","Har event render hoga; browser sirf paint merge karega"],
         answer: 0,
         explain: '"Har message turant": page smooth, par chat 4.1 second peeche aur 20,874 messages line mein — bina hadd ki line. "Sab ek frame mein": 5 fps, click 341 ms — page atka hua. "Naye 20": hadd + girana.',
-      },
+       choiceExplanations: ["\"Har message turant\": page smooth, par chat 4.1 second peeche aur 20,874 messages line mein — bina hadd ki line. \"Sab ek frame mein\": 5 fps, click 341 ms — page atka hua. \"Naye 20\": hadd + girana.","Is mode mein discarded UI events ke automatic replay ka path nahi hai.","Selected display intentionally many events omit karta hai; most-rendered criterion nahi.","Work per frame bounded hai; all event rendering ka promise nahi."] },
       lesson: 'Frontend bhi ek consumer hai, aur uski raftaar tay hai: har second 60 frame. Har frame mein kaam ki hadd rakho; baaki chhodo, ya "+N aur" likh do.',
     },
 
@@ -226,37 +211,22 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
     questions: [
       {
         q: '"Flash sale mein order API par 10 guna traffic aayega. Beech mein ek queue laga dein?"',
-        choices: [
-          'Queue thodi der ki tezi sokh sakti hai, lagataar 10 guna nahi. Queue par hadd rakho (seconds mein socho), bhari hone par darwaze par hi 429 + Retry-After do — paisa kaatne se pehle — aur line ki lambai aur badhne ki raftaar par alert lagao',
-          'Haan — badi queue sab sambhal legi',
-          'Nahi — queue hamesha buri hoti hai',
-          'Queue ki hadd hata do taaki koi order mana na ho',
-        ],
+        choices: ["Bounded queue, admission response aur backlog slope maapo","Large RAM queue lagao; payment admission pehle confirm karo","Timeout badhao; accepted orders ko lambi queue mein rakho","Queue cap hatao; sale khatam hone tak backlog lete raho"],
         answer: 0,
         explain: 'Lab: 8,000/second ke farak par 20,000 ki line 2.5 second mein bhar jaati hai. Bina hadd ke: 30 s mein 2,36,000, aur memory hadd 100 MB par process ~36 s mein mar gaya.',
-      },
+       choiceExplanations: ["Lab: 8,000/second ke farak par 20,000 ki line 2.5 second mein bhar jaati hai. Bina hadd ke: 30 s mein 2,36,000, aur memory hadd 100 MB par process ~36 s mein mar gaya.","Payment confirm ke baad volatile queue loss customer ko accepted-but-missing order de sakta hai.","Long queue user deadlines aur retained resources ko exhaust kar sakti hai.","Unbounded queue finite RAM ko overrun kar sakti hai; burst duration/service capacity estimate chahiye."] },
       {
         q: '"429 ke saath Retry-After mein kya value bhejein?"',
-        choices: [
-          'Utni, jitni der mein jagah sach mein banegi: abhi ki line ÷ kaam ki raftaar. Bahut kam → client baar-baar aata hai. Bahut zyada → jo bahar ruke hain woh peeche reh jaate hain',
-          'Hamesha 60 second — surakshit rehta hai',
-          '0 — client jaldi aa jaaye',
-          'Koi bhi — client waise bhi nahi maanta',
-        ],
+        choices: ["Capacity-based delay estimate; fairness aur deadline dekho","Fixed 60 s delay; load aur service rate ignore karo","Zero delay; rejected clients ko immediate loop chalao","Queue length use karo; processing rate ke bina delay do"],
         answer: 0,
-        explain: 'Lab (teen run): bina Retry-After ek order par 179–209 requests. 250 ms: 3.1. 3000 ms: 1.2 — par 150 mein se 89–99 phones ka ek bhi order nahi laga.',
-      },
+        explain: "Queue length / effective completion rate rough waiting estimate hai, guarantee nahi. Arrival changes, fairness, jitter aur caller deadline bhi matter karte hain. Standard Retry-After integer seconds ya HTTP-date hai; subsecond lab tuning custom retry-after-ms mein hai.",
+       choiceExplanations: ["Queue length / effective completion rate rough waiting estimate hai, guarantee nahi. Arrival changes, fairness, jitter aur caller deadline bhi matter karte hain. Standard Retry-After integer seconds ya HTTP-date hai; subsecond lab tuning custom retry-after-ms mein hai.","Ek fixed conservative value short recovery mein unnecessary wait aur unfairness badha sakti hai.","Immediate retry rejection traffic badhata hai aur service recovery ko compete karta hai.","Entries ko seconds mein badalne ke liye service rate chahiye; queue length alone duration nahi."] },
       {
         q: '"Dashboard par live events 5,000/second aa rahe hain aur browser atak raha hai. Kya karoge?"',
-        choices: [
-          'Har frame mein kaam ki hadd: naye kuch dikhao, baaki chhodo ya "+N aur" likho. Har event ko turant dikhana line ko bina hadd badhata hai; sab ko ek frame mein dikhana page ko jaam kar deta hai',
-          'Sab events ek saath dikha do, har frame mein',
-          'Har event aate hi turant dikhao',
-          'User ko bada computer lene ko bolo',
-        ],
+        choices: ["Per-frame render budget aur newest-state aggregation lagao","Har frame mein poora pending event backlog render karao","Har event par synchronous DOM update aur layout karao","Event queue retain karo; sirf chart animation disable karo"],
         answer: 0,
         explain: 'Lab: har message turant → chat 4.1 s peeche, 20,874 line mein. Sab ek frame mein → 5 fps, click 341 ms. Frame mein naye 20 → 47 fps, click 6 ms.',
-      },
+       choiceExplanations: ["Lab: har message turant → chat 4.1 s peeche, 20,874 line mein. Sab ek frame mein → 5 fps, click 341 ms. Frame mein naye 20 → 47 fps, click 6 ms.","Ek hi frame mein unbounded work user input aur paints ko block karega.","Arrival rate display capacity se zyada ho toh synchronous DOM work main thread saturate karega.","Animation hataane se event processing/backlog automatically bounded nahi hota."] },
     ],
   },
   success: [

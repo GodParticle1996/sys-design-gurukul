@@ -91,16 +91,11 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
           vars: { which: 'hamara: <code>worthRetrying</code> → p-retry: default <b>har error par</b>; rokne ke liye <code>AbortError</code> phenko' },
           ask: {
             q: 'Maan lo line 23 hata di. payment-service kehti hai <code>404</code>: "aisa order hai hi nahi". p-retry kya karega?',
-            choices: [
-              '404 ka error bhi baaki errors jaisa hi phenka jaayega → p-retry use dobara-dobara bhejega, retries khatam hone tak',
-              '404 dekh ke p-retry khud ruk jaayega',
-              'p-retry crash ho jaayega',
-              'p-retry 404 ko success maan lega',
-            ],
+            choices: ["Thrown 404 bhi retry hogi; abort/policy guard missing hai","Library 404 semantics body padh kar khud jaan legi","Library 404 ko successful returned value bana degi","Library process stop karegi; non-5xx error invalid hai"],
             answer: 0,
             hint: 'p-retry status nahi dekhta. p-retry sirf yeh dekhta hai ki error phenka gaya ya nahi.',
             explain: 'Library ko pata hi nahi ki 404 aur 503 mein farq hai — dono bas "error" hain. <b>Kis par dobara bhejna hai</b>, yeh faisla library tumse chahti hai (<code>AbortError</code>, ya <code>shouldRetry</code> option). Default mein yeh faisla "sab par" hai.',
-          },
+           choiceExplanations: ["Library ko pata hi nahi ki 404 aur 503 mein farq hai — dono bas \"error\" hain. <b>Kis par dobara bhejna hai</b>, yeh faisla library tumse chahti hai (<code>AbortError</code>, ya <code>shouldRetry</code> option). Default mein yeh faisla \"sab par\" hai.","Generic thrown Error status semantics default mein classify nahi karta.","Action throws toh success value nahi; wrapper ko AbortError/shouldRetry jaise control chahiye.","Non-5xx Error valid rejection hai; process exit library ka documented default nahi."] },
         },
         {
           clock: 'kitni baar',
@@ -127,16 +122,11 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
           vars: { rand: 'hamara: 0 se hadd tak → p-retry: <b>randomize: true</b> = intezaar × (1 se 2)' },
           ask: {
             q: '<code>minTimeout: 300</code>, <code>factor: 2</code>, <code>randomize: true</code>. Doosri fail ke baad p-retry kitna rukega?',
-            choices: [
-              '600 se 1200 ms ke beech — pehle 300 × 2 = 600, phir use 1 se 2 ke beech ki sankhya se guna',
-              '0 se 600 ms ke beech',
-              'Theek 600 ms',
-              '300 se 600 ms ke beech',
-            ],
+            choices: ["600-1200 ms: base 600 ko random 1..2 multiplier","0-600 ms: default randomize full-jitter sampler hai","Exactly 600 ms: randomize second retry par off hai","300-600 ms: factor 2 next failure ke baad lagega"],
             answer: 0,
             hint: 'Pehle bina random ka intezaar nikalo (300 × 2). Phir use 1 se 2 ke beech ki sankhya se guna karo.',
             explain: 'Asli run mein p-retry doosri fail ke baad <b>1150 ms</b> ruka — 600 aur 1200 ke beech. Hamara retry usi jagah 0 se 600 ke beech chunta (Asha: 550 ms).',
-          },
+           choiceExplanations: ["Asli run mein p-retry doosri fail ke baad <b>1150 ms</b> ruka — 600 aur 1200 ke beech. Hamara retry usi jagah 0 se 600 ke beech chunta (Asha: 550 ms).","p-retry randomize multiplier uses1..2, full jitter0..bound nahi.","randomize enabled hai; fixed delay assume nahi.","Second failure delay base factor growth ke saath600 hai."] },
         },
         {
           clock: 'asli run — hamari settings',
@@ -164,16 +154,11 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
             Doosri koshish 2.31 s par gayi — payment-service 2.40 s par uthi. Bas 0.1 second se chook. Phir poore <b>2000 ms</b> ka intezaar. Order <b>4.61 s</b> par.`,
           ask: {
             q: 'Default mein intezaar 1 s se shuru hota hai, har baar dugna, koi chhat nahi, aur 10 retries. payment-service der tak band rahe toh ek request kul kitni der tak retry karti rahegi?',
-            choices: [
-              '1 + 2 + 4 + … + 512 = 1023 second (~17 minute) — aur bina random ke, yaani sab clients ek saath',
-              '10 second',
-              '20 second',
-              '1 minute',
-            ],
+            choices: ["1023 s wait sum; call runtime iske upar judti hai","10 s wait sum; retry count ko seconds maan lo","20 s wait sum; sirf last doubled timeout gino","60 s wait sum; default overall deadline minute hai"],
             answer: 0,
             hint: 'Dus intezaar hain: 1, 2, 4, 8 … har baar dugna. Aakhri wala 512 second ka hai.',
             explain: '17 minute tak koi user nahi rukta — par us request ke peeche ka worker, connection aur memory ruke rehte hain. Aur <code>randomize: false</code> ka matlab: sab clients ek hi pal par lautte hain (level 1 wali dikkat).',
-          },
+           choiceExplanations: ["17 minute tak koi user nahi rukta — par us request ke peeche ka worker, connection aur memory ruke rehte hain. Aur <code>randomize: false</code> ka matlab: sab clients ek hi pal par lautte hain (level 1 wali dikkat).","Ten retries each one second nahi; exponential1+2+4+...+512 hai.","Saare waits add hote hain; only final wait ya factor count nahi.","Pinned defaults overall one-minute deadline enforce nahi karte."] },
         },
         {
           clock: 'wahi sawaal, chaar jagah',
@@ -246,15 +231,10 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
       ],
       observe: {
         q: 'Default wale hisse (2) mein doosri koshish 2.31 s par fail hui, aur payment-service 2.40 s par uth gayi. Phir bhi order 4.61 s par kyun laga?',
-        choices: [
-          'Default mein doosri fail ke baad intezaar poore 2000 ms ka hai (1000 × 2), bina random aur bina chhat ke. Phone 4.31 s tak soya raha',
-          'payment-service 4.31 s tak band thi',
-          'p-retry ne order bhejna bhool gaya',
-          'Network dheema tha',
-        ],
+        choices: ["Default second wait 2 s; healthy service ke baad client soya","Service 4.31 s tak down; client schedule ka role nahi","Randomizer ne zero attempts choose kiye; request skip hui","Network RTT 2 s thi; backoff wait duration zero raha"],
         answer: 0,
         explain: 'Bada base (1000 ms) + dugna + koi chhat nahi = chhoti si chook ki badi keemat. Hamari settings mein usi jagah intezaar 1150 ms tha aur order 3.22 s par lag gaya.',
-      },
+       choiceExplanations: ["Bada base (1000 ms) + dugna + koi chhat nahi = chhoti si chook ki badi keemat. Hamari settings mein usi jagah intezaar 1150 ms tha aur order 3.22 s par lag gaya.","Trace service2.40s par recovered dikhata hai; later dispatch client wait se aayi.","Retry attempts skip nahi hue; default deterministic wait observed hai.","Measured timeline known configured sleep se explain hai; extra RTT assume mat karo."] },
       lesson: 'Library wahi kaam karti hai, par uske default tumhari service ke nahi hain. Chaar options hamesha khud likho.',
     },
   ],
@@ -264,26 +244,16 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
     questions: [
       {
         q: '"Humne retry library default settings ke saath laga di. Kya galat ho sakta hai?"',
-        choices: [
-          'Default tumhari service ko nahi jaante: bahut zyada koshishein, lamba ya bina chhat ka intezaar, random band, aur har error par retry (4xx par bhi). Chaaron cheezein khud likhni chahiye',
-          'Kuch nahi — library ke default production ke liye bane hain',
-          'Default hamesha bahut kam retry karte hain',
-          'Library default ke saath chalti hi nahi',
-        ],
+        choices: ["Pinned defaults inspect; policy deadlines aur errors chuno","Defaults tested hain; caller deadline alag tune na karo","Only retry count badhao; latency budget ko baad mein dekho","Library replace karo; app error contract inspect na karo"],
         answer: 0,
         explain: 'p-retry 8 ke default: retries 10, minTimeout 1000 ms, maxTimeout Infinity, randomize false, har error par retry. Lab: default ke saath order 4.61 s par (service 2.40 s se theek); intezaar kul 1023 second tak ja sakta hai.',
-      },
+       choiceExplanations: ["p-retry 8 ke default: retries 10, minTimeout 1000 ms, maxTimeout Infinity, randomize false, har error par retry. Lab: default ke saath order 4.61 s par (service 2.40 s se theek); intezaar kul 1023 second tak ja sakta hai.","Library maintainers workload-specific caller SLA ya side effects nahi jaante.","Zyada attempts lamba retained work aur amplification badha sakte hain.","Library swap bad classifier/default assumptions ko automatically fix nahi karta."] },
       {
         q: '"Library mein randomize: true kar diya. Kya ab hamare paas full jitter hai?"',
-        choices: [
-          'Zaroori nahi — har library ka random alag hai. p-retry intezaar ko 1 se 2 ke beech guna karta hai (kabhi base se kam nahi); full jitter 0 se hadd tak chunta hai; gRPC ± 20% lagata hai. Library ka formula padhna padta hai',
-          'Haan, randomize ka matlab hamesha full jitter hota hai',
-          'Nahi, randomize kuch karta hi nahi',
-          'Haan, par sirf pehli retry par',
-        ],
+        choices: ["Formula check; randomize full jitter ka synonym nahi","Randomize true means uniform 0..bound across libraries","Randomize true only first attempt ko random karta","Randomize true HTTP methods ko automatically safe karta"],
         answer: 0,
         explain: 'Lab: base 300 par pehli fail ke baad p-retry 451 ms ruka (300–600 ke beech), hamara full jitter 151 ms (0–300 ke beech).',
-      },
+       choiceExplanations: ["Lab: base 300 par pehli fail ke baad p-retry 451 ms ruka (300–600 ke beech), hamara full jitter 151 ms (0–300 ke beech).","Libraries different distributions/floors use karti hain; name se formula infer mat karo.","Pinned p-retry each retry timeout random multiplier use karta hai, only first nahi.","Timing randomization duplicate side effects ko safe nahi banaati."] },
     ],
   },
   success: [

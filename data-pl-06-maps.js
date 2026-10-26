@@ -43,17 +43,7 @@ VISUALS['maps-crp'] = {
 
 VISUALS['maps-traffic'] = {
   t: 'Phones hi sensor hain — aur traffic ka bhavishya',
-  html: `
-    <div class="dg-flow">
-      <span class="dg-pill">📱 ~2 arab phones (anonymous position + speed)</span><span class="dg-arrow">→</span>
-      <span class="dg-pill acc">🧲 map matching (HMM)</span><span class="dg-arrow">→</span>
-      <span class="dg-pill">🌊 streaming aggregation per segment</span><span class="dg-arrow">→</span>
-      <span class="dg-pill gold">🔮 history curve + GNN forecast</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good">🗓️ time-dependent routing</span>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-cap">Sadak ka weight ek number nahi, <b>waqt ka function</b> hai: pehli sadak nikalne ke waqt ki speed par, agli sadak
-      us waqt ki speed par jab tum wahan pahunchoge. Lab: "abhi wali speed" ki galti 18:30 par <b>24.6 min</b> (33%); time-dependent ~8 min.</div>`,
+  html: "\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📱 ~2 arab phones (anonymous position + speed)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">🧲 map matching (HMM)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill\">🌊 streaming aggregation per segment</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill gold\">🔮 history curve + GNN forecast</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">🗓️ time-dependent routing</span>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-cap\">Sadak ka weight ek number nahi, <b>waqt ka function</b> hai: pehli sadak nikalne ke waqt ki speed par, agli sadak\n      us waqt ki speed par jab tum wahan pahunchoge. Lab: \"abhi wali speed\" ki galti 18: 30 par <b>24.6 min</b> (33%); time-dependent ~8 min.</div>",
 };
 
 VISUALS['maps-tiles-s2'] = {
@@ -67,7 +57,7 @@ VISUALS['maps-tiles-s2'] = {
           Kaam wahan jahan sasta: user ke device par.</div></div>
     </div>
     <div class="dg-rule"></div>
-    <div class="dg-cap">"Mere paas kya hai?" — S2: space-filling (Hilbert) curve zameen par saanp ki tarah; paas ki jagahon ko paas ke number →
+     <div class="dg-cap">"Mere paas kya hai?" — S2: hierarchical cell IDs ke descendant ranges contiguous hote hain; nearby coordinates ke IDs hamesha nearby nahi →
       har jagah ek sortable 64-bit key → range scan. Lab: 10 lakh jagahein, full scan 10 lakh rows vs Hilbert key <b>264 rows</b>, same jawab.</div>`,
 };
 
@@ -99,20 +89,7 @@ SD.registerLevels('planet', [
      <b>laakhon</b> chauraahe dekh leta hai.</p>
      <p><b>A*</b> = "compass wala Dijkstra": manzil ki seedhi doori ka andaaza jodo → search manzil ki taraf jhukta hai.
      Medium doori par madad, par jab asli raasta saikdon mile ghoomta ho toh kamzor.</p>`,
-    `<h3>🛣️ Insaan kaise sochta hai</h3>
-     <p>"Mohalle se nikal ke highway, highway se manzil ke paas exit." <b>Contraction hierarchies</b> yahi karti hain:
-     <b>shortcut edges</b> jodo (poora highway stretch ek hop mein), sadkon ko rank karo (galiyan neeche, highways upar),
-     search upar chadhta hai, shortcuts par chalta hai, neeche utarta hai — aur <b>dono taraf se</b> (bidirectional),
-     beech mein milte hain. Laakhon kadam → kuch hazaar.</p>
-     <p><b>Par:</b> shortcuts travel times se bane hain, aur travel times din bhar badalte hain (highway 2 baje 8 min, 6 baje
-     25 min) → shortcuts <b>purane</b> ho jaate hain. Precompute = tez, live traffic = sahi. Yahi tension agle level mein.</p>
-     <pre>lab 24 (300×300 grid = 90,000 junctions) — sheher ke aar-paar:
-dijkstra  ETA 27.24 min   junctions dekhe  65,260   18.8 ms
-astar     ETA 27.24 min   junctions dekhe   9,196    4.5 ms
-bidir     ETA 27.24 min   junctions dekhe  46,153   18.4 ms
-overlay   ETA 27.24 min   junctions dekhe   2,513    6.0 ms</pre>
-     <p>Chaaron ka jawab <b>bilkul same</b> — farq sirf mehnat ka. (Imaandari: is grid mein har cell ke border bahut hain,
-     isliye overlay ke edge relaxations zyada dikhte hain; asli sadkon mein cell se nikalne ke raaste kam hote hain.)</p>`,
+    "<h3>🛣️ Insaan kaise sochta hai</h3>\n     <p>\"Mohalle se nikal ke highway, highway se manzil ke paas exit.\" <b>Contraction hierarchies</b> yahi karti hain:\n     <b>shortcut edges</b> jodo (poora highway stretch ek hop mein), sadkon ko rank karo (galiyan neeche, highways upar),\n     search upar chadhta hai, shortcuts par chalta hai, neeche utarta hai — aur <b>dono taraf se</b> (bidirectional),\n     beech mein milte hain. Laakhon kadam → kuch hazaar.</p>\n     <p><b>Par:</b> shortcuts travel times se bane hain, aur travel times din bhar badalte hain (highway 2 baje 8 min, 6 baje\n     25 min) → shortcuts <b>purane</b> ho jaate hain. Precompute = tez, live traffic = sahi. Yahi tension agle level mein.</p>\n     <pre>lab 24 (300×300 grid = 90,000 junctions) — sheher ke aar-paar:\ndijkstra  ETA 27.24 min   junctions dekhe  65,260   18.8 ms\nastar     ETA 27.24 min   junctions dekhe   9,196    4.5 ms\nbidir     ETA 27.24 min   junctions dekhe  46,153   18.4 ms\noverlay   ETA 27.24 min   junctions dekhe   2,513    6.0 ms</pre>\n     <p>Chaaron ka jawab <b>bilkul same</b> — farq sirf mehnat ka. (Imaandari: is grid mein har cell ke border bahut hain,\n     isliye overlay ke edge relaxations zyada dikhte hain; asli sadkon mein cell se nikalne ke raaste kam hote hain.)</p>",
   ],
   stages: [
     {
@@ -129,15 +106,10 @@ overlay   ETA 27.24 min   junctions dekhe   2,513    6.0 ms</pre>
       ],
       observe: {
         q: '"Poore naksha ke aar-paar" (0,0 → 299,299) par A* ne bhi saare 90,000 junctions dekhe. Kyun?',
-        choices: [
-          'Manzil ekdum kone mein hai — har junction "raaste mein" hai, compass kuch kaat hi nahi paata. A* tab chamakta hai jab manzil ek taraf ho aur baaki duniya door',
-          'A* galat chala',
-          'Heuristic galat hai',
-          'Grid chhota hai',
-        ],
+        choices: ["Equal f-scores and tie rule explored plateau","Every A* always explores entire map","A* correctness proved broken by node count","Smaller grid makes heuristic inadmissible"],
         answer: 0,
-        explain: 'Isi liye continent-scale ke liye query-time search kaafi nahi — structure pehle banao.',
-      },
+        explain: "Is uniform grid and tie rule mein many cells same A* f-score share karti hain, so broad plateau expand hui. Different admissible heuristics/tie-breaking can change node count; A* ka universal full-grid behavior nahi.",
+       choiceExplanations: ["Is uniform grid and tie rule mein many cells same A* f-score share karti hain, so broad plateau expand hui. Different admissible heuristics/tie-breaking can change node count; A* ka universal full-grid behavior nahi.","Different heuristic/tie-break rules fewer expansions kar sakti hain.","Many expansions inefficient ho sakti hain, wrong path ka proof nahi.","Grid size alone admissibility decide nahi karti."] },
       lesson: 'Sab algorithms same jawab dete hain — design ka kaam hai "kitna kaam", aur woh query se pehle le jaana.',
     },
     {
@@ -146,26 +118,16 @@ overlay   ETA 27.24 min   junctions dekhe   2,513    6.0 ms</pre>
       questions: [
         {
           q: 'Contraction hierarchies ki kamzori?',
-          choices: [
-            'Shortcuts travel times se bane hain — traffic badalte hi purane; poora dobara banana mehenga',
-            'Galat raasta dete hain',
-            'Chhote sheher mein kaam nahi karte',
-            'Bidirectional nahi ho sakte',
-          ],
+          choices: ["Shortcuts ke metrics refresh karo","All hierarchies return wrong routes","No hierarchy supports reverse search","Dynamic traffic can never be integrated"],
           answer: 0,
           explain: 'Precompute = tez par purana; live = sahi par dheema — yahi tension.',
-        },
+         choiceExplanations: ["Precompute = tez par purana; live = sahi par dheema — yahi tension.","Updated/customizable hierarchies valid paths return kar sakti hain.","Bidirectional hierarchy search established technique hai.","Customization separates reusable topology from changing weights."] },
         {
           q: 'Bidirectional search kyun kam kaam karta hai?',
-          choices: [
-            'Do chhote daayre (start aur manzil se) ek bade daayre se kam area dhakte hain — beech mein milte hain',
-            'Do CPU use karta hai',
-            'Heuristic lagata hai',
-            'Kam edges hain',
-          ],
+          choices: ["Meet searches reduce some explored region","Two CPUs are logically required","Half work guaranteed on every graph","Bidirectional always removes heuristic need"],
           answer: 0,
-          explain: 'Area ∝ r²: do r/2 ke daayre = aadha area.',
-        },
+          explain: "Simple 2D geometric intuition mein two smaller fronts less area explore kar sakte hain. Actual graph topology, edge weights, stopping condition and heuristic determine work; exactly half universal guarantee nahi.",
+         choiceExplanations: ["Simple 2D geometric intuition mein two smaller fronts less area explore kar sakte hain. Actual graph topology, edge weights, stopping condition and heuristic determine work; exactly half universal guarantee nahi.","Algorithm one CPU par interleaved bhi run ho sakta hai.","Topology, weights and stopping criteria actual expansion count affect karte hain.","Heuristics complementary ho sakti hain, not automatically redundant."] },
       ],
     },
   ],
@@ -175,26 +137,16 @@ overlay   ETA 27.24 min   junctions dekhe   2,513    6.0 ms</pre>
     questions: [
       {
         q: 'Interviewer: "Poore desh ka routing 100 ms mein, live traffic ke saath."',
-        choices: [
-          'Topology se structure pehle (hierarchy/cells), cost layer alag aur har kuch minute customize; query = local search + precomputed shortcuts, bidirectional',
-          'Har query par Dijkstra, bade servers',
-          'Raaste pehle se cache har jode ke liye',
-          'Sirf highways par route',
-        ],
+        choices: ["Topology reuse aur fresh cost metric","All origin/destination pairs cache forever","Only local Dijkstra with no measurements","Only highways, ignore access roads"],
         answer: 0,
-        explain: 'Jode anant hain — cache nahi, structure.',
-      },
+        explain: "Finite graph par possible origin/destination pairs quadratic ho sakte hain; every pair cache karna expensive/stale ho sakta hai. Structural preprocessing aur bounded caching complementary tools hain.",
+       choiceExplanations: ["Finite graph par possible origin/destination pairs quadratic ho sakte hain; every pair cache karna expensive/stale ho sakta hai. Structural preprocessing aur bounded caching complementary tools hain.","Pair count and changing traffic exhaustive caching expensive banate hain.","Full local search continent-scale latency budget miss kar sakti hai.","Start/end access and legal turn constraints required hain."] },
       {
         q: 'Interviewer: "A* ka heuristic kaisa ho?"',
-        choices: [
-          'Admissible — asli cost se kabhi zyada nahi (seedhi doori / max speed); warna galat raasta',
-          'Jitna bada utna tez',
-          'Random',
-          'Pichhle raaste ka time',
-        ],
+        choices: ["Lower-bound heuristic, reopen if needed","Overestimate cost arbitrarily for optimality","Random estimate without bound","Past ETA always lower bound hoti"],
         answer: 0,
-        explain: 'Lab ka heuristic: Manhattan doori / sabse tez speed.',
-      },
+        explain: "Optimal A* lower-bound (admissible) heuristic maangta hai. Closed-set graph search mein consistency or reopening logic bhi important hai. Straight-line distance divided by a valid maximum speed is one lower-bound example.",
+       choiceExplanations: ["Optimal A* lower-bound (admissible) heuristic maangta hai. Closed-set graph search mein consistency or reopening logic bhi important hai. Straight-line distance divided by a valid maximum speed is one lower-bound example.","Unbounded overestimate optimal path prune kar sakta hai.","Random value admissibility establish nahi karta.","Past traffic can be slower than current; estimate overstate kar sakti hai."] },
     ],
   },
   success: [
@@ -226,32 +178,8 @@ overlay   ETA 27.24 min   junctions dekhe   2,513    6.0 ms</pre>
     'Cost function ek chunaav hai — eco routing, tolls',
   ],
   lesson: [
-    `<h3>🧱 Dhaancha shakal se, numbers aakhir mein</h3>
-     <p><b>CRP</b> (Customizable Route Planning) do cheezein alag karta hai:</p>
-     <ul>
-       <li><b>Topology</b> — kaunsi sadak kisse judi. Lagbhag kabhi nahi badalta → bhaari preprocessing <b>ek baar</b>.</li>
-       <li><b>Cost</b> — abhi ka travel time. Har kuch minute → <b>sasta</b> pass.</li>
-     </ul>
-     <p>Naksha ko kuch levels par <b>cells</b> mein baanto. Har cell ke liye har entry border se har exit border tak ki cost
-     pehle se nikaalo — cell ek <b>summary</b> ban jaata hai. Desh ke aar-paar raasta: apni gali se cell border → cell-to-cell
-     border crossings par kood → manzil ki gali. Cells alag machines par bhi ho sakte hain.</p>
-     <p>Traffic badla? <b>Sirf us cell</b> ke border costs dobara.</p>
-     <pre>lab 24 — manzil ke aas-paas jam (676 sadkein 12× dheemi):
-jam se pehle ETA 15.31 min
-purane overlay se ETA 19.17 min   ← galat, shortcuts purane
-asli (Dijkstra, live) 20.25 min
-sirf wo cell dobara:   56 border nodes,    13 ms → ETA 20.25
-poora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga, jawab same)</pre>`,
-    `<h3>⚖️ "Sabse tez" ek chunaav hai</h3>
-     <p>Wahi structure, alag cost function:</p>
-     <ul>
-       <li><b>Eco-friendly routing</b> — har edge ke liye ML andaaza: kitna fuel/energy (chadhaai, traffic, engine: petrol /
-       hybrid / EV).</li>
-       <li><b>Tolls avoid</b>, <b>highways avoid</b>, <b>kam turns</b> — sab alag cost functions, <b>same</b> cells par.</li>
-     </ul>
-     <p>Sabse tez ≠ sabse efficient → multi-objective. Maps eco raasta tab offer karta hai jab uska extra time lagbhag zero ho.</p>
-     <p class="tip">🎯 <b>Jo dheere badalta hai use jo tezi se badalta hai us se alag karo.</b> Tab tezi wala hissa sasta ho
-     jaata hai — yahan 1.2 sec se 13 ms.</p>`,
+    "<h3>🧱 Dhaancha shakal se, numbers aakhir mein</h3>\n     <p><b>CRP</b> (Customizable Route Planning) do cheezein alag karta hai:</p>\n     <ul>\n       <li><b>Topology</b> — kaunsi sadak kisse judi. Lagbhag kabhi nahi badalta → bhaari preprocessing <b>ek baar</b>.</li>\n       <li><b>Cost</b> — abhi ka travel time. Har kuch minute → <b>sasta</b> pass.</li>\n     </ul>\n     <p>Naksha ko kuch levels par <b>cells</b> mein baanto. Har cell ke liye har entry border se har exit border tak ki cost\n     pehle se nikaalo — cell ek <b>summary</b> ban jaata hai. Desh ke aar-paar raasta: apni gali se cell border → cell-to-cell\n     border crossings par kood → manzil ki gali. Cells alag machines par bhi ho sakte hain.</p>\n     <p>Traffic badla? <b>Sirf us cell</b> ke border costs dobara.</p>\n     <pre>lab 24 — manzil ke aas-paas jam (676 sadkein 12× dheemi):\njam se pehle ETA 15.31 min\npurane overlay se ETA 19.17 min   ← galat, shortcuts purane\nasli (Dijkstra, live) 20.25 min\nsirf wo cell dobara:   56 border nodes,    13 ms → ETA 20.25\npoora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga, jawab same)</pre>",
+    "<h3>⚖️ \"Sabse tez\" ek chunaav hai</h3>\n     <p>Wahi structure, alag cost function:</p>\n     <ul>\n       <li><b>Eco-friendly routing</b> — har edge ke liye ML andaaza: kitna fuel/energy (chadhaai, traffic, engine: petrol /\n       hybrid / EV).</li>\n       <li><b>Tolls avoid</b>, <b>highways avoid</b>, <b>kam turns</b> — sab alag cost functions, <b>same</b> cells par.</li>\n     </ul>\n     <p>Sabse tez ≠ sabse efficient → multi-objective. Maps eco raasta tab offer karta hai jab uska extra time lagbhag zero ho.</p>\n     <p class=\"tip\">🎯 <b>Jo dheere badalta hai use jo tezi se badalta hai us se alag karo.</b> Tab tezi wala hissa sasta ho\n     jaata hai — yahan 1.2 sec se 13 ms.</p>",
   ],
   stages: [
     {
@@ -267,17 +195,12 @@ poora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga
         { text: 'Jam tool chalao.', cmd: 'node tools/jam.js', expect: 'jam se pehle: ETA 15.31 min\n\nManzil ke aas-paas ke ilaake mein jam: 676 sadkein 12x dheemi (cell 210)\n  purane overlay se ETA: 19.17 min  ← galat, shortcuts purane hain\n  asli (Dijkstra, live weights): 20.25 min\n\n  sirf wo cell dobara: 56 border nodes, 13 ms → ETA 20.25 min\n  poora naksha dobara: 22400 border nodes, 1226 ms → ETA 20.25 min\n\n  ek cell ka kaam poore naksha se 94x sasta — aur natija bilkul same.' },
       ],
       observe: {
-        q: 'Purane overlay ne 19.17 min kyun bataya jabki asli 20.25 tha — jam toh usi cell mein tha?',
-        choices: [
-          'Cell ke andar ki border-to-border shortcuts jam se pehle ki thin; route ka jo hissa shortcuts se chala, usme jam dikha hi nahi (sirf live edges wala hissa dikha)',
-          'Dijkstra galat tha',
-          'Jam do cells mein tha',
-          'Overlay ne raasta badal diya',
-        ],
+        q: "Purane overlay ne 19.17 min kyun bataya jabki asli 20.25 tha — jam toh usi cell mein tha?",
+        choices: ["Overlay cost had stale traffic summary","Live edges must all be missing","Any changed estimate means wrong Dijkstra","Cell topology must have vanished"],
         answer: 0,
         explain: 'Isi liye cost layer har kuch minute customize hoti hai — structure wahi, numbers taaze.',
-      },
-      lesson: 'Traffic ka update = ek cell ka kaam (13 ms), poore naksha ka nahi (1.2 s).',
+       choiceExplanations: ["Isi liye cost layer har kuch minute customize hoti hai — structure wahi, numbers taaze.","Shortcuts stale ho sakti hain even when local live edges available hon.","Search old weights par correct ho sakti hai, real-time estimate still stale.","Metric update topology deletion imply nahi karta."] },
+      lesson: "Traffic ka update = ek cell ka kaam (13 ms), poore naksha ka nahi (1.2 s).",
     },
     {
       type: 'match',
@@ -297,26 +220,16 @@ poora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga
     questions: [
       {
         q: 'Interviewer: "Har 2 minute traffic update aata hai. Poora routing index dobara banta hai (20 min). Kya karein?"',
-        choices: [
-          'Topology aur cost alag karo (CRP): cells + border summaries ek baar; traffic update par sirf affected cells ke border costs customize',
-          'Update har 20 min par',
-          'Bade servers',
-          'Live Dijkstra har query',
-        ],
+        choices: ["Topology separate, costs customize","Delay all traffic inputs until rebuild","Only add servers without profiling","Every query ignore all precomputation"],
         answer: 0,
         explain: 'Lab: 94× sasta, jawab same.',
-      },
+       choiceExplanations: ["Lab: 94× sasta, jawab same.","Slower refresh freshness requirement violate karta hai.","Capacity can help, but repeated metric-independent work remains.","Full live search may exceed query latency/capacity budget."] },
       {
         q: 'Interviewer: "Eco routing kaise joden bina naya routing engine banaye?"',
-        choices: [
-          'Wahi cells/topology; naya cost function (fuel per edge ka model) se ek alag customization — dono costs par query, multi-objective choice',
-          'Naya graph',
-          'Sirf highways avoid',
-          'User ko khud chunne do raasta',
-        ],
+        choices: ["Validate eco cost model on shared topology","Avoid highways means lowest fuel always","User choice supplies missing cost model","New graph mandatory for every metric"],
         answer: 0,
         explain: 'Cost function ek chunaav hai.',
-      },
+       choiceExplanations: ["Cost function ek chunaav hai.","Fuel slope, speed, stops and vehicle efficiency se vary karta hai.","Choice meaningful tab jab alternatives ka modeled cost available ho.","Many road/turn constraints reused with a new metric ho sakti hain."] },
     ],
   },
   success: [
@@ -327,8 +240,8 @@ poora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga
   homework: `<p>Apne system mein koi precomputed cheez dhoondho jo "thodi si" badli par poori dobara banti hai (search index, report,
     recommendations). Kya usme "dhaancha" aur "numbers" alag ho sakte hain, taaki sirf badla hissa dobara bane?</p>`,
   cards: [
-    { front: 'CRP ka idea?', back: 'Topology (dheema) se cells + border structure ek baar; cost (traffic) har kuch minute sirf affected cells mein customize.' },
-    { front: 'Lab 24: jam ke baad?', back: 'Ek cell dobara: 13 ms; poora naksha: 1,226 ms (94×) — jawab bilkul same (ETA 20.25).' },
+    { front: 'CRP ka idea?', back: "Metric-independent partition/topology reuse; traffic/cost metric separately customize. Course ka one-level overlay affected cell recompute dikhata hai. Real multilevel indexes mein affected higher-level shortcuts bhi refresh ho sakte hain." },
+    { front: 'Lab 24: jam ke baad?', back: "Ek cell dobara: 13 ms; poora naksha: 1,226 ms (94×) — jawab bilkul same (ETA 20.25)." },
     { front: 'Cost function ek chunaav?', back: 'Wahi structure par fastest, eco (fuel model), toll-free, no-highway — sab alag customizations.' },
   ],
 },
@@ -348,33 +261,8 @@ poora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga
     'Time-dependent routing — lab mein ETA ki galti',
   ],
   lesson: [
-    `<h3>📱 Sadak par sensor nahi, jeb mein</h3>
-     <p>Traffic numbers <b>phones</b> se aate hain: anonymous position + speed. Ek sadak par saikdon phones 10 km/h par = jam.
-     Bheed hi sensor hai. 2020 mein Berlin ke artist Simon Weckert ne 99 phones ek laal gaadi mein bhar ke khaali sadak par
-     ghumaye — Maps ne wahan jam dikha diya.</p>
-     <h3>🧲 Map matching</h3>
-     <p>GPS kuch metre galat hota hai — galat sadak, building, nadi. Ek point anishchit hai, par <b>points ki lakeer</b> nahi.
-     <b>Hidden Markov Model</b> sabse sambhav sadkon ka kram chunta hai → blue dot sadak se chipka, aur speed sahi segment ko
-     milti hai (teen sadkon mein bikhri nahi).</p>
-     <h3>🔮 40 minute ki drive mein "abhi" kam maayne rakhta hai</h3>
-     <p><b>History</b>: har segment laakhon baar chala hai → roz ka speed curve (weekdays 5:30 dheema, Sunday subah khaali) =
-     baseline. Kamzori: aaj aam din nahi, aur ek highway ka jam feeders mein phailta hai → DeepMind ke <b>supersegments + graph
-     neural network</b>: node aur uske padosi dekho → phailte jam jaldi pakdo; history baseline ko aaj ke area-wide flow se modo.</p>`,
-    `<h3>🗓️ Time-dependent routing</h3>
-     <p>Raaste ko <b>samay mein aage</b> chalo: pehli sadak nikalne ke waqt ki speed par, uska time jodo, agli sadak <b>us</b>
-     waqt ki speed par jab tum wahan pahunchoge… Edges numbers nahi, <b>arrival time ke functions</b> hain. ETA = predicted
-     segment times ka jod, predicted palon par. Chalte-chalte lagatar recheck; crash → segment cost ucchla → reroute. Closures,
-     construction, crash reports — kai Waze (Google ka) se. Aur alternatives sach mein alag hon, ek hi sadak ke 10 roop nahi.</p>
-     <pre>lab 24 (ex2) — shaam ka rush, seekha hua curve vs aaj ka asli (peak 9 min late):
-nikalne ka time   "abhi wali speed"   time-dependent   asli     static ki galti   TD ki galti
-     17:00             52.3 min          70.0 min      69.9      -17.6 min        +0.1
-     18:30             99.4 min          66.8 min      74.7      +24.6 min        -7.9</pre>
-     <h3>🌊 Pipeline</h3>
-     <p>Arabon anonymous pings → edge → map matching → per-segment <b>streaming</b> aggregation (rolling windows, raat ka batch
-     nahi) → har segment ki abhi ki speed → sirf badle cells ka customization → serving fleet → edge cache. Query ko milta hai:
-     pakka structure + ≤ do minute purani cost layer. Hot path turant, update path ko thoda peeche rehne ki chhoot — dono alag.</p>
-     <p class="tip">⚖️ Keemat: bina history wali ghatna (taaza crash, toofan) par forecast aatmavishwas se galat; aur ~2 arab
-     phones ki location — anonymization hi tay karta hai ki yeh manzoor hai bhi ya nahi.</p>`,
+    "<h3>📱 Sadak par sensor nahi, jeb mein</h3>\n     <p>Traffic numbers <b>phones</b> se aate hain: anonymous position + speed. Ek sadak par saikdon phones 10 km/h par = jam.\n     Bheed hi sensor hai. 2020 mein Berlin ke artist Simon Weckert ne 99 phones ek laal gaadi mein bhar ke khaali sadak par\n     ghumaye — Maps ne wahan jam dikha diya.</p>\n     <h3>🧲 Map matching</h3>\n     <p>GPS kuch metre galat hota hai — galat sadak, building, nadi. Ek point anishchit hai, par <b>points ki lakeer</b> nahi.\n     <b>Hidden Markov Model</b> sabse sambhav sadkon ka kram chunta hai → blue dot sadak se chipka, aur speed sahi segment ko\n     milti hai (teen sadkon mein bikhri nahi).</p>\n     <h3>🔮 40 minute ki drive mein \"abhi\" kam maayne rakhta hai</h3>\n     <p><b>History</b>: har segment laakhon baar chala hai → roz ka speed curve (weekdays 5: 30 dheema, Sunday subah khaali) =\n     baseline. Kamzori: aaj aam din nahi, aur ek highway ka jam feeders mein phailta hai → DeepMind ke <b>supersegments + graph\n     neural network</b>: node aur uske padosi dekho → phailte jam jaldi pakdo; history baseline ko aaj ke area-wide flow se modo.</p>",
+    "<h3>🗓️ Time-dependent routing</h3>\n     <p>Raaste ko <b>samay mein aage</b> chalo: pehli sadak nikalne ke waqt ki speed par, uska time jodo, agli sadak <b>us</b>\n     waqt ki speed par jab tum wahan pahunchoge… Edges numbers nahi, <b>arrival time ke functions</b> hain. ETA = predicted\n     segment times ka jod, predicted palon par. Chalte-chalte lagatar recheck; crash → segment cost ucchla → reroute. Closures,\n     construction, crash reports — kai Waze (Google ka) se. Aur alternatives sach mein alag hon, ek hi sadak ke 10 roop nahi.</p>\n     <pre>lab 24 (ex2) — shaam ka rush, seekha hua curve vs aaj ka asli (peak 9 min late):\nnikalne ka time   \"abhi wali speed\"   time-dependent   asli     static ki galti   TD ki galti\n     17: 00             52.3 min          70.0 min      69.9      -17.6 min        +0.1\n     18: 30             99.4 min          66.8 min      74.7      +24.6 min        -7.9</pre>\n     <h3>🌊 Pipeline</h3>\n     <p>Arabon anonymous pings → edge → map matching → per-segment <b>streaming</b> aggregation (rolling windows, raat ka batch\n     nahi) → har segment ki abhi ki speed → sirf badle cells ka customization → serving fleet → edge cache. Query ko milta hai:\n     pakka structure + ≤ do minute purani cost layer. Hot path turant, update path ko thoda peeche rehne ki chhoot — dono alag.</p>\n     <p class=\"tip\">⚖️ Keemat: bina history wali ghatna (taaza crash, toofan) par forecast aatmavishwas se galat; aur ~2 arab\n     phones ki location — anonymization hi tay karta hai ki yeh manzoor hai bhi ya nahi.</p>",
   ],
   stages: [
     {
@@ -382,24 +270,18 @@ nikalne ka time   "abhi wali speed"   time-dependent   asli     static ki galti 
       title: '🐳 Lab — "abhi wali speed" vs time-dependent ETA',
       project: '24-google-maps',
       exercise: 'ex2',
-      goal: '16:00 se 20:00 tak har aadhe ghante nikalo — static ETA aur time-dependent ETA ki asli safar se galti.',
-      why: `<code>tools/eta.js</code>: 30 sadkein, har ek free-flow mein 1.2 min. Maps ke paas SEEKHA hua curve (peak 18:15), aaj ka asli
-        traffic thoda alag (peak 18:24, thoda zyada) — isliye time-dependent bhi perfect nahi. Koi server nahi.`,
+      goal: "16: 00 se 20: 00 tak har aadhe ghante nikalo — static ETA aur time-dependent ETA ki asli safar se galti.",
+      why: "<code>tools/eta.js</code>: 30 sadkein, har ek free-flow mein 1.2 min. Maps ke paas SEEKHA hua curve (peak 18: 15), aaj ka asli\n        traffic thoda alag (peak 18: 24, thoda zyada) — isliye time-dependent bhi perfect nahi. Koi server nahi.",
       steps: [
         { text: 'ETA tool chalao.', cmd: 'cd docker-labs/24-google-maps && node tools/eta.js', expect: '     17:00               52.3 min          70.0 min         69.9 min      -17.6 min    +0.1 min\n     18:30               99.4 min          66.8 min         74.7 min      +24.6 min    -7.9 min\n\nSabse buri galti 18:30 par: 24.6 min (33%).' },
         { text: 'Aakhri lines padho.', cmd: 'node tools/eta.js | tail -4', expect: 'Time-dependent ki sabse buri galti: -8.3 min — aur wo bhi sirf isliye ki aaj ka peak seekhe hue curve se 9 min late tha.' },
       ],
       observe: {
-        q: '18:30 par "abhi wali speed" ne 24.6 min ZYADA kyun bataya?',
-        choices: [
-          'Nikalte waqt peak hai, par safar ke dauraan traffic khul raha hai — static ETA maanta hai ki abhi ki dheemi speed poore raaste rahegi',
-          'Sadak band thi',
-          'GPS galat tha',
-          'Bug',
-        ],
+        q: "18: 30 par \"abhi wali speed\" ne 24.6 min ZYADA kyun bataya?",
+        choices: ["Departure snapshot missed later easing","All travel speeds permanently constant","GPS error only possible ETA cause","Delay always worsens throughout trip"],
         answer: 0,
         explain: 'Weight ek number nahi, waqt ka function hai — pahunchne ke waqt ki speed lagao.',
-      },
+       choiceExplanations: ["Weight ek number nahi, waqt ka function hai — pahunchne ke waqt ki speed lagao.","Question traffic changing time ke saath model karta hai.","Prediction assumptions alone difference explain kar sakti hain.","After-peak congestion ease ho sakta hai."] },
       lesson: 'ETA "abhi" se nahi, "jab tum wahan pahunchoge" se nikalti hai.',
     },
     {
@@ -422,26 +304,16 @@ nikalne ka time   "abhi wali speed"   time-dependent   asli     static ki galti 
     questions: [
       {
         q: 'Interviewer: "Delivery app ki ETA shaam ko 20 minute galat aati hai."',
-        choices: [
-          'Time-dependent ETA: har segment ki speed us waqt ki jab rider wahan pahunchega — history curves + aaj ka live flow; aur chalte-chalte recompute',
-          'Abhi ki speed se ETA',
-          'Fixed 30 min bol do',
-          'Average speed poore din ki',
-        ],
+        choices: ["Arrival-time estimates + live updates","Current speed fixed for entire trip","Same promised ETA for every customer","All-day average hides rush hour shape"],
         answer: 0,
         explain: 'Lab: static ki galti 33% tak, time-dependent ~8 min.',
-      },
+       choiceExplanations: ["Lab: static ki galti 33% tak, time-dependent ~8 min.","Long trip later traffic conditions traverse karti hai.","Distance, departure time and live traffic vary karte hain.","Daily mean temporal structure and uncertainty hide karta hai."] },
       {
         q: 'Interviewer: "99 phones ek gaadi mein — fake jam. Kaise bachoge?"',
-        choices: [
-          'Signals mix karo: history, padosi segments ka flow (GNN), phone ka movement pattern (sab same speed, same raasta), aur alag sources (Waze reports) — ek hi source par andha bharosa nahi',
-          'Phones block karo',
-          'Kuch nahi kar sakte',
-          'Sirf taxis ka data lo',
-        ],
+        choices: ["Multiple signals + adversarial checks","Every same-speed group is malicious","Only one sensor type is sufficient","GNN label guarantees authentic traffic"],
         answer: 0,
         explain: 'Crowd sensor tabhi achha jab crowd asli ho — anomalies pakdo.',
-      },
+       choiceExplanations: ["Crowd sensor tabhi achha jab crowd asli ho — anomalies pakdo.","Real buses, convoys and queues correlated movement rakh sakte hain.","Single-source manipulation/failure broader estimate distort kar sakti hai.","Model name ground truth or robustness guarantee nahi."] },
     ],
   },
   success: [
@@ -454,7 +326,7 @@ nikalne ka time   "abhi wali speed"   time-dependent   asli     static ki galti 
   cards: [
     { front: 'Traffic data kahan se?', back: 'Phones — anonymous position + speed; bheed hi sensor. (Simon Weckert: 99 phones laal gaadi mein → fake jam.)' },
     { front: 'Map matching?', back: 'GPS metres galat; points ki trail par Hidden Markov Model sabse sambhav sadak sequence chunta hai → speed sahi segment ko.' },
-    { front: 'Time-dependent routing?', back: 'Edge weight = arrival time ka function. Lab: static ETA 18:30 par 24.6 min galat (33%); time-dependent ~8 min.' },
+    { front: 'Time-dependent routing?', back: "Edge weight = arrival time ka function. Lab: static ETA 18: 30 par 24.6 min galat (33%); time-dependent ~8 min." },
   ],
 },
 
@@ -473,23 +345,12 @@ nikalne ka time   "abhi wali speed"   time-dependent   asli     static ki galti 
     'Geocoding aur machine-built map; paanch sabak',
   ],
   lesson: [
-    `<h3>🧩 Tiles — quadtree</h3>
-     <p>Duniya ko squares mein kaato; har zoom level par ek tile 4 mein toot-ta hai = <b>quadtree</b>. Sirf woh kuch tiles
-     (~9) bhejo jo screen par hain, tumhare paas cache.</p>
-     <table>
-       <tr><th></th><th>🖼️ Raster tiles</th><th>✏️ Vector tiles</th></tr>
-       <tr><td>Kya</td><td>Tayyar images</td><td>Instructions: line, park, building</td></tr>
-       <tr><td>Kaun banata hai</td><td>Server</td><td>Phone ka GPU</td></tr>
-       <tr><td>Ghumana / 3D / smooth zoom</td><td>Nahi</td><td>Haan</td></tr>
-       <tr><td>Style badla</td><td>Duniya ki har image dobara</td><td>Bas naye rules</td></tr>
-       <tr><td>Size</td><td>Bada</td><td>Chhota (kamzor network ke liye achha)</td></tr>
-     </table>
-     <p class="tip">🎯 <b>Kaam wahan karo jahan sasta ho</b> — arab phones ke GPU muft hain.</p>`,
+    "<h3>🧩 Tiles — quadtree</h3>\n     <p>Duniya ko squares mein kaato; har zoom level par ek tile 4 mein toot-ta hai = <b>quadtree</b>. Sirf woh kuch tiles\n     (~9) bhejo jo screen par hain, tumhare paas cache.</p>\n     <table>\n       <tr><th></th><th>🖼️ Raster tiles</th><th>✏️ Vector tiles</th></tr>\n       <tr><td>Kya</td><td>Tayyar images</td><td>Instructions: line, park, building</td></tr>\n       <tr><td>Kaun banata hai</td><td>Server</td><td>Phone ka GPU</td></tr>\n       <tr><td>Ghumana / 3D / smooth zoom</td><td>Nahi</td><td>Haan</td></tr>\n       <tr><td>Style badla</td><td>Duniya ki har image dobara</td><td>Bas naye rules</td></tr>\n       <tr><td>Size</td><td>Bada</td><td>Chhota (kamzor network ke liye achha)</td></tr>\n     </table>\n     <p class=\"tip\">🎯 <b>Kaam wahan karo jahan sasta ho</b> — device rendering server work shift karti hai; battery, data, compatibility aur client compute free nahi.</p>",
     `<h3>📍 "Mere paas coffee"</h3>
      <p>Lat/long 2 dimensions hain — aam DB index (B-tree) ek dimension mein sort karta hai. <b>S2</b>: ek space-filling
-     (Hilbert jaisa) curve zameen par (cube ke faces par) saanp ki tarah ghoomta hai, taaki paas ki jagahon ko paas ke
-     number milein → har jagah <b>ek sortable 64-bit number</b> → "paas kya hai" = kuch <b>range scans</b>. Kai dimensions
-     ko ek key mein chapta karo.</p>
+     (Hilbert-style) ordering hierarchy ke descendant cells ko contiguous ID ranges deti hai. Region covering se
+     <b>64-bit cell ranges</b> scan karo, phir exact distance filter lagao. Nearby points different cell/face boundaries par
+     distant IDs rakh sakte hain; geometric nearness aur numeric nearness identical nahi.</p>
      <pre>lab 24 (ex3) — 10 lakh jagahein, 2 km ke andar:
 full scan     10,00,000 rows    113 mile   9 ms
 Hilbert key         264 rows    113 mile   3 ms   (16 cells) — 3,788× kam rows, same jawab</pre>
@@ -523,15 +384,10 @@ Hilbert key         264 rows    113 mile   3 ms   (16 cells) — 3,788× kam row
       ],
       observe: {
         q: 'Hilbert curve ki kaunsi khoobi is trick ko mumkin banati hai?',
-        choices: [
-          'Paas ki jagahon ko lagbhag paas ke number milte hain, aur ek poora level-cell curve par contiguous hota hai — isliye square = kuch "BETWEEN a AND b" range scans',
-          'Hilbert curve compress karta hai',
-          'Woh random order deta hai',
-          'Woh sirf chhote shehron mein kaam karta hai',
-        ],
+        choices: ["Hierarchy cells map to contiguous ID ranges","Nearby points always neighboring IDs","Hilbert curve encrypts coordinates","Space curve removes all false positives"],
         answer: 0,
-        explain: 'Yahi S2 karta hai, gol zameen par (cube ke 6 faces).',
-      },
+        explain: "S2 hierarchy mein a cell ke descendant IDs contiguous range form karte hain. Nearby coordinates ka ID difference small hona guaranteed nahi, especially cell/face boundaries par. Region covering and final geometry filtering use karo.",
+       choiceExplanations: ["S2 hierarchy mein a cell ke descendant IDs contiguous range form karte hain. Nearby coordinates ka ID difference small hona guaranteed nahi, especially cell/face boundaries par. Region covering and final geometry filtering use karo.","Boundary-near points can have distant curve indexes.","Spatial ordering encryption/privacy mechanism nahi.","Covering ranges need geometric filtering at boundaries."] },
       lesson: '2-D problem ko 1-D bana do — phir har database ka B-tree tumhara geo index hai.',
     },
     {
@@ -558,26 +414,16 @@ Hilbert key         264 rows    113 mile   3 ms   (16 cells) — 3,788× kam row
     questions: [
       {
         q: 'Interviewer: "Ride app mein 5 km ke andar ke drivers dhoondhne hain, 10 lakh drivers."',
-        choices: [
-          'Geo cells (S2/geohash/H3) ki 1-D key par index; query ke circle ko covering cells mein todo → range scans; drivers ki location update par sirf cell key badlo',
-          'Har driver ki doori nikaalo',
-          'Lat par index, phir long filter',
-          'Sab drivers memory mein, loop',
-        ],
+        choices: ["Cell cover index plus exact distance filter","Only cell-key change is accurate position","Any prefix cell equals exact circle","Compute distance to every driver first"],
         answer: 0,
-        explain: 'Lab: 10 lakh → 264 rows.',
-      },
+        explain: "S2/geohash covering cells candidate IDs reduce karti hain; exact radius distance filter then apply karo. H3 neighbor/cell lookups different encoding use karte hain, universal Hilbert range assumption nahi. Same cell ke andar moving driver ke coordinates bhi update karo.",
+       choiceExplanations: ["S2/geohash covering cells candidate IDs reduce karti hain; exact radius distance filter then apply karo. H3 neighbor/cell lookups different encoding use karte hain, universal Hilbert range assumption nahi. Same cell ke andar moving driver ke coordinates bhi update karo.","Within-cell movement stored coordinates still update karne honge.","Covering cells radius ke bahar candidates include kar sakti hain.","Spatial index candidate set reduce karta hai before exact distance math."] },
       {
-        q: 'Interviewer: "Dark mode naksha chahiye. Raster tiles hain."',
-        choices: [
-          'Raster mein har zoom ki har tile dobara render karni padegi — vector tiles par sirf style rules badlo, phone draw karega',
-          'CSS filter lagao',
-          'Naye servers',
-          'Sirf ek zoom level',
-        ],
+        q: "Dark map mein labels, road classes aur contrast independently style karne hain; existing raster tiles hain. Long-term flexible approach?",
+        choices: ["Vector geometry with semantic style rules","CSS invert preserves every map contrast","Every vector tile has zero render cost","New server alone changes old pixels"],
         answer: 0,
-        explain: 'Kaam wahan jahan sasta — aur style data ko pixels se alag rakho.',
-      },
+        explain: "Vector tiles geometry and semantic styles separate karti hain. Raster CSS filtering quick approximation ho sakti hai, but independent road/label styling and validated contrast limited hain; raster rerender is another valid tradeoff.",
+       choiceExplanations: ["Vector tiles geometry and semantic styles separate karti hain. Raster CSS filtering quick approximation ho sakti hai, but independent road/label styling and validated contrast limited hain; raster rerender is another valid tradeoff.","Raster filters approximate dark mode but labels/roads colors distort kar sakte hain.","Client rendering CPU/GPU and style validation still required hain.","Server capacity without rerender/style logic imagery semantics nahi badalti."] },
     ],
   },
   success: [
@@ -589,7 +435,7 @@ Hilbert key         264 rows    113 mile   3 ms   (16 cells) — 3,788× kam row
     Morton/Hilbert) se B-tree range scan banaya ja sakta hai? Pehle aur baad ki rows padhne ka andaaza likho.</p>`,
   cards: [
     { front: 'Vector vs raster tiles?', back: 'Raster = tayyar images (no rotate, style badla toh sab dobara). Vector = instructions, phone GPU draw kare: rotate/tilt/zoom, chhote, restyle aasaan.' },
-    { front: 'S2 ka jaadu?', back: 'Hilbert-style curve zameen par; paas ki jagahon ke paas ke numbers; har jagah ek 64-bit key → range scans. Lab: 10 lakh → 264 rows.' },
+    { front: 'S2 ka jaadu?', back: 'Hierarchical cells ke descendant IDs contiguous ranges banate hain. Region ko cells se cover karo, candidate ranges scan karo aur exact geometry filter lagao. Nearby points ke ID difference par universal bound nahi. Lab: 10 lakh → 264 rows.' },
     { front: 'Maps ke paanch sabak?', back: 'Dheema vs tez badlaav alag; react nahi predict; users sensor; kai dimensions ek key; kaam wahan jahan sasta.' },
   ],
 },

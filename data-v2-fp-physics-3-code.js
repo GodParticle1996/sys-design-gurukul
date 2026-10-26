@@ -35,15 +35,11 @@ SD.registerLevels('fp-core', [
           "line": "6-12",
           "ask": {
             "q": "Agle independent lookup ko yeh code kab shuru karta hai?",
-            "choices": [
-              "Pichhle lookup ke reply ke baad",
-              "Sabko ek saath",
-              "Function return hone ke baad bhi kabhi nahi"
-            ],
+            "choices": ["Previous reply await hone ke baad next lookup","Function entry par saare independent lookups saath","Function return ke baad callback next lookup start kare"],
             "answer": 0,
-            "explain": "await loop ke andar hai. Isi liye request ka wait sequential path mein judta hai.",
+            "explain": "Shown loop mein await iteration ke andar hai, isliye starts sequential hain. Promise-all style concurrent start is code mein absent hai. Next iteration loop ke andar resume hoti hai, return ke baad nahi.",
             "hint": "Line 9 aur loop ka agla chakkar dekho."
-          }
+          , choiceExplanations: ["Shown loop mein await iteration ke andar hai, isliye starts sequential hain.","Promise-all style concurrent start is code mein absent hai.","Next iteration loop ke andar resume hoti hai, return ke baad nahi."] }
         },
         {
           "title": "2. Batch ka size chhota aur valid kyun?",
@@ -56,15 +52,11 @@ SD.registerLevels('fp-core', [
           "line": 17,
           "ask": {
             "q": "5 independent keys, batch size 2. Requests?",
-            "choices": [
-              "3: do keys, do keys, ek key",
-              "2; aakhri key chhod denge",
-              "5; batch sirf naam hai"
-            ],
+            "choices": ["3 requests; two full batches aur one partial batch","2 requests; final unmatched key skip hoti hai","5 requests; chunk length request count nahi badalti"],
             "answer": 0,
-            "explain": "ceil(5 / 2) = 3. Aakhri partial batch bhi bhejna hai.",
+            "explain": "ceil(5 / 2) = 3 batches; final partial chunk ko bhi request milti hai. Partial last chunk drop karna intended complete result contract todta hai. Each bulk request multiple keys carry kar sakti hai.",
             "hint": "Aakhri ek key ko bhi reply chahiye."
-          }
+          , choiceExplanations: ["ceil(5 / 2) = 3 batches; final partial chunk ko bhi request milti hai.","Partial last chunk drop karna intended complete result contract todta hai.","Each bulk request multiple keys carry kar sakti hai."] }
         },
         {
           "title": "4. Wait ab kis cheez ka hai?",
@@ -106,15 +98,11 @@ SD.registerLevels('fp-core', [
           "line": "7-10",
           "ask": {
             "q": "Slow reply baad mein aayi. Output ko kaunsa order milega?",
-            "choices": [
-              "Input keys ka order; reply apne index par rakhi hai",
-              "Jo reply pehle aayi wahi pehle",
-              "Random order guaranteed hai"
-            ],
+            "choices": ["Input key order; result original index par aata","Completion order; fastest response pehle push hoti","Lexical key order; helper har run keys sort karta"],
             "answer": 0,
-            "explain": "values[i] reply completion se independent input position yaad rakhta hai.",
+            "explain": "Helper original index retain karke out-of-order completion ke bawajood input order preserve karta hai. Push-on-completion this helper ka storage strategy nahi. Original index preserve karna lexical sort nahi.",
             "hint": "Line 9 par push nahi; indexed assignment hai."
-          }
+          , choiceExplanations: ["Helper original index retain karke out-of-order completion ke bawajood input order preserve karta hai.","Push-on-completion this helper ka storage strategy nahi.","Original index preserve karna lexical sort nahi."] }
         },
         {
           "title": "4. Kitne workers bante hain?",
@@ -127,15 +115,11 @@ SD.registerLevels('fp-core', [
           "line": "12-14",
           "ask": {
             "q": "Har incoming user max 2 requests kare. Kya poori service par bhi max 2 hi hongi?",
-            "choices": [
-              "Nahi; kai users ki calls milkar zyada load bana sakti hain",
-              "Haan; local limit global lock hai",
-              "Haan; Promise.all sab users ko serialize karta hai"
-            ],
+            "choices": ["Nahi; per-request caps multiple users mein add hote","Haan; local two-worker pool global semaphore hai","Haan; Promise.all incoming users ko serialize karta"],
             "answer": 0,
-            "explain": "Per-call concurrency limit useful hai, par shared dependency budget aur admission policy bhi chahiye.",
+            "explain": "Two concurrent dependency calls per user multiplied by simultaneous users global offered concurrency badha sakti hai. Local function scope across requests coordination provide nahi karta. Promise.all global admission control nahi.",
             "hint": "Ek user aur poore fleet ki boundary alag hai."
-          }
+          , choiceExplanations: ["Two concurrent dependency calls per user multiplied by simultaneous users global offered concurrency badha sakti hai.","Local function scope across requests coordination provide nahi karta.","Promise.all global admission control nahi."] }
         }
       ],
       "lesson": "🎯 <b>Asli baat:</b> Bounded parallelism wait overlap karta hai. Calls ki ginti aur shared dependency ka total load phir bhi gino.",
@@ -203,15 +187,11 @@ SD.registerLevels('fp-core', [
           "say": "Agar pehle read ke result se agla command banta hai, command abhi ready hi nahi. Pipelining is dependency ko apne aap solve nahi karti. Atomicity, consistency aur transaction guarantees bhi alag contract hain.",
           "ask": {
             "q": "Lab ka HTTP batch successful hua. Kya Redis production performance prove hui?",
-            "choices": [
-              "Nahi; Redis yahan run hi nahi hua",
-              "Haan; dono mein cache word hai",
-              "Haan; 4-key batch Redis ka benchmark hai"
-            ],
+            "choices": ["Nahi; HTTP lab measured, Redis process run nahi hua","Haan; cache label transport implementation same karta","Haan; key count Redis throughput directly measure karta"],
             "answer": 0,
-            "explain": "Architecture idea samjha; product ka result product ko run karke measure karna hoga.",
+            "explain": "Redis process/protocol run nahi hua; lab fixed-cost lesson demonstrate karta hai, Redis production claim nahi. Conceptual similarity implementation identity nahi. Request cardinality alone actual Redis performance sample nahi.",
             "hint": "Goal mein run ki boundary padho."
-          }
+          , choiceExplanations: ["Redis process/protocol run nahi hua; lab fixed-cost lesson demonstrate karta hai, Redis production claim nahi.","Conceptual similarity implementation identity nahi.","Request cardinality alone actual Redis performance sample nahi."] }
         }
       ],
       "lesson": "🎯 <b>Asli baat:</b> Repeated wait ka idea products mein milta hai. API shape aur guarantees ko product docs se alag verify karo."
@@ -237,15 +217,11 @@ SD.registerLevels('fp-core', [
       ],
       "observe": {
         "q": "Parallel2 mein calls 12 aur batch4 mein 3 thi. Kya dono ne same cheez badli?",
-        "choices": [
-          "Nahi; parallel ne waits overlap kiye, batch ne requests ghataayi",
-          "Haan; parallel ne bhi 3 calls ki",
-          "Haan; batch ne 9 values chhod di"
-        ],
+        "choices": ["Parallel overlaps waits; batch reduces request count","Parallel reduces values; batch overlaps same calls","Parallel serializes keys; batch sends no replies"],
         "answer": 0,
-        "explain": "Values 12 dono mein. Peak active aur call count alag metrics hain.",
+        "explain": "Concurrency and aggregation different transformations hain: four-value batches fewer trips, parallelism overlapping trips. Parallel result contract values omit nahi karta. Bounded parallel starts overlap karte hain; batch bhi results return karta hai.",
         "hint": "Calls, items aur peak ko saath padho."
-      },
+      , choiceExplanations: ["Concurrency and aggregation different transformations hain: four-value batches fewer trips, parallelism overlapping trips.","Parallel result contract values omit nahi karta.","Bounded parallel starts overlap karte hain; batch bhi results return karta hai."] },
       "lesson": "Capture mein exact milliseconds badal sakte hain. Values, calls, bounded peak aur run ki conditions compare karo."
     }
   ],
@@ -255,26 +231,18 @@ SD.registerLevels('fp-core', [
     "questions": [
       {
         "q": "Bounded parallel mein output order kaise bachta hai?",
-        "choices": [
-          "Har reply ko us key ke original index par store karke",
-          "Reply aane ke order mein push karke",
-          "Har reply ko index zero par rakh kar"
-        ],
+        "choices": ["Result ko original input index par assign karo","Har completed reply result array mein push karo","Har reply ko result array ke first slot par likho"],
         "answer": 0,
-        "explain": "Out-of-order completion input order ko badalne ki zaroorat nahi.",
+        "explain": "Index mapping output ordering ko completion timing se independent rakhti hai. Push completion order preserve karega, input order nahi. Same slot overwrite hone se values lose hongi.",
         "hint": "values[i] dekho."
-      },
+      , choiceExplanations: ["Index mapping output ordering ko completion timing se independent rakhti hai.","Push completion order preserve karega, input order nahi.","Same slot overwrite hone se values lose hongi."] },
       {
         "q": "Batch size 4 hai. Endpoint max 2 keys allow karta hai. Kya helper ka default safe hai?",
-        "choices": [
-          "Nahi; batch size endpoint contract ke mutabiq set karo",
-          "Haan; helper endpoint ko majboor kar dega",
-          "Haan; 4 har service ka standard hai"
-        ],
+        "choices": ["Nahi; batch ko endpoint max two ke andar rakho","Haan; client default endpoint validation override karta","Haan; two batches reject hon toh four keys drop karo"],
         "answer": 0,
-        "explain": "Client ki arbitrary limit server contract ko replace nahi karti.",
+        "explain": "Client chunk size API contract aur payload limits ke compatible honi chahiye. Server contract client default se change nahi hota. Silent omission success nahi; size fix/error handle chahiye.",
         "hint": "App aur endpoint ki limits match karo."
-      }
+      , choiceExplanations: ["Client chunk size API contract aur payload limits ke compatible honi chahiye.","Server contract client default se change nahi hota.","Silent omission success nahi; size fix/error handle chahiye."] }
     ]
   },
   "success": [

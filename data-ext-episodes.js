@@ -42,12 +42,12 @@ SD.extendLevel('shedding', {
      <h3>🏷️ Tiers pehle se likho</h3>
      <table>
        <tr><th>Tier</th><th>Misaal</th><th>Kab girao</th></tr>
-       <tr><td>Critical</td><td>Payments, auth</td><td>Kabhi nahi</td></tr>
+       <tr><td>Critical</td><td>Payments, auth</td><td>Last resort; bounded admission phir bhi</td></tr>
        <tr><td>Standard</td><td>Paying customer ka API</td><td>Aakhir mein</td></tr>
        <tr><td>Background</td><td>Webhooks, exports</td><td>Pehle</td></tr>
        <tr><td>Batch</td><td>Analytics, crawlers</td><td>Turant</td></tr>
      </table>
-     <p>Uber ka trip pipeline: pehle internal analytics rukta hai. Aur <b>priority starvation</b> se bachne ke liye <b>age boosting</b> — jo 1
+     <p>Trip-service design example: internal analytics pehle shed ho sakta hai; yeh Uber ki current internal policy ka claim nahi. Aur <b>priority starvation</b> se bachne ke liye <b>age boosting</b> — jo 1
      minute se line mein hai, uski priority badhao.</p>`,
   ],
   cards: [
@@ -70,15 +70,10 @@ SD.extendLevel('breaker', {
   interview: [
     {
       q: 'Interviewer: "Ek dependency errors nahi de rahi, bas 30 sec leti hai. Hamari service kyun giri?"',
-      choices: [
-        'Har request thread/connection pakad ke intezaar karti rahi — pool bhar gaya; timeout (chhota) + circuit breaker (timeouts ko failure gine) + bulkhead chahiye',
-        'Dependency ka bug',
-        'CPU full',
-        'Memory leak',
-      ],
+      choices: ["Slow calls pool hold karti; bounded dependency policy chahiye","Errors absent hain toh connection occupancy irrelevant hai","Low CPU se thread/connection exhaustion impossible hai","Replica count increase bounded waits ka substitute hai"],
       answer: 0,
-      explain: 'Dheema = mara hua se bura, kyunki woh tumhare resources pakad leta hai.',
-    },
+      explain: "Long service time outstanding concurrency badha kar pool saturate kar sakta hai; deadlines, bulkheads aur appropriate breaker policy inspect karo. Request resources response tak occupied reh sakte hain. Waiting resources CPU low hone par bhi exhaust ho sakti hain. Extra replicas same unbounded dependency waits inherit kar sakti hain.",
+     choiceExplanations: ["Long service time outstanding concurrency badha kar pool saturate kar sakta hai; deadlines, bulkheads aur appropriate breaker policy inspect karo.","Request resources response tak occupied reh sakte hain.","Waiting resources CPU low hone par bhi exhaust ho sakti hain.","Extra replicas same unbounded dependency waits inherit kar sakti hain."] },
   ],
   cards: [
     { front: 'Dead-but-slow dependency?', back: 'Errors nahi, bas 30 s per request → tumhare threads uske intezaar mein → pool bhara → poori service band. Ilaaj: timeout + breaker (timeouts gine) + bulkhead.' },
@@ -116,15 +111,10 @@ SD.extendLevel('blast', {
       ],
       observe: {
         q: 'Shuffle mein 43 customers ka ek worker mara phir bhi woh bache. Kyun?',
-        choices: [
-          'Unka doosra worker zinda tha — sirf 3 customers ka EXACT wahi jodi tha; retry dusre worker par gaya',
-          'Unki request poison nahi thi',
-          'Worker restart ho gaya',
-          'Router ne cache se diya',
-        ],
+        choices: ["Other assigned worker survived; retry path available tha","Partial pair overlap se two workers dono dead the","Router ne all successful replies cache se invent kiye","Same pair ke customers ko automatically third worker mila"],
         answer: 0,
-        explain: 'Overlap hone se band nahi hote — sirf poora combination milne par.',
-      },
+        explain: "Lab two-worker assignments mein partial overlap peers ka one alternate available tha; exact pair overlap clients dono lose karte hain. Partial and full overlap different cases hain. Observed recovery surviving worker se hai. Third worker assignment configured result nahi.",
+       choiceExplanations: ["Lab two-worker assignments mein partial overlap peers ka one alternate available tha; exact pair overlap clients dono lose karte hain.","Partial and full overlap different cases hain.","Observed recovery surviving worker se hai.","Third worker assignment configured result nahi."] },
       lesson: 'Shuffle sharding: hardware wahi, assignment alag — blast radius 1/4 se ~1/28.',
     },
   ],
@@ -137,21 +127,21 @@ SD.extendLevel('blast', {
    4. data/caching — TTL ka sauda, CDC invalidation pipeline
    ===================================================================== */
 SD.extendLevel('caching', {
-  objectives: ['TTL ek sauda hai; CDC (WAL → Debezium → Kafka → invalidator) se lagbhag zero staleness'],
+  objectives: ['TTL aur CDC invalidation ka freshness contract; races, lag aur every cache layer'],
   lesson: [
     `<h3>🤝 TTL = users se ek sauda</h3>
-     <p>TTL 5 minute = "data 5 minute purana ho sakta hai". Bahut cheezon ke liye theek; <b>price, inventory, permissions</b> ke liye nahi.
+     <p>TTL stale window limit karne ka ek control hai; actual freshness fill race, upstream lag aur other cache layers se depend karti hai. Price/inventory/permissions mein allowed staleness domain contract se decide karo; authoritative action par current invariant validate karo.
      Lamba TTL = ghanton purana; chhota = lagatar misses.</p>
      <h3>🛰️ CDC invalidation pipeline</h3>
      <p>Cache-aside mein cache ko pata hi nahi ki DB badla. Toh DB ke <b>write-ahead log</b> (wahi jo crash recovery aur replication ke liye
      hai) ko padho:</p>
-     <pre>App → DB → WAL → Debezium (WAL tail, har insert/update/delete ka event) → Kafka (durable — invalidator down ho toh bhi changes nahi khote)
-    → chhota invalidation consumer (change → kaunsi keys) → Redis DEL          end-to-end ~50–100 ms</pre>
-     <p>Shopify storefront: product/price/inventory ke badlaav CDC se cache tak — lagbhag hamesha taaza. (Poora khel — tags, versions, L1 —
+     <pre>App → DB → WAL → Debezium (WAL tail, har insert/update/delete ka event) → Kafka (retention, replication aur durable offsets ke andar recovery buffer)
+    → chhota invalidation consumer (change → kaunsi keys) → Redis DEL          end-to-end delay workload se measure karo</pre>
+     <p>Product/price/inventory updates ko CDC se cache tak la sakte ho; lag, lost invalidation, reconnect aur stale-refill race verify karo. Yeh reference pattern hai, Shopify ke current internal implementation ka claim nahi. (Poora khel — tags, versions, L1 —
      agle level "Cache Invalidation" mein, lab ke saath.)</p>`,
   ],
   cards: [
-    { front: 'CDC cache invalidation?', back: 'DB WAL → Debezium → Kafka (durable buffer) → invalidation consumer → Redis DEL. ~50–100 ms end-to-end. Shopify storefront.' },
+    { front: 'CDC cache invalidation?', back: 'DB WAL → CDC → retained stream → invalidator → relevant cache layers. Lag, retention recovery aur refill race test karo. Async invalidation instantaneous consistency guarantee nahi.' },
   ],
 });
 
@@ -190,15 +180,10 @@ xfetch     3 DB reads                  p50  122 ms   p99  226 ms   (key kabhi th
       ],
       observe: {
         q: 'Mutex ne DB bachaya (3 queries) par p50 457 ms kyun?',
-        choices: [
-          'Sab ek hi rebuild ka intezaar kar rahe the — rebuild 400 ms ka tha; SWR/xfetch mein kisi ko intezaar nahi karna pada',
-          'Lock dheema tha',
-          'Network',
-          'Bug',
-        ],
+        choices: ["Waiters same slow rebuild completion ka wait kar rahe","Mutex acquisition itself har request par 400 ms leta","SWR har stale hit par full DB query wait karta","Old cache data fresh rebuild se slower serve hota"],
         answer: 0,
-        explain: 'Mutex DB bachata hai, latency nahi. Staleness chale toh SWR; traffic ho toh early refresh.',
-      },
+        explain: "Single-flight database work collapse karta hai, par stale response absent ho toh callers rebuild completion tak wait karte hain. 400 ms rebuild work hai, lock primitive ka fixed cost nahi. Stale-while-revalidate allowed old value return kar sakta hai. Stale serve time fresh data correctness se different tradeoff hai.",
+       choiceExplanations: ["Single-flight database work collapse karta hai, par stale response absent ho toh callers rebuild completion tak wait karte hain.","400 ms rebuild work hai, lock primitive ka fixed cost nahi.","Stale-while-revalidate allowed old value return kar sakta hai.","Stale serve time fresh data correctness se different tradeoff hai."] },
       lesson: 'Stampede ke teen ilaaj — sabne DB bachaya, farq latency aur staleness mein.',
     },
   ],
@@ -247,15 +232,10 @@ weighted   2.1× (jaan-boojh) 15.1%                   12.5%</pre>
       ],
       observe: {
         q: 'Modulo ka load sabse barabar (1.0×) — phir bhi sabse bura kyun?',
-        choices: [
-          'N badalte hi 83–86% keys ki jagah badal jaati hai → poora cache ek saath thanda → DB par toofan',
-          'Modulo dheema hai',
-          'Load galat naapa',
-          'Modulo sirf 6 nodes tak',
-        ],
+        choices: ["Membership change ne many keys remap karke cache cold ki","Modulo CPU cost 80% requests ko timeout banaati hai","Even key counts imply same physical cached values remain","Modulo hash sirf six-node cluster tak defined hota hai"],
         answer: 0,
-        explain: 'Barabar load ek cheez, badlaav par sthirta doosri. Vnodes dono deta hai.',
-      },
+        explain: "hash % N mein N change large key fraction remap kar sakta hai; measured 83–86% this run ka result hai. Problem resize movement hai, modulo arithmetic latency nahi. Balanced placement remapping cost zero nahi karti. Modulo any positive N ke liye defined hai.",
+       choiceExplanations: ["hash % N mein N change large key fraction remap kar sakta hai; measured 83–86% this run ka result hai.","Problem resize movement hai, modulo arithmetic latency nahi.","Balanced placement remapping cost zero nahi karti.","Modulo any positive N ke liye defined hai."] },
       lesson: 'Consistent hashing ka asli kaam: node badle toh sirf ~1/N keys hilein.',
     },
   ],
@@ -269,7 +249,7 @@ weighted   2.1× (jaan-boojh) 15.1%                   12.5%</pre>
    7. data/pool — pooler, modes, sizing, storm (lab 35)
    ===================================================================== */
 SD.extendLevel('pool', {
-  objectives: ['Pooler (PgBouncer): session vs transaction vs statement; pool ≈ cores × 2 + 1; connection storm'],
+  objectives: ['Pooler (PgBouncer): session vs transaction vs statement; pool size measured concurrency sweep se; connection storm'],
   lesson: [
     `<h3>🧑‍🤝‍🧑 1,000 connections, 50 kaam kar rahe</h3>
      <p>Postgres har connection ke liye ek <b>process</b> banata hai (~5–10 MB + file descriptors). 1,000 app servers × 1 = 5–10 GB sirf connections
@@ -278,21 +258,20 @@ SD.extendLevel('pool', {
      <table>
        <tr><th>Mode</th><th>Connection kab tak</th><th>Kya toot-ta</th></tr>
        <tr><td>Session</td><td>Client ke poore session tak</td><td>Kuch nahi — par multiplexing sabse kam</td></tr>
-       <tr><td><b>Transaction</b></td><td>BEGIN…COMMIT tak (~95% teams)</td><td>Session-level cheezein (prepared statements, SET, temp tables)</td></tr>
+       <tr><td><b>Transaction</b></td><td>BEGIN…COMMIT tak</td><td>Session SET/LISTEN/advisory locks; protocol prepared plans configuration par supported ho sakti hain</td></tr>
        <tr><td>Statement</td><td>Ek query</td><td>Transactions hi nahi — lagbhag sab</td></tr>
      </table>
      <p>PgBouncer (chhota, single-threaded C, ~2 MB, sirf pooling) se shuru karo; Pgpool-II (read/write split, cache, failover — zyada failure modes)
      tabhi jab woh cheezein chahiye.</p>`,
-    `<h3>📐 Pool kitna bada? cores × 2 + 1</h3>
-     <p>"Zyada connections = zyada throughput" galat. Har core ek kaam chalata hai; ek IO ka intezaar kare toh doosra chale (~2 per core) + 1. 16 cores
-     → ~33, 200 nahi. Kai app instances ho toh total baanto (4 × 8 = 32). <b>"CPU ki problem hai, traffic ki nahi."</b></p>
+    `<h3>📐 Pool kitna bada? latency/concurrency sweep</h3>
+     <p>More connections execution capacity create nahi karti. CPU, I/O wait, query mix, locks aur downstream budgets measure karo. <code>2 × cores</code> jaisi heuristic starting hypothesis hai, exact universal optimum nahi. Har app replica/pool ka aggregate DB budget gino; bounded queue aur request deadline rakho.</p>
      <pre>lab 35 — 200 clients bina ruke (8 cores wala DB model):
 pool=4    529 tx/s     pool=16   1490 tx/s  ← peak
 pool=64   502 tx/s     pool=256   186 tx/s  ← 8× kam
 1,000 mostly-idle clients: seedha DB → 500 refused, ~1 GB; transaction pool 32 → 0 refused, 64 MB; session pool 32 → sirf 32 clients served</pre>
      <h3>🌪️ Connection storm</h3>
      <p>PgBouncer restart → 1,000 clients ek saath reconnect → thanda pooler bahut saare naye connections → Postgres har ek ke liye process fork →
-     CPU spike, max_connections, OOM. Ilaaj: <b>pre-warm</b> (min_pool_size), <b>stagger</b> (server_login_retry + app mein jittered retry),
+     CPU spike ya connection limits possible hain. Ilaaj: rolling/staggered reconnect, bounded app-side jitter, measured server connection caps. <code>min_pool_size</code> only forced-user pool ya connected-client conditions mein enforced hota hai; <code>server_login_retry</code> failed-server-login delay hai, random client jitter nahi. Aur
      <b>jaldi mana karo</b> (client_login_timeout). Pooler restart ko DB operation ki tarah treat karo.</p>
      <p class="tip">🎯 Ek alert: <code>cl_waiting &gt; 0</code> 30 sec se zyada. (sv_active/pool_size &gt;90% = saturated; avg_xact_time &gt;500 ms = slow
      queries connections pakad rahi hain.)</p>`,
@@ -313,33 +292,23 @@ pool=64   502 tx/s     pool=256   186 tx/s  ← 8× kam
       ],
       observe: {
         q: 'Pool 256 par throughput 1490 → 186 kyun gira jabki connections zyada the?',
-        choices: [
-          'Sab ek saath cores aur locks ke liye lade — context switch aur contention ka kharcha; asli kaam kam hua. Pool ~2 × cores par peak',
-          'Pooler dheema',
-          'Network',
-          'Clients kam the',
-        ],
+        choices: ["Oversized pool se contention badhi; less work complete hua","More connections se CPU service rate proportional badhti","Smallest possible pool every workload ka optimum hota","Core-count formula measured latency sweep replace karta"],
         answer: 0,
-        explain: '"CPU ki problem, traffic ki nahi."',
-      },
+        explain: "Lab contention model overloaded concurrency ko slower banata hai; production optimum CPU, I/O, query mix aur locks se measure karo. Connections actual execution capacity create nahi karti. I/O-heavy workloads ko useful concurrency chahiye. 2×cores heuristic universal exact optimum nahi.",
+       choiceExplanations: ["Lab contention model overloaded concurrency ko slower banata hai; production optimum CPU, I/O, query mix aur locks se measure karo.","Connections actual execution capacity create nahi karti.","I/O-heavy workloads ko useful concurrency chahiye.","2×cores heuristic universal exact optimum nahi."] },
       lesson: 'Pool chhota aur sahi (≈ cores × 2), transaction mode, aur 1,000 app connections pooler par.',
     },
   ],
   interview: [
     {
       q: 'Interviewer: "PgBouncer restart karte hi DB gir gaya. Kyun, aur agli baar?"',
-      choices: [
-        'Connection storm — sab clients ek saath reconnect, Postgres har ek ke liye process fork; min_pool_size pre-warm, jittered retry, client_login_timeout se jaldi mana, restart ko DB operation ki tarah',
-        'PgBouncer bug',
-        'DB chhota',
-        'Restart mat karo kabhi',
-      ],
+      choices: ["Stagger reconnects aur measured connection budget rakho","Pooler retry delay ko random client jitter same maano","min_pool_size ko no-clients prewarm guarantee maano","Only login timeout se DB capacity double ho jaayegi"],
       answer: 0,
-      explain: 'Recovery ka load bhi ek load hai (Datadog ka thundering herd bhi yahi).',
-    },
+      explain: "Restart aggregate connection storm la sakta hai; rolling warmup, DB/client limits, bounded jittered retry aur pooler settings validate karo. server_login_retry fixed behavior app-side jitter ke equal nahi. Minimum pool behavior connection/demand settings par depend karta hai. Timeout load bound kar sakta hai, processing capacity double nahi.",
+     choiceExplanations: ["Restart aggregate connection storm la sakta hai; rolling warmup, DB/client limits, bounded jittered retry aur pooler settings validate karo.","server_login_retry fixed behavior app-side jitter ke equal nahi.","Minimum pool behavior connection/demand settings par depend karta hai.","Timeout load bound kar sakta hai, processing capacity double nahi."] },
   ],
   cards: [
-    { front: 'PgBouncer modes?', back: 'Session (sab chalta, multiplexing kam), transaction (~95% teams; session features toot-te), statement (transactions hi nahi).' },
+    { front: 'PgBouncer modes?', back: 'Session preserves session semantics. Transaction shares connection after COMMIT; session features audit karo. Configured protocol prepared plans supported ho sakti hain. Statement disallows multi-statement transactions; simple autocommit use case.' },
     { front: 'Pool size formula?', back: '≈ cores × 2 + 1 (16 cores → 33). Lab 35: pool 16 → 1490 tx/s, 256 → 186 tx/s.' },
     { front: 'Pooler ka ek alert?', back: 'cl_waiting > 0 for > 30 s. (sv_active/pool_size > 90% saturated; avg_xact_time > 500 ms slow queries.)' },
   ],
@@ -366,7 +335,7 @@ single lock              double charge 30/30
 redlock (5 nodes)        double charge 30/30   ← majority ne kuch nahi bachaya
 single + fencing token   double charge  0/30   (ledger ne 30 purane tokens reject kiye)</pre>
      <h3>💓 Lease</h3>
-     <p>Lease = heartbeat wala lock (liveness): TTL ≈ 3–5× kaam ka time, TTL/3 par renew (do renewals chook sakte ho). Lease akela pause theek nahi karta
+     <p>Lease ownership ko limited duration deti hai. TTL/renew interval observed pauses, RPC delay, clock behavior aur recovery objectives se choose karo; fixed 3–5× rule safety proof nahi. Lease akela pause theek nahi karta
      (renew thread bhi rukta hai). <b>"Lease liveness ke liye, fence safety ke liye."</b></p>`,
   ],
   stages: [
@@ -384,15 +353,10 @@ single + fencing token   double charge  0/30   (ledger ne 30 purane tokens rejec
       ],
       observe: {
         q: 'Redlock (5 mein se 3 majority) ne ek bhi double charge kyun nahi roka?',
-        choices: [
-          'Dikkat lock server mein nahi, A ke pause mein thi — kitne bhi servers hon, jaaga hua A purane bharose par likhta hai; sirf storage (ledger) purana token mana kar sakta hai',
-          'Majority galat nikli',
-          'Nodes kam the',
-          'TTL galat tha',
-        ],
+        choices: ["Paused client old lease se likha; resource fence chahiye","More quorum votes stale client CPU ko pause se rokengi","Longer TTL duplicate payment semantics solve karegi","Clock sync alone in-flight side effect revoke karegi"],
         answer: 0,
-        explain: 'Kleppmann ka point. Aur Redlock ke 5 counters se ek bharosemand fencing token banta bhi nahi.',
-      },
+        explain: "Lab stale old holder new owner ke baad effect apply karta hai; ledger ko old fencing token reject karna hoga, idempotency separate rakho. Replica quorum client scheduling control nahi. Lease duration operation dedupe key nahi. Clock changes outstanding external request revoke nahi karti.",
+       choiceExplanations: ["Lab stale old holder new owner ke baad effect apply karta hai; ledger ko old fencing token reject karna hoga, idempotency separate rakho.","Replica quorum client scheduling control nahi.","Lease duration operation dedupe key nahi.","Clock changes outstanding external request revoke nahi karti."] },
       lesson: 'Lock performance ke liye, fencing correctness ke liye — aur fencing resource hi check karta hai.',
     },
   ],
@@ -487,15 +451,10 @@ PROPAGATE=1  A ne  9,374 bheje → 2,979 poore (3.1 tries/success)    C ne 0 thu
       ],
       observe: {
         q: 'Live stock ticker ke liye kaunsi policy?',
-        choices: [
-          'drop-oldest — purane price bekaar hain; sabse purana event sirf 2 s purana rehta hai',
-          'unbounded',
-          'block — producer ruk jaaye',
-          'error',
-        ],
+        choices: ["Latest-value display ho toh drop-oldest fit ho sakta","Billing audit ledger bhi latest price ke liye drop karo","Unbounded buffer stale history ko automatically fresh kare","Block producer ko har real-time workload mein forbid karo"],
         answer: 0,
-        explain: 'Taazgi zaroori ho toh purana girao. Payments jaise kaam ke liye block/error.',
-      },
+        explain: "For explicitly lossy live display, freshness completeness se important ho toh old events drop acceptable ho sakte hain. Audit/execution obligations har tick retain karne ko require kar sakti hain. Larger backlog value age badha sakti hai. Lossless backpressure valid contract-specific choice hai.",
+       choiceExplanations: ["For explicitly lossy live display, freshness completeness se important ho toh old events drop acceptable ho sakte hain.","Audit/execution obligations har tick retain karne ko require kar sakti hain.","Larger backlog value age badha sakti hai.","Lossless backpressure valid contract-specific choice hai."] },
       lesson: 'Bounded queue ka matlab hai pehle se tay karna ki bhar jaane par kiska kaam jaayega.',
     },
     {
@@ -512,15 +471,10 @@ PROPAGATE=1  A ne  9,374 bheje → 2,979 poore (3.1 tries/success)    C ne 0 thu
       ],
       observe: {
         q: 'Propagation ke saath A ne 7× kam bheja — phir bhi kaam ZYADA hua (2,757 → 2,979). Kaise?',
-        choices: [
-          'C ka waqt 69,409 "na" bolne mein nahi gaya — woh asli kaam karta raha; source ne raftaar kam ki',
-          'C tez ho gaya',
-          'B ne cache kiya',
-          'Retry kam hue isliye',
-        ],
+        choices: ["Upstream throttle se rejection overhead kam hua","Lower offered rate useful throughput hamesha ghataati","Intermediate queue ne extra worker CPU create ki","Rejected work processing CPU/resource consume nahi karta"],
         answer: 0,
-        explain: 'Reject bhi kaam hai. Signal source tak pahunche toh bekaar kaam band.',
-      },
+        explain: "Measured backpressure run mein consumer many rejections se bachkar useful work complete kar saka. Overload curve par lower offered pressure goodput improve kar sakti hai. Queue hardware execution capacity invent nahi karti. Reject handling cheap ho sakti hai, free nahi.",
+       choiceExplanations: ["Measured backpressure run mein consumer many rejections se bachkar useful work complete kar saka.","Overload curve par lower offered pressure goodput improve kar sakti hai.","Queue hardware execution capacity invent nahi karti.","Reject handling cheap ho sakti hai, free nahi."] },
       lesson: '429 + Retry-After se signal source tak — tabhi backpressure, warna sirf shedding.',
     },
   ],
@@ -530,26 +484,16 @@ PROPAGATE=1  A ne  9,374 bheje → 2,979 poore (3.1 tries/success)    C ne 0 thu
     questions: [
       {
         q: 'Interviewer: "Kafka consumer lag badh raha hai. Consumers badha dein?"',
-        choices: [
-          'Pehle growth rate aur wajah dekho (dheema downstream? hot partition?); consumers partitions tak hi badhte hain; consumer ke andar bounded processing + pause/resume; upstream ko signal; lag par alert',
-          'Haan, 10× consumers',
-          'Retention badhao',
-          'Messages drop karo',
-        ],
+        choices: ["Lag growth aur partition/downstream bottleneck diagnose karo","Consumers ko partitions se tenfold badao; linear gain hoga","Retention badhaao; drain processing rate khud badhegi","Offset commit aage karo; actual pending work complete hoga"],
         answer: 0,
-        explain: 'Lag ek signal hai, dushman nahi.',
-      },
+        explain: "Within one group partition assignments useful consumer parallelism bound karti hain; hot partitions/downstream stalls ko diagnose karo. Classic group mein excess consumers idle ho sakte hain. Retention recovery time buy karti hai, service rate nahi. Committing unseen work data loss hide kar sakta hai.",
+       choiceExplanations: ["Within one group partition assignments useful consumer parallelism bound karti hain; hot partitions/downstream stalls ko diagnose karo.","Classic group mein excess consumers idle ho sakte hain.","Retention recovery time buy karti hai, service rate nahi.","Committing unseen work data loss hide kar sakta hai."] },
       {
         q: 'Interviewer: "429 return karte hain par clients turant retry karte hain."',
-        choices: [
-          'Retry-After header do aur clients jitter ke saath maanein; SDK mein backoff; bina Retry-After ka 429 bas "na" hai',
-          '503 bhejo',
-          'Clients block karo',
-          'Rate limit hata do',
-        ],
+        choices: ["Honor Retry-After plus bounded jittered client retry","503 status se clients automatically back off karenge","Retry-After header supply se SDK behavior prove hoga","Rate limiter hatao; retries ka contention khatam hoga"],
         answer: 0,
-        explain: 'Lab: 26.2 → 3.1 tries per success.',
-      },
+        explain: "Server signal aur client implementation dono chahiye; 429 Retry-After include kar sakta hai, missing ho toh bounded SDK backoff policy rakho. Status alone compliant retry behavior guarantee nahi. Clients header actually parse/honor karte hain ya nahi test karo. Protection remove karna offered load/resource pressure amplify kar sakta hai.",
+       choiceExplanations: ["Server signal aur client implementation dono chahiye; 429 Retry-After include kar sakta hai, missing ho toh bounded SDK backoff policy rakho.","Status alone compliant retry behavior guarantee nahi.","Clients header actually parse/honor karte hain ya nahi test karo.","Protection remove karna offered load/resource pressure amplify kar sakta hai."] },
     ],
   },
   success: [
@@ -654,15 +598,10 @@ sab replicated, LB ek            lb mara   → 25.0%</pre>
       ],
       observe: {
         q: 'Active-passive mein standby taiyaar tha, phir bhi 1.1 sec errors kyun?',
-        choices: [
-          'Switch karne wale ne 3 × 500 ms health checks ke baad maana ki primary mara — takeover ki khidki; asli duniya mein detection + promotion + DNS/VIP → aksar 30 sec+',
-          'Standby dheema tha',
-          'Data sync nahi tha',
-          'Bug',
-        ],
+        choices: ["Detection threshold ne ready standby tak switch delay ki","Standby ready tha toh detection time zero hona chahiye","Three polls always exactly 1.5 s failover guarantee dete","Real deployments uniformly at least 30 s hi leti hain"],
         answer: 0,
-        explain: 'Active-active retry turant; keemat: dono ko hamesha zinda aur sync rakhna.',
-      },
+        explain: "Lab measured takeover window detector schedule se aayi. Real end-to-end failover detection/promotion/routing/client caches se measure hota hai. Ready target failure observation ko instantaneous nahi karta. Sampling phase, timeout aur actions wall time badal sakte hain. Universal lower bound/fixed duration assert nahi kar sakte.",
+       choiceExplanations: ["Lab measured takeover window detector schedule se aayi. Real end-to-end failover detection/promotion/routing/client caches se measure hota hai.","Ready target failure observation ko instantaneous nahi karta.","Sampling phase, timeout aur actions wall time badal sakte hain.","Universal lower bound/fixed duration assert nahi kar sakte."] },
       lesson: 'Replica tabhi kaam ka jab koi use chunne wala bhi zinda ho — aur har tier mein.',
     },
     {
@@ -689,26 +628,16 @@ sab replicated, LB ek            lb mara   → 25.0%</pre>
     questions: [
       {
         q: 'Interviewer: "Hamare paas 3 app servers aur DB replica hai — SPOF-free?"',
-        choices: [
-          'Har critical-path component dekho: LB, queue broker, cache (agar dependency), gateway, DNS, region — aur har replica ka switch karne wala; ek bhi single = SPOF',
-          'Haan, app aur DB replicated hain',
-          'Nahi, 5 app servers chahiye',
-          'Sirf DB dekho',
-        ],
+        choices: ["Critical path aur shared failure domains audit karo","Three app replicas aur one DB replica complete proof hain","Five app replicas se shared LB/DNS redundant ho jaayenge","DB healthy ho toh queues/auth critical path nahi bante"],
         answer: 0,
-        explain: 'Lab: sab replicated, LB ek → 25%.',
-      },
+        explain: "Replica topology ke saath detection, failover controller, shared dependencies aur capacity test karni hoti hai. Unreplicated critical dependencies remain kar sakti hain. More app instances infrastructure control redundancy nahi deti. Actual request flow determine karta hai kaun dependency critical hai.",
+       choiceExplanations: ["Replica topology ke saath detection, failover controller, shared dependencies aur capacity test karni hoti hai.","Unreplicated critical dependencies remain kar sakti hain.","More app instances infrastructure control redundancy nahi deti.","Actual request flow determine karta hai kaun dependency critical hai."] },
       {
         q: 'Interviewer: "Cache ko replicate karein?"',
-        choices: [
-          'Poochho: optimization hai (dheema par chalega → rebuild) ya dependency (cold start DB ko kuchal dega → replicate)?',
-          'Hamesha',
-          'Kabhi nahi',
-          'Sirf production mein',
-        ],
+        choices: ["Cold-miss behavior aur availability contract evaluate karo","Cache optimization label se failure impact zero maano","Replication add karke stale-write correctness assume karo","Production mein cache durability source jaisi assume karo"],
         answer: 0,
-        explain: 'Optimization vs dependency.',
-      },
+        explain: "Cache loss manageable miss load ho toh rebuild; dependency-level cold-start collapse risk ho toh resilience/headroom controls chahiye. Warm-cache dependence hidden availability bottleneck ho sakti hai. Availability replicas consistency policy automatically solve nahi karti. Cache copy source-of-truth durability promise nahi.",
+       choiceExplanations: ["Cache loss manageable miss load ho toh rebuild; dependency-level cold-start collapse risk ho toh resilience/headroom controls chahiye.","Warm-cache dependence hidden availability bottleneck ho sakti hai.","Availability replicas consistency policy automatically solve nahi karti.","Cache copy source-of-truth durability promise nahi."] },
     ],
   },
   success: [
@@ -771,15 +700,10 @@ restore snapshot + log (bad query se thik pehle): 10,500 ✅</pre>`,
       ],
       observe: {
         q: 'Sirf snapshot se restore mein subah ke 500 orders kyun gaye?',
-        choices: [
-          'Snapshot raat 2 baje ka tha — uske baad ke writes sirf log mein the; log replay ke bina woh wapas nahi aate',
-          'Replica ne mita diye',
-          'Snapshot kharab tha',
-          'Bug',
-        ],
+        choices: ["Snapshot ke baad writes archive log replay mein the","Snapshot itself every future commit continuously rakhta","Replica presence snapshot timestamp ko latest banaati","Restore row count newest state ka sufficient proof hai"],
         answer: 0,
-        explain: 'Snapshot = ek pal; snapshot + log = koi bhi pal.',
-      },
+        explain: "Base backup/snapshot boundary ke baad committed work recover karne ke liye relevant intact logs/PITR chain chahiye. Point-in-time artifact future writes include nahi karta. Replica backup content timestamp rewrite nahi karti. Wrong values/missing new writes counts se hide ho sakte hain.",
+       choiceExplanations: ["Base backup/snapshot boundary ke baad committed work recover karne ke liye relevant intact logs/PITR chain chahiye.","Point-in-time artifact future writes include nahi karta.","Replica backup content timestamp rewrite nahi karti.","Wrong values/missing new writes counts se hide ho sakte hain."] },
       lesson: 'Replica aur backup alag cheezon se bachate hain — dono rakho, aur restore test karo.',
     },
     {
@@ -806,26 +730,16 @@ restore snapshot + log (bad query se thik pehle): 10,500 ✅</pre>`,
     questions: [
       {
         q: 'Interviewer: "Hamare paas 3 replicas hain, backup ki zaroorat?"',
-        choices: [
-          'Haan — replicas galat writes, DROP TABLE, attacks sab turant copy karte hain; base backup + WAL/binlog archive (PITR), alag account mein, aur restore drills',
-          'Nahi, 3 kaafi',
-          'Sirf weekly dump',
-          'Replica hi backup hai',
-        ],
+        choices: ["Historical recovery point aur tested restore bhi chahiye","Three live replicas logical corruption rollback karengi","Weekly dump alone har business RPO meet karega","Same-account replica compromise boundary isolate karegi"],
         answer: 0,
-        explain: 'Lab: DELETE → primary 0, replica 0.',
-      },
+        explain: "Replication live availability aur backups/PITR unwanted logical changes se recovery address karte hain; independent retention and restore tests assess karo. Bad changes replicate ho sakti hain. Backup cadence business loss objective se evaluate hoti hai. Shared credentials/failure domain correlated loss la sakta hai.",
+       choiceExplanations: ["Replication live availability aur backups/PITR unwanted logical changes se recovery address karte hain; independent retention and restore tests assess karo.","Bad changes replicate ho sakti hain.","Backup cadence business loss objective se evaluate hoti hai.","Shared credentials/failure domain correlated loss la sakta hai."] },
       {
         q: 'Interviewer: "Backup strategy kaise sabit karoge?"',
-        choices: [
-          'Regular restore drills — alag environment mein restore, row counts/checksums, RTO/RPO naapo; backup jo restore nahi hua woh backup nahi',
-          'Backup job green hai',
-          'File size dekho',
-          'Vendor ka SLA',
-        ],
+        choices: ["Isolated restore drill; integrity aur achieved RTO/RPO naapo","Backup job green ho toh restore work prove ho gaya","Archive file nonzero ho toh application recoverable hai","Vendor storage SLA full service recovery SLA ban jaati"],
         answer: 0,
-        explain: '"Backup tab tak backup nahi jab tak restore test na ho."',
-      },
+        explain: "Restore rehearsal actual data validity, dependencies aur recovery duration ka evidence deti hai. Creation job success recovery execution ka substitute nahi. Artifact present hona complete usable backup guarantee nahi. Object storage availability full app restore workflow nahi.",
+       choiceExplanations: ["Restore rehearsal actual data validity, dependencies aur recovery duration ka evidence deti hai.","Creation job success recovery execution ka substitute nahi.","Artifact present hona complete usable backup guarantee nahi.","Object storage availability full app restore workflow nahi."] },
     ],
   },
   success: [
@@ -883,7 +797,7 @@ SD.registerLevelsAfter('data', 'stampede', [
        <li><b>Tag-based</b>: har cached view jo product 123 par nirbhar hai, use tag "product:123" do; badlaav par <b>tag se purge</b>, ek call.
        Cloudflare ke <b>surrogate keys</b>: ek purge se edge par saikdon related assets saaf.</li>
        <li><b>Version-based keys</b>: invalidate mat karo, <b>key badlo</b> — <code>product:123:v5</code> → <code>v6</code>; purana unreachable, TTL se khatam.
-       Current version ek chhoti Redis key/DB column mein. GitHub static assets: filename mein content hash. Purge logic zero; keemat = memory.</li>
+       Current version ek chhoti Redis key/DB column mein. GitHub static assets: filename mein content hash. Version pointer freshness, old-key retention aur lookup/fill races still manage karo; keemat memory aur coordination hai.</li>
      </ul>`,
     `<h3>🏢 Har layer tak khabar</h3>
      <p>L1 in-process (hash map / Caffeine / LRU, µs), L2 Redis/Memcached (network, sub-ms, saajha), CDN edge par. CDC ne L2 ki key mitayi — par har app
@@ -893,8 +807,8 @@ SD.registerLevelsAfter('data', 'stampede', [
 sirf TTL (cache 5 s, L1 5 s)          ~4,000 ms galat
 CDC → shared cache DEL (L1 ko pata nahi) ~4,040 ms galat
 CDC + L1 ko pub/sub se khabar            ~91–121 ms</pre>
-     <p class="tip">🎯 Invalidation ek spectrum hai: TTL (sabse simple, sabse purana), CDC (lagbhag zero staleness + infra), tags (poora + tag index),
-     versions (zero purge logic + memory). Combination users ki staleness tolerance se chuno.</p>`,
+     <p class="tip">🎯 Invalidation ek spectrum hai: TTL (sabse simple, sabse purana), CDC (measured async lag + infra), tags (poora + tag index),
+     versions (pointer/retention/race management + memory). Combination users ki staleness tolerance se chuno.</p>`,
   ],
   stages: [
     {
@@ -911,15 +825,10 @@ CDC + L1 ko pub/sub se khabar            ~91–121 ms</pre>
       ],
       observe: {
         q: 'CDC ne shared cache turant saaf kiya — phir bhi 4 sec galat kyun?',
-        choices: [
-          'Har app ki apni L1 copy thi jise CDC ki khabar hi nahi — woh apne TTL tak purani rahi',
-          'CDC dheema tha',
-          'DB dheema',
-          'Redis ne DEL nahi kiya',
-        ],
+        choices: ["Local L1 invalidation missing thi; TTL tak stale rahi","Shared L2 purge operation actually execute nahi hua","DB commit CDC ke baad logically rollback ho gaya","CDC notification se all process caches reset ho jaati"],
         answer: 0,
-        explain: 'Invalidation tabhi poora jab har layer tak pahunche.',
-      },
+        explain: "Trace mein remote cache invalidation complete thi, par independent process-local copies unchanged rahi. Prompt shared purge successful batata hai. DB rollback ka evidence nahi. Every cache layer ko explicit invalidation/version policy chahiye.",
+       choiceExplanations: ["Trace mein remote cache invalidation complete thi, par independent process-local copies unchanged rahi.","Prompt shared purge successful batata hai.","DB rollback ka evidence nahi.","Every cache layer ko explicit invalidation/version policy chahiye."] },
       lesson: 'Record → views (tags/versions), aur key → har layer (pub/sub).',
     },
     {
@@ -928,7 +837,7 @@ CDC + L1 ko pub/sub se khabar            ~91–121 ms</pre>
       instructions: 'Har situation ko sahi invalidation se jodo.',
       pairs: [
         { left: '📰 Blog post page, 1 min purana chalega', right: 'TTL — sabse simple', explain: 'Staleness chal jaati hai toh complexity mat khareedo.' },
-        { left: '💰 Price/inventory, turant sahi chahiye', right: 'CDC (WAL → Kafka → invalidator)', explain: 'Shopify storefront.' },
+        { left: '💰 Product view, measured async lag acceptable', right: 'CDC (WAL → Kafka → invalidator)', explain: 'Async invalidation lag, refill races aur recovery test karo; checkout inventory invariant authoritative state par validate karo.' },
         { left: '🧩 Ek product 200 cached pages mein dikhta hai', right: 'Tags / surrogate keys — ek purge sab saaf', explain: 'Cloudflare surrogate keys.' },
         { left: '📦 JS/CSS bundles', right: 'Version/content-hash wali keys', explain: 'Purge hi nahi — naya naam.' },
         { left: '🖥️ Har app instance ki in-process cache', right: 'Pub/sub se invalidation propagation', explain: 'L1 ko bhi khabar.' },
@@ -941,26 +850,16 @@ CDC + L1 ko pub/sub se khabar            ~91–121 ms</pre>
     questions: [
       {
         q: 'Interviewer: "Price badalne ke baad bhi kuch users ko purana price dikhta hai, kuch ko naya."',
-        choices: [
-          'Kai layers — kuch app instances ki L1 purani; CDC se L2 saaf + pub/sub se har instance ki L1 saaf; aur CDN tag purge',
-          'TTL chhota karo',
-          'Cache hata do',
-          'Users ko refresh bolo',
-        ],
+        choices: ["Trace cache layers; reliable version/invalidation design karo","L2 purge alone every app memory update guarantee karta","Client refresh server stale L1 ko invalidate kar deta","Short TTL alone every freshness requirement satisfy karta"],
         answer: 0,
-        explain: 'Lab: pub/sub ke bina 4 sec, saath ~100 ms.',
-      },
+        explain: "L1/L2/CDN copy paths identify karo; invalidation message loss/reconnect aur allowed staleness handle karo. Process-local cache state remote DEL se necessarily clear nahi. Client reload server-internal cached values still read kar sakta hai. TTL waiting window remains; target semantics verify karo.",
+       choiceExplanations: ["L1/L2/CDN copy paths identify karo; invalidation message loss/reconnect aur allowed staleness handle karo.","Process-local cache state remote DEL se necessarily clear nahi.","Client reload server-internal cached values still read kar sakta hai.","TTL waiting window remains; target semantics verify karo."] },
       {
         q: 'Interviewer: "Ek product badla, kaunse cached pages mitayein pata nahi."',
-        choices: [
-          'Tag-based: har cached view ko uske records ke tags do; badlaav par tag purge — ya version keys',
-          'Poora cache flush',
-          'TTL par chhod do',
-          'Har page ko har minute rebuild',
-        ],
+        choices: ["Dependency tags ya version keys se derived views map karo","Full flush ko per-record invalidation ke equal maano","Each view ko independent fixed TTL se exact fresh rakho","Every cached view ko origin write path se disconnect karo"],
         answer: 0,
-        explain: 'Record ≠ view.',
-      },
+        explain: "Cached result ki source dependencies track karke affected views invalidate/version karo; tag cardinality and race semantics design karo. Global flush unnecessary miss storm la sakta hai. TTL exact synchronous freshness guarantee nahi. Dependency relation absent ho toh targeted invalidation missing rahegi.",
+       choiceExplanations: ["Cached result ki source dependencies track karke affected views invalidate/version karo; tag cardinality and race semantics design karo.","Global flush unnecessary miss storm la sakta hai.","TTL exact synchronous freshness guarantee nahi.","Dependency relation absent ho toh targeted invalidation missing rahegi."] },
     ],
   },
   success: [
@@ -985,9 +884,9 @@ VISUALS['lock-choices'] = {
   t: 'Kaunsa taala — ya taala hi nahi?',
   html: `
     <div class="dg-grid">
-      <div class="dg-node is-gold"><span class="ni">⚡</span><span class="nl">Redis SET NX EX</span><span class="ns">~0.5 ms · pause par toot-ta — fencing chahiye</span></div>
-      <div class="dg-node is-good"><span class="ni">🦓</span><span class="nl">ZooKeeper / etcd</span><span class="ns">5–15 ms · ephemeral sequential nodes, sirf predecessor ko watch</span></div>
-      <div class="dg-node is-good"><span class="ni">🐘</span><span class="nl">Postgres advisory lock</span><span class="ns">~1 ms · session khatam = release · deadlock detection</span></div>
+      <div class="dg-node is-gold"><span class="ni">⚡</span><span class="nl">Redis SET NX EX</span><span class="ns">lease + stale-holder risk; resource contract verify</span></div>
+      <div class="dg-node is-good"><span class="ni">🦓</span><span class="nl">ZooKeeper / etcd</span><span class="ns">session expiry + predecessor watch; latency measure</span></div>
+      <div class="dg-node is-good"><span class="ni">🐘</span><span class="nl">Postgres advisory lock</span><span class="ns">session end release; DB failure semantics test</span></div>
       <div class="dg-node is-accent"><span class="ni">🚫</span><span class="nl">Koi taala nahi</span><span class="ns">idempotent (ON CONFLICT) ya optimistic (version column)</span></div>
     </div>
     <div class="dg-cap">Lab 36: 100 waiters — "sabko jagao" 5,050 wake-ups; "line mein agla" (ZooKeeper jaisa) 100.</div>`,
@@ -1008,9 +907,7 @@ SD.registerLevelsAfter('dist', 'locks', [
   lesson: [
     `<h3>🦓 ZooKeeper — line mein number</h3>
      <p>Har waiter ek <b>ephemeral sequential</b> node banata hai (number ke saath). Sabse chhota number jeet-ta hai. Har waiter sirf apne se
-     <b>pehle wale</b> ko watch karta hai → release par sirf ek jaagta hai (koi thundering herd nahi). Ephemeral = session se juda → holder crash/
-     disconnect → node gayab → agla aage. Timeouts nahi. Latency 5–15 ms (Redis ~0.5 ms) → kabhi-kabhi ke liye theek (leader election, config
-     changes), hazaron/sec par bottleneck. etcd bhi aisa hi.</p>
+     <b>pehle wale</b> ko watch karta hai → release par sirf ek jaagta hai (koi thundering herd nahi). Ephemeral = session se juda → session expiry → ephemeral node removed → next owner proceed. Temporary disconnect immediate deletion nahi; session timeout aur recoverable-create ambiguity handle karo. Latency deployment/workload par measure karo; fixed 5–15 ms universal claim nahi. etcd equivalent coordination primitives deta hai.</p>
      <pre>lab 36 — 100 workers, ek lock, 100 handoffs:
 all   (sabko jagao)       5,050 wake-ups · 4,950 bekaar
 queue (line mein agla)      100 wake-ups · 0 bekaar</pre>
@@ -1029,8 +926,7 @@ queue (line mein agla)      100 wake-ups · 0 bekaar</pre>
      <ul>
        <li><b>Idempotent</b> kaam → <code>INSERT … ON CONFLICT DO NOTHING</code>.</li>
        <li>Takraav pakda ja sakta hai → <b>optimistic concurrency</b> (version column, <code>WHERE version = N</code>; haara retry kare — na taala, na deadlock, na timeout).</li>
-       <li>Sach mein taala sirf <b>non-idempotent bahari side effects</b> ke liye (card charge, SMS, paid third-party API) → lock + <b>fencing</b> (taala
-       kabhi na kabhi toot-ega).</li>
+       <li>External effects (payment/SMS) ke liye provider-supported idempotency, reconciliation aur ownership contract dekho. Fencing tabhi useful hai jab <b>resource token atomically validate</b> kare. Distributed mutex alone exactly-once effect prove nahi karta; shared-state coordination ke aur bhi valid lock use cases hain.</li>
      </ul>
      <p class="tip">🎯 Distributed lock ≠ mutex. Do alag chintayein: <b>liveness</b> (lease: mara holder hamesha na roke) aur <b>safety</b> (fencing:
      purana holder bigaad na sake).</p>`,
@@ -1050,30 +946,25 @@ queue (line mein agla)      100 wake-ups · 0 bekaar</pre>
       ],
       observe: {
         q: '"all" mein 5,050 wake-ups kahan se aaye?',
-        choices: [
-          'Har release par bache hue sab waiters jaage (99 + 98 + … + 1 ≈ N²/2), ek jeeta, baaki phir so gaye — lock server par har baar poori bheed',
-          'Lock server ka bug',
-          'Workers ne spin kiya',
-          'Network retry',
-        ],
+        choices: ["100 + 99 + ... + 1 = 5,050 wake-ups","99 + 98 + ... + 1 = 5,050 wake-ups","100 releases × 100 waiters = 5,050 wake-ups","100 useful + 100 retries = 5,050 wake-ups"],
         answer: 0,
-        explain: 'ZooKeeper ka "sirf predecessor ko watch" isi ko todta hai.',
-      },
+        explain: "This lab count initial 100-waiter round include karta hai; triangular sum N(N+1)/2 = 5,050, useful 100, wasted 4,950. 99 se1 ka sum 4,950 hai. Constant 100 wakeups per release hota toh total10,000 hota. 200 ka sum5,050 nahi; measured growing herd pattern triangular hai.",
+       choiceExplanations: ["This lab count initial 100-waiter round include karta hai; triangular sum N(N+1)/2 = 5,050, useful 100, wasted 4,950.","99 se1 ka sum 4,950 hai.","Constant 100 wakeups per release hota toh total10,000 hota.","200 ka sum5,050 nahi; measured growing herd pattern triangular hai."] },
       lesson: 'Release par ek hi jaage — warna lock server khud bheed ka shikaar.',
     },
     {
       type: 'bins',
       title: 'Taala chahiye ya nahi?',
-      instructions: 'Har kaam ke liye — lock + fencing, ya bina lock ke raasta?',
+      instructions: 'Boundary chuno: ek DB ke atomic state change se kaam ho sakta hai, ya external execution/ownership contract bhi chahiye? External group ka matlab lock mandatory nahi.',
       bins: [
-        { id: 'nolock', label: '🚫 Taala nahi — idempotency / OCC' },
-        { id: 'lock', label: '🔐 Taala + fencing' },
+        { id: 'nolock', label: '🗃️ Single-DB atomicity / OCC' },
+        { id: 'lock', label: '🔗 External execution / ownership' },
       ],
       items: [
         { text: 'Signup par welcome email ka record ek hi baar bane', bin: 'nolock', explain: 'Unique constraint + ON CONFLICT DO NOTHING.' },
-        { text: 'Card par paisa kaatna (payment gateway)', bin: 'lock', explain: 'Non-idempotent bahari side effect — lock + fencing (aur gateway ki idempotency key bhi).' },
+        { text: 'Card par paisa kaatna (payment gateway)', bin: 'lock', explain: 'Provider-side stable operation ID/dedup, ambiguous outcome reconciliation aur allowed retry window verify karo. Local lock remote effect atomically dedupe nahi karta.' },
         { text: 'Profile edit — do tabs se ek saath', bin: 'nolock', explain: 'Version column — haara retry kare.' },
-        { text: 'Paid SMS API se OTP bhejna', bin: 'lock', explain: 'Do baar = do baar paisa + user pareshan.' },
+        { text: 'Paid SMS API se OTP bhejna', bin: 'lock', explain: 'External send boundary hai: provider idempotency supported ho toh stable key use karo; warna ambiguous retry duplication/loss tradeoff explicit karo. Mutex alone delivery uniqueness prove nahi karta.' },
         { text: 'Counter badhana (likes)', bin: 'nolock', explain: 'Atomic UPDATE likes = likes + 1.' },
         { text: 'Raat ka billing job sirf ek machine chalaye', bin: 'lock', explain: 'Leader election / lease — aur job ki idempotency key.' },
       ],
@@ -1085,26 +976,16 @@ queue (line mein agla)      100 wake-ups · 0 bekaar</pre>
     questions: [
       {
         q: 'Interviewer: "Order processing mein double processing rokni hai. Redis lock lagayein?"',
-        choices: [
-          'Pehle poochho lock chahiye bhi — order status par optimistic update (WHERE status=\'new\') ya unique constraint; bahari side effect ho toh lock + fencing, aur jab critical section Postgres mein hi hai toh pg_advisory_xact_lock',
-          'Haan, Redis SET NX',
-          'Redlock 5 nodes',
-          'Java synchronized',
-        ],
+        choices: ["Atomic state/unique key pehle; external effect scope dekho","Redis SET NX alone payment side effect exactly-once karta","Five Redis leases client pause aur retries eliminate karte","Process mutex all service hosts coordinate karta"],
         answer: 0,
-        explain: 'Sabse achha lock woh jo lagta hi nahi.',
-      },
+        explain: "Single-DB invariant conditional update/unique constraint/transaction se enforce ho sakta hai; external effects require idempotency/fencing-compatible contract. Lock holder pause ya ambiguous response remain kar sakte hain. Quorum lease client execution revoke nahi karti. Process lock other hosts ke threads nahi control karta.",
+       choiceExplanations: ["Single-DB invariant conditional update/unique constraint/transaction se enforce ho sakta hai; external effects require idempotency/fencing-compatible contract.","Lock holder pause ya ambiguous response remain kar sakte hain.","Quorum lease client execution revoke nahi karti.","Process lock other hosts ke threads nahi control karta."] },
       {
         q: 'Interviewer: "Kai workers ek lock ke liye intezaar karte hain aur lock server CPU 100% jaata hai."',
-        choices: [
-          'Thundering herd — sabko jagane ki jagah queue/sequential nodes (sirf predecessor watch) ya jittered backoff',
-          'Bada lock server',
-          'Workers kam',
-          'TTL badhao',
-        ],
+        choices: ["Queued predecessor watch ya bounded jittered backoff","Longer lease releases par wake-up fanout reduce karegi","Bigger lock server same herd asymptotics remove karega","More workers se same lock ka useful concurrency badhegi"],
         answer: 0,
-        explain: 'Lab: 5,050 → 100 wake-ups.',
-      },
+        explain: "One-at-a-time handoff unnecessary wakeups reduce kar sakti hai; cancellation/lost wakeups/fairness handle karo. Lease length notification fanout algorithm nahi badalti. More CPU quadratic notification pattern retain karti hai. Mutually exclusive resource mein extra waiters throughput automatically nahi badhate.",
+       choiceExplanations: ["One-at-a-time handoff unnecessary wakeups reduce kar sakti hai; cancellation/lost wakeups/fairness handle karo.","Lease length notification fanout algorithm nahi badalti.","More CPU quadratic notification pattern retain karti hai.","Mutually exclusive resource mein extra waiters throughput automatically nahi badhate."] },
     ],
   },
   success: [
@@ -1113,11 +994,11 @@ queue (line mein agla)      100 wake-ups · 0 bekaar</pre>
     'Main bata sakta hoon kab lock chahiye hi nahi',
   ],
   homework: `<p>Apne codebase mein har distributed lock dhoondho. Har ek ke saamne: kya kaam idempotent ho sakta hai? Version column se ho sakta hai?
-    Agar lock sach mein chahiye — fencing token ya storage-level check hai? Aur lock ka TTL kaam ke time ka 3–5× hai?</p>`,
+    Agar lock sach mein chahiye — fencing token ya storage-level check hai? Aur TTL/renew/pause budget measured hai? Resource stale token atomically reject karta hai?</p>`,
   cards: [
-    { front: 'ZooKeeper lock?', back: 'Ephemeral sequential nodes; sabse chhota jeete; har koi sirf predecessor watch kare (herd nahi); session gaya toh node gaya. 5–15 ms.' },
+    { front: 'ZooKeeper lock?', back: 'Ephemeral sequential waiter nodes; predecessor watch unnecessary herd reduce karta hai. Session expiry par ephemeral removal; temporary disconnect immediate expiry nahi. Recoverable errors/watch races handle karo; latency measure karo.' },
     { front: 'Postgres advisory lock?', back: 'pg_advisory_lock / pg_advisory_xact_lock (COMMIT par khud chhoote); naya infra nahi, crash-safe, deadlock detection, ~1 ms. Critical section usi DB mein ho toh best shuruaat.' },
-    { front: 'Lock kab chahiye hi nahi?', back: 'Idempotent (ON CONFLICT DO NOTHING) ya takraav pakda ja sake (version column OCC). Lock sirf non-idempotent bahari side effects ke liye — fencing ke saath.' },
+    { front: 'Lock kab chahiye hi nahi?', back: 'Single-DB invariant atomic constraint/update/OCC se solve ho sakta hai. External effect ke liye provider idempotency/reconciliation inspect karo. Locks shared coordination mein valid ho sakte hain; resource fencing alone payment dedupe nahi.' },
   ],
 },
 ]);

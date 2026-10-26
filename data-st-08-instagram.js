@@ -160,7 +160,7 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
       type: 'tradeoff',
       title: 'Logical shards lab',
       instructions: 'Logical shards ki ginti, physical nodes aur growth ka tareeka badlo.',
-      goal: 'Aisi setting dhoondho jahan naya node jodne par <b>koi data rewrite na ho</b>, ek node par load <b>70% se kam</b> rahe, aur growth ke liye <b>application code na badalna pade</b>.',
+      goal: "Naya node jodne par <b>15% ya kam rows copy</b> hon, busiest-node load <b>70% ya kam</b>, aur application routing code na badle. Logical keys stable rahengi; selected shards ka physical data move phir bhi hota hai.",
       scenario: `Tumhare paas ek badhta hua product hai. Aaj 4 database machines hain.
         Agle saal shayad 12 chahiye. Sawaal: data ka batwara kaise tay karoge?`,
       knobs: [
@@ -200,15 +200,10 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
         jitna tum chaho.`,
       quiz: {
         q: 'Instagram ne shuruaat mein hazaron logical shards ek hi machine par kyun rakhe?',
-        choices: [
-          'Kyunki batwara baad mein badalna mehenga hai — isliye aaj se hi bahut saare tukde bana lo, aur machines zaroorat ke hisaab se badhao',
-          'Kyunki Postgres ek machine par hi chalta hai',
-          'Kyunki schemas sirf ek machine par ban sakte hain',
-          'Taaki backups aasan rahein',
-        ],
+        choices: ["Logical partition pehle, placement baad","Physical server per schema mandatory","Backup tool ne shard count force kiya","One machine hi Postgres ki limit"],
         answer: 0,
-        explain: 'Logical shards sasta hain (schemas), physical nodes mehenge. Isliye batwara pehle se bada rakho aur thikana baad mein badalte raho.',
-      },
+        explain: "Logical shard identity aur physical placement separate rakhna future moves easier banata hai. Many schemas/tables ka metadata/maintenance cost bhi hai; logical shards literally free nahi.",
+       choiceExplanations: ["Logical shard identity aur physical placement separate rakhna future moves easier banata hai. Many schemas/tables ka metadata/maintenance cost bhi hai; logical shards literally free nahi.","Many logical shards one physical hostpar co-locate ho sakte hain.","Question growth/placement flexibility ka hai.","Postgres replication aur application sharding support karta hai."] },
     },
     {
       type: 'design',
@@ -227,25 +222,25 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
         {
           id: 'first', label: 'Sabse pehla kadam', icon: '🚦',
           options: [
-            { id: 'pool', label: 'Connection pooler lagao aur top queries/indexes theek karo', score: 4, why: 'Sabse sasta aur sabse zyada asar. Instagram ki pehli deewar connections thi — 1,500 connections ≈ 2 GB RAM, bina koi kaam kiye.' },
-            { id: 'shard', label: 'Turant sharding shuru kar do', score: -1, why: 'Sharding ka operational bhaar bada hai. Video ka takeaway: "zaroorat padne tak shard mat karo" — Instagram ne 2.7 crore users tak intezaar kiya.' },
-            { id: 'nosql', label: 'NoSQL par migrate karo', score: -3, why: 'Walls paimane ki hain, database ki nahi; aur switch ke baad wapas aana lagbhag namumkin hai.' },
+            { id: 'pool', label: "Measure queries/pooling and cheap headroom", score: 4, why: 'Sabse sasta aur sabse zyada asar. Instagram ki pehli deewar connections thi — 1,500 connections ≈ 2 GB RAM, bina koi kaam kiye.' },
+            { id: 'shard', label: "Shard before observing constraints", score: -1, why: 'Sharding ka operational bhaar bada hai. Video ka takeaway: "zaroorat padne tak shard mat karo" — Instagram ne 2.7 crore users tak intezaar kiya.' },
+            { id: 'nosql', label: "Migrate engine before identifying bottleneck", score: -3, why: 'Walls paimane ki hain, database ki nahi; aur switch ke baad wapas aana lagbhag namumkin hai.' },
           ],
         },
         {
           id: 'shape', label: 'Jab sharding karni pade', icon: '🧮',
           options: [
-            { id: 'logical', label: 'Hazaron logical shards + mapping table, shuruaat mein kuch hi machines par', score: 4, why: 'Batwara hamesha ke liye tay, thikana badalne layak. Growth data rewrite nahi, config change ban jaata hai.' },
-            { id: 'modulo', label: 'hash(user) % N machines', score: -3, why: 'N badla toh lagbhag sab rows ka thikana badal jaata hai — har growth ek poora data migration ban jaata hai.' },
-            { id: 'range', label: 'User id ke range se (0-1M node 1, 1M-2M node 2…)', score: 0, why: 'Simple hai par naye users hamesha aakhri node par girte hain — naya hot spot banta rehta hai.' },
+            { id: 'logical', label: "Logical shards and placement mapping", score: 4, why: 'Batwara hamesha ke liye tay, thikana badalne layak. Growth data rewrite nahi, config change ban jaata hai.' },
+            { id: 'modulo', label: "Modulo physical machine count", score: -3, why: 'N badla toh lagbhag sab rows ka thikana badal jaata hai — har growth ek poora data migration ban jaata hai.' },
+            { id: 'range', label: "Fixed user-ID ranges per machine", score: 0, why: 'Simple hai par naye users hamesha aakhri node par girte hain — naya hot spot banta rehta hai.' },
           ],
         },
         {
           id: 'ids', label: 'Primary keys', icon: '🔑',
           options: [
-            { id: 'snowflake', label: 'Time-sortable distributed ids (snowflake-style) aaj se hi', score: 3, why: 'Sharded duniya mein auto-increment collide karta hai, aur baad mein billions rows ka id format badalna bahut mehenga hai. Video: yeh pehle din se karo.' },
-            { id: 'auto', label: 'Auto-increment hi rakho, baad mein dekhenge', score: -2, why: 'Har shard 1, 2, 3 dega — do alag rows ki ek hi id. Aur migration billions rows par hoti hai.' },
-            { id: 'uuid', label: 'UUIDv4 sab jagah', score: 0, why: 'Collide nahi karta, par bada hai, random hai (index churn) aur usse waqt ka pata nahi chalta — isliye "latest" queries ke liye alag index chahiye.' },
+            { id: 'snowflake', label: "Scoped time-sortable distributed IDs", score: 3, why: 'Sharded duniya mein auto-increment collide karta hai, aur baad mein billions rows ka id format badalna bahut mehenga hai. Video: yeh pehle din se karo.' },
+            { id: 'auto', label: "Keep local counters without shard namespace", score: -2, why: 'Har shard 1, 2, 3 dega — do alag rows ki ek hi id. Aur migration billions rows par hoti hai.' },
+            { id: 'uuid', label: "Random IDs with explicit ordering field", score: 0, why: 'Collide nahi karta, par bada hai, random hai (index churn) aur usse waqt ka pata nahi chalta — isliye "latest" queries ke liye alag index chahiye.' },
           ],
         },
       ],
@@ -262,37 +257,22 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
     questions: [
       {
         q: 'Interviewer: "Postgres 2 TB ki ho gayi hai. NoSQL par jaayein?"',
-        choices: [
-          'Pehle poochho ki deewar kis cheez ki hai — connections, indexes, ya sach mein ek machine ki seema. Sharding kisi bhi database mein karni padegi; naam badalne se woh kaam gayab nahi hota',
-          'Haan, relational databases horizontally scale nahi karte',
-          'Haan, agar team NoSQL jaanti hai',
-          'Nahi, kabhi database nahi badalna chahiye',
-        ],
+        choices: ["Measured bottleneck aur ops compare","2TB se relational model invalid","New tool name se sharding free","Current engine ko universal best"],
         answer: 0,
         explain: 'Instagram ne evaluate karke bhi Postgres chuna, kyunki walls scale ki thin. Switch karne se partitioning gayab nahi hoti, sirf abstraction badalti hai.',
-      },
+       choiceExplanations: ["Instagram ne evaluate karke bhi Postgres chuna, kyunki walls scale ki thin. Switch karne se partitioning gayab nahi hoti, sirf abstraction badalti hai.","Data size alone relational fit disprove nahi karta.","Distributed storage bhi placement/access pattern/operations tradeoffs rakhta hai.","Measurements aur required features engine choice drive karte hain."] },
       {
         q: 'Interviewer: "Sharding ke baad growth kaise sambhaloge?"',
-        choices: [
-          'Logical shards bahut saare banao aur mapping table se unka thikana badlo — naya node jodna ek replication + mapping update ban jaata hai',
-          'Shard count badha kar rehash kar lo',
-          'Har saal bade machines par move kar do',
-          'Application mein shard count ki constant badal do',
-        ],
+        choices: ["Logical shards ko nodes par remap","Modulo constant ko everywhere badlo","Every growth par all keys rehash","Only bigger host ko scaling maano"],
         answer: 0,
         explain: 'Yahi woh pattern hai jo Instagram se aaya: partitioning aur placement alag rakho.',
-      },
+       choiceExplanations: ["Yahi woh pattern hai jo Instagram se aaya: partitioning aur placement alag rakho.","App constant changes coordinated routing/migration complexity badhate hain.","Full rehash unnecessary data move kar sakta hai.","Vertical scaling capacity limit ko eventually hit kar sakti hai."] },
       {
         q: 'Interviewer: "Naya specialised database kab lena chahiye?"',
-        choices: [
-          'Jab problem sach mein nayi ho (vector search, planet-scale graph, real-time time-series) — sirf "bahut saare users" hona nayi problem nahi hai',
-          'Jab maujooda database dheemi lage',
-          'Jab team nayi technology seekhna chahe',
-          'Jab data 1 TB paar kar jaaye',
-        ],
+        choices: ["New access pattern ka measured gap","Only total bytes threshold dekho","Team novelty ko primary need maano","One slow query se engine replace"],
         answer: 0,
         explain: 'Complexity budget: har naya tool seekhne, chalane, train karne aur hire karne ka kharcha maangta hai.',
-      },
+       choiceExplanations: ["Complexity budget: har naya tool seekhne, chalane, train karne aur hire karne ka kharcha maangta hai.","Storage size diagnosis nahi; schema/index/capacity inspect chahiye.","Learning cost justified product need ka substitute nahi.","Query plan/index/workload tuning cheaper fix ho sakta hai."] },
     ],
   },
   success: [
@@ -320,7 +300,11 @@ function shardMapModel(k) {
   const perNode = Math.max(1, Math.floor(k.logical / k.nodes));
   const hotPct = Math.min(100, Math.round(100 / k.nodes + 18));
   if (k.style === 0) return { movedPct: Math.round(100 - 100 / (k.nodes + 1)), hotPct, codeChange: true, perNode };
-  const movedPct = Math.min(100, Math.round((100 / (k.nodes + 1)) * (8 / Math.max(1, perNode))));
+  /* Balanced, equal-size logical shards: the new node needs roughly 1/(N+1)
+     of existing data. More shards improve granularity; they do not make the
+     physical copy disappear. This excludes replicas and unequal shard sizes. */
+  const movedShards = Math.ceil(k.logical / (k.nodes + 1));
+  const movedPct = Math.min(100, Math.round(1000 * movedShards / k.logical) / 10);
   return { movedPct, hotPct, codeChange: false, perNode };
 }
 

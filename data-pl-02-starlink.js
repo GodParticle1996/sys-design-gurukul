@@ -11,22 +11,7 @@
 
 VISUALS['starlink-leo'] = {
   t: 'Doori ke badle raftaar — GEO vs LEO',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-bad"><span class="bx-label">🛰️ GEO — 35,786 km</span>
-        <div class="dg-cap">24 ghante ka orbit, ek jagah "ruka" dikhta hai; ek satellite 1/3 duniya; dish fixed, handover nahi.
-          Par roshni ~120 ms ek taraf → physics RTT ~477 ms, asli ~600 ms. Calls aur games ke liye bekaar.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">🚀 LEO — ~550 km</span>
-        <div class="dg-cap">65× paas: ek taraf &lt;2 ms, measured RTT 20–40 ms (zyada zameen ka network). Par 7.5 km/s par
-          bhaagta hai — ~95 min ka orbit, aasmaan minutes mein paar. Har user ke liye satellites ki TRAIN chahiye.</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-flow">
-      <span class="dg-pill acc">📡 phased array (motor nahi, beam ms mein ghoomta)</span><span class="dg-arrow">+</span>
-      <span class="dg-pill acc">🗺️ ephemeris (sabki aane wali jagah)</span><span class="dg-arrow">+</span>
-      <span class="dg-pill">📍 apna GPS</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good">🎯 dhoondhna nahi, HISAAB lagana</span>
-    </div>`,
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">🛰️ GEO — 35,786 km</span>\n        <div class=\"dg-cap\">24 ghante ka orbit, ek jagah \"ruka\" dikhta hai; ek satellite 1/3 duniya; dish fixed, handover nahi.\n          Par roshni ~120 ms ek taraf → physics RTT ~477 ms, asli ~600 ms. Calls aur games ke liye bekaar.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🚀 LEO — ~550 km</span>\n        <div class=\"dg-cap\">65× paas: ek taraf &lt; 2 ms, measured RTT 20–40 ms (zyada zameen ka network). Par 7.5 km/s par\n          bhaagta hai — ~95 min ka orbit, aasmaan minutes mein paar. Har user ke liye satellites ki TRAIN chahiye.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill acc\">📡 phased array (motor nahi, beam ms mein ghoomta)</span><span class=\"dg-arrow\">+</span>\n      <span class=\"dg-pill acc\">🗺️ ephemeris (sabki aane wali jagah)</span><span class=\"dg-arrow\">+</span>\n      <span class=\"dg-pill\">📍 apna GPS</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">🎯 dhoondhna nahi, HISAAB lagana</span>\n    </div>",
 };
 
 VISUALS['starlink-schedule'] = {
@@ -50,18 +35,7 @@ VISUALS['starlink-schedule'] = {
 
 VISUALS['starlink-lasers'] = {
   t: 'Aasmaan mein aaina se aasmaan mein network tak',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-gold"><span class="bx-label">🪞 Gen 1 — bent pipe</span>
-        <div class="dg-cap">User → satellite → seedha neeche gateway. User aur gateway dono ko ek hi satellite dikhna chahiye →
-          sirf US/Europe jaisi zameen ke paas coverage; Pacific, poles, door ke jahaaz nahi.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">🔦 2021+ — laser links</span>
-        <div class="dg-cap">SpaceX (2024 talk): 9,000+ laser links, ~100 Gbps each, kuch 5,400 km tak, ~40 PB/din.
-          Same-plane links (aage/peeche) hafton tak locked = backbone; cross-plane links schedule par tootte-judte.</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-cap">Glass mein roshni ~2 lakh km/s, vacuum mein ~3 lakh (≈50% tez). Space raaste ka fixed ~1,100 km upar-neeche;
-      lab ka hisaab: ~2,757 km se lambe raaste par space jeet-ta hai (fiber seedha ho tab bhi). London → Singapore: 10.8 ms aage.</div>`,
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-gold\"><span class=\"bx-label\">🪞 Gen 1 — bent pipe</span>\n        <div class=\"dg-cap\">User → satellite → seedha neeche gateway. User aur gateway dono ko ek hi satellite dikhna chahiye →\n          sirf US/Europe jaisi zameen ke paas coverage; Pacific, poles, door ke jahaaz nahi.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🔦 2021+ — laser links</span>\n        <div class=\"dg-cap\">SpaceX (2024 talk): 9,000+ laser links, ~100 Gbps each, kuch 5,400 km tak, ~40 PB/din.\n          Same-plane links (aage/peeche) hafton tak locked = backbone; cross-plane links schedule par tootte-judte.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-cap\">Glass mein roshni ~2 lakh km/s, vacuum mein ~3 lakh (≈50% tez). Space raaste ka fixed ~1,100 km upar-neeche;\n      lab ka hisaab: ~2,757 km se lambe raaste par space jeet-ta hai (fiber seedha ho tab bhi). London → Singapore: 10.8 ms aage.</div>",
 };
 
 VISUALS['starlink-anchor'] = {
@@ -98,30 +72,8 @@ SD.registerLevels('planet', [
     'Lab: GEO/LEO physics aur fiber vs vacuum',
   ],
   lesson: [
-    `<h3>🧭 Internet maanta hai ki router hilte nahi</h3>
-     <p>Zameen ke internet mein routers ek jagah hain; OSPF/BGP kabhi-kabhi ke, anjaane badlaav dhoondh lete hain.
-     Starlink mein 7,000+ satellites ~27,000 km/h (7.5 km/s) par bhaag rahe hain, har ~95 min mein ek chakkar —
-     topology <b>kabhi tikti hi nahi</b>. Par ek raahat: orbital mechanics <b>deterministic</b> hai. Agle hafte
-     kaunsa satellite kahan hoga, kuch metre tak pata hai. Toh badlaav ko surprise ki jagah <b>schedule</b> bana do.</p>
-     <h3>🛰️ GEO vs LEO</h3>
-     <table>
-       <tr><th></th><th>GEO (35,786 km)</th><th>LEO (~550 km)</th></tr>
-       <tr><td>Aasmaan mein</td><td>Ek jagah ruka dikhta hai</td><td>Minutes mein paar</td></tr>
-       <tr><td>Coverage</td><td>1 satellite ≈ 1/3 duniya</td><td>Hazaron chahiye, har user ke liye ek "train"</td></tr>
-       <tr><td>Roshni (ek taraf)</td><td>~120 ms (video mein "12 ms" — galat)</td><td>&lt;2 ms</td></tr>
-       <tr><td>RTT</td><td>physics ~477 ms, asli ~600 ms</td><td>measured 20–40 ms</td></tr>
-     </table>
-     <p class="tip">🎯 Starlink ne <b>doori ke badle raftaar</b> li, aur <b>latency ke badle complexity</b>.</p>`,
-    `<h3>📡 Dish jo kabhi dhoondhti nahi</h3>
-     <p>Dish ek <b>phased array</b> hai — saikdon chhote antenna, unke signals mein timing ka farq daal ke beam
-     electronically milliseconds mein ghumaya jaata hai. Koi tracking motor nahi (ek motor sirf install ke waqt
-     jhukane ke liye).</p>
-     <p>Aur dish satellite <b>dhoondhti</b> nahi. Uske paas <b>ephemeris</b> hai (saare satellites ki aane wali jagah)
-     aur apna GPS → kahan point karna hai, yeh <b>hisaab</b> hai. Satellite ki raftaar se frequency khisakti hai
-     (Doppler, saikdon kHz, lagatar badalta) — woh bhi pehle se nikaal ke bhejne se pehle theek kar diya jaata hai.</p>
-     <h3>📏 Lab 19 (ex2) — physics pehle</h3>
-     <pre>GEO 35,786 km: 239 ms ek taraf  → round trip 477 ms (asli ~600 ms)
-LEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>`,
+    "<h3>🧭 Internet maanta hai ki router hilte nahi</h3>\n     <p>Zameen ke internet mein routers ek jagah hain; OSPF/BGP kabhi-kabhi ke, anjaane badlaav dhoondh lete hain.\n     Starlink mein 7,000+ satellites ~27,000 km/h (7.5 km/s) par bhaag rahe hain, har ~95 min mein ek chakkar —\n     topology <b>kabhi tikti hi nahi</b>. Par ek raahat: orbital mechanics <b>deterministic</b> hai. Agle hafte\n     kaunsa satellite kahan hoga, kuch metre tak pata hai. Toh badlaav ko surprise ki jagah <b>schedule</b> bana do.</p>\n     <h3>🛰️ GEO vs LEO</h3>\n     <table>\n       <tr><th></th><th>GEO (35,786 km)</th><th>LEO (~550 km)</th></tr>\n       <tr><td>Aasmaan mein</td><td>Ek jagah ruka dikhta hai</td><td>Minutes mein paar</td></tr>\n       <tr><td>Coverage</td><td>1 satellite ≈ 1/3 duniya</td><td>Hazaron chahiye, har user ke liye ek \"train\"</td></tr>\n       <tr><td>Roshni (ek taraf)</td><td>~120 ms (video mein \"12 ms\" — galat)</td><td>&lt; 2 ms</td></tr>\n       <tr><td>RTT</td><td>physics ~477 ms, asli ~600 ms</td><td>measured 20–40 ms</td></tr>\n     </table>\n     <p class=\"tip\">🎯 Starlink ne <b>doori ke badle raftaar</b> li, aur <b>latency ke badle complexity</b>.</p>",
+    "<h3>📡 Dish jo kabhi dhoondhti nahi</h3>\n     <p>Dish ek <b>phased array</b> hai — saikdon chhote antenna, unke signals mein timing ka farq daal ke beam\n     electronically milliseconds mein ghumaya jaata hai. Koi tracking motor nahi (ek motor sirf install ke waqt\n     jhukane ke liye).</p>\n     <p>Aur dish satellite <b>dhoondhti</b> nahi. Uske paas <b>ephemeris</b> hai (saare satellites ki aane wali jagah)\n     aur apna GPS → kahan point karna hai, yeh <b>hisaab</b> hai. Satellite ki raftaar se frequency khisakti hai\n     (Doppler, saikdon kHz, lagatar badalta) — woh bhi pehle se nikaal ke bhejne se pehle theek kar diya jaata hai.</p>\n     <h3>📏 Lab 19 (ex2) — physics pehle</h3>\n     <pre>GEO 35,786 km: 239 ms ek taraf  → round trip 477 ms (asli ~600 ms)\nLEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>",
   ],
   stages: [
     {
@@ -133,14 +85,14 @@ LEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>`,
           q: 'GEO satellite 35,786 km upar. Tum → satellite → zameen ka station: roshni (3,00,000 km/s) ko kitne ms?',
           unit: 'ms', given: ['35,786 km upar', 'upar + neeche = 2 × 35,786 km', '3,00,000 km/s'],
           answer: 239, tol: 0.2,
-          steps: ['2 × 35,786 = 71,572 km', '71,572 / 3,00,000 = 0.239 s = 239 ms — sirf ek taraf'],
+          steps: ['2 × 35,786 = 71,572 km', "71,572 / 3,00,000 = 0.239 s = 239 ms — sirf ek taraf"],
           lesson: 'Jawab wapas aane mein bhi utna hi → ~477 ms sirf physics. Asli mein ~600 ms.',
         },
         {
           q: 'LEO 550 km par wahi hisaab — ek taraf kitne ms?',
           unit: 'ms', given: ['2 × 550 km', '3,00,000 km/s'],
           answer: 3.7, tol: 0.2,
-          steps: ['1,100 / 3,00,000 = 0.0037 s', '≈ 3.7 ms'],
+          steps: ["1,100 / 3,00,000 = 0.0037 s", "≈ 3.7 ms"],
           lesson: '65× paas → ~65× kam physics latency. Asli RTT 20–40 ms zyadatar zameen ka network hai.',
         },
       ],
@@ -155,19 +107,14 @@ LEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>`,
         10% lamba (assumption). <code>--route</code> = fiber seedhi line se kitna lamba bichha hai.`,
       steps: [
         { text: 'Default (fiber bilkul seedha — best case).', cmd: 'cd docker-labs/19-starlink && node tools/latency.js', expect: 'Mumbai → Delhi            1150        5.8 ms           7.9 ms    fiber by 2.1 ms\nLondon → Singapore       10880       54.4 ms          43.6 ms    space by 10.8 ms\n\nBreak-even: ~2757 km se lambe raaste par space jeetta hai (ek taraf ka time, route factor 1).' },
-        { text: 'Asli fiber seedha nahi bichhta — 1.3×.', cmd: 'node tools/latency.js --route 1.3', expect: 'London → Singapore       10880       70.7 ms          43.6 ms    space by 27.1 ms\n\nBreak-even: ~1296 km se lambe raaste par space jeetta hai (ek taraf ka time, route factor 1.3).' },
+        { text: "Asli fiber seedha nahi bichhta — 1.3×.", cmd: 'node tools/latency.js --route 1.3', expect: 'London → Singapore       10880       70.7 ms          43.6 ms    space by 27.1 ms\n\nBreak-even: ~1296 km se lambe raaste par space jeetta hai (ek taraf ka time, route factor 1.3).' },
       ],
       observe: {
         q: 'Mumbai → Delhi par fiber jeeta, London → Singapore par space. Kyun?',
-        choices: [
-          'Space raaste ka fixed ~1,100 km upar-neeche ka kharcha hai; chhote raaste par woh bhaari, lambe raaste par vacuum ki 50% zyada raftaar use pee jaati hai',
-          'Delhi mein satellites kam hain',
-          'Fiber lambe raaste par toot jaata hai',
-          'Singapore ka fiber purana hai',
-        ],
+        choices: ["Fixed access path vs faster propagation","Actual route exactly great-circle hota","Vacuum removes all queueing delay","Fiber speed depends only on city age"],
         answer: 0,
-        explain: 'Break-even ~2,757 km (seedha fiber). Isi liye HFT jaise latency-bhookhe log lambe raaston par isme dilchaspi lete hain.',
-      },
+        explain: "Lab idealized path lengths compare karti hai. Space access ka fixed up/down path short routes ko hurt karta hai; long routes par faster vacuum propagation help kar sakti hai. Actual service RTT ke liye measured paths and queues chahiye.",
+       choiceExplanations: ["Lab idealized path lengths compare karti hai. Space access ka fixed up/down path short routes ko hurt karta hai; long routes par faster vacuum propagation help kar sakti hai. Actual service RTT ke liye measured paths and queues chahiye.","Real ground/space routes indirect, constrained and changing ho sakte hain.","Terminal processing, scheduling and queueing latency still rehti hai.","Medium refractive index propagation ko affect karta hai; city age nahi."] },
       lesson: 'Design physics se shuru karo: kaunsa medium, kitni doori, kitna fixed overhead.',
     },
   ],
@@ -177,26 +124,16 @@ LEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>`,
     questions: [
       {
         q: 'Interviewer: "GEO internet par video calls kharab kyun lagti hain, bandwidth theek hote hue bhi?"',
-        choices: [
-          'Latency physics ki hai — 35,786 km upar-neeche = ~477 ms RTT sirf roshni mein; bandwidth isse nahi bachati',
-          'GEO ki bandwidth kam hai',
-          'Weather',
-          'Codec purana hai',
-        ],
+        choices: ["GEO path ka unavoidable propagation delay","Bandwidth alone decides call latency","Codec version explains orbit delay","More spectrum makes light faster"],
         answer: 0,
         explain: 'Bandwidth pipe ki chaudai hai, latency uski lambai.',
-      },
+       choiceExplanations: ["Bandwidth pipe ki chaudai hai, latency uski lambai.","Throughput and propagation distinct constraints hain.","Codec adds processing delay; long path ka floor phir bhi rehta hai.","Additional bandwidth propagation speed change nahi karti."] },
       {
         q: 'Interviewer: "LEO dish satellite ko track kaise karti hai?"',
-        choices: [
-          'Phased array beam ko electronically ghumata hai; ephemeris + GPS se pehle se pata ki satellite kahan hoga — dhoondhna nahi, hisaab; Doppler bhi pehle se theek',
-          'Motor se satellite ke peeche ghoomti hai',
-          'Signal strength scan karke',
-          'Satellite dish ko dhoondhta hai',
-        ],
+        choices: ["Beam steering plus orbit knowledge","Constant full-sky search every packet","Motor only can track fast handovers","Satellite changes Earth GPS coordinates"],
         answer: 0,
         explain: 'Deterministic duniya mein search ki jagah compute.',
-      },
+       choiceExplanations: ["Deterministic duniya mein search ki jagah compute.","Prediction and control search overhead reduce kar sakte hain.","Phased arrays electronic steering support karti hain; mechanical-only assumption wrong hai.","GPS/orbit estimates terminal and satellite position inform karte hain."] },
     ],
   },
   success: [
@@ -204,13 +141,11 @@ LEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>`,
     'Main phased array aur ephemeris ka "hisaab, dhoondh nahi" samjha sakta hoon',
     'Main fiber vs vacuum ka break-even nikaal sakta hoon',
   ],
-  homework: `<p>Apne 2 sabse zaroori network raaste lo (users → servers, ya region → region). Doori nikaalo aur
-    fiber ki physics latency (doori × 1.3 / 2,00,000 km/s) likho. Ab asli measured latency se milao — farq kitna
-    hai aur kahan jaata hai (routing, queues, handshakes)?</p>`,
+  homework: "<p>Apne 2 sabse zaroori network raaste lo (users → servers, ya region → region). Doori nikaalo aur\n    fiber ki physics latency (doori × 1.3 / 2,00,000 km/s) likho. Ab asli measured latency se milao — farq kitna\n    hai aur kahan jaata hai (routing, queues, handshakes)?</p>",
   cards: [
-    { front: 'GEO vs LEO latency?', back: 'GEO 35,786 km: ~239 ms ek taraf, ~477 ms RTT physics (~600 ms asli). LEO 550 km: ~3.7 ms ek taraf, measured RTT 20–40 ms.' },
+    { front: 'GEO vs LEO latency?', back: "GEO 35,786 km: ~239 ms ek taraf, ~477 ms RTT physics (~600 ms asli). LEO 550 km: ~3.7 ms ek taraf, measured RTT 20–40 ms." },
     { front: 'Starlink dish satellite kaise dhoondhti hai?', back: 'Dhoondhti nahi — ephemeris (sabki aane wali jagah) + GPS se hisaab; phased array beam electronically ms mein ghumata hai; Doppler pehle se theek.' },
-    { front: 'Fiber vs vacuum break-even?', back: 'Glass ~2 lakh km/s, vacuum ~3 lakh. Space ka fixed ~1,100 km. Lab: ~2,757 km se lamba raasta → space tez (fiber 1.3× lamba ho toh ~1,300 km).' },
+    { front: 'Fiber vs vacuum break-even?', back: "Glass ~2 lakh km/s, vacuum ~3 lakh. Space ka fixed ~1,100 km. Lab: ~2,757 km se lamba raasta → space tez (fiber 1.3× lamba ho toh ~1,300 km)." },
   ],
 },
 
@@ -245,18 +180,7 @@ LEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>`,
        <li>Desh ke licence — kaunse raaste kanooni hain</li>
        <li><b>GEO exclusion zone</b> — GEO belt ki line-of-sight par aane se pehle transmit band (regulation ki "no-transmit line" pehle se nikaal ke uske aas-paas raasta)</li>
      </ul>`,
-    `<h3>🎼 Surprise nahi, symphony</h3>
-     <p>Control plane zameen par, data plane aasmaan mein. Plan <b>pehle</b> baant diya jaata hai, lagu baad mein
-     hota hai → "convergence" ki jagah <b>schedule</b>. 15-second ke <b>epoch</b> par satellites, dishes, gateways
-     <b>ek saath</b> palatte hain — koi router aadha-purana, aadha-naya nahi rehta.</p>
-     <p class="tip">🎯 Video ka contrast: Datadog 2023 mein sab kuch ek saath badla — <b>surprise</b> ki tarah.
-     Starlink sab kuch ek saath badalta hai — <b>jaan-boojh ke</b>. Asli surprise (mara satellite, fail laser) →
-     pakdo → <b>agle</b> plan se bahar (≤15 sec).</p>
-     <h3>📏 Lab 19 — 6 satellites, epoch 3 sec (asli 15), 20 sec ki SSH-jaisi session</h3>
-     <pre>mode        jawab   server sessions   har handover par ruka
-reactive     99%         1            ~0.9–1.0 sec (dead-interval + satellite search, 21 tries)
-scheduled   100%         1            0  (p99 3 ms, 0 search, 0 resend)
-scheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bachaya)</pre>`,
+    "<h3>🎼 Surprise nahi, symphony</h3>\n     <p>Control plane zameen par, data plane aasmaan mein. Plan <b>pehle</b> baant diya jaata hai, lagu baad mein\n     hota hai → \"convergence\" ki jagah <b>schedule</b>. 15-second ke <b>epoch</b> par satellites, dishes, gateways\n     <b>ek saath</b> palatte hain — koi router aadha-purana, aadha-naya nahi rehta.</p>\n     <p class=\"tip\">🎯 Video ka contrast: Datadog 2023 mein sab kuch ek saath badla — <b>surprise</b> ki tarah.\n     Starlink sab kuch ek saath badalta hai — <b>jaan-boojh ke</b>. Asli surprise (mara satellite, fail laser) →\n     pakdo → <b>agle</b> plan se bahar (≤15 sec).</p>\n     <h3>📏 Lab 19 — 6 satellites, epoch 3 sec (asli 15), 20 sec ki SSH-jaisi session</h3>\n     <pre>mode        jawab   server sessions   har handover par ruka\nreactive     99%         1            ~0.9–1.0 sec (dead-interval + satellite search, 21 tries)\nscheduled   100%         1            0  (p99 3 ms, 0 search, 0 resend)\nscheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bachaya)</pre>",
   ],
   stages: [
     {
@@ -275,15 +199,10 @@ scheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bac
       ],
       observe: {
         q: 'Scheduled mode mein bhi reactive fallback kyun rakha?',
-        choices: [
-          'Schedule sirf predictable badlaav ke liye hai — asli surprise (mara satellite) ke liye reactive raasta chahiye; lab mein usi ne 2 baar bachaya',
-          'Schedule galat ho sakta hai isliye hamesha reactive',
-          'Reactive tez hai',
-          'Zaroorat nahi thi',
-        ],
+        choices: ["Schedule + unexpected fault recovery","Prediction makes every failure known","Reactive path makes schedule useless","Only fixed route never reconfigure"],
         answer: 0,
         explain: 'Predictable → compute ahead. Asli surprise → reactive. Dono ka apna kaam.',
-      },
+       choiceExplanations: ["Predictable → compute ahead. Asli surprise → reactive. Dono ka apna kaam.","Hardware faults and interference fully predictable nahi.","Predictable and unexpected changes different response paths justify karte hain.","Fixed route topology/failure changes par disconnect ho sakta hai."] },
       lesson: 'Jo badlaav pehle se pata hai, use surprise ki tarah handle karna = har baar bekaar ka downtime.',
     },
     {
@@ -310,26 +229,16 @@ scheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bac
     questions: [
       {
         q: 'Interviewer: "Hamare cluster mein nodes har raat rotate hote hain aur har baar 30 sec errors aate hain."',
-        choices: [
-          'Rotation predictable hai — use surprise ki tarah mat handle karo: pehle drain, naya ready, phir switch (make-before-break), schedule sabko pehle se pata',
-          'Health check interval chhota karo',
-          'Errors ko retry kar lo',
-          'Rotation band kar do',
-        ],
+        choices: ["Make-before-break aur verified readiness","Only faster probes after old host dies","Only retry all failed requests","Stop all rotations permanently"],
         answer: 0,
         explain: 'Starlink ka sabak: jo aane wala hai use schedule banao.',
-      },
+       choiceExplanations: ["Starlink ka sabak: jo aane wala hai use schedule banao.","Planned transition ko post-failure detection tak delay karna avoidable disruption hai.","Retries stateful/non-idempotent operations par unsafe ho sakti hain.","Rotation maintenance/security requirements serve kar sakti hai."] },
       {
         q: 'Interviewer: "Epoch-based reconfiguration ka faayda?"',
-        choices: [
-          'Sab ek saath palatte hain — koi hissa aadha-purana aadha-naya nahi, isliye beech ki ajeeb haalatein (loops, black holes) nahi banti',
-          'Tez hota hai',
-          'Kam messages',
-          'Security',
-        ],
+        choices: ["Versioned epochs with coordinated activation","Epoch number makes clocks perfect","One config update instantly everywhere","Versioning removes failed node handling"],
         answer: 0,
-        explain: 'Reactive convergence mein kuch der tak alag-alag routers alag sach maante hain.',
-      },
+        explain: "Epoch/version numbers inconsistent routing states ko detect aur coordinate karne mein help karte hain. Clock synchronization, installation barriers, bounded overlap and stale-node fallback ke bina simultaneous switch or loop-free behavior guaranteed nahi.",
+       choiceExplanations: ["Epoch/version numbers inconsistent routing states ko detect aur coordinate karne mein help karte hain. Clock synchronization, installation barriers, bounded overlap and stale-node fallback ke bina simultaneous switch or loop-free behavior guaranteed nahi.","Clock error and rollout lag need explicit budgets/protocol.","Distribution asynchronous ho sakti hai; barriers/readiness checks chahiye.","Partial failure and stale nodes ka fallback still design karna hoga."] },
     ],
   },
   success: [
@@ -398,15 +307,15 @@ scheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bac
           q: 'London → Singapore 10,880 km. Seedhe fiber (2,00,000 km/s) mein ek taraf kitne ms?',
           unit: 'ms', given: ['10,880 km', '2,00,000 km/s'],
           answer: 54.4, tol: 0.2,
-          steps: ['10,880 / 2,00,000 = 0.0544 s', '= 54.4 ms (asli fiber isse bhi lamba bichha hota hai)'],
+          steps: ["10,880 / 2,00,000 = 0.0544 s", "= 54.4 ms (asli fiber isse bhi lamba bichha hota hai)"],
           lesson: 'Glass mein roshni 1/3 dheemi.',
         },
         {
-          q: 'Wahi raasta space se: (1,100 km upar-neeche + 10,880 × 1.1) / 3,00,000 km/s — kitne ms?',
+          q: "Wahi raasta space se: (1,100 km upar-neeche + 10,880 × 1.1) / 3,00,000 km/s — kitne ms?",
           unit: 'ms', given: ['fixed 1,100 km', 'raasta 10% lamba', '3,00,000 km/s'],
           answer: 43.6, tol: 0.2,
-          steps: ['1,100 + 11,968 = 13,068 km', '13,068 / 3,00,000 ≈ 0.0436 s = 43.6 ms'],
-          lesson: '~11 ms aage — aur fiber 1.3× lamba ho toh ~27 ms. Trading ke liye yeh sona hai.',
+          steps: ['1,100 + 11,968 = 13,068 km', "13,068 / 3,00,000 ≈ 0.0436 s = 43.6 ms"],
+          lesson: "~11 ms aage — aur fiber 1.3× lamba ho toh ~27 ms. Trading ke liye yeh sona hai.",
         },
         {
           q: '9,000 laser links × 100 Gbps — kul kitne Tbps capacity (sab ek saath full ho toh)?',
@@ -423,26 +332,16 @@ scheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bac
       questions: [
         {
           q: 'Same-plane laser links backbone kyun bante hain?',
-          choices: [
-            'Aage/peeche wale satellites ki relative raftaar lagbhag zero — link hafton tak locked rehta hai',
-            'Woh zyada powerful hain',
-            'Woh zameen ke paas hain',
-            'Woh sasta hai',
-          ],
+          choices: ["Same-plane neighbors ki stable geometry","All satellites same ground distance","Laser has no pointing constraints","Cross-plane topology never changes"],
           answer: 0,
           explain: 'Formation mein chalti gaadiyon ki tarah. Cross-plane links khisakte hain, isliye schedule par.',
-        },
+         choiceExplanations: ["Formation mein chalti gaadiyon ki tarah. Cross-plane links khisakte hain, isliye schedule par.","Orbit position geographic range badalti hai.","Acquisition, tracking and optical link budget matter karte hain.","Different orbital planes relative motion and handover complexity rakhte hain."] },
         {
           q: 'Bent pipe mein Pacific ke beech ka jahaaz internet kyun nahi paata tha?',
-          choices: [
-            'User aur gateway dono ko ek hi satellite dikhna chahiye tha — beech samandar mein koi gateway us footprint mein nahi',
-            'Satellite wahan jaate nahi',
-            'Jahaaz ki dish chhoti thi',
-            'Licence nahi tha',
-          ],
+          choices: ["Same-footprint gateway absent tha","No satellite ever crosses oceans","Dish size alone decides gateway reach","Internet source must be inside ship"],
           answer: 0,
           explain: 'Lasers ne satellite-to-satellite raasta diya — ab gateway door bhi ho sakta hai.',
-        },
+         choiceExplanations: ["Lasers ne satellite-to-satellite raasta diya — ab gateway door bhi ho sakta hai.","Bent-pipe coverage satellite orbit ke saath gateway geography par depend karti hai.","Dish capability matters but missing reachable ground gateway alag constraint hai.","Inter-satellite links remote gateway tak traffic relay kar sakte hain."] },
       ],
     },
   ],
@@ -452,26 +351,16 @@ scheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bac
     questions: [
       {
         q: 'Interviewer: "Mumbai se Delhi ke liye trading link — fiber ya LEO?"',
-        choices: [
-          'Fiber — ~1,150 km par space ka fixed upar-neeche ka kharcha jeet jaata hai (lab: fiber 2.1 ms aage); space lambe (&gt;~3,000 km) raaston par faayda deta hai',
-          'LEO, hamesha tez',
-          'GEO',
-          'Koi farq nahi',
-        ],
+        choices: ["Idealized lab mein fiber path shorter","LEO universally every fiber se faster","GEO has smallest propagation floor","Only bandwidth se route choose karo"],
         answer: 0,
-        explain: 'Physics se shuru karo.',
-      },
+        explain: "Is lab ke idealized distance/propagation assumptions mein fiber selected hai. Actual Mumbai-Delhi carrier or Starlink SLA ka result nahi; real route lengths, access links, congestion and tail RTT measure karo.",
+       choiceExplanations: ["Is lab ke idealized distance/propagation assumptions mein fiber selected hai. Actual Mumbai-Delhi carrier or Starlink SLA ka result nahi; real route lengths, access links, congestion and tail RTT measure karo.","Actual latencies topology, congestion and link policy se vary karti hain.","GEO altitude propagation path kaafi bada banati hai.","Trading latency target throughput ke saath propagation and tail measurements maangta hai."] },
       {
         q: 'Interviewer: "Laser mesh ka ek ops challenge?"',
-        choices: [
-          'Cross-plane links lagatar tootte-judte hain aur satellites badalte rehte hain — routing ko schedule par hona padta hai, aur ek laser fail ho toh agle plan tak reroute',
-          'Lasers garam ho jaate hain',
-          'Koi challenge nahi',
-          'Bandwidth kam hai',
-        ],
+        choices: ["Moving links aur recovery budget","Topology can be static forever","Laser links have no acquisition delay","Every failure waits for next schedule"],
         answer: 0,
-        explain: 'Topology ek schedule hai, ek graph nahi.',
-      },
+        explain: "Topology ko time-varying graph aur planned link schedule se model kar sakte hain. Unexpected failures, link acquisition and fallback reactive handling phir bhi chahiye.",
+       choiceExplanations: ["Topology ko time-varying graph aur planned link schedule se model kar sakte hain. Unexpected failures, link acquisition and fallback reactive handling phir bhi chahiye.","Relative orbital motion changes feasible links over time.","Pointing/acquisition and signal budget need capacity planning.","Unexpected failures need reactive recovery within SLO, not only next schedule."] },
     ],
   },
   success: [
@@ -479,8 +368,7 @@ scheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bac
     'Main same-plane vs cross-plane links samjha sakta hoon',
     'Main vacuum vs glass ka hisaab laga sakta hoon',
   ],
-  homework: `<p>Lab 19 ke <code>tools/latency.js</code> mein apne do shehar jodo (routes array mein ek line). Fiber aur space
-    dono ka hisaab dekho — aur <code>--route 1.3</code> ke saath bhi.</p>`,
+  homework: "<p>Lab 19 ke <code>tools/latency.js</code> mein apne do shehar jodo (routes array mein ek line). Fiber aur space\n    dono ka hisaab dekho — aur <code>--route 1.3</code> ke saath bhi.</p>",
   cards: [
     { front: 'Bent pipe ki seema?', back: 'User aur gateway dono ko ek hi satellite dikhna chahiye — coverage sirf gateways ke aas-paas; samandar/poles nahi.' },
     { front: 'Starlink laser mesh (2024)?', back: '9,000+ laser links, ~100 Gbps each, kuch 5,400 km tak, ~40 PB/din. Same-plane = hafton locked backbone; cross-plane schedule par.' },
@@ -503,41 +391,8 @@ scheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bac
     'Hamesha badalta fleet aur Starlink ke saath sabak',
   ],
   lesson: [
-    `<h3>⚓ Tumhara IP zameen par rehta hai</h3>
-     <p>Agar har satellite badalne par tumhara public IP badalta, har TCP connection toot-ta — SSH, video call, sab.
-     Starlink mein tumhara IP ek zameen ke <b>PoP</b> (Seattle, Frankfurt, London…) par rehta hai. Dish ↔ PoP ek
-     private tunnel hai; tunnel ke <b>andar</b> ka raasta schedule par badalta hai, dono sire <b>fixed</b>.</p>
-     <p>Isi liye geolocation tumhe PoP ke sheher mein dikhata hai (Montana ke gaon mein ho toh "Seattle"). BGP ko wahi
-     prefixes wahi PoPs se dikhte hain. Yeh wahi idea hai jo mobile network ka packet gateway karta hai.</p>
-     <h3>📏 Lab 19 — direct vs anchor</h3>
-     <pre>mode        jawab   server sessions   har handover par
-direct       50%         7            ~1.7 sec + naya login (SSH 6 baar toota)
-reactive     99%         1            ~1 sec ruka
-scheduled   100%         1            0</pre>
-     <p class="tip">🎯 <b>Pehchaan (identity) ko churn ke upar rakho.</b> Kubernetes Service pods ke upar, load balancer
-     backends ke upar, cellular gateway towers ke upar — sab wahi pattern.</p>`,
-    `<h3>🪚 Sawtooth latency</h3>
-     <p>Latency trace ek repeat hone wala <b>sawtooth</b> hai: 20–60 ms, har 15 sec kadam, handover par kuch packets
-     loss. TCP ke liye dikkat:</p>
-     <ul>
-       <li><b>CUBIC</b> handover ke loss ko congestion samajh ke speed kaat deta hai.</li>
-       <li><b>BBR</b> ka min-RTT andaaza har 15 sec khisak jaata hai.</li>
-     </ul>
-     <p>Jahaaz, hawai jahaaz, mines jaise users ke liye: link <b>"periodically changing"</b> hai, "unreliable" nahi →
-     buffers, timeouts, congestion control usi hisaab se tune karo.</p>
-     <h3>🔄 Hardware badlo, software OTA</h3>
-     <p>Satellite ki umar ~5 saal; 550 km par hawa ka khinchaav mare satellites ko khud jala deta hai (self-cleaning).
-     v1.5 mein lasers, v2 mini mein zyada capacity → fleet hamesha <b>milajula</b>; scheduler har satellite ki
-     capability jaanta hai. 6 mahine mein ~50,000 automatic collision-avoidance maneuvers — har ek orbit badalta hai →
-     prediction update → pointing/Doppler/lasers/schedule dobara.</p>
-     <h3>📋 Paanch sabak</h3>
-     <ol>
-       <li>Predictable ko anjaane se alag karo — traffic pattern, maintenance, cert expiry, planned failover: pehle se compute.</li>
-       <li>Jab badlaav lagatar ho, use <b>synchronize</b> karo (epochs).</li>
-       <li>Identity churn ke upar rakho.</li>
-       <li>Future computable ho toh central planner; nahi toh distributed protocols.</li>
-       <li>Physics se shuru karo, aur <b>replacement ke liye</b> design karo.</li>
-     </ol>`,
+    "<h3>⚓ Tumhara IP zameen par rehta hai</h3>\n     <p>Agar har satellite badalne par tumhara public IP badalta, har TCP connection toot-ta — SSH, video call, sab.\n     Starlink mein tumhara IP ek zameen ke <b>PoP</b> (Seattle, Frankfurt, London…) par rehta hai. Dish ↔ PoP ek\n     private tunnel hai; tunnel ke <b>andar</b> ka raasta schedule par badalta hai, dono sire <b>fixed</b>.</p>\n     <p>Isi liye geolocation tumhe PoP ke sheher mein dikhata hai (Montana ke gaon mein ho toh \"Seattle\"). BGP ko wahi\n     prefixes wahi PoPs se dikhte hain. Yeh wahi idea hai jo mobile network ka packet gateway karta hai.</p>\n     <h3>📏 Lab 19 — direct vs anchor</h3>\n     <pre>mode        jawab   server sessions   har handover par\ndirect       50%         7            ~1.7 sec + naya login (SSH 6 baar toota)\nreactive     99%         1            ~1 sec ruka\nscheduled   100%         1            0</pre>\n     <p class=\"tip\">🎯 <b>Pehchaan (identity) ko churn ke upar rakho.</b> Kubernetes Service pods ke upar, load balancer\n     backends ke upar, cellular gateway towers ke upar — sab wahi pattern.</p>",
+    "<h3>🪚 Sawtooth latency</h3>\n     <p>Latency trace ek repeat hone wala <b>sawtooth</b> hai: 20–60 ms, har 15 sec kadam, handover par kuch packets\n     loss. TCP ke liye dikkat:</p>\n     <ul>\n       <li><b>CUBIC</b> handover ke loss ko congestion samajh ke speed kaat deta hai.</li>\n       <li><b>BBR</b> ka min-RTT andaaza har 15 sec khisak jaata hai.</li>\n     </ul>\n     <p>Jahaaz, hawai jahaaz, mines jaise users ke liye: link <b>\"periodically changing\"</b> hai, \"unreliable\" nahi →\n     buffers, timeouts, congestion control usi hisaab se tune karo.</p>\n     <h3>🔄 Hardware badlo, software OTA</h3>\n     <p>Satellite ki umar ~5 saal; 550 km par hawa ka khinchaav mare satellites ko khud jala deta hai (self-cleaning).\n     v1.5 mein lasers, v2 mini mein zyada capacity → fleet hamesha <b>milajula</b>; scheduler har satellite ki\n     capability jaanta hai. 6 mahine mein ~50,000 automatic collision-avoidance maneuvers — har ek orbit badalta hai →\n     prediction update → pointing/Doppler/lasers/schedule dobara.</p>\n     <h3>📋 Paanch sabak</h3>\n     <ol>\n       <li>Predictable ko anjaane se alag karo — traffic pattern, maintenance, cert expiry, planned failover: pehle se compute.</li>\n       <li>Jab badlaav lagatar ho, use <b>synchronize</b> karo (epochs).</li>\n       <li>Identity churn ke upar rakho.</li>\n       <li>Future computable ho toh central planner; nahi toh distributed protocols.</li>\n       <li>Physics se shuru karo, aur <b>replacement ke liye</b> design karo.</li>\n     </ol>",
   ],
   stages: [
     {
@@ -546,23 +401,17 @@ scheduled   100%         1            0</pre>
       project: '19-starlink',
       exercise: 'ex1-handover',
       goal: 'Same 20 sec ki session — direct raasta (server connection satellite se bandha) vs PoP anchor. Server ne kitne alag sessions dekhe?',
-      why: `<code>tools/session.js</code> har 100 ms <code>PING</code> bhejta hai; 1.5 sec jawab nahi → reconnect (SSH ServerAlive jaisa).
-        Server har TCP connection ko ek naya session maanta hai — session badla = SSH toota, login dobara.`,
+      why: "<code>tools/session.js</code> har 100 ms <code>PING</code> bhejta hai; 1.5 sec jawab nahi → reconnect (SSH ServerAlive jaisa).\n        Server har TCP connection ko ek naya session maanta hai — session badla = SSH toota, login dobara.",
       steps: [
         { text: 'Direct mode.', cmd: 'cd docker-labs/19-starlink && DISH_MODE=direct npm start ex1-handover\nnode tools/session.js --secs 20', expect: 'mode=direct  20s  pings 199  jawab 100 (50%)  rtt p50 1 ms p99 2 ms\n  server sessions: 7  (1 = SSH kabhi nahi toota)   app reconnects: 6\n  stalls >400ms: 6  sabse lamba: 1802 ms' },
         { text: 'Anchor (scheduled) mode.', cmd: 'DISH_MODE=scheduled npm start ex1-handover\nnode tools/session.js --secs 20', expect: 'mode=scheduled  20s  pings 199  jawab 199 (100%)  rtt p50 1 ms p99 3 ms\n  server sessions: 1  (1 = SSH kabhi nahi toota)   app reconnects: 0' },
       ],
       observe: {
         q: 'Anchor mode mein satellite 7 baar badla, par server ko 1 hi session dikha. Kyun?',
-        choices: [
-          'Server ka TCP connection PoP se hai, satellite se nahi — neeche ka tunnel badla, upar ki pehchaan (IP, TCP) wahi rahi',
-          'Satellite badla hi nahi',
-          'Server ne sessions merge kar diye',
-          'Pings kam the',
-        ],
+        choices: ["Stable anchor, changing lower paths","All satellite paths stayed identical","Server combined unrelated TCP sessions","Fewer pings prove stable transport"],
         answer: 0,
         explain: 'Identity ko churn ke upar ek fixed jagah tikao — yahi anchor ka kaam.',
-      },
+       choiceExplanations: ["Identity ko churn ke upar ek fixed jagah tikao — yahi anchor ka kaam.","Question explicitly reports seven lower-path changes.","TCP identity and proxy anchoring differ from merging arbitrary sessions.","Ping count alone session continuity establish nahi karta."] },
       lesson: 'Jo cheez badalti rehti hai, uske upar ek stable anchor rakho — clients ko sirf anchor dikhe.',
     },
     {
@@ -583,26 +432,16 @@ scheduled   100%         1            0</pre>
     questions: [
       {
         q: 'Interviewer: "Hamari service ke backends har 10 min rotate hote hain, lambe WebSocket connections toot jaate hain."',
-        choices: [
-          'Connections ko ek stable anchor (gateway/proxy) par khatam karo jo backend badalne par andar ka raasta badle; ya drain + client ko graceful reconnect with resume token',
-          'Rotation band karo',
-          'Timeout badhao',
-          'Clients ko bolo retry karein',
-        ],
+        choices: ["Drain/resume or protocol-aware stable proxy","Only larger timeout retains backend state","Blind retry every WebSocket message","Stop security rotation permanently"],
         answer: 0,
         explain: 'Identity churn ke upar — Starlink PoP jaisa.',
-      },
+       choiceExplanations: ["Identity churn ke upar — Starlink PoP jaisa.","Timeout old process/socket loss ko recover nahi karta.","Retries duplicates create kar sakti hain; sequence/ack semantics chahiye.","Rotation valid maintenance need hai; graceful lifecycle design karo."] },
       {
         q: 'Interviewer: "Starlink par hamara bulk upload bahut dheema hai, loss thoda hai."',
-        choices: [
-          'Handover ke periodic loss ko CUBIC congestion samajh ke speed kaatta hai — BBR/tuned CC, bade buffers, loss-tolerant settings; link periodic hai, unreliable nahi',
-          'Bandwidth plan badhao',
-          'UDP use karo bina reliability',
-          'Raat ko upload karo',
-        ],
+        choices: ["Loss causes aur congestion profile","Add unlimited buffers to fix all loss","Remove reliability by choosing UDP only","Assume loss cannot be congestion"],
         answer: 0,
-        explain: 'Sawtooth ko samjho, usse lado mat.',
-      },
+        explain: "Measured handover loss, congestion signals, RTT and queues ko alag samjho. Congestion-control variants and pacing tune karke compare karo; large buffers or BBR universal fix nahi. Reliable application behavior preserve hona chahiye.",
+       choiceExplanations: ["Measured handover loss, congestion signals, RTT and queues ko alag samjho. Congestion-control variants and pacing tune karke compare karo; large buffers or BBR universal fix nahi. Reliable application behavior preserve hona chahiye.","Large buffers queueing latency/bufferbloat badha sakte hain.","UDP alone ordering, recovery and integrity contract nahi supply karta.","Both congestion and handovers measured traces mein distinguish karo."] },
     ],
   },
   success: [

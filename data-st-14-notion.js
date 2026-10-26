@@ -25,7 +25,7 @@ VISUALS['notion-blocks'] = {
       <span class="dg-arrow">= poori API</span>
       <span class="dg-pill acc">naya block type = sirf renderer, koi schema migration nahi</span>
     </div>
-    <div class="dg-cap">200 arab+ blocks, laakhon workspaces. Database badla ja sakta hai; 200 arab rows ki <b>shakal</b> hamesha ke liye.</div>`,
+    <div class="dg-cap">200 arab+ blocks, laakhon workspaces. Database badla ja sakta hai; bahut bade persisted model ki <b>shakal</b> badalna multi-year migration ban sakta hai.</div>`,
 };
 
 VISUALS['notion-permissions'] = {
@@ -139,26 +139,16 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Notes app jahan kuch bhi kisi ke andar ho sake — data model?"',
-        choices: [
-          'Unified block: id, type, properties (JSON), ordered children, parent pointer — chaar operations; keemat: permissions/search tree walks, isliye memo/cache aur workspace sharding',
-          'Har cheez ki alag table',
-          'Ek bada JSON document per page',
-          'Graph database',
-        ],
+        choices: ["Typed blocks aur explicit parent/order","One JSON blob se updates free","Separate tables se nesting impossible","Graph DB se permissions automatic"],
         answer: 0,
         explain: 'Notion ka tareeka — aur uski keemat pehle se pata.',
-      },
+       choiceExplanations: ["Notion ka tareeka — aur uski keemat pehle se pata.","Large blob concurrent updates aur fine-grained permissions ko complicate kar sakta hai.","Relational tables trees represent kar sakti hain; tradeoffs compare karo.","Storage engine permission inheritance automatically define nahi karta."] },
       {
         q: 'Interviewer: "Kaunsa faisla sabse mushkil se badalta hai?"',
-        choices: [
-          'Data model — arabon rows ki shakal; DB ya framework badla ja sakta hai',
-          'Programming language',
-          'Cloud provider',
-          'UI framework',
-        ],
+        choices: ["Persisted model aur external contracts","Only UI widget choice permanent","Every language rewrite low risk","Cloud migration only config change"],
         answer: 0,
         explain: '"Data model decisions outlive everything."',
-      },
+       choiceExplanations: ["\"Data model decisions outlive everything.\"","Widgets generally persisted semantics se zyada replaceable hote hain.","Language migration behavior/tooling cost rakh sakti hai.","Cloud migration data locality, operations aur service contracts affect karti hai."] },
     ],
   },
   success: [
@@ -171,7 +161,7 @@ SD.registerLevels('stories', [
   cards: [
     { front: 'Notion ka block?', back: '{ id, type, properties (JSON), content[] (children), parent, metadata }. Paragraph se workspace tak sab block.' },
     { front: 'Block model ke teen faayde?', back: 'Composability (kuch bhi kisi ke andar), chaar operations ki API, bina schema migration naye types.' },
-    { front: 'Block model ki keemat?', back: 'Permissions (ancestor walks), search (tree flatten), E2E lagbhag namumkin, migration hamesha ka vaada, onboarding bojh.' },
+    { front: 'Block model ki keemat?', back: 'Permissions (ancestor walks), search (tree flatten), server-side plaintext features E2E mein client/search design maangti hain, migration hamesha ka vaada, onboarding bojh.' },
   ],
 },
 
@@ -233,15 +223,10 @@ ab aman ko Team Wiki mein 4001 blocks → 2000 salary wale blocks aman ko dikh r
       ],
       observe: {
         q: 'Memo ne lookups 17,346 → 4,003 kaise kiye?',
-        choices: [
-          'Ek page ke saare blocks ke ancestors lagbhag wahi hain — ek baar jo pata chala (is ancestor par permission kya hai) woh yaad rakho, dobara upar mat chalo',
-          'Blocks kam ho gaye',
-          'Cache DB mein tha',
-          'Permission check hata diya',
-        ],
+        choices: ["Shared ancestor result memoization","Checks skip karke access allow hua","Memo ne source blocks delete kiye","Database ne all grants public kiye"],
         answer: 0,
         explain: 'Page-level memo — aur isi liye permission results aggressively cache hote hain (aur move par invalidate).',
-      },
+       choiceExplanations: ["Page-level memo — aur isi liye permission results aggressively cache hote hain (aur move par invalidate).","Memo prior authorized result reuse karta hai, check removal nahi.","Optimization block count change nahi karti.","Access policy changing ka evidence nahi."] },
       lesson: 'Inherited permissions = ancestor walks; memo/cache zaroori, aur har re-parent ek permission event.',
     },
     {
@@ -250,26 +235,16 @@ ab aman ko Team Wiki mein 4001 blocks → 2000 salary wale blocks aman ko dikh r
       questions: [
         {
           q: 'Inline mention (dusre page ka link) ki permission kahan se aati hai?',
-          choices: [
-            'Us page ke apne ancestors se jahan woh rehta hai — render tree mein jagah se nahi',
-            'Jis page mein mention hai uske ancestors se',
-            'Workspace se hamesha',
-            'Mention karne wale se',
-          ],
+          choices: ["Referenced page ki own permission chain","Mention container ki display chain","Author ki personal access list","Link text ka visible label"],
           answer: 0,
           explain: 'Isi liye render aur permission ke liye alag pointers.',
-        },
+         choiceExplanations: ["Isi liye render aur permission ke liye alag pointers.","Reference render hona target permission grant nahi.","Author access reader ko automatically inherit nahi hota.","Visible label authorization boundary nahi."] },
         {
           q: 'Move karte waqt sirf content[] badla, parent nahi — kya hua?',
-          choices: [
-            'Block naye page par dikhta hai par permissions purani jagah ki — dikhne wale log wahi',
-            'Permissions badal gayi',
-            'Block delete',
-            'Kuch nahi',
-          ],
+          choices: ["Render aur permission parent mismatch","All grants automatically recalculate","Block guaranteed delete ho gaya","Parent pointer sirf cosmetic tha"],
           answer: 0,
           explain: 'Dono pointers badlo toh dono badlenge (lab ka leak).',
-        },
+         choiceExplanations: ["Dono pointers badlo toh dono badlenge (lab ka leak).","One pointer update se other inherited policy khud change nahi hoti.","Mismatch deletion imply nahi karta.","Parent link authorization/lifecycle semantics carry kar sakta hai."] },
       ],
     },
   ],
@@ -279,26 +254,16 @@ ab aman ko Team Wiki mein 4001 blocks → 2000 salary wale blocks aman ko dikh r
     questions: [
       {
         q: 'Interviewer: "Nested folders ke saath inherited permissions — fast kaise?"',
-        choices: [
-          'Parent pointers se ancestor walk + per-request/page memo + permission cache (ancestor → grants), re-parent/share change par invalidate; ya closure table/materialized path se ancestors ek query mein',
-          'Har file par saari permissions copy',
-          'Permissions check mat karo reads par',
-          'Har request par poora tree load',
-        ],
+        choices: ["Ancestor lookup, memo aur safe invalidation","Every child ko copied grants forever","Read time par permission checks skip","Full tree load every request mandatory"],
         answer: 0,
         explain: 'SQL Gurukul ka db-trees level: recursive CTE, closure table, materialized path.',
-      },
+       choiceExplanations: ["SQL Gurukul ka db-trees level: recursive CTE, closure table, materialized path.","Copied grants changes/revocations ke baad stale ho sakti hain.","Request context ke bina blind reads unauthorized disclosure la sakti hain.","Closure/path/memo approaches repeated full loads avoid kar sakti hain."] },
       {
         q: 'Interviewer: "User ne private doc ek shared folder mein drag kiya — kya karoge?"',
-        choices: [
-          'Move = permission event: pehle warning ("ab X log dekh payenge"), audit log, aur permission caches invalidate',
-          'Kuch nahi',
-          'Drag band',
-          'Admin approval hamesha',
-        ],
+        choices: ["Access preview, audit, invalidation","Only order array change sufficient","All document moves permanently block","Old permission cache forever keep"],
         answer: 0,
         explain: 'Lab: ek drag = 2,000 blocks ka leak.',
-      },
+       choiceExplanations: ["Lab: ek drag = 2,000 blocks ka leak.","Move inherited visibility badal sakta hai; both relationships update hon.","Blanket block product need solve nahi karta; policy-aware move chahiye.","Stale grants revocations aur new visibility ko galat serve kar sakte hain."] },
     ],
   },
   success: [
@@ -377,15 +342,10 @@ scan LAKE (CDC copy) par     p50  6 ms   p99 16 ms</pre>
       ],
       observe: {
         q: 'Lake par scan chalne se primary ke users par lagbhag asar kyun nahi?',
-        choices: [
-          'Scan alag machine/process (CDC copy) par CPU khaata hai — primary ke live reads us CPU ke liye line mein nahi lagte',
-          'Lake tez hai',
-          'Scan chhota tha',
-          'Reads cache se aaye',
-        ],
+        choices: ["Analytical compute alag resource pool","Lake se source work automatically zero","Every analytics result strongly fresh","Replica CPU primary ke same cores"],
         answer: 0,
         explain: 'Operational aur analytical kaam alag — CDC unhe jodne ka raasta.',
-      },
+       choiceExplanations: ["Operational aur analytical kaam alag — CDC unhe jodne ka raasta.","CDC extraction, replication aur source overhead ab bhi budget karna hoga.","Asynchronous copy lag rakh sakti hai.","Separate pool scanning main request CPU se isolate karta hai."] },
       lesson: 'Production queries serve kare, analytics lake mein — CDC se taaza, primary se door.',
     },
     {
@@ -412,26 +372,16 @@ scan LAKE (CDC copy) par     p50  6 ms   p99 16 ms</pre>
     questions: [
       {
         q: 'Interviewer: "Notion jaisa app — shard key kya?"',
-        choices: [
-          'Workspace/tenant — access ki natural ikaai; ek page load ek shard; logical shards bahut (480) physical kam (96) taaki rebalance bina rehash; cross-workspace queries scatter ya lake mein',
-          'Block id hash',
-          'User id',
-          'Created date',
-        ],
+        choices: ["Workspace locality aur hot-tenant plan","Only random block id se page scatter","Only user id se shared page split","Only creation time se ancestry choose"],
         answer: 0,
         explain: 'Lab: block-id sharding = 22 shards per page; workspace = 1.',
-      },
+       choiceExplanations: ["Lab: block-id sharding = 22 shards per page; workspace = 1.","Random block placement one page ko many shards se assemble karwa sakti hai.","Shared workspace docs many users ko span karti hain.","Creation date permission/ownership locality define nahi karti."] },
       {
         q: 'Interviewer: "Analytics team prod DB par queries chala rahi hai."',
-        choices: [
-          'CDC (logical replication) → pipeline → columnar lake (Hudi/Iceberg); analytics, AI, search wahan se; prod sirf live queries',
-          'Read replica hi kaafi hamesha',
-          'Raat ko chalao',
-          'Analytics band',
-        ],
+        choices: ["Isolated analytics copy, lag budget define","Read replica universally enough hai","Night schedule se contention impossible","All analytics ko permanently stop"],
         answer: 0,
         explain: 'Lab: primary par scan → p50 6 → 20 ms.',
-      },
+       choiceExplanations: ["Lab: primary par scan → p50 6 → 20 ms.","Read replica valid ho sakti hai; query shape, freshness aur load assess karo.","Night time spare capacity guaranteed nahi.","Analytics requirements ko isolated capacity/model se support kiya ja sakta hai."] },
     ],
   },
   success: [

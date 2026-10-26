@@ -11,66 +11,22 @@
 
 VISUALS['wa-connections'] = {
   t: 'Laakhon phones, hamesha juda — par zyadatar chup',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-bad"><span class="bx-label">🧵 Thread per connection</span>
-        <div class="dg-cap">Har connection ka apna thread + stack (1–2 MB). 10 lakh = terabytes. OS das hazaar par haanfne lagta hai (C10K).
-          Lab: Node worker thread ~5.4 MB → 20,000 = ~100 GB.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">🪶 Erlang process / event loop</span>
-        <div class="dg-cap">Erlang process = kuch sau bytes → laakhon ek machine par; har core ka ek scheduler; "reductions" se
-          koi process core nahi pakad sakta. Lab: event loop par idle connection ~3.2 KB.</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-flow">
-      <span class="dg-pill">XMPP (XML, lambe tags)</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good">FunXMPP (binary codes)</span>
-      <span class="dg-pill acc">2G/3G par har byte keemti — chhota protocol ek feature hai</span>
-    </div>`,
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">🧵 Thread per connection</span>\n        <div class=\"dg-cap\">Har connection ka apna thread + stack (1–2 MB). 10 lakh = terabytes. OS das hazaar par haanfne lagta hai (C10K).\n          Lab: Node worker thread ~5.4 MB → 20,000 = ~100 GB.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🪶 Erlang process / event loop</span>\n        <div class=\"dg-cap\">Erlang lightweight processes ka memory version/workload par depend karta hai; official 64-bit example ~2.6 KB process state hai, socket/mailbox extra. Reductions normal BEAM code schedule karti hain; blocking NIF alag risk. Lab idle socket ~3.2 KB RSS delta alag Node measurement hai.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">XMPP (XML, lambe tags)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">FunXMPP (binary codes)</span>\n      <span class=\"dg-pill acc\">2G/3G par har byte keemti — chhota protocol ek feature hai</span>\n    </div>",
 };
 
 VISUALS['wa-contention'] = {
-  t: '2 lakh se ~30 lakh connections — same hardware',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-gold"><span class="bx-label">✖️ Multiplication</span>
-        <div class="dg-cap">Per-connection chhota kharcha × laakhon = bada. (OS se time maangna → CPU ka TSC padho; chhote memory
-          chunks → huge pages.)</div></div>
-      <div class="dg-box is-bad"><span class="bx-label">🔒 Sharing</span>
-        <div class="dg-cap">Koi bhi lock/counter/table jise sab chhoote = bheed. Global lock wala process linking → monitors;
-          ek ETS table → <b>partitioned</b>; ek replication stream → per-table streams.</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-cap">Lab 25 (asli threads, shared memory): ek taala — 8 threads par <b>0.4×</b> (dheema!); 256 taale — <b>4.2×</b>.</div>`,
+  t: "Historical connection-scale optimization: ~2 lakh se ~30 lakh",
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-gold\"><span class=\"bx-label\">✖️ Multiplication</span>\n        <div class=\"dg-cap\">Per-connection chhota kharcha × laakhon = bada. (OS se time maangna → CPU ka TSC padho; chhote memory\n          chunks → huge pages.)</div></div>\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">🔒 Sharing</span>\n        <div class=\"dg-cap\">Koi bhi lock/counter/table jise sab chhoote = bheed. Global lock wala process linking → monitors;\n          ek ETS table → <b>partitioned</b>; ek replication stream → per-table streams.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-cap\">Lab 25 (asli threads, shared memory): ek taala — 8 threads par <b>0.4×</b> (dheema!); 256 taale — <b>4.2×</b>.</div>",
 };
 
 VISUALS['wa-store-forward'] = {
   t: 'Dakghar, filing cabinet nahi',
-  html: `
-    <div class="dg-flow">
-      <span class="dg-pill">📱 Riya</span><span class="dg-arrow">→</span>
-      <span class="dg-pill acc">🗺️ registry: Aman kis server/process par?</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good">online → push, bhool jao</span>
-      <span class="dg-pill gold">offline → queue → wapas aaya → deliver → DELETE</span>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-grid">
-      <div class="dg-node"><span class="ni">✔️</span><span class="nl">1 grey</span><span class="ns">server ke paas</span></div>
-      <div class="dg-node"><span class="ni">✔️✔️</span><span class="nl">2 grey</span><span class="ns">phone tak pahuncha</span></div>
-      <div class="dg-node is-accent"><span class="ni">💙</span><span class="nl">2 blue</span><span class="ns">padh liya</span></div>
-    </div>
-    <div class="dg-cap">Media chat raaste se nahi: phone encrypt → alag blob storage → chat mein sirf pointer (URL + key + fingerprint).
-      Forward hua meme ek baar store, laakh baar nahi.</div>`,
+  html: "\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📱 Riya</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">🗺️ registry: Aman kis server/process par?</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">online → push, bhool jao</span>\n      <span class=\"dg-pill gold\">offline → queue → wapas aaya → deliver → DELETE</span>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-grid\">\n      <div class=\"dg-node\"><span class=\"ni\">✔️</span><span class=\"nl\">1 grey</span><span class=\"ns\">server ke paas</span></div>\n      <div class=\"dg-node\"><span class=\"ni\">✔️✔️</span><span class=\"nl\">2 grey</span><span class=\"ns\">phone tak pahuncha</span></div>\n      <div class=\"dg-node is-accent\"><span class=\"ni\">💙</span><span class=\"nl\">2 blue</span><span class=\"ns\">padh liya</span></div>\n    </div>\n    <div class=\"dg-cap\">Media chat raaste se nahi: phone encrypt → alag blob storage → chat mein sirf pointer (URL + key + fingerprint).\n      Existing encrypted media reference reuse ho sakta hai; fresh randomized encryption universal dedup guarantee nahi.</div>",
 };
 
 VISUALS['wa-e2e'] = {
   t: 'Server sirf band lifafe dekhta hai',
-  html: `
-    <div class="dg-ladder">
-      <div class="dg-rung"><span class="lv">🔑</span><span class="cmd">Identity keys</span><span class="q">har device ki apni; server par sirf public keys</span></div>
-      <div class="dg-rung a"><span class="lv">⚙️</span><span class="cmd">Double ratchet</span><span class="q">har message nayi key → ek key churi hui toh bhi pehle/baad ke nahi padh sakte</span></div>
-      <div class="dg-rung a"><span class="lv">👥</span><span class="cmd">Sender keys (groups)</span><span class="q">ek baar encrypt, ek copy — lab: 1,000 members par 200 MB → 0.26 MB</span></div>
-      <div class="dg-rung g"><span class="lv">💻</span><span class="cmd">Multi-device (2021)</span><span class="q">har device ki apni identity; user = devices ka set; har device ke liye alag encrypt</span></div>
-    </div>`,
+  html: "\n    <div class=\"dg-ladder\">\n      <div class=\"dg-rung\"><span class=\"lv\">🔑</span><span class=\"cmd\">Identity keys</span><span class=\"q\">har device ki apni; server par sirf public keys</span></div>\n      <div class=\"dg-rung a\"><span class=\"lv\">⚙️</span><span class=\"cmd\">Double ratchet</span><span class=\"q\">deleted past keys protect karo; future recovery ke liye fresh entropy aur safe device chahiye</span></div>\n      <div class=\"dg-rung a\"><span class=\"lv\">👥</span><span class=\"cmd\">Sender keys (groups)</span><span class=\"q\">ek baar encrypt, ek copy — lab: 1,000 members par 200 MB → 0.26 MB</span></div>\n      <div class=\"dg-rung g\"><span class=\"lv\">💻</span><span class=\"cmd\">Multi-device (2021)</span><span class=\"q\">har device ki apni identity; user = devices ka set; har device ke liye alag encrypt</span></div>\n    </div>",
 };
 
 SD.registerLevels('stories', [
@@ -89,30 +45,8 @@ SD.registerLevels('stories', [
     'Lab: 20,000 idle connections — event loop vs threads',
   ],
   lesson: [
-    `<h3>📉 50 log, 45 crore users</h3>
-     <p>2014 mein Facebook ne WhatsApp $19B mein khareeda: ~45 crore users, ~50 log, ~30 engineers. Aaj 2 arab+ users, roz 100 arab+
-     messages — wahi buniyaad. Ek server par ~20 lakh log ek saath. Server message aage deta hai aur <b>mita deta hai</b>. E2E
-     encrypted. Siddhant: <b>kam se kam kaam</b> — server utna hi kare jitna zaroori, ek machine ko jitna ho sake kheencho, naye
-     parts tabhi jab koi raasta na bache.</p>
-     <h3>🔌 Chat server web server nahi hai</h3>
-     <p>Web server: request aayi, jawab diya, connection gaya. Chat server: har online user ka <b>zinda connection</b>, zyadatar
-     <b>chup</b> (phone jeb mein). Thread-per-connection mein har ek 1–2 MB → 10 lakh = terabytes; OS das hazaar par haanfta hai
-     (C10K). Chahiye tha: per-connection kharcha ≈ 0.</p>
-     <pre>lab 25 (ex1): 20,000 idle connections, ek Node process, ek event loop
-  server RSS 47 MB → 109 MB = 3.2 KB per connection
-lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 GB</pre>
-     <p>(Imaandari: Node ka worker thread poora V8 isolate leta hai — C/Java ka thread sasta hai, par phir bhi KB nahi, MB.)</p>`,
-    `<h3>☎️ Erlang — telephone exchange ki bhasha</h3>
-     <p>Erlang Ericsson ne 1980s mein telephone switches ke liye banaya tha — laakhon calls, kabhi band nahi. Uska VM (<b>BEAM</b>):</p>
-     <ul>
-       <li><b>Process</b> = kuch sau bytes → laakhon ek machine par. Har user connection = ek process.</li>
-       <li><b>Har core ka ek scheduler</b> (24 cores = 24).</li>
-       <li><b>Reductions</b> se preemptive: ~har function call = 1 reduction; ~2,000 ke baad process ruk jaata hai → koi process core nahi
-       pakad sakta; ek atka/dheema user doosron ko nahi rokta. Khaali scheduler doosron ka kaam chura leta hai.</li>
-       <li>Processes memory share nahi karte, sirf <b>messages</b> — chat ki shakal hi yahi hai.</li>
-     </ul>
-     <p>Shuruaat open-source <b>ejabberd</b> (XMPP) se. XMPP = XML: angle brackets, dohraaye tags. India, Brazil, Indonesia mein 2G/3G par
-     log → <b>FunXMPP</b>: binary codes, kahin kam bytes. <b>Chhota protocol dheeme network par ek feature hai.</b></p>`,
+    "<h3>📉 50 log, 45 crore users</h3>\n     <p>2014 mein Facebook ne WhatsApp $19B mein khareeda: ~45 crore users, ~50 log, ~30 engineers. Aaj 2 arab+ users, roz 100 arab+\n     messages — wahi buniyaad. Ek server par ~20 lakh log ek saath. Server message aage deta hai aur <b>mita deta hai</b>. E2E\n     encrypted. Siddhant: <b>kam se kam kaam</b> — server utna hi kare jitna zaroori, ek machine ko jitna ho sake kheencho, naye\n     parts tabhi jab koi raasta na bache.</p>\n     <h3>🔌 Chat server web server nahi hai</h3>\n     <p>Web server: request aayi, jawab diya, connection gaya. Chat server: har online user ka <b>zinda connection</b>, zyadatar\n     <b>chup</b> (phone jeb mein). Thread-per-connection ka stack/runtime budget large ho sakta hai; default stack reservation aur committed RSS alag hain. C10K historical challenge tha, modern OS ka fixed10k limit nahi\n     (C10K). Chahiye tha: per-connection kharcha ≈ 0.</p>\n     <pre>lab 25 (ex1): 20,000 idle connections, ek Node process, ek event loop\n  server RSS 47 MB → 109 MB = 3.2 KB per connection\nlab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 GB</pre>\n     <p>(Imaandari: Node worker thread apna V8 isolate leta hai. Native/Java thread memory version, configured stack, virtual reservation and committed pages par depend karti hai; is Node RSS result ko every OS thread ka fixed cost mat banao.)</p>",
+    "<h3>☎️ Erlang — telephone exchange ki bhasha</h3>\n     <p>Erlang Ericsson ne 1980s mein telephone switches ke liye banaya tha — laakhon calls, kabhi band nahi. Uska VM (<b>BEAM</b>):</p>\n     <ul>\n       <li><b>Process</b> = version-dependent small heap/process state → laakhon ek machine par. Har user connection = ek process.</li>\n       <li><b>Normal schedulers</b> typically online logical CPU configuration se map karte hain; count runtime options se change ho sakta hai. Dirty CPU/IO scheduler pools separate hain.</li>\n       <li><b>Reductions</b> runtime work accounting se ordinary BEAM processes schedule/preempt hote hain. Exact budget version-dependent hai; work stealing balance help karta hai. Long blocking native NIF ya shared resource other users ko phir bhi affect kar sakta hai.</li>\n       <li>Ordinary process heaps isolated hote hain aur messages se communicate karte hain. ETS tables, off-heap binaries aur native resources shared state la sakte hain; har path private heap nahi.</li>\n     </ul>\n     <p>Shuruaat open-source <b>ejabberd</b> (XMPP) se. XMPP = XML: angle brackets, dohraaye tags. India, Brazil, Indonesia mein 2G/3G par\n     log → <b>FunXMPP</b>: binary codes, kahin kam bytes. <b>Chhota protocol dheeme network par ek feature hai.</b></p>",
   ],
   stages: [
     {
@@ -130,16 +64,11 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
       ],
       observe: {
         q: 'Idle connection event loop par itna sasta kyun?',
-        choices: [
-          'Idle connection bas ek socket + chhota buffer hai; koi apna stack/thread nahi — kaam tabhi jab data aaye',
-          'Node memory compress karta hai',
-          'Connections asli nahi the',
-          'OS ne memory chhupa li',
-        ],
+        choices: ["Per-connection dedicated thread nahi","Each socket ka memory cost zero","OS saare buffers compress karta","Idle sockets kernel ko dikhte nahi"],
         answer: 0,
-        explain: 'Erlang ka process bhi isi soch ka — kuch sau bytes. Yahi 20 lakh connections per server ka raaz.',
-      },
-      lesson: 'Zinda par chup connections ke liye per-connection kharcha ~0 chahiye — thread nahi, event loop / halka process.',
+        explain: "Event-driven sockets aur lightweight Erlang processes dedicated OS-thread stacks avoid kar sakte hain. Actual memory includes runtime, mailbox, socket buffers and workload. Erlang official 64-bit example 327 words/2616 bytes hai; specific connection count historical configuration ka result hai.",
+       choiceExplanations: ["Event-driven sockets aur lightweight Erlang processes dedicated OS-thread stacks avoid kar sakte hain. Actual memory includes runtime, mailbox, socket buffers and workload. Erlang official 64-bit example 327 words/2616 bytes hai; specific connection count historical configuration ka result hai.","Sockets, protocol state aur buffers memory consume karte hain.","Compression event-loop efficiency ki requirement nahi.","Kernel socket tables aur descriptor limits ab bhi matter karte hain."] },
+      lesson: "Idle connection ka per-connection overhead low and bounded rakho; zero nahi. Event loop/lightweight process ke saath FDs, socket buffers, heartbeat and slow-client state measure karo.",
     },
     {
       type: 'quiz',
@@ -147,26 +76,16 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
       questions: [
         {
           q: 'Reductions ka faayda chat server mein?',
-          choices: [
-            'Koi ek dheema/atka user process core pakad ke baaki laakhon ko nahi rok sakta — ~2,000 reductions ke baad ruk ke baari aati hai',
-            'Memory kam',
-            'Network tez',
-            'Encryption',
-          ],
+          choices: ["Runnable processes ko CPU time share","Every process ka memory size ghata","Network packets ka payload compress","Each message ko encryption milti"],
           answer: 0,
-          explain: 'Preemptive scheduling = ek ki galti sabki latency nahi.',
-        },
+          explain: "Reductions ordinary BEAM execution ko cooperative runtime scheduling points par preempt karti hain. Native NIFs/ports, shared resources aur long work ab bhi schedulers affect kar sakte hain; no-unbounded-latency guarantee nahi.",
+         choiceExplanations: ["Reductions ordinary BEAM execution ko cooperative runtime scheduling points par preempt karti hain. Native NIFs/ports, shared resources aur long work ab bhi schedulers affect kar sakte hain; no-unbounded-latency guarantee nahi.","Scheduling memory footprint ko directly reduce nahi karti.","Reductions CPU work accounting hain, wire encoding nahi.","Encryption alag protocol mechanism hai."] },
         {
           q: 'WhatsApp ne XMPP ko FunXMPP kyun banaya?',
-          choices: [
-            '2G/3G users ke liye bytes kam — XML ke lambe tags ki jagah binary codes',
-            'Security',
-            'XMPP band ho gaya',
-            'Encryption ke liye',
-          ],
+          choices: ["XML verbosity ke badle compact encoding","Binary format se encryption mil gayi","Transport ne all retries hata diye","Network RTT ko zero bana diya"],
           answer: 0,
-          explain: 'Dheeme network par protocol ka size hi latency hai.',
-        },
+          explain: "Compact binary encoding payload bytes reduce kar sakti hai. RTT, radio setup, congestion, parsing and retransmissions bhi end-to-end latency contribute karte hain.",
+         choiceExplanations: ["Compact binary encoding payload bytes reduce kar sakti hai. RTT, radio setup, congestion, parsing and retransmissions bhi end-to-end latency contribute karte hain.","Compact representation confidentiality guarantee nahi deti.","Encoding choice retransmission policy eliminate nahi karti.","Bytes kam hote hain; propagation delay zero nahi hota."] },
       ],
     },
   ],
@@ -176,26 +95,16 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     questions: [
       {
         q: 'Interviewer: "10 lakh WebSocket connections ek box par chahiye. Kya dekhoge?"',
-        choices: [
-          'Per-connection memory (event loop/lightweight processes, thread nahi), file descriptor limits, kernel buffers, heartbeat ka kharcha, aur ek dheema client doosron ko na roke',
-          'Har connection ka thread, bada RAM',
-          'Connections ko HTTP polling se badlo',
-          'Load balancer hi kaafi',
-        ],
+        choices: ["Memory, FDs, heartbeats aur slow clients","Only load balancer ka connection count","One OS thread per idle connection","Only average response time monitor"],
         answer: 0,
-        explain: 'Lab: 3.2 KB vs MBs per connection.',
-      },
+        explain: "Lab: 3.2 KB vs MBs per connection.",
+       choiceExplanations: ["Lab: 3.2 KB vs MBs per connection.","Backend socket memory/kernel capacity aur connection liveness bhi bottlenecks hain.","Large dedicated thread stacks idle connections ko mehenga banati hain.","Averages memory growth aur slow-client queues chhupa sakte hain."] },
       {
         q: 'Interviewer: "Erlang jaisa niche language kyun chuna?"',
-        choices: [
-          'Problem ki shakal (laakhon halke, alag, message-passing wale connections + fault tolerance) se bilkul fit; keemat: kam engineers aur libraries',
-          'Fashion',
-          'Sasta',
-          'Facebook ne kaha',
-        ],
+        choices: ["Actor isolation aur concurrency fit","Language popularity se reliability","Low license fee se fault tolerance","Vendor preference se CPU efficiency"],
         answer: 0,
         explain: 'Core runtime problem ke hisaab se chuno.',
-      },
+       choiceExplanations: ["Core runtime problem ke hisaab se chuno.","Popularity failure isolation ya workload fit ka proof nahi.","License price runtime semantics define nahi karti.","Vendor recommendation production measurements ka substitute nahi."] },
     ],
   },
   success: [
@@ -207,8 +116,8 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     aur kitne idle hain. 10× connections par kya tootega pehle — memory, file descriptors, ya CPU?</p>`,
   cards: [
     { front: 'WhatsApp ka siddhant?', back: '"Do more with less" — server kam se kam kare, ek machine ko jitna ho sake kheencho, naye parts tabhi jab raasta na bache. 2014: ~45 crore users, ~50 log.' },
-    { front: 'Erlang process kyun?', back: 'Kuch sau bytes → laakhon per machine; har core ka scheduler; reductions se preemption (koi core nahi pakad sakta); sirf message passing.' },
-    { front: 'Lab 25: idle connection ka kharcha?', back: 'Event loop par ~3.2 KB; Node worker thread ~5.4 MB → 20,000 = ~100 GB.' },
+    { front: 'Erlang process kyun?', back: "Erlang lightweight processes OS threads se chhote hote hain. Official 64-bit example 327 words=2616 bytes (heap 233 words included); mailboxes/binaries/socket buffers extra hain. Reductions ordinary BEAM work ko schedule karti hain; long unsafe NIFs alag risk hain." },
+    { front: 'Lab 25: idle connection ka kharcha?', back: "Event loop par ~3.2 KB; Node worker thread ~5.4 MB → 20,000 = ~100 GB." },
   ],
 },
 
@@ -227,38 +136,8 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     'Registry: sender ka server ≠ receiver ka server',
   ],
   lesson: [
-    `<h3>🎯 Har fix = contention ka shikaar</h3>
-     <p>2012 ka target: 10 lakh connections per server. Shuruaat ~2 lakh par, aur server girte rahe (bada football match khatam,
-     bhookamp — sab ek saath message). 10 lakh paar, 20 lakh paar; Feb ke ek din ek server par peak <b>28 lakh</b> connections,
-     5 lakh+ packets/sec, 2 lakh+ internal messages/sec — ek box par.</p>
-     <p>Do dushman:</p>
-     <ul>
-       <li><b>Multiplication</b> — per-connection chhota kharcha × laakhon.</li>
-       <li><b>Sharing</b> — koi bhi lock/counter/table jise sab chhoote = bheed.</li>
-     </ul>
-     <table>
-       <tr><th>Mila</th><th>Fix</th></tr>
-       <tr><td>Har baar OS se time maangna</td><td>CPU ka TSC seedha padho</td></tr>
-       <tr><td>Kernel ki connection hash table mein takraav</td><td>Table badi (~5 lakh slots)</td></tr>
-       <tr><td>Saikdon GB memory, TLB misses</td><td>Huge pages (bade chunks)</td></tr>
-       <tr><td>Idle schedulers spin karke CPU kha rahe</td><td>Spinning band</td></tr>
-       <tr><td>Process linking ek global lock leta tha</td><td>Halke monitors</td></tr>
-       <tr><td>In-memory ETS table ek hotspot</td><td><b>Partitioned</b> — kai tukde</td></tr>
-       <tr><td>DB replication ek stream se</td><td>Har table ki apni stream</td></tr>
-     </table>
-     <p>Video: "dark and grungy" kaam — aur <b>same hardware</b> par 2 lakh → ~30 lakh.</p>`,
-    `<h3>🔒 Ek taala vs baante hue taale (lab 25, ex2)</h3>
-     <pre>threads   one-lock ops/sec     partitioned (256 locks)
-    1      2.57 M  (1.0x)          2.14 M  (1.0x)
-    2      1.80 M  (0.7x)          4.09 M  (1.9x)
-    4      1.43 M  (0.6x)          6.88 M  (3.2x)
-    8      1.15 M  (0.4x)          9.02 M  (4.2x)</pre>
-     <p>Ek taale par threads badhao toh kaam <b>ghata</b> — sab ek darwaaze par, upar se cache line ek core se doosre par bhaagti
-     hai. Taale user ke hisaab se baanto → cores sach mein kaam aate hain. (Taale alag 64-byte cache lines par — ek line par
-     rakhoge toh "false sharing" phir dheema kar deta hai.)</p>
-     <h3>🗺️ Registry</h3>
-     <p>Saikdon servers; Riya ka server ≠ Aman ka server. Distributed <b>registry</b>: har online user kis server aur kis process
-     par → lookup → paar do → Aman ke socket par push. Cluster bhar mein 7 crore+ internal Erlang messages/sec.</p>`,
+    "<h3>🎯 Har fix = contention ka shikaar</h3>\n     <p>2012 ka target: 10 lakh connections per server. Shuruaat ~2 lakh par, aur server girte rahe (bada football match khatam,\n     bhookamp — sab ek saath message). 10 lakh paar, 20 lakh paar; Feb ke ek din ek server par peak <b>28 lakh</b> connections,\n     5 lakh+ packets/sec, 2 lakh+ internal messages/sec — ek box par.</p>\n     <p>Do dushman:</p>\n     <ul>\n       <li><b>Multiplication</b> — per-connection chhota kharcha × laakhon.</li>\n       <li><b>Sharing</b> — koi bhi lock/counter/table jise sab chhoote = bheed.</li>\n     </ul>\n     <table>\n       <tr><th>Mila</th><th>Fix</th></tr>\n       <tr><td>Har baar OS se time maangna</td><td>CPU ka TSC seedha padho</td></tr>\n       <tr><td>Kernel ki connection hash table mein takraav</td><td>Table badi (~5 lakh slots)</td></tr>\n       <tr><td>Saikdon GB memory, TLB misses</td><td>Huge pages (bade chunks)</td></tr>\n       <tr><td>Idle schedulers spin karke CPU kha rahe</td><td>Spinning band</td></tr>\n       <tr><td>Process linking ek global lock leta tha</td><td>Halke monitors</td></tr>\n       <tr><td>In-memory ETS table ek hotspot</td><td><b>Partitioned</b> — kai tukde</td></tr>\n       <tr><td>DB replication ek stream se</td><td>Har table ki apni stream</td></tr>\n     </table>\n     <p>Video ka historical scale-up example ~2 lakh → ~30 lakh connections report karta hai. Hardware, runtime version, active/idle mix aur memory settings ke bina isko reproducible same-machine guarantee mat banao.</p>",
+    "<h3>🔒 Ek taala vs baante hue taale (lab 25, ex2)</h3>\n     <pre>threads   one-lock ops/sec     partitioned (256 locks)\n    1      2.57 M  (1.0x)          2.14 M  (1.0x)\n    2      1.80 M  (0.7x)          4.09 M  (1.9x)\n    4      1.43 M  (0.6x)          6.88 M  (3.2x)\n    8      1.15 M  (0.4x)          9.02 M  (4.2x)</pre>\n     <p>Ek taale par threads badhao toh kaam <b>ghata</b> — sab ek darwaaze par, upar se cache line ek core se doosre par bhaagti\n     hai. Taale user ke hisaab se baanto → cores sach mein kaam aate hain. (Taale alag 64-byte cache lines par — ek line par\n     rakhoge toh \"false sharing\" phir dheema kar deta hai.)</p>\n     <h3>🗺️ Registry</h3>\n     <p>Saikdon servers; Riya ka server ≠ Aman ka server. Distributed <b>registry</b>: har online user kis server aur kis process\n     par → lookup → paar do → Aman ke socket par push. Cluster bhar mein 7 crore+ internal Erlang messages/sec.</p>",
   ],
   stages: [
     {
@@ -275,15 +154,10 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
       ],
       observe: {
         q: 'Ek taale par 8 threads 1 thread se bhi DHEEME kyun?',
-        choices: [
-          'Sab ek hi taale ka intezaar karte hain aur taale ki cache line cores ke beech bhaagti rehti hai — kaam serial, upar se coordination ka kharcha',
-          'Threads kam the',
-          'CPU dheema',
-          'Bug',
-        ],
+        choices: ["Serial lock aur cache-line contention","Extra threads ne network slow kiya","CPU cores ne independent work kiya","Eight threads ka cost automatically kam"],
         answer: 0,
         explain: 'Sharing = bheed. WhatsApp ne ETS tables aur replication streams isi wajah se baante.',
-      },
+       choiceExplanations: ["Sharing = bheed. WhatsApp ne ETS tables aur replication streams isi wajah se baante.","Question shared lock compare karta hai; network change nahi diya.","Shared critical section independent execution ko rokta hai.","Coordination overhead threads badhne par throughput ghata sakta hai."] },
       lesson: 'Cores tabhi kaam aate hain jab koi saajha taala na ho — hotspot dhoondho aur baanto.',
     },
     {
@@ -310,26 +184,16 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     questions: [
       {
         q: 'Interviewer: "32 cores hain par throughput 8 cores ke baad nahi badhta."',
-        choices: [
-          'Contention dhoondho — saajhe locks, counters, tables, allocators (profiler, lock stats); unhe partition/shard karo; false sharing ke liye padding',
-          'Aur cores',
-          'Bada clock speed',
-          'Threads badhao',
-        ],
+        choices: ["Profile shared locks aur cache lines","Thread count bina bound badhao","More cores ko direct capacity maano","Only network bandwidth double karo"],
         answer: 0,
-        explain: 'Lab: ek taala = 0.4× at 8 threads.',
-      },
+        explain: "Lab: ek taala = 0.4× at 8 threads.",
+       choiceExplanations: ["Lab: ek taala = 0.4× at 8 threads.","More contenders same lock ko aur hot bana sakte hain.","Parallel speedup shared serial work se limited hota hai.","Network change lock contention solve nahi karta."] },
       {
         q: 'Interviewer: "Scale up pehle, scale out baad mein — kyun?"',
-        choices: [
-          'Har nayi machine = 3 baje tootne wali ek aur cheez + coordination; ek machine ko contention hata ke 10× kheencho, phir faila o — par ek box gira toh bahut log ek saath, isliye tez failover',
-          'Scale up hamesha sasta',
-          'Scale out mumkin nahi',
-          'Koi farq nahi',
-        ],
+        choices: ["Local efficiency vs machine blast radius","One machine se failover unnecessary","Scale-out coordination ka cost zero","Vertical scale ko unlimited maano"],
         answer: 0,
-        explain: 'WhatsApp: same hardware par 2 lakh → ~30 lakh.',
-      },
+        explain: "Public story ke historical connection counts optimization ka example hain; exact hardware/version/workload qualification chahiye. Lab ka shared-lock profile local evidence hai, full WhatsApp reproduction nahi.",
+       choiceExplanations: ["Public story ke historical connection counts optimization ka example hain; exact hardware/version/workload qualification chahiye. Lab ka shared-lock profile local evidence hai, full WhatsApp reproduction nahi.","Bigger host failure par aur users ek saath disconnect ho sakte hain.","Distribution routing, replication aur operational cost laata hai.","Hardware aur contention dono vertical limits rakhte hain."] },
     ],
   },
   success: [
@@ -342,7 +206,7 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
   cards: [
     { front: 'WhatsApp ke do dushman?', back: 'Multiplication (per-connection kharcha × laakhon) aur sharing (saajha lock/counter/table = bheed).' },
     { front: 'Grungy fixes ki misaal?', back: 'CPU TSC se time, badi kernel hash table, huge pages, spinning band, global-lock linking → monitors, ETS partitioned, per-table replication.' },
-    { front: 'Lab 25: taale?', back: 'Ek taala: 8 threads par 0.4× (dheema). 256 taale: 4.2×.' },
+    { front: 'Lab 25: taale?', back: "Ek taala: 8 threads par 0.4× (dheema). 256 taale: 4.2×." },
   ],
 },
 
@@ -361,18 +225,7 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     'Persistent connection + push notification backup',
   ],
   lesson: [
-    `<h3>📮 Dakghar, filing cabinet nahi</h3>
-     <p>Recipient online → push karo aur <b>bhool jao</b>. Offline → Erlang ke apne DB (Mnesia) mein queue → wapas aaya → deliver →
-     <b>delete</b>. Storage chhota rehta hai kyunki server sirf "raaste mein" wale messages rakhta hai.</p>
-     <pre>lab 25 (ex3-store-forward) — Riya chat1 par, Aman chat2 par:
-1) dono online: 3 messages live, "OK via chat2", registry mein stored 0
-2) Aman offline: 5 messages → "OK queued", stored 5
-3) Aman wapas (is baar chat1 par): 5 mile, stored 0 (5 store, 5 deliver hoke mitaaye)</pre>
-     <h3>🖼️ Media chat ke raaste se nahi</h3>
-     <p>Phone image <b>encrypt</b> karta hai → alag blob storage par upload → chat mein sirf ek chhota <b>pointer</b> (URL + decryption
-     key + content fingerprint). Same file = same fingerprint → forward hua meme <b>ek baar</b> store, laakh baar nahi.</p>
-     <p><b>Ticks</b>: 1 grey = server ke paas; 2 grey = phone tak pahuncha; 2 blue = padh liya. Server utna hi rakhta hai jitna "deliver
-     hua? retry?" ke liye chahiye, phir chhod deta hai.</p>`,
+    "<h3>📮 Dakghar, filing cabinet nahi</h3>\n     <p>Recipient online → push karo aur <b>bhool jao</b>. Offline → Erlang ke apne DB (Mnesia) mein queue → wapas aaya → deliver →\n     <b>delete</b>. Storage chhota rehta hai kyunki server sirf \"raaste mein\" wale messages rakhta hai.</p>\n     <pre>lab 25 (ex3-store-forward) — Riya chat1 par, Aman chat2 par:\n1) dono online: 3 messages live, \"OK via chat2\", registry mein stored 0\n2) Aman offline: 5 messages → \"OK queued\", stored 5\n3) Aman wapas (is baar chat1 par): 5 mile, stored 0 (5 store, 5 deliver hoke mitaaye)</pre>\n     <h3>🖼️ Media chat ke raaste se nahi</h3>\n     <p>Phone image <b>encrypt</b> karta hai → alag blob storage par upload → chat mein sirf ek chhota <b>pointer</b> (URL + decryption\n     key + content fingerprint). Same encrypted object reference reuse se forwarding bytes share ho sakti hain. Har fresh encryption ka ciphertext/fingerprint same hoga yeh guarantee nahi; scope, key distribution aur authorized access explicit hon.</p>\n     <p><b>Ticks</b>: 1 grey = server ke paas; 2 grey = phone tak pahuncha; 2 blue = padh liya. Server utna hi rakhta hai jitna \"deliver\n     hua? retry?\" ke liye chahiye, phir chhod deta hai.</p>",
     `<h3>💥 Let it crash</h3>
      <p>Anjaani error → process mar jaata hai → <b>supervisor</b> (supervisor trees) use milliseconds mein dobara shuru karta hai. Ek user
      ke liye second ka ek tukda. Self-healing = chhoti team isse chala paayi.</p>
@@ -400,15 +253,10 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
       ],
       observe: {
         q: 'Deliver ke baad server se message mitane ka sabse bada faayda?',
-        choices: [
-          'Server storage users ke saath nahi, sirf "raaste mein" wale messages ke saath badhti hai — chhote, saste servers; history phone par',
-          'Security ke liye hi',
-          'Tez delivery',
-          'Kanoon',
-        ],
+        choices: ["In-flight queue, long history client par","Delivery latency automatically zero","Server ko backups ki need khatam","Encryption se all metadata delete"],
         answer: 0,
         explain: 'Keemat: history search/backup server se nahi — woh complexity phones par gayi.',
-      },
+       choiceExplanations: ["Keemat: history search/backup server se nahi — woh complexity phones par gayi.","Queue retention choice transport latency eliminate nahi karti.","Keys/config/other persistent data ka backup contract alag ho sakta hai.","Message deletion metadata retention automatically define nahi karti."] },
       lesson: 'Dakiya sirf pahunchata hai, rakhta nahi — isse server chhote aur sasta.',
     },
     {
@@ -430,26 +278,16 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     questions: [
       {
         q: 'Interviewer: "Chat app mein photo bhejne ka flow?"',
-        choices: [
-          'Client encrypt → blob store par upload (content hash se dedup) → chat message mein sirf pointer + key + hash; receiver pointer se download aur decrypt',
-          'Photo chat message ke andar base64',
-          'Server photo resize karke har recipient ko',
-          'P2P hamesha',
-        ],
+        choices: ["Encrypted blob, message mein pointer/key","Plaintext photo ko every hop resize","Base64 bytes har recipient chat path","Random encryption se global dedup maano"],
         answer: 0,
-        explain: 'Chat path chhota rakho; media alag, content-addressed.',
-      },
+        explain: "Encrypted blob ko separate data path mein rakho; chat carries scoped pointer/key/integrity metadata. Same encrypted object reference reuse ho sakta hai. Independently randomized encryption same plaintext ko different ciphertext de sakti hai; universal global dedup assume mat karo.",
+       choiceExplanations: ["Encrypted blob ko separate data path mein rakho; chat carries scoped pointer/key/integrity metadata. Same encrypted object reference reuse ho sakta hai. Independently randomized encryption same plaintext ko different ciphertext de sakti hai; universal global dedup assume mat karo.","Server plaintext resize nahi kar sakta jab uske paas content key nahi.","Inline copies chat fanout aur payload ko bada karti hain.","Randomized encryption same plaintext ko different ciphertext de sakti hai."] },
       {
         q: 'Interviewer: "Server crash par users ke connections ka kya?"',
-        choices: [
-          'Process-level isolation + supervisors (ek connection ka crash sirf woh restart); machine gire toh clients reconnect + chhoote messages queue se kheenchein; tez failover',
-          'Sab kho jaate hain',
-          'Server kabhi crash nahi hota',
-          'Users ko manually reconnect',
-        ],
+        choices: ["Reconnect, replay aur idempotent ack","Supervisors machine loss hide karte","Client UI hi durable message store","Server crash ko impossible declare"],
         answer: 0,
         explain: 'Build for failure.',
-      },
+       choiceExplanations: ["Build for failure.","Process supervision node/network failure ko magically mask nahi karti.","Offline history aur durable pending delivery ka explicit contract chahiye.","Failures expected hain; recovery behavior design karna hota hai."] },
     ],
   },
   success: [
@@ -461,7 +299,7 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     purane notifications, temp uploads). Kya use deliver/ack par mitane se storage ghatega? Kaunsi cheez sach mein history chahiye?</p>`,
   cards: [
     { front: 'Store and forward?', back: 'Online → push, bhool jao. Offline → queue → deliver → delete. Lab: stored 5 → 0 after delivery. Server storage "raaste mein" wale messages jitni.' },
-    { front: 'WhatsApp media flow?', back: 'Phone encrypt → alag blob storage → chat mein pointer (URL + key + fingerprint). Same file = ek copy.' },
+    { front: 'WhatsApp media flow?', back: "Phone encrypt → blob storage → scoped pointer/key/integrity metadata. Existing encrypted object reference reuse possible; fresh randomized ciphertext par global plaintext dedup infer nahi." },
     { front: 'Let it crash?', back: 'Anjaani error par process mare, supervisor ms mein restart kare — self-healing, isliye chhoti team.' },
   ],
 },
@@ -481,21 +319,7 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     'Calls P2P, aur mushkil hissa kahan gaya — trade-offs',
   ],
   lesson: [
-    `<h3>✉️ Server sirf band lifafe dekhta hai</h3>
-     <p>E2E itihaas ka sabse bada rollout (~1 arab log ek saath), <b>Signal protocol</b> par. Isne server ko aur <b>simple</b> bhi banaya —
-     server sirf sealed envelopes dekhta hai; galti karne ko aur leak karne ko kam.</p>
-     <ul>
-       <li>Har device ki lambi <b>identity key</b>; server par sirf public keys.</li>
-       <li>Phones ek hi secret nikaal lete hain bina use bheje.</li>
-       <li><b>Double ratchet</b>: har message nayi key → <b>forward secrecy</b> — ek key churi hui toh bhi pehle ya baad ke messages nahi
-       padh sakte.</li>
-     </ul>
-     <h3>👥 Groups — sender keys</h3>
-     <p>Pairwise: 100 logon ke group mein ek message = 99 encryptions. <b>Sender keys</b>: har member apni key ek baar sabko baant-ta
-     hai; phir encrypt ek baar, ek sealed copy bhejo. Kharcha key management par shift — koi join/leave kare toh rotate.</p>
-     <pre>lab 25 (ex4) — asli AES-256-GCM, 200 messages × 1 KB:
-1000 members   pairwise     199,800 encryptions   200.5 MB upload   4,475 ms
-1000 members   sender key     1,199 encryptions     0.26 MB           28 ms   (+999 keys rotate on leave)</pre>`,
+    "<h3>✉️ Server sirf band lifafe dekhta hai</h3>\n     <p>E2E itihaas ka sabse bada rollout (~1 arab log ek saath), <b>Signal protocol</b> par. Isne server ko aur <b>simple</b> bhi banaya —\n     server sirf sealed envelopes dekhta hai; galti karne ko aur leak karne ko kam.</p>\n     <ul>\n       <li>Har device ki lambi <b>identity key</b>; server par sirf public keys.</li>\n       <li>Phones ek hi secret nikaal lete hain bina use bheje.</li>\n       <li><b>Double Ratchet</b>: message keys evolve hoti hain. Secure deletion ke saath <b>forward secrecy</b> past messages protect karti hai.\n       Future compromise recovery fresh DH entropy aur uncompromised endpoints par depend karti hai; dono guarantees ek nahi.</li>\n     </ul>\n     <h3>👥 Groups — sender keys</h3>\n     <p>Pairwise: 100 logon ke group mein ek message = 99 encryptions. <b>Sender keys</b>: har member apni key ek baar sabko baant-ta\n     hai; phir encrypt ek baar, ek sealed copy bhejo. Kharcha key management par shift — koi join/leave kare toh rotate.</p>\n     <pre>lab 25 (ex4) — asli AES-256-GCM, 200 messages × 1 KB:\n1000 members   pairwise     199,800 encryptions   200.5 MB upload   4,475 ms\n1000 members   sender key     1,199 encryptions     0.26 MB           28 ms   (+999 keys rotate on leave)</pre>",
     `<h3>💻 Multi-device (2021)</h3>
      <p>Pehle web/desktop phone ka <b>aaina</b> the (keys sirf phone par) → phone band = sab band. Naya design: har companion device (4
      tak) ki <b>apni identity key</b> → user = devices ka set. Bhejna = har recipient device ke liye alag encrypt + apne dusre devices ke
@@ -527,15 +351,10 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
       ],
       observe: {
         q: 'Sender key ki keemat kahan gayi?',
-        choices: [
-          'Key management mein — koi group chhode toh sabki sender keys rotate, taaki woh aage ke messages na padh sake',
-          'Kahin nahi, muft hai',
-          'Server ko keys pata hain',
-          'Forward secrecy khatam',
-        ],
+        choices: ["Membership changes par key redistribution","Sender keys server ko decrypt deti","One key se revocation permanent free","Per-message encryption cost unlimited"],
         answer: 0,
         explain: 'Har message ka kharcha ghata, membership badalne ka kharcha badha.',
-      },
+       choiceExplanations: ["Har message ka kharcha ghata, membership badalne ka kharcha badha.","Sender key transport server ko plaintext key dena zaroori nahi.","Departed members ke access ke liye rotation/rekey policy chahiye.","Cost per-message pairwise fanout se membership management par shift hota hai."] },
       lesson: 'Encryption ka design bhi fan-out ka design hai: ek baar encrypt, server fan-out kare — par padh na sake.',
     },
     {
@@ -544,26 +363,16 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
       questions: [
         {
           q: 'Forward secrecy ka matlab?',
-          choices: [
-            'Ek message ki key churi hui toh bhi pehle aur baad ke messages nahi padhe ja sakte — har message nayi key (double ratchet)',
-            'Messages aage forward ho sakte hain',
-            'Server keys rakhta hai',
-            'Backup encrypted hai',
-          ],
+          choices: ["Later compromise se past keys protect","Har future key compromise-proof hoti","Server backups automatically private","Messages ko forward karna safe hota"],
           answer: 0,
-          explain: 'Ratchet sirf aage ghoomta hai.',
-        },
+          explain: "Forward secrecy later key compromise ke baad past messages ko protect karti hai, jab old keys securely delete hui hon. Future recovery ek alag post-compromise property hai; Double Ratchet mein fresh DH entropy aur threat assumptions matter karte hain.",
+         choiceExplanations: ["Forward secrecy later key compromise ke baad past messages ko protect karti hai, jab old keys securely delete hui hon. Future recovery ek alag post-compromise property hai; Double Ratchet mein fresh DH entropy aur threat assumptions matter karte hain.","Future recovery fresh entropy aur separate post-compromise property maangti hai.","Backup encryption aur key lifecycle independent concern hai.","Forward secrecy message forwarding feature ka naam nahi."] },
         {
           q: 'Multi-device se pehle web WhatsApp phone band hone par kyun band ho jaata tha?',
-          choices: [
-            'Keys sirf phone par thin — web sirf phone ka aaina tha; naye design mein har device ki apni identity key',
-            'Server band',
-            'Browser limit',
-            'Bandwidth',
-          ],
+          choices: ["Old web session phone par depend thi","Browser mein crypto possible nahi","Server har browser close par band","Network bandwidth phone se tied tha"],
           answer: 0,
           explain: 'User = devices ka set, har device apna.',
-        },
+         choiceExplanations: ["User = devices ka set, har device apna.","Browsers cryptography kar sakte hain; architecture phone-linked thi.","Server availability phone-linked session design ka cause nahi.","Data-path/key architecture question explain karti hai, bandwidth alone nahi."] },
       ],
     },
   ],
@@ -573,26 +382,16 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
     questions: [
       {
         q: 'Interviewer: "E2E group chat 5,000 members ka — kaise?"',
-        choices: [
-          'Sender keys: har member ki key ek baar pairwise baanto, message ek baar encrypt, server fan-out; join/leave par rotation; bade groups mein rotation ka kharcha dhyan se',
-          'Har member ko pairwise',
-          'Server par decrypt karke re-encrypt',
-          'E2E groups mein mumkin nahi',
-        ],
+        choices: ["Sender keys, fanout aur rekey policy","Every recipient ko same private key","Server plaintext ko dubara encrypt","Only transport TLS ko E2E maano"],
         answer: 0,
-        explain: 'Lab: 1,000 members par 200 MB → 0.26 MB.',
-      },
+        explain: "Lab: 1,000 members par 200 MB → 0.26 MB.",
+       choiceExplanations: ["Lab: 1,000 members par 200 MB → 0.26 MB.","Sender keys per-sender chains aur membership distribution maangti hain.","Server decrypt kare toh server se end-to-end confidentiality nahi.","TLS server par terminate hota hai; E2E boundary users ke devices hain."] },
       {
         q: 'Interviewer: "E2E ka system design par kya asar?"',
-        choices: [
-          'Server simple (sealed envelopes), par search/backup/sync/moderation server par nahi ho sakte → complexity clients par jaati hai',
-          'Server mehenga',
-          'Koi asar nahi',
-          'Latency badhti hai bas',
-        ],
+        choices: ["Server plaintext features client par shift","Server all content search freely kare","E2E se identity verification free","Encryption metadata ko bhi erase kare"],
         answer: 0,
         explain: '"Mushkil hissa kahan rahe?" — WhatsApp ne phones chune.',
-      },
+       choiceExplanations: ["\"Mushkil hissa kahan rahe?\" — WhatsApp ne phones chune.","Server ke paas plaintext/key na ho toh normal plaintext indexing nahi kar sakta.","Device identity, key verification aur recovery alag problems hain.","Routing metadata, timing aur ciphertext size ab bhi reveal ho sakte hain."] },
     ],
   },
   success: [
@@ -603,8 +402,8 @@ lab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 
   homework: `<p>Apne product mein ek feature socho jo "server ko data dikhe" par tika hai (search, spam filter, backup). Agar data E2E ho
     jaaye, toh woh feature kahan chalega — client par? Kitna mushkil hoga?</p>`,
   cards: [
-    { front: 'Double ratchet / forward secrecy?', back: 'Har message nayi key; ek key churi hui toh bhi pehle/baad ke messages safe.' },
-    { front: 'Sender keys (lab 25)?', back: 'Key ek baar baanto, message ek baar encrypt. 1,000 members: 199,800 → 1,199 encryptions, 200 MB → 0.26 MB. Keemat: leave par rotation.' },
+     { front: 'Double ratchet / forward secrecy?', back: 'Forward secrecy past keys protect karti hai jab old keys securely delete hui hon. Future recovery alag property hai: fresh DH entropy, uncompromised endpoint aur protocol assumptions matter karte hain.' },
+    { front: 'Sender keys (lab 25)?', back: "Key ek baar baanto, message ek baar encrypt. 1,000 members: 199,800 → 1,199 encryptions, 200 MB → 0.26 MB. Keemat: leave par rotation." },
     { front: 'Multi-device (2021)?', back: 'Har device ki apni identity key; user = devices ka set; har device ke liye alag encrypt; history E2E sync, server andha.' },
   ],
 },

@@ -9,22 +9,7 @@
 
 VISUALS['bt-swarm'] = {
   t: 'Server ki capacity fixed, swarm ki badhti hai',
-  html: `
-    <div class="dg-split">
-      <div class="dg-box is-bad"><span class="bx-label">🏢 Client-server</span>
-        <div class="dg-cap">Ek uplink, 1,000 log = 1,000 tukde. Sabse zyada maang ke waqt hi server bhar jaata hai
-          (flash crowd / "Slashdot effect"). Lab: 40 log, <b>63 sec</b>, origin ne 100% bheja.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">🐝 Swarm</span>
-        <div class="dg-cap">Har downloader upload bhi karta hai → capacity = sabke uplinks ka jod. Bheed aaye toh swarm
-          <b>tez</b>. Lab: 40 log, <b>6.8 sec</b>, origin ka hissa 12%.</div></div>
-    </div>
-    <div class="dg-rule"></div>
-    <div class="dg-flow">
-      <span class="dg-pill">📄 file → pieces</span><span class="dg-arrow">→</span>
-      <span class="dg-pill acc">🧾 .torrent: har piece ka SHA-1</span><span class="dg-arrow">→</span>
-      <span class="dg-pill">📋 tracker: sirf peers ki list</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good">🔍 har piece khud verify → turant aage serve</span>
-    </div>`,
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">🏢 Client-server</span>\n        <div class=\"dg-cap\">Ek uplink, 1,000 log = 1,000 tukde. Sabse zyada maang ke waqt hi server bhar jaata hai\n          (flash crowd / \"Slashdot effect\"). Lab: 40 log, <b>63 sec</b>, origin ne 100% bheja.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🐝 Swarm</span>\n        <div class=\"dg-cap\">Har downloader upload bhi karta hai → capacity = sabke uplinks ka jod. Bheed aaye toh swarm\n          <b>tez</b>. Lab: 40 log, <b>6.8 sec</b>, origin ka hissa 12%.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📄 file → pieces</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">🧾 .torrent: har piece ka SHA-1</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill\">📋 tracker: sirf peers ki list</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">🔍 har piece khud verify → turant aage serve</span>\n    </div>",
 };
 
 VISUALS['bt-rarest'] = {
@@ -60,14 +45,7 @@ VISUALS['bt-titfortat'] = {
 
 VISUALS['bt-dht'] = {
   t: 'Tracker ke bina: XOR distance se dhoondho',
-  html: `
-    <div class="dg-ladder">
-      <div class="dg-rung"><span class="lv">2001</span><span class="cmd">website + .torrent file + tracker</span><span class="q">tracker = technical aur legal SPOF</span></div>
-      <div class="dg-rung a"><span class="lv">2005</span><span class="cmd">Mainline DHT (Kademlia)</span><span class="q">info hash ke sabse paas (XOR) wale nodes peers ki list rakhte hain</span></div>
-      <div class="dg-rung g"><span class="lv">aaj</span><span class="cmd">Magnet link</span><span class="q">sirf 40-char info hash — metadata bhi peers se, hash se verify</span></div>
-    </div>
-    <div class="dg-cap">Lab 18: nodes 1,000 → 1,00,000 (100×), lookup rounds sirf 4.0 → 5.3. Har node 1 lakh mein se sirf 116 ko jaanta hai.
-      <b>URL jagah ka pata hai; magnet content ka.</b></div>`,
+  html: "\n    <div class=\"dg-ladder\">\n      <div class=\"dg-rung\"><span class=\"lv\">2001</span><span class=\"cmd\">website + .torrent file + tracker</span><span class=\"q\">tracker = technical aur legal SPOF</span></div>\n      <div class=\"dg-rung a\"><span class=\"lv\">2005</span><span class=\"cmd\">Mainline DHT (Kademlia)</span><span class=\"q\">info hash ke sabse paas (XOR) wale nodes peers ki list rakhte hain</span></div>\n      <div class=\"dg-rung g\"><span class=\"lv\">aaj</span><span class=\"cmd\">Magnet link</span><span class=\"q\">sirf 40-char info hash — metadata bhi peers se, hash se verify</span></div>\n    </div>\n    <div class=\"dg-cap\">Lab 18: nodes 1,000 → 1,00,000 (100×), lookup rounds sirf 4.0 → 5.3. Har node 1 lakh mein se sirf 116 ko jaanta hai.\n      <b>URL jagah ka pata hai; magnet content ka.</b></div>",
 };
 
 SD.registerLevels('planet', [
@@ -104,18 +82,7 @@ SD.registerLevels('planet', [
      </ul>
      <p>Aaj bhi production mein: Twitter ne deploy 40 min → 12 sec kiya, Windows Update ka P2P, Uber Kraken
      (Docker images), Mistral ke model weights magnet link se.</p>`,
-    `<h3>🔍 Anjaan logon se data — bharosa kaise?</h3>
-     <p>Peers anjaan hain, badalte rehte hain — unhe authenticate nahi kar sakte. Toh <b>sender ko nahi,
-     content ko verify karo</b>: aaya hua piece hash karo, .torrent ke hash se milao. Match → rakho aur
-     aage do. Mismatch → phenko, kahin aur se maango, bhejne wale ko ban karo.</p>
-     <p>Ek baar content verify hone laga, toh <b>koi bhi raasta</b> theek hai — mirror, cache, peer, dushman bhi.</p>
-     <h3>📏 Lab 18 — 40 log, 2 MB file, asli bytes, asli SHA-1</h3>
-     <pre>origin mode: 40/40 done, last at 63.0 s   origin ka upload: 1280 pieces (100%)
-swarm mode:  40/40 done, last at  6.8 s   origin ka upload:  151 pieces (12%)
-swarm, 80 log:              7.5 s         origin ka upload:  6%
-swarm + 5 jhoothe peers:    6.9 s         143 corrupt pieces pakde, 143 bans, 0 file mein gaye</pre>
-     <p>Log dugne kiye → time lagbhag wahi. Jhoothe peers ne ek-ek byte badla → hash ne pakda → time 6.8 → 6.9.
-     <b>Hash check sasta hai, bharosa mehenga.</b></p>`,
+    "<h3>🔍 Anjaan logon se data — bharosa kaise?</h3>\n     <p>Peers anjaan hain, badalte rehte hain — unhe authenticate nahi kar sakte. Toh <b>sender ko nahi,\n     content ko verify karo</b>: aaya hua piece hash karo, .torrent ke hash se milao. Match → rakho aur\n     aage do. Mismatch → phenko, kahin aur se maango, bhejne wale ko ban karo.</p>\n     <p>Ek baar content verify hone laga, toh <b>koi bhi raasta</b> theek hai — mirror, cache, peer, dushman bhi.</p>\n     <h3>📏 Lab 18 — 40 log, 2 MB file, asli bytes, asli SHA-1</h3>\n     <pre>origin mode: 40/40 done, last at 63.0 s   origin ka upload: 1280 pieces (100%)\nswarm mode:  40/40 done, last at  6.8 s   origin ka upload:  151 pieces (12%)\nswarm, 80 log:              7.5 s         origin ka upload:  6%\nswarm + 5 jhoothe peers:    6.9 s         143 corrupt pieces pakde, 143 bans, 0 file mein gaye</pre>\n     <p>Log dugne kiye → time lagbhag wahi. Jhoothe peers ne ek-ek byte badla → hash ne pakda → time 6.8 → 6.9.\n     <b>Hash check sasta hai, bharosa mehenga.</b></p>",
   ],
   stages: [
     {
@@ -133,16 +100,11 @@ swarm + 5 jhoothe peers:    6.9 s         143 corrupt pieces pakde, 143 bans, 0 
         { text: '5 jhoothe peers ke saath.', cmd: 'node tools/flash.js --mode swarm --malicious 5', expect: 'RESULT swarm: 35/35 done, last at 6.9 s, p50 6.5 s\n  SHA-1 mismatch: 143 pieces reject, 143 bans — koi kharab piece file mein nahi gaya' },
       ],
       observe: {
-        q: 'Origin mode mein 44 sec tak ek bhi banda poora nahi hua. Swarm mein 6.8 sec mein sab. Asli farq kya hai?',
-        choices: [
-          'Origin mode mein capacity fixed (20 pieces/sec) aur 40 mein bati; swarm mein har peer 4 pieces/sec jodta hai — capacity maang ke saath badhti hai',
-          'Swarm mein file chhoti thi',
-          'Swarm mein compression tha',
-          'Origin mode mein bug hai',
-        ],
+        q: "Origin mode mein 44 sec tak ek bhi banda poora nahi hua. Swarm mein 6.8 sec mein sab. Asli farq kya hai?",
+        choices: ["Peer upload capacity demand ke saath badhi","Swarm file bytes automatically smaller","Compression alone creates peer upload","Origin has unlimited egress by default"],
         answer: 0,
         explain: 'Demand hi supply ban gayi. Origin ne har piece ~5 baar bheja, baaki 88% peers ne ek dusre ko diya.',
-      },
+       choiceExplanations: ["Demand hi supply ban gayi. Origin ne har piece ~5 baar bheja, baaki 88% peers ne ek dusre ko diya.","Question same file distribute karta hai.","Peers copies onward send karte hain; compression primary changed variable nahi.","Origin capacity lab mein explicitly fixed hai."] },
       lesson: 'Jab har grahak thoda bechne bhi lage, bheed tumhari dushman nahi, tumhari capacity hai.',
     },
     {
@@ -151,21 +113,16 @@ swarm + 5 jhoothe peers:    6.9 s         143 corrupt pieces pakde, 143 bans, 0 
       questions: [
         {
           q: 'Tracker ke paas file ka kitna data hota hai?',
-          choices: ['Kuch nahi — sirf peers ki list', 'Poori file', 'Pehla piece', 'Saare hashes aur pieces'],
+          choices: ["Peer endpoints aur swarm membership","All payload pieces ka durable copy","Only first piece ka canonical copy","Every completed client ka plaintext"],
           answer: 0,
           explain: 'Tracker "kaun kaun share kar raha hai" batata hai. Isi liye woh sasta hai — aur isi liye baad mein DHT se badla ja saka.',
-        },
+         choiceExplanations: ["Tracker \"kaun kaun share kar raha hai\" batata hai. Isi liye woh sasta hai — aur isi liye baad mein DHT se badla ja saka.","Tracker discovery service hai; file data peer exchange se aata hai.","Tracker seed hona protocol requirement nahi.","Tracker user content plaintext store karna mandatory nahi."] },
         {
           q: '"Content verify karo, sender nahi" ka sabse bada faayda?',
-          choices: [
-            'Data kisi bhi raaste se aa sakta hai — mirror, cache, anjaan peer — jab tak hash match hai, bharosa zaroori nahi',
-            'Download tez hota hai',
-            'Encryption milta hai',
-            'Tracker ki zaroorat nahi rehti',
-          ],
+          choices: ["Trusted hashes se peer content verify","Hash grants publisher authorization","Hash encrypts downloaded payload","Hash removes peer discovery need"],
           answer: 0,
           explain: 'Content-addressing ka poora jaadu yahi hai — Docker images aur git objects bhi isi soch par hain.',
-        },
+         choiceExplanations: ["Content-addressing ka poora jaadu yahi hai — Docker images aur git objects bhi isi soch par hain.","Digest ko trusted publisher identity/metadata se bind karna alag issue hai.","Hash integrity check hai, confidentiality nahi.","Correct content ke liye peers/locations find karne honge."] },
       ],
     },
   ],
@@ -174,27 +131,17 @@ swarm + 5 jhoothe peers:    6.9 s         143 corrupt pieces pakde, 143 bans, 0 
     instructions: 'Do sawaal. 🎤',
     questions: [
       {
-        q: 'Interviewer: "5 GB build artifact 10,000 servers par 5 minute mein pahunchana hai."',
-        choices: [
-          'P2P distribution (Twitter Murder / Uber Kraken jaisa): tracker/seed ek jagah, har server piece verify karke aage de, same-rack peers ko pehle — origin ka load lagbhag constant',
-          'Ek bada S3 bucket, sab ek saath download',
-          'rsync har server par ek-ek karke',
-          '10,000 × 5 GB ka CDN plan',
-        ],
+        q: "Interviewer: 5 GB artifact ko10000servers tak5minutes mein bhejna hai; origin egress limited hai, rack uplinks aur peer upload spare hain. Kaunsa design evaluate karoge?",
+        choices: ["Peer fanout aur capacity budget","Only serial rsync across all servers","Single small seed egress for all bytes","P2P name guarantees five-minute SLO"],
         answer: 0,
-        explain: '10,000 × 5 GB = 50 TB ek origin se 5 min mein namumkin; swarm mein origin ~har piece ek baar bhejta hai.',
-      },
+        explain: "Peer-assisted distribution origin copies reduce kar sakti hai. 50 TB/300s roughly 167 GB/s total delivered traffic hai; origin, rack topology, peer uplinks, seed availability and verified content actual feasibility decide karte hain.",
+       choiceExplanations: ["Peer-assisted distribution origin copies reduce kar sakti hai. 50 TB/300s roughly 167 GB/s total delivered traffic hai; origin, rack topology, peer uplinks, seed availability and verified content actual feasibility decide karte hain.","Serial transfers parallel capacity waste kar sakti hain.","Direct50TB transfer origin/link capacity ko exceed kar sakta hai.","Peer uplinks, topology, seeding and startup actual completion time govern karte hain."] },
       {
         q: 'Interviewer: "Anjaan peers kharab data bhej dein toh?"',
-        choices: [
-          'Har piece ka hash pehle se trusted metadata mein; receiver khud verify kare, mismatch par phenke aur sender ko ban kare',
-          'Sirf trusted peers se lo',
-          'TLS laga do',
-          'Poori file download karke end mein check karo',
-        ],
+        choices: ["Trusted piece digest, verify and retry","TLS means peer never serves bad data","Untrusted peer chooses trusted digest","Only filename proves correct artifact"],
         answer: 0,
         explain: 'TLS channel ko verify karta hai, content ko nahi. Aur end mein check = poora download bekaar.',
-      },
+       choiceExplanations: ["TLS channel ko verify karta hai, content ko nahi. Aur end mein check = poora download bekaar.","Authenticated transport malicious sender ke payload ko correct nahi banata.","Digest attacker se hi trust kiya toh integrity comparison meaningless ho sakta hai.","Filename bytes authenticate nahi karta."] },
     ],
   },
   success: [
@@ -206,7 +153,7 @@ swarm + 5 jhoothe peers:    6.9 s         143 corrupt pieces pakde, 143 bans, 0 
     container image jo 1,000 nodes ek saath kheenchte hain. Likho: aaj origin par kitna load aata hai (nodes ×
     size), aur P2P ya same-rack sharing se kitna ghatega.</p>`,
   cards: [
-    { front: 'BitTorrent ka core idea?', back: 'Har downloader upload bhi karta hai → capacity maang ke saath badhti hai. Lab: 40 log, origin akela 63 s vs swarm 6.8 s.' },
+    { front: 'BitTorrent ka core idea?', back: "Har downloader upload bhi karta hai → capacity maang ke saath badhti hai. Lab: 40 log, origin akela 63 s vs swarm 6.8 s." },
     { front: 'Tracker kya rakhta hai?', back: 'Sirf peers ki list. File ka koi byte nahi.' },
     { front: '"Content verify karo, sender nahi"?', back: 'Har piece ka SHA-1 .torrent mein; receiver khud hash karke milata hai. Mismatch → phenko + ban. Phir koi bhi raasta chalega.' },
   ],
@@ -289,15 +236,10 @@ rarest       t=30               0 / 128                200 / 200</pre>
       ],
       observe: {
         q: 'Rarest-first mein t=16 par bhi 5 pieces gayab the, jabki seeder ko har piece ek baar bhejne mein 16 sec lagte hain. Kyun?',
-        choices: [
-          'Pehla piece random hota hai — shuru mein kuch duplicate pieces gaye, isliye 16 sec mein saare 128 alag pieces bahar nahi aa paaye',
-          'Rarest first kaam nahi karta',
-          'Hash check fail hua',
-          'Seeder dheema tha',
-        ],
+        choices: ["Initial random picks duplicated some pieces","Rarest-first guarantees every time bound","All hashes were necessarily invalid","Seeder never sent any useful piece"],
         answer: 0,
         explain: 'Random first piece ki chhoti si keemat. 20 sec tak seeder rahe toh sab bach jaata hai.',
-      },
+       choiceExplanations: ["Random first piece ki chhoti si keemat. 20 sec tak seeder rahe toh sab bach jaata hai.","Finite-time availability selection and initial diversity par depend karti hai.","Question missing coverage dikhata hai, corrupt digest evidence nahi.","Seeder useful duplicates bhej sakta hai; problem distinct coverage ki hai."] },
       lesson: 'Har peer ka local faisla (rarest first) poore swarm ko seeder ke bina zinda rakhta hai.',
     },
   ],
@@ -307,26 +249,16 @@ rarest       t=30               0 / 128                200 / 200</pre>
     questions: [
       {
         q: 'Interviewer: "P2P video streaming bana rahe hain. Rarest-first chalega?"',
-        choices: [
-          'Seedha nahi — streaming ko playback ke paas wale pieces pehle chahiye; mix karo: aage ki window mein sequential/deadline-based, baaki rarest-first',
-          'Haan, hamesha',
-          'Nahi, P2P streaming mumkin hi nahi',
-          'Sirf sequential',
-        ],
+        choices: ["Playback deadlines plus rarity window","Global rarest piece before playback","Only sequential no diversity policy","Peer-to-peer cannot stream any video"],
         answer: 0,
         explain: 'Rarest first throughput ke liye hai; streaming latency/order maangti hai.',
-      },
+       choiceExplanations: ["Rarest first throughput ke liye hai; streaming latency/order maangti hai.","Globally rarest piece far future ka ho sakta hai; playback stall hogi.","Pure sequential swarm diversity reduce kar sakta hai.","P2P streaming possible hai; scheduling contract different hai."] },
       {
         q: 'Interviewer: "Endgame mode ka nuksaan?"',
-        choices: [
-          'Thoda duplicate traffic (ek hi block kai peers se) — jaan-boojh ke, taaki ek dheema peer poore download ko na roke',
-          'Download dheema',
-          'Hash check band ho jaata hai',
-          'Seeder overload',
-        ],
+        choices: ["Extra duplicate bytes for lower tail","Disable hashes to save final wait","One slow peer gets exclusive work","No cancellation after first result"],
         answer: 0,
         explain: 'Wahi idea jo hedged requests mein hai: tail kaatne ke liye thoda extra kaam.',
-      },
+       choiceExplanations: ["Wahi idea jo hedged requests mein hai: tail kaatne ke liye thoda extra kaam.","Endgame integrity verification retain kar sakta hai.","Exclusive assignment tail straggler ko critical path rakhti hai.","First success ke baad redundant requests cancel karna waste limit karta hai."] },
     ],
   },
   success: [
@@ -405,15 +337,10 @@ titfortat BINA optimistic unchoke (koi free-rider nahi): 400 sec mein 0/200 poor
       ],
       observe: {
         q: '"none" mein free-riders honest peers se pehle khatam kyun hue?',
-        choices: [
-          'Unka koi upload bandwidth kharch nahi hua aur uploaders random logon ko de rahe the — lena poora, dena zero. Dene walon ko saza mili',
-          'Free-riders ke paas tez internet tha',
-          'Simulator ka bug',
-          'Free-riders kam the',
-        ],
+        choices: ["No upload incentive gave free-rider edge","Free-riders had measured faster links","More pieces existed for free-riders","All upload CPU costs automatically zero"],
         answer: 0,
         explain: 'Bina incentive ke rational behaviour swarm ko kamzor karta hai.',
-      },
+       choiceExplanations: ["Bina incentive ke rational behaviour swarm ko kamzor karta hai.","Question network link upgrade nahi deta.","Same file availability ko different payload count explain nahi karta.","Uploading costs bandwidth/processing; incentive policy matters."] },
       lesson: 'Tit-for-tat dene walon ko tez karta hai; optimistic unchoke naye logon ko ghusne deta hai.',
     },
     {
@@ -434,26 +361,16 @@ titfortat BINA optimistic unchoke (koi free-rider nahi): 400 sec mein 0/200 poor
     questions: [
       {
         q: 'Interviewer: "Hamare internal P2P cache mein kuch nodes upload band kar dete hain (CPU bachane). Kya karein?"',
-        choices: [
-          'Protocol mein incentive: jo zyada deta hai use priority (tit-for-tat jaisa), naye nodes ke liye ek optimistic slot; aur upload ko sasta rakho (background class)',
-          'Un nodes ko band kar do',
-          'Sab nodes ko force karo',
-          'P2P hata do',
-        ],
+        choices: ["Reciprocity aur newcomer bootstrap","Only punish nodes after completion","No newcomer ever gets first piece","Assume every node follows policy"],
         answer: 0,
         explain: 'Enforcement protocol mein — central police ke bina.',
-      },
+       choiceExplanations: ["Enforcement protocol mein — central police ke bina.","Late punishment live resource allocation incentive nahi.","Bootstrap deny karne se new participants share karna start nahi karte.","Rational or buggy peers controls bypass/disable kar sakte hain."] },
       {
         q: 'Interviewer: "Optimistic unchoke hata dein? Thoda bandwidth bachega."',
-        choices: [
-          'Nahi — naye peers kabhi pehla piece nahi paayenge (lab: 400 sec mein 0/200), aur behtar partner dhoondhne ka raasta band',
-          'Haan, bandwidth zaroori hai',
-          'Sirf raat ko hatao',
-          'Koi farq nahi',
-        ],
+        choices: ["Newcomer bootstrap aur partner exploration","Only current best peers forever","No-first-piece peers can reciprocate","Exploration cannot improve throughput"],
         answer: 0,
         explain: 'Explore band = system naye logon aur naye mauke ke liye andha.',
-      },
+       choiceExplanations: ["Explore band = system naye logon aur naye mauke ke liye andha.","Old partner set changing network quality miss kar sakta hai.","Empty peers ke paas upload offer karne ko content nahi.","Exploration potentially better peers discover kar sakti hai."] },
     ],
   },
   success: [
@@ -486,41 +403,8 @@ titfortat BINA optimistic unchoke (koi free-rider nahi): 400 sec mein 0/200 poor
     'Bufferbloat aur uTP/LEDBAT; trade-offs (privacy, Sybil)',
   ],
   lesson: [
-    `<h3>📋 Tracker bhi ek SPOF</h3>
-     <p>Tracker file nahi rakhta, par woh gira toh naye log swarm dhoondh hi nahi sakte. Aur woh <b>legal</b> SPOF
-     bhi hai — ek operator, ek IP, ek hosting bill, ek takedown notice.</p>
-     <p>2005: <b>Mainline DHT</b>, Kademlia (2002 paper) par. Laakhon nodes ki ek distributed hash table: key =
-     <b>info hash</b> (metadata ka SHA-1, 160-bit), value = peers ki list. Har node ki random 160-bit ID; jin
-     nodes ki ID info hash ke <b>sabse paas</b> hai (XOR distance), woh uski peer list rakhte hain.</p>
-     <h3>🧭 XOR distance se kaise pahunchein?</h3>
-     <p>Har node har "distance range" (bucket) mein kuch hi nodes jaanta hai — paas wale zyada detail mein, door wale
-     kam. Lookup: "tumhe target ke jo sabse paas nodes pata hain, batao" — 3 se ek saath poochho, jo naye paas wale
-     mile unse poochho. Har jawab distance ka kam se kam ek bit aur "sahi" karta hai → <b>log N</b> rounds.</p>
-     <pre>lab 18 (ex4):
-nodes     har node kitne jaanta hai   avg rounds   avg messages   sahi node mila
-1000            63 (6.30%)               4.0          11.0          100%
-10000           89 (0.89%)               4.6          12.8          100%
-100000         116 (0.12%)               5.3          14.8          100%</pre>`,
-    `<h3>🧲 Magnet link</h3>
-     <p><b>Metadata exchange</b> extension: peers .torrent ka metadata bhi tukdon mein bhej dete hain, jo info hash se
-     verify hota hai. Toh ab sirf <b>40-character info hash</b> chahiye → magnet link.</p>
-     <pre>2001: website + .torrent file + tracker
-2005: DHT ne tracker ki jagah li
-baad mein: metadata exchange ne .torrent ki jagah li → sirf magnet link</pre>
-     <p class="tip">🎯 URL <b>jagah</b> ka pata hai ("yeh server, yeh path"). Magnet <b>content</b> ka pata hai
-     ("yeh hash wali cheez, jahan bhi ho").</p>
-     <h3>🛁 Bufferbloat aur shareef upload</h3>
-     <p>TCP capacity dhoondhta hai loss aane tak speed badha ke. Ghar ke routers packet giraane ki jagah
-     <b>buffer</b> karte hain → queue bharti hai. Darjanon BitTorrent TCP connections buffers bhare rakhte the →
-     sabke packets (video call, game, web) seconds tak line mein. ~2009 <b>uTP</b>: timestamps se <b>queuing delay</b>
-     naapo; ~100 ms target se upar → buffer bharne se pehle hi peeche hato. TCP ke aage jhuk jaata hai →
-     "background" class. IETF ne ise <b>LEDBAT</b> banaya — Windows Update aur Apple updates yahi use karte hain.</p>
-     <h3>⚖️ Trade-offs</h3>
-     <ul>
-       <li>Privacy nahi — swarm membership public, IPs dikhte hain.</li>
-       <li>Throughput &gt; latency; availability maang ke saath (seeders gaye toh file gayi).</li>
-       <li>Khuli membership → <b>Sybil attack</b>: hazaron nakli identities lookups ko bigaad sakti hain.</li>
-     </ul>`,
+    "<h3>📋 Tracker bhi ek SPOF</h3>\n     <p>Tracker file nahi rakhta, par woh gira toh naye log swarm dhoondh hi nahi sakte. Aur woh <b>legal</b> SPOF\n     bhi hai — ek operator, ek IP, ek hosting bill, ek takedown notice.</p>\n     <p>2005: <b>Mainline DHT</b>, Kademlia (2002 paper) par. Laakhon nodes ki ek distributed hash table: key =\n     <b>info hash</b> (metadata ka SHA-1, 160-bit), value = peers ki list. Har node ki random 160-bit ID; jin\n     nodes ki ID info hash ke <b>sabse paas</b> hai (XOR distance), woh uski peer list rakhte hain.</p>\n     <h3>🧭 XOR distance se kaise pahunchein?</h3>\n     <p>Har node har \"distance range\" (bucket) mein kuch hi nodes jaanta hai — paas wale zyada detail mein, door wale\n     kam. Lookup: \"tumhe target ke jo sabse paas nodes pata hain, batao\" — 3 se ek saath poochho, jo naye paas wale\n     mile unse poochho. Healthy random routing-table assumptions mein lookup progressively closer XOR-prefix contacts explore karta hai; expected logarithmic behavior mil sakta hai. Har response guaranteed one-bit improvement nahi; churn, loss and adversaries progress change karte hain.</p>\n     <pre>lab 18 (ex4):\nnodes     har node kitne jaanta hai   avg rounds   avg messages   sahi node mila\n1000            63 (6.30%)               4.0          11.0          100%\n10000           89 (0.89%)               4.6          12.8          100%\n100000         116 (0.12%)               5.3          14.8          100%</pre>",
+    "<h3>🧲 Magnet link</h3>\n     <p><b>Metadata exchange</b> extension: peers .torrent ka metadata bhi tukdon mein bhej dete hain, jo info hash se\n     verify hota hai. Toh ab sirf <b>40-character info hash</b> chahiye → magnet link.</p>\n     <pre>2001: website + .torrent file + tracker\n2005: DHT ne tracker ki jagah li\nbaad mein: metadata exchange ne .torrent ki jagah li → sirf magnet link</pre>\n     <p class=\"tip\">🎯 URL <b>jagah</b> ka pata hai (\"yeh server, yeh path\"). Magnet <b>content</b> ka pata hai\n     (\"yeh hash wali cheez, jahan bhi ho\").</p>\n     <h3>🛁 Bufferbloat aur shareef upload</h3>\n     <p>TCP capacity dhoondhta hai loss aane tak speed badha ke. Ghar ke routers packet giraane ki jagah\n     <b>buffer</b> karte hain → queue bharti hai. Darjanon BitTorrent TCP connections buffers bhare rakhte the →\n     sabke packets (video call, game, web) seconds tak line mein. ~2009 <b>uTP</b>: timestamps se <b>queuing delay</b>\n     naapo; ~100 ms target se upar → buffer bharne se pehle hi peeche hato. TCP ke aage jhuk jaata hai →\n     \"background\" class. <b>LEDBAT</b> RFC 6817 mein Experimental delay-based congestion control hai. Specific OS/update-service deployment version-dependent hai, universal current claim nahi.</p>\n     <h3>⚖️ Trade-offs</h3>\n     <ul>\n       <li>Privacy nahi — swarm membership public, IPs dikhte hain.</li>\n       <li>Throughput &gt; latency; availability maang ke saath (seeders gaye toh file gayi).</li>\n       <li>Khuli membership → <b>Sybil attack</b>: hazaron nakli identities lookups ko bigaad sakti hain.</li>\n     </ul>",
   ],
   stages: [
     {
@@ -536,16 +420,11 @@ baad mein: metadata exchange ne .torrent ki jagah li → sirf magnet link</pre>
         { text: 'Kam lookups se jaldi dekhna ho toh.', cmd: 'node tools/dht.js --nodes 10000 --lookups 100', expect: '10000           89 (0.89%)            4.6            6           12.8         100.0%' },
       ],
       observe: {
-        q: 'Nodes 100× badhe (1,000 → 1 lakh), rounds sirf 4.0 → 5.3. Kyun?',
-        choices: [
-          'Har round XOR distance ka kam se kam ek bit sahi karta hai, aur har node paas ke nodes zyada detail mein jaanta hai — rounds log N ke saath badhte hain',
-          'Bade network mein nodes tez hain',
-          'Lookups cache ho gaye',
-          'Simulation chhota tha',
-        ],
+        q: "Nodes 100× badhe (1,000 → 1 lakh), rounds sirf 4.0 → 5.3. Kyun?",
+        choices: ["Healthy XOR routing ka expected log growth","100x nodes make each link 100x faster","Every lookup magically cache hit","Constant rounds guaranteed under loss"],
         answer: 0,
-        explain: 'log2(100×) ≈ 6.6 bits — par har round kai bits sahi kar deta hai (k=8, alpha=3).',
-      },
+        explain: "Healthy Kademlia-style routing mein progressively closer XOR prefixes expected logarithmic lookup behavior dete hain. Har round progress unconditional guarantee nahi; churn, timeouts, parallelism and adversaries affect karte hain.",
+       choiceExplanations: ["Healthy Kademlia-style routing mein progressively closer XOR prefixes expected logarithmic lookup behavior dete hain. Har round progress unconditional guarantee nahi; churn, timeouts, parallelism and adversaries affect karte hain.","Node count physical link speed define nahi karta.","Experiment routing topology compare karta hai, universal cache hits nahi.","Timeouts, churn and adversarial peers expected bound ko affect karte hain."] },
       lesson: 'Har node thoda sa jaane, par sahi dhang se — toh bina kisi center ke bhi log N mein pata mil jaata hai.',
     },
     {
@@ -554,26 +433,16 @@ baad mein: metadata exchange ne .torrent ki jagah li → sirf magnet link</pre>
       questions: [
         {
           q: 'Magnet link mein sirf info hash hai. Metadata par bharosa kaise?',
-          choices: [
-            'Metadata peers se tukdon mein aata hai aur info hash se verify hota hai — hash hi pehchaan hai',
-            'Magnet link encrypted hai',
-            'Tracker verify karta hai',
-            'Bharosa nahi kar sakte',
-          ],
+          choices: ["Trusted info hash metadata ko authenticate","Magnet syntax encrypts metadata","Any tracker message authoritative","Filename alone identifies exact bytes"],
           answer: 0,
-          explain: 'Content-addressing: naam hi saboot hai.',
-        },
+          explain: "Metadata ka computed digest trusted expected info hash se match karo. Isse content integrity/binding verify hoti hai; arbitrary sender ka diya hash alone publisher identity ya authorization prove nahi.",
+         choiceExplanations: ["Metadata ka computed digest trusted expected info hash se match karo. Isse content integrity/binding verify hoti hai; arbitrary sender ka diya hash alone publisher identity ya authorization prove nahi.","Magnet link encryption scheme nahi.","Tracker response hash verification ka replacement nahi.","Different payloads same filename rakh sakte hain."] },
         {
           q: 'uTP/LEDBAT kis problem ko theek karta hai?',
-          choices: [
-            'Bufferbloat — bulk upload router ke buffers bhar deta tha, sabke calls/games seconds tak atakte; LEDBAT queuing delay dekh ke pehle hi peeche hat-ta hai',
-            'Piece corruption',
-            'Free riding',
-            'Tracker downtime',
-          ],
+          choices: ["Background bulk traffic yields on delay","Piece hashes recover corrupted blocks","Tracker stays up during maintenance","Free-riders get better upload ratio"],
           answer: 0,
           explain: '"Har workload ko barabar mat ladao" — background ko jhukna chahiye.',
-        },
+         choiceExplanations: ["\"Har workload ko barabar mat ladao\" — background ko jhukna chahiye.","LEDBAT congestion behavior hai, content integrity nahi.","Tracker availability congestion control se independent hai.","Reciprocity peer scheduling ka separate concern hai."] },
       ],
     },
   ],
@@ -583,26 +452,16 @@ baad mein: metadata exchange ne .torrent ki jagah li → sirf magnet link</pre>
     questions: [
       {
         q: 'Interviewer: "Central registry ke bina 1 lakh nodes mein key ka owner kaise dhoondhoge?"',
-        choices: [
-          'Kademlia-style DHT: random IDs, XOR distance, k-buckets; iterative lookup parallel alpha ke saath — log N rounds',
-          'Sab nodes ko broadcast',
-          'Har node sabko jaane',
-          'Ek random node se poochho',
-        ],
+        choices: ["XOR k-buckets, iterative bounded lookup","Broadcast every query to all nodes","Every node stores every other node","One random peer is ownership proof"],
         answer: 0,
         explain: 'Broadcast = N messages; sab jaane = N² memory. DHT: har node ~log N, lookup ~log N.',
-      },
+       choiceExplanations: ["Broadcast = N messages; sab jaane = N² memory. DHT: har node ~log N, lookup ~log N.","Broadcast demand network size ke saath expensive hoti hai.","Full membership per-node O(N) state and fleet-wide O(N²) relationships laati hai.","Random contact ko iterative routing/verification chahiye."] },
       {
         q: 'Interviewer: "Open DHT ka sabse bada security risk?"',
-        choices: [
-          'Sybil — ek attacker hazaron nakli IDs banake lookups ghere ya records poison kare; ID generation mehenga/bandha karna, kai raaston se verify',
-          'DDoS',
-          'Encryption ki kami',
-          'Slow lookups',
-        ],
+        choices: ["Sybil/eclipse under cheap open identities","Only lack of encrypted payloads","Every slow lookup is compromise","DHT makes volumetric attacks impossible"],
         answer: 0,
         explain: 'Khuli membership ki keemat.',
-      },
+       choiceExplanations: ["Khuli membership ki keemat.","Encryption alone fake identity concentration prevent nahi karti.","Latency network/churn se bhi aa sakti hai.","Open services still resource exhaustion/DDoS threats face karti hain."] },
     ],
   },
   success: [
@@ -614,9 +473,9 @@ baad mein: metadata exchange ne .torrent ki jagah li → sirf magnet link</pre>
     faayda ho — build artifacts, container images, static assets. Likho: kya milega (cache kahin se bhi, verify
     apne aap) aur kya chahiye (hash ka trusted source).</p>`,
   cards: [
-    { front: 'Kademlia DHT?', back: 'Random IDs, XOR distance; key ke sabse paas nodes value rakhte hain; har node har distance-range mein k nodes jaanta hai. Lookup ~log N rounds (lab: 1k→100k nodes, 4.0→5.3).' },
+    { front: 'Kademlia DHT?', back: "Random IDs, XOR distance; key ke sabse paas nodes value rakhte hain; har node har distance-range mein k nodes jaanta hai. Lookup ~log N rounds (lab: 1k→100k nodes, 4.0→5.3)." },
     { front: 'Magnet link?', back: 'Sirf info hash (40 chars). DHT se peers, metadata exchange se .torrent — info hash se verify. URL = jagah; magnet = content.' },
-    { front: 'uTP / LEDBAT?', back: 'Queuing delay naap ke (~100 ms target) buffer bharne se pehle peeche hat-na — bufferbloat ka ilaaj, background class. Windows/Apple updates.' },
+    { front: 'uTP / LEDBAT?', back: "LEDBAT delay-based background congestion control competing traffic ko yield karne ke liye design hua. Target/deployment implementation-specific; RFC 6817 Experimental hai. Universal bufferbloat cure nahi." },
   ],
 },
 ]);

@@ -1,3 +1,4 @@
+(() => {
 /* =====================================================================
    TRACK 7 — Poore Systems Banao
    bitly · leaderboard · adclick · ticketmaster · whatsapp · youtube · boss-uber
@@ -151,23 +152,21 @@ NON-FUNCTIONAL
 5 saal ka data              →  6 arab URLs
 har row ~500 bytes          →  ~3 TB
 
-7 characters base62         →  62⁷ = 3.5 KHARAB codes   ✅ kaafi hai</pre>
+7 characters base62         →  62⁷ ≈ 3.52 trillion = 35.2 KHARAB codes   ✅ kaafi hai</pre>
      <p class="tip">🎯 Yeh estimate ek line mein poora design bata deta hai:
      <b>40 writes/sec</b> ka matlab hai write path ka koi sawaal hi nahi —
-     ek Postgres uska 100x kar lega. Saara design <b>read path</b> ka hai.</p>
+     representative query, durability aur failure budget ke saath capacity benchmark karo. Saara design <b>read path</b> ka hai.</p>
      <h3>🔑 Short code — teen tareeke</h3>
      <table>
        <tr><th></th><th>Kaise</th><th>Dikkat</th></tr>
        <tr><td><b>Random</b></td><td>7 random characters</td><td>Har insert par "yeh code hai kya?" lookup — aur space bharne par collisions badhte jaate hain</td></tr>
        <tr><td><b>Hash</b></td><td>md5(url) ke pehle 7</td><td>Wahi URL = wahi code (kabhi feature, kabhi bug). Aur collisions phir bhi handle karne padte hain</td></tr>
-       <tr><td><b>Counter</b></td><td>badhta counter → base62</td><td>Codes guessable hain (<code>abc</code>, <code>abd</code>...) — par ek scramble se hal</td></tr>
+       <tr><td><b>Counter</b></td><td>badhta counter → base62</td><td>Codes predictable ho sakte hain; authorization mandatory. Obfuscation aur cryptographic secrecy alag hain</td></tr>
      </table>
-     <p><b>Counter jeetta hai</b>, aur wajah gehri hai: usme <b>collision mumkin hi nahi</b>,
+     <p><b>Is deterministic-allocation lab mein counter fit hai</b>, aur wajah gehri hai: durable disjoint allocation aur unreused namespace mein random-code collision retries nahi,
      isliye har write par woh existence-check <b>hai hi nahi</b>. Aur jo counter tum
      use karoge (Snowflake ya DB sequence) woh sortable hai — matlab index bhi khush.</p>
-     <p>Guessability ka ilaaj: counter ko base62 karne se pehle ek reversible
-     scramble (jaise Feistel network ya multiply-by-large-odd-number mod 62⁷)
-     laga do. Codes bikhre hue dikhenge, par collision ab bhi namumkin hai.</p>`,
+     <p>Reversible mapping collision behavior preserve karti hai if mapping one-to-one ho: mod 62⁷ multiplication mein multiplier ko modulus se coprime hona hoga (odd hona alone enough nahi; factor 31 bhi avoid karo). Simple arithmetic scramble secrecy/authorization nahi. Full 64-bit Snowflake ko 7 base62 characters mein losslessly fit nahi kar sakte; width aur capacity alag calculate karo.</p>`,
     `<h3>🏗️ Design</h3>
      <pre>WRITE (40/sec — lagbhag kuch bhi chalega)
    POST /urls  →  counter se id  →  base62 encode  →  DB insert
@@ -208,32 +207,32 @@ READ (12,000/sec peak — yahan sab kuch hai)
         {
           id: 'code', label: 'Short code kaise bane', icon: '🔑',
           options: [
-            { id: 'counter', label: 'Badhta counter → scramble → base62', score: 3, why: 'Collision <b>namumkin</b> hai, isliye har write par existence-check hai hi nahi. Code sabse chhota rehta hai, aur scramble se guessing bhi ruk jaati hai.' },
-            { id: 'random', label: '7 random characters, collision par retry', score: -1, why: 'Chalega, par har insert par ek "yeh code hai kya?" lookup chahiye — aur jaise-jaise space bharta hai, retry badhte jaate hain. (Bloom filter usme se 99% lookups kaat sakta hai, par asli hal collision ko <b>khatam</b> karna hai.)' },
-            { id: 'hash', label: 'md5(url) ke pehle 7 characters', score: -2, why: 'Do problems: wahi URL hamesha wahi code dega (do alag users, do alag campaigns — ek hi link), aur collisions phir bhi handle karne padenge kyunki 7 characters mein hash truncate ho raha hai.' },
+            { id: 'counter', label: "Durable disjoint counter then base62", score: 3, why: "Durable disjoint counter unreused bounded namespace mein random collision retries avoid karta hai. UNIQUE constraint still prudent hai; width capacity se derive karo. Scrambling alone guessing-resistant security guarantee nahi." },
+            { id: 'random', label: "Random code+unique insert retry", score: -1, why: "Random code + atomic UNIQUE insert/retry bhi correct design ho sakta hai. Pehle SELECT required nahi; woh race bhi kar sakta hai. Is lab ka preference deterministic collision-free allocation hai; random width occupancy aur threat model se choose karo." },
+            { id: 'hash', label: "Truncated URL hash;no collision test", score: -2, why: 'Do problems: wahi URL hamesha wahi code dega (do alag users, do alag campaigns — ek hi link), aur collisions phir bhi handle karne padenge kyunki 7 characters mein hash truncate ho raha hai.' },
           ],
         },
         {
           id: 'read', label: 'Redirect path', icon: '⚡',
           options: [
-            { id: 'cache', label: 'Cache-aside; miss par code ke index se DB', score: 3, why: '95%+ hit rate seedha aata hai kyunki links ka access bahut skewed hai. Aur redirect path par bas ek key lookup rehta hai — "embarrassingly simple".' },
-            { id: 'db', label: 'Har baar DB, index laga hai', score: 0, why: '12,000 rps par ek Postgres ise kar bhi lega — par p99 50ms ka SLO aur 99.99% ki shart cache ke bina bahut naazuk ho jaati hai. Yahan cache lagbhag muft ka faayda hai.' },
-            { id: 'join', label: 'DB + har redirect par click count UPDATE', score: -3, why: 'Tumne 12,000 reads/sec ko 12,000 <b>writes</b>/sec bana diya — aur woh sab ek hi row par (hot row contention). Click count hamesha async: event bhejo, redirect turant lauta do.' },
+            { id: 'cache', label: "Cache miss to indexed source", score: 3, why: '95%+ hit rate seedha aata hai kyunki links ka access bahut skewed hai. Aur redirect path par bas ek key lookup rehta hai — "embarrassingly simple".' },
+            { id: 'db', label: "Indexed source on every redirect", score: 0, why: '12,000 rps par ek Postgres ise kar bhi lega — par p99 50ms ka SLO aur 99.99% ki shart cache ke bina bahut naazuk ho jaati hai. Yahan cache lagbhag muft ka faayda hai.' },
+            { id: 'join', label: "Sync click UPDATE on every redirect", score: -3, why: "Tumne 12,000 reads/sec ko 12,000 <b>writes</b>/sec bana diya — aur woh sab ek hi row par (hot row contention). Low-latency redirect mein bounded async event common choice hai;durable handoff/loss policy define karo." },
           ],
         },
         {
           id: 'status', label: 'Redirect ka status code', icon: '↩️',
           options: [
-            { id: '302', label: '302 Found', score: 2, why: 'Har click tumhare server se guzarta hai — isliye analytics milti hai aur destination badla ja sakta hai. Jab analytics product ka hissa ho, yeh extra load ek <b>feature</b> hai.' },
-            { id: '301', label: '301 Permanent', score: -1, why: 'Server load kam ho jaata hai (browser khud cache kar leta hai) — par isi wajah se <b>click count khatam</b> ho jaata hai, aur link ka destination kabhi badla nahi ja sakta. Requirements mein analytics likha hai.' },
+            { id: '302', label: "302;explicit cache/reuse policy", score: 2, why: 'Har click tumhare server se guzarta hai — isliye analytics milti hai aur destination badla ja sakta hai. Jab analytics product ka hissa ho, yeh extra load ek <b>feature</b> hai.' },
+            { id: '301', label: "301 permanently cache mapping", score: -1, why: 'Server load kam ho jaata hai (browser khud cache kar leta hai) — par isi wajah se <b>click count khatam</b> ho jaata hai, aur link ka destination kabhi badla nahi ja sakta. Requirements mein analytics likha hai.' },
           ],
         },
         {
           id: 'viral', label: 'Ek link viral ho gaya — 50k rps', icon: '🔥',
           options: [
-            { id: 'local', label: '1-second local cache + cache key ki N copies', score: 3, why: 'Local cache 99.9% traffic app ki memory se hi de deta hai (aur 1 second ki staleness ek redirect ke liye bilkul bekaar cheez hai). Copies bache hue traffic ko nodes par baant deti hain.' },
-            { id: 'nodes', label: 'Cache cluster mein aur nodes daalo', score: -2, why: 'Ek key hamesha <b>ek</b> node par hash hoti hai. 20 nodes hon ya 200, woh key ek hi node par jalegi.' },
-            { id: 'rate', label: 'Us code par rate limit lagao', score: -3, why: 'Yeh traffic asli users ka hai — tum apne hi product ko band kar rahe ho. Rate limit abuse ke liye hai, popularity ke liye nahi.' },
+            { id: 'local', label: "Local cache;safe replica reads", score: 3, why: 'Local cache 99.9% traffic app ki memory se hi de deta hai (aur 1 second ki staleness ek redirect ke liye bilkul bekaar cheez hai). Copies bache hue traffic ko nodes par baant deti hain.' },
+            { id: 'nodes', label: "Add shards;keep hot key on one", score: -2, why: 'Ek key hamesha <b>ek</b> node par hash hoti hai. 20 nodes hon ya 200, woh key ek hi node par jalegi.' },
+            { id: 'rate', label: "Throttle this popular public link", score: -3, why: 'Yeh traffic asli users ka hai — tum apne hi product ko band kar rahe ho. Rate limit abuse ke liye hai, popularity ke liye nahi.' },
           ],
         },
       ],
@@ -254,19 +253,25 @@ READ (12,000/sec peak — yahan sab kuch hai)
         api: { countTotal: false, pagination: 'cursor' },
       }),
       tasks: T_BITLY,
-      success: allOf(T_BITLY),
+      success: SD.allTasks(T_BITLY),
       successText: `Poora design ek ratio se nikla: <b>100:1</b>.
         Write path itna chhota hai ki uspar sochna bhi bekaar tha; saara kaam
         read path par tha. Aur viral link koi naya problem nahi tha —
         woh wahi <b>hot key</b> thi jo tum pehle se jaante ho.`,
+      solution: [
+        "estimate --users 100000000 --rps 12000 --bytes 500",
+        "id bench --type uuid4 --rows 1000000",
+        "id bench --type snowflake --rows 1000000",
+        "load --rps 12000 --duration 8",
+        "sim add cache --ttl 300 --jitter 20",
+        "cache hotkey --key url:aX9k2Lq --rps 50000",
+        "cache hotkey --key url:aX9k2Lq --rps 50000 --replicas 8",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.api.cache?.jitterPct > 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
       hints: [
-        'Pehle numbers: estimate --users 100000000 --rps 12000 --bytes 500',
-        'Random code = har insert par lookup, aur random index: id bench --type uuid4 --rows 1000000',
-        'Counter + base62 = sortable, koi lookup nahi: id bench --type snowflake --rows 1000000',
-        'Ab redirect path par peak load: load --rps 12000 --duration 8',
-        'Cache lagao — redirect 99% read hai: sim add cache --ttl 300 --jitter 20',
-        'Ek viral link: cache hotkey --key url:aX9k2Lq --rps 50000',
-        'Use phailao: cache hotkey --key url:aX9k2Lq --rps 50000 --replicas 8',
+        "Pehle observation: Traffic ka andaaza lagao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Us viral link ko phailao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 100000000 --rps 12000 --bytes 500\nid bench --type uuid4 --rows 1000000\nid bench --type snowflake --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20\ncache hotkey --key url:aX9k2Lq --rps 50000\ncache hotkey --key url:aX9k2Lq --rps 50000 --replicas 8",
       ],
     },
     {
@@ -274,38 +279,23 @@ READ (12,000/sec peak — yahan sab kuch hai)
       title: 'Shortener ke faisle',
       questions: [
         {
-          q: 'Counter-based codes random se behtar kyun hain?',
-          choices: [
-            'Collision mumkin hi nahi — isliye har write par "yeh code pehle se hai kya?" wala lookup HAI HI NAHI. Aur code sabse chhota rehta hai',
-            'Woh tez generate hote hain',
-            'Woh chhote dikhte hain',
-            'Woh secure hain',
-          ],
+          q: "Unique counter allocation accepted hai. Random code generation ke comparison mein advantage?",
+          choices: ["Unique counter avoids random collision retries","Base62 encoding makes codes unguessable","Random codes inherently cannot be unique","Counter removes every persistence invariant"],
           answer: 0,
-          explain: 'Random codes ke saath har insert ek read + ek write hai, aur space bharne par retries badhte jaate hain. Counter ke saath woh read <b>gayab</b> ho jaata hai. Yeh us tarah ka optimization hai jo sabse achha hota hai: kaam <b>tez</b> nahi kiya, kaam <b>hataya</b> diya.',
-        },
+          explain: "Durable disjoint counter allocation plus one-to-one base62 encoding avoids random-code collision retries while namespace is not exhausted/reused. Random code plus atomic collision retry is valid alternative. Predictability, availability and counter recovery are tradeoffs.",
+         choiceExplanations: ["Durable disjoint counter allocation plus one-to-one base62 encoding avoids random-code collision retries while namespace is not exhausted/reused. Random code plus atomic collision retry is valid alternative. Predictability, availability and counter recovery are tradeoffs.","Base62 is reversible encoding; predictability still needs threat modeling.","Random code plus atomic unique constraint and retry can be correct too.","Counter allocation must be durable, non overlapping and not reset/reused."] },
         {
           q: 'Click analytics chahiye. Redirect ke waqt kya karoge?',
-          choices: [
-            'Ek event async bhejo (queue/stream) aur redirect turant lauta do — DB update redirect path par kabhi nahi',
-            'DB mein click_count += 1 karo',
-            'Redis counter badhao, phir redirect',
-            'Analytics chhod do',
-          ],
+          choices: ["Bounded async analytics on redirect path","Sync DB increment has zero tail cost","Queue means click events cannot be lost","Analytics throughput can ignore backlog"],
           answer: 0,
-          explain: 'Sync DB update 12,000 reads/sec ko 12,000 writes/sec bana deta hai — <b>aur woh sab ek hi row par</b> (hot row contention). Redis counter <b>bahut behtar</b> hai aur kai systems yahi karte hain; par sabse saaf yeh hai ki redirect path par kuch bhi block na ho — event fire karo aur nikal jao.',
-        },
+          explain: "Latency-sensitive redirects commonly emit bounded async analytics. Define whether lossy best-effort or durable handoff is required; queue overload/recovery policy matters. Sync update can be valid if SLO/correctness needs justify it; never universal prohibition nahi.",
+         choiceExplanations: ["Latency-sensitive redirects commonly emit bounded async analytics. Define whether lossy best-effort or durable handoff is required; queue overload/recovery policy matters. Sync update can be valid if SLO/correctness needs justify it; never universal prohibition nahi.","Synchronous dependencyadds latency/failure coupling; measure contract tradeoff.","Durable handoff, backpressure and event loss policy still required.","Consumer lag and retention determine event availability and freshness."] },
         {
-          q: '5 saal mein 6 arab URLs. Kitne characters chahiye?',
-          choices: [
-            '7 base62 characters = 3.5 kharab combinations — 6 arab ke liye bahut zyada, aur chhota bhi',
-            '6 characters kaafi hain',
-            '10 characters chahiye',
-            'UUID use karo',
-          ],
+          q: "Sequential allocation se 6 billion unique URLs. Minimum fixed base62 code width?",
+          choices: ["6 base62 characters enough for 6 billion","5 base62 characters enough for 6 billion","4 base62 characters enough for 6 billion","3 base62 characters enough for 6 billion"],
           answer: 0,
-          explain: '62⁷ ≈ 3.5 × 10¹² hai, aur zaroorat 6 × 10⁹ ki — yaani 500x margin. (62⁶ ≈ 5.7 × 10¹⁰ bhi kaafi hota, par 7 par margin aaram se rehta hai.) Yeh us tarah ka calculation hai jo 30 second leta hai aur poore design ka ek sawaal hamesha ke liye band kar deta hai.',
-        },
+          explain: "62^5=916132832<6 billion;62^6=56800235584>6 billion. Minimum fixed width is 6 base62 characters for sequential unique allocation over 6 billion values. Random code collision risk requires separate birthday/uniqueness analysis.",
+         choiceExplanations: ["62^5=916132832<6 billion;62^6=56800235584>6 billion. Minimum fixed width is 6 base62 characters for sequential unique allocation over 6 billion values. Random code collision risk requires separate birthday/uniqueness analysis.","62^5=916132832, less than 6 billion.","62^4=14776336, far below 6 billion.","62^3=238328, far below 6 billion."] },
       ],
     },
   ],
@@ -315,26 +305,16 @@ READ (12,000/sec peak — yahan sab kuch hai)
     questions: [
       {
         q: '"Bitly design karo." Pehla kaam?',
-        choices: [
-          'Read:write ratio poochhna. 100:1 nikla toh poora design read path ka hai — write path itna chhota hai ki uspar waqt lagana hi galti hogi',
-          'Database schema banana',
-          'Hashing algorithm chunna',
-          'Microservices decide karna',
-        ],
+        choices: ["Scope retention, ratio and redirect SLO","Choose hash before deciding custom aliases","Read heavy means writes need no durability","Choose 15 services before user requirements"],
         answer: 0,
         explain: 'Ek sawaal ne poora design tay kar diya. 100:1 ka matlab hai: cache par focus, redirect path ko simple rakho, aur analytics ko async karo. Agar ratio ulta hota (write-heavy), toh yeh bilkul alag system hota. Isiliye "shape pehchano" pehla kadam hai.',
-      },
+       choiceExplanations: ["Ek sawaal ne poora design tay kar diya. 100:1 ka matlab hai: cache par focus, redirect path ko simple rakho, aur analytics ko async karo. Agar ratio ulta hota (write-heavy), toh yeh bilkul alag system hota. Isiliye \"shape pehchano\" pehla kadam hai.","Collision, security and product constraints should guide ID design.","Losing URL mappings breaks redirects; read heavy still needs reliable writes.","Topology without requirements adds unsupported complexity."] },
       {
         q: '"Custom alias chahiye — /my-campaign. Ab kya badla?"',
-        choices: [
-          'Ab collision mumkin hai (do log wahi alias maang sakte hain), toh unique constraint par insert karo aur DB ko decide karne do — check-then-insert race se bacho. Aur reserved words (admin, api, login) ki blocklist chahiye',
-          'Kuch nahi badla',
-          'Alias ko hash kar do',
-          'Alias ko counter mein badal do',
-        ],
+        choices: ["Atomic alias uniqueness and reserved policy","Check then insert is race free at low latency","Hash custom alias and ignore requested spelling","Counter generation prevents human alias clash"],
         answer: 0,
         explain: 'Yeh follow-up dekhta hai ki tum <b>race conditions</b> pehchante ho. "Pehle check karo phir insert karo" wahi check-then-act bug hai — do requests ek saath wahi alias le sakti hain. Sahi jawab: unique index par insert karo aur constraint violation ko 409 mein badal do. Aur reserved paths ka dhyaan ek asli production detail hai.',
-      },
+       choiceExplanations: ["Yeh follow-up dekhta hai ki tum <b>race conditions</b> pehchante ho. \"Pehle check karo phir insert karo\" wahi check-then-act bug hai — do requests ek saath wahi alias le sakti hain. Sahi jawab: unique index par insert karo aur constraint violation ko 409 mein badal do. Aur reserved paths ka dhyaan ek asli production detail hai.","Two concurrent requests can both see alias unused.","Custom alias is user chosen public name; hashing changes requested contract.","Counter uniqueness does not stop two people choosing/my-campaign."] },
     ],
   },
   success: [
@@ -348,9 +328,9 @@ READ (12,000/sec peak — yahan sab kuch hai)
     Phir code ki lambai gino aur hisaab lagao ki us space mein kitne links aa sakte hain.`,
   cards: [
     { front: 'Shortener ka pehla sawaal?', back: '<b>Read:write ratio.</b> 100:1 nikla → poora design read path ka hai; 40 writes/sec par write path pe sochna hi galti hai.' },
-    { front: 'Short code kaise banayein?', back: '<b>Counter → scramble → base62.</b> Collision namumkin, isliye per-write existence lookup <b>hai hi nahi</b>. 7 chars = 3.5 kharab codes.' },
-    { front: 'Click analytics kaise?', back: '<b>Async event</b> — redirect path par DB update kabhi nahi. Warna 12k reads/sec = 12k writes/sec ek hi row par (hot row).' },
-    { front: '301 vs 302?', back: '<b>301</b> = browser cache karta hai → load kam, par analytics khatam aur destination kabhi nahi badal sakte. <b>302</b> = har click server se → analytics milti hai. Shorteners 302 chunte hain.' },
+    { front: 'Short code kaise banayein?', back: "<b>Durable disjoint counter → optional one-to-one mapping → base62.</b> Namespace reuse/exhaustion guard karo; no separate SELECT needed, UNIQUE still useful. 7 chars ≈ 3.52 trillion = 35.2 kharab codes. Encoding/scramble authorization replace nahi karte." },
+    { front: 'Click analytics kaise?', back: '<b>Async event</b> — redirect critical path par sync analytics cost avoid/measure karo;async durability/loss policy explicit ho. Warna 12k reads/sec = 12k writes/sec ek hi row par (hot row).' },
+    { front: '301 vs 302?', back: "301 heuristically cacheable permanent redirect hai;302 temporary,but explicit cache headers se cache ho sakta hai.Destination change/analytics needs se status aur cache policy choose karo;every302 always hits server nahi." },
     { front: 'Viral link (50k rps ek code par)?', back: 'Hot key. <b>1-second local cache</b> (99.9% traffic wahin) + cache key ki N copies. Cache nodes badhane se kuch nahi hoga.' },
     { front: 'Custom alias ka chhupa hua bug?', back: '<b>Check-then-insert race.</b> Unique index par seedha insert karo aur violation ko 409 banao. Aur reserved words (admin, api, login) block karo.' },
   ],
@@ -441,31 +421,31 @@ leaderboard:alltime              koi TTL nahi</pre>
         {
           id: 'store', label: 'Leaderboard kis structure mein', icon: '🏆',
           options: [
-            { id: 'zset', label: 'Redis sorted set (ZADD / ZREVRANGE / ZREVRANK)', score: 3, why: 'Structure hi jawab hai. Score update, top-K aur <b>rank</b> — teenon O(log n). Rank yahan ek gin-ti nahi, ek lookup hai.' },
-            { id: 'sql', label: 'Postgres table with index on score', score: -1, why: 'Top-100 toh chal jaayega, par 10k updates/sec index ke ek hi hisse par hot spot banate hain — aur "meri rank" ke liye <code>COUNT(*) WHERE score &gt; ?</code> har baar lakhon rows ginega.' },
-            { id: 'sort', label: 'Har request par saare scores memory mein sort karo', score: -3, why: '50 lakh entries ka sort har request par — 50,000 rps par yeh pehle second mein hi khatam.' },
+            { id: 'zset', label: "Redis sorted-set projection", score: 3, why: 'Structure hi jawab hai. Score update, top-K aur <b>rank</b> — teenon O(log n). Rank yahan ek gin-ti nahi, ek lookup hai.' },
+            { id: 'sql', label: "SQL score index and rank query", score: -1, why: 'Top-100 toh chal jaayega, par 10k updates/sec index ke ek hi hisse par hot spot banate hain — aur "meri rank" ke liye <code>COUNT(*) WHERE score &gt; ?</code> har baar lakhon rows ginega.' },
+            { id: 'sort', label: "Re-sort all scores each request", score: -3, why: '50 lakh entries ka sort har request par — 50,000 rps par yeh pehle second mein hi khatam.' },
           ],
         },
         {
           id: 'rank', label: '"Meri rank kya hai"', icon: '📊',
           options: [
-            { id: 'zrank', label: 'ZREVRANK — O(log n) lookup', score: 3, why: 'Sorted set har node ke saath "neeche kitne hain" rakhta hai, isliye rank gini nahi jaati, <b>padhi</b> jaati hai. Yahi is structure ka sabse bada faayda hai.' },
-            { id: 'count', label: 'COUNT(*) WHERE score > mera', score: -3, why: 'Har call par lakhon rows. Aur yeh sawaal <b>har player</b> poochhta hai — yaani sabse mehengi query sabse zyada chalti hai.' },
-            { id: 'approx', label: 'Score buckets se approximate rank', score: 1, why: 'Bahut bade scale (5 crore+) par yeh sahi raasta hai — par 50 lakh par ZREVRANK exact bhi de deta hai aur sasta bhi hai. Complexity tab lo jab zaroorat ho.' },
+            { id: 'zrank', label: "ZREVRANK for exact score rank", score: 3, why: 'Sorted set har node ke saath "neeche kitne hain" rakhta hai, isliye rank gini nahi jaati, <b>padhi</b> jaati hai. Yahi is structure ka sabse bada faayda hai.' },
+            { id: 'count', label: "SQL COUNT above current score", score: -3, why: 'Har call par lakhon rows. Aur yeh sawaal <b>har player</b> poochhta hai — yaani sabse mehengi query sabse zyada chalti hai.' },
+            { id: 'approx', label: "Bucketed approximate rank", score: 1, why: 'Bahut bade scale (5 crore+) par yeh sahi raasta hai — par 50 lakh par ZREVRANK exact bhi de deta hai aur sasta bhi hai. Complexity tab lo jab zaroorat ho.' },
           ],
         },
         {
           id: 'windows', label: 'Daily / weekly / all-time', icon: '🗓️',
           options: [
-            { id: 'keys', label: 'Alag keys with TTL — teenon mein ZINCRBY', score: 2, why: 'Har window apni key, TTL se purane apne aap saaf. Teen writes ek update par — par har ek O(log n) hai, aur Redis ke liye yeh kuch bhi nahi.' },
-            { id: 'query', label: 'Ek hi set, aur time se filter kar lo', score: -2, why: 'Sorted set score par sorted hai, time par nahi — "aaj ke scores" filter karne ka koi sasta tareeka hai hi nahi. Window alag key hi honi chahiye.' },
+            { id: 'keys', label: "Separate window keys;periodic expiry", score: 2, why: 'Har window apni key, TTL se purane apne aap saaf. Teen writes ek update par — par har ek O(log n) hai, aur Redis ke liye yeh kuch bhi nahi.' },
+            { id: 'query', label: "One score set without time history", score: -2, why: 'Sorted set score par sorted hai, time par nahi — "aaj ke scores" filter karne ka koi sasta tareeka hai hi nahi. Window alag key hi honi chahiye.' },
           ],
         },
         {
           id: 'durable', label: 'Redis gir gaya toh', icon: '💾',
           options: [
-            { id: 'source', label: 'Scores DB mein bhi likho — Redis ek derived view hai jo rebuild ho sake', score: 2, why: 'Sahi rishta: DB source of truth, Redis ek tez read structure. Redis gira toh leaderboard thodi der ke liye gaya, <b>scores nahi</b>. Rebuild ek job hai.' },
-            { id: 'aof', label: 'Redis persistence (AOF) hi kaafi hai', score: -1, why: 'AOF asli hai par woh Redis ko source of truth bana deta hai — aur tab dataset RAM ki hadd mein bandha hai aur crash par aakhri kuch second ke writes ja sakte hain. Game scores ke liye woh risk lene ki koi wajah nahi.' },
+            { id: 'source', label: "Durable scores;rebuild projection", score: 2, why: 'Sahi rishta: DB source of truth, Redis ek tez read structure. Redis gira toh leaderboard thodi der ke liye gaya, <b>scores nahi</b>. Rebuild ek job hai.' },
+            { id: 'aof', label: "Only AOF without recovery drill", score: -1, why: 'AOF asli hai par woh Redis ko source of truth bana deta hai — aur tab dataset RAM ki hadd mein bandha hai aur crash par aakhri kuch second ke writes ja sakte hain. Game scores ke liye woh risk lene ki koi wajah nahi.' },
           ],
         },
       ],
@@ -480,38 +460,23 @@ leaderboard:alltime              koi TTL nahi</pre>
       title: 'Leaderboard ke faisle',
       questions: [
         {
-          q: 'SQL mein leaderboard ka sabse mehenga sawaal kaunsa hai?',
-          choices: [
-            '"Meri rank kya hai" — COUNT(*) WHERE score > mera, har baar lakhon rows. Aur yeh sawaal har player poochhta hai',
-            'Top 100 nikalna',
-            'Score update karna',
-            'Naya player add karna',
-          ],
+          q: "Given SQLexact-rank query COUNT(score>mine) large matches scan karti hai. Expensive operation?",
+          choices: ["Exact around-me rank can scan many scores","Top 100 always scans entireSQLtable","Score update alwaysO(N)without exception","Insert player always recomputes all ranks"],
           answer: 0,
-          explain: 'Top-100 sasta hai (index ke pehle 100 entries). Rank mehengi hai kyunki uske liye <b>ginna</b> padta hai. Aur cruel baat yeh hai ki sabse mehengi query sabse zyada chalti hai — har player apni rank dekhta hai. Sorted set isi ek sawaal ka jawab O(log n) mein de deta hai.',
-        },
+          explain: "Given exact rank via COUNT score-greater for frequently queried players, rank can scan many entries. SQLindex/topK and score updates can be efficient; precise cost depends query shape, distribution and engine. Rank projection/approximation tradeoffs evaluate karo.",
+         choiceExplanations: ["Given exact rank via COUNT score-greater for frequently queried players, rank can scan many entries. SQLindex/topK and score updates can be efficient; precise cost depends query shape, distribution and engine. Rank projection/approximation tradeoffs evaluate karo.","Matching ordered index can serve topK efficiently.","Index and data layout determine update work; universal claim unsupported.","Materialized rank policy is design choice, not mandatory every insert."] },
         {
           q: 'Redis sorted set rank ko O(log n) mein kaise deta hai?',
-          choices: [
-            'Skip list ke har node ke saath "mere neeche kitne hain" ka count rehta hai — isliye rank gini nahi jaati, padhi jaati hai',
-            'Woh sab kuch cache karta hai',
-            'Woh memory mein hai isliye tez hai',
-            'Woh ek array rakhta hai',
-          ],
+          choices: ["Rank-aware skip list spans support traversal","Memory alone makes every operationO(1)","Sorted set stores no ordering metadata","One huge array means every rank constant"],
           answer: 0,
-          explain: 'Sirf "memory mein hai" wala jawab kaafi nahi — 50 lakh entries memory mein ginne mein bhi waqt lagta. Asli baat structure hai: skip list ke levels par span counts rakhe jaate hain, isliye traversal ke doraan rank <b>jud</b> jaati hai. Isi liye ise "data structure ka jawab" kehte hain, "storage ka jawab" nahi.',
-        },
+          explain: "Redis ordinary sorted set implementation hash lookup+skip list uses rank spans for logarithmic rank traversal; small set compact encodings may differ. Being in RAM alone O(1)rank theorem nahi.",
+         choiceExplanations: ["Redis ordinary sorted set implementation hash lookup+skip list uses rank spans for logarithmic rank traversal; small set compact encodings may differ. Being in RAM alone O(1)rank theorem nahi.","Memory reduces IOcost; algorithmic work still depends data structure.","Scores/order and spans support efficient rank operations.","Sorted array updates can require shifting; implementation contract differs."] },
         {
           q: '5 crore players ho gaye. Sabse pehle kya karoge?',
-          choices: [
-            'Poochhunga ki exact rank sach mein chahiye kya — top 1000 ke liye haan, baaki ke liye "top 5% mein ho" ya approximate rank kaafi hai. Yeh product sawaal poore scaling problem ko hata sakta hai',
-            'Redis cluster mein shard karo',
-            'Aur memory daalo',
-            'Rank cache karo',
-          ],
+          choices: ["Exactness, topK and update needs clarify","Cluster automatically shards global rank","More memory removes every global merge","Cached rankstays exact after all updates"],
           answer: 0,
           explain: 'Sharding ek sorted set ko todna mushkil hai (global ordering chahiye). Par isse pehle: rank 4,82,391 aur 4,84,100 mein <b>player ke liye</b> koi farak nahi. Exactness sirf top ke paas maayne rakhti hai. Yeh sawaal poochhna — "kya yahan exact chahiye?" — aksar engineering ka aadha kaam bacha deta hai.',
-        },
+         choiceExplanations: ["Sharding ek sorted set ko todna mushkil hai (global ordering chahiye). Par isse pehle: rank 4,82,391 aur 4,84,100 mein <b>player ke liye</b> koi farak nahi. Exactness sirf top ke paas maayne rakhti hai. Yeh sawaal poochhna — \"kya yahan exact chahiye?\" — aksar engineering ka aadha kaam bacha deta hai.","Global rank across shards needs aggregation/order design.","RAMcapacity is one constraint; CPU/skew/global queries remain.","Score changes can invalidate cached relative ranks."] },
       ],
     },
     {
@@ -532,27 +497,17 @@ leaderboard:alltime              koi TTL nahi</pre>
     instructions: 'Yahan structure ka naam lena hi aadha jawab hai. 🎤',
     questions: [
       {
-        q: '"Realtime gaming leaderboard design karo, 50 lakh players."',
-        choices: [
-          'Redis sorted set — ZADD update, ZREVRANGE top-K, ZREVRANK rank, sab O(log n). Scores DB mein bhi (source of truth), Redis derived. Daily/weekly alag keys with TTL',
-          'Postgres table with index on score',
-          'Har minute ek batch job jo ranks compute kare',
-          'Elasticsearch',
-        ],
+        q: "Realtime leaderboard ke Redis projection ka accurate contract?",
+        choices: ["Sorted set projection plus durable score events","Sorted set makes all range queriesO(logN)","SQLcan never implement any leaderboard","Redis alone removes recovery and score audit"],
         answer: 0,
-        explain: 'Do cheezein iss jawab ko poora banati hain: sahi <b>structure</b> (aur uske teenon operations ka naam), aur Redis ka <b>rishta</b> DB ke saath. Doosra hissa bhoolna sabse aam galti hai — tab Redis chupke se source of truth ban jaata hai aur ek din woh gir jaata hai.',
-      },
+        explain: "RedisZADD/ZRANK/ZREVRANK logarithmic operations hain; ZRANGE returning M members isO(logN+M). Durable score authority/event log and rebuild plan define karo. SQL other options SLO/workload meet kar sakte hain; tool name alone required answer nahi.",
+       choiceExplanations: ["RedisZADD/ZRANK/ZREVRANK logarithmic operations hain; ZRANGE returning M members isO(logN+M). Durable score authority/event log and rebuild plan define karo. SQL other options SLO/workload meet kar sakte hain; tool name alone required answer nahi.","Range returning M members costsO(logN+M), notjustlogN.","Relational index/window/aggregates can fit some workloads.","Durable authority/rebuild strategy andanti-cheat/business rules still needed."] },
       {
         q: '"Ab 5 crore players. Kya badlega?"',
-        choices: [
-          'Pehle poochhunga ki exact rank sabke liye chahiye kya. Top-1000 alag chhote set mein (jo 99% reads khaata hai aur replicate ho sakta hai), baaki ke liye bucketed/approximate rank. Us se poora sharding ka sawaal hi tal jaata hai',
-          'Sorted set ko shard kar dunga',
-          'Bade Redis instance par jaunga',
-          'Cassandra par shift karunga',
-        ],
+        choices: ["Revisit exact rank and partitioned tradeoffs","Any 5 crore set must use Cassandra","TopKcache alone computes every exact rank","Sharding sorted set automatically ranks globally"],
         answer: 0,
         explain: 'Sorted set ko shard karna mushkil hai kyunki rank ke liye <b>global ordering</b> chahiye — har shard ka apna order poore leaderboard ki rank nahi deta. Isliye achha jawab pehle <b>requirement</b> kaatta hai, phir structure. "Top-K alag karo" bhi mazboot hai: 99% reads sirf top 100 ke hain.',
-      },
+       choiceExplanations: ["Sorted set ko shard karna mushkil hai kyunki rank ke liye <b>global ordering</b> chahiye — har shard ka apna order poore leaderboard ki rank nahi deta. Isliye achha jawab pehle <b>requirement</b> kaatta hai, phir structure. \"Top-K alag karo\" bhi mazboot hai: 99% reads sirf top 100 ke hain.","Cardinality alone does not choose engine; bytes, updates and SLOs matter.","TopKanswers topK; arbitrary exact rank needs more information.","Cross shard exact rank merging requires additional structure/work."] },
     ],
   },
   success: [
@@ -664,20 +619,26 @@ watermark 60s  →  ~0.1% chhoote, par har number 1 minute der se</pre>
              theek karo, aur dedup ka daam dekho.`,
       sys: SD.sys.orders({ name: 'ad-ingest' }),
       tasks: T_ADCLICK,
-      success: allOf(T_ADCLICK),
+      success: SD.allTasks(T_ADCLICK),
       successText: `Yeh system paise ka hai, isliye har faisla thoda alag hua:
         event time (processing time nahi), dedup laazmi, aur ek <b>doosra</b> exact
         pass jo raat ko chalta hai. Aur hot partition wahi purana shape tha —
         Super Bowl ad ne wahi kiya jo airport wali cell ne kiya tha.`,
+      solution: [
+        "stream window --size 60 --events 1000000 --late 4",
+        "stream window --size 60 --watermark 10 --events 1000000 --late 4",
+        "stream window --size 60 --watermark 30 --events 1000000 --late 4",
+        "stream partitions --partitions 12 --consumers 20",
+        "stream partitions --partitions 12 --consumers 12",
+        "bloom --items 10000000 --fp 0.01",
+        "cache hotkey --key ad:sb2026 --rps 400000",
+        "cache hotkey --key ad:sb2026 --rps 400000 --replicas 32",
+      ],
+      verify: s => { const m = SD.mission; return m.latest(s, 'stream', 'window')?.watermark === 30 && m.latest(s, 'stream', 'window')?.dropped === 0 && m.latest(s, 'stream', 'partitions')?.idle === 0 && m.latest(s, 'cache', 'hotkey')?.rps === 400000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
       hints: [
-        'Bina watermark: stream window --size 60 --events 1000000 --late 4',
-        'Chhota watermark: stream window --size 60 --watermark 10 --events 1000000 --late 4',
-        'Bada watermark: stream window --size 60 --watermark 30 --events 1000000 --late 4',
-        'Zyada consumers: stream partitions --partitions 12 --consumers 20',
-        'Theek karo: stream partitions --partitions 12 --consumers 12',
-        'Dedup window ka size: bloom --items 10000000 --fp 0.01',
-        'Super Bowl ad: cache hotkey --key ad:sb2026 --rps 400000',
-        'Key todo: cache hotkey --key ad:sb2026 --rps 400000 --replicas 32',
+        "Pehle observation: Bina watermark ke minute-window — late clicks kho jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Us ad ki key ko todo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nstream window --size 60 --events 1000000 --late 4\nstream window --size 60 --watermark 10 --events 1000000 --late 4\nstream window --size 60 --watermark 30 --events 1000000 --late 4\nstream partitions --partitions 12 --consumers 20\nstream partitions --partitions 12 --consumers 12\nbloom --items 10000000 --fp 0.01\ncache hotkey --key ad:sb2026 --rps 400000\ncache hotkey --key ad:sb2026 --rps 400000 --replicas 32",
       ],
     },
     {
@@ -692,32 +653,32 @@ watermark 60s  →  ~0.1% chhoote, par har number 1 minute der se</pre>
         {
           id: 'bus', label: 'Ingest ke baad kahan', icon: '🌊',
           options: [
-            { id: 'kafka', label: 'Kafka, partition by ad_id', score: 3, why: 'Durable buffer, replay (billing dispute par bahut kaam ka), aur ad-wise partitioning se aggregation bina coordination ke ho jaati hai. Aur agar processor gir jaaye toh events wahin rehte hain.' },
-            { id: 'db', label: 'Seedha DB mein insert', score: -3, why: '10 lakh inserts/sec. Aur processor girne par backpressure ka koi rasta nahi — ingest API hi gir jaayegi.' },
-            { id: 'sqs', label: 'SQS queue', score: -1, why: 'Ingest ke liye chal jaayega, par consume karte hi events chale jaate hain — billing dispute par replay nahi kar sakte, aur ek hi data par doosra consumer (fraud detection) nahi laga sakte.' },
+            { id: 'kafka', label: "Retained log;independent subscribers", score: 3, why: 'Durable buffer, replay (billing dispute par bahut kaam ka), aur ad-wise partitioning se aggregation bina coordination ke ho jaati hai. Aur agar processor gir jaaye toh events wahin rehte hain.' },
+            { id: 'db', label: "Synchronous per-click DB insert", score: -3, why: '10 lakh inserts/sec. Aur processor girne par backpressure ka koi rasta nahi — ingest API hi gir jaayegi.' },
+            { id: 'sqs', label: "Worker queue with delete-on-consume", score: -1, why: 'Ingest ke liye chal jaayega, par consume karte hi events chale jaate hain — billing dispute par replay nahi kar sakte, aur ek hi data par doosra consumer (fraud detection) nahi laga sakte.' },
           ],
         },
         {
           id: 'time', label: 'Kis waqt se ginna', icon: '⏱️',
           options: [
-            { id: 'event', label: 'Event time + watermark', score: 3, why: 'Click jab HUA tab ka minute. Mobile clicks late aate hain, aur processing time se ginne par campaign ke aakhri minute ke clicks agle minute mein chale jaate hain — jo seedha bill galat karta hai.' },
-            { id: 'proc', label: 'Processing time', score: -2, why: 'Aasan hai aur <b>galat</b> hai. Aur galti random nahi hoti — woh un users par padti hai jinka network kharab hai, yaani systematically kuch advertisers ko nuksaan.' },
+            { id: 'event', label: "Event time;explicit late-event policy", score: 3, why: 'Click jab HUA tab ka minute. Mobile clicks late aate hain, aur processing time se ginne par campaign ke aakhri minute ke clicks agle minute mein chale jaate hain — jo seedha bill galat karta hai.' },
+            { id: 'proc', label: "Processing time;ignore event clock", score: -2, why: 'Aasan hai aur <b>galat</b> hai. Aur galti random nahi hoti — woh un users par padti hai jinka network kharab hai, yaani systematically kuch advertisers ko nuksaan.' },
           ],
         },
         {
           id: 'dedup', label: 'Duplicate clicks', icon: '🔁',
           options: [
-            { id: 'both', label: 'click_id + bloom se pehla chhanna + exact check', score: 3, why: 'At-least-once delivery matlab duplicates aayenge hi. Bloom sasta pehla filter hai, par "shayad dekha hai" par <b>exact check laazmi</b> — warna ek asli click gir sakta hai, aur woh kisi ka paisa hai.' },
-            { id: 'bloomonly', label: 'Sirf bloom filter', score: -2, why: 'False positive ka matlab yahan ek asli click ko duplicate samajh ke <b>girana</b> hai. Analytics mein chalta, billing mein nahi.' },
-            { id: 'none', label: 'Kuch nahi — duplicates kam hote hain', score: -3, why: 'Consumer crash + offset commit na hona roz ki baat hai. Aur duplicates ka matlab advertiser ko dugna bill — woh dispute banta hai.' },
+            { id: 'both', label: "Exact click-ID dedupe;Bloom hint", score: 3, why: 'At-least-once delivery matlab duplicates aayenge hi. Bloom sasta pehla filter hai, par "shayad dekha hai" par <b>exact check laazmi</b> — warna ek asli click gir sakta hai, aur woh kisi ka paisa hai.' },
+            { id: 'bloomonly', label: "Bloom-positive means discard", score: -2, why: 'False positive ka matlab yahan ek asli click ko duplicate samajh ke <b>girana</b> hai. Analytics mein chalta, billing mein nahi.' },
+            { id: 'none', label: "Count every repeated delivery", score: -3, why: 'Consumer crash + offset commit na hona roz ki baat hai. Aur duplicates ka matlab advertiser ko dugna bill — woh dispute banta hai.' },
           ],
         },
         {
           id: 'exact', label: 'Billing ke liye numbers', icon: '💰',
           options: [
-            { id: 'lambda', label: 'Fast approximate dashboard + raat ko exact batch (S3 raw se)', score: 3, why: 'Do alag zarooratein, do alag paths. Dashboard ko turant chahiye (thodi galti manzoor), billing ko <b>sahi</b> chahiye (der manzoor). Ek hi pipeline se dono maangna hi galti hai.' },
-            { id: 'stream', label: 'Sirf stream ka natija hi billing mein', score: -1, why: 'Chal sakta hai — par jo events watermark ke baad aaye woh bill mein kabhi nahi aayenge, aur uska koi correction path bhi nahi. Aur dispute par tumhare paas "dobara gin lo" ka koi rasta nahi.' },
-            { id: 'batch', label: 'Sirf raat wala batch, dashboard bhi usi se', score: -1, why: 'Numbers sahi honge par dashboard 24 ghante purana — jo requirement (&lt; 1 min) ke bilkul khilaaf hai. Advertisers live campaign band nahi kar paayenge.' },
+            { id: 'lambda', label: "Live view plus exact reconciliation", score: 3, why: 'Do alag zarooratein, do alag paths. Dashboard ko turant chahiye (thodi galti manzoor), billing ko <b>sahi</b> chahiye (der manzoor). Ek hi pipeline se dono maangna hi galti hai.' },
+            { id: 'stream', label: "Only uncorrected streaming totals", score: -1, why: 'Chal sakta hai — par jo events watermark ke baad aaye woh bill mein kabhi nahi aayenge, aur uska koi correction path bhi nahi. Aur dispute par tumhare paas "dobara gin lo" ka koi rasta nahi.' },
+            { id: 'batch', label: "Only daily result;no live view", score: -1, why: 'Numbers sahi honge par dashboard 24 ghante purana — jo requirement (&lt; 1 min) ke bilkul khilaaf hai. Advertisers live campaign band nahi kar paayenge.' },
           ],
         },
       ],
@@ -733,37 +694,22 @@ watermark 60s  →  ~0.1% chhoote, par har number 1 minute der se</pre>
       questions: [
         {
           q: '"Billing isi data par hoti hai" — isse kya-kya badal jaata hai?',
-          choices: [
-            'Event time laazmi, dedup laazmi, aur ek exact correction pass chahiye — approximate structures (HLL) yahan galat jagah par hain',
-            'Kuch khaas nahi',
-            'Bas zyada replicas chahiye',
-            'Sirf dashboard tez hona chahiye',
-          ],
+          choices: ["Auditable exactness, dedupe and correction","Approximate count alone can invoice allmoney","Watermark alone proves all clicks complete","Replicas eliminate duplicate event effects"],
           answer: 0,
           explain: 'Yeh wahi purana sawaal hai — <b>galat jawab kitna mehenga hai?</b> — aur yahan jawab "kisi ka paisa" hai. Ek analytics dashboard mein ±1% bilkul theek hai; yahan woh ek dispute hai. Isliye teen alag faisle badalte hain, aur teenon usi ek line se aate hain.',
-        },
+         choiceExplanations: ["Yeh wahi purana sawaal hai — <b>galat jawab kitna mehenga hai?</b> — aur yahan jawab \"kisi ka paisa\" hai. Ek analytics dashboard mein ±1% bilkul theek hai; yahan woh ek dispute hai. Isliye teen alag faisle badalte hain, aur teenon usi ek line se aate hain.","Approximation can be acceptable for analytics, but billing invariant must explicitly allow it.","Late events beyond watermark still possible; reconciliation needed.","Replicas durably copy duplicate effects; dedupe must be designed."] },
         {
           q: 'Partition key <code>ad_id</code> chuna. Kaunsa khatra bacha hai?',
-          choices: [
-            'Hot partition — ek viral/Super Bowl ad par traffic ka 40%, aur woh sab ek partition par. Ilaaj: us ad ki key todo (ad_id:0..N) aur dashboard par jod do',
-            'Ordering toot jaayegi',
-            'Consumers khaali baithenge',
-            'Koi khatra nahi',
-          ],
+          choices: ["Viral ad can concentrate partition work","Good hash means eachad equal request load","Same key preserves global cross-ad order","More consumers split one partition automatically"],
           answer: 0,
           explain: 'Yeh wahi shape hai jo tum teen baar dekh chuke ho: hot <b>key</b> (cache), hot <b>cell</b> (geo), hot <b>partition</b> (yahan). Aur ilaaj bhi teenon jagah wahi hai — <b>todo ya replicate karo</b>. Isiliye patterns pehchanna kaam ka hai: naya problem sirf naya libaas pehne hue hai.',
-        },
+         choiceExplanations: ["Yeh wahi shape hai jo tum teen baar dekh chuke ho: hot <b>key</b> (cache), hot <b>cell</b> (geo), hot <b>partition</b> (yahan). Aur ilaaj bhi teenon jagah wahi hai — <b>todo ya replicate karo</b>. Isiliye patterns pehchanna kaam ka hai: naya problem sirf naya libaas pehne hue hai.","Uniform hash keys do not imply uniform key popularity.","One key ordering is local, not global acrossallads.","Classic group parallelism bounded by partition assignments."] },
         {
-          q: 'Watermark 10s se 60s kiya. Billing ke liye yeh sahi hai?',
-          choices: [
-            'Behtar hai (kam events chhoote) par kaafi nahi — asli hal yeh hai ki billing stream ke natije par depend hi na kare, balki raat ke exact pass par ho',
-            'Haan, ab sab sahi hai',
-            'Nahi, watermark aur badhao',
-            'Watermark ka billing se koi lena-dena nahi',
-          ],
+          q: "Watermark 10 sse 60s; billing correctness ke liye kya assess karoge?",
+          choices: ["Delay vs late data; reconcile billing truth","60 swatermark means no late clicks exist","Longer watermark makes memory use zero","Any watermark removes deduplication need"],
           answer: 0,
-          explain: 'Watermark kitna bhi bada karo, woh ek <b>anumaan</b> hi rahega — aur kabhi na kabhi koi event uske baad aayega. Billing ke liye tumhe ek aisa raasta chahiye jiska jawab "sab kuch, chahe jitni der lage" ho. Isliye raw events S3 mein rakho aur raat ko poora hisaab karo. Stream dashboard ke liye hai, bill ke liye nahi.',
-        },
+          explain: "Longer watermark allowance tolerates more out-of-order delay but retains state and delays finality. Events bound ke baadarrivekar sakte hain. Billing requires auditable definitions, dedupe and correction/reconciliation; nightly batch one possible implementation, mandatory not only correct way.",
+         choiceExplanations: ["Longer watermark allowance tolerates more out-of-order delay but retains state and delays finality. Events bound ke baadarrivekar sakte hain. Billing requires auditable definitions, dedupe and correction/reconciliation; nightly batch one possible implementation, mandatory not only correct way.","Source/backpressure/network delays can exceed 60 seconds.","Longer waiting typically retains more window state.","Late arrival and duplicate event identity are separate issues."] },
       ],
     },
   ],
@@ -773,26 +719,16 @@ watermark 60s  →  ~0.1% chhoote, par har number 1 minute der se</pre>
     questions: [
       {
         q: '"10 lakh clicks/sec, minute-wise counts. Design bolo."',
-        choices: [
-          'Kafka (partition by ad_id) → Flink event-time tumbling windows with watermark → OLAP store → dashboard. Raw events S3 mein bhi, jahan se raat ko exact recompute ho. Dedup click_id se, aur hot ad ke liye key splitting',
-          'Har click DB mein, phir GROUP BY',
-          'Redis counters badhao',
-          'Har ghante batch job',
-        ],
+        choices: ["Event time pipeline with dedupe and hot key plan","Oneadkey guarantees balanced partitions","Minute GROUP BY has zero retained data cost","Raw archive makes online counters exact alone"],
         answer: 0,
         explain: 'Char cheezein isme hain: sahi <b>partition key</b>, <b>event time + watermark</b>, <b>dedup</b> (kyunki at-least-once), aur <b>correction path</b>. Redis counters ka jawab galat nahi hai aur chhote scale par bilkul sahi hai — par usme replay, audit aur late-event handling teenon nahi hain.',
-        },
+         choiceExplanations: ["Char cheezein isme hain: sahi <b>partition key</b>, <b>event time + watermark</b>, <b>dedup</b> (kyunki at-least-once), aur <b>correction path</b>. Redis counters ka jawab galat nahi hai aur chhote scale par bilkul sahi hai — par usme replay, audit aur late-event handling teenon nahi hain.","Popularads may need salting/partial aggregation and merge.","Windowed/grouped queries require work, state and retention.","Archive permits recompute; online pipeline still needs correctness contracts."] },
       {
         q: '"Advertiser keh raha hai humara count unke count se 3% kam hai. Kya karoge?"',
-        choices: [
-          'Reconciliation: unke raw logs aur hamare raw events (S3) ko click_id se milaao — teen buckets banao (sirf unke paas, sirf hamare paas, dono par alag). Watermark ke baad aaye events aur dedup dono ko alag-alag check karo',
-          'Apne numbers par bharosa karo',
-          'Unke numbers maan lo',
-          'Difference ko adjust kar do',
-        ],
+        choices: ["Reconcile definitions, time bounds and click IDs","Accept provider number without raw evidence","Adjust 3%without root cause or audit trail","Assume every difference caused by watermark"],
         answer: 0,
         explain: 'Yeh wahi reconciliation hai jo tumne ledger level mein seekha tha, ab streaming par. Aur is system mein 3% ke do sabse sambhaavit karan pehle se pata hain: <b>late events</b> jo watermark ke baad aaye, aur <b>dedup</b> jisne kuch asli clicks gira diye. Isiliye raw events rakhna sirf "achha hota hai" nahi — woh iss baatcheet ka <b>ekmatr</b> saboot hai.',
-      },
+       choiceExplanations: ["Yeh wahi reconciliation hai jo tumne ledger level mein seekha tha, ab streaming par. Aur is system mein 3% ke do sabse sambhaavit karan pehle se pata hain: <b>late events</b> jo watermark ke baad aaye, aur <b>dedup</b> jisne kuch asli clicks gira diye. Isiliye raw events rakhna sirf \"achha hota hai\" nahi — woh iss baatcheet ka <b>ekmatr</b> saboot hai.","Counterpart can differ on filters, timezone, fraud policy or errors.","Blind adjustment can hide missing/duplicate events andfinancial risk.","Dedup, ingestion loss, definitions and clock boundaries also affect counts."] },
     ],
   },
   success: [
@@ -923,22 +859,28 @@ booking      →  seedha, atomic, primary par</pre>
         booking: { mode: 'none', seats: {}, holds: {} },
       },
       tasks: T_TICKET,
-      success: allOf(T_TICKET),
+      success: SD.allTasks(T_TICKET),
       successText: `Do alag problems, do alag ilaaj:
         <b>contention</b> ka jawab reservation (hold + TTL) tha,
         <b>flash crowd</b> ka jawab admission control tha.
         Dhyaan do ki lock lagane se load kam nahi hua, aur admission control se
         double booking nahi ruki — <b>har problem ko uska apna ilaaj chahiye tha</b>.`,
+      solution: [
+        "book seat A14 --concurrent 2",
+        "book reset",
+        "sim set booking.mode reservation",
+        "book hold A14 --ttl 600",
+        "book seat A14 --concurrent 1",
+        "load --rps 50000 --duration 8",
+        "sim add admission --max-concurrent 3000 --queue 8",
+        "sim add cache --ttl 2 --jitter 20",
+        "load --rps 50000 --duration 8",
+      ],
+      verify: s => { const m = SD.mission; return s.sys.booking?.mode === 'reservation' && s.sys.booking.holds.A14 === 600 && s.sys.api.admission?.maxConcurrent === 3000 && s.sys.api.cache?.ttlSec === 2 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated); },
       hints: [
-        'Pehle bina kisi protection ke: book seat A14 --concurrent 2',
-        'Saaf karo: book reset',
-        'Ab reservation mode: sim set booking.mode reservation',
-        'Seat par hold lagao: book hold A14 --ttl 600',
-        'Doosra khareedaar ab ruk jaana chahiye: book seat A14 --concurrent 1',
-        'Ab on-sale ka load: load --rps 50000 --duration 8',
-        'Waiting room lagao: sim add admission --max-concurrent 3000 --queue 8',
-        'Aur seat map ko cache karo: sim add cache --ttl 2 --jitter 20',
-        'Ab dobara: load --rps 50000 --duration 8',
+        "Pehle observation: Bina kisi protection ke ek seat par do log — double booking. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: Ab load dobara — ab system khada rehna chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nbook seat A14 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold A14 --ttl 600\nbook seat A14 --concurrent 1\nload --rps 50000 --duration 8\nsim add admission --max-concurrent 3000 --queue 8\nsim add cache --ttl 2 --jitter 20\nload --rps 50000 --duration 8",
       ],
     },
     {
@@ -954,32 +896,32 @@ booking      →  seedha, atomic, primary par</pre>
         {
           id: 'gate', label: 'On-sale par 5 lakh log', icon: '🚪',
           options: [
-            { id: 'room', label: 'Waiting room — position number ke saath, ek-ek karke andar', score: 3, why: 'Load bhi sambhal gaya aur user ko <b>sach</b> pata chal gaya. Aur yeh retry storm bhi rokta hai: jab number dikh raha ho toh log refresh nahi maarte.' },
-            { id: 'scale', label: 'Pehle se 50x scale kar do', score: 0, why: 'Pre-scaling zaroori hai (autoscaling 10 second mein kuch nahi kar sakti) — par akela kaafi nahi. 5 lakh log 200 seats ke liye hain; capacity ka koi bhi number us ganit ko nahi badal sakta.' },
-            { id: 'shed', label: 'Queue full par 503 do', score: -1, why: 'System toh bach jaayega, par 5 lakh log 503 dekh ke turant refresh karenge — aur load 3x ho jaayega. 503 ke saath kam se kam Retry-After chahiye; waiting room usse kaafi behtar hai.' },
+            { id: 'room', label: "Bounded waiting room with ETA", score: 3, why: 'Load bhi sambhal gaya aur user ko <b>sach</b> pata chal gaya. Aur yeh retry storm bhi rokta hai: jab number dikh raha ho toh log refresh nahi maarte.' },
+            { id: 'scale', label: "Prescale;no admission guard", score: 0, why: 'Pre-scaling zaroori hai (autoscaling 10 second mein kuch nahi kar sakti) — par akela kaafi nahi. 5 lakh log 200 seats ke liye hain; capacity ka koi bhi number us ganit ko nahi badal sakta.' },
+            { id: 'shed', label: "Reject excess with no waiting UX", score: -1, why: 'System toh bach jaayega, par 5 lakh log 503 dekh ke turant refresh karenge — aur load 3x ho jaayega. 503 ke saath kam se kam Retry-After chahiye; waiting room usse kaafi behtar hai.' },
           ],
         },
         {
           id: 'hold', label: 'Seat pakadna', icon: '🎟️',
           options: [
-            { id: 'res', label: 'Redis SET NX EX — hold with TTL, phir confirm', score: 3, why: 'Atomic check-and-set (NX) se double booking mumkin hi nahi, aur TTL (EX) se abandoned checkout apne aap wapas. Lock milliseconds ka, asar 10 minute ka.' },
-            { id: 'lock', label: 'DB row lock, checkout ke doraan pakde rakho', score: -3, why: '10 minute ka DB lock — woh connection, woh transaction, woh row sab block. Aur browser band ho gaya toh lock timeout tak baitha rahega.' },
-            { id: 'opt', label: 'Optimistic — confirm par version check', score: -1, why: 'Double booking toh ruk jaayegi, par user <b>payment ke baad</b> haarega. Woh sabse bura experience hai, aur refund flow bhi banana padega.' },
+            { id: 'res', label: "Atomic owned hold with expiry", score: 3, why: 'Atomic check-and-set (NX) se double booking mumkin hi nahi, aur TTL (EX) se abandoned checkout apne aap wapas. Lock milliseconds ka, asar 10 minute ka.' },
+            { id: 'lock', label: "DB lock across human checkout", score: -3, why: '10 minute ka DB lock — woh connection, woh transaction, woh row sab block. Aur browser band ho gaya toh lock timeout tak baitha rahega.' },
+            { id: 'opt', label: "Retry optimistic claim at payment", score: -1, why: 'Double booking toh ruk jaayegi, par user <b>payment ke baad</b> haarega. Woh sabse bura experience hai, aur refund flow bhi banana padega.' },
           ],
         },
         {
           id: 'map', label: 'Seat map (5 lakh log dekh rahe hain)', icon: '👀',
           options: [
-            { id: 'cache', label: 'Cache se (1-2s purana), upar se SSE se "yeh gayi" updates', score: 3, why: '5 lakh log <b>ek hi</b> seat map dekh rahe hain — woh ek key hai, aur cache uska sabse sahi jawab. Thodi staleness bilkul theek: user bik chuki seat par click karega aur turant pata chal jaayega.' },
-            { id: 'live', label: 'Har request par DB se live seat status', score: -3, why: '5 lakh log × har few second = DB par lagataar hazaaron queries, aur woh <b>usi</b> DB par jispar booking chal rahi hai. Read path booking ko gira dega.' },
-            { id: 'ws', label: 'Har user ke liye ek WebSocket jo poora map bheje', score: -1, why: 'Updates ke liye push sahi hai, par 5 lakh connections is ek page ke liye bahut bhaari hain — aur initial map toh phir bhi cache se hi aana chahiye.' },
+            { id: 'cache', label: "Bounded stale map;incremental updates", score: 3, why: '5 lakh log <b>ek hi</b> seat map dekh rahe hain — woh ek key hai, aur cache uska sabse sahi jawab. Thodi staleness bilkul theek: user bik chuki seat par click karega aur turant pata chal jaayega.' },
+            { id: 'live', label: "Read full source map each request", score: -3, why: '5 lakh log × har few second = DB par lagataar hazaaron queries, aur woh <b>usi</b> DB par jispar booking chal rahi hai. Read path booking ko gira dega.' },
+            { id: 'ws', label: "Broadcast full map per connection", score: -1, why: 'Updates ke liye push sahi hai, par 5 lakh connections is ek page ke liye bahut bhaari hain — aur initial map toh phir bhi cache se hi aana chahiye.' },
           ],
         },
         {
           id: 'confirm', label: 'Payment ke baad confirm', icon: '✅',
           options: [
-            { id: 'txn', label: 'Ek transaction: seat sold + booking row + hold delete; idempotency key ke saath', score: 3, why: 'Teenon ek saath ya koi nahi. Aur idempotency key isliye ki payment webhook do baar aa sakta hai — bina uske do bookings ban jaayengi.' },
-            { id: 'steps', label: 'Ek-ek karke: pehle seat, phir booking, phir hold delete', score: -2, why: 'Beech mein crash = seat sold par booking row nahi (ya ulta). Yeh woh data corruption hai jo mahino baad support ticket ban ke aata hai.' },
+            { id: 'txn', label: "Atomic guarded sale;stable payment ID", score: 3, why: 'Teenon ek saath ya koi nahi. Aur idempotency key isliye ki payment webhook do baar aa sakta hai — bina uske do bookings ban jaayengi.' },
+            { id: 'steps', label: "Seat then booking as separate writes", score: -2, why: 'Beech mein crash = seat sold par booking row nahi (ya ulta). Yeh woh data corruption hai jo mahino baad support ticket ban ke aata hai.' },
           ],
         },
       ],
@@ -995,37 +937,22 @@ booking      →  seedha, atomic, primary par</pre>
       questions: [
         {
           q: 'Waiting room lagane ke baad bhi double booking ka khatra hai?',
-          choices: [
-            'Haan — admission control sirf LOAD kam karta hai. Andar aaye hue log phir bhi ek hi seat maang sakte hain; uske liye alag se atomic hold chahiye',
-            'Nahi, ab sab safe hai',
-            'Nahi, kyunki ek-ek karke andar aate hain',
-            'Haan, par bahut kam',
-          ],
+          choices: ["Admission limits load; atomic holds still needed","Waiting room means seats cannot race","Queue ticket itself reserves every seat","One user batch prevents all repeat requests"],
           answer: 0,
           explain: 'Yeh is level ki sabse zaroori baat hai: <b>ek problem ka ilaaj doosre ko theek nahi karta</b>. Waiting room 5 lakh ko 3,000 concurrent bana deta hai — par woh 3,000 log bhi ek hi front-row seat par click kar sakte hain. Load aur contention do alag axes hain.',
-        },
+         choiceExplanations: ["Yeh is level ki sabse zaroori baat hai: <b>ek problem ka ilaaj doosre ko theek nahi karta</b>. Waiting room 5 lakh ko 3,000 concurrent bana deta hai — par woh 3,000 log bhi ek hi front-row seat par click kar sakte hain. Load aur contention do alag axes hain.","Admitted users may concurrently request same available seat.","Admissionright and seat inventory claim separate invariants hain.","Retries, multi tab and concurrent clients still possible."] },
         {
-          q: 'Hold ka TTL 10 minute hai. User 3 minute mein pay kar deta hai. Ab?',
-          choices: [
-            'Confirm karte waqt hold ko sold mein badlo — sab ek transaction mein, idempotency key ke saath (payment webhook do baar aa sakta hai)',
-            'TTL khatam hone ka intezaar karo',
-            'Hold delete karke naya booking row banao',
-            'Hold ko permanent kar do',
-          ],
+          q: "TTLhold ke3 min baad payment confirmed; what must atomic confirmation validate?",
+          choices: ["Validate hold owner, expiry and payment intent","Payment success makes expired hold owned","Webhook redelivery always creates new sale","TTLremaining means no database guard needed"],
           answer: 0,
-          explain: 'Do cheezein zaroori hain. <b>Atomicity</b>: seat sold + booking row + hold delete — teenon ya koi nahi, warna beech ka crash corruption chhod jaata hai. Aur <b>idempotency</b>: payment providers webhooks dohraate hain, aur bina key ke woh doosri booking ban jaayegi.',
-        },
+          explain: "Payment confirmation validate hold owner, state, expiry and payment intent with atomic idempotent transition. Payment provider is external; local DB transaction alone charge atomic nahi. Expired reassigned seat with payment needs explicit refund/rebooking policy.",
+         choiceExplanations: ["Payment confirmation validate hold owner, state, expiry and payment intent with atomic idempotent transition. Payment provider is external; local DB transaction alone charge atomic nahi. Expired reassigned seat with payment needs explicit refund/rebooking policy.","Seat may have beenreclaimed; reconcile/refund or retry under business policy.","Stable payment/booking IDs must make duplicate webhooks idempotent.","Concurrent expiration/reassignment needs atomic state transition."] },
         {
-          q: 'Seat map 2 second purana hai. User ek bik chuki seat par click karta hai. Yeh problem hai?',
-          choices: [
-            'Nahi — use turant "yeh ja chuki, ek aur chuno" mil jaata hai. Bura tab hota jab yeh PAYMENT ke baad pata chalta',
-            'Haan, seat map hamesha live hona chahiye',
-            'Haan, isse users chale jaayenge',
-            'Nahi, kyunki aisa kam hota hai',
-          ],
+          q: "Map 2 seconds stale; claim seat already sold. Correctness boundary?",
+          choices: ["Stale map acceptable if claim validates early","Cached map means sellingtwice acceptable","Instant map alone prevents transaction race","Late payment failure can stay hidden"],
           answer: 0,
-          explain: 'Achha design galtiyon ko <b>khatam</b> karne ki koshish nahi karta — woh unhe <b>jaldi aur sasta</b> banata hai. 2-second stale map ka natija ek turant, saaf error hai. Live map ka natija DB par lagataar load hai — jo booking path ko hi gira sakta hai. Pehla sauda kahin behtar hai.',
-        },
+          explain: "Bounded stale availability display acceptable if product contract permits and claim atomically validates before committing payment. Cannot promise noUXcost; measure conflict rate and clear feedback. Double booking prevention UIstalenessse independent invariant hai.",
+         choiceExplanations: ["Bounded stale availability display acceptable if product contract permits and claim atomically validates before committing payment. Cannot promise noUXcost; measure conflict rate and clear feedback. Double booking prevention UIstalenessse independent invariant hai.","Display staleness and authoritative booking invariants different contracts hain.","Concurrent users cans ee same fresh available seat; atomic claim still needed.","Payment/booking mismatch needs visible recovery/reconciliation."] },
       ],
     },
     {
@@ -1037,25 +964,25 @@ booking      →  seedha, atomic, primary par</pre>
         t1: {
           text: '70 seats kabhi bike hi nahi, par woh "unavailable" dikh rahi thi. Pehla shak?',
           choices: [
-            { t: 'Holds jo kabhi expire nahi hue — TTL laga tha ya nahi?', good: true, next: 't2', explain: 'Sahi shak. Yeh reservation pattern ka classic failure hai: hold ban gaya, user chala gaya, aur hold kabhi wapas nahi aaya. Seat "kisi ke paas" hai par kisi ke paas nahi.' },
-            { t: 'Payment gateway ne kuch transactions fail ki hongi', good: false, explain: 'Payment fail hona normal hai — par uske baad seat <b>wapas</b> aani chahiye thi. Sawaal yeh hai ki woh wapas kyun nahi aayi.' },
-            { t: 'Seat map ka cache stale tha', good: false, explain: 'Cache 2 second stale ho sakta hai, ghanton nahi. Aur asli booking check cache se nahi hota — yeh unavailability kahin aur se aa rahi thi.' },
+            { t: "Inspect stale hold age and expiry", good: true, next: 't2', explain: 'Sahi shak. Yeh reservation pattern ka classic failure hai: hold ban gaya, user chala gaya, aur hold kabhi wapas nahi aaya. Seat "kisi ke paas" hai par kisi ke paas nahi.' },
+            { t: "Assume payment errors hid all seats", good: false, explain: 'Payment fail hona normal hai — par uske baad seat <b>wapas</b> aani chahiye thi. Sawaal yeh hai ki woh wapas kyun nahi aayi.' },
+            { t: "Assume map cache explains all seats", good: false, explain: 'Cache 2 second stale ho sakta hai, ghanton nahi. Aur asli booking check cache se nahi hota — yeh unavailability kahin aur se aa rahi thi.' },
           ],
         },
         t2: {
           text: 'Holds Redis mein bane the — par code ne TTL ke bina SET kiya tha. Turant kya?',
           choices: [
-            { t: 'Purane holds saaf karo (created_at se), aur code mein TTL laazmi karo', good: true, next: 't3', explain: 'Do kadam: abhi ka nuksaan roko (stuck holds release), aur wajah band karo. Aur aage ke liye: hold banane ka ek hi helper function ho jisme TTL parameter <b>required</b> ho — taaki koi ise bhool hi na sake.' },
-            { t: 'Saara Redis flush kar do', good: false, explain: 'Isme woh holds bhi chale jaayenge jo abhi asli checkouts ke hain — aur woh log payment karke aayenge aur unki seat ja chuki hogi.' },
-            { t: 'TTL sirf naye holds par lagao, purane rehne do', good: false, explain: 'Toh 70 seats hamesha ke liye atki rahengi. Purane holds ko bhi saaf karna hi hoga.' },
+            { t: "Reclaim stale holds;enforce TTL", good: true, next: 't3', explain: 'Do kadam: abhi ka nuksaan roko (stuck holds release), aur wajah band karo. Aur aage ke liye: hold banane ka ek hi helper function ho jisme TTL parameter <b>required</b> ho — taaki koi ise bhool hi na sake.' },
+            { t: "Flush entire shared Redis database", good: false, explain: 'Isme woh holds bhi chale jaayenge jo abhi asli checkouts ke hain — aur woh log payment karke aayenge aur unki seat ja chuki hogi.' },
+            { t: "Add TTL only to future hold writes", good: false, explain: 'Toh 70 seats hamesha ke liye atki rahengi. Purane holds ko bhi saaf karna hi hoga.' },
           ],
         },
         t3: {
           text: 'Theek ho gaya. Ab aisa dobara na ho, iske liye kya monitor karoge?',
           choices: [
-            { t: 'Active holds ki ginti aur unki umar — aur "hold jo TTL se purana hai" par alert', good: true, next: 'end', explain: 'Yeh us tarah ka metric hai jo <b>chup-chaap failures</b> pakadta hai. Yahan kuch fail nahi hua tha — koi error nahi, koi 500 nahi. Bas inventory gayab ho rahi thi. Aur ek business metric: "available seats" vs "sold seats" ka farak.' },
-            { t: 'Redis ka memory usage', good: false, explain: 'Woh badhega zaroor, par bahut dheere aur bahut baad mein — tab tak show ho chuka hoga.' },
-            { t: 'Error rate', good: false, explain: 'Yahi is bug ki khoobi thi — <b>error rate bilkul saaf tha</b>. Har request 200 laut rahi thi. Isiliye technical metrics se yeh kabhi nahi dikhta.' },
+            { t: "Hold-age and invariant alerts", good: true, next: 'end', explain: 'Yeh us tarah ka metric hai jo <b>chup-chaap failures</b> pakadta hai. Yahan kuch fail nahi hua tha — koi error nahi, koi 500 nahi. Bas inventory gayab ho rahi thi. Aur ek business metric: "available seats" vs "sold seats" ka farak.' },
+            { t: "Only aggregate Redis memory", good: false, explain: 'Woh badhega zaroor, par bahut dheere aur bahut baad mein — tab tak show ho chuka hoga.' },
+            { t: "Only total HTTP error rate", good: false, explain: 'Yahi is bug ki khoobi thi — <b>error rate bilkul saaf tha</b>. Har request 200 laut rahi thi. Isiliye technical metrics se yeh kabhi nahi dikhta.' },
           ],
         },
         end: {
@@ -1078,26 +1005,16 @@ booking      →  seedha, atomic, primary par</pre>
     questions: [
       {
         q: '"Ticketmaster design karo. Ek popular concert, 5 lakh log."',
-        choices: [
-          'Do alag problems batata hoon: flash crowd (waiting room + pre-scale + cached seat map) aur contention (hold with TTL, atomic SET NX EX, phir transactional confirm with idempotency key)',
-          'Sab requests ko queue mein daal dunga',
-          'Har seat par pessimistic lock lagaunga',
-          'Auto-scaling se handle ho jaayega',
-        ],
+        choices: ["Burst admission plus authoritative atomic hold","RedisTTLalone guarantees every booking once","Only autoscale eliminates same-seat conflict","Queue everyone without deadline or capacity cap"],
         answer: 0,
-        explain: 'Pehla vaakya hi sab bata deta hai: tumne <b>do alag</b> problems pehchane. Yeh design isliye mushkil hai ki log aksar sirf ek dekh paate hain — ya toh sirf scale ki baat karte hain, ya sirf locking ki. Dono ka ilaaj chahiye, aur ek doosre ko theek nahi karta.',
-      },
+        explain: "Separate overload admission from seat correctness. Waiting room/pre warm protect capacity; atomic durable hold owner/expiry and idempotent payment confirmation protect inventory. Redis SET NX EX alone all failure cases proof nahi; fencing/authority/recovery test needed.",
+       choiceExplanations: ["Separate overload admission from seat correctness. Waiting room/pre warm protect capacity; atomic durable hold owner/expiry and idempotent payment confirmation protect inventory. Redis SET NX EX alone all failure cases proof nahi; fencing/authority/recovery test needed.","Expired lease/staleholder/payment races need durable authoritative guards.","More instances do not serialize one hot seat invariant.","Unbounded waiting grows memory and expired work; honest ETA/backpressure needed."] },
       {
-        q: '"Hold ke doraan user ka browser crash ho gaya. Kya hoga?"',
-        choices: [
-          'Kuch nahi karna padega — TTL expire hoga aur seat apne aap wapas aa jaayegi. Yahi TTL ka poora karan hai: hold ek VAADA hai, kabza nahi',
-          'Cleanup job chalayenge',
-          'User ko dobara aana padega',
-          'Seat block rahegi',
-        ],
+        q: "Browser crash leaves hold behind. Required expiry behavior?",
+        choices: ["Expired hold must be reclaimable by policy","DBexpiry column physically deletes itself","TTLalone guarantees cleanup exact instant","Browser exit is authoritative cancellation"],
         answer: 0,
-        explain: 'Jawab ki khoobi yeh hai ki <b>kuch karna hi nahi padta</b> — recovery design mein hi bani hui hai. Yeh ek achhe distributed design ki nishani hai: failure ka handling ek alag cleanup path nahi, balki normal mechanism ka hissa hai. (Cleanup job wala jawab tab chahiye jab hold DB mein ho, Redis TTL mein nahi.)',
-      },
+        explain: "Abandoned hold expires logically and must be reclaimable. Redis expiry or DB expiry checks/reaper depending on implementation provideit; DB timestamp alone auto-delete nahi. Confirm and cleanup must use atomic owner/state/expiry guards.",
+       choiceExplanations: ["Abandoned hold expires logically and must be reclaimable. Redis expiry or DB expiry checks/reaper depending on implementation provideit; DB timestamp alone auto-delete nahi. Confirm and cleanup must use atomic owner/state/expiry guards.","DBexpiry field needs query filter/reclaim worker or transactional expiry logic.","SomeTTLsystems clean lazily; validity check must respect expiry.","Crash/unreliable client exit can omit cancellation signal."] },
     ],
   },
   success: [
@@ -1214,30 +1131,30 @@ NON-FUNCTIONAL
         {
           id: 'order', label: 'Message aane par kram', icon: '📥',
           options: [
-            { id: 'store', label: 'Pehle durable store (id ke saath), phir push', score: 3, why: 'Push ek <b>optimization</b> hai, source of truth nahi. Yeh kram offline users, reconnects, multi-device aur "message kho gaya" — chaaron ek saath hal karta hai.' },
-            { id: 'push', label: 'Pehle push (tez lagega), phir async store', score: -3, why: 'Store fail hua toh message <b>dikha</b> par save nahi hua — aur refresh par gayab. Yeh exact bug Realtime level ke incident mein tha.' },
-            { id: 'both', label: 'Dono ek saath (parallel)', score: -1, why: 'Tez lagta hai par ab do natije ho sakte hain: push chala gaya aur store fail. Kram hi guarantee deta hai — parallel usse tod deta hai.' },
+            { id: 'store', label: "Persist message then push", score: 3, why: 'Push ek <b>optimization</b> hai, source of truth nahi. Yeh kram offline users, reconnects, multi-device aur "message kho gaya" — chaaron ek saath hal karta hai.' },
+            { id: 'push', label: "Push then best-effort persist", score: -3, why: 'Store fail hua toh message <b>dikha</b> par save nahi hua — aur refresh par gayab. Yeh exact bug Realtime level ke incident mein tha.' },
+            { id: 'both', label: "Push and persist independently", score: -1, why: 'Tez lagta hai par ab do natije ho sakte hain: push chala gaya aur store fail. Kram hi guarantee deta hai — parallel usse tod deta hai.' },
           ],
         },
         {
           id: 'group', label: 'Group message (1000 members)', icon: '👥',
           options: [
-            { id: 'read', label: 'Ek copy conversation mein; padhte waqt fetch', score: 3, why: 'Chat mein read:write ratio <b>kam</b> hai — ek message 20 log padhte hain. 1000 inbox writes karna bekaar hai. (Notification ka chhota event alag se fanout hota hai.)' },
-            { id: 'write', label: 'Har member ke inbox mein copy', score: -1, why: 'Feed ke liye sahi hai (jahan read:write 1000:1 hai), chat ke liye nahi. 100 crore messages/din × average group size = storage aur write amplification dono phat jaate hain.' },
+            { id: 'read', label: "One shared conversation body", score: 3, why: 'Chat mein read:write ratio <b>kam</b> hai — ek message 20 log padhte hain. 1000 inbox writes karna bekaar hai. (Notification ka chhota event alag se fanout hota hai.)' },
+            { id: 'write', label: "One inbox body per recipient", score: -1, why: 'Feed ke liye sahi hai (jahan read:write 1000:1 hai), chat ke liye nahi. 100 crore messages/din × average group size = storage aur write amplification dono phat jaate hain.' },
           ],
         },
         {
           id: 'sync', label: 'Multi-device sync', icon: '📱',
           options: [
-            { id: 'cursor', label: 'Har device ka apna last_seen_id; reconnect par gap fetch', score: 3, why: 'Koi alag sync system chahiye hi nahi. Wahi mechanism jo offline user ke liye tha, multi-device ko bhi cover karta hai — aur receipts bhi wahi cursors hain.' },
-            { id: 'perdevice', label: 'Har device ke liye alag message copy', score: -2, why: '3 devices = 3x storage aur 3x writes, aur ab unhe aapas mein consistent bhi rakhna hai. Cursor ek number hai; copies ek poora system hain.' },
+            { id: 'cursor', label: "Per-device cursor and gap fetch", score: 3, why: 'Koi alag sync system chahiye hi nahi. Wahi mechanism jo offline user ke liye tha, multi-device ko bhi cover karta hai — aur receipts bhi wahi cursors hain.' },
+            { id: 'perdevice', label: "Duplicate history for each device", score: -2, why: '3 devices = 3x storage aur 3x writes, aur ab unhe aapas mein consistent bhi rakhna hai. Cursor ek number hai; copies ek poora system hain.' },
           ],
         },
         {
           id: 'conn', label: 'Connection layer', icon: '🔌',
           options: [
-            { id: 'gw', label: 'Alag gateway nodes (sirf sockets) + pub/sub + L4 LB', score: 2, why: 'Connections ek alag capacity dimension hain — 10 crore ÷ 50k = 2,000 nodes, chahe koi kuch bhej hi na raha ho. Logic peechhe, aur pub/sub isliye ki do users do alag gateways par hote hain.' },
-            { id: 'app', label: 'App servers hi WebSocket rakhein', score: -1, why: 'Ab tum connections aur business logic ko ek saath scale kar rahe ho — jabki unki zaroorat bilkul alag-alag badhti hai. Aur har app deploy 10 crore reconnects trigger karega.' },
+            { id: 'gw', label: "Dedicated socket gateway tier", score: 2, why: 'Connections ek alag capacity dimension hain — 10 crore ÷ 50k = 2,000 nodes, chahe koi kuch bhej hi na raha ho. Logic peechhe, aur pub/sub isliye ki do users do alag gateways par hote hain.' },
+            { id: 'app', label: "Co-located API and socket tier", score: -1, why: 'Ab tum connections aur business logic ko ek saath scale kar rahe ho — jabki unki zaroorat bilkul alag-alag badhti hai. Aur har app deploy 10 crore reconnects trigger karega.' },
           ],
         },
       ],
@@ -1252,38 +1169,23 @@ NON-FUNCTIONAL
       title: 'Chat ke faisle',
       questions: [
         {
-          q: 'Chat mein read par fanout kyun, jabki Twitter feed mein write par?',
-          choices: [
-            'Read:write ratio ulta hai. Feed: ek tweet 5 crore log padhte hain (write par kaam karo). Chat: ek message 20 log padhte hain (write sasta rakho)',
-            'Chat mein messages chhote hote hain',
-            'Chat realtime hai',
-            'Feed mein ordering matter karti hai',
-          ],
+          q: "Chat vsfeed fanout strategy ka real decision basis?",
+          choices: ["Compare recipient count, history and read ratio","Every chat must use read fanout always","Every feed must use write fanout always","Realtime transport decides storage fanout"],
           answer: 0,
-          explain: 'Yeh dono design ek hi sawaal se nikalte hain: <b>kaam kahan karna sasta hai?</b> Jab ek write ko crore log padhenge, tab write par mehnat karna sahi hai. Jab 20 log padhenge, tab woh mehnat bekaar hai. Isliye "fanout on write" koi universal best practice nahi — woh ek ratio ka jawab hai.',
-        },
+          explain: "Chat/feed fanout choice reader/write ratio, group-size, popularity, offline history, encryption and delivery contract se choose karo. Shared conversation log common chat pattern; write fanout and in boxes also valid. Feed hybrid fanout common; universal chat read/feed write rule nahi.",
+         choiceExplanations: ["Chat/feed fanout choice reader/write ratio, group-size, popularity, offline history, encryption and delivery contract se choose karo. Shared conversation log common chat pattern; write fanout and in boxes also valid. Feed hybrid fanout common; universal chat read/feed write rule nahi.","Small groups, large channels, offline in boxes or encryption can change tradeoff.","Celebrity fanout and inactive users often favor hybrid strategies.","Transport delivery and durable layout separate design choices hain."] },
         {
-          q: 'Read receipts kaise store karoge?',
-          choices: [
-            'Per-user cursor — last_read_message_id. "Kitno ne padha" = COUNT(cursor >= message_id). Har message par per-user row nahi',
-            'Har message par ek read_by array',
-            'Har (message, user) jodi ke liye ek row',
-            'Redis set mein',
-          ],
+          q: "Monotonic per-conversation read state ke liye compact model?",
+          choices: ["Per-conversation monotonic read cursor","One global cursor always covers all chats","Cursor counts prove user read every message","Cursor works without stable message ordering"],
           answer: 0,
-          explain: 'Per-message-per-user row ka matlab hai 100 crore messages × group size rows — arbon rows sirf receipts ke liye. Cursor ek hi number hai per user per conversation, aur woh <b>monotonic</b> hai (sirf aage badhta hai) — isliye update bhi sasta hai aur race bhi nahi.',
-        },
+          explain: "Per-user per-conversation last_read cursor compact hai jab read-state prefix/monotonic semantics fit karein. It assumes consistent message ordering; per message exceptions or privacy/product needs alternatives require kar sakte hain.",
+         choiceExplanations: ["Per-user per-conversation last_read cursor compact hai jab read-state prefix/monotonic semantics fit karein. It assumes consistent message ordering; per message exceptions or privacy/product needs alternatives require kar sakte hain.","Different conversation orderings need separate scoped cursors.","Cursor is defined read state; attention/display and sparse unread semantics differ.","Message order and cursor comparison must be consistent and stable."] },
         {
           q: '2,000 gateway nodes ka deploy karna hai. Kya dhyaan rakhoge?',
-          choices: [
-            'Rolling restart chhote batches mein, aur client par backoff + full jitter — warna 10 crore reconnects ek saath aayenge aur bache hue nodes gir jaayenge',
-            'Blue-green deployment',
-            'Raat ko deploy karo',
-            'Kuch khaas nahi',
-          ],
+          choices: ["Drain in batches; bound jittered reconnects","Blue green prevents any connection reconnect","Night deploy has zero global online users","Restart all gateways to finish faster always"],
           answer: 0,
           explain: 'Yeh un cheezon mein se hai jo design mein likhni padti hain, ops par chhodi nahi ja saktin. Ek gateway node par 50,000 connections hain; ek batch restart = laakhon reconnects, aur har reconnect mein auth + subscriptions + backlog fetch hai. Bina jitter ke woh ek self-inflicted DDoS hai.',
-        },
+         choiceExplanations: ["Yeh un cheezon mein se hai jo design mein likhni padti hain, ops par chhodi nahi ja saktin. Ek gateway node par 50,000 connections hain; ek batch restart = laakhon reconnects, aur har reconnect mein auth + subscriptions + backlog fetch hai. Bina jitter ke woh ek self-inflicted DDoS hai.","Connection handoff/draining still needed; traffic switching can trigger reconnects.","Global users/timezones and sessions persist overnight.","Simultaneous auth/catch up bursts can overload remaining dependencies."] },
       ],
     },
     {
@@ -1306,26 +1208,16 @@ NON-FUNCTIONAL
     questions: [
       {
         q: '"WhatsApp design karo. Message delivery kaise?"',
-        choices: [
-          'Pehle durable store (per-conversation monotonic id), phir connected recipients ko push. Reconnect par client last_seen_id bhej ke gap bhare. Push ek optimization hai, source of truth nahi',
-          'WebSocket se sabko broadcast',
-          'Har user ke liye ek queue',
-          'Push notifications',
-        ],
+        choices: ["Durable message; authorized cursor gap recovery","Broadcast only makes offline history reliable","Push provider ACK equals recipient read","UnorderedrandomIDs always chronologicalcursor"],
         answer: 0,
         explain: 'Yeh jawab ek saath chaar cheezein hal karta hai: offline users, reconnects, multi-device sync, aur "message kho gaya". Aur woh aakhri clause — "push ek optimization hai" — hi dikhata hai ki tumne guarantee kahan rakhi hai.',
-      },
+       choiceExplanations: ["Yeh jawab ek saath chaar cheezein hal karta hai: offline users, reconnects, multi-device sync, aur \"message kho gaya\". Aur woh aakhri clause — \"push ek optimization hai\" — hi dikhata hai ki tumne guarantee kahan rakhi hai.","Offline/disconnected recipients need retained message history.","Push delivery/status and app read receipts separate contracts hain.","Cursor needs stable order; randomuniqueID alone not chronological."] },
       {
-        q: '"Group mein 1000 members hain. Ek message aaya. Kitne writes?"',
-        choices: [
-          'Ek — message conversation mein ek baar likha jaata hai. Members padhte waqt fetch karte hain. (Notification ka chhota event alag se fanout hota hai)',
-          '1000 — har member ke inbox mein',
-          '1000 + 1',
-          'Depends on online users',
-        ],
+        q: "Given shared conversation log chosen hai;1000 members. Body write and metadata cost?",
+        choices: ["Chosen shared log:one body plus metadata work","Every chat architecture has exactly one write","Recipient inbox metadata has zero storage cost","One body write means delivery to all guaranteed"],
         answer: 0,
-        explain: 'Yeh sawaal seedha yeh test karta hai ki tumne fanout ka faisla <b>ratio</b> se liya ya aadat se. Chat mein ek message 20 log padhte hain — 1000 inbox writes ka koi faayda nahi. (Aur agar interviewer poochhe "par read slow nahi hoga?" — jawab hai ki conversation par index se woh ek range scan hai.)',
-      },
+        explain: "Given chosen shared conversation log design, message body once write ho sakti hai. Member delivery metadata, encryption, cursors, notifications and replication additional writes create kar sakte hain. Every WhatsApp-like architecture exactly one write universal claim nahi.",
+       choiceExplanations: ["Given chosen shared conversation log design, message body once write ho sakti hai. Member delivery metadata, encryption, cursors, notifications and replication additional writes create kar sakte hain. Every WhatsApp-like architecture exactly one write universal claim nahi.","Write fanout is valid alternative; architecture assumptions determine cost.","Delivery/push/encryption/receipt metadata can fanout with recipients.","Durable log write does not ensure every offline/blocked recipient receivesit."] },
     ],
   },
   success: [
@@ -1375,12 +1267,11 @@ NON-FUNCTIONAL
   • Playback shuru &lt; 2 second
   • Global — har jagah</pre>
      <pre>Egress ka hisaab (yahi asli bill hai):
-  100 crore ghante/din × ~1 GB/ghanta  =  10 crore GB/din
-                                       ≈  100 PB/din
-                                       ≈  ~10 Tbps average
+  100 crore ghante/din × ~1 GB/ghanta  =  100 crore GB/din
+                                       ≈  1 EB/din =1000 PB/din
+                                       ≈  ~92.6 Tbps average (decimal units)
 
-Origin se yeh serve karna namumkin hai. Isliye poora design
-CDN ke around banta hai — aur CDN hit rate hi sabse zaroori metric hai.</pre>
+Given global traffic mein distributed CDN delivery origin load aur distance reduce karti hai. Byte hit ratio, origin-shield load, player startup SLO aur egress price separately measure karo; single origin ka workload benchmark ke bina universal impossibility claim mat banao.</pre>
      <h3>🏗️ Teen alag systems</h3>
      <pre>1. UPLOAD      presigned URL → S3 (multipart, resumable)
                app server 40ms kaam karta hai, 12 minute nahi
@@ -1421,13 +1312,9 @@ alag quality se maang sakta hai — beech mein, bina ruke.</pre>
        <tr><td>Purana/dulrbh video</td><td>CDN miss → origin S3 → cache mein</td></tr>
        <tr><td>Manifest</td><td>Chhota, chhoti TTL (quality options badal sakte hain)</td></tr>
      </table>
-     <p>Video traffic bahut <b>skewed</b> hai: kuch hazaar videos poore traffic ka
-     bada hissa khaate hain. Isliye CDN hit rate 95%+ hota hai — aur wahi ek number
-     tumhara bandwidth bill tay karta hai. 95% se 90% girna matlab origin traffic
-     <b>dugna</b>.</p>
+     <p>Video popularity often skewed hoti hai; <b>95% byte hit ratio is scenario ka assumption</b> hai, universal production fact nahi. Same delivery volume/shield boundary par byte hits 95% se 90% girne par origin bytes 5% se 10%, yani <b>dugna</b> hote hain. CDN delivery, origin egress, regional prices aur requests ka bill separately model karo.</p>
      <h3>👁️ View count</h3>
-     <p>100 crore views/din. Har view par ek DB update? Woh 12,000 writes/sec hai
-     ek hi row par — aur woh row hot hai.</p>
+     <p>100 crore views/din roughly 11,574 average events/sec across the platform hain. Ek viral video ka per-key skew alag measure karo; platform total ko automatically ek row ka load mat maano. Per-event updates write cost add karte hain; hot-key aggregation helpful ho sakti hai.</p>
      <pre>Sahi raasta:  view event → stream → windowed aggregate → periodic update
              UI par thoda purana count bilkul theek hai
              ("1.2M views" mein exactness ka koi mol nahi)</pre>
@@ -1448,39 +1335,39 @@ alag quality se maang sakta hai — beech mein, bina ruke.</pre>
         {
           id: 'upload', label: 'Upload', icon: '📤',
           options: [
-            { id: 'presigned', label: 'Presigned multipart URL — client seedha S3 par', score: 3, why: 'Bytes app server se guzarte hi nahi, aur multipart se 5 GB upload resumable ho jaata hai (mobile par yeh zaroori hai). App 40ms kaam karta hai.' },
-            { id: 'proxy', label: 'App server ke through', score: -3, why: 'Ek 5 GB upload dheeme network par 20 minute ek concurrency slot pakadta hai. Kuch upload ek saath = poori API down.' },
+            { id: 'presigned', label: "Scoped direct multipart upload", score: 3, why: 'Bytes app server se guzarte hi nahi, aur multipart se 5 GB upload resumable ho jaata hai (mobile par yeh zaroori hai). App 40ms kaam karta hai.' },
+            { id: 'proxy', label: "Proxy upload through API tier", score: -3, why: 'Ek 5 GB upload dheeme network par 20 minute ek concurrency slot pakadta hai. Kuch upload ek saath = poori API down.' },
           ],
         },
         {
           id: 'transcode', label: 'Transcoding', icon: '⚙️',
           options: [
-            { id: 'queue', label: 'S3 event → queue → worker fleet, chunks + manifest, status API', score: 3, why: 'Minute-ghante ka kaam, isliye async. Queue burst sambhaalti hai, workers alag scale karte hain (CPU-bound), aur status API user ko sach dikhata hai.' },
-            { id: 'sync', label: 'Upload complete hote hi wahin transcode', score: -3, why: 'Ek 4K video ka transcode ghanta le sakta hai. Request cycle mein woh mumkin hi nahi, aur retry par poora kaam dobara.' },
-            { id: 'lazy', label: 'Jab koi dekhe tab transcode karo (lazy)', score: -1, why: 'Chalak idea hai aur lambe-tail videos ke liye kuch platforms yahi karte hain — par pehle viewer ko minute bhar wait karna padega. Aam raaste ke liye galat; sirf ek optimization ho sakta hai.' },
+            { id: 'queue', label: "Idempotent queued worker pipeline", score: 3, why: 'Minute-ghante ka kaam, isliye async. Queue burst sambhaalti hai, workers alag scale karte hain (CPU-bound), aur status API user ko sach dikhata hai.' },
+            { id: 'sync', label: "Transcode inside upload request", score: -3, why: 'Ek 4K video ka transcode ghanta le sakta hai. Request cycle mein woh mumkin hi nahi, aur retry par poora kaam dobara.' },
+            { id: 'lazy', label: "Transcode on first viewer request", score: -1, why: 'Chalak idea hai aur lambe-tail videos ke liye kuch platforms yahi karte hain — par pehle viewer ko minute bhar wait karna padega. Aam raaste ke liye galat; sirf ek optimization ho sakta hai.' },
           ],
         },
         {
           id: 'deliver', label: 'Playback', icon: '🌍',
           options: [
-            { id: 'cdn', label: 'CDN se chunks + manifest, origin par miss', score: 3, why: '10 Tbps origin se serve karna namumkin hai. Aur video traffic bahut skewed hai, isliye CDN hit rate 95%+ aata hai — wahi ek number poora bandwidth bill tay karta hai.' },
-            { id: 'origin', label: 'Seedha S3 se', score: -2, why: 'S3 durable hai par woh CDN nahi — har viewer ko us region tak jaana padega (door ke logon ke liye buffering), aur egress bill kai guna.' },
-            { id: 'app2', label: 'App server ke through stream', score: -3, why: 'Ek 2-ghante ka video ek slot ko 2 ghante ke liye pakad lega. Wahi upload wali galti, ab read side par.' },
+            { id: 'cdn', label: "CDN segments;bounded origin miss", score: 3, why: "Given 92.6 Tbps global delivery mein CDN/cache origin work reduce karta hai. 95% byte hits lab assumption hai; total delivery egress, origin miss load, regional pricing aur startup SLO separately measure karo." },
+            { id: 'origin', label: "Direct object storage playback", score: -2, why: 'S3 durable hai par woh CDN nahi — har viewer ko us region tak jaana padega (door ke logon ke liye buffering), aur egress bill kai guna.' },
+            { id: 'app2', label: "Stream via application servers", score: -3, why: 'Ek 2-ghante ka video ek slot ko 2 ghante ke liye pakad lega. Wahi upload wali galti, ab read side par.' },
           ],
         },
         {
           id: 'views', label: 'View count', icon: '👁️',
           options: [
-            { id: 'stream', label: 'View event → stream → aggregate → periodic update', score: 3, why: '100 crore views/din = 12,000 writes/sec ek hot row par. Aur "1.2M views" mein exactness ka koi mol hi nahi — yeh approximate ke liye perfect jagah hai.' },
-            { id: 'db', label: 'Har view par DB mein counter++', score: -3, why: 'Ek hi row par 12,000 writes/sec — lock contention, replication lag, aur woh row poore DB ko dheema kar degi.' },
-            { id: 'redis', label: 'Redis INCR, periodically DB mein flush', score: 1, why: 'Bahut behtar hai aur chhote scale par bilkul sahi. Par Redis ke girne par kuch counts ja sakte hain, aur monetization ke liye chahiye wala exact count phir bhi alag pipeline maangta hai.' },
+            { id: 'stream', label: "Stream;batch view projection", score: 3, why: "100 crore/day roughly 11,574 platform events/sec hain; ek viral video ka share hot-key load decide karta hai. UI approximate count tolerate kar sakti hai; billing/abuse metrics ko separate correctness contract chahiye." },
+            { id: 'db', label: "DB row increment per view", score: -3, why: 'Ek hi row par 12,000 writes/sec — lock contention, replication lag, aur woh row poore DB ko dheema kar degi.' },
+            { id: 'redis', label: "Redis increments;periodic flush", score: 1, why: 'Bahut behtar hai aur chhote scale par bilkul sahi. Par Redis ke girne par kuch counts ja sakte hain, aur monetization ke liye chahiye wala exact count phir bhi alag pipeline maangta hai.' },
           ],
         },
       ],
       verdicts: {
         great: '🏆 Teen alag systems, teen alag scaling axes — aur bytes kabhi app server se nahi guzre. Yahi is design ka aakaar hai.',
         ok: '👍 Zyadatar sahi. Ek jagah bytes ya writes wahan ja rahe hain jahan unhe nahi jaana chahiye.',
-        bad: '🤔 Egress ka hisaab dobara padho: ~10 Tbps. Us number ke baad har chunav apne aap saaf ho jaata hai.',
+        bad: '🤔 Egress ka hisaab dobara padho: ~92.6 Tbps. Us number ke baad har chunav apne aap saaf ho jaata hai.',
       },
     },
     {
@@ -1493,7 +1380,7 @@ alag quality se maang sakta hai — beech mein, bina ruke.</pre>
         { id: 'store', label: '💾 Storage-bound' },
       ],
       items: [
-        { text: 'Video delivery (playback)', bin: 'net', explain: '~10 Tbps. Isiliye CDN hi poora design hai, aur hit rate hi bill hai.' },
+        { text: 'Video delivery (playback)', bin: 'net', explain: '~92.6 Tbps. Isiliye CDN hi poora design hai, aur hit rate hi bill hai.' },
         { text: 'Transcoding fleet', bin: 'cpu', explain: 'Har video ke 5-6 versions banane hain. Yeh pure compute hai — aur isiliye woh alag fleet honi chahiye jo spot/preemptible instances par chal sake.' },
         { text: 'Original videos + saare transcoded versions', bin: 'store', explain: 'Har video ki 6 copies. Isliye lifecycle rules laazmi hain — purane, kam-dekhe jaane wale videos ki high-res copies archive ya delete ho sakti hain.' },
         { text: 'Upload ingest', bin: 'net', explain: 'Bytes andar aa rahe hain. Presigned URL se yeh bojh S3 par chala jaata hai, tumhare servers par nahi.' },
@@ -1507,37 +1394,22 @@ alag quality se maang sakta hai — beech mein, bina ruke.</pre>
       questions: [
         {
           q: 'Playback 2 second mein kaise shuru hota hai jabki video 2 GB ki hai?',
-          choices: [
-            'Video chunks (2-10s) mein tuti hai. Player sabse chhoti quality ka pehla chunk leta hai, dikhana shuru karta hai, phir apni speed naap ke quality badhata hai',
-            'Video compress hoti hai',
-            'CDN se aata hai isliye tez hai',
-            'Preloading hoti hai',
-          ],
+          choices: ["Fetch playable initial segments then adapt","Whole 2 GBmustarrive before playback","CDN alone determines codec startup buffer","Adaptive player always starts lowest quality"],
           answer: 0,
-          explain: 'CDN madad karta hai par asli jawab <b>chunking + adaptive bitrate</b> hai. Poori file kabhi download hoti hi nahi. Aur isi wajah se seek bhi turant hota hai (sirf woh chunk chahiye) aur network kharab hone par video ruk-ruk ke chalne ki jagah <b>dhundhla</b> ho jaata hai.',
-        },
+          explain: "Segmented media and manifest player ko playable initial segments se start karte hain, then bandwidth/buffer policy quality adapt karti hai. Exact segment length, initial quality and startup 2 seconds scenario-specific hain; not always lowest quality.",
+         choiceExplanations: ["Segmented media and manifest player ko playable initial segments se start karte hain, then bandwidth/buffer policy quality adapt karti hai. Exact segment length, initial quality and startup 2 seconds scenario-specific hain; not always lowest quality.","Segmented streaming permits play before full asset download.","Manifest, codec, keyframes, network and buffer policy also matter.","Initial quality selection depends bandwidth estimate/player policy; not always lowest."] },
         {
-          q: 'CDN hit rate 95% se 90% ho gaya. Kya asar?',
-          choices: [
-            'Origin traffic DUGNA ho gaya (5% se 10%) — aur woh 10 Tbps ka 10% hai. Hit rate is system ka sabse zaroori ek number hai',
-            '5% zyada latency',
-            'Thoda zyada cost',
-            'Kuch khaas nahi',
-          ],
+          q: "Constant byte volume:CDN byte hit 95%to90%. Origin miss bytes?",
+          choices: ["Origin byte demand doubles if other factors fixed","Total viewer byte demand necessarily doubles","Origin rate increases exactly 5%relative","Higher miss rate guarantees no latency change"],
           answer: 0,
-          explain: 'Yeh un hisaabon mein se hai jo intuition ko dhokha deta hai: hit rate mein 5 <b>point</b> ka farak origin load ko <b>dugna</b> kar deta hai. Isiliye CDN hit rate ek first-class SLI honi chahiye, aur uska girna (naya content, cache purge, TTL change) ek alert hona chahiye.',
-        },
+          explain: "Assume unchanged viewer traffic, byte hit definition and shielding:95%hit means 5%origin miss;90%hit means 10%, so origin bytes double. Request hit ratio and byte hit ratio differ kar sakte hain; originSLO capacity separately monitor.",
+         choiceExplanations: ["Assume unchanged viewer traffic, byte hit definition and shielding:95%hit means 5%origin miss;90%hit means 10%, so origin bytes double. Request hit ratio and byte hit ratio differ kar sakte hain; originSLO capacity separately monitor.","Same view traffic staysconstant; miss fraction changes origin share.","5%to10%is 100%relative increase.","Miss latency/shielding/capacity affect user tail; cannot guarantee unchanged."] },
         {
           q: '100 crore views/din. Count kaise rakhoge?',
-          choices: [
-            'View events stream mein → windowed aggregate → periodic update. UI par thoda purana count bilkul theek hai; monetization ke liye alag exact pipeline',
-            'Har view par DB counter++',
-            'Redis INCR, har view par',
-            'Har ghante COUNT(*) query',
-          ],
+          choices: ["Aggregate stable event IDs; batch materialization","One hot DB row handles any view rate linearly","Redis INCR alone dedupes every retried view","Approximate UI count fits all billing invariants"],
           answer: 0,
           explain: '12,000 writes/sec ek hi row par lock contention aur replication lag dono banata hai. Aur "1.2M views" mein exactness ka koi mol hi nahi — yeh <b>approximate ke liye perfect</b> jagah hai. (Redis INCR chhote scale par sahi hai, par is scale par bhi woh aggregate pipeline hi ban jaata hai.)',
-        },
+         choiceExplanations: ["12,000 writes/sec ek hi row par lock contention aur replication lag dono banata hai. Aur \"1.2M views\" mein exactness ka koi mol hi nahi — yeh <b>approximate ke liye perfect</b> jagah hai. (Redis INCR chhote scale par sahi hai, par is scale par bhi woh aggregate pipeline hi ban jaata hai.)","Single hot row has serialization/lock/throughput limits.","INCR repeat applies increment twice unless deduped.","Billing exactness/attribution requirements may differ from UI approximation."] },
       ],
     },
   ],
@@ -1546,27 +1418,17 @@ alag quality se maang sakta hai — beech mein, bina ruke.</pre>
     instructions: 'Yahan numbers pehle bolna hi jeet hai. 🎤',
     questions: [
       {
-        q: '"YouTube design karo." Pehla number kaunsa nikaaloge?',
-        choices: [
-          'Egress — 100 crore watch-hours/din × ~1 GB/ghanta ≈ 100 PB/din ≈ 10 Tbps. Yeh ek number bata deta hai ki poora design CDN ke around hai, aur CDN hit rate hi sabse zaroori metric hai',
-          'Storage — kitne videos hain',
-          'Upload rate',
-          'Database size',
-        ],
+        q: "1 billion watch hours/day*1 GB/hour. Decimal daily egress and average bandwidth?",
+        choices: ["1 EB/day egress, about 92.6 Tbps average","100 PB/day egress, about 9.26 Tbps average","10 PB/day egress, about 0.926 Tbps average","1 PB/day egress, about 0.0926 Tbps average"],
         answer: 0,
-        explain: 'Ek estimate ne poore design ki disha tay kar di. Storage bada hai par woh <b>sasta aur aasan</b> hai (S3 par daal do). Egress bada <b>aur</b> mushkil hai — woh tumhara bill bhi hai aur tumhari architecture bhi. Achha estimate wahi hai jo agla kadam bata de.',
-      },
+        explain: "Decimal units:1 billion watch hours/day*1 GB/hour=1 billion GB/day=1 EB/day=1000 PB/day. Average bits/s=(10^18 bytes*8)/86400~92.6 Tbps. Peak, bitrate, overhead and cache miss fraction se origin and CDN budget separately derive karo.",
+       choiceExplanations: ["Decimal units:1 billion watch hours/day*1 GB/hour=1 billion GB/day=1 EB/day=1000 PB/day. Average bits/s=(10^18 bytes*8)/86400~92.6 Tbps. Peak, bitrate, overhead and cache miss fraction se origin and CDN budget separately derive karo.","1 billion hours*1 GB=1 billion GB=1 EB decimal, not 100 PB.","10 PB factor 100 too low for given watch hours/bitrate.","1 PB factor 1000 too low; units must beexplicit."] },
       {
         q: '"Ek video achanak viral ho gaya. Kya hoga?"',
-        choices: [
-          'CDN uska bada hissa khud sambhaal lega (woh isi ke liye hai) — par pehle kuch minute mein har edge par miss hoga, aur woh saare misses origin par ek saath aayenge. Isliye origin par request coalescing/shielding chahiye',
-          'CDN sab sambhaal lega',
-          'Origin gir jaayega',
-          'Aur servers add karenge',
-        ],
+        choices: ["Cold-edge misses need shield/coalescing budget","CDN 95%means origin never receives spikes","Every viral video necessarily crashes origin","Add workers eliminates bandwidth ceiling"],
         answer: 0,
         explain: 'Yeh <b>cache stampede</b> hai, ab CDN ke paimane par — aur uska naam "origin shield" hai: edges pehle ek middle layer se poochhte hain, jo ek hi origin request banati hai. Yeh bilkul wahi single-flight/coalescing hai jo tumne cache level mein dekha tha, sirf ek layer upar.',
-      },
+       choiceExplanations: ["Yeh <b>cache stampede</b> hai, ab CDN ke paimane par — aur uska naam \"origin shield\" hai: edges pehle ek middle layer se poochhte hain, jo ek hi origin request banati hai. Yeh bilkul wahi single-flight/coalescing hai jo tumne cache level mein dekha tha, sirf ek layer upar.","Hit ratio aggregate can hide cold object burst across many edges.","Shielding, pre warm and bounded origin can absorb some bursts.","Origin bandwidth/provider limits may remain dominant."] },
     ],
   },
   success: [
@@ -1580,11 +1442,11 @@ alag quality se maang sakta hai — beech mein, bina ruke.</pre>
     resolutions ki list dekho. Phir video ki quality manually badlo aur dekho ki
     agle chunks kis quality ke aate hain.`,
   cards: [
-    { front: 'Video platform ka pehla number?', back: '<b>Egress.</b> 100 crore watch-hours/din ≈ 100 PB/din ≈ <b>10 Tbps</b>. Yeh ek number bata deta hai ki poora design CDN ke around hai.' },
+    { front: 'Video platform ka pehla number?', back: '<b>Egress.</b> 100 crore watch-hours/din ×1GB/hour≈1EB/day≈<b>92.6Tbps</b>. Yeh ek number bata deta hai ki poora design CDN ke around hai.' },
     { front: 'Teen alag systems?', back: '<b>Upload</b> (bandwidth-bound, presigned URL) · <b>Transcode</b> (CPU-bound, queue + worker fleet) · <b>Deliver</b> (egress-bound, CDN). Teenon alag scale karte hain.' },
-    { front: 'Playback 2 second mein kaise?', back: '<b>Chunks + adaptive bitrate.</b> Player sabse chhoti quality ka pehla chunk leta hai, dikhana shuru karta hai, phir speed naap ke chadhta hai. Poori file kabhi download nahi hoti.' },
-    { front: 'CDN hit rate 95% → 90%?', back: 'Origin traffic <b>dugna</b> (5% → 10%). Hit rate is system ka sabse zaroori single number hai — use SLI banao aur uske girne par alert.' },
-    { front: 'View count (100 crore/din)?', back: 'Stream → windowed aggregate → periodic update. Har view par DB counter = 12,000 writes/sec <b>ek hot row</b> par. "1.2M views" mein exactness ka koi mol nahi.' },
+    { front: 'Playback 2 second mein kaise?', back: "<b>Chunks + adaptive bitrate.</b> Player initial bitrate/device/network policy se chunk choose karta hai, buffer aur throughput se adapt karta hai. Playback whole file download se pehle shuru ho sakti hai; full watch mein poora selected rendition stream ho sakta hai." },
+    { front: 'CDN hit rate 95% → 90%?', back: "Same volume aur byte-hit/shield boundary par origin bytes <b>dugna</b> (5% → 10%). Request hit ratio alone bytes prove nahi karti. Origin capacity, delivery latency aur egress cost bhi monitor karo." },
+    { front: 'View count (100 crore/din)?', back: "Stream → windowed aggregate → periodic update. 100 crore/day ≈ 11,574 events/sec platform-wide; per-video skew hot row decide karta hai. UI freshness/approximation policy explicit rakho; billing metrics separate hain." },
     { front: 'Video viral ho gaya?', back: 'CDN sambhaalega — par pehle minute mein har edge par miss, aur woh sab origin par ek saath. Ilaaj: <b>origin shield</b> = CDN ke paimane par request coalescing.' },
   ],
 },
@@ -1640,7 +1502,7 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
      <b>current state</b> hai, history nahi — aur current state ke liye
      durable store galat aujaar hai.</p>
      <h3>🤝 Matching — geo aur contention ek saath</h3>
-     <pre>1. rider ki cell + 8 padosi cells se candidates lo   (geo)
+     <pre>1. query radius cover karne wali cells se candidates lo   (geo)
 2. asli doori + ETA se rank karo                     (baarik chhanna)
 3. top driver par HOLD lagao (TTL 15s)               (contention!)
 4. driver ko offer bhejo
@@ -1653,7 +1515,7 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
      sirf yahan hold 15 second ka hai, 10 minute ka nahi.</p>
      <h3>🔥 Hot cell — 8 PM, baarish</h3>
      <p>Aadha shehar ek ilaake se ride maang raha hai. Us cell ka data ek hi
-     node/partition par hai. Ilaaj wahi teen: <b>cell ko chhoti precision par
+     node/partition par hai. Ilaaj wahi teen: <b>cell ko finer spatial resolution par
      todo</b>, <b>us cell ka data replicate karo</b>, aur adaptive grid rakho
      taaki ghani jagah ke cells chhote hon.</p>
      <h3>🔄 Ride lifecycle — workflow</h3>
@@ -1692,7 +1554,7 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
         booking: { mode: 'none', seats: {}, holds: {} },
       },
       tasks: T_UBER,
-      success: allOf(T_UBER),
+      success: SD.allTasks(T_UBER),
       successText: `👑 <b>Architect Mahaguru.</b><br><br>
         Saat shapes, saat failure modes — aur tumne ek bhi <b>naya</b> nahi seekha.
         Geohash prefix wahi B-tree prefix tha. Hot cell wahi hot key thi.
@@ -1702,27 +1564,33 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
         uska known failure dhoondo, aur phir <b>maap ke</b> theek karo.<br><br>
         Boxes koi bhi bana leta hai. Tradeoff bolna, bottleneck maapna,
         aur "iski keemat yeh hai" keh paana — wahi architect banata hai. 🏛️`,
+      solution: [
+        "estimate --users 1000000 --rps 25000 --bytes 512",
+        "GET /api/v1/drivers?geohash=te7ud9&limit=20",
+        "CREATE INDEX ix_geo ON drivers(geohash, updated_at)",
+        "GET /api/v1/drivers?geohash=te7ud9&limit=20",
+        "ring show",
+        "ring set vnodes 150",
+        "cache hotkey --key cell:te7ud9 --rps 60000",
+        "cache hotkey --key cell:te7ud9 --rps 60000 --replicas 16",
+        "book seat driver:8891 --concurrent 2",
+        "book reset",
+        "sim set booking.mode reservation",
+        "book hold driver:8891 --ttl 15",
+        "book seat driver:8891 --concurrent 1",
+        "load --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'",
+        "sim add timeout pricing 200",
+        "sim add fallback pricing \"last known surge multiplier\"",
+        "sim add admission --max-concurrent 8000 --queue 5",
+        "sim scale pool 200",
+        "load --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'",
+        "slo --availability 99.95",
+      ],
+      verify: s => { const m = SD.mission; return m.index(s, 'drivers', ['geohash', 'updated_at']) && s.sys.ring?.vnodes === 150 && s.sys.booking?.mode === 'reservation' && s.sys.booking.holds['driver:8891'] === 15 && s.sys.deps.pricing?.timeoutMs === 200 && !!s.sys.deps.pricing.fallback && s.sys.api.admission?.maxConcurrent === 8000 && s.sys.pool.size === 200 && m.current(s, 'load', r => r.rps === 25000 && !r.saturated); },
       hints: [
-        'Pehle numbers: estimate --users 1000000 --rps 25000 --bytes 512',
-        'Bina index ke nearby query: GET /api/v1/drivers?geohash=te7ud9&limit=20',
-        'Geo index banao: CREATE INDEX ix_geo ON drivers(geohash, updated_at)',
-        'Ab wahi query: GET /api/v1/drivers?geohash=te7ud9&limit=20',
-        'Locations kis node par hain, dekho: ring show',
-        'Distribution theek karo: ring set vnodes 150',
-        '8 PM, baarish — ek cell par saara load: cache hotkey --key cell:te7ud9 --rps 60000',
-        'Us cell ko todo: cache hotkey --key cell:te7ud9 --rps 60000 --replicas 16',
-        'Ab matching ka contention — bina protection ke: book seat driver:8891 --concurrent 2',
-        'Reset karo: book reset',
-        'Reservation mode: sim set booking.mode reservation',
-        'Driver par 15s ka hold: book hold driver:8891 --ttl 15',
-        'Doosra rider ab ruke: book seat driver:8891 --concurrent 1',
-        "Ab peak load: load --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'",
-        'Pricing service ko baandho: sim add timeout pricing 200',
-        'Aur fallback: sim add fallback pricing "last known surge multiplier"',
-        'Waiting room: sim add admission --max-concurrent 8000 --queue 5',
-        'Ab jaake pool badhao: sim scale pool 200',
-        "Peak dobara: load --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'",
-        'Aur budget: slo --availability 99.95',
+        "Pehle observation: Peak ka andaaza lagao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
+        "Checklist ko kram se dekho. Aakhri proof: SLO budget check karo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 1000000 --rps 25000 --bytes 512\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nCREATE INDEX ix_geo ON drivers(geohash, updated_at)\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nring show\nring set vnodes 150\ncache hotkey --key cell:te7ud9 --rps 60000\ncache hotkey --key cell:te7ud9 --rps 60000 --replicas 16\nbook seat driver:8891 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold driver:8891 --ttl 15\nbook seat driver:8891 --concurrent 1\nload --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'\nsim add timeout pricing 200\nsim add fallback pricing \"last known surge multiplier\"\nsim add admission --max-concurrent 8000 --queue 5\nsim scale pool 200\nload --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'\nslo --availability 99.95",
       ],
     },
     {
@@ -1738,45 +1606,45 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
         {
           id: 'loc', label: 'Driver locations', icon: '📍',
           options: [
-            { id: 'mem', label: 'In-memory geo store (cell → drivers), + async stream mein bhi', score: 3, why: 'Yeh <b>current state</b> hai, history nahi — 20 second purana location bekaar hai. In-memory store 1.5 crore writes/min sambhaal leta hai; aur stream analytics/trip-history ke liye alag se sab rakh leta hai.' },
-            { id: 'db', label: 'Har ping DB mein insert', score: -3, why: '1.5 crore writes/min. Aur uska 99.99% data agle ping par bekaar ho jaata hai. Durable store yahan bilkul galat aujaar hai.' },
-            { id: 'kafka', label: 'Sirf Kafka mein, wahin se query karo', score: -2, why: 'Kafka ek log hai, ek <b>lookup</b> store nahi. "Is cell mein abhi kaun hai" ka jawab usse nikalna matlab poora stream padhna. Stream ke saath ek materialized state chahiye.' },
+            { id: 'mem', label: "Fresh geo state plus durable stream", score: 3, why: 'Yeh <b>current state</b> hai, history nahi — 20 second purana location bekaar hai. In-memory store 1.5 crore writes/min sambhaal leta hai; aur stream analytics/trip-history ke liye alag se sab rakh leta hai.' },
+            { id: 'db', label: "Append all pings to serving SQL", score: -3, why: '1.5 crore writes/min. Aur uska 99.99% data agle ping par bekaar ho jaata hai. Durable store yahan bilkul galat aujaar hai.' },
+            { id: 'kafka', label: "Only stream;no geo query projection", score: -2, why: 'Kafka ek log hai, ek <b>lookup</b> store nahi. "Is cell mein abhi kaun hai" ka jawab usse nikalna matlab poora stream padhna. Stream ke saath ek materialized state chahiye.' },
           ],
         },
         {
           id: 'nearby', label: 'Nearby drivers', icon: '🗺️',
           options: [
-            { id: 'cell', label: 'Geohash/H3 cell + 8 padosi, phir asli doori se rank', score: 3, why: '2D range query par index chalta hi nahi. Cell prefix se candidates (mota chhanna), phir haversine/ETA se rank (baarik chhanna). Padosi cells isliye ki boundary par sabse paas wala chhoot na jaaye.' },
-            { id: 'between', label: 'lat/lng par BETWEEN with composite index', score: -3, why: 'Composite index pehli range ke baad ruk jaata hai — poori latitude patti padhni padegi. Yeh chhote data par chalta hai aur peak par marta hai.' },
+            { id: 'cell', label: "Radius-cover cells;exact distance", score: 3, why: '2D range query par index chalta hi nahi. Cell prefix se candidates (mota chhanna), phir haversine/ETA se rank (baarik chhanna). Padosi cells isliye ki boundary par sabse paas wala chhoot na jaaye.' },
+            { id: 'between', label: "Composite B-tree bounding box", score: -3, why: 'Composite index pehli range ke baad ruk jaata hai — poori latitude patti padhni padegi. Yeh chhote data par chalta hai aur peak par marta hai.' },
           ],
         },
         {
           id: 'hotcell', label: '8 PM, baarish — ek cell par sab', icon: '🔥',
           options: [
-            { id: 'split', label: 'Cell ko chhoti precision par todo + us cell ka data replicate', score: 3, why: 'Hot key ka wahi ilaaj, geo par. Aur adaptive grid rakho — ghani jagah ke cells chhote, taaki yeh apne aap sambhal jaaye.' },
-            { id: 'nodes', label: 'Aur nodes add karo', score: -2, why: 'Ek cell ka data ek hi node par hash hota hai. Nodes badhane se woh cell nahi bantegi — baaki nodes khaali baithe rahenge.' },
+            { id: 'split', label: "Finer cells;planned read replicas", score: 3, why: 'Hot key ka wahi ilaaj, geo par. Aur adaptive grid rakho — ghani jagah ke cells chhote, taaki yeh apne aap sambhal jaaye.' },
+            { id: 'nodes', label: "More nodes;unchanged hot routing", score: -2, why: 'Ek cell ka data ek hi node par hash hota hai. Nodes badhane se woh cell nahi bantegi — baaki nodes khaali baithe rahenge.' },
           ],
         },
         {
           id: 'match', label: 'Driver matching', icon: '🤝',
           options: [
-            { id: 'hold', label: 'Top driver par 15s ka hold (TTL), offer bhejo, timeout par agla', score: 3, why: 'Reservation pattern, ab 15 second ka. Hold ke bina ek driver 5 riders ko offer ho jaayega aur chaar ko "mil gaya… nahi mila" dikhega. TTL isliye ki driver phone na uthaye toh woh atka na rahe.' },
-            { id: 'first', label: 'Sabko offer bhej do, jo pehle accept kare use de do', score: -2, why: 'Chalak lagta hai aur kai systems yeh karte hain — par bina hold ke driver ko ek saath kai offers dikhenge, aur har reject/timeout par rider ka wait badhta jaayega. Aur double-assignment ka race bacha rehta hai.' },
-            { id: 'lock', label: 'DB lock driver row par jab tak accept na ho', score: -2, why: 'Driver 15-20 second le sakta hai. Utni der DB lock pakadna us row par sabko rokta hai — aur agar driver ka network gaya toh lock timeout tak atka rahega.' },
+            { id: 'hold', label: "Atomic owner/expiry offer;safe accept", score: 3, why: 'Reservation pattern, ab 15 second ka. Hold ke bina ek driver 5 riders ko offer ho jaayega aur chaar ko "mil gaya… nahi mila" dikhega. TTL isliye ki driver phone na uthaye toh woh atka na rahe.' },
+            { id: 'first', label: "Broadcast offer;first accept wins", score: -2, why: 'Chalak lagta hai aur kai systems yeh karte hain — par bina hold ke driver ko ek saath kai offers dikhenge, aur har reject/timeout par rider ka wait badhta jaayega. Aur double-assignment ka race bacha rehta hai.' },
+            { id: 'lock', label: "DB lock while driver decides", score: -2, why: 'Driver 15-20 second le sakta hai. Utni der DB lock pakadna us row par sabko rokta hai — aur agar driver ka network gaya toh lock timeout tak atka rahega.' },
           ],
         },
         {
           id: 'track', label: 'Live tracking', icon: '🔌',
           options: [
-            { id: 'gw', label: 'Alag gateway layer (sockets) + pub/sub, L4 LB', score: 2, why: 'Connections ek alag capacity dimension hain. Gateway sirf sockets rakhe; rider aur driver do alag gateways par honge, isliye beech mein pub/sub.' },
-            { id: 'poll', label: 'App har 3 second location poll kare', score: 0, why: 'Simple aur bharosemand — par 50,000 active rides × 20 polls/min = ~16,000 rps sirf tracking ke liye. Ek ride ke doraan yeh mehenga pad jaata hai.' },
+            { id: 'gw', label: "Socket gateways and pub/sub", score: 2, why: 'Connections ek alag capacity dimension hain. Gateway sirf sockets rakhe; rider aur driver do alag gateways par honge, isliye beech mein pub/sub.' },
+            { id: 'poll', label: "Client polls every3seconds", score: 0, why: 'Simple aur bharosemand — par 50,000 active rides × 20 polls/min = ~16,000 rps sirf tracking ke liye. Ek ride ke doraan yeh mehenga pad jaata hai.' },
           ],
         },
         {
           id: 'pay', label: 'Fare aur payment', icon: '💰',
           options: [
-            { id: 'ledger', label: 'Immutable ledger entries + idempotency key + roz reconciliation', score: 3, why: 'Ride complete = service di ja chuki hai, use <b>reverse nahi</b> kiya ja sakta. Isliye payment failure ek alag recovery flow hai, aur ledger + reconciliation dono zaroori hain.' },
-            { id: 'update', label: 'Rider ka balance column update karo, fail par retry', score: -3, why: 'Bina idempotency key ke retry double charge hai. Aur balance column itihaas mita deta hai — dispute par tumhare paas koi jawab nahi.' },
+            { id: 'ledger', label: "Ledger;stable intent;reconcile", score: 3, why: 'Ride complete = service di ja chuki hai, use <b>reverse nahi</b> kiya ja sakta. Isliye payment failure ek alag recovery flow hai, aur ledger + reconciliation dono zaroori hain.' },
+            { id: 'update', label: "Mutable balance;blind retries", score: -3, why: 'Bina idempotency key ke retry double charge hai. Aur balance column itihaas mita deta hai — dispute par tumhare paas koi jawab nahi.' },
           ],
         },
       ],
@@ -1791,49 +1659,29 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
       title: 'BOSS — Aakhri sawaal',
       questions: [
         {
-          q: 'Driver locations DB mein kyun nahi?',
-          choices: [
-            'Woh CURRENT STATE hai, history nahi — 20 second purana location bekaar hai. 1.5 crore writes/min durable store par daalna galat aujaar chunna hai',
-            'DB slow hai',
-            'Locations bahut badi hain',
-            'DB mein geo support nahi',
-          ],
+          q: "Frequent driver locations ke current query and history layers kaise choose karoge?",
+          choices: ["Fresh geo projection; durable history by need","AnyDBuse for location is categoricallywrong","Current state cannot require crash recovery","Kafka alone provides nearest-neighbor lookup"],
           answer: 0,
-          explain: 'Sabse zaroori sawaal yeh hai: <b>kya yeh data durable hona chahiye?</b> Driver ka purana location kisi kaam ka nahi — woh ek badalti hui state hai. (Trip history alag cheez hai, aur woh stream mein jaati hai.) Aujaar ka chunav data ke <b>swabhav</b> se hota hai, uske size se nahi.',
-        },
+          explain: "Current geo projection often low latency state-store fit hai; history/audit/safety and crash recovery durability requirements se choose karo. DB cannot store locations blanket claim nahi. Actual update rate, schema, IO and query shape benchmark karo.",
+         choiceExplanations: ["Current geo projection often low latency state-store fit hai; history/audit/safety and crash recovery durability requirements se choose karo. DB cannot store locations blanket claim nahi. Actual update rate, schema, IO and query shape benchmark karo.","Spatial DB can fit measured workloads; blanket technology ban unsupported.","Recovery/audit/safety requirements can demand retained updates.","Queryable geo state index/projection still needed."] },
         {
           q: 'Matching mein hold (TTL) na lagayein toh?',
-          choices: [
-            'Ek driver kai riders ko offer ho jaayega, aur jo pehle accept kare uske alawa sabko "mil gaya... nahi mila" dikhega. Aur double-assignment ka race bhi bacha rehta hai',
-            'Kuch khaas nahi',
-            'Matching slow hogi',
-            'Drivers confuse honge',
-          ],
+          choices: ["Atomic assignment and expiring offers needed","TTLalone guarantees no driver double assignment","NoTTLguarantees every ride double books","Longer hold always improves match latency"],
           answer: 0,
-          explain: 'Yeh wahi <b>reservation pattern</b> hai jo Ticketmaster mein tha — sirf TTL 10 minute ki jagah 15 second hai. Aur TTL usi wajah se laazmi hai: driver phone na uthaye toh woh hold atka nahi rehna chahiye, warna woh driver kisi ko nahi milega.',
-        },
+          explain: "Exclusive assignment requires authoritative state transitions; offer expiry and abandonment cleanup handle karti hai. TTL alone old holder/retried accept stale claim fence nahi karta. Version/owner validation and payment/ride workflow reconciliation chahiye.",
+         choiceExplanations: ["Exclusive assignment requires authoritative state transitions; offer expiry and abandonment cleanup handle karti hai. TTL alone old holder/retried accept stale claim fence nahi karta. Version/owner validation and payment/ride workflow reconciliation chahiye.","Authoritative claim/fencing/state transitions still protect owner races.","Leak/stale offer and double assignment are different failure modes.","Long hold can block driver availability and hurt match success."] },
         {
           q: 'Ride complete ho gayi par payment fail ho gaya. Kya karoge?',
-          choices: [
-            'Ride reverse nahi ho sakti — service di ja chuki hai. Ek alag recovery flow: retry, phir rider ke account par outstanding balance, phir agli ride se pehle settle',
-            'Ride cancel kar do',
-            'Driver ko paisa mat do',
-            'Ride free kar do',
-          ],
+          choices: ["Durable payment recovery and explicit debtpolicy","Cancel completed physical ride to undo service","Silently drop failed payment record forever","Retry with new payment key until success"],
           answer: 0,
           explain: 'Yeh saga ki sabse zaroori seekh hai: <b>har kadam compensate nahi ho sakta</b>. Kuch cheezein asli duniya mein ho chuki hain (gaadi chal chuki hai, driver ka waqt laga hai) aur unhe undo karne ka koi tareeka hai hi nahi. Un jagahon par tumhe ek <b>forward recovery</b> chahiye, rollback nahi.',
-        },
+         choiceExplanations: ["Yeh saga ki sabse zaroori seekh hai: <b>har kadam compensate nahi ho sakta</b>. Kuch cheezein asli duniya mein ho chuki hain (gaadi chal chuki hai, driver ka waqt laga hai) aur unhe undo karne ka koi tareeka hai hi nahi. Un jagahon par tumhe ek <b>forward recovery</b> chahiye, rollback nahi.","Completed ride cannot be physically undone; compensating business actions needed.","Lostreceivable breaks reconciliation/accounting and audit.","New intent keys may duplicate charges after ambiguous timeout."] },
         {
           q: 'Poore app ka nichod, ek line mein?',
-          choices: [
-            'Pehle pattern ka NAAM lo (uske saath uska known failure aata hai), phir bottleneck MAAPO (anumaan mat lagao), phir har faisle ki KEEMAT bolo',
-            'Hamesha scale ke liye design karo',
-            'Modern patterns use karo',
-            'Sab kuch simple rakho',
-          ],
+          choices: ["Classify, measure and state tradeoffs","Always maximize scale before definingneed","Newest pattern wins without failure analysis","Simplestdiagram winsdespite wrong outcomes"],
           answer: 0,
           explain: 'Teen aadatein, aur teenon dohrayi ja sakti hain. <b>Naam</b> se tumhe checklist milti hai. <b>Maap</b> se tumhe sach milta hai (aur bottleneck lagbhag kabhi CPU nahi hota). <b>Keemat</b> se pata chalta hai ki tumne chuna hai, yaad nahi kiya. Baaki sab vocabulary hai. 👑',
-        },
+         choiceExplanations: ["Teen aadatein, aur teenon dohrayi ja sakti hain. <b>Naam</b> se tumhe checklist milti hai. <b>Maap</b> se tumhe sach milta hai (aur bottleneck lagbhag kabhi CPU nahi hota). <b>Keemat</b> se pata chalta hai ki tumne chuna hai, yaad nahi kiya. Baaki sab vocabulary hai. 👑","Prematurescale can add cost without user benefit.","Pattern fit, cost and failure handling need evidence.","Simplicity must still meet correctness and SLO requirements."] },
       ],
     },
   ],
@@ -1843,26 +1691,16 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
     questions: [
       {
         q: '"Uber design karo." Pehle 60 second mein kya bologe?',
-        choices: [
-          '"Isme saat shapes hain: write-heavy locations, geo search, matching (contention), ride workflow, realtime tracking, ledger, aur surge (streaming). Main matching se shuru karta hoon kyunki wahi sabse mushkil hai — usme geo aur contention dono hain."',
-          '"Main services aur database se shuru karta hoon"',
-          '"Kitne users honge?"',
-          '"Microservices architecture use karunga"',
-        ],
+        choices: ["Clarify ride scope then matching invariants","Start 15 services before source/user needs","StartNoSQLbecausecompany is large","Treat map display as atomic driver assignment"],
         answer: 0,
         explain: 'Pehle 60 second mein tum do cheezein dikha rahe ho: ki tumne problem ka <b>aakaar</b> samajh liya, aur ki tum jaante ho ki <b>sabse mushkil hissa kaunsa hai</b>. Woh doosri baat hi seniority ka signal hai — junior candidates aksar sabse aasan hisse se shuru karte hain aur waqt wahin khatam kar dete hain.',
-      },
+       choiceExplanations: ["Pehle 60 second mein tum do cheezein dikha rahe ho: ki tumne problem ka <b>aakaar</b> samajh liya, aur ki tum jaante ho ki <b>sabse mushkil hissa kaunsa hai</b>. Woh doosri baat hi seniority ka signal hai — junior candidates aksar sabse aasan hisse se shuru karte hain aur waqt wahin khatam kar dete hain.","Service topology follows ownership/access/scale constraints.","Large user count alone does not pick data model or engine.","Location candidates and exclusive assignment different contracts hain."] },
       {
         q: '"Tumhare is design ka sabse kamzor hissa kya hai?"',
-        choices: [
-          'Matching ka hold — agar Redis gir jaaye toh double-assignment mumkin hai. Blast radius ek shehar tak seemit hai. Isliye main "active holds" par metric rakhunga aur matching ke liye ek local fallback (single-node dispatch per city) sochunga',
-          '"Koi kamzori nahi hai"',
-          '"Testing aur chahiye"',
-          '"Scale par pata chalega"',
-        ],
+        choices: ["Name assignment failure, scope and recovery","Single city fallback automatically consistent","Active hold count proves no duplicate assignments","Assume Redis failure means allcities lost"],
         answer: 0,
         explain: 'Achha jawab teen cheezein rakhta hai: ek <b>asli</b> kamzori (koi nakli chhoti si nahi), uska <b>blast radius</b>, aur uska <b>detection</b>. "Koi kamzori nahi" ka matlab hai tumne socha hi nahi. Har design mein kamzori hai — architect woh hai jo jaanta hai ki woh kahan hai aur uska pata kaise chalega. 👑',
-      },
+       choiceExplanations: ["Achha jawab teen cheezein rakhta hai: ek <b>asli</b> kamzori (koi nakli chhoti si nahi), uska <b>blast radius</b>, aur uska <b>detection</b>. \"Koi kamzori nahi\" ka matlab hai tumne socha hi nahi. Har design mein kamzori hai — architect woh hai jo jaanta hai ki woh kahan hai aur uska pata kaise chalega. 👑","Fallback requires authoritative ownership/fencing and tested handoff.","Invariant checks and assignment IDs detect duplicates; count alone insufficient.","Blast scope depends deployment/routing; verify isolation instead ofassuming."] },
     ],
   },
   success: [
@@ -1889,3 +1727,5 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
   ],
 },
 ]);
+
+})();
