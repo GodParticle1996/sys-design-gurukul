@@ -54,7 +54,7 @@ function renderTopbar() {
       <span class="streakbox${alive ? '' : ' cold'}" title="Roz khelo, streak badhao! Best: ${st.best} din">${alive ? '🔥' : '🩶'} ${alive ? st.count : 0} din</span>
       <span class="rank">${rank.icon} ${rank.name}</span>
       <div class="xpbar"><div class="xpfill" style="width:${pct}%"></div></div>
-      <span class="xptext">${SD.state.xp} XP${next ? ` · ${next.xp - SD.state.xp} to ${next.icon}` : ' · MAX RANK 👑'}</span>
+      <span class="xptext">${SD.state.xp} XP${next ? ` · ${next.xp - SD.state.xp} to ${next.icon}` : ` · MAX RANK ${rank.icon}`}</span>
     </div>`;
   topbarEl.querySelector('#brand').onclick = showHome;
   const theme = el('button', 'btn ghost small theme-toggle', SD.applyTheme() === 'dark' ? 'Light theme' : 'Dark theme');
