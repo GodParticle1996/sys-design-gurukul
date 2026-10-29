@@ -171,7 +171,7 @@ $ node tools/p-retry.js
 | Pehla intezaar | `base: 300` | `minTimeout: 300` — **default 1000 ms** |
 | Hadd | `cap: 2400` | `maxTimeout: 2400` — **default Infinity** |
 | Random | `wait: 'full'` → 0 se hadd tak | `randomize: true` → intezaar × (1 se 2) — 0 se shuru nahi hota. **Default false** |
-| Kis par dobara bhejein | `worthRetrying` (jawab nahi / 429 / 5xx) | default: **har error par**; rokne ke liye `AbortError` phenko ya `shouldRetry` do |
+| Kis par dobara bhejein | `worthRetrying` (jawab nahi / 429 / 5xx) | default: **har saadhaaran Error par** (AbortError aur network ke alawa TypeError par nahi); rokne ke liye `AbortError` phenko ya `shouldRetry` do |
 | Is kahani mein | 4 koshish, order 3.15 s par | (1) hamari settings: 3 koshish, 3.22 s · (2) default: 4.61 s — service 2.40 s par theek ho chuki thi |
 
 Default ke saath 10 retries ka intezaar 1 + 2 + 4 + … + 512 second = 1023 second (~17 minute) tak ja sakta hai, aur bina random ke.

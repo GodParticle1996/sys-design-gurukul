@@ -23,7 +23,7 @@ const patches = JSON.parse(fs.readFileSync(patchFile, 'utf8'));
 
 const NON_LATIN = /[Ѐ-ӿऀ-ॿ؀-ۿ]/;
 /* ADHD writing rule (labs.js header): name the thing again instead of pointing back with a pronoun. */
-const STAND_IN = /\b(woh|yeh|isse|usse|uska|uski|uske|iska|iski|iske|wahan|unhe|inhe)\b/i;
+const STAND_IN = /\b(woh|yeh|isse|usse|uska|uski|uske|iska|iski|iske|wahan|unhe|inhe|unka|unki|unke|unko|inko)\b/i;
 const app = loadApp();
 const levels = new Map(app.levels.map(({ level }) => [level.id, level]));
 const dataFiles = app.files.filter(f => /^data-/.test(f));

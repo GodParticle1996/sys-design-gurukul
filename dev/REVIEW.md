@@ -160,6 +160,8 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | XP & ranks (brief: TASK-xp-and-ranks.md) | Codex, ~12 min | Claude: diff read, 8 suites rerun, topbar checked in Chromium | merged `3fc501a`; follow-up fix `29f6326` |
 | Phase 3 rewrite: cb-kyun … cb-kab, rt-kyun | Claude | Codex: 18 findings, 1 P1 | all 18 fixed after Claude checked each against the code and lab READMEs |
 | Phase 3 rewrite: rt-kaise, rt-code | Claude | Codex: 8 findings (7 P2, 1 P3) | all 8 fixed after checking `lib/retry.js` and the README trace; 3 more found while fixing |
+| Phase 3 rewrite: rt-lib, rt-kab | Claude | Codex: 9 findings (5 P1, 2 P2, 2 P3) | all 9 fixed; Codex checked p-retry 8.0.1's tagged source |
+| Phase 3 rewrite: bp-kyun … bp-kab | Claude | Codex | review pending; not committed |
 
 What Codex's review caught (all confirmed before fixing):
 
@@ -186,6 +188,20 @@ Second round (rt-kaise, rt-code):
   mixes server-side mistakes (200 with the header in the body, a silent dropped connection) with client-side ones.
 - **Not adopted:** Codex's version of two questions gave all four options the same prefix, differing only in
   "n = 0 or 1". Kept real misconceptions instead (random once, no cap, one fixed wait).
+
+Third round (rt-lib, rt-kab) — 4 of the 5 P1s were inherited text that the rewrite kept without re-checking:
+
+- **Retries vs attempts:** "default 10 koshish" — p-retry's default is 10 *retries* = 11 tries, which the level itself
+  teaches two stages earlier.
+- **p-retry 8 does not retry everything:** AbortError and a non-network TypeError stop it. Fixed in the question,
+  the dry-run step and the lab README row ("default: har error par").
+- **Waves are cumulative:** waits of 1, 2, 4 s put the walls at t = 1, 3, 7 s, not 1, 2, 4 s (stem, hint, options).
+- **Units:** the budget row's 1,004 is failed *actions*, not users (question, table header, step text, flashcard).
+  The no-budget row's "0 errors" hides 50 actions still unfinished when the run ended.
+- **Overclaims:** "the worker and connection stay held for 17 minutes" (an awaited timer pins neither); an
+  Idempotency-Key protects only within the provider's retention window.
+- **Checker:** `apply.js` now also flags unka/unki/unke/unko/inko. "usi/isi + noun" ("isi wajah se", "usi din")
+  stays allowed: the noun is named.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

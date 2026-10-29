@@ -201,7 +201,7 @@ SD.registerLevels('sdd-resil', [
               'Har baar 300 ms hi ruko; 5 failures ke baad ginti shoonya karke dobara shuru karo',
             ],
             answer: 0,
-            hint: 'Dikkat yeh thi ki phones bahut jaldi-jaldi aur bina ruke bhejte rahe.',
+            hint: 'Dikkat thi: phones bahut jaldi-jaldi aur bina ruke bhejte rahe.',
             explain: 'Har baar zyada rukne ka naam <b>backoff</b> hai; har baar dugna = <b>exponential backoff</b>. (Retry hata dena bhi theek nahi: ek chhoti si blip par bhi user ko error milega.)',
             choiceExplanations: [
               'Har baar zyada rukne ka naam <b>backoff</b> hai; har baar dugna = <b>exponential backoff</b>. (Retry hata dena bhi theek nahi: ek chhoti si blip par bhi user ko error milega.)',
@@ -321,7 +321,7 @@ SD.registerLevels('sdd-resil', [
               'Sab phones mil ke ek hi random sankhya chunein, aur us ek waqt par saath laute',
             ],
             answer: 0,
-            hint: 'Dikkat rukne ki lambai mein nahi thi. Dikkat yeh thi ki sab ek hi pal par laute.',
+            hint: 'Dikkat rukne ki lambai mein nahi thi. Dikkat thi: sab ek hi pal par laute.',
             explain: 'Der se lautna kaafi nahi; alag-alag lautna zaroori hai. Random rukna hi chhe phones ko ek doosre se alag karta hai.',
             choiceExplanations: [
               'Der se lautna kaafi nahi; alag-alag lautna zaroori hai. Random rukna hi chhe phones ko ek doosre se alag karta hai.',
