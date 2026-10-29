@@ -159,7 +159,7 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | --- | --- | --- | --- |
 | XP & ranks (brief: TASK-xp-and-ranks.md) | Codex, ~12 min | Claude: diff read, 8 suites rerun, topbar checked in Chromium | merged `3fc501a`; follow-up fix `29f6326` |
 | Phase 3 rewrite: cb-kyun … cb-kab, rt-kyun | Claude | Codex: 18 findings, 1 P1 | all 18 fixed after Claude checked each against the code and lab READMEs |
-| Phase 3 rewrite: rt-kaise, rt-code | Claude | Codex | review pending; not committed |
+| Phase 3 rewrite: rt-kaise, rt-code | Claude | Codex: 8 findings (7 P2, 1 P3) | all 8 fixed after checking `lib/retry.js` and the README trace; 3 more found while fixing |
 
 What Codex's review caught (all confirmed before fixing):
 
@@ -173,6 +173,19 @@ What Codex's review caught (all confirmed before fixing):
   out; interview stems now carry one observable clue instead of stating the answer.
 - **Reasons with false absolutes:** "window sirf OPEN par saaf", "timer ke baad trial apne aap jaati hai", "error
   sirf network toote par".
+
+Second round (rt-kaise, rt-code):
+
+- **False claims in reasons:** "sirf line 22 loop rokti hai" (lines 20 and 21 also return); "random wale phones ki
+  koshish ki ginti wahi thi" (30 vs 28 calls; Asha and Chitra won on try 4); "server ko pata hai kab jagah hogi"
+  (`fragile.js` always sends a fixed `retry-after: 1`); "full jitter ausatan sabse accha" (the README ranks nothing).
+- **Off-by-one in `n`:** "n = ab tak ki failures" makes the first bound 600 ms. `n` is the try number from 0. The
+  same slip was in the lab comment (`lib/retry.js:4`), the code shown in rt-code and its dry-run label; all fixed.
+- **Teaching order:** a distractor in rt-code stage 1 used fetch's Response before stage 2 teaches it.
+- **Giveaways:** only the right option contained "Retry-After" or a full status list. The overload interview now
+  mixes server-side mistakes (200 with the header in the body, a silent dropped connection) with client-side ones.
+- **Not adopted:** Codex's version of two questions gave all four options the same prefix, differing only in
+  "n = 0 or 1". Kept real misconceptions instead (random once, no cap, one fixed wait).
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

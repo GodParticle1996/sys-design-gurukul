@@ -55,11 +55,11 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
         title: 'docker-labs/37-retries/lib/retry.js',
         file: 'docker-labs/37-retries/lib/retry.js',
         from: 4,
-        text: "/* Kitni der rukna hai?  n = ab tak kitni baar fail hua (0, 1, 2 …)  ·  base, cap = milliseconds */\nconst WAITS = {\n  fixed:   (n, o)         => o.base,                                          // har baar utna hi: 300, 300, 300 …\n  backoff: (n, o)         => Math.min(o.cap, o.base * 2 ** n),                // har baar dugna: 300, 600, 1200 … (cap tak)\n  full:    (n, o, random) => random() * Math.min(o.cap, o.base * 2 ** n),     // 0 se us hadd ke beech, kahin bhi\n  equal:   (n, o, random) => { const d = Math.min(o.cap, o.base * 2 ** n); return d / 2 + random() * d / 2; },   // aadha pakka + aadha random\n};\n\n/* Kis failure par dobara bhejna theek hai?  jawab nahi aaya · 429 \"baad mein aana\" · 5xx (server ki dikkat).\n   Baaki 4xx (400, 401, 403, 404 …) par nahi: wahi request dobara bhejne se jawab nahi badlega. */\nconst worthRetrying = r => r.status === 0 || r.status === 429 || r.status >= 500;\n\nasync function retry(call, { attempts = 3, base = 100, cap = 2000, wait = 'full', random = Math.random,\n                             sleep = ms => new Promise(done => setTimeout(done, ms)), onWait } = {}) {\n  for (let n = 0; ; n++) {\n    const r = await call(n);\n    if (r.ok) return r;                                              // kaam ho gaya\n    if (!worthRetrying(r)) return r;                                 // dobara bhejne ka fayda nahi\n    if (n === attempts - 1) return r;                                // koshishein khatam: haar maan lo, user ko batao\n    const ms = r.retryAfter != null\n      ? r.retryAfter * 1000 + random() * base                        // server ne khud bataya kab aana hai: utna to rukna hi hai (+ thoda random)\n      : WAITS[wait](n, { base, cap }, random);\n    if (onWait) onWait(n, ms, r);\n    await sleep(ms);\n  }\n}",
+        text: "/* Kitni der rukna hai?  n = koshish number, 0 se (pehli = 0, phir 1, 2 …)  ·  base, cap = milliseconds */\nconst WAITS = {\n  fixed:   (n, o)         => o.base,                                          // har baar utna hi: 300, 300, 300 …\n  backoff: (n, o)         => Math.min(o.cap, o.base * 2 ** n),                // har baar dugna: 300, 600, 1200 … (cap tak)\n  full:    (n, o, random) => random() * Math.min(o.cap, o.base * 2 ** n),     // 0 se us hadd ke beech, kahin bhi\n  equal:   (n, o, random) => { const d = Math.min(o.cap, o.base * 2 ** n); return d / 2 + random() * d / 2; },   // aadha pakka + aadha random\n};\n\n/* Kis failure par dobara bhejna theek hai?  jawab nahi aaya · 429 \"baad mein aana\" · 5xx (server ki dikkat).\n   Baaki 4xx (400, 401, 403, 404 …) par nahi: wahi request dobara bhejne se jawab nahi badlega. */\nconst worthRetrying = r => r.status === 0 || r.status === 429 || r.status >= 500;\n\nasync function retry(call, { attempts = 3, base = 100, cap = 2000, wait = 'full', random = Math.random,\n                             sleep = ms => new Promise(done => setTimeout(done, ms)), onWait } = {}) {\n  for (let n = 0; ; n++) {\n    const r = await call(n);\n    if (r.ok) return r;                                              // kaam ho gaya\n    if (!worthRetrying(r)) return r;                                 // dobara bhejne ka fayda nahi\n    if (n === attempts - 1) return r;                                // koshishein khatam: haar maan lo, user ko batao\n    const ms = r.retryAfter != null\n      ? r.retryAfter * 1000 + random() * base                        // server ne khud bataya kab aana hai: utna to rukna hi hai (+ thoda random)\n      : WAITS[wait](n, { base, cap }, random);\n    if (onWait) onWait(n, ms, r);\n    await sleep(ms);\n  }\n}",
       },
       vars: [
         { id: 'cfg', label: 'Settings (mini.js se aati hain)' },
-        { id: 'n', label: '<code>n</code> (ab tak kitni baar fail hua)' },
+        { id: 'n', label: '<code>n</code> (koshish number, 0 se)' },
         { id: 'r', label: '<code>r</code> (call ka nateeja)' },
         { id: 'worth', label: '<code>worthRetrying(r)</code>' },
         { id: 'ms', label: '<code>ms</code> (kitna rukna hai)' },
@@ -92,11 +92,22 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
           vars: { worth: 'true — status 0 (jawab nahi aaya)' },
           ask: {
             q: 'Maan lo yahan <code>r.status</code> 404 hota (payment-service ne kaha: "aisa order hai hi nahi"). Line 21 kya karti?',
-            choices: ["404 branch returns result; this classifier retry skip kare","404 branch loops five times; all non-2xx eligible hain","404 branch throw kare; fetch Response object nahi deta","404 branch skip karke next delay calculation chala de"],
+            choices: [
+              'worthRetrying false deta — 404 na 0 hai, na 429, na 500+ — toh line 21 turant r lauta deti',
+              'Phir bhi paanch koshish hoti — call fail hui hai, aur fail hui call dobara jaati hai',
+              'worthRetrying false deta, toh line 21 error phenk ke caller ka poora kaam rok deti',
+              'Line 21 skip ho jaati, aur seedha agla random intezaar ginne wali line chal jaati',
+            ],
             answer: 0,
             hint: 'Line 14 mein teen shartein hain. 404 unmein se kisi mein aata hai?',
             explain: 'Line 14: <code>0</code>, <code>429</code>, ya <code>500 aur upar</code>. 404 teeno mein nahi. Wahi request dobara bhejne se "order hai hi nahi" ka jawab nahi badlega — isliye pehla faisla hi rok deta hai.',
-           choiceExplanations: ["Line 14: <code>0</code>, <code>429</code>, ya <code>500 aur upar</code>. 404 teeno mein nahi. Wahi request dobara bhejne se \"order hai hi nahi\" ka jawab nahi badlega — isliye pehla faisla hi rok deta hai.","Shown worthRetrying set 0,429,5xx hai; 404 us set mein nahi.","HTTP 404 normal Response hai; transport failure reject se alag.","Early return gate next delay tak control pahunchne nahi deta."] },
+            choiceExplanations: [
+              'Line 14: <code>0</code>, <code>429</code>, ya <code>500 aur upar</code>. 404 teeno mein nahi. Wahi request dobara bhejne se "order hai hi nahi" ka jawab nahi badlega — isliye pehla faisla hi rok deta hai.',
+              'Line 14 ki teen shartein: 0, 429, ya 500 aur upar. 404 kisi mein nahi aata, toh dobara bhejna band.',
+              'Line 21 mein throw nahi, return r hai. retry() error nahi phenkta — 404 wala nateeja caller ko lauta deta hai.',
+              'Line 21 ka return loop wahin khatam kar deta hai. Intezaar wali line tak code pahunchta hi nahi.',
+            ],
+          },
         },
         {
           clock: 'koshish 1 · doosra faisla',
@@ -145,11 +156,22 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
           vars: { n: '4', r: '{ ok: false, status: 0 }', worth: 'true', out: '—' },
           ask: {
             q: '<code>n</code> = 4 hai aur <code>attempts</code> = 5. Line 22 kya karegi?',
-            choices: ["n=4 fifth attempt hai; result return, loop finish","n=4 fourth attempt hai; fifth attempt abhi baaki","n=4 par counter reset; n=0 se attempts phir start","n=4 par permanent wait; final result return na ho"],
+            choices: [
+              '4 === 5 - 1 sach hai → return r: fail hua nateeja lautao, ab app user ko error dikhaye',
+              'Ek aur koshish karegi — n = 4 toh sirf chauthi koshish hai, paanchvi abhi baaki hai',
+              'n ko phir 0 kar degi, aur paanch ki paanch koshishein shuru se dobara chalengi',
+              'Loop ko hamesha ke liye rok degi — aur retry() kabhi koi nateeja nahi lautayega',
+            ],
             answer: 0,
             hint: 'n 0 se gina jaata hai. n = 4 kaunsi koshish hai?',
-            explain: "n zero-based hai: 0,1,2,3,4 total five attempts. Shown loop for (let n = 0; ; n++) mein loop condition khaali hai. Final-attempt guard last result return karta hai; ise hataane par repeatedly retryable failures mein loop attempts limit ke baad bhi chalta rahega.",
-           choiceExplanations: ["n zero-based hai: 0,1,2,3,4 total five attempts. Shown loop for (let n = 0; ; n++) mein loop condition khaali hai. Final-attempt guard last result return karta hai; ise hataane par repeatedly retryable failures mein loop attempts limit ke baad bhi chalta rahega.","Zero-based indexing mein n=0 pehli aur n=4 paanchvi attempt hai.","Code final attempt par returns; reset/recursion branch nahi.","Last result caller ko milta hai; is configured guard ke saath indefinite wait nahi."] },
+            explain: 'n 0 se gina jaata hai: 0, 1, 2, 3, 4 = paanch koshish, toh n = 4 paanchvi hai. 4 === 5 - 1 sach hai, toh line 22 fail hua r lauta deti hai. Line 22 hata do toh koshishon ki hadd hat jaati hai. Line 20 (kaam ho gaya) aur line 21 (dobara bhejne layak nahi) ab bhi rokengi, par service band rahe toh loop random intezaar ke saath chalta hi rahega.',
+            choiceExplanations: [
+              'n 0 se gina jaata hai: 0, 1, 2, 3, 4 = paanch koshish, toh n = 4 paanchvi hai. 4 === 5 - 1 sach hai, toh line 22 fail hua r lauta deti hai. Line 22 hata do toh koshishon ki hadd hat jaati hai. Line 20 (kaam ho gaya) aur line 21 (dobara bhejne layak nahi) ab bhi rokengi, par service band rahe toh loop random intezaar ke saath chalta hi rahega.',
+              'n 0 se shuru hota hai: n = 0 pehli koshish, n = 4 paanchvi.',
+              'Code mein n ko 0 karne wali koi line nahi. Line 22 aakhri nateeja lauta ke loop khatam karti hai.',
+              'Line 22 aakhri nateeja lautati hai — caller ko jawab milta hai, koi hamesha ka intezaar nahi.',
+            ],
+          },
         },
         {
           clock: 'agar server ne "baad mein aana" bola',
@@ -211,11 +233,22 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
           vars: { res: 'jawab aaya · status 503', after: '"1"', ret: '—' },
           ask: {
             q: 'Line 13 ab kya lautayegi?',
-            choices: ["ok false, status 503, retryAfter numeric one","ok true, status 503, retryAfter numeric one","ok false, status zero, retryAfter null value","No result; fetch every HTTP 503 par exception de"],
+            choices: [
+              '{ ok: false, status: 503, retryAfter: 1 }',
+              '{ ok: true, status: 503, retryAfter: 1 }',
+              '{ ok: false, status: 0, retryAfter: null }',
+              'Kuch nahi — line 11 par 503 error phenkta',
+            ],
             answer: 0,
             hint: '<code>res.ok</code> sirf 200 se 299 ke status par true hota hai.',
             explain: '<code>res.ok</code> 503 par false hai → <code>ok: false</code>. Status jaisa aaya waisa: 503. <code>+after</code> "1" ko sankhya 1 bana deta hai. Isi <code>retryAfter: 1</code> ko retry.js ki line 23 ne padha tha (1043 ms).',
-           choiceExplanations: ["<code>res.ok</code> 503 par false hai → <code>ok: false</code>. Status jaisa aaya waisa: 503. <code>+after</code> \"1\" ko sankhya 1 bana deta hai. Isi <code>retryAfter: 1</code> ko retry.js ki line 23 ne padha tha (1043 ms).","res.ok 200-299 ke liye true hota hai; response arrival alone success nahi.","Status zero lab transport/no-response sentinel hai; actual HTTP 503 response mila tha.","Fetch 503 Response return karta hai; wrapper khud status classify karta hai."] },
+            choiceExplanations: [
+              '<code>res.ok</code> 503 par false hai → <code>ok: false</code>. Status jaisa aaya waisa: 503. <code>+after</code> "1" ko sankhya 1 bana deta hai. Isi <code>retryAfter: 1</code> ko retry.js ki line 23 ne padha tha (1043 ms).',
+              'res.ok sirf 200 se 299 par true hota hai. 503 aaya hai, toh ok: false.',
+              'status 0 ka matlab "jawab hi nahi aaya". Yahan asli 503 jawab aaya hai.',
+              'fetch 503 par error nahi phenkta — 503 ek normal jawab (Response) hai.',
+            ],
+          },
         },
         {
           clock: 'chaar faisle = chaar settings',
@@ -259,16 +292,38 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
     questions: [
       {
         q: '"Tumhara retry wrapper kis failure par dobara bhejta hai, aur kis par nahi?"',
-        choices: ["This wrapper: transport/429/5xx; contract safety bhi dekho","Every failure retry; HTTP method aur side effects ignore","Only 500 retry; connection errors immediately abandon","Only user click retry; internal policy kabhi use na karo"],
+        choices: [
+          'Dobara: jawab na aaye, 429 aur 5xx. Nahi: 400, 401, 403, 404 jaise baaki 4xx',
+          'Dobara: jawab na aaye aur har 4xx. Nahi: 5xx, kyunki server ne jawab de diya',
+          'Dobara: 429 aur 5xx. Nahi: jawab na aaye, kyunki bina status kuch pata nahi',
+          'Dobara: jawab na aaye aur 5xx. Nahi: 429, kyunki 429 bhi client ki galti hai',
+        ],
         answer: 0,
-        explain: "Lab classifier status 0/429/5xx leta hai, lekin production mein every 5xx retryable ya every 4xx permanent universal nahi. Method/operation contract, authentication refresh, documented transient errors, idempotency, Retry-After aur deadline ke hisaab se explicit policy chuno.",
-       choiceExplanations: ["Lab classifier status 0/429/5xx leta hai, lekin production mein every 5xx retryable ya every 4xx permanent universal nahi. Method/operation contract, authentication refresh, documented transient errors, idempotency, Retry-After aur deadline ke hisaab se explicit policy chuno.","Permanent errors retry se fix nahi hote aur side effects duplicate ho sakte hain.","Transient transport errors bhi retry candidates ho sakte hain, safe idempotent contract ke saath.","Controlled internal retries useful ho sakti hain; each failure manual click require nahi."] },
+        explain: 'Lab ki lib/retry.js line 14: <code>status === 0 || status === 429 || status >= 500</code>. Retry ka faisla loop mein sabse pehle hota hai (line 21), ginti aur intezaar se bhi pehle. Asli production mein list soch ke banao: har 5xx dobara bhejne layak nahi, aur kuch 4xx theek ho sakte hain (jaise token expire hone par 401 — naya token lo, phir bhejo). Aur sirf wahi request dobara bhejo jo dobara bhejna safe ho.',
+        choiceExplanations: [
+          'Lab ki lib/retry.js line 14: <code>status === 0 || status === 429 || status >= 500</code>. Retry ka faisla loop mein sabse pehle hota hai (line 21), ginti aur intezaar se bhi pehle. Asli production mein list soch ke banao: har 5xx dobara bhejne layak nahi, aur kuch 4xx theek ho sakte hain (jaise token expire hone par 401 — naya token lo, phir bhejo). Aur sirf wahi request dobara bhejo jo dobara bhejna safe ho.',
+          '4xx ka matlab request mein hi galti hai: wahi 404 dobara bhejne se jawab nahi badlega. 5xx server ki dikkat hai, thodi der mein theek ho sakti hai.',
+          'Timeout ya toota connection ek chhoti blip bhi ho sakti hai. Isliye line 14 status 0 ko bhi dobara bhejne layak ginti hai.',
+          '429 ka matlab "abhi bahut requests, thodi der baad aana". Baad mein wahi request chal sakti hai, isliye line 14 mein 429 alag se hai.',
+        ],
+      },
       {
         q: '"<code>fetch</code> 503 par error nahi phenkta. Phir retry wrapper ko kaise pata chalega ki call fail hui?"',
-        choices: ["Response.ok/status normalize karo; retry wrapper ko do","Only try/catch lagao; HTTP 503 catch mein aa jaayega","Treat received response success; status code ignore karo","Read body substring only; transport failures ignore karo"],
+        choices: [
+          'Call ko aisa function banao jo status dekh ke ok, status aur Retry-After lautaye',
+          'fetch ke aaspaas try/catch laga do — 503 apne aap catch mein aa jaayega',
+          'Jawab aa gaya toh call safal maano — status code dekhne ki zaroorat nahi',
+          'Body mein "error" shabd dhoondho — status aur toota connection chhod do',
+        ],
         answer: 0,
         explain: 'Lab ki <code>tools/mini.js</code> ka <code>placeOrder()</code>: <code>catch</code> sirf "jawab hi nahi aaya" pakadta hai (status 0). 503 ek normal <code>res</code> hai jiska <code>res.ok</code> false hota hai.',
-       choiceExplanations: ["Lab ki <code>tools/mini.js</code> ka <code>placeOrder()</code>: <code>catch</code> sirf \"jawab hi nahi aaya\" pakadta hai (status 0). 503 ek normal <code>res</code> hai jiska <code>res.ok</code> false hota hai.","Fetch transport rejection catch mein aati hai; HTTP 503 Response ke roop mein resolve hota hai.","Received response bhi HTTP/application failure ho sakti hai.","Body shape endpoint-specific hai; status aur transport outcome reliable structured inputs hain."] },
+        choiceExplanations: [
+          'Lab ki <code>tools/mini.js</code> ka <code>placeOrder()</code>: <code>catch</code> sirf "jawab hi nahi aaya" pakadta hai (status 0). 503 ek normal <code>res</code> hai jiska <code>res.ok</code> false hota hai.',
+          'catch sirf tab chalta hai jab jawab hi na aaye. 503 ek normal jawab hai, catch mein nahi aata.',
+          'Jawab aana safalta nahi hai. 503 bhi jawab hai — status hi batata hai ki call fail hui.',
+          'Body ka format har endpoint mein alag hota hai. Status aur toota connection hi bharose layak hain.',
+        ],
+      },
     ],
   },
   success: [
@@ -280,7 +335,7 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
     { front: 'Sahi retry ke chaar faisle?', back: '<b>Kis failure par</b> (jawab nahi aaya / 429 / 5xx) · <b>kitni baar</b> (attempts) · <b>server ne kya kaha</b> (Retry-After pehle) · <b>kitna rukna</b> (dugni hadd ke andar random, chhat ke saath). Lab: lib/retry.js line 21, 22, 23–24, 25.' },
     { front: 'worthRetrying kis par true hai?', back: '<code>status === 0</code> (jawab hi nahi aaya) · <code>429</code> · <code>500 aur upar</code>. 400, 401, 403, 404 par false: wahi request dobara bhejne se jawab nahi badlega.' },
     { front: 'fetch 503 par kya karta hai?', back: 'Error <b>nahi</b> phenkta: normal <code>res</code> deta hai jiska <code>res.ok</code> false hai. Error sirf tab, jab jawab hi na aaye. Isliye apni call se <code>{ ok, status, retryAfter }</code> lautao.' },
-    { front: 'attempts: 5 mein n kahan tak jaata hai?', back: '<code>n</code> 0 se gina jaata hai: 0, 1, 2, 3, 4. <code>n === attempts - 1</code> par (paanchvi koshish) loop haar maan leta hai. Is line ke bina retry kabhi nahi rukta.' },
+    { front: 'attempts: 5 mein n kahan tak jaata hai?', back: '<code>n</code> 0 se gina jaata hai: 0, 1, 2, 3, 4. <code>n === attempts - 1</code> par (paanchvi koshish) loop haar maan leta hai. Is line ke bina koshishon ki koi hadd nahi: service band rahe toh retry chalta hi rahega.' },
   ],
 },
 ]);

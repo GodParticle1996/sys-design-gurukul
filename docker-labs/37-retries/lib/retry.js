@@ -1,7 +1,7 @@
 /* Retry — ek fail hui call ko dobara bhejna, par dimaag se. Is lab ke tools (slowmo, mini, jitter, storm) yahi file chalate hain.
    call()  → { ok, status, retryAfter }      status 0 = jawab hi nahi aaya (connection toota / timeout)                 */
 
-/* Kitni der rukna hai?  n = ab tak kitni baar fail hua (0, 1, 2 …)  ·  base, cap = milliseconds */
+/* Kitni der rukna hai?  n = koshish number, 0 se (pehli = 0, phir 1, 2 …)  ·  base, cap = milliseconds */
 const WAITS = {
   fixed:   (n, o)         => o.base,                                          // har baar utna hi: 300, 300, 300 …
   backoff: (n, o)         => Math.min(o.cap, o.base * 2 ** n),                // har baar dugna: 300, 600, 1200 … (cap tak)
