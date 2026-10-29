@@ -162,7 +162,7 @@
           if (answered[at] || b.disabled) return;
           if (i === f.ask.answer) {
             answered[at] = true;
-            if (!wrong) firstTry++;
+            if (!wrong) { firstTry++; SD.addXP(SD.XP_PER_ITEM); }
             b.classList.add('right');
             card.appendChild(el('div', 'rp-ask-ex', '✅ ' + SD.choiceFeedback(f.ask, i)));
             const go = el('button', 'btn rp-go', 'Replay aage chalao →');
@@ -313,6 +313,7 @@
       if (!solved && touched && v.ok) {
         solved = true;
         firstTry = 1;
+        SD.addXP(SD.XP_PER_ITEM);
         win();
       }
     }
@@ -345,7 +346,7 @@
           if (i === q.answer) {
             card._done = true;
             b.classList.add('right');
-            if (!wrong) firstTry++;
+            if (!wrong) { firstTry++; SD.addXP(SD.XP_PER_ITEM); }
             card.appendChild(el('div', 'rp-ask-ex', '✅ ' + SD.choiceFeedback(q, i)));
             const nx = el('button', 'btn big td-next', 'Aage badho →');
             nx.onclick = () => onDone({ firstTry, total });
@@ -448,7 +449,7 @@
         const tol = p.tol == null ? 0.5 : p.tol;          /* log10 mein doori */
         const off = Math.abs(Math.log10(guess / p.answer));
         const right = off <= tol;
-        if (right && !tried) firstTry++;
+        if (right && !tried) { firstTry++; SD.addXP(SD.XP_PER_ITEM); }
         if (!right) {
           tried = true;
           SD.noteMistake(p.q, `${fmt(p.answer)} ${p.unit || ''} — ${(p.steps || []).join(' → ')}`, '🧮 Napkin math');
@@ -538,6 +539,7 @@
           return;
         }
         card._done = true;
+        if (!missed) SD.addXP(SD.XP_PER_ITEM);
         classified++;
         badBtn.disabled = safeBtn.disabled = true;
         if (f) {

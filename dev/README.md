@@ -10,6 +10,7 @@ node tools/quiz-quality.js --check
 node tools/tradeoff-test.js
 node dev/state-test.js
 node dev/progress-test.js
+node dev/xp-test.js
 QA_CONTRAST=1 QA_OUT=/tmp/sys-design-gurukul-final-ui node dev/audit-ui.js
 node dev/replay-browser.js
 ```

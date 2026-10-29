@@ -148,6 +148,7 @@
       askSlot.appendChild(askCard(stage.observe, 'dk-opt', '🐳 Docker lab', first => {
         observationRight = true;
         observationFirst = first;
+        if (first) SD.addXP(SD.XP_PER_ITEM);
         if (stage.lesson) askSlot.appendChild(el("div", "lab-win", stage.lesson));
         const done = el('button', 'btn big dk-done', 'Aage badho →');
         doneButton = done;

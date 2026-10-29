@@ -301,7 +301,7 @@
       next.textContent = i === steps.length - 1 ? 'Poora hua ✔' : 'Agla step →';
       if (s.ask) {
         if (answered[i] === undefined) {
-          askSlot.appendChild(askCard(s.ask, first => { answered[i] = first; next.disabled = false; }));
+          askSlot.appendChild(askCard(s.ask, first => { answered[i] = first; if (first) SD.addXP(SD.XP_PER_ITEM); next.disabled = false; }));
         } else {
           askSlot.appendChild(el('div', 'ms-ask-fb good', `✅ <b>${s.ask.choices[s.ask.answer]}</b><br>${s.ask.explain || ''}`));
         }

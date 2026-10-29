@@ -118,7 +118,10 @@ SD.renderers.design = function renderDesign(stage, arena, onDone) {
       rows.push({ slot, chosen, isBest });
     });
 
-    if (submitted === 1) firstTryGood = good;
+    if (submitted === 1) {
+      firstTryGood = good;
+      for (let i = 0; i < good; i++) SD.addXP(SD.XP_PER_ITEM);
+    }
     board.classList.add('reviewed');
 
     const pct = maxScore ? Math.max(0, Math.round((score / maxScore) * 100)) : 0;
