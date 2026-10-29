@@ -3869,7 +3869,7 @@ VISUALS['youtube'] = {
 };
 
 VISUALS['boss-uber'] = {
-  t: 'FINAL BOSS — ek problem, saat shapes',
+  t: 'FINAL BOSS — Ride hailing: ek problem, saat shapes',
   html: `
     <div class="dg-flow">
       <span class="dg-pill gold">🚗 10 lakh drivers · 8 PM, baarish · 50,000 requests/min ek shehar mein</span>

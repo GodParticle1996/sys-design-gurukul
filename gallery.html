@@ -11,21 +11,137 @@
   <main id="app" style="max-width:1000px;margin:0 auto;padding:24px 18px 80px">
     <section class="hero">
       <h1>📊 Concept Diagram <span class="glow">Gallery</span></h1>
-      <p>Har level ka signature visual, ek jagah. (App mein yeh level intro par aur play ke doraan toggle se dikhte hain.)</p>
+      <p>Har level ka signature visual, ek jagah, track ke kram mein. (App mein yeh level intro par aur play ke doraan toggle se dikhte hain.)</p>
     </section>
     <div id="g"></div>
   </main>
+  <!-- Same scripts as index.html except app.js: content files register their own diagrams.
+       validate.js fails if this list drifts from index.html. -->
+  <script src="core.js"></script>
+  <script src="data-core.js"></script>
   <script src="visuals.js"></script>
+  <script src="games.js"></script>
+  <script src="perfsim.js"></script>
+  <script src="canvas.js"></script>
+  <script src="labs.js"></script>
+  <script src="dockerlab.js"></script>
+  <script src="explain.js"></script>
+  <script src="data-flow.js"></script>
+  <script src="data-api.js"></script>
+  <script src="data-data.js"></script>
+  <script src="data-resil.js"></script>
+  <script src="data-dist.js"></script>
+  <script src="data-shapes.js"></script>
+  <script src="data-builds.js"></script>
+  <script src="data-feed.js"></script>
+  <script src="data-feed-2.js"></script>
+  <script src="data-st-01-reddit.js"></script>
+  <script src="data-st-02-cloudflare.js"></script>
+  <script src="data-st-03-jira.js"></script>
+  <script src="data-st-04-snowflake.js"></script>
+  <script src="data-st-05-airtable.js"></script>
+  <script src="data-st-06-slack.js"></script>
+  <script src="data-st-07-discord.js"></script>
+  <script src="data-st-08-instagram.js"></script>
+  <script src="data-st-09-stripe.js"></script>
+  <script src="data-st-10-prime.js"></script>
+  <script src="data-st-11-dropbox.js"></script>
+  <script src="data-st-12-whatsapp.js"></script>
+  <script src="data-st-13-roblox.js"></script>
+  <script src="data-st-14-notion.js"></script>
+  <script src="data-ai-01-safety.js"></script>
+  <script src="data-ai-02-colab.js"></script>
+  <script src="data-ai-03-tiktok.js"></script>
+  <script src="data-ai-04-replit.js"></script>
+  <script src="data-ai-05-deepseek.js"></script>
+  <script src="data-ai-06-aws.js"></script>
+  <script src="data-pl-01-bittorrent.js"></script>
+  <script src="data-pl-02-starlink.js"></script>
+  <script src="data-pl-03-youtube.js"></script>
+  <script src="data-pl-04-gmail.js"></script>
+  <script src="data-pl-05-search.js"></script>
+  <script src="data-pl-06-maps.js"></script>
+  <script src="data-gaps.js"></script>
+  <script src="data-ext-videos.js"></script>
+  <script src="data-ext-episodes.js"></script>
+  <script src="data-ext-sdd1.js"></script>
+  <script src="data-v2-00-tracks.js"></script>
+  <script src="data-v2-breaker-1-kyun.js"></script>
+  <script src="data-v2-breaker-2-kaise.js"></script>
+  <script src="data-v2-breaker-3-code.js"></script>
+  <script src="data-v2-breaker-4-library.js"></script>
+  <script src="data-v2-breaker-5-kab.js"></script>
+  <script src="data-v2-retries-1-kyun.js"></script>
+  <script src="data-v2-retries-2-kaise.js"></script>
+  <script src="data-v2-retries-3-code.js"></script>
+  <script src="data-v2-retries-4-library.js"></script>
+  <script src="data-v2-retries-5-kab.js"></script>
+  <script src="data-v2-backpressure-1-kyun.js"></script>
+  <script src="data-v2-backpressure-2-kaise.js"></script>
+  <script src="data-v2-backpressure-3-code.js"></script>
+  <script src="data-v2-backpressure-4-library.js"></script>
+  <script src="data-v2-backpressure-5-kab.js"></script>
+  <script src="data-v2-noisy-1-kyun.js"></script>
+  <script src="data-v2-noisy-2-kaise.js"></script>
+  <script src="data-v2-noisy-3-code.js"></script>
+  <script src="data-v2-noisy-4-library.js"></script>
+  <script src="data-v2-noisy-5-kab.js"></script>
+  <script src="data-v2-random-1-kyun.js"></script>
+  <script src="data-v2-random-2-kaise.js"></script>
+  <script src="data-v2-random-3-code.js"></script>
+  <script src="data-v2-random-4-kab.js"></script>
+  <script src="data-v2-health-1-kyun.js"></script>
+  <script src="data-v2-health-2-kaise.js"></script>
+  <script src="data-v2-health-3-code.js"></script>
+  <script src="data-v2-health-4-library.js"></script>
+  <script src="data-v2-health-5-kab.js"></script>
+  <script src="data-v2-dr-1-kyun.js"></script>
+  <script src="data-v2-dr-2-kaise.js"></script>
+  <script src="data-v2-dr-3-code.js"></script>
+  <script src="data-v2-dr-4-library.js"></script>
+  <script src="data-v2-dr-5-kab.js"></script>
+  <script src="data-v2-chaos-1-kyun.js"></script>
+  <script src="data-v2-chaos-2-kaise.js"></script>
+  <script src="data-v2-chaos-3-code.js"></script>
+  <script src="data-v2-chaos-4-kab.js"></script>
+  <script src="data-v2-eda-1-kyun.js"></script>
+  <script src="data-v2-eda-2-kaise.js"></script>
+  <script src="data-v2-eda-3-code.js"></script>
+  <script src="data-v2-eda-4-kab.js"></script>
+  <script src="data-v2-fp-physics-1-kyun.js"></script>
+  <script src="data-v2-fp-physics-2-kaise.js"></script>
+  <script src="data-v2-fp-physics-3-code.js"></script>
+  <script src="data-v2-fp-physics-4-kab.js"></script>
+  <script src="data-guidance.js"></script>
   <script>
-    const g = document.getElementById('g');
-    for (const id in VISUALS) {
-      const v = VISUALS[id];
-      const sec = document.createElement('section');
-      sec.innerHTML =
-        '<div class="crumb" style="margin-top:26px">' + id + '</div>' +
-        '<div class="diagram hero"><div class="dg-title">📊 ' + v.t + '</div>' + v.html + '</div>';
-      g.appendChild(sec);
-    }
+    (function () {
+      const g = document.getElementById('g');
+      const seen = new Set();
+      function add(id, crumb) {
+        const v = VISUALS[id];
+        if (!v) return;
+        seen.add(id);
+        const sec = document.createElement('section');
+        sec.innerHTML = '<div class="crumb" style="margin-top:26px">' + crumb + '</div>' +
+          '<div class="diagram hero"><div class="dg-title">📊 ' + v.t + '</div>' + v.html + '</div>';
+        g.appendChild(sec);
+      }
+      SD.tracks.forEach(track => {
+        const h = document.createElement('h2');
+        h.style.marginTop = '40px';
+        h.textContent = track.icon + ' ' + track.name;
+        g.appendChild(h);
+        SD.levelsOf(track).forEach(level => add(level.id, level.id + ' — ' + level.title));
+      });
+      const rest = Object.keys(VISUALS).filter(id => !seen.has(id));
+      if (rest.length) {
+        const h = document.createElement('h2');
+        h.style.marginTop = '40px';
+        h.textContent = 'Bina level ke diagrams';
+        g.appendChild(h);
+        rest.forEach(id => add(id, id));
+      }
+    })();
   </script>
 </body>
 </html>

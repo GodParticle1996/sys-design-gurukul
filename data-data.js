@@ -2603,7 +2603,7 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
       ],
       items: [
         { text: 'Ek hi Postgres, chhoti app, internal admin tool', bin: 'auto', explain: 'Sabse simple aur sabse chhota. Jab tak ek hi DB writer hai aur ids bahar nahi jaati, autoinc se behtar kuch nahi. Boring jeetta hai.' },
-        { text: 'Public URL mein dikhne wala id — /invoices/<id>', bin: 'uuid', explain: 'Autoinc yahan do cheezein leak karta hai: tumhara total count, aur doosron ke records (<code>/invoices/1248</code> maang lo). UUID guess-proof hai.' },
+        { text: 'Public URL mein dikhne wala id — /invoices/&lt;id&gt;', bin: 'uuid', explain: 'Autoinc yahan do cheezein leak karta hai: tumhara total count, aur doosron ke records (<code>/invoices/1248</code> maang lo). UUID guess-proof hai.' },
         { text: '5 services alag-alag jagah se ek hi table mein likh rahi hain', bin: 'sort', explain: 'Coordination-free chahiye <b>aur</b> index-friendly bhi. Snowflake dono deta hai — har service apni id banati hai, aur woh phir bhi waqt ke kram mein rehti hain.' },
         { text: 'Client offline mein rows banata hai, baad mein sync karta hai', bin: 'uuid', explain: 'Client ko server se poochhe bina id chahiye, aur takraana bilkul nahi chahiye. ULID bhi chalega aur sortable bhi hoga — par agar client ki clock par bharosa nahi toh UUIDv4 zyada surakshit hai.' },
         { text: 'Events table jahan 50,000 inserts/sec aate hain', bin: 'sort', explain: 'Yahan random id ka page-split tax seedha throughput khaa jaayega. Sortable id se har insert aakhri (garam) page par jaata hai.' },

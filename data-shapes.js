@@ -564,7 +564,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      <pre>1. client → POST /uploads          "mujhe ek 4GB mp4 daalna hai"
 2. app   → S3 se signed URL banao (5 min valid, size cap, content-type fix)
         → 201 { upload_url, file_id }        ← 40 ms mein khatam
-3. client → PUT <upload_url>  (SEEDHA S3 par — app server beech mein hai hi nahi)
+3. client → PUT &lt;upload_url&gt;  (SEEDHA S3 par — app server beech mein hai hi nahi)
 4. S3    → event: "file aa gaya"
 5. app   → metadata row, phir processing (thumbnail, transcode, scan)</pre>
      <p>Ab app server ne 40 ms kaam kiya, 12 minute nahi. Bytes kabhi tumhare

@@ -567,13 +567,58 @@ function structure() {
   });
   ok();
 
-  /* index.html */
+  /* Content HTML: a tag the browser doesn't know (`</docs/migrate>`, `<id>`) is swallowed with its text,
+     and an unclosed tag bleeds its style into the rest of the screen. Literal brackets must be &lt; &gt;. */
+  const KNOWN_TAGS = new Set(('a abbr b br caption code col colgroup dd del details div dl dt em h1 h2 h3 h4 h5 h6 hr i img ' +
+    'ins kbd li mark ol p pre q s samp section aside small span strong sub summary sup table tbody td tfoot th thead tr u ul ' +
+    'var svg g rect text line path circle polyline polygon defs marker tspan title figure figcaption label input button').split(' '));
+  const VOID_TAGS = new Set(['br', 'hr', 'img', 'input', 'col', 'line', 'path', 'circle', 'rect', 'polyline', 'polygon']);
+  const htmlProblem = str => {
+    const stack = []; const re = /<(\/?)([a-zA-Z][\w:-]*)[^<>]*?(\/?)>/g; let m;
+    while ((m = re.exec(str))) {
+      const tag = m[2].toLowerCase();
+      if (!KNOWN_TAGS.has(tag)) return `anjaana tag ${m[0]} (browser ise text ke saath gayab kar dega; &lt; &gt; likho)`;
+      if (VOID_TAGS.has(tag) || m[3]) continue;
+      if (!m[1]) stack.push(tag);
+      else if (stack[stack.length - 1] === tag) stack.pop();
+      else return `</${tag}> bina khule (khule: ${stack.join(',') || '-'})`;
+    }
+    return stack.length ? `band nahi hua: <${stack.join('><')}>` : null;
+  };
+  const eachString = (o, p, f) => {
+    if (typeof o === 'string') f(p, o);
+    else if (Array.isArray(o)) o.forEach((v, i) => eachString(v, `${p}[${i}]`, f));
+    else if (o && typeof o === 'object') Object.keys(o).forEach(k => eachString(o[k], p ? `${p}.${k}` : k, f));
+  };
+  allLevels.forEach(({ level }) => {
+    let clean = true;
+    eachString(level, '', (p, str) => { const why = htmlProblem(str); if (why) { clean = false; fail(`${level.id} ${p}: ${why}`); } });
+    if (clean) ok();
+  });
+  Object.keys(VISUALS).forEach(id => {
+    const why = htmlProblem(String(VISUALS[id].t || '')) || htmlProblem(String(VISUALS[id].html || ''));
+    if (why) fail(`VISUALS['${id}']: ${why}`); else ok();
+  });
+
+  /* index.html — the browser's list is the real one; it must match ENGINE + CONTENT exactly, in order */
   const html = fs.readFileSync(path.join(DIR, 'index.html'), 'utf8');
   ENGINE.concat(CONTENT).forEach(f => {
     if (EXTRA.includes(f)) return ok();
     if (fs.existsSync(path.join(DIR, f)) && !html.includes(f)) fail(`index.html mein <script src="${f}"> nahi hai`);
     else ok();
   });
+  const pageScripts = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map(m => m[1]).filter(f => f !== 'app.js');
+  const ours = ENGINE.concat(CONTENT).filter(f => !EXTRA.includes(f));
+  if (pageScripts.join('\n') !== ours.join('\n')) fail(`index.html ke <script> validate.js ki ENGINE + CONTENT list se alag hain (ya kram alag hai): ` +
+    `sirf index.html mein: ${pageScripts.filter(f => !ours.includes(f)).join(' ') || '-'} · sirf validate.js mein: ${ours.filter(f => !pageScripts.includes(f)).join(' ') || '-'}`);
+  else ok();
+
+  /* gallery.html — content files register their own diagrams, so the gallery must load the same scripts */
+  const scriptsOf = page => [...page.matchAll(/<script\s+src="([^"]+)"/g)].map(m => m[1]);
+  const gallery = scriptsOf(fs.readFileSync(path.join(DIR, 'gallery.html'), 'utf8'));
+  const appScripts = scriptsOf(html).filter(f => f !== 'app.js');
+  if (gallery.join('\n') !== appScripts.join('\n')) fail(`gallery.html ke <script> index.html (app.js ke bina) se alag hain — diagrams gayab honge`);
+  else ok();
 }
 
 /* =====================================================================

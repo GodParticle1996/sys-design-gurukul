@@ -1031,9 +1031,9 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
      bana sakte hain?"</p>
      <h3>📉 Deprecation kaise karein</h3>
      <pre>1. Naya tareeka do, purana chalta rahe
-2. Response mein signal:  Deprecation: true
-                          Sunset: Sat, 01 Nov 2026 00:00:00 GMT
-                          Link: </docs/migrate>; rel="deprecation"
+2. Response mein signal:  Deprecation: @1793491200   (1 Nov 2026 se purana, Unix seconds)
+                          Sunset: Sat, 01 May 2027 00:00:00 GMT
+                          Link: &lt;/docs/migrate&gt;; rel="deprecation"
 3. Usage metrics dekho — kaun abhi bhi purana use kar raha hai
 4. Un clients se SEEDHA baat karo (email, dashboard warning)
 5. Traffic ~0 hone par hatao — pehle "brownout" (roz 5 min band) se test karo</pre>`,
