@@ -144,6 +144,41 @@ Deferred, at the user's request: **XP fairness and the rank ladder.** The design
 runs and the Docker stages award no per-answer XP, and the top rank arrives at 39% of the app's 44,100 maximum XP.
 A self-contained brief for another agent is in [TASK-xp-and-ranks.md](TASK-xp-and-ranks.md).
 
+**Done 2026-10-29 by Codex as a sub-agent** (commit `3fc501a`, see below): every renderer awards 10 XP per first-try
+answer (max 50,940 XP); ten new ranks end at System Samrat 🔱, 48,000 XP (94%). Claude's review found one gap outside
+Codex's file scope — the topbar still said "MAX RANK 👑" — fixed in `29f6326`.
+
+### Working with Codex (from 2026-10-29)
+
+The user runs terminals in herdr; Codex CLI in terminal 1 (pane `w5:p1`, named `codex1`) works as a sub-agent.
+User's rules: cross-review both ways; Codex at high reasoning (ask before max). Setup: Codex works in its own git
+worktree `../sdg-codex-xp` (branch `codex/<task>`), never commits or pushes; Claude reviews the diff, reruns every
+suite, then commits and merges. Briefs go in as files; reports come back as `CODEX-*.md` in the worktree.
+
+| Job | Who wrote | Who reviewed | Result |
+| --- | --- | --- | --- |
+| XP & ranks (brief: TASK-xp-and-ranks.md) | Codex, ~12 min | Claude: diff read, 8 suites rerun, topbar checked in Chromium | merged `3fc501a`; follow-up fix `29f6326` |
+| Phase 3 rewrite: cb-kyun … cb-kab, rt-kyun | Claude | Codex: 18 findings, 1 P1 | all 18 fixed after Claude checked each against the code and lab READMEs |
+| Phase 3 rewrite: rt-kaise, rt-code | Claude | Codex | review pending; not committed |
+
+What Codex's review caught (all confirmed before fixing):
+
+- **P1 · `cb-code`:** the marked answer said an OPEN breaker "ginta rahega" without line 11. Wrong: `record()` returns
+  while OPEN, and without `allow()` the breaker never leaves OPEN.
+- **Wrong numbers:** 300 → 30 calls was timeout vs timeout + breaker, not retry. Backoff *does* cut calls (132 → 30).
+  The six phones return across 100 ms, not one instant.
+- **Giveaways:** every wrong option said "badha do" under a "ghatani" stem; only the right option named the new term
+  (retry storm, jitter); one wrong option used "cache" before the lesson named it.
+- **Stems that allowed other answers:** "feature band karo" and "retry hata do" were valid unless the stem ruled them
+  out; interview stems now carry one observable clue instead of stating the answer.
+- **Reasons with false absolutes:** "window sirf OPEN par saaf", "timer ke baad trial apne aap jaati hai", "error
+  sirf network toote par".
+
+The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
+rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.
+The bad write was caught by the reload check and rolled back; the tool now also runs `node --check` on every file
+it writes.
+
 Phase 3 findings logged while reading:
 
 - Every mission's hints were replaced with boilerplate ("Aakhri proof: …", "Near-answer walkthrough"). Rewrite them
