@@ -89,11 +89,22 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
           vars: { w: inside(4), ret: '<b>false</b>', src: '4 / 12' },
           ask: {
             q: '<code>write(#4)</code> ne <code>false</code> lautaya. Tukda #4 ka kya hua?',
-            choices: ["#4 accepted; false ab aur writes rokne ka signal hai","#4 rejected; same chunk ko drain ke baad resend karo","#4 acknowledged; downstream processing complete ho gayi","#4 copied back; reader ko chunk phir se emit karna hai"],
+            choices: [
+              'Writer ne #4 le liya — andar 4/4; false ka matlab "ab aur mat bhejo", "nahi liya" nahi',
+              '#4 gir gaya — writer ne lene se mana kiya; writer khaali hone par #4 dobara bhejna padega',
+              '#4 aage pahunch ke likh bhi diya gaya — false sirf batata hai ki likhna poora hua',
+              '#4 reader ke paas wapas chala gaya — reader ko #4 baad mein dobara dena padega',
+            ],
             answer: 0,
             hint: '<code>write(#4)</code> ke baad writer ke andar kitne tukde hain: 3 ya 4?',
-            explain: "Is normal writable stream mein chunk #4 buffer ho gaya. false ka signal: agle chunks rok kar drain ka wait karo. highWaterMark threshold hai, hard memory limit nahi; errors/destroyed streams ke liye alag error handling chahiye.",
-           choiceExplanations: ["Is normal writable stream mein chunk #4 buffer ho gaya. false ka signal: agle chunks rok kar drain ka wait karo. highWaterMark threshold hai, hard memory limit nahi; errors/destroyed streams ke liye alag error handling chahiye.","Normal writable stream mein false admission rejection nahi. Same chunk resend karna duplicate banayega.","Buffered acceptance durable completion acknowledgement nahi; callback/finish semantics alag dekho.","write() chunk ko reader ko return nahi karta; false future writes pause karne ka signal hai."] },
+            explain: 'Chalte hue stream mein write() tukda le leta hai — #4 writer ke andar ruka hai. true/false ek salaah hai: "meri line nishaan tak aa gayi, ab aur mat bhejo." Node ki documentation ke shabd: highWaterMark "is a threshold, not a limit" — nishaan hai, deewar nahi.',
+            choiceExplanations: [
+              'Chalte hue stream mein write() tukda le leta hai — #4 writer ke andar ruka hai. true/false ek salaah hai: "meri line nishaan tak aa gayi, ab aur mat bhejo." Node ki documentation ke shabd: highWaterMark "is a threshold, not a limit" — nishaan hai, deewar nahi.',
+              'Writer ke andar ab 4/4 hai — #4 andar hai. Dobara bhejoge toh #4 do baar likha jaayega.',
+              'Andar 4/4 ka matlab #4 abhi line mein khada hai, likha nahi gaya. Likhna poora hone ki khabar alag aati hai.',
+              'write() tukda kabhi wapas nahi karta. #4 writer ki line mein hai.',
+            ],
+          },
         },
         {
           clock: '0.50–1.20 s',
@@ -127,11 +138,22 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
           vars: { w: inside(1), ret: '—', src: '5 / 12 — phir ruka' },
           ask: {
             q: 'Writer reader ko "ab bhejo" kab bolega? (Node is khabar ko <code>\'drain\'</code> kehta hai.)',
-            choices: ["Buffer ka pending data drain ho: lab mein 0/4","Buffer threshold se ek neeche aaye: lab mein 3/4","Buffer aadha khaali ho: lab mein 2/4 par signal","Har write callback ho: buffer size se bina sambandh"],
+            choices: [
+              'Jab writer poora khaali ho jaaye: andar 0/4 — tab hi reader ko "ab bhejo" milega',
+              'Jaise hi nishaan se ek neeche aaye: andar 3/4 — ek jagah bani, toh turant "ab bhejo"',
+              'Jab writer aadha khaali ho: andar 2/4 — aadhi line khaali hote hi reader phir chalega',
+              'Har tukda likhne ke baad — writer har likhe tukde par reader ko "ek aur bhejo" bolta hai',
+            ],
             answer: 0,
-            hint: 'Agar writer 3/4 par hi "ab bhejo" bol deta, toh agla hi tukda use phir 4/4 kar deta. Uske baad kya hota?',
-            explain: 'Node ka writer tab tak chup rehta hai jab tak writer ki line <b>poori khaali</b> na ho jaaye. Warna reader har tukde par rukta-chalta-rukta. Tanki ki motor bhi "thoda khaali" par nahi, "kaafi khaali" par chalu hoti hai.',
-           choiceExplanations: ["Node ka writer tab tak chup rehta hai jab tak writer ki line <b>poori khaali</b> na ho jaaye. Warna reader har tukde par rukta-chalta-rukta. Tanki ki motor bhi \"thoda khaali\" par nahi, \"kaafi khaali\" par chalu hoti hai.","Is writable flow ka drain buffered work nikalne ke baad signal karta hai; threshold cross-back ko per-chunk notification mat maano.","Aadha khaali hone ka custom hysteresis rule is Node stream mein configured nahi.","Write callbacks aur drain alag signals hain; callback per chunk ho sakta hai, drain producer resume ke liye hai."] },
+            hint: 'Writer 3/4 par hi "ab bhejo" bol deta, toh agla tukda line phir 4/4 kar deta. Phir reader ka kya hota?',
+            explain: 'Node ka writer tab tak chup rehta hai jab tak writer ki line poori khaali na ho jaaye. Warna reader har tukde par rukta-chalta-rukta. Tanki ki motor bhi "thoda khaali" par nahi, "kaafi khaali" par chalu hoti hai. Lab: is pehle round mein 1.35 s par writer khaali (0/4) → \'drain\' → reader phir chalu.',
+            choiceExplanations: [
+              'Node ka writer tab tak chup rehta hai jab tak writer ki line poori khaali na ho jaaye. Warna reader har tukde par rukta-chalta-rukta. Tanki ki motor bhi "thoda khaali" par nahi, "kaafi khaali" par chalu hoti hai. Lab: is pehle round mein 1.35 s par writer khaali (0/4) → \'drain\' → reader phir chalu.',
+              '3/4 par chalu karte hi agla tukda phir 4/4 kar deta — reader har tukde par rukta-chalta. Node 0 par hi bolta hai.',
+              'Node mein aadhe ka koi niyam nahi. \'drain\' tab aata hai jab andar 0 bache.',
+              'Har tukde ke likhne ki khabar alag hai (write ka callback). \'drain\' tab aata hai jab false ke baad line khaali ho — har bharne-khaali hone ke round mein ek baar (lab: 1.35, 2.55, 3.75 s).',
+            ],
+          },
         },
         {
           clock: '1.35–1.60 s',
@@ -147,11 +169,22 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
           vars: { w: inside(0), ret: 'false ko har baar suna', rd: 'poora', src: '12 / 12 (2.80 s par)' },
           ask: {
             q: 'Pehle tareeke mein sab likhne mein 3.75 s lage the. Is baar reader teen baar ruka. Ab sab likhne mein kitna samay laga?',
-            choices: ["Lagbhag 3.75 s; slow writer ab bhi bottleneck hai","Lagbhag 7.5 s; har pause processing ko bhi rokta","Lagbhag 1.2 s; source speed destination tak badhti","Lagbhag 0.3 s; sirf aakhri chunk ka delay ginte hain"],
+            choices: [
+              '3.75 s — utna hi; is lab mein raftaar writer ki thi (12 tukde, har ek ~300 ms)',
+              '7.5 s — dugna, kyunki reader teen baar ruka aur rukne ka waqt bhi judta gaya',
+              '1.2 s — reader ki raftaar par, kyunki ab writer par bojh kam hai aur writer tez hai',
+              '2.8 s — reader ka aakhri tukda 2.80 s par padha gaya, toh likhna bhi tabhi khatam',
+            ],
             answer: 0,
             hint: 'Dono tareekon mein writer ek tukda kitni der mein likhta hai? Kya reader ke rukne se writer kabhi khaali baitha?',
-            explain: 'Is lab mein backpressure ke saath total samay lagbhag same tha: writer bottleneck raha. Real workloads mein buffering, batching aur implementation overhead throughput/latency badal sakte hain. Backpressure sirf yeh tay karta hai ki ruka hua data <b>kahan</b> rahe: tumhari RAM mein, ya abhi file mein hi.',
-           choiceExplanations: ["Is lab mein backpressure ke saath total samay lagbhag same tha: writer bottleneck raha. Real workloads mein buffering, batching aur implementation overhead throughput/latency badal sakte hain. Backpressure sirf yeh tay karta hai ki ruka hua data <b>kahan</b> rahe: tumhari RAM mein, ya abhi file mein hi.","Source pause ke dauraan writer queued chunks process karta rehta hai.","Reader tez hone se writer ki 300 ms/chunk service rate nahi badhti.","Saare 12 chunks writer ko process karne hain; sirf last delay nahi."] },
+            explain: 'Is lab mein writer hi dheema tha, aur reader rukne par bhi writer kaam karta raha — isliye dono run 3.75 s mein khatam hue. Backpressure ne buffering ghatayi: writer ke andar 9 ki jagah kabhi 4 se zyada nahi. (Doosre workloads mein pause/resume ka overhead samay thoda badal sakta hai.)',
+            choiceExplanations: [
+              'Is lab mein writer hi dheema tha, aur reader rukne par bhi writer kaam karta raha — isliye dono run 3.75 s mein khatam hue. Backpressure ne buffering ghatayi: writer ke andar 9 ki jagah kabhi 4 se zyada nahi. (Doosre workloads mein pause/resume ka overhead samay thoda badal sakta hai.)',
+              'Reader ruka tab bhi writer andar ke tukde likhta raha. Writer kabhi khaali nahi baitha.',
+              'Reader tez hone se writer ki raftaar nahi badhti. Writer ab bhi ~300 ms har tukda leta hai.',
+              '2.80 s par aakhri tukda sirf padha gaya. Andar ke 4 tukde likhne mein 3.75 s tak lage.',
+            ],
+          },
         },
         {
           clock: 'pipeline()',
@@ -222,12 +255,23 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
           say: 'Line 35: <code>pipeline(r, w, done)</code>. Line 36 se 41 ka poora kaam ek line mein — aur ek cheez zyada, jo agle step mein hai.',
           vars: { mode: 'pipeline', buf: '<b>1 MB</b>' },
           ask: {
-            q: 'Node mein ek purana tareeka bhi hai: <code>reader.pipe(writer)</code>. <code>pipe()</code> bhi backpressure sambhalta hai. Maan lo writer beech mein fail ho gaya (disk bhar gayi). Reader ka kya hoga?',
-            choices: ["Lab mein pipe reader chhodta; pipeline dono destroy kare","Dono reader destroy karein; error propagation same hai","Dono reader chhod dein; caller sab cleanup manually kare","Pipe poora process roke; pipeline sirf failed write roke"],
+            q: 'Node mein ek purana tareeka bhi hai: <code>reader.pipe(writer)</code>. <code>pipe()</code> bhi backpressure sambhalta hai. Maan lo writer beech mein fail ho gaya (disk bhar gayi), aur lab ki tarah writer ka error handler laga hai. Reader ka kya hoga?',
+            choices: [
+              'pipe() mein reader khula reh jaata hai; pipeline() reader aur writer dono band karta hai',
+              'Dono mein reader apne aap band ho jaata hai — writer ka error reader tak pahunch jaata hai',
+              'Dono mein reader khula reh jaata hai — reader band karna har haal mein tumhara kaam hai',
+              'pipe() mein poora process band ho jaata hai; pipeline() sirf writer ko rokta hai',
+            ],
             answer: 0,
             hint: '<code>pipe()</code> sirf data aage badhata hai. Safai kaun karega?',
-            explain: 'Lab ka slow motion (writer #3 par fail): <code>reader.pipe(writer)</code> → <code>reader.destroyed = false</code>. <code>pipeline(reader, writer)</code> → <code>reader.destroyed = true</code>.',
-           choiceExplanations: ["Lab ka slow motion (writer #3 par fail): <code>reader.pipe(writer)</code> → <code>reader.destroyed = false</code>. <code>pipeline(reader, writer)</code> → <code>reader.destroyed = true</code>.","pipe() backpressure deta hai, par pipeline() jaisi composed error/cleanup guarantee nahi.","pipeline() error par participating streams ko destroy karta hai, success/finished-stream caveats ke saath.","Unhandled errors process affect kar sakte hain, lekin pipe ka contract process ko band karna nahi."] },
+            explain: 'Lab ka slow motion (writer #3 par fail): reader.pipe(writer) → reader.destroyed = false; pipeline(reader, writer) → reader.destroyed = true. Asli reader file, DB cursor ya socket pakde ho, toh adhoori safai mein file, cursor ya socket khule reh sakte hain.',
+            choiceExplanations: [
+              'Lab ka slow motion (writer #3 par fail): reader.pipe(writer) → reader.destroyed = false; pipeline(reader, writer) → reader.destroyed = true. Asli reader file, DB cursor ya socket pakde ho, toh adhoori safai mein file, cursor ya socket khule reh sakte hain.',
+              'pipe() writer ka error reader tak nahi le jaata. Lab: reader.destroyed = false.',
+              'pipeline() galti par dono stream band karta hai. Lab: reader.destroyed = true.',
+              'Lab mein writer ka error handler laga hai, toh process nahi girta. (Handler na ho toh writer ka error process gira sakta hai.) pipe() bas reader ki safai nahi karta.',
+            ],
+          },
         },
         {
           clock: 'galti ho toh',
@@ -238,7 +282,7 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
               <tr><td><code>reader.pipe(writer)</code></td><td>band</td><td><b>khula reh gaya</b></td></tr>
               <tr><td><code>pipeline(reader, writer)</code></td><td>band</td><td>band</td></tr>
             </table></div>
-            Khula reader = khuli file, khula database cursor, khula socket. Aise sau download fail hue toh sau cheezein khuli.<br><br>Isliye naye code mein <code>pipeline()</code>: backpressure bhi, safai bhi, aur galti ek hi jagah (<code>done</code>) milti hai.`,
+            Asli reader aksar file, database cursor ya socket pakde hota hai. Reader khula reh gaya toh file, cursor ya socket bhi khule reh sakte hain — sau download fail hue toh sau cheezein khuli.<br><br>Isliye naye code mein <code>pipeline()</code>: backpressure bhi, safai bhi, aur galti ek hi jagah (<code>done</code>) milti hai.`,
           vars: { err: '<code>pipe()</code>: reader khula · <code>pipeline()</code>: dono band' },
         },
         {
@@ -268,15 +312,26 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
               <tr><th><code>x-overflow</code></th><th>Kya hota hai</th><th>Hamara naam</th></tr>
               <tr><td><code>drop-head</code> <b>(default)</b></td><td>Queue ka sabse purana message girta hai</td><td>sabse purana girao</td></tr>
               <tr><td><code>reject-publish</code></td><td>Naya message nahi liya jaata. Publisher ne "confirms" chalu kiye hon toh use <code>basic.nack</code> milta hai</td><td>"na" bolo</td></tr>
-              <tr><td><code>reject-publish-dlx</code></td><td>Wahi, aur mana kiya hua message ek alag queue mein rakh liya jaata hai</td><td>"na" bolo + sambhaal ke rakho</td></tr>
+              <tr><td><code>reject-publish-dlx</code></td><td>Wahi "na", aur mana kiya hua message dead-letter exchange ko bhejne ki koshish (exchange aur queue pehle se set karni padti hai; quorum queue reject-publish-dlx nahi leti)</td><td>"na" bolo + sambhaal ke rakho</td></tr>
             </table></div>`,
           ask: {
             q: 'Ek team ne orders wali queue par <code>x-max-length</code> lagaya, par <code>x-overflow</code> nahi likha. Queue bhar gayi. Kya hoga?',
-            choices: ["Oldest ready messages drop/dead-letter; default drop-head","Publish nack ho; overflow default reject-publish samjho","Publish block ho; max-length ko upstream feedback maano","Consumer stop ho; ready messages RAM mein badhte rahein"],
+            choices: [
+              'Sabse purane orders chupchaap girenge — default drop-head hai, publisher ko kuch pata nahi',
+              'Publisher ko error milega — bhari queue naye order ko mana karegi aur publisher ko batayegi',
+              'Publisher ruk jaayega jab tak jagah na bane — max-length apne aap publisher ko rok deta hai',
+              'Naye orders chupchaap girenge — bhari queue aakhir mein aaye order ko hi chhod deti hai',
+            ],
             answer: 0,
             hint: 'Table mein kaunsi value ke aage "default" likha hai?',
-            explain: "RabbitMQ max-length ka default front/oldest ready messages ko drop ya configured DLX par dead-letter karta hai. Unacknowledged messages is ready limit mein count nahi hote. Order admission ke liye appropriate reject-publish policy, confirms aur recovery strategy samjho; queue type/version support check karo.",
-           choiceExplanations: ["RabbitMQ max-length ka default front/oldest ready messages ko drop ya configured DLX par dead-letter karta hai. Unacknowledged messages is ready limit mein count nahi hote. Order admission ke liye appropriate reject-publish policy, confirms aur recovery strategy samjho; queue type/version support check karo.","Nack ke liye reject-publish policy aur publisher confirms ka behavior configure/observe karo.","Max-length khud blocking producer protocol nahi banata.","Queue consumer ko stop karke cap enforce nahi karti; default oldest ready messages hataati hai."] },
+            explain: 'Default drop-head level 2 ka "sabse purana girao" hai — location jaise data ke liye theek, orders ke liye bura. (Dead-letter exchange laga ho toh gire messages dead-letter exchange mein jaate hain.) Orders ke liye reject-publish aur publisher confirms: tab publisher ko "na" milta hai.',
+            choiceExplanations: [
+              'Default drop-head level 2 ka "sabse purana girao" hai — location jaise data ke liye theek, orders ke liye bura. (Dead-letter exchange laga ho toh gire messages dead-letter exchange mein jaate hain.) Orders ke liye reject-publish aur publisher confirms: tab publisher ko "na" milta hai.',
+              'Publisher ko "na" tabhi milta hai jab x-overflow: reject-publish ho aur publisher confirms chalu hon.',
+              'max-length publisher ko nahi rokta. Bhari queue sabse purana message gira ke naya le leti hai.',
+              'Naya message reject-publish girata hai, jo default nahi — reject-publish x-overflow mein likhna padta hai.',
+            ],
+          },
         },
         {
           title: '2. RabbitMQ: consumer par bojh kaise rokein?',
@@ -285,7 +340,7 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
         {
           title: '3. Kafka: yahan consumer khud maangta hai',
           say: `Ab tak producer kaam <b>dhakelta</b> tha (push). Kafka mein consumer khud <b>maangta</b> hai: <code>poll()</code> — "agle messages do" (pull).<br><br>
-            Consumer dheema hai → <code>poll()</code> kam bulata hai → kam aata hai. Pull mein backpressure apne aap milta hai. Messages Kafka ki disk par rehte hain, consumer ki memory mein nahi.<br><br>
+            Consumer dheema hai → <code>poll()</code> kam bulata hai → kam aata hai. Pull mein backpressure apne aap milta hai. Baaki messages Kafka ki disk par rehte hain. (Client thode records pehle se fetch karke memory mein rakhta hai — fetch settings ki hadd tak; <code>max.poll.records</code> sirf ek <code>poll()</code> ka batch chhota karta hai.)<br><br>
             Documentation ke default:
             <ul>
               <li><code>max.poll.records</code> = <b>500</b>: ek <code>poll()</code> mein zyada se zyada itne.</li>
@@ -320,15 +375,26 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
       steps: [
         { text: 'Pehle "jawab nazarandaaz". Har line mein write() ka jawab aur "writer ke andar" dekho.', cmd: 'cd docker-labs/15-backpressure && node tools/streams-slowmo.js --mode ignore', expect: "asli Node streams, slow motion · reader: har 100 ms par ek tukda (kul 12) · writer: ek tukda 300 ms, highWaterMark 4 tukde\nNode v24.18.0 · highWaterMark na do toh default: 65536 bytes · object mode mein 16 objects\n\n=== write() ka jawab nazarandaaz ===\n    0.10 s  #1: source se padha → write() → true  · writer ke andar 1/4\n    0.20 s  #2: source se padha → write() → true  · writer ke andar 2/4\n    0.30 s  #3: source se padha → write() → true  · writer ke andar 3/4\n    0.40 s  #4: source se padha → write() → false · writer ke andar 4/4   ← \"ruk ja\"\n    0.50 s  #5: source se padha → write() → false · writer ke andar 4/4   ← \"ruk ja\"\n    0.60 s  #6: source se padha → write() → false · writer ke andar 5/4   ← hadd ke upar\n    0.70 s  #7: source se padha → write() → false · writer ke andar 6/4   ← hadd ke upar\n    0.80 s  #8: source se padha → write() → false · writer ke andar 6/4   ← hadd ke upar\n    0.90 s  #9: source se padha → write() → false · writer ke andar 7/4   ← hadd ke upar\n    1.00 s  #10: source se padha → write() → false · writer ke andar 8/4   ← hadd ke upar\n    1.10 s  #11: source se padha → write() → false · writer ke andar 8/4   ← hadd ke upar\n    1.20 s  #12: source se padha → write() → false · writer ke andar 9/4   ← hadd ke upar\n   nateeja → writer ke andar sabse zyada: 9 (hadd 4) · source se aakhri tukda 1.20 s par padha · sab likhne mein 3.75 s" },
         { text: 'Ab "false par ruko, drain par chalo". Dhoondo: \'drain\' kis pal aata hai, aur us pal writer ke andar kitne hain.', cmd: 'node tools/streams-slowmo.js --mode drain', expect: "asli Node streams, slow motion · reader: har 100 ms par ek tukda (kul 12) · writer: ek tukda 300 ms, highWaterMark 4 tukde\nNode v24.18.0 · highWaterMark na do toh default: 65536 bytes · object mode mein 16 objects\n\n=== write() false → reader.pause() · 'drain' → reader.resume() ===\n    0.10 s  #1: source se padha → write() → true  · writer ke andar 1/4\n    0.20 s  #2: source se padha → write() → true  · writer ke andar 2/4\n    0.30 s  #3: source se padha → write() → true  · writer ke andar 3/4\n    0.40 s  #4: source se padha → write() → false · writer ke andar 4/4   ← \"ruk ja\"\n    0.40 s           reader.pause() — reader ruka\n    0.45 s           writer ne #1 likh diya · writer ke andar 3/4\n    0.50 s  #5: source se padha → reader ke andar ruka hua (write nahi hua)\n    0.75 s           writer ne #2 likh diya · writer ke andar 2/4\n    1.05 s           writer ne #3 likh diya · writer ke andar 1/4\n    1.35 s           writer khaali (writer ke andar 0/4) → 'drain' → reader phir chalu\n    1.35 s  #5: reader ke andar se nikla → write() → true  · writer ke andar 1/4\n    1.40 s  #6: source se padha → write() → true  · writer ke andar 2/4\n    1.50 s  #7: source se padha → write() → true  · writer ke andar 3/4\n    1.60 s  #8: source se padha → write() → false · writer ke andar 4/4   ← \"ruk ja\"\n    1.60 s           reader.pause() — reader ruka\n    1.65 s           writer ne #5 likh diya · writer ke andar 3/4\n    1.70 s  #9: source se padha → reader ke andar ruka hua (write nahi hua)\n    1.95 s           writer ne #6 likh diya · writer ke andar 2/4\n    2.25 s           writer ne #7 likh diya · writer ke andar 1/4\n    2.55 s           writer khaali (writer ke andar 0/4) → 'drain' → reader phir chalu\n    2.55 s  #9: reader ke andar se nikla → write() → true  · writer ke andar 1/4\n    2.60 s  #10: source se padha → write() → true  · writer ke andar 2/4\n    2.70 s  #11: source se padha → write() → true  · writer ke andar 3/4\n    2.80 s  #12: source se padha → write() → false · writer ke andar 4/4   ← \"ruk ja\"\n    2.80 s           reader.pause() — reader ruka\n    2.85 s           writer ne #9 likh diya · writer ke andar 3/4\n    3.15 s           writer ne #10 likh diya · writer ke andar 2/4\n    3.45 s           writer ne #11 likh diya · writer ke andar 1/4\n    3.75 s           writer khaali (writer ke andar 0/4) → 'drain' → reader phir chalu\n   nateeja → writer ke andar sabse zyada: 4 (hadd 4) · source se aakhri tukda 2.80 s par padha · sab likhne mein 3.75 s" },
-        { text: 'Writer beech mein fail ho jaaye toh: pipe() vs pipeline().', cmd: 'node tools/streams-slowmo.js --mode error', expect: "asli Node streams, slow motion · reader: har 100 ms par ek tukda (kul 12) · writer: ek tukda 300 ms, highWaterMark 4 tukde\nNode v24.18.0 · highWaterMark na do toh default: 65536 bytes · object mode mein 16 objects\n\n=== writer #3 likhte hue fail ho jaaye — reader ka kya hota hai? ===\n   reader.pipe(writer)      → error mila: \"disk bhar gayi\" · writer.destroyed = true · reader.destroyed = false ← reader khula reh gaya (file / DB cursor / socket ka leak)\n   pipeline(reader, writer) → error mila: \"disk bhar gayi\" · writer.destroyed = true · reader.destroyed = true  ← dono band" },
+        { text: 'Writer beech mein fail ho jaaye toh: pipe() vs pipeline().', cmd: 'node tools/streams-slowmo.js --mode error', expect: "asli Node streams, slow motion · reader: har 100 ms par ek tukda (kul 12) · writer: ek tukda 300 ms, highWaterMark 4 tukde\nNode v24.18.0 · highWaterMark na do toh default: 65536 bytes · object mode mein 16 objects\n\n=== writer #3 likhte hue fail ho jaaye — reader ka kya hota hai? ===\n   reader.pipe(writer)      → error mila: \"disk bhar gayi\" · writer.destroyed = true · reader.destroyed = false ← reader khula reh gaya (asli file / DB cursor / socket hota toh leak)\n   pipeline(reader, writer) → error mila: \"disk bhar gayi\" · writer.destroyed = true · reader.destroyed = true  ← dono band" },
         { text: 'Ab asli raftaar: 120 MB, teeno tareeke (~25 s).', cmd: 'node tools/streams.js', expect: "tez reader → dheema writer (~16 MB/s) · 120 MB · writer ka highWaterMark 1 MB\n\ntareeka                               writer mein sabse zyada jama   process ki extra memory (peak)   kul samay\nwrite() ka jawab nazarandaaz                120 MB                    129 MB                8.0 s\npause() / drain par resume()                  1 MB                     45 MB                8.0 s\nstream.pipeline()                             1 MB                     49 MB                8.0 s" },
       ],
       observe: {
         q: 'Asli raftaar par teeno tareeke 8.0 s mein khatam hue. Toh <code>write()</code> ka jawab sunne se kya bacha?',
-        choices: ["Buffered memory ghati; writer throughput lagbhag same","Total processing time ghata; pauses writer tez karte","CPU kaam ghata; pipeline file bytes kam process karta","Durability badhi; buffered writes ab disk-acknowledged hain"],
+        choices: [
+          'RAM — nazarandaaz karne par poori 120 MB file writer ke andar jama hui; sunne par sirf 1 MB',
+          'Samay — sunne wala tareeka tez tha, kyunki reader ke rukne se writer ko aaram mila',
+          'CPU — pipeline() kam CPU leta hai, kyunki writer ko kam tukde sambhalne padte hain',
+          'Kuch nahi — teeno tareeke 8.0 s mein khatam hue, toh teeno bilkul barabar hain',
+        ],
         answer: 0,
-        explain: 'Raftaar hamesha dheeme writer ki thi. Backpressure ne sirf yeh tay kiya ki ruka hua data RAM mein rahega ya file mein.',
-       choiceExplanations: ["Raftaar hamesha dheeme writer ki thi. Backpressure ne sirf yeh tay kiya ki ruka hua data RAM mein rahega ya file mein.","Measured elapsed teeno cases mein 8 s tha; benefit memory bound karna tha.","Same bytes process hue; is experiment ne CPU reduction prove nahi ki.","Backpressure durability acknowledgement add nahi karta."] },
+        explain: 'Is lab mein raftaar dheeme writer ki thi: teeno tareeke 8.0 s. Backpressure ne tay kiya ki ruka hua data RAM mein rahega ya file mein. Badi file ya zyada downloads par 120 MB wala tareeka process ki memory khatam karke process ko maar sakta hai.',
+        choiceExplanations: [
+          'Is lab mein raftaar dheeme writer ki thi: teeno tareeke 8.0 s. Backpressure ne tay kiya ki ruka hua data RAM mein rahega ya file mein. Badi file ya zyada downloads par 120 MB wala tareeka process ki memory khatam karke process ko maar sakta hai.',
+          'Teeno tareeke 8.0 s mein khatam hue. Samay nahi bacha — RAM bachi.',
+          'Teeno mein wahi 120 MB likhe gaye. Is lab ne CPU naapa hi nahi — farak RAM mein dikha.',
+          'Samay barabar tha, par writer ke andar 120 MB vs 1 MB. Bade load par 120 MB aur 1 MB ka farak hi crash ka farak hai.',
+        ],
+      },
       lesson: 'Node mein data ek jagah se doosri jagah le jaana ho toh <code>pipeline()</code>. Khud <code>write()</code> bulao toh uska jawab padho.',
     },
   ],
@@ -338,22 +404,55 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
     questions: [
       {
         q: '"Hamari Node service badi file download par out-of-memory se mar jaati hai. Kahan dekhoge?"',
-        choices: ["write(false) handling aur pipeline cleanup trace karo","RAM dugni karo; streaming loop pehle jaisa chalao","HighWaterMark ghatao; false return ignore karte raho","GC force karo; pending write buffers collect karao"],
+        choices: [
+          'Jahan ek stream se doosri mein data jaata hai — write() ka jawab padha ja raha hai ya nahi',
+          'Server ki RAM dekho — RAM dugni kar do, aur download wala code jaisa hai waisa chalne do',
+          'highWaterMark chhota kar do — chhote nishaan ke baad false nazarandaaz karna bhi chalega',
+          'Garbage collector dekho — GC ko haath se chalao, taaki ruke hue tukde memory se saaf hon',
+        ],
         answer: 0,
-        explain: 'Lab: 120 MB ki file. Jawab nazarandaaz → writer ke andar 120 MB, memory 129 MB chadhi. pipeline() → 1 MB. Samay teeno mein 8.0 s.',
-       choiceExplanations: ["Lab: 120 MB ki file. Jawab nazarandaaz → writer ke andar 120 MB, memory 129 MB chadhi. pipeline() → 1 MB. Samay teeno mein 8.0 s.","Extra RAM root cause ko postpone karegi; source unlimited enqueue karta rahega.","HighWaterMark advisory threshold hai. False ignore karoge toh small threshold hard cap nahi banega.","Pending useful buffers reachable hain; GC unhe safely discard nahi karega."] },
+        explain: 'Code write() ka jawab nahi padhta (ya loop mein res.write() bulata rehta hai), toh poori file memory mein jama hoti hai. pipeline() lagao, ya false par pause aur \'drain\' par resume. Lab: 120 MB ki file — jawab nazarandaaz → writer ke andar 120 MB, memory 129 MB chadhi; pipeline() → writer ke andar 1 MB. Samay teeno mein 8.0 s.',
+        choiceExplanations: [
+          'Code write() ka jawab nahi padhta (ya loop mein res.write() bulata rehta hai), toh poori file memory mein jama hoti hai. pipeline() lagao, ya false par pause aur \'drain\' par resume. Lab: 120 MB ki file — jawab nazarandaaz → writer ke andar 120 MB, memory 129 MB chadhi; pipeline() → writer ke andar 1 MB. Samay teeno mein 8.0 s.',
+          'Dugni RAM sirf crash ko badi file tak taal deti hai. Code poori file andar bharta rahega.',
+          'highWaterMark nishaan hai, deewar nahi. false nazarandaaz kiya toh poori file phir bhi andar jama hogi.',
+          'GC sirf kachra saaf karta hai. Ruke hue tukde abhi likhne baaki hain, kachra nahi.',
+        ],
+      },
       {
         q: '"RabbitMQ ki queue par humne max-length lagaya. Ab kuch orders gayab ho jaate hain aur kahin koi error nahi. Kyun?"',
-        choices: ["Overflow default aur DLX dekho; rejection/confirm policy chuno","Consumer acknowledgement timeout badhao; cap wahi rakho","Producer retries badhao; accepted publish ko loss-free maano","Queue cap dugni karo; overflow policy ko default rakho"],
+        choices: [
+          'Overflow ka default drop-head hai — bhari queue sabse purana message chupchaap gira deti hai',
+          'Consumer ka ack timeout chhota hai — consumer ke liye ruke orders timeout par gayab hote hain',
+          'RabbitMQ mein bug hai — max-length lagne ke baad RabbitMQ messages galti se kho deta hai',
+          'max-length chhota hai — max-length dugna kar do, aur overflow ko default par rehne do',
+        ],
         answer: 0,
-        explain: 'RabbitMQ documentation: overflow ke teen jawab — drop-head (default), reject-publish, reject-publish-dlx. (Is lab mein RabbitMQ chalaya nahi gaya.)',
-       choiceExplanations: ["RabbitMQ documentation: overflow ke teen jawab — drop-head (default), reject-publish, reject-publish-dlx. (Is lab mein RabbitMQ chalaya nahi gaya.)","Consumer timeout ready-message overflow policy nahi badalta.","Publisher confirm default drop-head se purane accepted messages ko bachane ki guarantee nahi.","Bada cap sustained overload ke drop behavior ko sirf postpone karega."] },
+        explain: 'RabbitMQ documentation: overflow ke jawab — drop-head (default), reject-publish, aur classic queue mein reject-publish-dlx (quorum queue mein nahi). Orders ke liye reject-publish lagao aur publisher confirms chalu karo, taaki publisher ko "na" (nack) mile. (Is lab mein RabbitMQ chalaya nahi gaya.)',
+        choiceExplanations: [
+          'RabbitMQ documentation: overflow ke jawab — drop-head (default), reject-publish, aur classic queue mein reject-publish-dlx (quorum queue mein nahi). Orders ke liye reject-publish lagao aur publisher confirms chalu karo, taaki publisher ko "na" (nack) mile. (Is lab mein RabbitMQ chalaya nahi gaya.)',
+          'Ack ka timeout overflow ka niyam nahi badalta. Orders queue bharne par gire, consumer tak pahunche hi nahi.',
+          'Bug nahi, default niyam hai: drop-head. RabbitMQ wahi kar raha hai jo default kehta hai.',
+          'Bada max-length lagataar farak mein bhi bharega — phir wahi chupchaap girna, bas der se.',
+        ],
+      },
       {
-        q: '"Hamara Kafka consumer ek batch par 6–7 minute lagata hai, aur consumer group baar-baar rebalance hota hai. Kya ho raha hai?"',
-        choices: ["max.poll.interval.ms se batch duration compare karo","Session heartbeat interval se batch duration hi compare karo","Broker retention.ms badhao; poll loop pehle jaisa rakho","Partitions badhao; per-record processing time ignore karo"],
+        q: '"Hamara Kafka consumer (Java client, default settings) ek batch par 6–7 minute lagata hai, aur consumer group baar-baar rebalance hota hai. Kya ho raha hai?"',
+        choices: [
+          'poll() 5 minute (max.poll.interval.ms) mein nahi hua — Kafka consumer ko mara maan ke kaam baant deta',
+          'Heartbeat ruk gayi hai — batch ke dauraan heartbeat nahi jaati, toh session.timeout.ms toot raha',
+          'Broker dheema hai — retention.ms badha do, messages zyada der tikenge aur rebalance rukega',
+          'Partitions kam hain — partitions badha do, har consumer ko kam kaam milega aur rebalance band',
+        ],
         answer: 0,
-        explain: "Kafka 4.1 consumer docs mein max.poll.interval.ms default 300000 ms hai. Batch work deadline se lamba ho toh group progress fail ho sakti hai; static membership mein reassignment session timeout tak delay ho sakta hai. Smaller max.poll.records ya bounded worker processing + owner-thread pause/poll strategy consider karo. Kafka is lab mein run nahi kiya gaya.",
-       choiceExplanations: ["Kafka 4.1 consumer docs mein max.poll.interval.ms default 300000 ms hai. Batch work deadline se lamba ho toh group progress fail ho sakti hai; static membership mein reassignment session timeout tak delay ho sakta hai. Smaller max.poll.records ya bounded worker processing + owner-thread pause/poll strategy consider karo. Kafka is lab mein run nahi kiya gaya.","Heartbeats alone application progress deadline ko replace nahi karte. Static-member behavior aur client protocol bhi check karo.","Retention stored log lifetime hai, consumer ke poll progress deadline ka setting nahi.","Parallelism help kar sakti hai par expensive batch ka max-poll violation pehle diagnose karo."] },
+        explain: 'Kafka documentation: max.poll.records default 500, max.poll.interval.ms default 300000 (5 minute). Itni der poll() na ho toh consumer group se nikal jaata hai aur consumer ka kaam doosre ko milta hai. Ilaaj: batch chhota karo (max.poll.records), ya processing alag worker ko do aur consumer ke apne thread par poll() chalte rakho — kaam wale partitions pause() karke, kaam ke baad offsets commit karke resume(). (Is lab mein Kafka chalaya nahi gaya.)',
+        choiceExplanations: [
+          'Kafka documentation: max.poll.records default 500, max.poll.interval.ms default 300000 (5 minute). Itni der poll() na ho toh consumer group se nikal jaata hai aur consumer ka kaam doosre ko milta hai. Ilaaj: batch chhota karo (max.poll.records), ya processing alag worker ko do aur consumer ke apne thread par poll() chalte rakho — kaam wale partitions pause() karke, kaam ke baad offsets commit karke resume(). (Is lab mein Kafka chalaya nahi gaya.)',
+          'Java client ki heartbeat background thread se jaati rehti hai, toh session.timeout.ms nahi tootta. Toot raha hai poll() ka alag 5 minute wala niyam.',
+          'retention.ms sirf batata hai ki messages kitne din rakhe jaayein. poll() ke 5 minute wale niyam se lena-dena nahi.',
+          'Partitions badhane se ek batch ka 6–7 minute nahi ghatta. Pehle batch ko 5 minute ke andar lao.',
+        ],
+      },
     ],
   },
   success: [

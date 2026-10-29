@@ -484,7 +484,7 @@ Node v24.18.0 · highWaterMark na do toh default: 65536 bytes · object mode mei
    nateeja → writer ke andar sabse zyada: 4 (hadd 4) · source se aakhri tukda 2.80 s par padha · sab likhne mein 3.75 s
 
 === writer #3 likhte hue fail ho jaaye — reader ka kya hota hai? ===
-   reader.pipe(writer)      → error mila: "disk bhar gayi" · writer.destroyed = true · reader.destroyed = false ← reader khula reh gaya (file / DB cursor / socket ka leak)
+   reader.pipe(writer)      → error mila: "disk bhar gayi" · writer.destroyed = true · reader.destroyed = false ← reader khula reh gaya (asli file / DB cursor / socket hota toh leak)
    pipeline(reader, writer) → error mila: "disk bhar gayi" · writer.destroyed = true · reader.destroyed = true  ← dono band
 ```
 

@@ -161,7 +161,8 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: cb-kyun … cb-kab, rt-kyun | Claude | Codex: 18 findings, 1 P1 | all 18 fixed after Claude checked each against the code and lab READMEs |
 | Phase 3 rewrite: rt-kaise, rt-code | Claude | Codex: 8 findings (7 P2, 1 P3) | all 8 fixed after checking `lib/retry.js` and the README trace; 3 more found while fixing |
 | Phase 3 rewrite: rt-lib, rt-kab | Claude | Codex: 9 findings (5 P1, 2 P2, 2 P3) | all 9 fixed; Codex checked p-retry 8.0.1's tagged source |
-| Phase 3 rewrite: bp-kyun … bp-kab | Claude | Codex | review pending; not committed |
+| Phase 3 rewrite: bp-kyun … bp-kab | Claude | Codex: 20 findings (9 P1, 10 P2, 1 P3) | all 20 fixed (2 differently, see below), plus step text, cards, lab tool label and README |
+| Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex | review pending; not committed |
 
 What Codex's review caught (all confirmed before fixing):
 
@@ -202,6 +203,22 @@ Third round (rt-lib, rt-kab) — 4 of the 5 P1s were inherited text that the rew
   Idempotency-Key protects only within the provider's retention window.
 - **Checker:** `apply.js` now also flags unka/unki/unke/unko/inko. "usi/isi + noun" ("isi wajah se", "usi din")
   stays allowed: the noun is named.
+
+Fourth round (bp-*) — most P1s were claims stronger than the lab measured:
+
+- **Async put():** `put()` returns a pending Promise at once; `sender()` waits at `await`. "put() lautata nahi" was
+  wrong in the question, the dry-run step and the interview.
+- **What was measured:** 70,826 rejections is a count, not "most of the time spent rejecting"; `--max-old-space-size`
+  caps the V8 heap, not process memory (RSS was ~155 MB); `say()`'s cost was never measured; equal 3.75 s / 8.0 s
+  totals hold for this lab, not every workload; the in-memory reader leaked no file or socket (tool label fixed too).
+- **Library facts:** quorum queues have no `reject-publish-dlx`, and dead-lettering needs a configured exchange;
+  Kafka clients prefetch records (`max.poll.records` only sizes one poll), and pausing on the poll thread while
+  processing for 7 minutes does not keep polling; drain fires every round (1.35, 2.55, 3.75 s).
+- **Ambiguous stems:** "5% per second" now reads 5 jobs/s of 100; interviews now give the evidence the answer needs
+  (growth rates, pending handlers, the client's 503 policy).
+- **Not adopted:** Retry-After counts as known (the Retries topic teaches it first), so only the wait wording
+  changed (the lab client waits 0.8–1.2 × retry-after-ms). The "disable animations" distractor was replaced, since
+  the lab model has no animations.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

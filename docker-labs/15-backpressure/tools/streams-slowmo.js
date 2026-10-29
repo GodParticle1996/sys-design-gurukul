@@ -106,7 +106,7 @@ async function errorDemo(how) {
   });
   settled.then(async () => { await sleep(600); w.stopped = true; });  // error ke baad 0.6 s aur dekho: reader kya karta hai
   await w.loop();
-  console.log(`   ${(how === 'pipeline' ? 'pipeline(reader, writer)' : 'reader.pipe(writer)').padEnd(24)} → error mila: "${got && got.message}" · writer.destroyed = ${w.writer.destroyed} · reader.destroyed = ${String(w.reader.destroyed).padEnd(5)} ${w.reader.destroyed ? '← dono band' : '← reader khula reh gaya (file / DB cursor / socket ka leak)'}`);
+  console.log(`   ${(how === 'pipeline' ? 'pipeline(reader, writer)' : 'reader.pipe(writer)').padEnd(24)} → error mila: "${got && got.message}" · writer.destroyed = ${w.writer.destroyed} · reader.destroyed = ${String(w.reader.destroyed).padEnd(5)} ${w.reader.destroyed ? '← dono band' : '← reader khula reh gaya (asli file / DB cursor / socket hota toh leak)'}`);
 }
 
 (async () => {

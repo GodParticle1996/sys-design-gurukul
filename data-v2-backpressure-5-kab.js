@@ -104,12 +104,23 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
             Lab: 10 s par 78,560 · 20 s par 1,57,360 · 30 s par 2,36,000. Yaani har second ~7,900 badh rahi hai.
             <pre>kitni der mein bharegi = (hadd − abhi ki lambai) ÷ badhne ki raftaar</pre>`,
           ask: {
-            q: 'Do queues hain. Queue A 90% bhari hai aur ghanton se utni hi hai. Queue B 30% bhari hai aur har second 5% badh rahi hai. Pehle kis par daudoge?',
-            choices: ["B: given trend par 14 s headroom; A abhi stable","A: occupancy 90% hai, growth trend ko baad mein dekho","Dono: same urgency maan kar occupancy average nikalo","Neither: rejection error aane tak alerts ko wait karao"],
+            q: 'Dono queues mein 100 jobs ki jagah hai. Queue A mein 90 jobs hain aur ghanton se utni hi hain. Queue B mein 30 jobs hain aur har second 5 jobs aur jud rahi hain. Pehle kis par daudoge?',
+            choices: [
+              'B par — 70 jagah bachi aur 5 jobs/s jud rahe hain, toh 14 second mein bharegi; A tiki hai',
+              'A par — 90% bhari queue zyada khatarnaak hai, badhne ki raftaar baad mein dekhenge',
+              'Dono barabar hain — dono ka ausat 60% bhara hai, toh dono par ek jaisi jaldi karni hai',
+              'Kisi par nahi — jab tak koi error na aaye, line ka bharna apne aap mein dikkat nahi',
+            ],
             answer: 0,
-            hint: 'Upar wala formula B par lagao: hadd 100%, abhi 30%, raftaar 5% har second.',
-            explain: 'Lambai batati hai ki abhi kahan ho. <b>Badhne ki raftaar</b> batati hai ki kitna samay bacha hai. Alert dono par lagao — sirf lambai par nahi.',
-           choiceExplanations: ["Lambai batati hai ki abhi kahan ho. <b>Badhne ki raftaar</b> batati hai ki kitna samay bacha hai. Alert dono par lagao — sirf lambai par nahi.","High steady occupancy bhi risk hai, par B ka short time-to-full is stated snapshot mein immediate concern hai.","Occupancy average growth rate aur remaining time ko hide kar dega.","Error ke pehle growth/admission pressure alert useful time deta hai."] },
+            hint: 'Upar wala formula B par lagao: jagah 100, abhi 30, har second 5 aur.',
+            explain: 'Lambai batati hai ki abhi kahan ho. Badhne ki raftaar batati hai ki kitna samay bacha hai: B ke paas (100 − 30) ÷ 5 = 14 second. Alert dono par lagao — sirf lambai par nahi. (A par bhi alert chahiye: purani stability aage ki guarantee nahi.)',
+            choiceExplanations: [
+              'Lambai batati hai ki abhi kahan ho. Badhne ki raftaar batati hai ki kitna samay bacha hai: B ke paas (100 − 30) ÷ 5 = 14 second. Alert dono par lagao — sirf lambai par nahi. (A par bhi alert chahiye: purani stability aage ki guarantee nahi.)',
+              'A bhari hai par abhi tiki hui hai. Abhi ki raftaar par B 14 second mein bharegi; pehle B.',
+              'Ausat dono queues ka alag haal chhupa deta hai. Abhi ki raftaar par B 14 second mein bharegi; A abhi tiki hai.',
+              'Level 1 mein error 0 tha aur process mar gaya. Error aane tak ruke toh bahut der ho chuki hogi.',
+            ],
+          },
         },
         {
           title: '4. "Kab aana hai" kitna rakhein?',
@@ -125,7 +136,7 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
             (Teen run ka dayra.) Retry-After badhane se <b>bekaar requests ghat-ti hain</b>. Par <b>baari bigadti hai</b>: jis phone ka order abhi laga, wahi phone agla order usi pal bhejta hai jis pal jagah bani. Jo phone bahar ruka tha, woh laut-ta hai toh jagah phir bhari milti hai.<br><br>
             Do seekh:
             <ol>
-              <li>Retry-After utna rakho jitni der mein jagah sach mein banegi: <b>line ÷ raftaar</b>. Yahan 44 ÷ 200 ≈ 0.2 second.</li>
+              <li>Retry-After ka shuruaati andaaza: <b>line ÷ raftaar</b> (line khaali hone ka waqt). Yahan 44 ÷ 200 ≈ 0.2 second. Agli ek jagah 0.2 s se pehle bhi ban sakti hai — phir naap ke tune karo.</li>
               <li>Retry-After bheed kam karta hai, <b>baari nahi deta</b>. Jahan baari zaroori ho, wahan intezaar karne walon ki apni line chahiye (pehle aaya, pehle paya).</li>
             </ol>
             ⚠️ Lab ke phones lalchi hain: order lagte hi agla bhej dete hain. Asli customers aisa nahi karte, toh asli farak isse chhota hoga. Disha yahi rahegi.`,
@@ -155,10 +166,21 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
       ],
       observe: {
         q: 'Retry-After 250 ms se 3000 ms karne par ek kaam par requests 3.1 se 1.2 ho gayi. Toh 3000 ms behtar kyun nahi hai?',
-        choices: ["Fewer retries par fairness bigdi; completion spread bhi maapo","Lamba delay total throughput ko measured run mein ghataata","Lamba delay C ko measured run mein phir crash karaata","Fewest retries hi goal; starving workers ko ignore karo"],
+        choices: [
+          '150 mein se 96 workers ka ek bhi kaam nahi hua (250 ms par 24) — baari bigad gayi',
+          '3000 ms par kul kaam bahut kam ho gaya — lambe intezaar mein C khaali baitha raha',
+          '3000 ms par C ne phir "na" bolna shuru kar diya, kyunki sab ek saath laut aaye',
+          '3000 ms hi behtar hai — jitna zyada rukwao utna achha, requests jitni kam utna achha',
+        ],
         answer: 0,
-        explain: 'Kul kaam har baar lagbhag barabar raha (~2,990). Farak baari ka hai: jo andar hain woh andar hi rehte hain, jo bahar ruke hain woh aur der se lautte hain.',
-       choiceExplanations: ["Kul kaam har baar lagbhag barabar raha (~2,990). Farak baari ka hai: jo andar hain woh andar hi rehte hain, jo bahar ruke hain woh aur der se lautte hain.","Given runs mein completed work roughly same tha; changed signal per-worker opportunity tha.","Is comparison ka evidence starvation/fairness hai, repeated C crash nahi.","Request count akela success metric nahi; tail wait aur fairness bhi constraints hain."] },
+        explain: 'Kul kaam har baar lagbhag barabar raha (~2,990). Farak baari ka hai: jo andar hain, andar hi rehte hain; jo bahar ruke hain, aur der se lautte hain. Retry-After utna ho jitni der mein jagah sach mein banti hai.',
+        choiceExplanations: [
+          'Kul kaam har baar lagbhag barabar raha (~2,990). Farak baari ka hai: jo andar hain, andar hi rehte hain; jo bahar ruke hain, aur der se lautte hain. Retry-After utna ho jitni der mein jagah sach mein banti hai.',
+          'Kul kaam 250 ms par 2,990, 3000 ms par 2,988 — lagbhag barabar. Farak kaam mein nahi, baari mein tha.',
+          'C ne dono run mein 0 baar "na" bola. Farak sirf workers ki baari mein tha.',
+          'Kam requests akela lakshya nahi. 96 workers khaali haath rahe: 150 mein se 96 users ka order laga hi nahi.',
+        ],
+      },
       lesson: 'Khaali 429 downstream ko bachata hai par bheed nahi hatata. Retry-After bheed hatata hai par baari nahi deta. Dono ke number dekh ke chuno.',
     },
 
@@ -176,11 +198,22 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
       ],
       observe: {
         q: '"Frame mein naye 20" ne 20,230 messages chhod diye — lagbhag 81%. Phir bhi yahi tareeka sabse achha kyun hai?',
-        choices: ["Fresh display aur responsive UI; full history goal nahi","Dropped updates backend se baad mein auto replay honge","Is mode mein delivered event count sabse zyada tha","Har event render hoga; browser sirf paint merge karega"],
+        choices: [
+          'Insaan 5,000 messages/second padh hi nahi sakta — page smooth raha, click 6 ms, data taaza',
+          'Chhode hue messages baad mein apne aap dikh jaate hain, toh asal mein koi message nahi chhoota',
+          'Is tareeke mein screen par sabse zyada messages dikhe, baaki dono tareekon se bhi zyada',
+          'Sabse achha nahi hai — chat mein har message dikhna chahiye, chahe page thoda atke',
+        ],
         answer: 0,
-        explain: '"Har message turant": page smooth, par chat 4.1 second peeche aur 20,874 messages line mein — bina hadd ki line. "Sab ek frame mein": 5 fps, click 341 ms — page atka hua. "Naye 20": hadd + girana.',
-       choiceExplanations: ["\"Har message turant\": page smooth, par chat 4.1 second peeche aur 20,874 messages line mein — bina hadd ki line. \"Sab ek frame mein\": 5 fps, click 341 ms — page atka hua. \"Naye 20\": hadd + girana.","Is mode mein discarded UI events ke automatic replay ka path nahi hai.","Selected display intentionally many events omit karta hai; most-rendered criterion nahi.","Work per frame bounded hai; all event rendering ka promise nahi."] },
-      lesson: 'Frontend bhi ek consumer hai, aur uski raftaar tay hai: har second 60 frame. Har frame mein kaam ki hadd rakho; baaki chhodo, ya "+N aur" likh do.',
+        explain: '"Har message turant": page smooth, par chat 4.1 second peeche aur 20,874 messages line mein — bina hadd ki line. "Sab ek frame mein": 5 fps, click 341 ms — page atka hua. "Naye 20": hadd + girana — 47 fps, click 6 ms, aur screen ka data 11 ms taaza.',
+        choiceExplanations: [
+          '"Har message turant": page smooth, par chat 4.1 second peeche aur 20,874 messages line mein — bina hadd ki line. "Sab ek frame mein": 5 fps, click 341 ms — page atka hua. "Naye 20": hadd + girana — 47 fps, click 6 ms, aur screen ka data 11 ms taaza.',
+          'Is tareeke mein chhode messages wapas nahi aate. Purani chat chahiye toh scroll par server se alag maango.',
+          'Sabse zyada messages "sab ek frame mein" ne dikhaye (23,200) — par page 5 fps par atak gaya.',
+          'Har message alag layout ke saath turant dikhane par chat 4.1 s peeche rahi; sab ek frame mein dikhane par 5 fps aur click 341 ms. Naye 20 dikhane par page tez aur data taaza raha.',
+        ],
+      },
+      lesson: 'Frontend bhi ek consumer hai. Is lab ka target 60 frame har second hai (~16.7 ms har frame); asli browser mein screen aur kaam ke hisaab se badalta hai. Har frame mein kaam ki hadd rakho; baaki chhodo, ya "+N aur" likh do.',
     },
 
     /* ---------------- 5. sach ya galatfehmi ---------------- */
@@ -196,7 +229,7 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
         { text: '"Queue badi kar do, samasya khatam."', bin: 'myth', explain: 'Badi line sirf der badhati hai. Slow motion: memory 20 → 5.0 s par crash, 22 gayab. Memory 40 → 10.0 s par crash, 42 gayab.' },
         { text: '"Koi error nahi aa raha, matlab sab theek hai."', bin: 'myth', explain: 'Lab: line 30 s mein 2,36,000 tak gayi, error 0. Process marne tak dashboard hara tha. Line ki lambai aur badhne ki raftaar dekho.' },
         { text: '"Node ka write() false lautaye toh data nahi liya gaya."', bin: 'myth', explain: 'Liya gaya. false sirf "ruk ja" hai. Slow motion: nishaan 4 par tha, writer ke andar 9 pahunch gaye.' },
-        { text: '"Backpressure lagane se system dheema ho jaata hai."', bin: 'myth', explain: 'Raftaar hamesha sabse dheemi kadi ki thi. Lab: streams ke teeno tareeke 8.0 s mein khatam. Backpressure tay karta hai ki ruka hua kaam kahan rahe.' },
+        { text: '"Backpressure lagane se system dheema ho jaata hai."', bin: 'myth', explain: 'Lab mein raftaar sabse dheemi kadi ki thi: streams ke teeno tareeke 8.0 s mein khatam. (Pause/resume ka thoda overhead ho sakta hai, par raftaar dheemi kadi hi tay karti hai.) Backpressure tay karta hai ki ruka hua kaam kahan rahe.' },
         { text: '"Data girana hamesha galat hai."', bin: 'myth', explain: 'Location, bhaav, live feed mein purana girana safai hai. Lab ki chat: 81% chhodne par 47 fps; sab dikhane par 5 fps.' },
         { text: '"429 bhej diya, kaam ho gaya."', bin: 'myth', explain: 'Bina Retry-After ke client turant laut-ta hai. Lab: ek order par 202.6 requests; Retry-After 250 ms ke saath 3.1.' },
         { text: '"Ek saath sirf 10 kaam chalenge" likh diya, toh backpressure ho gaya.', bin: 'myth', explain: 'Baaki kaam kahan khade hain? Agar baaki kaam ki line par hadd nahi, toh wahi kahani. Slow motion: line ki hadd 8 thi, par 16 ruke hue orders order-service ke andar jama ho gaye.' },
@@ -211,22 +244,55 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
     questions: [
       {
         q: '"Flash sale mein order API par 10 guna traffic aayega. Beech mein ek queue laga dein?"',
-        choices: ["Bounded queue, admission response aur backlog slope maapo","Large RAM queue lagao; payment admission pehle confirm karo","Timeout badhao; accepted orders ko lambi queue mein rakho","Queue cap hatao; sale khatam hone tak backlog lete raho"],
+        choices: [
+          'Queue thodi tezi sokhti hai, lagataar 10 guna nahi: hadd rakho, bhari par 429 + Retry-After do',
+          'Haan — badi queue laga do, flash sale ka saara traffic queue mein aaram se sama jaayega',
+          'Haan — pehle paisa kaat ke order confirm karo, phir order ko lambi queue mein daal do',
+          'Queue ki hadd hata do — sale khatam hone tak saare orders lete raho, koi order mana na ho',
+        ],
         answer: 0,
-        explain: 'Lab: 8,000/second ke farak par 20,000 ki line 2.5 second mein bhar jaati hai. Bina hadd ke: 30 s mein 2,36,000, aur memory hadd 100 MB par process ~36 s mein mar gaya.',
-       choiceExplanations: ["Lab: 8,000/second ke farak par 20,000 ki line 2.5 second mein bhar jaati hai. Bina hadd ke: 30 s mein 2,36,000, aur memory hadd 100 MB par process ~36 s mein mar gaya.","Payment confirm ke baad volatile queue loss customer ko accepted-but-missing order de sakta hai.","Long queue user deadlines aur retained resources ko exhaust kar sakti hai.","Unbounded queue finite RAM ko overrun kar sakti hai; burst duration/service capacity estimate chahiye."] },
+        explain: 'Queue par hadd rakho (seconds mein socho), bhari hone par darwaze par hi 429 + Retry-After do — paisa kaatne se pehle — aur line ki lambai aur badhne ki raftaar par alert lagao. Lab: 8,000/second ke farak par 20,000 ki line 2.5 second mein bhar jaati hai. Bina hadd ke: 30 s mein 2,36,000, aur V8 heap ki hadd 100 MB par process ~36 s mein mar gaya.',
+        choiceExplanations: [
+          'Queue par hadd rakho (seconds mein socho), bhari hone par darwaze par hi 429 + Retry-After do — paisa kaatne se pehle — aur line ki lambai aur badhne ki raftaar par alert lagao. Lab: 8,000/second ke farak par 20,000 ki line 2.5 second mein bhar jaati hai. Bina hadd ke: 30 s mein 2,36,000, aur V8 heap ki hadd 100 MB par process ~36 s mein mar gaya.',
+          'Lagataar 10 guna mein har queue bharti hai: 8,000/second ke farak par 20,000 ki line 2.5 second mein.',
+          'Paisa kaatne ke baad order kho gaya toh customer ka paisa gaya aur order nahi. "Na" paisa kaatne se pehle bolo.',
+          'Bina hadd ki line memory khatam karti hai: lab mein 30 s mein 2,36,000, process ~36 s mein mara.',
+        ],
+      },
       {
         q: '"429 ke saath Retry-After mein kya value bhejein?"',
-        choices: ["Capacity-based delay estimate; fairness aur deadline dekho","Fixed 60 s delay; load aur service rate ignore karo","Zero delay; rejected clients ko immediate loop chalao","Queue length use karo; processing rate ke bina delay do"],
+        choices: [
+          'Line ÷ raftaar se shuruaati andaaza, phir requests, baari aur deadline naap ke tune karo',
+          'Hamesha 60 second — lamba intezaar surakshit hai, client kabhi jaldi nahi aayega',
+          '0 — client turant dobara aa jaaye, taaki jagah bante hi sabse pehle order lag jaaye',
+          'Line ki lambai — line mein 500 hain toh Retry-After: 500, client utna ruk jaayega',
+        ],
         answer: 0,
-        explain: "Queue length / effective completion rate rough waiting estimate hai, guarantee nahi. Arrival changes, fairness, jitter aur caller deadline bhi matter karte hain. Standard Retry-After integer seconds ya HTTP-date hai; subsecond lab tuning custom retry-after-ms mein hai.",
-       choiceExplanations: ["Queue length / effective completion rate rough waiting estimate hai, guarantee nahi. Arrival changes, fairness, jitter aur caller deadline bhi matter karte hain. Standard Retry-After integer seconds ya HTTP-date hai; subsecond lab tuning custom retry-after-ms mein hai.","Ek fixed conservative value short recovery mein unnecessary wait aur unfairness badha sakti hai.","Immediate retry rejection traffic badhata hai aur service recovery ko compete karta hai.","Entries ko seconds mein badalne ke liye service rate chahiye; queue length alone duration nahi."] },
+        explain: 'Line ÷ raftaar line khaali hone ka andaaza deta hai; agli ek jagah line khaali hone se pehle bhi ban sakti hai. Bahut kam → client baar-baar aata hai. Bahut zyada → bahar ruke clients peeche reh jaate hain. Lab (teen run): bina Retry-After ek order par 179–209 requests. 250 ms: 3.1. 3000 ms: 1.2 — par 150 mein se 89–99 phones ka ek bhi order nahi laga. (Standard Retry-After integer seconds ya HTTP-date leta hai; lab ka client alag retry-after-ms header padhta hai.)',
+        choiceExplanations: [
+          'Line ÷ raftaar line khaali hone ka andaaza deta hai; agli ek jagah line khaali hone se pehle bhi ban sakti hai. Bahut kam → client baar-baar aata hai. Bahut zyada → bahar ruke clients peeche reh jaate hain. Lab (teen run): bina Retry-After ek order par 179–209 requests. 250 ms: 3.1. 3000 ms: 1.2 — par 150 mein se 89–99 phones ka ek bhi order nahi laga. (Standard Retry-After integer seconds ya HTTP-date leta hai; lab ka client alag retry-after-ms header padhta hai.)',
+          'Jagah 1 second mein ban jaaye toh 60 second ka intezaar bekaar hai. Lab: 3000 ms par hi 89–99 phones khaali haath.',
+          '0 matlab khaali 429 jaisa: ek order par ~200 requests. Client darwaze par khada rehta hai.',
+          'Lambai ginti hai, waqt nahi. Waqt ke liye kaam ki raftaar se bhaag do: 500 ÷ 200/second = 2.5 s.',
+        ],
+      },
       {
         q: '"Dashboard par live events 5,000/second aa rahe hain aur browser atak raha hai. Kya karoge?"',
-        choices: ["Per-frame render budget aur newest-state aggregation lagao","Har frame mein poora pending event backlog render karao","Har event par synchronous DOM update aur layout karao","Event queue retain karo; sirf chart animation disable karo"],
+        choices: [
+          'Har frame mein kaam ki hadd: naye kuch events dikhao, baaki chhodo ya "+N aur" likho',
+          'Sab events ek saath dikhao, har frame mein — jo aaya sab ek hi baar mein screen par',
+          'Har event aate hi turant dikhao — browser khud dekh lega kab screen par chhapna hai',
+          'Server se events har 5 second mein ek saath bhejo — browser ko baar-baar kaam nahi milega',
+        ],
         answer: 0,
-        explain: 'Lab: har message turant → chat 4.1 s peeche, 20,874 line mein. Sab ek frame mein → 5 fps, click 341 ms. Frame mein naye 20 → 47 fps, click 6 ms.',
-       choiceExplanations: ["Lab: har message turant → chat 4.1 s peeche, 20,874 line mein. Sab ek frame mein → 5 fps, click 341 ms. Frame mein naye 20 → 47 fps, click 6 ms.","Ek hi frame mein unbounded work user input aur paints ko block karega.","Arrival rate display capacity se zyada ho toh synchronous DOM work main thread saturate karega.","Animation hataane se event processing/backlog automatically bounded nahi hota."] },
+        explain: 'Har event ko turant dikhana line ko bina hadd badhata hai; sab ko ek frame mein dikhana page ko jaam kar deta hai. Lab: har message turant → chat 4.1 s peeche, 20,874 line mein. Sab ek frame mein → 5 fps, click 341 ms. Frame mein naye 20 → 47 fps, click 6 ms.',
+        choiceExplanations: [
+          'Har event ko turant dikhana line ko bina hadd badhata hai; sab ko ek frame mein dikhana page ko jaam kar deta hai. Lab: har message turant → chat 4.1 s peeche, 20,874 line mein. Sab ek frame mein → 5 fps, click 341 ms. Frame mein naye 20 → 47 fps, click 6 ms.',
+          'Ek frame mein saare events = ek bada bojh. Lab: 5 fps, click 341 ms — page jaam.',
+          'Turant dikhane mein events line mein jama hote hain: lab mein chat 4.1 s peeche, 20,874 line mein.',
+          'Batch bhejne se events kam nahi hote — 5 second ke 25,000 ek saath aayenge, aur ek jhatke mein dikhane par page atkega. Har frame ka kaam seemit karna hi hal hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -238,7 +304,7 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
     { front: 'Roko, "na" bolo, ya girao — kaise chunein?', back: 'Bhejne wala <b>program</b> jo ruk sakta hai → roko (await / pipeline / pull). <b>Insaan ya doosre ka system</b> → turant "na" + Retry-After. <b>Taazgi wala data</b> (location, bhaav, feed) → purana ya extra girao, ginti ke saath.' },
     { front: 'Line ki hadd kaise tay karein?', back: 'Seconds mein: hadd = kaam karne wale ki raftaar × jitna intezaar manzoor. Lab: 2,000/s × 10 s = 20,000. Line thodi der ki tezi ke liye hai: 8,000/s ka farak 20,000 ki line ko 2.5 s mein bhar deta hai.' },
     { front: 'Crash se pehle line kaise pakdein?', back: 'Error se nahi (lab: error 0). Teen number: lambai, <b>badhne ki raftaar</b>, sabse purane kaam ki umar. Kitni der mein bharegi = (hadd − abhi) ÷ badhne ki raftaar.' },
-    { front: 'Retry-After: bahut kam / bahut zyada?', back: 'Lab: bina → ek order par 179–209 requests. 250 ms → 3.1. 3000 ms → 1.2, par 150 mein se 89–99 phones ka ek bhi order nahi laga. Rakho: line ÷ raftaar. Baari chahiye toh alag line.' },
+    { front: 'Retry-After: bahut kam / bahut zyada?', back: 'Lab: bina → ek order par 179–209 requests. 250 ms → 3.1. 3000 ms → 1.2, par 150 mein se 89–99 phones ka ek bhi order nahi laga. Shuruaat: line ÷ raftaar ka andaaza, phir naap ke tune karo. Baari chahiye toh alag line.' },
     { front: 'Screen par 5,000 messages/second?', back: 'Har frame mein hadd (naye 20), baaki chhodo. Lab: 47 fps, click 6 ms. Sab dikhao → 5 fps. Har message turant → 4.1 s peeche.' },
   ],
 },

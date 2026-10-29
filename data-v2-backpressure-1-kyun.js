@@ -109,11 +109,22 @@ SD.registerLevels('sdd-resil', [
           vars: { in: '6', line: ['wait:#3', 'wait:#4', 'wait:#5', 'wait:#6'], out: '1' },
           ask: {
             q: 'Har second 5 orders aate hain aur 1 nikalta hai. 2.9 s par line mein kitne orders khade honge?',
-            choices: ["12: teen rounds mein net 4 orders judte hain","3: har round mein sirf ek waiting order gino","15: teen rounds ke saare arrivals waiting gino","0: har round ke saare arrivals processed gino"],
+            choices: [
+              '12 — har second line mein 4 badhte hain (5 aaye, 1 nikla), toh teen second mein 12',
+              '3 — har second sirf ek order line mein rukta hai, baaki dispatch-service utha leti hai',
+              '15 — teen second mein 15 orders aaye, aur aaye hue saare orders line mein khade hain',
+              '0 — line lambi dekh ke dispatch-service raftaar pakad legi, aur line khaali kar degi',
+            ],
             answer: 0,
-            hint: 'Ek second mein kitne aaye? Kitne nikle? Jo farak bacha, woh kahan gaya?',
-            explain: '5 − 1 = <b>4 har second</b>. 0.9 s par 4, 1.9 s par 8, 2.9 s par 12. Yeh farak kahin jaata nahi. Line mein jama hota hai.',
-           choiceExplanations: ["5 − 1 = <b>4 har second</b>. 0.9 s par 4, 1.9 s par 8, 2.9 s par 12. Yeh farak kahin jaata nahi. Line mein jama hota hai.","Consumer har round ek nikaalta hai; waiting mein 5 minus 1 judte hain, sirf 1 nahi.","15 arrivals mein se teen process bhi hue; unhe waiting mein dobara mat gino.","Arrival rate 5/s, processing 1/s hai. Dono barabar nahi, isliye queue khaali nahi rehti."] },
+            hint: 'Ek second mein kitne aaye? Kitne nikle? Bacha hua farak kahan gaya?',
+            explain: '5 − 1 = 4 har second. 0.9 s par 4, 1.9 s par 8, 2.9 s par 12. Bacha hua farak kahin jaata nahi — line mein jama hota hai.',
+            choiceExplanations: [
+              '5 − 1 = 4 har second. 0.9 s par 4, 1.9 s par 8, 2.9 s par 12. Bacha hua farak kahin jaata nahi — line mein jama hota hai.',
+              'Har second 5 aate hain aur sirf 1 nikalta hai. Line mein 4 judte hain, 1 nahi.',
+              '15 mein se teen orders dispatch-service utha chuki hai. Line mein 15 − 3 = 12 bache.',
+              'dispatch-service ki raftaar 1 order/s hi rehti hai. Lambi line dekh ke koi tez nahi hota.',
+            ],
+          },
         },
         {
           clock: '2.9 s',
@@ -129,12 +140,23 @@ SD.registerLevels('sdd-resil', [
           nodes: { os: { tone: 'ok', badge: '25 "confirm" · 0 error' }, ds: { tone: 'slow', badge: 'line 20 · memory bhari' }, rd: { tone: 'ok', badge: '4 ko rider mila' } },
           vars: { in: '25', line: '20 orders', mem: mem(20), out: '4', wait: '~21.2 s baad', dash: '🟢 errors 0 · 25 mein se 25 "confirm"' },
           ask: {
-            q: 'dispatch-service ki memory mein 20 orders ki line aati hai. (Slow motion ke liye sankhya chhoti hai; asli process mein yeh lakhon hoti hai.) Agla order 5.0 s par aayega. Kya hoga?',
-            choices: ["Lab ki memory limit tootegi; process aur RAM queue jaayenge","Producer wait karega; offer() pending Promise lautayega","Offer reject hoga; customer ko overload status milega","Consumer scale hoga; naye workers queue saaf karenge"],
+            q: 'dispatch-service ki memory mein 20 orders ki line aati hai. (Slow motion ke liye sankhya chhoti hai; asli process mein sankhya lakhon mein hoti hai.) Agla order 5.0 s par aayega. Kya hoga?',
+            choices: [
+              'Line 21 hogi, memory mein jagah nahi bachegi — process crash, aur line ke saare orders gayab',
+              'order-service ko pata chal jaayega ki line bhari hai, aur order-service apne aap dheemi hogi',
+              '21va order wapas jaayega, aur customer ko "abhi bheed hai, thodi der baad try karein" dikhega',
+              'Lambi line dekh ke dispatch-service tez chalne lagegi, aur line dheere-dheere chhoti hogi',
+            ],
             answer: 0,
-            hint: 'Kya kisi ne order-service ko bataya hai ki line bhar rahi hai? Kya line ko pata hai ki uski koi hadd hai?',
-            explain: 'Line ko apni hadd pata hi nahi: line har order le leti hai. Asli hadd memory ki hai. Aur memory "na" nahi bolti — <b>process ko maar deti hai</b>.',
-           choiceExplanations: ["Line ko apni hadd pata hi nahi: line har order le leti hai. Asli hadd memory ki hai. Aur memory \"na\" nahi bolti — <b>process ko maar deti hai</b>.","Is unbounded offer() mein waiting Promise ya feedback ka code nahi hai.","Yahan reject policy lagi nahi hai; overloaded RAM queue aur controlled rejection alag hain.","Lab worker rate fixed hai. Queue length apne aap worker count nahi badhati."] },
+            hint: 'Kya kisi ne order-service ko bataya hai ki line bhar rahi hai? Kya line ko apni koi hadd pata hai?',
+            explain: 'Line ko apni hadd pata hi nahi: line har order le leti hai. Asli hadd memory ki hai. Aur memory "na" nahi bolti — process ko maar deti hai. Lab: 5.0 s par crash, 22 orders gayab (line ke 21 + jis par kaam chal raha tha 1).',
+            choiceExplanations: [
+              'Line ko apni hadd pata hi nahi: line har order le leti hai. Asli hadd memory ki hai. Aur memory "na" nahi bolti — process ko maar deti hai. Lab: 5.0 s par crash, 22 orders gayab (line ke 21 + jis par kaam chal raha tha 1).',
+              'order-service ko kisi ne kuch nahi bataya. Line ka code har order chupchaap le leta hai.',
+              'Wapas bhejne ka koi code nahi hai. Line "na" bolna jaanti hi nahi — har order le leti hai.',
+              'dispatch-service ki raftaar 1 order/s hi hai. Line ki lambai raftaar nahi badalti.',
+            ],
+          },
         },
         {
           clock: '5.0 s',
@@ -170,7 +192,7 @@ SD.registerLevels('sdd-resil', [
         },
         {
           clock: 'asli crash',
-          say: `Wahi program, par process ki memory par <b>100 MB</b> ki hadd (jaise asli server par hoti hai):
+          say: `Wahi program, par process ke V8 heap par <b>100 MB</b> ki hadd (<code>--max-old-space-size=100</code>, jaise asli server par memory ki hadd):
             <ul>
               <li>29 s tak line <b>2.2 lakh se zyada</b>.</li>
               <li>Phir <b>~7 second</b> process jam gaya: na naya kaam liya, na purana kiya. Process memory khaali karne mein laga tha.</li>
@@ -178,7 +200,7 @@ SD.registerLevels('sdd-resil', [
             </ul>
             Line ke <b>2.2 lakh se zyada</b> kaam gaye. Kaam karne wala sirf ~55,500 kar paya tha.`,
           nodes: { os: { tone: 'bad', badge: 'lab: sab "le liya"' }, ds: { tone: 'bad', badge: 'lab: ~36 s par mara' }, rd: { tone: 'idle', badge: 'lab: ~55,500 hue' } },
-          vars: { in: 'lab: 10,000 har second', line: 'lab: 2.2 lakh se zyada — sab gaye', mem: 'lab: hadd 100 MB — paar', out: 'lab: ~55,500', wait: 'kabhi nahi', dash: '🔴 process mar gaya' },
+          vars: { in: 'lab: 10,000 har second', line: 'lab: 2.2 lakh se zyada — sab gaye', mem: 'lab: heap hadd 100 MB — paar', out: 'lab: ~55,500', wait: 'kabhi nahi', dash: '🔴 process mar gaya' },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> jab bhejne wala kaam karne wale se tez ho, toh farak (aaya − nikla) kahin jaata nahi: <b>line mein jama hota hai</b>.<br>Bina hadd ki line teen cheezein chhupa leti hai: badhti hui der, badhti hui memory, aur aakhir mein crash — jisme line ka sab kuch ek saath jaata hai. Crash tak dashboard hara rehta hai.',
@@ -205,11 +227,22 @@ SD.registerLevels('sdd-resil', [
           vars: { fix: 'koi nahi (memory 20)', proc: '5.0 s par CRASH', line: '21 par toot gayi', lost: '22', know: 'kisi ko nahi' },
           ask: {
             q: 'Memory dugni (40 orders ki jagah) karne se kya badlega?',
-            choices: ["Isi model mein crash der se; backlog aur loss zyada","40-slot buffer se processing rate 5/s ho jaayegi","40-slot buffer lagte hi producer rate 1/s ho jaayegi","Queue 20 par rukegi; baaki requests reject hongi"],
+            choices: [
+              'Crash 5.0 s ki jagah 10.0 s par hoga — aur tab tak line lambi, toh zyada orders gayab',
+              'Samasya khatam — 40 orders ki jagah kaafi hai, line kabhi itni lambi nahi hogi',
+              'dispatch-service dugni tez chalegi — zyada memory milte hi har order jaldi uthega',
+              'Line 20 par ruk jaayegi, aur 20 se upar wale orders apne aap wapas laut jaayenge',
+            ],
             answer: 0,
-            hint: 'Line har second 4 badhti hai. Memory dugni karne se yeh 4 badalta hai kya?',
-            explain: 'Memory se raftaar nahi badalti. 5 aate hain, 1 nikalta hai: line ab bhi har second 4 badhti hai. Bas bharne mein dugna waqt lagta hai.',
-           choiceExplanations: ["Memory se raftaar nahi badalti. 5 aate hain, 1 nikalta hai: line ab bhi har second 4 badhti hai. Bas bharne mein dugna waqt lagta hai.","Extra storage se fixed worker ka service time nahi badalta.","Producer ko feedback nahi diya, isliye arrival rate ab bhi 5/s hai.","Memory budget badla; admission/reject policy add nahi hui."] },
+            hint: 'Line har second 4 badhti hai. Memory dugni karne se har second ke 4 badalte hain kya?',
+            explain: 'Memory se raftaar nahi badalti. 5 aate hain, 1 nikalta hai: line ab bhi har second 4 badhti hai. Bas bharne mein dugna waqt lagta hai. Lab: 10.0 s par crash, aur 22 ki jagah 42 orders gayab.',
+            choiceExplanations: [
+              'Memory se raftaar nahi badalti. 5 aate hain, 1 nikalta hai: line ab bhi har second 4 badhti hai. Bas bharne mein dugna waqt lagta hai. Lab: 10.0 s par crash, aur 22 ki jagah 42 orders gayab.',
+              'Line har second 4 badhti hai, toh 40 ki jagah bhi bharegi — bas 10 second mein.',
+              'Rider dhoondhne mein 1 s kaam se lagta hai, memory se nahi. Raftaar 1 order/s hi rahegi.',
+              'Memory badhane se line ko koi hadd nahi milti. Line har order leti rahegi, jab tak memory khatam na ho.',
+            ],
+          },
         },
         {
           clock: '10.0 s',
@@ -244,11 +277,22 @@ SD.registerLevels('sdd-resil', [
           vars: { lost: '1 (#11)' },
           ask: {
             q: '#11 ke customer ke phone par abhi kya likha hai?',
-            choices: ["Order confirm: app ko silent drop ka pata nahi chala","Busy, retry later: queue ne overload response bheja","Processing: app consumer acknowledgement ka wait kare","Cancelled: timeout ke baad payment rollback ho gaya"],
+            choices: [
+              '"✅ Order confirm" — order-service paisa kaat ke confirm bol chuki; line ne chupchaap giraya',
+              '"Abhi bahut bheed hai, thodi der mein try karein" — line ne bhari hone par customer ko bataya',
+              'Spinner ghoom raha hai — phone tab tak rukega jab tak dispatch-service order na utha le',
+              '"Order cancel" — line bhari thi, toh paisa apne aap wapas gaya aur order cancel dikha',
+            ],
             answer: 0,
             hint: 'order-service ne "confirm" kab bola tha: order dene se pehle ya baad mein? Aur line ne girate waqt kisi ko bataya?',
-            explain: 'Line ne <b>chupchaap</b> giraya. order-service ko pata nahi, customer ko pata nahi. Slow motion ki line: <code>#11 aaya → line bhari (8/8) → #11 chupchaap gira · customer ko phir bhi "order confirm"</code>',
-           choiceExplanations: ["Line ne <b>chupchaap</b> giraya. order-service ko pata nahi, customer ko pata nahi. Slow motion ki line: <code>#11 aaya → line bhari (8/8) → #11 chupchaap gira · customer ko phir bhi \"order confirm\"</code>","Drop-new ne success jaisa return diya. Is path mein overload response nahi bheja gaya.","App ne queue admission ko final completion samajh liya; consumer acknowledgement ka wait nahi hai.","Silent drop automatic cancellation ya payment refund trigger nahi karta."] },
+            explain: 'Line ne chupchaap giraya. order-service ko pata nahi, customer ko pata nahi. Slow motion: #11 aaya → line bhari (8/8) → #11 chupchaap gira · customer ko phir bhi "order confirm".',
+            choiceExplanations: [
+              'Line ne chupchaap giraya. order-service ko pata nahi, customer ko pata nahi. Slow motion: #11 aaya → line bhari (8/8) → #11 chupchaap gira · customer ko phir bhi "order confirm".',
+              'Line ka code bas return karta hai — kisi ko kuch nahi batata. "Bheed hai" kehne wala code hi nahi.',
+              'order-service ne confirm pehle hi bol diya tha. Phone dispatch-service ka intezaar nahi karta.',
+              'Chupchaap girane par koi cancel ya refund nahi hota. Paisa kat chuka hai, order gayab hai.',
+            ],
+          },
         },
         {
           clock: '2.1–3.0 s',
@@ -315,11 +359,22 @@ SD.registerLevels('sdd-resil', [
           say: 'Har ghar mein koi na koi chillata hai: <b>"Motor band karo, tanki bhar gayi!"</b><br><br>Kai gharon mein yeh kaam ek chhota switch karta hai. Tanki ke andar ek gola tairta hai. Paani upar aaya → gola upar → motor band. Paani neeche gaya → gola neeche → motor chalu.',
           ask: {
             q: 'Us tairte hue gole ne asal mein kya kiya?',
-            choices: ["Fullness ki khabar motor tak bhej kar inflow roka","Storage capacity badha kar paani ko jagah di","Outflow ki raftaar badha kar backlog saaf kiya","Naya paani gira kar inflow ko chalta rehne diya"],
+            choices: [
+              'Tanki ka haal motor tak pahunchaya: paani upar jaata hai, "ruk ja" ulta neeche aata hai',
+              'Tanki ko bada kar diya — gola upar uthne se tanki mein aur paani ki jagah ban gayi',
+              'Nal ko tez kar diya — gola upar aate hi paani neeche ke nal se jaldi nikalne laga',
+              'Extra paani ko chupchaap baha diya — tanki bhari toh upar ka paani bahar gir gaya',
+            ],
             answer: 0,
             hint: 'Paani kis disha mein jaata hai? "Ruk ja" kis disha mein jaata hai?',
-            explain: 'Paani: motor → tanki → nal. "Ruk ja": tanki → motor. Kaam jis disha mein behta hai, yeh khabar kaam ki <b>ulti disha</b> mein chalti hai. Poori baat yahi hai.',
-           choiceExplanations: ["Paani: motor → tanki → nal. \"Ruk ja\": tanki → motor. Kaam jis disha mein behta hai, yeh khabar kaam ki <b>ulti disha</b> mein chalti hai. Poori baat yahi hai.","Float feedback deta hai, tank ki physical capacity nahi badalta.","Nal ki output capacity wahi hai; float producer ko rokta hai.","Drop policy overflow ko discard karti; float upstream flow ko rokta hai."] },
+            explain: 'Paani: motor → tanki → nal. "Ruk ja": tanki → motor. Kaam jis disha mein behta hai, "ruk ja" ki khabar us disha ki ulti disha mein chalti hai. Poori baat itni hi hai.',
+            choiceExplanations: [
+              'Paani: motor → tanki → nal. "Ruk ja": tanki → motor. Kaam jis disha mein behta hai, "ruk ja" ki khabar us disha ki ulti disha mein chalti hai. Poori baat itni hi hai.',
+              'Gola tanki ka size nahi badalta. Tanki utni hi hai; bas motor ruk jaati hai.',
+              'Nal ki raftaar wahi rehti hai. Gola sirf motor ko rokta hai, nal ko nahi chhoota.',
+              'Bina gole ki tanki bhar ke paani bahar baha deti hai. Gola level badhne par motor rok deta hai, taaki paani bahar na behe.',
+            ],
+          },
         },
         {
           title: '4. In cheezon ke naam',
@@ -358,17 +413,39 @@ SD.registerLevels('sdd-resil', [
     instructions: 'Interviewer yahan "kyun" sunna chahta hai, naam nahi. 🎤',
     questions: [
       {
-        q: '"Hamari service mein koi error nahi tha, CPU theek tha. Phir bhi process out-of-memory se mar gaya aur hazaaron kaam kho gaye. Kya hua hoga?"',
-        choices: ["Unbounded backlog maapo; capacity aur admission bound karo","Daily restart lagao; queue growth ko memory leak maano","GC tune karo; pending work ka count badalne do","RAM badhao; producer aur consumer rates wahi rakho"],
+        q: '"Hamari service mein error 0 tha, CPU theek tha. Kaam lagbhag 10,000/s aata hai aur 2,000/s nikalta hai. Memory lagataar badhi, phir process out-of-memory se mar gaya aur hazaaron kaam kho gaye. Kya hua hoga?"',
+        choices: [
+          'Andar bina hadd ki line thi: kaam zyada aaya, kam nikla, aur farak line mein jama hota gaya',
+          'Memory leak hoga — koi object chhoota reh gaya; process ko roz raat restart kar do',
+          'Garbage collector kharab hai — GC ki settings badlo, pending kaam apne aap saaf hoga',
+          'Server chhota hai — RAM dugni kar do, aane aur nikalne ki raftaar jaisi hai waisi rehne do',
+        ],
         answer: 0,
-        explain: 'Lab: bhejne wala 10,000/s, kaam karne wala 2,000/s → line 30 s mein 2,36,000, error 0. Memory hadd 100 MB par process ~36 s mein mara aur 2.2 lakh se zyada kaam gaye.',
-       choiceExplanations: ["Lab: bhejne wala 10,000/s, kaam karne wala 2,000/s → line 30 s mein 2,36,000, error 0. Memory hadd 100 MB par process ~36 s mein mara aur 2.2 lakh se zyada kaam gaye.","Restart lost work aur growing backlog ka root cause nahi hatata. Leak alag evidence se prove karo.","Reachable queued work garbage nahi hai; GC useful pending entries nahi hata sakta.","Sustained arrivals completions se zyada rahein toh extra RAM sirf crash postpone karti hai."] },
+        explain: 'Lab: bhejne wala 10,000/s, kaam karne wala 2,000/s → line 30 s mein 2,36,000, error 0. V8 heap ki hadd 100 MB par process ~36 s mein mara aur 2.2 lakh se zyada kaam gaye. Ilaaj: line par hadd, aur bhari hone par bhejne wale ko batana — sirf memory badhana nahi.',
+        choiceExplanations: [
+          'Lab: bhejne wala 10,000/s, kaam karne wala 2,000/s → line 30 s mein 2,36,000, error 0. V8 heap ki hadd 100 MB par process ~36 s mein mara aur 2.2 lakh se zyada kaam gaye. Ilaaj: line par hadd, aur bhari hone par bhejne wale ko batana — sirf memory badhana nahi.',
+          'Aane aur nikalne ka farak (8,000/s) pending kaam ko seedha badhata hai — leak ka koi alag saboot nahi. Restart par wahi kaam gayab honge, aur line phir badhegi.',
+          'GC sirf bekaar memory saaf karta hai. Line mein khade orders abhi kaam ke hain, kachra nahi.',
+          'Raftaar ka farak waisa hi raha toh dugni RAM sirf crash ko der se laati hai. Slow motion: memory 40 par crash 10.0 s, 42 gayab.',
+        ],
+      },
       {
         q: '"Queue lambi hoti ja rahi hai. Queue badi kar dein, ya RAM badha dein?"',
-        choices: ["Burst ya sustained overload maapo; phir capacity chuno","Buffer dugna karo; worker capacity baad mein maapo","Queue hatao; wahi load seedhe consumer ko bhejo","RAM dugni karo; admission policy baad mein socho"],
+        choices: [
+          'Pehle dekho: thodi der ki tezi ya lagataar farak? Lagataar farak mein badi line bhi bharegi',
+          'Haan, queue dugni kar do — dugni jagah mein lambi line bhi aaram se sama jaayegi',
+          'Queue hata do — orders seedha dispatch-service ko bhejo, beech ka intezaar khatam',
+          'RAM badha do, queue ko chhedo mat — zyada RAM mein wahi queue zyada der tak chalegi',
+        ],
         answer: 0,
-        explain: 'Slow motion: memory 20 → 5.0 s par crash, 22 gayab. Memory 40 → 10.0 s par crash, 42 gayab. Raftaar ka farak (har second 4) jaisa tha waisa raha.',
-       choiceExplanations: ["Slow motion: memory 20 → 5.0 s par crash, 22 gayab. Memory 40 → 10.0 s par crash, 42 gayab. Raftaar ka farak (har second 4) jaisa tha waisa raha.","Sustained rate mismatch ko larger buffer fix nahi karta; waiting time aur crash loss badh sakte hain.","Queue hatane se consumer ka processing budget nahi badhta; direct requests bhi overload karengi.","RAM bounded waiting budget ka hissa hai, sustainable throughput ka substitute nahi."] },
+        explain: 'Thodi der ki tezi ko line sokh leti hai. Lagataar farak ho toh har line bharegi — badi line sirf der badhati hai, aur girne par nuksaan bhi. Slow motion: memory 20 → 5.0 s par crash, 22 gayab; memory 40 → 10.0 s par crash, 42 gayab. Tab bhejne wale ko dheema karo, kaam karne wale ko tez karo, ya kaam saaf-saaf mana karo.',
+        choiceExplanations: [
+          'Thodi der ki tezi ko line sokh leti hai. Lagataar farak ho toh har line bharegi — badi line sirf der badhati hai, aur girne par nuksaan bhi. Slow motion: memory 20 → 5.0 s par crash, 22 gayab; memory 40 → 10.0 s par crash, 42 gayab. Tab bhejne wale ko dheema karo, kaam karne wale ko tez karo, ya kaam saaf-saaf mana karo.',
+          'Lagataar farak mein dugni line dugne waqt mein bharti hai — aur girne par nuksaan bhi dugna (22 se 42).',
+          'Line hatane se dispatch-service tez nahi hoti. Seedhe aaye orders bhi usi 1 order/s par atkenge.',
+          'Zyada RAM bhi sirf der badhati hai. Raftaar ka farak waisa hi rehta hai, toh crash aayega hi.',
+        ],
+      },
     ],
   },
   success: [
