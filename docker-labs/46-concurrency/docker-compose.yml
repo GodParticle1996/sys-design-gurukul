@@ -1,0 +1,30 @@
+# Optional container route. Host Java route verified; container build/run is not verified.
+services:
+  basics:
+    build: .
+    profiles: [ex0-basics]
+    command: [ex0-basics]
+  race:
+    build: .
+    profiles: [ex1-race]
+    command: [ex1-race]
+  queue:
+    build: .
+    profiles: [ex2-queue]
+    command: [ex2-queue]
+  pool:
+    build: .
+    profiles: [ex3-pool]
+    command: [ex3-pool]
+  deadlock:
+    build: .
+    profiles: [ex4-deadlock]
+    command: [ex4-deadlock]
+  workers:
+    build: .
+    profiles: [ex5-workers]
+    command: [ex5-workers]
+  tests:
+    build: .
+    profiles: [test]
+    command: [test]

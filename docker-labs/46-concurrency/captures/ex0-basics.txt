@@ -1,0 +1,9 @@
+MODEL: ek core A/B ka kaam baari-baari chala sakta hai; do cores zaroori nahi.
+ASLI JAVA PLATFORM THREADS; JVM states, OS scheduler measurement nahi
+before start=NEW
+monitor held by main=BLOCKED
+timed latch await=TIMED_WAITING
+after join=TERMINATED
+thread changed parent field=7
+separate JVM field=0
+Java RUNNABLE mein ready ya CPU par chal raha thread ho sakta hai; alag RUNNING enum nahi.

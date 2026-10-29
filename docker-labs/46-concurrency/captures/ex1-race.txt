@@ -1,0 +1,7 @@
+ASLI JAVA THREADS; read barrier jaan-boojhkar lagaya hai
+broken: expected=2 actual=1
+mutex: expected=2 actual=2
+atomic increment: expected=2 actual=2
+reentrant: holds=2 -> 1 -> 0
+other key enters: coarse=false fine=true
+immutable snapshot unchanged=true

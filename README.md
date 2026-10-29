@@ -35,17 +35,20 @@ node tools/quiz-quality.js --check  # length bias, per-option feedback, shuffled
 node tools/tradeoff-test.js      # metric contracts, demand-reduction shortcuts, invalid states
 node dev/state-test.js           # old/corrupt/blocked storage and reload migration
 node dev/progress-test.js        # restart/reload XP farming and single-use review guards
+node dev/xp-test.js              # XP, first-try and rank regression
+node dev/concurrency-test.js     # real Java output vs captures, lesson text and renderers (JDK 21+)
 ```
 
 ---
 
 ## Kya hai isme
 
-**14 tracks · 244 levels · 1016 stages · 503 interview Qs · 1067 flashcards · 244 diagrams · 330 interactive labs · 45 docker projects**
-(ginti `node validate.js` se, 2026-10-23)
+**15 tracks · 250 levels · 1040 stages · 515 interview Qs · 1090 flashcards · 250 diagrams · 348 interactive labs · 46 lab projects**
+(ginti `node validate.js` se, 2026-10-29)
 
 | Track | Levels | Kya seekhoge |
 |---|---|---|
+| 🧵 **Concurrency — khud todo, phir sambhalo** (hamesha khula, free order) | 6 | **20 concepts**: process/thread aur lifecycle se races, mutex, semaphore, conditions, lock scope, deadlock/livelock/starvation, atomicity, immutability aur concurrent idempotency tak. **Paanch Java build–break–fix labs**: race · producer–consumer · semaphore pool · deadlock · bounded thread pool. [Coverage aur commands](docker-labs/46-concurrency/README.md). |
 | 🧪 **First Principles — machine se system tak** (hamesha khula, free order) | 4 | Alag 15-video course ka pehla topic: **Physics of Software** — remote lookup ka wait · batching vs bounded parallelism · latency/bandwidth aur units · waiting vs service · Little's Law ke averages · warm file-read benchmark ki hadd · hot data aur cost ka hisaab. [Numbered 1→15 roadmap](dev/first-principles-plan.md); abhi sirf pehla topic bana hai. |
 | 📣 **Playlist · 2 EDA Core — ek ghatna, alag kaam** (hamesha khula, free order) | 4 | Pehla topic: **Event-Driven Architecture** — notification se atka order · har consumer ki apni copy · asli publish/read/ack code · Node EventEmitter ka farak · accepted vs completed · duplicates, RAM broker restart aur save/publish gap. Agle topics ka [plan](dev/eda-plan.md). |
 | 🛡️ **Playlist · 1 Resilience — samasya se code tak** (hamesha khula, free order) | 38 | System design playlist ka pehla hissa, har topic chaar sawaalon mein — **Kyun** (samasya, slow motion mein) · **Kaise** (ek-ek click) · **Code** (asli code + asli library) · **Kab**: **Circuit Breaker · Retries · Backpressure · Noisy Neighbour · Randomness · Health Checks · Disaster Recovery · Chaos Engineering** |
@@ -66,7 +69,7 @@ Har track ka apna certificate hai.
 
 ### 🐳 Docker projects — `docker-labs/`
 
-45 chhote **Node.js (zero dependency)** projects (poori list `docker-labs/README.md` mein): har ek mein asli services (HTTP servers) aur tools jo failure khud
+46 chhote lab projects (poori list `docker-labs/README.md` mein): pehle 45 **Node.js (zero dependency)** services aur tools; naya **Concurrency lab Java 21** platform threads use karta hai. Services aur tools failure khud
 dikhate hain — Reddit ka cache, Cloudflare ka edge filter, Jira ka noisy neighbour, Snowflake ka warehouse, Airtable ki
 live query, Slack ka boot/fan-out/queue, Discord ki hot partition, **job scheduler (lease + zombie + idempotency)**,
 **Raft (election, split vote, quorum)**, **50 TB migration (dual write vs CDC vs shadow)**. Har README mein asli run ke
@@ -225,8 +228,8 @@ data-gaps.js   maujooda tracks ke BEECH ke levels
 data-ext-videos.js   purane levels ko SD.extendLevel se badhaya + Raft levels (data-gaps ke BAAD)
 data-ext-episodes.js · data-ext-sdd1.js   video batches: purane levels badhaye + naye levels (videos ke BAAD, isi kram mein)
 data-v2-00-tracks.js · data-v2-<topic>-<n>-<hissa>.js   🛡️ playlist course: ek level ek file (EXTENDING.md §10.7)
-docker-labs/   45 Node projects (compose + start.js + historical README captures)
-data-guidance.js  53 topic guides, all 244 levels ke explicit assignments
+docker-labs/   46 projects: 45 Node + 1 Java concurrency lab (compose + start.js + README captures)
+data-guidance.js  53 existing topic guides; data-v2-concurrency.js adds 6 guides (all 250 levels assigned)
 exercise-solutions.json  nonterminal exercises ke intended actions
 validate.js    structure + missions + labs + render
 ```
@@ -254,7 +257,7 @@ aur `node dev/replay-browser.js` actual Chromium mein wahi fixtures chalate hain
 wrong options, repeated clicks, missing decisions aur preview shortcuts bhi try karte hain.
 Browser tools existing Playwright/Chromium use karte hain; install ya server start nahi karte.
 
-`data-guidance.js` mein 53 topic guides all 244 levels ko explicit map karte hain:
+`data-guidance.js` ke 53 guides aur `data-v2-concurrency.js` ke 6 guides all 250 levels ko explicit map karte hain:
 why → tiny example → hands-on → use/avoid → comparison → decision tree → common mistake/production.
 Theme Light/Dark topbar se badalti hai. Tap controls Enter/Space se bhi chalte hain.
 Progress v1 storage se migrate hoti hai; resume challenge boundary par hai, partial

@@ -65,7 +65,7 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-fp-physics-1-kyun.js',
   'data-v2-fp-physics-2-kaise.js',
   'data-v2-fp-physics-3-code.js',
-  'data-v2-fp-physics-4-kab.js', 'data-guidance.js'];
+  'data-v2-fp-physics-4-kab.js', 'data-guidance.js', 'data-v2-concurrency.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */
@@ -592,7 +592,12 @@ function structure() {
   };
   allLevels.forEach(({ level }) => {
     let clean = true;
-    eachString(level, '', (p, str) => { const why = htmlProblem(str); if (why) { clean = false; fail(`${level.id} ${p}: ${why}`); } });
+    eachString(level, '', (p, str) => {
+      // Dry-run source panes escape raw code. Java generics such as <Runnable> are source, not HTML.
+      const source = p.match(/^stages\[(\d+)\]\.code\.text$/);
+      if (source && ['dryrun', 'cards'].includes(level.stages[+source[1]].type)) return;
+      const why = htmlProblem(str); if (why) { clean = false; fail(`${level.id} ${p}: ${why}`); }
+    });
     if (clean) ok();
   });
   Object.keys(VISUALS).forEach(id => {

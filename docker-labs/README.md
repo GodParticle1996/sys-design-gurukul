@@ -1,8 +1,8 @@
 # 🐳 System Gurukul — Docker Projects
 
-Saare tracks ke hands-on projects (45). Har project **zero-dependency Node.js**
-hai (sirf `http` aur `fetch`) — chhoti asli services jo failure ko khud dikhati hain. Har README mein **asli run ke
-numbers** hain.
+Saare tracks ke hands-on projects (46). Pehle 45 projects **zero-dependency Node.js** services aur tools hain.
+Lab 46 mein **Java 21+** ke asli platform threads hain; Node sirf launcher hai. Koi Maven/Gradle dependency nahi.
+Har README measured output aur model ki boundary bataata hai.
 
 | Project | Kya dikhata hai | Level |
 |---|---|---|
@@ -51,6 +51,7 @@ numbers** hain.
 | [43-health-checks](43-health-checks/README.md) | Health checks: "sab theek?" poochhne wala hi sab na gira de | Health Checks 1–5 (Playlist · 1 Resilience) |
 | [44-event-driven](44-event-driven/README.md) | Ek order, alag consumers: accepted vs completed, ack, RAM loss aur save/publish gap | EDA 1–4 (Playlist · 2 EDA Core) |
 | [45-software-physics](45-software-physics/README.md) | Remote wait, batch/parallel, units, FIFO averages, warm file reads aur cost ka labelled hisaab | Physics 1–4 (First Principles) |
+| [46-concurrency](46-concurrency/README.md) | 20 concepts, five build–break–fix labs: race, bounded FIFO, semaphore pool, deadlock, bounded executor + concurrent dedup | Concurrency 1–6 |
 
 ```bash
 cd docker-labs/09-raft

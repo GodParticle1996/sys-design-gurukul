@@ -1,0 +1,6 @@
+LOGICAL CONNECTIONS; asli Semaphore, DB/socket nahi
+broken missing close: permits=1/2
+broken raw double release: permits=3/2
+borrowed=1,2 permits=0
+third borrow with 20 ms deadline=timed out
+after failure + double close: permits=2 free=2

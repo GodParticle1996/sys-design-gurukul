@@ -76,7 +76,7 @@
     const where = el('div', 'dk-where');
     where.innerHTML = `📁 <code>sys-design-gurukul/docker-labs/${escapeHtml(stage.project)}</code>` +
       (stage.exercise ? ` · exercise <code>${escapeHtml(stage.exercise)}</code>` : '') +
-      `<div class="dk-note">Docker nahi hai? Har project <code>npm install &amp;&amp; npm start ${escapeHtml(stage.exercise || '')}</code> se bhi chalta hai (Node.js 18+). Poori details project ke <code>README.md</code> mein.</div>`;
+      `<div class="dk-note">${stage.runtimeNote || `Docker nahi hai? Har project <code>npm install &amp;&amp; npm start ${escapeHtml(stage.exercise || '')}</code> se bhi chalta hai (Node.js 18+). Poori details project ke <code>README.md</code> mein.`}</div>`;
     arena.appendChild(where);
     if (stage.why) arena.appendChild(el('div', 'lab-scenario', stage.why));
 

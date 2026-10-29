@@ -1,0 +1,6 @@
+ASLI JAVA THREADS; opposite lock order, interruptible cleanup
+deadlock detected=true; demo threads stopped
+same lock order: completed=2/2
+MODEL livelock: 4 rounds dono raasta badalte rahe; completed=0
+MODEL starvation: 4 premium jobs chune; normal job waiting=4 rounds
+Finite model trace infinite starvation prove nahi karti; selection rule ko dekho.

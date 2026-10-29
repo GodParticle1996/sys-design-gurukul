@@ -163,6 +163,7 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: rt-lib, rt-kab | Claude | Codex: 9 findings (5 P1, 2 P2, 2 P3) | all 9 fixed; Codex checked p-retry 8.0.1's tagged source |
 | Phase 3 rewrite: bp-kyun … bp-kab | Claude | Codex: 20 findings (9 P1, 10 P2, 1 P3) | all 20 fixed (2 differently, see below), plus step text, cards, lab tool label and README |
 | Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex | review pending; not committed |
+| New Concurrency track (6 levels, Java lab 46) — the user asked Codex directly | Codex, ~37 min | Claude: shared-file diff, Java code, 24 + 42 checks rerun, browser pass at 390/1280 (0 broken) | merged as-is; language rewrite + real hints next (all 51 hints were one boilerplate line) |
 
 What Codex's review caught (all confirmed before fixing):
 

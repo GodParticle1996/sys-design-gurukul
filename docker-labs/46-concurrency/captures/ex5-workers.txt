@@ -1,0 +1,7 @@
+ASLI JAVA EXECUTOR; first 2 jobs latch par roke, phir 3 aur bheje
+unbounded: active=2 queued=3 rejected=0 completed=5
+bounded: active=2 queued=2 rejected=1 completed=4
+check-then-act: same key, effects=2
+atomic per-key claim: requests=4 effects=1 replies=order-1 x4
+same key different body rejected=true
+BOUNDARY: one JVM, memory only; crash/multi-pod/external charge guarantee nahi.

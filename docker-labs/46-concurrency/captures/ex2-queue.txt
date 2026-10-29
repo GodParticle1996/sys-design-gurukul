@@ -1,0 +1,5 @@
+ASLI JAVA THREADS; capacity=2, ek producer C ke liye rukta hai
+broken unbounded intake: waiting=5 consumer abhi shuru nahi hua
+full: size=2 producer=WAITING offer(X)=false
+after take(A): producer resumed; remaining=B,C
+received=A,B,C empty poll=null

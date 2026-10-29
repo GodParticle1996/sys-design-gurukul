@@ -1,0 +1,6 @@
+{
+  "name": "system-gurukul-concurrency",
+  "private": true,
+  "scripts": { "start": "node start.js", "test": "node start.js test" },
+  "engines": { "node": ">=18" }
+}

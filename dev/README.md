@@ -11,6 +11,7 @@ node tools/tradeoff-test.js
 node dev/state-test.js
 node dev/progress-test.js
 node dev/xp-test.js
+node dev/concurrency-test.js  # JDK 21+: actual Java vs captured output, README and UI setup/code
 QA_CONTRAST=1 QA_OUT=/tmp/sys-design-gurukul-final-ui node dev/audit-ui.js
 node dev/replay-browser.js
 ```
@@ -50,3 +51,5 @@ This machine has no colour-emoji font, so emoji appear as empty boxes in the scr
 
 `eda-plan.md` records completed EDA coverage, remaining topics, source IDs, and lab capture locations.
 `first-principles-plan.md` records the separate 15-video course in numbered order, source corrections and lab 45 evidence.
+`concurrency-plan.md` maps all 20 concurrency concepts to six levels and the five Java build–break–fix labs.
+`../CLAUDE-REVIEW-CONCURRENCY.md` records the separate user request, validation and pending cross-review.
