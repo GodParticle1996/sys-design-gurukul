@@ -33,7 +33,7 @@ SD.renderers.bins = function renderBins(stage, arena, onDone) {
       const chip = pool.querySelector(`[data-id="${id}"]`);
       if (chip) attempt(chip, b.id, z);
     });
-    SD.makeInteractive(z, () => { if (selected) attempt(selected, b.id, z); }, `Category: ${b.label.replace(/<[^>]*>/g, '')}`);
+    SD.makeInteractive(z, () => { if (selected) attempt(selected, b.id, z); }, `Category: ${SD.plainText(b.label)}`);
     zones[b.id] = z;
     binsRow.appendChild(z);
   });
@@ -49,7 +49,7 @@ SD.renderers.bins = function renderBins(stage, arena, onDone) {
       e.dataTransfer.setData('text/plain', chip.dataset.id);
       selectChip(chip);
     });
-    SD.makeInteractive(chip, () => selectChip(selected === chip ? null : chip), item.text.replace(/<[^>]*>/g, ''));
+    SD.makeInteractive(chip, () => selectChip(selected === chip ? null : chip), SD.plainText(item.text));
     pool.appendChild(chip);
   });
 
@@ -206,7 +206,7 @@ SD.renderers.order = function renderOrder(stage, arena, onDone) {
     chip.dataset.id = String(step.idx);
     chip._step = step;
     chip.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', chip.dataset.id));
-    SD.makeInteractive(chip, () => attempt(chip), step.text.replace(/<[^>]*>/g, ''));
+    SD.makeInteractive(chip, () => attempt(chip), SD.plainText(step.text));
     pool.appendChild(chip);
   });
 
@@ -264,7 +264,7 @@ SD.renderers.match = function renderMatch(stage, arena, onDone) {
   stage.pairs.forEach((p, i) => {
     const card = el('div', 'mcard left', p.left);
     card.dataset.idx = String(i);
-    SD.makeInteractive(card, () => pick(card, 'L'), p.left.replace(/<[^>]*>/g, ''));
+    SD.makeInteractive(card, () => pick(card, 'L'), SD.plainText(p.left));
     card.addEventListener('dragover', e => e.preventDefault());
     card.addEventListener('drop', e => {
       e.preventDefault();
@@ -280,7 +280,7 @@ SD.renderers.match = function renderMatch(stage, arena, onDone) {
     card.dataset.idx = String(p.idx);
     card.draggable = true;
     card.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', card.dataset.idx));
-    SD.makeInteractive(card, () => pick(card, 'R'), p.right.replace(/<[^>]*>/g, ''));
+    SD.makeInteractive(card, () => pick(card, 'R'), SD.plainText(p.right));
     rightCol.appendChild(card);
   });
 

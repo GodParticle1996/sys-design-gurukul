@@ -1506,9 +1506,9 @@ SD.registerLevelsAfter('flow', 'lifecycle', [
      <p>Nayi HTTPS connection par ek byte data jaane se <b>pehle</b> yeh sab hota hai:</p>
      <pre>DNS lookup       30 ms   "api.example.com ka IP kya hai?"
 TCP handshake    40 ms   SYN → SYN-ACK → ACK        (1 RTT)
-TLS handshake    80 ms   keys ka exchange           (TLS 1.3 par 1 RTT, 1.2 par 2)
+TLS handshake    40 ms   keys ka exchange           (TLS 1.3: 1 RTT · purana TLS 1.2: 2 RTT = 80 ms)
 ─────────────────────
-                150 ms   ...ab request bhej sakte ho</pre>
+                110 ms   ...ab request bhej sakte ho  (TLS 1.2 par 150 ms)</pre>
      <p>Isiliye <b>connection reuse</b> (keep-alive / connection pooling) itna matter
      karta hai. Jo purane clients har request par nayi connection kholte the, unki
      latency dugni thi — aur code mein kuch "galat" nahi dikhta tha.</p>
@@ -1664,7 +1664,7 @@ HTTP/3    QUIC (UDP) — har stream apne aap mein
     Phir <code>curl -w "@curl-format.txt"</code> se ek asli call ka DNS/TCP/TLS breakdown nikaalo.
     Aur apne load balancer ka pata karo — L4 hai ya L7?`,
   cards: [
-    { front: 'Nayi HTTPS connection ka tax?', back: 'DNS (~30ms) + TCP (1 RTT) + TLS (1–2 RTT) ≈ <b>150ms</b> at 40ms RTT — data bhejne se <b>pehle</b>. Isliye keep-alive / connection pooling sabse sasta optimization hai.' },
+    { front: 'Nayi HTTPS connection ka tax?', back: 'DNS (~30 ms) + TCP (1 RTT) + TLS 1.3 (1 RTT) ≈ <b>110 ms</b> at 40 ms RTT — data bhejne se <b>pehle</b>. Purane TLS 1.2 par ek RTT aur: 150 ms. Isliye keep-alive / connection pooling sabse sasta optimization hai.' },
     { front: 'UDP kab?', back: 'Jab <b>purana data bekaar</b> ho — live video, gaming, VoIP. Wahan "ruk ke dobara bhejo" ulta nuksaan hai. Baaki sab jagah TCP default.' },
     { front: 'HTTP/1.1 vs 2 vs 3?', back: '<b>1.1</b> — ek connection = ek request (browser 6 kholta hai). <b>2</b> — multiplexed, par TCP par HOL blocking baaki. <b>3</b> — QUIC/UDP, har stream alag; aur connection ID se network badalne par bhi zinda.' },
     { front: 'HTTP/2 ke baad domain sharding?', back: '<b>Nuksaan.</b> Har domain = extra DNS+TCP+TLS. Woh HTTP/1.1 ki 6-connection limit ke liye thi. Har optimization apne zamaane ki bottleneck ke liye hoti hai.' },

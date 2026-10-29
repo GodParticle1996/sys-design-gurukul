@@ -2,7 +2,7 @@
    System Gurukul — Core: state, XP, streak, spaced repetition, registry
    Loaded FIRST. Everything lives under the global `SD` namespace so
    content files (data-*.js) can self-register levels & cards.
-   (Ported from kubegurukul/core.js — SQL & MySQL edition)
+   (kubegurukul/core.js se shuru hua — System Gurukul edition)
    ===================================================================== */
 
 /* kuch purane browsers/webviews mein scrollIntoView nahi hota — app na toote */
@@ -78,6 +78,7 @@ SD.defaultState = function () {
     checkpoint: null,     // challenge boundary; partial answers/sim state are not saved
     theme: 'system',
     popBonus: { day: null, keys: [] },
+    labsDone: [],         // 'project/exercise' — laptop par chalaaye gaye docker labs (self-reported ✔)
   };
 };
 
@@ -106,6 +107,7 @@ SD.normalizeState = function (s) {
   }
   if (count(s.levelStarts)) out.levelStarts = s.levelStarts;
   if (['light', 'dark', 'system'].includes(s.theme)) out.theme = s.theme;
+  if (Array.isArray(s.labsDone)) out.labsDone = [...new Set(s.labsDone.filter(x => typeof x === 'string' && x.length <= 200))];
   if (s.popBonus && typeof s.popBonus.day === 'string' && Array.isArray(s.popBonus.keys))
     out.popBonus = { day: s.popBonus.day, keys: [...new Set(s.popBonus.keys.filter(x => typeof x === 'string'))] };
   const cp = s.checkpoint;
@@ -181,6 +183,11 @@ SD.shake = function (node) {
 };
 SD.escapeHtml = function (s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+};
+/* HTML → saada text (aria-label ke liye): tags hatao aur aam entities wapas badlo, warna screen reader "&lt;id&gt;" padhta hai. */
+SD.plainText = function (html) {
+  const ENT = { lt: '<', gt: '>', amp: '&', quot: '"', '#39': "'", nbsp: ' ' };
+  return String(html).replace(/<[^>]*>/g, '').replace(/&(lt|gt|amp|quot|#39|nbsp);/g, (m, k) => ENT[k]).replace(/\s+/g, ' ').trim();
 };
 
 /* ---------------- XP & ranks ---------------- */
@@ -311,6 +318,19 @@ SD.harvestQuestions = function () {
   }));
   return qs;
 };
+
+/* ---------------- docker labs ----------------
+   Docker stage sawaal se poora hota hai; lab khud chalana alag se yaad rakha jaata hai.
+   Ek hi lab exercise kai levels mein aa sakti hai — ek baar chalaayi toh sab jagah ho gayi. */
+SD.labKey = stage => `${stage.project}/${stage.exercise || ''}`;
+SD.labDone = stage => SD.state.labsDone.includes(SD.labKey(stage));
+SD.markLabDone = function (stage) {
+  if (SD.labDone(stage)) return;
+  SD.state.labsDone.push(SD.labKey(stage));
+  SD.saveState();
+};
+SD.pendingLabs = level => (level.stages || []).map((stage, index) => ({ stage, index }))
+  .filter(({ stage }) => stage.type === 'docker' && !SD.labDone(stage));
 
 /* ---------------- track helpers ---------------- */
 SD.trackOf = function (level) {

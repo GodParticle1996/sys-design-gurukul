@@ -312,7 +312,7 @@
 
       if (!solved && touched && v.ok) {
         solved = true;
-        if (!touched) firstTry = 0; else firstTry = 1;
+        firstTry = 1;
         win();
       }
     }
@@ -384,13 +384,15 @@
     const slot = el('div', 'es-slot');
     arena.appendChild(slot);
 
-    /* "5k" "2.5M" "1.2 crore" "1e6" "3,500" — sab parse ho jaate hain */
+    /* "5k" "2.5M" "1.2 crore" "3 arab" "40 hazaar" "1e6" "3,500" — sab parse ho jaate hain */
+    const NUM_WORDS = [[/\b(?:crores?|cr)\b/g, 1e7], [/\b(?:lakhs?|lacs?)\b/g, 1e5], [/\b(?:arab|billions?|bn)\b/g, 1e9],
+      [/\b(?:millions?|mn)\b/g, 1e6], [/\b(?:hazaar|hazar|thousands?)\b/g, 1e3], [/\btrillions?\b/g, 1e12]];
     function parseNum(raw) {
       let s = String(raw).trim().toLowerCase().replace(/,/g, '').replace(/\s+/g, ' ');
       if (!s) return NaN;
       let mult = 1;
-      if (/\bcrore\b|\bcr\b/.test(s)) { mult = 1e7; s = s.replace(/\bcrore\b|\bcr\b/g, ''); }
-      else if (/\blakh\b|\blac\b/.test(s)) { mult = 1e5; s = s.replace(/\blakh\b|\blac\b/g, ''); }
+      const word = NUM_WORDS.find(([re]) => { re.lastIndex = 0; return re.test(s); });
+      if (word) { mult = word[1]; word[0].lastIndex = 0; s = s.replace(word[0], ''); }
       else if (/[kK]$/.test(s.trim())) { mult = 1e3; s = s.trim().slice(0, -1); }
       else if (/[mM]$/.test(s.trim())) { mult = 1e6; s = s.trim().slice(0, -1); }
       else if (/[bB]$/.test(s.trim())) { mult = 1e9; s = s.trim().slice(0, -1); }
@@ -424,8 +426,8 @@
       const row = el('div', 'es-inrow');
       const input = el('input', 'es-input');
       input.type = 'text';
-      input.setAttribute('aria-label', `${p.q.replace(/<[^>]*>/g, '')} — ${p.unit || 'number'}`);
-      input.placeholder = 'apna andaaza — 5k, 2.5M, 1.2 crore, 30000 …';
+      input.setAttribute('aria-label', `${SD.plainText(p.q)} — ${p.unit || 'number'}`);
+      input.placeholder = 'apna andaaza — 5k, 2.5M, 1.2 crore, 3 arab, 30000 …';
       const unit = el('span', 'es-unit', p.unit || '');
       const go = el('button', 'btn es-go', 'Andaaza jama karo');
       row.appendChild(input); row.appendChild(unit); row.appendChild(go);
@@ -439,7 +441,7 @@
         if (card._done) return;
         const guess = parseNum(input.value);
         if (!Number.isFinite(guess) || guess <= 0) {
-          fb.innerHTML = '<div class="es-bad">Ek number likho — "5k", "2.5M", "1.2 crore" ya "30000" sab chalte hain.</div>';
+          fb.innerHTML = '<div class="es-bad">Ek number likho — "5k", "2.5M", "1.2 crore", "3 arab" ya "30000" sab chalte hain.</div>';
           shake(card);
           return;
         }

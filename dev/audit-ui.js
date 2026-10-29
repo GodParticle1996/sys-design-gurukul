@@ -85,6 +85,11 @@ function contrastInPage() {
       for (const { track, id, stages } of entries) {
         await page.evaluate(({ track, id }) => SD.ui.showIntro(SD.levelSets[track].find(l => l.id === id)), { track, id });
         await sample(`${id}/intro`);
+        /* The topic guide is an end-of-level recap now; render that same box here to measure it. */
+        await page.evaluate(({ track, id }) => {
+          const guideBox = SD.ui.topicGuide(SD.levelSets[track].find(l => l.id === id));
+          if (guideBox) document.querySelector('#app .panel').appendChild(guideBox);
+        }, { track, id });
         const guide = page.locator('.guide-details');
         if (await guide.count()) {
           await guide.evaluate(e => { e.open = true; });

@@ -1137,14 +1137,14 @@ TCP   → yeh already karta hai (receive window)</pre>
         "Aapka result load ho raha hai" dekh ke woh ruk jaate hain.`,
       solution: [
         "load --rps 50000 --duration 5 --pattern detail",
-        "sim add admission --max-concurrent 200 --queue 8",
+        "sim add admission --max-rps 200 --queue 8",
         "load --rps 50000 --duration 5 --pattern detail",
       ],
-      verify: s => { const m = SD.mission; return s.sys.api.admission?.maxConcurrent === 200 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated && r.queuedRps > 0); },
+      verify: s => { const m = SD.mission; return s.sys.api.admission?.maxRps === 200 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated && r.queuedRps > 0); },
       hints: [
         "Pehle observation: Capacity se zyada load daalo — sab mar jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
         "Checklist ko kram se dekho. Aakhri proof: Wahi load dobara — ab kuch to bach jaayenge. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 50000 --duration 5 --pattern detail\nsim add admission --max-concurrent 200 --queue 8\nload --rps 50000 --duration 5 --pattern detail",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 50000 --duration 5 --pattern detail\nsim add admission --max-rps 200 --queue 8\nload --rps 50000 --duration 5 --pattern detail",
       ],
     },
     {
@@ -1298,14 +1298,14 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
         "load --rps 120000 --duration 4 --pattern detail",
         "sim precompute results",
         "sim scale pool 400",
-        "sim add admission --max-concurrent 150000 --queue 8",
+        "sim add admission --max-rps 150000 --queue 8",
         "load --rps 120000 --duration 4 --pattern detail",
       ],
-      verify: s => { const m = SD.mission; return s.sys.api.precomputed === true && s.sys.pool.size === 400 && s.sys.api.admission?.maxConcurrent === 150000 && m.current(s, 'load', r => r.rps === 120000 && !r.saturated); },
+      verify: s => { const m = SD.mission; return s.sys.api.precomputed === true && s.sys.pool.size === 400 && s.sys.api.admission?.maxRps === 150000 && m.current(s, 'load', r => r.rps === 120000 && !r.saturated); },
       hints: [
         "Pehle observation: As-is 1.2 lakh rps daalo — system gir jaayega. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
         "Checklist ko kram se dekho. Aakhri proof: Ab dobara load test karo — survive karna chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 120000 --duration 4 --pattern detail\nsim precompute results\nsim scale pool 400\nsim add admission --max-concurrent 150000 --queue 8\nload --rps 120000 --duration 4 --pattern detail",
+        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 120000 --duration 4 --pattern detail\nsim precompute results\nsim scale pool 400\nsim add admission --max-rps 150000 --queue 8\nload --rps 120000 --duration 4 --pattern detail",
       ],
     },
     {

@@ -467,6 +467,12 @@ Ek-off cheezon ke liye poora command banane ki zaroorat nahi — stage mein
 }
 ```
 
+**Poora kab hota hai:** `observe` ka sahi jawab stage ko poora karta hai. Laptop ke bina learner "seedha sawaal karo"
+dabata hai — tab har step ka `expect` (captured output) khul jaata hai, isliye `expect` mein woh output hona chahiye
+jisse sawaal ka jawab nikle. Har step ✔ karne par `SD.markLabDone(stage)` lab ko `state.labsDone` mein likhta hai
+(key `project/exercise` — ek hi exercise kai levels mein ho toh ek baar kaafi). Baaki labs level map par 🐳 nishaan
+aur level intro par "lab seedha kholo" button ban jaate hain. `exercise-solutions.json` mein step ke ✔ `optional: true` hain.
+
 Project ka dhaancha (validator in files ko check karta hai): `package.json`, `Dockerfile`, `docker-compose.yml`
 (har exercise ek **profile**), `start.js` (bina docker: `npm start <exercise>`), `README.md` (exercise ka naam + asli
 numbers), `services/*.js`, `tools/*.js`, `lib/util.js` (`serve`, `json`, `get` jo non-2xx par throw karta hai, `getRaw`,

@@ -39,4 +39,11 @@ const future = boot(JSON.stringify({ schemaVersion: 20, xp: 120, completed: ['po
   checkpoint: { levelId: 'pool', stageIdx: 2, firstTry: 3, total: 4, stages: ['quiz:Review'] } })).SD;
 check(future.state.xp === 120 && future.state.streak.best === 2 && future.state.theme === 'light', 'new schema fields preserve compatible progress');
 check(future.state.checkpoint.stageIdx === 2 && future.state.checkpoint.firstTry === 3, 'valid checkpoint preserved');
+const labBoot = boot(JSON.stringify({ xp: 5, labsDone: ['01-reddit/ex1', '01-reddit/ex1', 7, null, 'x'.repeat(300)] }));
+const labs = labBoot.SD;
+check(labs.state.labsDone.length === 1 && labs.state.labsDone[0] === '01-reddit/ex1', 'labsDone keeps unique short strings only');
+check(Array.isArray(old.SD.state.labsDone) && old.SD.state.labsDone.length === 0, 'old saves get an empty labsDone list');
+labs.markLabDone({ project: '15-backpressure', exercise: 'ex1' });
+const reloaded = boot(labBoot.values[labs.STORE_KEY]).SD;
+check(labs.labDone({ project: '15-backpressure', exercise: 'ex1' }) && reloaded.state.labsDone.includes('15-backpressure/ex1'), 'a ticked lab survives save and reload');
 console.log(`${checks} persistence and migration checks pass`);

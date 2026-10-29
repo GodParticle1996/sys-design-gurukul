@@ -163,11 +163,19 @@ function cheats(env, record) {
       perform(test, { action: 'review' }); assert(!test.arena.querySelector('.dsn-next'), 'Good choices must not cancel a requirement-breaking design choice');
     }
   } else if (record.type === 'docker') {
-    const test = render(env, record); need(test.arena, '.dk-skip').click();
-    perform(test, record.solution.find(a => a.action === 'choose'));
-    const next = need(test.arena, '.dk-done'); assert(next.disabled, 'MCQ preview must not complete external lab'); next.onclick(); assert.equal(test.count(), 0);
-    record.solution.filter(a => a.action === 'confirmStep').forEach(a => perform(test, a));
-    test.arena.querySelectorAll('.dk-tick')[0].click(); assert(next.disabled); next.onclick(); assert.equal(test.count(), 0, 'Unconfirmed step blocks completion');
+    /* Without a laptop the observation question finishes the stage, and the lab stays pending. */
+    const stage = stageFor(env, record);
+    env.SD.state.labsDone = [];
+    const skipped = render(env, record); need(skipped.arena, '.dk-skip').click();
+    perform(skipped, record.solution.find(a => a.action === 'choose'));
+    const next = need(skipped.arena, '.dk-done'); assert(!next.disabled, 'Answering the question must finish the stage without the lab');
+    next.onclick(); assert.equal(skipped.count(), 1);
+    assert(!env.SD.labDone(stage), 'A skipped lab must not be recorded as done');
+    /* Ticks alone never finish the stage, but they do record the lab. */
+    const ticksOnly = render(env, record);
+    record.solution.filter(a => a.action === 'confirmStep').forEach(a => perform(ticksOnly, a));
+    assert(!ticksOnly.arena.querySelector('.dk-done'), 'Ticks without the answer must not offer completion'); assert.equal(ticksOnly.count(), 0);
+    assert(env.SD.labDone(stage), 'Ticking every step must record the lab as done');
   } else if (record.type === 'bins') {
     const test = render(env, record), first = record.solution[0]; perform(test, first);
     const placed = need(test.arena, '.placed');
@@ -186,7 +194,10 @@ function cheats(env, record) {
 
 function omittedSteps(env, record) {
   const original = JSON.stringify(stageFor(env, record));
+  let attempts = 0;
   for (let skip = 0; skip < record.solution.length; skip++) {
+    if (record.solution[skip].optional) continue;
+    attempts++;
     const walk = render(env, record);
     try {
       record.solution.forEach((action, i) => { if (i !== skip) perform(walk, action); });
@@ -201,7 +212,7 @@ function omittedSteps(env, record) {
     assert.equal(walk.count(), 0, `Omitting action ${skip + 1}/${record.solution.length} must not complete exercise`);
     assert.equal(JSON.stringify(stageFor(env, record)), original, 'Omitted action mutated shared lesson data');
   }
-  return record.solution.length;
+  return attempts;
 }
 
 function main() {

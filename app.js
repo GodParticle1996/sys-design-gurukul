@@ -80,10 +80,10 @@ function topicGuide(level) {
   const guide = registry && registry.topics[registry.byLevel[level.id]];
   if (!guide) return null;
   const box = el('section', 'topic-guide');
-  box.appendChild(el('h3', null, `Decision guide: ${guide.title}`));
+  box.appendChild(el('h3', null, `📒 Yaad rakhne layak: ${guide.title}`));
   box.appendChild(el('p', null, `<b>Kyun matter karta hai:</b> ${guide.why}`));
   const details = el('details', 'guide-details');
-  details.appendChild(el('summary', null, 'Example, use/avoid, decision tree aur production check kholo'));
+  details.appendChild(el('summary', null, 'Poori cheat sheet kholo — example, kab use / kab nahi, decision tree, production'));
   const sections = [
     ['Concept', guide.concept], ['Tiny example', guide.example], ['Ab kya karo', guide.handsOn],
     ['Kab use karein', guide.use], ['Kab nahi', guide.avoid],
@@ -114,7 +114,7 @@ function showHome() {
 
   const hero = el('section', 'hero', `
     <h1>System design seekho, <span class="glow">chalaake</span></h1>
-    <p>Browser ke system simulator mein requests, load aur failures try karo; represented 24-million-row dataset ka cost model dekho. Phir alag local labs mein measurements compare karo. Hinglish mein, level by level.</p>`);
+    <p>Request bhejo, load daalo, failure lagao — aur simulator mein dekho system kahan atakta hai. 2.4 crore rows wale (simulated) database se page 485728 khud maango, p99 ko jalte dekho, phir theek karo. Saath mein laptop par chalne wale labs. Hinglish mein, level by level.</p>`);
   appEl.appendChild(hero);
 
   // dojo + streak strip
@@ -158,7 +158,7 @@ function showHome() {
   const resume = validCheckpoint();
   if (resume && !SD.state.completed.includes(resume.level.id)) {
     const card = el('section', 'resume-card');
-    card.appendChild(el('p', null, `<b>${resume.level.title}</b> — challenge ${Math.min(resume.cp.stageIdx + 1, allStages(resume.level).length)}/${allStages(resume.level).length}. Challenge boundary save hui hai; beech ke answers aur simulator changes dobara karne honge.`));
+    card.appendChild(el('p', null, `<b>${resume.level.title}</b> — challenge ${Math.min(resume.cp.stageIdx + 1, allStages(resume.level).length)}/${allStages(resume.level).length}. Pichhle poore challenge tak ka kaam save hai; jo challenge beech mein chhoda tha, woh shuru se hoga.`));
     const go = el('button', 'btn', 'Jahan chhoda tha, wahan se →');
     go.onclick = () => {
       SD.session = { level: resume.level, stageIdx: resume.cp.stageIdx, firstTry: resume.cp.firstTry, total: resume.cp.total, pendingXP: resume.cp.pendingXP || 0, replay: false };
@@ -226,13 +226,15 @@ function showTrack(track) {
     /* track.freeOrder: us track ke saare levels kisi bhi kram mein khule (sample / reference tracks) */
     const unlocked = track.freeOrder || i === 0 || SD.state.completed.includes(levels[i - 1].id);
     const stars = SD.state.stars[lvl.id] || 0;
+    const labsLeft = done ? SD.pendingLabs(lvl).length : 0;
     const card = el('div', 'levelcard' + (done ? ' done' : '') + (unlocked ? '' : ' locked'));
     card.innerHTML = `
       <div class="lv-num">${unlocked ? `LEVEL ${i + 1}` : '🔒 LOCKED'}</div>
       <div class="lv-icon">${lvl.icon}</div>
       <div class="lv-title">${lvl.title}</div>
       <div class="lv-stars">${done ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : unlocked ? '▶ Khelo' : 'Pichla level pehle'}</div>
-      ${done ? `<div class="lv-badge">🏅 ${lvl.badge}</div>` : ''}`;
+      ${done ? `<div class="lv-badge">🏅 ${lvl.badge}</div>` : ''}
+      ${labsLeft ? `<div class="lv-lab">🐳 ${labsLeft} lab baaki</div>` : ''}`;
     if (unlocked) SD.makeInteractive(card, () => showIntro(lvl));
     else if (card.setAttribute) card.setAttribute('aria-disabled', 'true');
     map.appendChild(card);
@@ -261,7 +263,7 @@ function showIntro(level) {
   wrap.appendChild(el('div', 'crumb', `${track.icon} ${track.name} — Level ${idx + 1} of ${levels.length}`));
   wrap.appendChild(el('h2', 'level-h', `${level.icon} ${level.title}`));
   if (['stories', 'ai', 'planet'].includes(track.id)) wrap.appendChild(el('p', 'case-study-note',
-    'Case-study patterns aur historical sources. Lab ke numbers teaching models/local measurements hain; current provider SLO ya product policy ki guarantee nahi.'));
+    '📜 Public kahaani par bana level — numbers us waqt ke ya hamare lab ke hain, aaj ki guarantee nahi.'));
 
   if (level.objectives && level.objectives.length) {
     wrap.appendChild(el('div', 'obj-box', `
@@ -273,18 +275,28 @@ function showIntro(level) {
   if (hero) wrap.appendChild(hero);
 
   level.lesson.forEach(html => wrap.appendChild(el('div', 'lesson-card', html)));
-  const guide = topicGuide(level);
-  if (guide) wrap.appendChild(guide);
 
   const totalStages = allStages(level).length;
   const bonusCount = level.stages.filter(s => s.bonus).length;
   if (bonusCount) wrap.appendChild(el('p', 'bonus-note',
     `🎁 Is level mein ${bonusCount} bonus "Good to Know" round hai — extra XP!`));
-  wrap.appendChild(el('p', 'bonus-note', '🎤 Aakhri mein Interview Round hoga — asli interview jaise sawal!'));
+  if (level.interview) wrap.appendChild(el('p', 'bonus-note', '🎤 Aakhri mein Interview Round hoga — asli interview jaise sawal!'));
 
   const replay = SD.state.completed.includes(level.id);
-  if (!replay) wrap.appendChild(el('p', 'bonus-note', 'XP level poora hone par milega. Challenge boundary par pending XP save hota hai; naya run shuru karne par adhura run replace hoga.'));
+  if (!replay) wrap.appendChild(el('p', 'bonus-note', '⭐ XP level poora hone par milega.'));
   if (replay) wrap.appendChild(el('p', 'replay-note', '🔁 Replay — pehle complete kar chuke ho, XP nahi milega (par stars sudhar sakte hain!)'));
+  /* Level ho gaya par lab baaki? Lab wala challenge seedha kholo — poora level dobara khelne ki zaroorat nahi */
+  const labsLeft = replay ? SD.pendingLabs(level) : [];
+  if (labsLeft.length) {
+    const box = el('div', 'lab-pending');
+    box.appendChild(el('p', null, `🐳 Is level ke ${labsLeft.length} lab abhi baaki hain. Lab wala challenge seedha kholo, laptop par steps chalao aur ✔ dabao:`));
+    labsLeft.forEach(({ stage, index }) => {
+      const open = el('button', 'btn small ghost', `🐳 ${stage.title}`);
+      open.onclick = () => { SD.session = { level, stageIdx: index, firstTry: 0, total: 0, pendingXP: 0, replay: true }; runStage(); };
+      box.appendChild(open);
+    });
+    wrap.appendChild(box);
+  }
 
   const row = el('div', 'btnrow');
   const back = el('button', 'btn ghost', '← Level map');
@@ -576,6 +588,10 @@ function levelComplete() {
     wrap.appendChild(el('ul', 'success-list', level.success.map(s => `<li>${s}</li>`).join('')));
   }
 
+  /* Topic ka cheat sheet level ke AAKHIR mein — pehle khud karke dekho, phir saar padho */
+  const guide = topicGuide(level);
+  if (guide) wrap.appendChild(guide);
+
   if (firstClear && (level.cards || []).length) {
     wrap.appendChild(el('p', 'bonus-note',
       `🧘 ${level.cards.length} flashcards Revision Dojo mein add hue — kal se revise karna, bhoolna mat!`));
@@ -709,7 +725,7 @@ function showCertificate(track) {
       <div class="cert-crown">${track.icon}</div>
       <h1>${track.certTitle}</h1>
       <p class="cert-sub">${track.certSub}</p>
-      <p>ne ${track.name} ke saare ${levels.length} levels jeet liye</p>
+      <p>Tumne ${track.name} ke saare ${levels.length} levels jeet liye</p>
       <div class="cert-stars">${'★'.repeat(Math.min(totalStars, maxStars))} <span>(${totalStars}/${maxStars} stars · ${SD.state.xp} XP total)</span></div>
       <div class="cert-badges">${levels.map(l => `<span title="${l.badge}">${l.icon}</span>`).join('')}</div>
       <p class="cert-formula">${track.formula}</p>

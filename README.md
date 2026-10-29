@@ -189,7 +189,7 @@ Yeh deterministic teaching-model examples hain; production benchmarks nahi:
 6. **Migration** — galat kram par **41,204 rows chup-chaap gayab**; `verify` unhe pakadta hai, `rollback` bachaata hai
 7. **Consistent hashing** — node add karne par ring **17.5%** keys hilata hai vs `hash % N` ka **80%**; aur 150 vnodes se skew **1.89x → 1.01x**
 8. **Unique IDs** — 10 lakh inserts: UUIDv4 **43 s / 340k page splits** vs Snowflake **6 s / 2k**
-9. **Networking** — cold connection ka setup tax **150 ms**, warm par **0**; 60 assets par HTTP/1.1 670 ms → /2 232 ms → /3 152 ms
+9. **Networking** — cold connection ka setup tax **110 ms** (TLS 1.3; purane TLS 1.2 par 150 ms), warm par **0**; 60 assets par HTTP/1.1 630 ms → /2 192 ms → /3 152 ms
 10. **Approximation** — bloom **1.1 MB** vs exact set 22.9 MB; HLL **12 KB** vs 1.5 GB
 
 ---
@@ -266,9 +266,10 @@ ho toh current tab chalta hai aur saving limitation dikhti hai.
 Resume checkpoint poore stage payload ka fingerprint check karta hai; changed questions
 ya predicates ke baad stale checkpoint discard hota hai.
 
-External Docker steps learner ki self-report hain; observation MCQ ka result
-automatically container output verify nahi karta. Laptop preview external lab ko complete
-nahi karta. Simulated costs, timings, quotas aur historical company snapshots current
+🐳 Docker stage observation sawaal se poora hota hai — lab chalao ya na chalao (laptop ke bina har step ka
+captured output khul jaata hai). Har step ✔ karne par lab "ho gaya" maana jaata hai; jo lab baaki hai uska
+🐳 nishaan level map par dikhta hai, aur level intro se woh lab seedha khul jaata hai. Browser steps ya
+output verify nahi karta — yeh learner ki apni report hai. Simulated costs, timings, quotas aur historical company snapshots current
 provider guarantees nahi. Source review aur validation evidence [dev/AUDIT.md](dev/AUDIT.md) mein hai.
 
 ---

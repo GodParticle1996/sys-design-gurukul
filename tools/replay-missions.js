@@ -151,8 +151,18 @@ function run(options = {}) {
     app.missions[0].stage.solution.forEach(c => send(stateProbe, c, 'engine/live-state-gate'));
     check(!stateProbe.sim.done, 'Engine ignores live-state verification');
     const r = app.terminal(app.missions.find(m => m.level.id === 'shedding').stage);
-    ['load --rps 50000 --duration 5 --pattern detail', 'sim add admission --max-concurrent 5000 --queue 8', 'load --rps 50000 --duration 5 --pattern detail'].forEach(c => send(r, c, 'engine/shedding-wrong-cap'));
+    ['load --rps 50000 --duration 5 --pattern detail', 'sim add admission --max-rps 5000 --queue 8', 'load --rps 50000 --duration 5 --pattern detail'].forEach(c => send(r, c, 'engine/shedding-wrong-cap'));
     check(r.sim.last.saturated && !r.sim.done, 'Admission above real capacity incorrectly wins shedding mission');
+    send(r, 'sim reset', 'engine/admission-unit');
+    send(r, 'sim add admission --max-concurrent 200 --queue 8', 'engine/admission-unit');
+    check(!r.sim.sys.api.admission && /RATE/.test(r.sim.lastError || ''), 'A concurrency flag was accepted as a requests-per-second cap');
+    const net = app.terminal(app.missions.find(m => m.level.id === 'networking').stage);
+    send(net, 'net trace --rtt 40', 'engine/tls');
+    check(net.sim.last.tlsVersion === '1.3' && net.sim.last.tls === 40, 'Default TLS handshake is not TLS 1.3 (1 RTT)');
+    send(net, 'net trace --rtt 40 --tls 1.2', 'engine/tls');
+    check(net.sim.last.tls === 80, 'TLS 1.2 handshake is not 2 RTT');
+    send(net, 'net trace --protocol h3 --tls 1.2', 'engine/tls');
+    check(net.sim.last.tls === 80 && /TLS 1\.3/.test(net.sim.lastError || ''), 'QUIC accepted TLS 1.2');
   }
   check(app.issues.length === 0, 'Engine logged internal exceptions: ' + app.issues.join(' | '));
   const result = { missions, checks, commands, omissions, fuzz, failures };

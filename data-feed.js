@@ -1390,7 +1390,7 @@ W  =  har request ka time (seconds)</pre>
         { text: '1 MB ko 1 Gbps link par bhejna', bin: 'tens', explain: 'Lagbhag <b>8 ms</b> (8 megabit ÷ 1 gigabit/sec). Bade payloads ka kharcha latency mein dikhta hai, CPU mein nahi.' },
         { text: 'Mumbai se Virginia ka round trip', bin: 'hundreds', explain: 'Lagbhag <b>130 ms minimum</b> (physics), asli mein 180-220 ms. Cross-continent sequential calls ka matlab hai seconds mein page load.' },
         { text: 'Thanda container start hona', bin: 'hundreds', explain: 'Lagbhag <b>200 ms se 1 second</b>. Yahi wajah hai ki serverless par cold start itna bada mudda hai, aur pre-warming ek asli strategy hai.' },
-        { text: 'Naya cross-continent TCP + TLS handshake', bin: 'hundreds', explain: 'Lagbhag <b>400 ms</b> — TCP ka 1 RTT + TLS ke 2 RTT (TLS 1.2). Isliye connection pooling aur keep-alive itne bade jeet hain: pehli request ke baad handshake hai hi nahi.' },
+        { text: 'Naya cross-continent TCP + TLS handshake', bin: 'hundreds', explain: 'Lagbhag <b>400 ms</b> — TCP ka 1 RTT + TLS 1.3 ka 1 RTT, aur har RTT ~200 ms. Purane TLS 1.2 par ek RTT aur: ~600 ms. Isliye connection pooling aur keep-alive itne bade jeet hain: pehli request ke baad handshake hai hi nahi.' },
       ],
     },
     {

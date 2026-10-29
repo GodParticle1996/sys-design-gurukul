@@ -69,7 +69,9 @@
     let asked = false;
 
     arena.appendChild(goalBox(stage.goal));
-    arena.appendChild(el('div', 'lab-scenario dk-verification', '<b>Local lab · self-reported walkthrough.</b> Browser tumhare laptop ke commands ya output verify nahi karta. Har step khud chalao, expected result se compare karo, phir step confirm karo. Sirf sawaal dekhna practice hai; lab complete nahi hota.'));
+    arena.appendChild(el('div', 'lab-scenario dk-verification', SD.labDone(stage)
+      ? '✅ Yeh lab tum pehle chala chuke ho. Chaho toh dobara chalao, ya seedha neeche ka sawaal karo.'
+      : '🐳 Laptop par har step chalao aur ✔ dabao. Laptop paas nahi? Neeche se seedha sawaal karo — lab baad mein kar lena.'));
 
     const where = el('div', 'dk-where');
     where.innerHTML = `📁 <code>sys-design-gurukul/docker-labs/${escapeHtml(stage.project)}</code>` +
@@ -109,6 +111,7 @@
         tick.textContent = ticked[idx] ? '✅ Ho gaya' : '✔ Ho gaya';
         tick.setAttribute('aria-pressed', String(ticked[idx]));
         li.className = 'dk-step' + (ticked[idx] ? ' done' : '');
+        if (ticked.every(Boolean)) SD.markLabDone(stage);
         maybeAsk();
       };
       li.appendChild(tick);
@@ -118,8 +121,13 @@
 
     const askSlot = el('div', 'dk-ask');
     arena.appendChild(askSlot);
-    const skip = el('button', 'btn ghost small dk-skip', 'Abhi laptop paas nahi — sawaal pehle dekh lo');
-    skip.onclick = () => { skip.remove(); ask(true); };
+    const skip = el('button', 'btn ghost small dk-skip', 'Abhi laptop paas nahi — seedha sawaal karo');
+    skip.onclick = () => {
+      skip.remove();
+      /* lab ka asli captured output khol do — sawaal usi se jawab diya ja sakta hai */
+      list.querySelectorAll('.dk-expect').forEach(d => { d.open = true; });
+      ask(true);
+    };
     arena.appendChild(skip);
 
     let observationRight = false, observationFirst = false, doneButton = null;
@@ -127,15 +135,16 @@
       if (ticked.every(Boolean)) { skip.remove(); ask(false); }
       syncDone();
     }
+    /* Sawaal sahi = stage poora. Lab ke steps sirf yeh batate hain ki lab chala ya baad ke liye bacha. */
     function syncDone() {
       if (!doneButton) return;
-      doneButton.disabled = !observationRight || !ticked.every(Boolean);
-      doneButton.textContent = doneButton.disabled ? 'Lab steps confirm karne baaki hain' : 'Self-reported walkthrough poora →';
+      doneButton.disabled = !observationRight;
+      doneButton.textContent = ticked.every(Boolean) ? 'Aage badho →' : 'Aage badho → (🐳 lab baad mein)';
     }
     function ask(preview) {
       if (asked) return;
       asked = true;
-      if (preview) askSlot.appendChild(el('div', 'dk-preview-note', 'Practice mode: sawaal solve kar sakte ho. Lab completion ke liye baad mein upar har actual step chalaakar confirm karo.'));
+      if (preview) askSlot.appendChild(el('div', 'dk-preview-note', 'Upar har step ka asli output khul gaya hai — usi se jawab do. Level map par 🐳 nishaan lab yaad dilayega.'));
       askSlot.appendChild(askCard(stage.observe, 'dk-opt', '🐳 Docker lab', first => {
         observationRight = true;
         observationFirst = first;
@@ -143,7 +152,7 @@
         const done = el('button', 'btn big dk-done', 'Aage badho →');
         doneButton = done;
         let continued = false;
-        done.onclick = () => { if (continued || done.disabled || !observationRight || !ticked.every(Boolean)) return; continued = true; onDone({ firstTry: observationFirst ? 1 : 0, total: 1, verification: 'self-reported' }); };
+        done.onclick = () => { if (continued || done.disabled || !observationRight) return; continued = true; onDone({ firstTry: observationFirst ? 1 : 0, total: 1, verification: ticked.every(Boolean) ? 'self-reported' : 'skipped' }); };
         askSlot.appendChild(done);
         syncDone();
       }));

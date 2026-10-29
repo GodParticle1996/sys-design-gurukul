@@ -43,7 +43,7 @@ Style measurement, all 244 levels, pre-audit tree `ce2f297` versus now:
 | # | Phase | Status |
 | --- | --- | --- |
 | 1 | Quick fixes: README/docs breakage, stale counts, rendering bugs, validator guards | ✅ done 2026-10-29 |
-| 2 | Engine and code review: simulator, renderers, app shell, test tools; tests for each fix | open |
+| 2 | Engine and code review: simulator, renderers, app shell, test tools; tests for each fix | ✅ done 2026-10-29 |
 | 3 | Content, track by track: language (decision 1), guides (decision 2), teaching order, facts | open |
 | 4 | Browser pass: phone and desktop screenshots, layout fixes | open |
 | 5 | Wrap-up: docs, notes, commits | open |
@@ -90,3 +90,69 @@ Carried forward:
 - **Phase 3:** the `blast` lesson credits "(AWS $200B video)", but the app must stand alone.
 - **Phase 3:** the audit's rewrite script left 1,181 misindented lines, and very long lines doubled
   (1,484 → 3,261). Those are the option and reason lines Phase 3 rewrites, so the formatting gets fixed then.
+
+### Phase 2 — done 2026-10-29
+
+Read in full: `core.js`, `data-core.js`, `app.js`, `games.js`, `canvas.js`, `labs.js`, `explain.js`, `dockerlab.js`.
+In `perfsim.js` I read the cost and load models, the terminal loop and the formula labs (Bloom, HLL, IDs,
+network). The replay suite already fuzzes its command handlers (3,952 malformed inputs).
+
+The models check out: the M/M/c pool wait (Sakasegawa), Little's Law, left-most-prefix index matching, Bloom
+m/k/fp and HLL 1.04/√m.
+
+Fixed:
+
+- **Raw `<b>` tags in the terminal (since the first upload).** `print()` wrote everything with `textContent`, so
+  68 of the 72 explanation lines showed literal `<b>`/`<code>`. Explanation lines now render a whitelist (b, i,
+  code, br); echoed commands and all other output stay plain text. Checked in Chromium.
+- **Admission control mixed concurrency and rate.** The flag and `sim status` said "concurrent", while the model,
+  the confirmation and `load` meant requests per second. That matters because the app teaches Little's Law. It is
+  now `--max-rps` everywhere: 4 missions, help text, status, tests, and the ticket-booking explanation.
+  `--max-concurrent` now fails with a message explaining the rate-versus-concurrency difference.
+- **TLS 1.2 numbers labelled as TLS 1.3.** `net trace` and `net compare` assumed 2 RTT for TLS, while the lesson
+  said "TLS 1.3 par 1 RTT". New `--tls 1.2|1.3` flag, default 1.3. Cold setup is now 110 ms (150 ms with
+  `--tls 1.2`), and `compare` gives 630 / 192 / 152 ms; `--tls 1.2` reproduces the old 670 / 232 / 152. QUIC rejects
+  TLS 1.2. The lesson table, flashcard, Feed bin item and README are updated, plus two overstatements:
+  - "sprite sheets ab nuksaan" is now softened;
+  - L4 load balancers can terminate TLS (AWS NLB).
+- **Sample IDs.**
+  - `id gen uuid4` randomized the version and variant digits; samples are now valid v4.
+  - ULIDs were 25 characters; now 26.
+  - Snowflake samples were past `Number.MAX_SAFE_INTEGER`, so the sequence bits rounded away; they now use BigInt
+    and count up.
+  - The `id bench` text had a sentence spliced by the audit; rewritten.
+- **Docker stages (user decision 2026-10-29).** The observation question finishes the stage. "Laptop paas nahi"
+  opens every step's captured output. Ticking every step records the lab in `state.labsDone` (key
+  `project/exercise`). Completed levels with labs not yet run show "🐳 N lab baaki" on the map, and their intro
+  has buttons that open each lab stage directly. Tests are updated: fixtures mark step ticks `optional`, and the
+  skip path, ticks-only path and storage round trip are tested. Played end to end in Chromium.
+- **Decision guides moved from the intro to the level-complete screen** ("📒 Yaad rakhne layak"). The intro's XP
+  and case-study disclaimers are now one short line each, and the interview note only shows when there is an
+  interview. Their content is rewritten in Phase 3.
+- **Accessibility.** `SD.plainText()` (strip tags, decode entities) now builds every aria-label; screen readers
+  heard `&lt;id&gt;` before.
+- **Text.**
+  - The home hero and resume card are rewritten in plain Hinglish.
+  - The certificate sentence had no subject ("ne … jeet liye").
+  - The Feed blurb named a Slack postmortem that doesn't exist and left out CrowdStrike and Datadog.
+  - The Builds blurb said "saat" systems and listed six; there are eight.
+  - The stale header comment in `core.js` is fixed.
+- **Estimate lab** now understands hazaar, million, arab, billion and plurals (14 parser cases tested).
+- **Cleanups:** dead code in `depCost` and in the tradeoff win branch.
+
+Deferred, at the user's request: **XP fairness and the rank ladder.** The design canvas, the four labs, the dry
+runs and the Docker stages award no per-answer XP, and the top rank arrives at 39% of the app's 44,100 maximum XP.
+A self-contained brief for another agent is in [TASK-xp-and-ranks.md](TASK-xp-and-ranks.md).
+
+Phase 3 findings logged while reading:
+
+- Every mission's hints were replaced with boilerplate ("Aakhri proof: …", "Near-answer walkthrough"). Rewrite them
+  to be specific and progressive.
+- There are audit spacing artifacts in explanations: "40 msRTT", "200 msSLO", "hai.1000*0.5 ms=500 ms". Scan for
+  them and fix.
+- Some options are fully English ("Admission limits load; atomic holds still needed"), and one reason has a garbled
+  word, "Admissionright".
+- The `ids` level should mention UUIDv7 (RFC 9562, time-ordered, Postgres 18 `uuidv7()`). The simulator could add a
+  `uuid7` kind.
+- The canvas review reveals the best options; a retry after a failed review can copy them. First-try scoring
+  already accounts for this. Keep.

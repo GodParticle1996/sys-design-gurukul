@@ -78,7 +78,7 @@ SD.defaultSys = function () {
       idempotency: false,
       auth: null,              // null | 'body' (spoofable) | 'header' (token se)
       cache: null,             // { ttlSec, jitterPct, hitRate }
-      admission: null,         // { maxConcurrent, queueSec }
+      admission: null,         // { maxRps, queueSec } — waiting room: har second kitni requests andar
       precomputed: false,
     },
     deps: {},                  // { name: {p50,p99,errorRate,down,timeoutMs,retry,breaker,fallback} }
@@ -233,7 +233,6 @@ SD.depCost = function (sys, name, opts) {
   const d = sys.deps[name];
   if (!d) return { ms: 0, ok: true, note: null };
   const o = opts || {};
-  const failing = d.down || Math.random() < 0 /* deterministic: errorRate neeche use hota hai */;
   const breaker = d.breaker;
 
   if (breaker && d.breakerState === 'open') {
@@ -279,7 +278,7 @@ SD.loadRun = function (sys, opts) {
 
   for (let s = 1; s <= duration; s++) {
     const offered = rps * amp;
-    const admitted = sys.api.admission ? Math.min(offered, sys.api.admission.maxConcurrent) : offered;
+    const admitted = sys.api.admission ? Math.min(offered, sys.api.admission.maxRps) : offered;
     const served = Math.min(admitted + backlog, capacity);
     backlog = Math.max(0, admitted + backlog - capacity);
     const rho = admitted / capacity;
@@ -313,7 +312,7 @@ SD.loadRun = function (sys, opts) {
      Isliye saturation offered par nahi, ADMITTED par naapa jaata hai — warna
      waiting room lagane ke baad bhi system "saturated" dikhta rehta, jo galat hai. */
   const offered = rps * (sys.retryAmp || 1);
-  const admittedRps = sys.api.admission ? Math.min(offered, sys.api.admission.maxConcurrent) : offered;
+  const admittedRps = sys.api.admission ? Math.min(offered, sys.api.admission.maxRps) : offered;
   return {
     buckets, capacity: Math.round(capacity), effPool, serviceMs, maxWait,
     offeredRps: Math.round(offered), admittedRps: Math.round(admittedRps),
@@ -400,7 +399,7 @@ function parseFlags(str, allowed) {
     if (!/^(true|false)$/i.test(out[k])) throw new Error(`400 — --${k} boolean flag hai; true ya false do`);
     out[k] = /^true$/i.test(out[k]);
   });
-  const numeric = ['rps', 'duration', 'users', 'bytes', 'days', 'peak', 'per-user-per-day', 'n', 'rows', 'size', 'items', 'bits', 'hashes', 'registers', 'precision', 'assets', 'rtt', 'events', 'partitions', 'consumers', 'concurrent', 'ttl', 'misses', 'nodes', 'replicas', 'max', 'max-concurrent', 'queue', 'ms', 'base', 'window', 'half-open', 'burst', 'holds'];
+  const numeric = ['rps', 'duration', 'users', 'bytes', 'days', 'peak', 'per-user-per-day', 'n', 'rows', 'size', 'items', 'bits', 'hashes', 'registers', 'precision', 'assets', 'rtt', 'events', 'partitions', 'consumers', 'concurrent', 'ttl', 'misses', 'nodes', 'replicas', 'max', 'max-concurrent', 'queue', 'ms', 'base', 'window', 'half-open', 'burst', 'holds', 'max-rps'];
   numeric.forEach(k => {
     if (out[k] != null && (out[k] === true || !Number.isFinite(Number(out[k])) || Number(out[k]) <= 0 || Number(out[k]) > 1e15))
       throw new Error(`400 — --${k} ko finite positive number do; '${out[k]}' valid nahi hai`);
@@ -486,9 +485,12 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     }
   });
 
+  /* 'sys' lines are the simulator's own explanations and may use <b>, <i>, <code> and <br>.
+     Everything else, including the echoed command, stays plain text. */
   function print(kind, text) {
     const div = SD.el('div', 't-' + kind);
-    div.textContent = text;
+    if (kind === 'sys') div.innerHTML = SD.escapeHtml(text).replace(/&lt;(\/?)(b|i|code)&gt;|&lt;br\s*\/?&gt;/g, (m, slash, tag) => tag ? `<${slash}${tag}>` : '<br>');
+    else div.textContent = text;
     out.appendChild(div);
     out.scrollTop = out.scrollHeight;
   }
@@ -1005,7 +1007,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     const rest = cmd.replace(/^sim\s+/i, '');
     const verb = rest.split(' ')[0].toLowerCase();
     const args = rest.slice(verb.length).trim();
-    const f = parseFlags(args, ['ttl', 'jitter', 'hit-rate', 'ms', 'max', 'backoff', 'base', 'threshold', 'window', 'half-open', 'max-concurrent', 'queue', 'rps', 'burst', 'holds']);
+    const f = parseFlags(args, ['ttl', 'jitter', 'hit-rate', 'ms', 'max', 'backoff', 'base', 'threshold', 'window', 'half-open', 'max-concurrent', 'max-rps', 'queue', 'rps', 'burst', 'holds']);
     const sys = sim.sys;
 
     if (verb === 'status') return simStatus();
@@ -1103,8 +1105,11 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         return rec({ kind: 'sim', op: 'add', what: 'fallback', target });
       }
       if (what === 'admission' || what === 'waiting-room') {
-        sys.api.admission = { maxConcurrent: +(f['max-concurrent'] || f.max || 150000), queueSec: +(f.queue || 8) };
-        print('ok', `Admission control on — ${fmt(sys.api.admission.maxConcurrent)} rps andar, baaki waiting room mein (~${sys.api.admission.queueSec}s)`);
+        /* Waiting room ek RATE par andar bhejta hai. Purana flag naam concurrency kehta tha, jo Little's Law ke hisaab se alag cheez hai. */
+        if (f['max-concurrent'] != null) err("400 — --max-concurrent yahan nahi chalega. Waiting room ek RATE par andar bhejta hai (jaise har second 200 requests), " +
+          "concurrency par nahi. Little's Law: andar ek saath = rate × har request ka waqt. Aise likho:  sim add admission --max-rps 200 --queue 8");
+        sys.api.admission = { maxRps: +(f['max-rps'] || f.max || 150000), queueSec: +(f.queue || 8) };
+        print('ok', `Admission control on — har second ${fmt(sys.api.admission.maxRps)} requests andar, baaki waiting room mein (~${sys.api.admission.queueSec}s)`);
         print('sys', `🚪 8 second wait > sabko 503. Aur yeh retries ko bhi rokta hai — warna 12 lakh requests 30 lakh ban jaati hain.`);
         return rec({ kind: 'sim', op: 'add', what: 'admission', cfg: sys.api.admission });
       }
@@ -1192,7 +1197,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       'cache           ' + (sys.api.cache ? `TTL ${sys.api.cache.ttlSec}s, jitter ${sys.api.cache.jitterPct}%` : '—'),
       'rate limit      ' + (sys.api.rateLimit ? sys.api.rateLimit.rps + ' rps' : '—'),
       'idempotency     ' + (sys.api.idempotency ? 'on' : '—'),
-      'admission       ' + (sys.api.admission ? fmt(sys.api.admission.maxConcurrent) + ' concurrent' : '—'),
+      'admission       ' + (sys.api.admission ? fmt(sys.api.admission.maxRps) + ' rps andar' : '—'),
       '',
       'app instances   ' + sys.app.instances,
       'db pool         ' + sys.pool.size + (sys.db.longTxHolding ? `   ⚠️ ${sys.db.longTxHolding} atke hue → effective ${eff}` : ''),
@@ -2004,9 +2009,13 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       const n = Math.min(8, parseInt(f.n, 10) || 5);
       const rows = [];
       for (let i = 0; i < n; i++) {
-        if (kind === 'uuid4') rows.push(K.sample().replace(/[0-9a-f]/g, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]));
-        else if (kind === 'snowflake') rows.push(String(1789234567890123000 + i * 4096 + Math.floor(Math.random() * 400)));
-        else if (kind === 'ulid') rows.push('01JQK7ZC' + String(i) + 'T8M3XA9F2VNBH6WD');
+        const hex = n => Array.from({ length: n }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+        /* v4: version nibble 4, variant 8|9|a|b — baaki 122 bits random */
+        if (kind === 'uuid4') rows.push(`${hex(8)}-${hex(4)}-4${hex(3)}-${'89ab'[Math.floor(Math.random() * 4)]}${hex(3)}-${hex(12)}`);
+        /* ek hi machine, ek hi millisecond: sirf 12-bit sequence badhta hai (BigInt — 64-bit Number mein fit nahi hota) */
+        else if (kind === 'snowflake') rows.push(String(1789234567890124800n + BigInt(i)));
+        /* 26 chars: 10 time + 16 random; same millisecond mein monotonic ULID aakhri hissa +1 karta hai */
+        else if (kind === 'ulid') rows.push('01JQK7ZC5T8M3XA9F2VNBH6WD' + '0123456789ABCDEFGHJKMNPQRSTVWXYZ'[i]);
         else rows.push(String(4820193 + i));
       }
       print('ok', [`${K.label}   ${K.bytes} bytes   ${K.sortable ? 'time-sortable ✅' : 'random order ❌'}`, '',
@@ -2043,14 +2052,15 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         `cursor pagination  ✅ unique stable id tie-breaker ban sakti hai; chronology alag property hai`,
       ].join('\n'));
       print('sys', K.sortable
-        ? `✅ Sorted id ka matlab hai har naya row B-tree ke <b>aakhri page</b> par jaata hai — ` +
-        `wahi page memory mein pehle se garam ho sakta hai. Splits aur I/O kam ho sakte hain, zero guaranteed nahi. ` +
-          `Aur bonus: <code>(created_at, id)</code> wala cursor tie-breaker <b>apne aap</b> sahi kaam karta hai, ` +
-        `Unique stable id tie-breaker ka kaam karti hai; timestamp ordering ke liye sortable id zaroori nahi.`
-        : `💥 Random id ka matlab hai har insert B-tree mein <b>kahin bhi</b> ja sakta hai. Woh page shayad ` +
+        ? `✅ Sorted id ka matlab: har naya row B-tree ke <b>aakhri page</b> par jaata hai, aur woh page aksar ` +
+          `pehle se memory mein garam hota hai. Isliye splits aur disk I/O bahut kam — zero nahi, par bahut kam. ` +
+          `Cursor ke liye ek baat: <code>(created_at, id)</code> mein id ka kaam sirf barabar waqt wale rows ko alag karna hai. ` +
+          `Uske liye id ka <b>unique</b> hona kaafi hai; sortable hona zaroori nahi.`
+        : `💥 Random id ka matlab: har insert B-tree mein <b>kahin bhi</b> ja sakta hai. Woh page shayad ` +
           `disk se laana pade, aur bharne par split ho. Isiliye ${fmt(splits)} splits aur ${Math.round(perRow / 0.006)}x dheeme writes. ` +
-          `UUIDv4 akeli chronological order nahi deti, par <b>(created_at, id)</b> cursor mein unique tie-breaker bilkul ban sakti hai. <b>Ek option:</b> external id UUID rakho (enumeration mushkil hoti hai; authorization phir bhi chahiye), ` +
-          `par <b>primary key</b> ko sortable rakho (bigint ya Snowflake/ULID).`);
+          `UUIDv4 se waqt ka kram nahi milta, par cursor mein <b>(created_at, id)</b> ka tie-breaker woh phir bhi ban sakti hai — unique jo hai. ` +
+          `<b>Ek tareeka:</b> bahar dikhne wali id UUID rakho (guess karna mushkil; permission check phir bhi zaroori), ` +
+          `aur andar ki <b>primary key</b> sortable rakho (bigint ya Snowflake/ULID).`);
       return rec({ kind: 'id', op: 'bench', type: kind, rows, splits, ms, idxMB, sortable: K.sortable });
     }
 
@@ -2068,26 +2078,32 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function cmdNet(cmd) {
     const rest = cmd.replace(/^net\s*/i, '');
     const verb = (rest.split(' ')[0] || '').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim(), ['rtt', 'protocol', 'warm', 'assets', 'layer']);
+    const f = parseFlags(rest.slice(verb.length).trim(), ['rtt', 'protocol', 'warm', 'assets', 'layer', 'tls']);
     const N = netState();
     const rtt = parseInt(f.rtt, 10) || N.rtt;
     const proto = String(f.protocol || N.protocol).toLowerCase();
+    /* Aaj ka default TLS 1.3: poora handshake 1 RTT. TLS 1.2 ko 2 RTT lagte hain. QUIC (h3) sirf TLS 1.3 ke saath chalta hai. */
+    const tlsVer = f.tls == null ? '1.3' : String(f.tls);
+    if (!['1.2', '1.3'].includes(tlsVer)) err('400 — --tls 1.2 ya 1.3 do');
+    if (proto === 'h3' && tlsVer === '1.2') err('400 — QUIC (HTTP/3) sirf TLS 1.3 ke saath chalta hai; --tls 1.2 h1 ya h2 ke saath try karo');
+    const tlsRtts = proto === 'h3' ? 1 : (tlsVer === '1.2' ? 2 : 1);
+    const setupRtts = (proto === 'h3' ? 0 : 1) + tlsRtts;          // TCP (h3 mein nahi) + TLS
 
     if (verb === 'trace') {
       const warm = !!f.warm;
       const dns = warm ? 0 : 30;
-      const tcp = warm ? 0 : (proto === 'h3' ? 0 : rtt);              // QUIC ka handshake TLS ke saath hai
-      const tls = warm ? 0 : (proto === 'h3' ? rtt : rtt * 2);        // TLS 1.3 = 1 RTT, QUIC = 0-RTT ke saath merged
+      const tcp = warm ? 0 : (proto === 'h3' ? 0 : rtt);              // QUIC mein TCP hai hi nahi
+      const tls = warm ? 0 : rtt * tlsRtts;                           // QUIC transport + TLS 1.3 ek hi RTT mein
       const ttfb = rtt + 20;
       const total = dns + tcp + tls + ttfb;
       /* warm par setup 0 hai — par sabak ke liye COLD ka kharch chahiye */
-      const coldSetup = 30 + (proto === 'h3' ? 0 : rtt) + (proto === 'h3' ? rtt : rtt * 2);
+      const coldSetup = 30 + rtt * setupRtts;
       print('ok', [
-        `protocol         ${proto.toUpperCase()}   RTT ${rtt} ms   connection ${warm ? 'WARM (reused)' : 'COLD (nayi)'}`,
+        `protocol         ${proto.toUpperCase()}   TLS ${proto === 'h3' ? '1.3' : tlsVer}   RTT ${rtt} ms   connection ${warm ? 'WARM (reused)' : 'COLD (nayi)'}`,
         '',
         `  DNS lookup        ${String(dns).padStart(4)} ms  ${bar(dns, total, 18)}`,
         `  TCP handshake     ${String(tcp).padStart(4)} ms  ${bar(tcp, total, 18)}  ${proto === 'h3' ? '(QUIC — TCP hai hi nahi)' : '(SYN → SYN-ACK → ACK)'}`,
-        `  TLS handshake     ${String(tls).padStart(4)} ms  ${bar(tls, total, 18)}`,
+        `  TLS handshake     ${String(tls).padStart(4)} ms  ${bar(tls, total, 18)}  ${proto === 'h3' ? '(QUIC ke saath, 1 RTT)' : tlsVer === '1.2' ? '(TLS 1.2: 2 RTT)' : '(TLS 1.3: 1 RTT)'}`,
         `  server + response ${String(ttfb).padStart(4)} ms  ${bar(ttfb, total, 18)}`,
         `  ─────────────────────────`,
         `  TTFB              ${String(total).padStart(4)} ms`,
@@ -2102,19 +2118,20 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
             ? `QUIC (HTTP/3) UDP par chalta hai, isliye TCP handshake hai hi nahi — TLS usi ke saath ho jaata hai. ` +
               `Isiliye cold connection par h3 sabse tez hai, aur mobile par (jahan network badalta rehta hai) ` +
               `woh connection ko IP se nahi, ek <b>connection id</b> se pehchanta hai — WiFi se 4G par jaane par bhi connection zinda rehta hai.`
-            : `TCP ko pehle ek RTT chahiye, phir TLS ko aur. <code>net trace --protocol h3</code> se farak dekho, ` +
-              `aur <code>net trace --warm</code> se dekho ki connection reuse kitna bachaata hai.`));
-      return rec({ kind: 'net', op: 'trace', protocol: proto, rtt, warm, dns, tcp, tls, total });
+            : `TCP ko pehle ek RTT chahiye, phir TLS ko ek aur (purane TLS 1.2 par do). <code>net trace --tls 1.2</code> se purane server ka kharch dekho, ` +
+              `<code>net trace --protocol h3</code> se farak dekho, aur <code>net trace --warm</code> se dekho ki connection reuse kitna bachaata hai.`));
+      return rec({ kind: 'net', op: 'trace', protocol: proto, tlsVersion: proto === 'h3' ? '1.3' : tlsVer, rtt, warm, dns, tcp, tls, total });
     }
 
     if (verb === 'compare') {
       const assets = parseInt(f.assets, 10) || 60;
       const conns = 6;                                    // browser ki per-host limit (HTTP/1.1)
-      const h1 = Math.round((assets / conns) * (rtt + 15) + rtt * 3);
-      const h2 = Math.round(rtt * 3 + assets * 1.2 + rtt);
+      const tcpSetup = rtt * (1 + (tlsVer === '1.2' ? 2 : 1));        // h1/h2: TCP + TLS
+      const h1 = Math.round((assets / conns) * (rtt + 15) + tcpSetup);
+      const h2 = Math.round(tcpSetup + assets * 1.2 + rtt);
       const h3 = Math.round(rtt * 1 + assets * 1.2 + rtt);
       print('ok', [
-        `${assets} assets, RTT ${rtt} ms`,
+        `${assets} assets, RTT ${rtt} ms, TLS ${tlsVer} (h3 hamesha 1.3)`,
         '',
         `  HTTP/1.1   ${String(h1).padStart(5)} ms  ${bar(h1, h1, 20)}  ${conns} connections, har ek par ek-ek karke`,
         `  HTTP/2     ${String(h2).padStart(5)} ms  ${bar(h2, h1, 20)}  ek connection, multiplexed`,
@@ -2125,9 +2142,9 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         `<b>HTTP/2</b> ne ek hi connection par saari requests multiplex kar di — par woh TCP par hai, ` +
         `aur TCP mein ek packet kho jaaye toh <b>saari</b> streams ruk jaati hain (HOL blocking bas ek layer neeche chala gaya). ` +
         `<b>HTTP/3</b> QUIC (UDP) par hai jahan har stream apne aap mein hai — isliye packet loss sirf usi stream ko rokta hai. ` +
-        `<br><br>Aur yahi wajah hai ki HTTP/2 ke baad "sprite sheets" aur "domain sharding" jaisi purani tricks ` +
-        `ab <b>nuksaan</b> karti hain — woh HTTP/1.1 ki 6-connection limit ke liye bani thi.`);
-      return rec({ kind: 'net', op: 'compare', assets, rtt, h1, h2, h3 });
+        `<br><br>Aur yahi wajah hai ki HTTP/1.1 ki 6-connection limit ke liye bani purani tricks ab badal gayi: ` +
+        `<b>domain sharding</b> HTTP/2 mein ulta nuksaan karti hai (ek connection ka faayda toot jaata hai), aur sprite sheets ki zaroorat bahut kam reh gayi.`);
+      return rec({ kind: 'net', op: 'compare', assets, rtt, tlsVersion: tlsVer, h1, h2, h3 });
     }
 
     if (verb === 'lb') {
@@ -2139,7 +2156,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         '',
         `  dekhta hai       ${l4 ? 'IP + port — packets forward karta hai' : 'poori HTTP request — path, headers, cookies'}`,
         `  routing          ${l4 ? 'connection ke hisaab se (round-robin, least-conn)' : 'content ke hisaab se (/api → svc-a, /img → svc-b)'}`,
-        `  TLS              ${l4 ? 'pass-through — LB padh hi nahi sakta' : 'terminate karta hai (isliye decrypt kar sakta hai)'}`,
+        `  TLS              ${l4 ? 'aam taur par pass-through (kuch L4 LB, jaise AWS NLB, terminate bhi karte hain)' : 'terminate karta hai (isliye decrypt kar sakta hai)'}`,
         `  WebSocket        ${l4 ? '✅ persistent connection seedha nikal jaati hai' : '⚠️ upgrade support chahiye, aur woh state rakhta hai'}`,
         `  retry / rewrite  ${l4 ? '❌ nahi kar sakta — use request dikhti hi nahi' : '✅ kar sakta hai'}`,
         `  speed            ${l4 ? 'bahut tez, bahut kam CPU' : 'thoda mehenga (parse + decrypt)'}`,
@@ -2154,7 +2171,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       return rec({ kind: 'net', op: 'lb', layer: l4 ? 4 : 7 });
     }
 
-    err("400 — aise:  net trace [--protocol h1|h2|h3] [--warm] [--rtt 40]   |   net compare --assets 60   |   net lb l4|l7");
+    err("400 — aise:  net trace [--protocol h1|h2|h3] [--tls 1.2|1.3] [--warm] [--rtt 40]   |   net compare --assets 60   |   net lb l4|l7");
   }
 
   /* =====================================================================
@@ -2354,7 +2371,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       '  sim add cache --ttl 60 --jitter 20   sim add timeout ledger 500',
       '  sim add retry ledger --max 3 --backoff exp --jitter full',
       '  sim add breaker ledger --threshold 0.5    sim add fallback ledger "stale"',
-      '  sim add admission --max-concurrent 150000 --queue 8',
+      '  sim add admission --max-rps 150000 --queue 8',
       '  sim add ratelimit --rps 100 --burst 200   sim add bulkhead ledger --max 20',
       '  sim inject latency ledger 3000       sim inject down ledger',
       '  sim inject long-tx --holds 45        sim inject flash',
@@ -2387,7 +2404,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       '  bench write --rows 100000    bench read --rows 100000    bench compact',
       '',
       'NETWORK',
-      '  net trace [--protocol h1|h2|h3] [--warm] [--rtt 40]',
+      '  net trace [--protocol h1|h2|h3] [--tls 1.2|1.3] [--warm] [--rtt 40]',
       '  net compare --assets 60          net lb l4 | l7',
       '',
       'HASH RING',
