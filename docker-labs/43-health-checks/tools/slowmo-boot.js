@@ -49,8 +49,9 @@ async function run(mode) {
       const ok = pod.up, why = ok ? '' : ' (port band)';
       const act = onResult(pod.checks, kind, ok, kind === 'startup' ? START_FAILS : 1);
       if (kind === 'startup') {
-        if (!ok) { startFails++; return; }
-        return say(`🩺 shuru ho gaye? ✓ — pehle ${startFails} baar ✗ (chhoot ${START_FAILS} tak; koi restart nahi) → ab baaki dono sawaal`);
+        if (ok) return say(`🩺 shuru ho gaye? ✓ — pehle ${startFails} baar ✗ (chhoot ${START_FAILS} tak; koi restart nahi) → ab baaki dono sawaal`);
+        startFails++;
+        if (act !== 'restart') return;   // chhoot abhi baaki; chhoot khatam ho toh neeche wala restart
       }
       if (kind === 'readiness') {
         if (act === 'ready') { if (firstReady == null) firstReady = clock; say('🩺 traffic bhejein? ✓ → READY'); }
@@ -60,7 +61,7 @@ async function run(mode) {
       if (act === 'restart') {
         const wait = BACKOFF[Math.min(pod.restarts, BACKOFF.length - 1)];
         pod.restarts++; pod.gen++; pod.up = false; pod.waiting = true;
-        say(`🩺 zinda ho? ✗${why} → RESTART #${pod.restarts}${wait ? ` — ${wait / 1000} s ruk ke` : ''}`);
+        say(`🩺 ${kind === 'startup' ? 'shuru ho gaye?' : 'zinda ho?'} ✗${why} → RESTART #${pod.restarts}${wait ? ` — ${wait / 1000} s ruk ke` : ''}`);
         at(clock + wait, 0, start);
       }
     }

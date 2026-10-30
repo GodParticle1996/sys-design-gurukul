@@ -164,7 +164,7 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: bp-kyun … bp-kab | Claude | Codex: 20 findings (9 P1, 10 P2, 1 P3) | all 20 fixed (2 differently, see below), plus step text, cards, lab tool label and README |
 | Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex: 14 findings (6 P1, 7 P2, 1 P3) | all 14 fixed (3 differently, see below), plus step text, a card, a flashcard and 2 README lines |
 | Phase 3 rewrite: rn-kyun … rn-kab | Claude | Codex | review pending; not committed |
-| Phase 3 rewrite: hc-kyun … hc-kab | Codex (first writing job) | Claude | in progress |
+| Phase 3 rewrite: hc-kyun … hc-kab (40 MCQs) | Codex (first writing job, ~20 min) | Claude: every option checked against `lib/health.js`, `lib/checker.js`, the README traces and the AWS/Kubernetes defaults | applied with light wording fixes; Codex also found 2 wrong step texts and a `slowmo-boot.js` bug, all fixed |
 | New Concurrency track (6 levels, Java lab 46) — the user asked Codex directly | Codex, ~37 min | Claude: shared-file diff, Java code, 24 + 42 checks rerun, browser pass at 390/1280 (0 broken) | merged as-is; language rewrite + real hints next (all 51 hints were one boilerplate line) |
 | Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex: 16 findings (2 P1, 12 P2, 2 P3) | all 16 fixed (3 differently, see below); `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
 
@@ -266,6 +266,21 @@ Sixth round (cc-*, the language pass on Codex's own track):
 - **Open:** cc-race teaches six ideas; Codex independently recommends the same split (race + mutex + atomic / lock
   size + reentrant + immutable). Waiting for the user. The track's step text is still English-heavy ("CPU work, I/O
   wait aur shared bottleneck alag dekho"); a step-text pass is still to do.
+
+Seventh round (hc-*) — the first batch Codex *wrote* and Claude reviewed:
+
+- **Quality:** every marked answer and number held up (the 4.0–5.0 s and 18.5 → 2.5 q/s from the README tables,
+  ALB's 5 × 30 s recovery vs one pass for a new target, Terminus's 503 on `/livez`). Codex kept the audit's caveats
+  (recorded run, docs calculation not measured on AWS) and widened stems that had loopholes (the ALB target type).
+- **Claude's edits:** code names capitalised at sentence starts (`Ready()`, `DepOk`) lowercased; six stiff phrases
+  made conversational ("Zinda hone ke sawaal par … niyam restart hai" → "\"Zinda ho?\" lagataar teen baar fail ho,
+  toh checker restart karta hai"). Codex's originals stay in `jobs/patches/hc-*.json`; the applied copies are
+  `hc-*.applied.json`.
+- **Found by Codex outside the questions:** the startup step said "30 'nahi' tak koi restart nahi" — the 30th
+  consecutive failure *is* the restart (`checker.js:38–46`). A recap card made fail open a condition for a strict
+  dependency in readiness; it is a separate routing choice. `tools/slowmo-boot.js` returned on every failed startup
+  probe before its restart branch, so a boot longer than the allowance never restarted; fixed, published output
+  unchanged byte for byte, and a 5-failure copy restarts on the 5th failure.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.
