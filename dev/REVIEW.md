@@ -167,7 +167,8 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: ch-kyun … ch-kab (39 MCQs) | Claude | Codex: 7 findings (2 P1, 5 P2) | all fixed; the p99 wording fix also swept Randomness, Noisy Neighbour and two lab READMEs |
 | Phase 3 rewrite, core track Flow (10 levels, 48 MCQs + 9 incident/design labels) | Claude | Codex: 20 findings (7 P1, 12 P2, 1 P3) | all fixed, plus the lifecycle lesson that repeated the 20 ms overclaim |
 | Tool: `dev/rewrite/labels.js` | Claude | Codex (in the API review) | rewrites incident `t` and design `label` texts with the same checks as `apply.js` |
-| Phase 3 rewrite, core track API (11 levels, 40 MCQs + 6 design labels) | Claude | Codex | review running; not committed |
+| Phase 3 rewrite, core track API (11 levels, 40 MCQs + 6 design labels) | Claude | Codex: 14 findings (3 P1, 10 P2, 1 P3) + 2 bugs in `labels.js` | all fixed; `labels.js` now finds a node by its whole label sequence and applies edits from the end |
+| Phase 3 rewrite, playlist First Principles (fp-physics-*, 33 MCQs) | Claude | Codex | review pending (Codex's 5-hour limit ran low); not committed |
 | Phase 3 rewrite, core track Data batch 1 (modeling … caching, 33 MCQs) | Codex | Claude: options read in full, "had" → "hadd" | applied; Codex's MCQ fact fixes kept; 9 lesson/flashcard overclaims Codex listed fixed by Claude |
 | Phase 3 rewrite, core track Data batch 2 (stampede … boss-data, 48 MCQs) | Codex | Claude: spot-read, "had" → "hadd" | applied; Codex's style is denser and more English-heavy than mine — ask for simpler wording next time. Its 7 outside-MCQ findings fixed by Claude |
 | Phase 3 rewrite: dr-kyun … dr-kab (45 MCQs) | Codex (second writing job, ~20 min) | Claude: timings checked against `tools/slowmo.js`, options read in full | applied (one word changed); Codex's 3 MCQ fact fixes kept, and its 3 step-text/flashcard findings fixed |
@@ -345,6 +346,16 @@ and its diagram, "cross-shard JOIN/transaction — gaya" (now "mehnga ya engine 
 second" vs deploy "20 minute" as universal numbers, "full-state events alone make duplicates safe" (needs the
 newer-version guard), "757 queries ek saath" (peak was 739) and "83,000 DB queries ek saath" (the tool counts routes,
 not DB load) in two READMEs and their cards.
+
+Fourteenth round (API) — P1s: my offset example had insertion and deletion swapped (newest-first: an insert
+*repeats* a seen row, a delete *skips* an unseen one); rotating a signing key does not log everyone out — only
+rejecting the old key does; 403 does not prove the identity is fine, and new credentials can help (RFC 9110).
+P2s: usage metrics cannot see which response field a client reads; 2ⁿ filter combinations do not need 2ⁿ indexes;
+"snapshot" was tested but never taught (removed from the questions); distractors that were impossible rather
+than tempting (GET "corrupts the browser") were replaced with real mistakes. `labels.js` had two real bugs — a
+same-level duplicate label pulled the edit to the wrong node, and a new label equal to another option's old
+text re-targeted later edits; the reload check rolled both back, but valid patches failed. Fixed: a node is now
+found by its full label sequence in the original source, and all edits apply from the end of the file.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

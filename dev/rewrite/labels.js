@@ -39,8 +39,31 @@ function slot(o) {
   return null;
 }
 
+/* Where an incident node's / design slot's labels sit in the ORIGINAL source: every old label as a `key: '…'`
+   literal, in order, inside one short window. A node is found by its whole label sequence, so a label that
+   repeats elsewhere (even in the same level) cannot pull the edit to the wrong node. */
+const orig = new Map(src);
+function findNode(key, olds) {
+  const forms = s => [JSON.stringify(s), single(s)].map(q => ({ needle: `${key}: ${q}`, q }));
+  const found = [];
+  for (const [f, t] of orig) for (const first of forms(olds[0])) {
+    for (let k = t.indexOf(first.needle); k > -1; k = t.indexOf(first.needle, k + 1)) {
+      const spans = [{ k, ...first }];
+      let at = k + first.needle.length, ok = true;
+      for (const o of olds.slice(1)) {
+        const next = forms(o).map(x => ({ ...x, k: t.indexOf(x.needle, at) })).filter(x => x.k > -1 && x.k - at < 4000).sort((a, b) => a.k - b.k)[0];
+        if (!next) { ok = false; break; }
+        spans.push(next); at = next.k + next.needle.length;
+      }
+      if (ok) found.push({ f, spans });
+    }
+  }
+  return found;
+}
+
 const problems = [];
 const touched = new Set();
+const edits = new Map();                       // file → [{k, len, text}] against the original source
 for (const p of patches) {
   const where = `${p.level} ${p.path}`;
   const s = slot(at(levels.get(p.level), p.path));
@@ -55,27 +78,24 @@ for (const p of patches) {
     const bias = wrong.length && lengthBias([g, ...wrong], 0);
     if (bias) problems.push(`${where}: length hint — sahi option sabse ${bias === 'long' ? 'lamba' : 'chhota'} hai (${[g, ...wrong].map(x => [...visible(x)].length).join('/')})`);
   });
-  s.list.forEach((c, i) => {
-    const old = c[s.key], neu = p.labels[i];
-    if (old === neu) return;
-    const hits = [];
-    for (const [f, t] of src) for (const q of [JSON.stringify(old), single(old)]) {
-      const needle = `${s.key}: ${q}`;
-      for (let k = t.indexOf(needle); k > -1; k = t.indexOf(needle, k + 1)) hits.push({ f, k, needle, q });
-    }
-    // A label can repeat across levels: then take the first hit after this level's own `id:` in the same file.
-    // A wrong pick cannot slip through — the reload check below compares the target path.
-    let hit = hits.length === 1 ? hits[0] : null;
-    if (hits.length > 1) {
-      const marks = [...src].flatMap(([f, t]) => [`id: '${p.level}'`, `id: "${p.level}"`].map(m => ({ f, k: t.indexOf(m) }))).filter(m => m.k > -1);
-      hit = marks.length === 1 ? hits.filter(h => h.f === marks[0].f && h.k > marks[0].k).sort((a, b) => a.k - b.k)[0] : null;
-    }
-    if (!hit) { problems.push(`${where}: "${old.slice(0, 50)}" source mein ${hits.length} baar mila`); return; }
-    const { f, k, needle, q } = hit;
-    const lit = q.startsWith('"') ? JSON.stringify(neu) : single(neu);
-    src.set(f, src.get(f).slice(0, k) + `${s.key}: ${lit}` + src.get(f).slice(k + needle.length));
-    touched.add(f);
+  const nodes = findNode(s.key, s.list.map(c => c[s.key]));
+  if (nodes.length !== 1) { problems.push(`${where}: labels ka kram source mein ${nodes.length} jagah mila — node pakka nahi`); continue; }
+  const { f, spans } = nodes[0];
+  spans.forEach((sp, i) => {
+    if (s.list[i][s.key] === p.labels[i]) return;
+    const lit = sp.q.startsWith('"') ? JSON.stringify(p.labels[i]) : single(p.labels[i]);
+    if (!edits.has(f)) edits.set(f, []);
+    edits.get(f).push({ k: sp.k, len: sp.needle.length, text: `${s.key}: ${lit}` });
   });
+}
+// Apply against the original text from the end backwards, so no edit shifts or re-targets another.
+for (const [f, list] of edits) {
+  list.sort((a, b) => b.k - a.k);
+  list.forEach((e, i) => { if (i && e.k + e.len > list[i - 1].k) problems.push(`${f}: do labels ki jagah overlap karti hai`); });
+  let t = orig.get(f);
+  list.forEach(e => { t = t.slice(0, e.k) + e.text + t.slice(e.k + e.len); });
+  src.set(f, t);
+  touched.add(f);
 }
 if (problems.length) { problems.forEach(x => console.log('✗ ' + x)); process.exit(1); }
 if (flag === '--dry') { console.log(`dry run ok: ${patches.length} items, files: ${[...touched].join(' ')}`); process.exit(0); }
