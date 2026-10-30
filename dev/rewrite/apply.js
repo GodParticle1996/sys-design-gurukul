@@ -13,6 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const vm = require('vm');
 const ROOT = path.resolve(__dirname, '..', '..');
 const { loadApp } = require('../load-app');
 const { lengthBias, text: visible } = require('../../tools/quiz-quality');
@@ -61,6 +62,34 @@ function findArray(text, key, arr) {
   }
   return hits;
 }
+/* Some data files build an MCQ with a helper — ask(q, choices, reasons, hint), where explain is reasons[0]
+   (data-v2-concurrency.js). Find that call by its current question and rewrite the whole call. */
+function closeParen(text, open) {                          // index of the ')' that closes text[open] === '('
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    const c = text[i];
+    if (c === "'" || c === '"' || c === '`') { for (i++; i < text.length && text[i] !== c; i++) if (text[i] === '\\') i++; continue; }
+    if ('([{'.includes(c)) depth++;
+    else if (')]}'.includes(c) && --depth === 0) return c === ')' ? i : -1;
+  }
+  return -1;
+}
+function findAsk(text, q) {
+  const hits = [];
+  for (let i = text.indexOf('ask('); i > -1; i = text.indexOf('ask(', i + 1)) {
+    if (/[\w$.]/.test(text[i - 1] || '')) continue;      // not task( or x.ask(
+    const end = closeParen(text, i + 3);
+    if (end < 0) continue;
+    let args; try { args = vm.runInNewContext('[' + text.slice(i + 4, end) + ']'); } catch (e) { continue; }   // the definition itself fails here
+    if (args[0] === q) hits.push({ index: i, length: end + 1 - i, args });
+  }
+  return hits;
+}
+function askText(q, choices, reasons, hint, indent) {
+  const list = arr => `[\n${arr.map(s => `${indent}    ${JSON.stringify(s)},`).join('\n')}\n${indent}  ]`;
+  return `ask(${JSON.stringify(q)},\n${indent}  ${list(choices)},\n${indent}  ${list(reasons)}` +
+    (hint != null ? `,\n${indent}  ${JSON.stringify(hint)})` : ')');
+}
 const lineIndent = (text, i) => { const start = text.lastIndexOf('\n', i - 1) + 1; return text.slice(start).match(/^[ \t]*/)[0]; };
 
 function arrayText(key, arr, jsonKeys, indent) {
@@ -96,6 +125,20 @@ const touched = new Set();
 for (const { p, obj, where } of plan) {
   const anchor = [];
   for (const [f, t] of src) findArray(t, 'choices', obj.choices).forEach(h => anchor.push({ file: f, ...h }));
+  if (anchor.length === 0) {
+    const asks = [];
+    for (const [f, t] of src) findAsk(t, obj.q).forEach(h => asks.push({ file: f, ...h }));
+    if (asks.length === 1) {
+      const { file, index, length, args } = asks[0];
+      const reasons = p.choiceExplanations || args[2].slice();
+      if (p.explain != null && !p.choiceExplanations) reasons[0] = p.explain;
+      if (p.explain != null && reasons[0] !== p.explain) { problems.push(`${where}: ask() mein explain = reason 0 hona chahiye`); continue; }
+      const text = src.get(file);
+      src.set(file, text.slice(0, index) + askText(p.q != null ? p.q : args[0], p.choices || args[1], reasons,
+        p.hint != null ? p.hint : args[3], lineIndent(text, index)) + text.slice(index + length));
+      touched.add(file); continue;
+    }
+  }
   if (anchor.length !== 1) { problems.push(`${where}: choices source mein ${anchor.length} baar mile`); continue; }
   const { file, jsonKeys } = anchor[0];
   let text = src.get(file);

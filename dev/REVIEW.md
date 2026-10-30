@@ -166,7 +166,7 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: rn-kyun … rn-kab | Claude | Codex | review pending; not committed |
 | Phase 3 rewrite: hc-kyun … hc-kab | Codex (first writing job) | Claude | in progress |
 | New Concurrency track (6 levels, Java lab 46) — the user asked Codex directly | Codex, ~37 min | Claude: shared-file diff, Java code, 24 + 42 checks rerun, browser pass at 390/1280 (0 broken) | merged as-is; language rewrite + real hints next (all 51 hints were one boilerplate line) |
-| Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex | review pending; not committed. `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
+| Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex: 16 findings (2 P1, 12 P2, 2 P3) | all 16 fixed (3 differently, see below); `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
 
 What Codex's review caught (all confirmed before fixing):
 
@@ -245,6 +245,27 @@ Fifth round (nn-*) — 2026-10-30, after a fresh Codex conversation (the old one
   valid was replaced.
 - **Tool:** `dev/rewrite/merge.js` turns small fixes (one reason, one stem) into full `apply.js` items from the
   current data, so untouched options are never retyped.
+
+Sixth round (cc-*, the language pass on Codex's own track):
+
+- **P1 · a lock is not a rollback:** "dono ko ek hi lock mein rakho" was offered as "dono ya koi nahi". A common lock
+  only hides the half-done state from threads that take the same lock; an exception after the first change still
+  leaves it changed. All-or-nothing needs a transaction or an undo rule.
+- **P1 · JDBC query timeout:** "sirf query rokta hai" — the driver only promises it *attempted* to cancel.
+- **Teaching order:** cc-start's interview used "race" (taught in cc-race) and prescribed locks and transactions;
+  hints and reasons used "lease", "parallelism", "per-key compute", "deadlock" and Node's `write(false)` before
+  their own level named them. A `final` question had no `final` in the card; the card now defines it.
+- **Silly distractors:** "a new core joins on every switch" (the stem says one core), "print the free-list count",
+  "two routes rewrite the third route's code".
+- **"Hamesha ke liye atke":** the demo interrupts both threads and unlocks in `finally`, so the answer now says
+  "bahar se koi na chhudaaye toh".
+- **Not adopted as written:** Codex's transfer fix taught lock ordering in the card right before the question that
+  tests it; the question now tests only "both accounts need locks", and the ordering rule moved to the explanation
+  as a pointer to cc-stuck. Codex's cc-start distractor "processes cannot reach the same row" contradicted its own
+  stem; replaced with "separate connections don't touch each other's work".
+- **Open:** cc-race teaches six ideas; Codex independently recommends the same split (race + mutex + atomic / lock
+  size + reentrant + immutable). Waiting for the user. The track's step text is still English-heavy ("CPU work, I/O
+  wait aur shared bottleneck alag dekho"); a step-text pass is still to do.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.
