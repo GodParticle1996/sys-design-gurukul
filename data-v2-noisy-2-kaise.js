@@ -191,7 +191,7 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           clock: 'asli raftaar',
           say: `Lab mein wahi teen niyam asli raftaar par (service 200/second; A 5 second tak 400/second; B, C 30/second har ek):
             <div class="dr-scroll"><table>
-              <tr><th>Niyam</th><th>B + C: fail</th><th>B + C: sabse dheemi 1%</th><th>A ki kitni hui</th></tr>
+              <tr><th>Niyam</th><th>B + C: fail</th><th>B + C: sabse dheemi 1% (kam se kam)</th><th>A ki kitni hui</th></tr>
               <tr><td>Sab ek line mein</td><td>578 mein se 233</td><td>1,031 ms</td><td>1,376</td></tr>
               <tr><td>Har tenant 80 / second</td><td>0</td><td>322 ms</td><td>721 (1,453 mana)</td></tr>
               <tr><td>Baari-baari</td><td><b>0</b></td><td><b>41 ms</b></td><td><b>1,046</b></td></tr>

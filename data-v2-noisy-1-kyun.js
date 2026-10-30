@@ -168,7 +168,7 @@ SD.registerLevels('sdd-resil', [
           say: `Lab mein wahi kahani asli raftaar par. partner-api jaisi service: 4 khidkiyan, <b>200 requests/second</b>. Tenant A 5 second ke liye <b>400 requests/second</b> bhejta hai. Tenant B aur C shaant hain: 30 requests/second har ek.
             <ul>
               <li>B aur C ki 578 mein se <b>233 requests fail</b> (40%).</li>
-              <li>B aur C ki jo requests hui, unme sabse dheemi 1% ko <b>1,031 ms</b> lage. (Aam din: ~20 ms.)</li>
+              <li>B aur C ki jo requests hui, un requests mein sabse dheemi 1% ko <b>1,031 ms ya zyada</b> lage. (Aam din: ~20 ms.)</li>
               <li>A ki 1,376 requests ho gayi.</li>
             </ul>`,
           nodes: { a: { tone: 'busy', badge: 'lab: 400/s, 5 second' }, b: { tone: 'bad', badge: 'lab: 40% fail' }, api: { tone: 'slow', badge: 'lab: 200/s' } },

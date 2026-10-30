@@ -257,7 +257,7 @@ har tenant quota 80/s            22 ms    322 ms      0/580       721 / 1453 / 0
 fair queuing (baari-baari)       24 ms     41 ms      0/580      1046 /    0 / 1121   (A ne bheje 2167)
 ```
 
-👉 **Ek line**: B aur C ki **578 mein se 233 requests fail** (40%), sabse dheemi 1% ko 1,031 ms. B aur C ne kuch galat nahi kiya.
+👉 **Ek line**: B aur C ki **578 mein se 233 requests fail** (40%), sabse dheemi 1% ko 1,031 ms ya zyada (p99). B aur C ne kuch galat nahi kiya.
 
 👉 **Quota (80/s har tenant)**: B, C bach gaye (0 error). Par A ki **1,453** requests 429 se lauti — jabki B + C sirf 60/s le rahe the, aur 200/s ki chhat mein se lagbhag 60/s khaali padi rahi.
 

@@ -164,7 +164,9 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: bp-kyun … bp-kab | Claude | Codex: 20 findings (9 P1, 10 P2, 1 P3) | all 20 fixed (2 differently, see below), plus step text, cards, lab tool label and README |
 | Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex: 14 findings (6 P1, 7 P2, 1 P3) | all 14 fixed (3 differently, see below), plus step text, a card, a flashcard and 2 README lines |
 | Phase 3 rewrite: rn-kyun … rn-kab (26 MCQs) | Claude (Raft lab rerun: 409–1053 ms failovers, 119–125 elections) | Codex: 9 findings (3 P1, 6 P2) | all fixed (1 differently); `tools/election.js` crash and timeout-as-failover fixed |
-| Phase 3 rewrite: ch-kyun … ch-kab (39 MCQs) | Claude | Codex | review pending; not committed |
+| Phase 3 rewrite: ch-kyun … ch-kab (39 MCQs) | Claude | Codex: 7 findings (2 P1, 5 P2) | all fixed; the p99 wording fix also swept Randomness, Noisy Neighbour and two lab READMEs |
+| Phase 3 rewrite, core track Flow (10 levels, 48 MCQs) | Claude | Codex | review pending; not committed. Incident/design option labels still clipped — need a label tool |
+| Phase 3 rewrite, core track Data batch 1 (8 levels) / batch 2 (10 levels) | Codex | Claude | batch 1 waiting for review; batch 2 being written |
 | Phase 3 rewrite: dr-kyun … dr-kab (45 MCQs) | Codex (second writing job, ~20 min) | Claude: timings checked against `tools/slowmo.js`, options read in full | applied (one word changed); Codex's 3 MCQ fact fixes kept, and its 3 step-text/flashcard findings fixed |
 | Tool: `dev/rewrite/scan.js` | Claude | — | per-track count of clipped-English strings; undercounts (options with glue words still read clipped), so treat it as a floor |
 | Phase 3 rewrite: hc-kyun … hc-kab (40 MCQs) | Codex (first writing job, ~20 min) | Claude: every option checked against `lib/health.js`, `lib/checker.js`, the README traces and the AWS/Kubernetes defaults | applied with light wording fixes; Codex also found 2 wrong step texts and a `slowmo-boot.js` bug, all fixed |
@@ -307,6 +309,14 @@ questions, fixed by Claude after checking the code: async replication *can* lose
 drained), so "zero nahi hota / hamesha jaata / zero kabhi nahi" became "zero ki guarantee nahi"; 500 ms × 3 is not
 a hard upper bound for the real router (a silent endpoint adds the last check's 300 ms timeout); and an error does
 not prove the order never happened, so the flashcard now says to retry with the same order number.
+
+Tenth round (ch-*) — "sabse dheemi 1% ko 515–517 ms lage" described a p99 value as if every slow request took
+that long; the slowest 1% took *at least* that long, and the hypothesis example "sabse dheemi 1% 200 ms ke andar"
+bounded the maximum. The plain phrase stays (the playlist never teaches "p99") but now reads "X ms ya zyada", and
+the same fix went through Randomness, Noisy Neighbour and the lab 39/41 READMEs. Also fixed: "wahi chot wahi
+nateeja degi" (real timers vary); "dono bekaar" (rollback alone still ends the fault on schedule); finally *calls*
+rollback, it does not guarantee rollback succeeded (also in the level's caption); the Chaos Monkey stem gave the
+answer away; an interview whose three distractors were actions while the stem asked for a cause.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

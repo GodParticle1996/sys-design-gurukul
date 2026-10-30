@@ -161,12 +161,12 @@ SD.registerLevels('sdd-resil', [
           say: `Lab mein wahi niyam asli raftaar par: 5 servers, <b>300 requests/second</b>. Servers har 0.5 second par haal bhejte hain. Aadhe second mein ~150 requests aati hain — aur sab ko wahi "sabse khaali" server dikhta hai.
             <ul>
               <li>Ek server ki line <b>92–106</b> tak pahunchi.</li>
-              <li>Sabse dheemi 1% requests ko <b>629–1,060 ms</b> lage (teen run). (Bina line ke sabse dheemi 1% ko ~204 ms lagte hain: lab ki 10% requests khud hi 200 ms ki hain.)</li>
+              <li>Sabse dheemi 1% requests ko <b>629–1,060 ms ya zyada</b> lage (teen run). (Bina line ke sabse dheemi 1% ko ~204 ms ya zyada lagte hain: lab ki 10% requests khud hi 200 ms ki hain.)</li>
             </ul>
             Teen run mein line: 106 · 92 · 93.`,
           nodes: { lb: { tone: 'slow', badge: 'lab: jaankari 0.5 s purani' }, s1: { tone: 'idle', badge: '' }, s2: { tone: 'bad', badge: 'lab: line 92–106' }, s3: { tone: 'idle', badge: '' } },
           flows: to('s2', '~150', 'bad'),
-          vars: { seen: 'lab: 0.5 s purana haal', age: 'lab: 0 se 0.5 s', s1: 'lab: 5 servers', s2: 'lab: ek ki line 92–106', s3: 'lab: sabse dheemi 1% → 629–1,060 ms' },
+          vars: { seen: 'lab: 0.5 s purana haal', age: 'lab: 0 se 0.5 s', s1: 'lab: 5 servers', s2: 'lab: ek ki line 92–106', s3: 'lab: sabse dheemi 1% → 629–1,060 ms+' },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> jab bahut saare faisle <b>ek hi purani jaankari</b> par <b>ek hi niyam</b> se liye jaate hain, toh sab ek hi jagah pahunchte hain. "Sabse achha" chunna tab ulta padta hai jab sab wahi chunein.<br>Is bheed ka naam: <b>herding</b> (jhund).',
@@ -275,11 +275,11 @@ SD.registerLevels('sdd-resil', [
             <ul>
               <li>Baari-baari ne dheeme server ko barabar hissa diya: <b>480</b> requests — utni hi jitni baaki har server ko.</li>
               <li>Dheeme server ki line: <b>91–113</b> (teen run).</li>
-              <li>Sabse dheemi 1% requests: <b>1.8–3.0 second</b>.</li>
+              <li>Sabse dheemi 1% requests: <b>1.8–3.0 second ya zyada</b>.</li>
             </ul>
             "Koi bhi ek" (random) ka haal bhi yahi: line 139–152.`,
           nodes: { lb: { tone: 'slow', badge: 'lab: baari-baari' }, s1: { tone: 'ok', badge: '' }, s2: { tone: 'ok', badge: '' }, s3: { tone: 'bad', badge: 'lab: line 91–113' } },
-          vars: { rule: 'lab: baari-baari, ek server dheema', avg: '—', worst: 'lab: sabse dheemi 1% → 1.8–3.0 s', s3: 'lab: dheeme server ki line 91–113' },
+          vars: { rule: 'lab: baari-baari, ek server dheema', avg: '—', worst: 'lab: sabse dheemi 1% → 1.8–3.0 s+', s3: 'lab: dheeme server ki line 91–113' },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> jaankari na dekhne se jhund nahi banta — par load balancer andha ho jaata hai: bhare ya dheeme server ko bhi barabar hissa.<br>Chahiye kuch aisa jo jaankari <b>dekhe</b>, par jisme sab ek hi "sabse achha" na chunein. Agla level isi ka hai.',
@@ -381,9 +381,9 @@ SD.registerLevels('sdd-resil', [
           'Theek, chahe servers alag size ke hon — round robin bade server ko apne aap zyada bhejta hai',
         ],
         answer: 0,
-        explain: 'Lab: ek server teen guna dheema → round robin ne dheeme server ko phir bhi 480 requests di; dheeme server ki line 91–113, sabse dheemi 1% requests 1.8–3.0 s.',
+        explain: 'Lab: ek server teen guna dheema → round robin ne dheeme server ko phir bhi 480 requests di; dheeme server ki line 91–113, sabse dheemi 1% requests 1.8–3.0 s ya zyada.',
         choiceExplanations: [
-          'Lab: ek server teen guna dheema → round robin ne dheeme server ko phir bhi 480 requests di; dheeme server ki line 91–113, sabse dheemi 1% requests 1.8–3.0 s.',
+          'Lab: ek server teen guna dheema → round robin ne dheeme server ko phir bhi 480 requests di; dheeme server ki line 91–113, sabse dheemi 1% requests 1.8–3.0 s ya zyada.',
           'Ginti barabar, bojh nahi. Ek request 10 ms ki, doosri 200 ms ki — barabar ginti par bhi ek server zyada bhar sakta hai.',
           'Round robin jawab ka samay dekhta hi nahi. Lab mein teen guna dheeme server ko bhi 480 requests mili, aur dheeme server ki line 91–113 tak gayi.',
           'Bina weight ke round robin har server ko barabar deta hai, size kuch bhi ho. Bade server ko zyada dena ho toh weight khud likhna padta hai.',

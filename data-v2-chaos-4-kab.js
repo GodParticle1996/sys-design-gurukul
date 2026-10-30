@@ -91,11 +91,22 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
             ("Dheemi" = 200 ms se zyada.) Iske baad ki chot is lab mein nahi hai: database ya kisi doosri service ka dheema ya band hona. Yeh chot Circuit Breaker aur Health Checks wale levels mein naapi gayi hai.`,
           ask: {
             q: 'Ek team ne "mar gaya" wali chot chalayi. Health check + retry ke saath 0 requests giri. Team: "hum resilient hain, kaam khatam." Agla kadam kya hona chahiye?',
-            choices: ["Ab slow aur partial failure modes parakho","Same crash test pass ko complete coverage maano","Fleet-wide crash se pehla result validate karo","Success rate ko chhodkar sirf CPU observe karo"],
+            choices: [
+              'Chot badlo — ab dheema, phir aadha-zinda instance; mara hua instance sabse aasaan bimaari hai',
+              'Kaam khatam — 0 requests giri, toh system har tarah ki kharabi aaram se seh lega',
+              'Sirf wahi "mar gaya" wali chot dohrate raho — doosri kharabi parkhne ki zaroorat nahi',
+              'Ek saath teeno instances band karo — sabse badi chot se hi asli taakat dikhegi',
+            ],
             answer: 0,
             hint: 'Table ki pehli row aur doosri row ka "sirf health check" wala khaana dekho.',
-            explain: "Ek crash scenario pass hona different latency/partial failure scenarios prove nahi karta. Coverage tested fault aur conditions tak limited hai. Larger blast radius next useful independent variable nahi. CPU business success aur latency ka replacement nahi.",
-           choiceExplanations: ["Ek crash scenario pass hona different latency/partial failure scenarios prove nahi karta.","Coverage tested fault aur conditions tak limited hai.","Larger blast radius next useful independent variable nahi.","CPU business success aur latency ka replacement nahi."] },
+            explain: 'Mara hua instance sabse aasaan bimaari hai — health check mare hue instance ko pakad leta hai. Lab mein agli do chot (dheema, aadha-zinda) ne nayi kami dikhayi jo pehli chot mein dikhi hi nahi. Principles of Chaos Engineering bhi yahi kehta hai: asli duniya ki alag-alag ghatnayein aazmao — server ka marna, galat jawab, traffic ka uchhaal.',
+            choiceExplanations: [
+              'Mara hua instance sabse aasaan bimaari hai — health check mare hue instance ko pakad leta hai. Lab mein agli do chot (dheema, aadha-zinda) ne nayi kami dikhayi jo pehli chot mein dikhi hi nahi. Principles of Chaos Engineering bhi yahi kehta hai: asli duniya ki alag-alag ghatnayein aazmao — server ka marna, galat jawab, traffic ka uchhaal.',
+              '0 sirf "mar gaya" wali chot ke liye tha. Table ki doosri row: dheema instance, sirf health check → 133–134 giri.',
+              'Wahi chot dohrana kaam ka hai — timing aur load se nateeja badal sakta hai. Par sirf instance band karne se dheema aur aadha-zinda haal nahi parkhe jaate.',
+              'Teeno band = poora outage, aur kuch naya nahi seekhoge. Daayra chhota rakho, chot ka prakaar badlo.',
+            ],
+          },
         },
         {
           title: '2. Andaaza kis naap par?',
@@ -105,14 +116,25 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
               <tr><td>Sirf health check, rokne ka niyam laga</td><td>ABORT (1.0 s par)</td><td>34</td></tr>
               <tr><td>Health check + retry</td><td><b>hypothesis tika</b></td><td>0</td></tr>
             </table></div>
-            Doosri row: prayog <b>pass</b>. Par isi setup, isi chot ke liye pichhli table kya kehti thi? 133 requests ko 200 ms se zyada laga, aur sabse dheemi 1% ko 515–517 ms (aam din: 14 ms).`,
+            Doosri row: prayog <b>pass</b>. Par isi setup, isi chot ke liye pichhli table kya kehti thi? 133 requests ko 200 ms se zyada laga, aur sabse dheemi 1% ko 515–517 ms ya zyada laga (aam din ka median: 14 ms).`,
           ask: {
-            q: 'Prayog pass hua, jabki har teesre grahak ne aadha second intezaar kiya. Yeh kaise?',
-            choices: ["Hypothesis success ginti thi; latency omitted thi","Retry ne timeout path ko execute nahi hone diya","Every third request sample se exclude hui thi","Successful response ka latency cost zero hota hai"],
+            q: 'Prayog pass hua, jabki har teesre grahak ne aadha second intezaar kiya. Dono baatein sach kaise?',
+            choices: [
+              'Andaaza sirf "safal %" dekhta tha — retry ne har request safal ki, samay naap mein tha hi nahi',
+              'Prayog mein bug tha — naap ne dheemi requests ko gina hi nahi, isliye 100% aaya',
+              'Dheemi requests asli nahi thi — lab ne sirf dikhane ke liye dheemi requests chhapi',
+              'Retry ne requests ko tez kar diya, isliye kisi ko sach mein intezaar nahi karna pada',
+            ],
             answer: 0,
             hint: 'measure() kya lautata tha? Us sankhya mein samay kahin hai?',
-            explain: "Success rate pass ho sakti hai jab retries users ko slow replies de rahi hon; latency target alag add karo. Successful retry se pehle timeout ka wait ho sakta hai. Trace aisa sampling exclusion nahi dikhaata. Success aur fast response alag properties hain.",
-           choiceExplanations: ["Success rate pass ho sakti hai jab retries users ko slow replies de rahi hon; latency target alag add karo.","Successful retry se pehle timeout ka wait ho sakta hai.","Trace aisa sampling exclusion nahi dikhaata.","Success aur fast response alag properties hain."] },
+            explain: 'Andaaze mein safal % ke saath samay bhi rakho: jaise "kam se kam 99% requests 200 ms ke andar". Lab ke darj runs mein sabse dheemi 1% ko 515–517 ms ya zyada laga (p99), aur 133 requests 200 ms se dheemi thi. Safal % akela deri nahi batata. Ek aur baat: dheemi chot pakadne mein bhi der lagi — rokne ka niyam 1.0 s par chala (34 giri), jabki aadhe-zinda instance par 0.5 s par (17 giri). Timeout hone tak fail dikhta hi nahi.',
+            choiceExplanations: [
+              'Andaaze mein safal % ke saath samay bhi rakho: jaise "kam se kam 99% requests 200 ms ke andar". Lab ke darj runs mein sabse dheemi 1% ko 515–517 ms ya zyada laga (p99), aur 133 requests 200 ms se dheemi thi. Safal % akela deri nahi batata. Ek aur baat: dheemi chot pakadne mein bhi der lagi — rokne ka niyam 1.0 s par chala (34 giri), jabki aadhe-zinda instance par 0.5 s par (17 giri). Timeout hone tak fail dikhta hi nahi.',
+              'Naap ne dheemi requests bhi gini — safal ki tarah, kyunki retry ke baad jawab safal tha. Naap mein samay tha hi nahi.',
+              'Dheemi requests asli thi: 133 requests ko 200 ms se zyada laga; sabse dheemi 1% ko 515–517 ms ya zyada.',
+              'Retry tez nahi karta — pehle 500 ms ka timeout jhelta hai, phir doosre instance par jaata hai.',
+            ],
+          },
         },
         {
           title: '3. Chalane se pehle: chhah sawaal',
@@ -127,11 +149,22 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
             Chhah mein se ek bhi "nahi" → pehle woh theek karo.`,
           ask: {
             q: 'Sawaal 4 (rokne ki hadd) aur sawaal 5 (chot wapas) mein se ek hi ho, toh?',
-            choices: ["Stop signal aur effective rollback dono chahiye","Stop threshold hi fault ko undo kar deti hai","Rollback callback hi stop threshold decide karta hai","Small fault se missing controls compensate hote hain"],
+            choices: [
+              'Dono saath chahiye — hadd jaldi rukwaati hai, rollback lagi hui chot hataata hai',
+              'Hadd kaafi hai — naap girte hi prayog ruk jaata hai, aur chot apne aap hat jaayegi',
+              'Rollback kaafi hai — aakhir mein chot wapas aa hi jaayegi, beech mein rokna zaroori nahi',
+              'Chot chhoti ho toh dono ke bina bhi chalega — chhota prayog khud hi kam nuksaan karta hai',
+            ],
             answer: 0,
             hint: 'Code yaad karo: break kis line ke baad aata hai, aur break ke baad kaunsi line chalti hai?',
-            explain: "Threshold detects unacceptable outcome; rollback action injected condition hataata hai. Dono responsibilities alag hain. Predicate khud environment restore nahi karta. Recovery mechanism outcome policy define nahi karta. Small scope useful hai par incomplete controls ko complete nahi banata.",
-           choiceExplanations: ["Threshold detects unacceptable outcome; rollback action injected condition hataata hai. Dono responsibilities alag hain.","Predicate khud environment restore nahi karta.","Recovery mechanism outcome policy define nahi karta.","Small scope useful hai par incomplete controls ko complete nahi banata."] },
+            explain: 'Hadd kharab naap par jaldi rokne ka faisla karti hai; rollback chot hataata hai. Sirf rollback ho toh chot tay waqt ke baad hategi — par nuksaan badhne par jaldi nahi. Lab ke darj runs: dono saath → 0.5 s aur 17 giri; hadd ke bina → 6.0 s aur 200 giri (lagbhag 12 guna).',
+            choiceExplanations: [
+              'Hadd kharab naap par jaldi rokne ka faisla karti hai; rollback chot hataata hai. Sirf rollback ho toh chot tay waqt ke baad hategi — par nuksaan badhne par jaldi nahi. Lab ke darj runs: dono saath → 0.5 s aur 17 giri; hadd ke bina → 6.0 s aur 200 giri (lagbhag 12 guna).',
+              'Hadd sirf loop todti hai. Chot hatane ka kaam rollback ka hai — rollback na ho toh chot lagi rehti hai.',
+              'Bina hadd ke chot poori der chalti hai. Lab: rokne ke niyam ke bina 200 giri, saath mein 17.',
+              'Chhota daayra kaam ka hai, par hadd aur rollback ki jagah nahi leta. Chhoti chot bhi lagi reh jaaye toh outage hai.',
+            ],
+          },
         },
         {
           title: '4. Principles of Chaos Engineering — aur kal subah',
@@ -148,11 +181,22 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
             <b>Kal subah:</b> apni ek service chuno. Likho: aam din ka naap, ek andaaza, rokne ki hadd. Staging mein ek instance band karo. Jo dikhe, likh lo.`,
           ask: {
             q: 'Us page par "abort" ya "stop condition" jaisa koi shabd nahi hai. Lab ka rokne ka niyam in paanch mein se kis principle ka hissa hai?',
-            choices: ["Minimize Blast Radius ka operational control","Vary Real-world Events ka fault selection rule","Run in Production ka environment selection rule","Automate Continuously ka scheduling interval"],
+            choices: [
+              'Minimize Blast Radius — rokne ka niyam kami nahi chhupata, bas nuksaan ka daayra chhota rakhta hai',
+              'Vary Real-world Events — rokne ka niyam batata hai ki agli baar kaunsi chot deni hai',
+              'Run Experiments in Production — rokne ka niyam ho tabhi production mein prayog ki ijaazat',
+              'Automate Experiments to Run Continuously — rokne ka niyam prayog ko baar-baar chalata hai',
+            ],
             answer: 0,
             hint: 'Rokne ke niyam ne lab mein kya badla: kami, ya giri hui requests ki ginti?',
-            explain: "Abort guardrail fallout limit karta hai, isliye blast radius principle se directly juda hai. Fault diversity aur stopping impact alag decisions hain. Environment selection abort policy nahi hai. Run frequency bounded customer exposure ka substitute nahi.",
-           choiceExplanations: ["Abort guardrail fallout limit karta hai, isliye blast radius principle se directly juda hai.","Fault diversity aur stopping impact alag decisions hain.","Environment selection abort policy nahi hai.","Run frequency bounded customer exposure ka substitute nahi."] },
+            explain: 'Lab: rokne ke niyam ke saath aur bina, dono baar andaaza toota — yaani kami dono baar dikhi. Farak sirf giri hui requests ka tha: 17 banaam 200.',
+            choiceExplanations: [
+              'Lab: rokne ke niyam ke saath aur bina, dono baar andaaza toota — yaani kami dono baar dikhi. Farak sirf giri hui requests ka tha: 17 banaam 200.',
+              'Chot chunna alag faisla hai. Rokne ka niyam chot nahi badalta — chot ki der aur nuksaan chhota karta hai.',
+              'Production ke liye rokne ka niyam zaroori hai, sahi. Par lab mein rokne ke niyam ne sirf nuksaan ka daayra badla: 17 banaam 200.',
+              'Baar-baar chalana samay ka faisla hai. Rokne ka niyam ek prayog ke andar nuksaan rokta hai.',
+            ],
+          },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> aasaan chot se shuru karo, par wahin ruko mat. Andaaze mein woh sab likho jo grahak mehsoos karta hai. Aur chhah sawaal mein se ek bhi "nahi" ho, toh prayog nahi — pehle tayyari.',
@@ -173,10 +217,21 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
       ],
       observe: {
         q: 'Doosri aur teesri row mein monkey ne utni hi baar maara (teen baar). Doosri mein 201 requests giri, teesri mein 44–46. Farak kahan se aaya?',
-        choices: ["Health detection ne stale membership jaldi hatayi","Monkey ne kam damaging victim select kiya","Offered requests ka schedule chhota kar diya","Ready instances ka count badha diya gaya"],
+        choices: [
+          'Teesri row mein health check tha — mara instance do fail par bahar, bas beech wali giri',
+          'Teesri row mein monkey ne kamzor instance chuna, jiske marne se kam nuksaan hua',
+          'Teesri row mein requests kam bheji gayi, isliye mare hue instance tak kam pahunchi',
+          'Teesri row mein instances zyada the, isliye ek instance ke marne ka hissa chhota raha',
+        ],
         answer: 0,
-        explain: "Same termination schedule mein health check dead member ko remove karta hai, isliye exposure detection window tak simat jaata hai. Given comparison mein termination count aur settings fixed hain. Provided workload same hai. Replica count is comparison mein unchanged hai.",
-       choiceExplanations: ["Same termination schedule mein health check dead member ko remove karta hai, isliye exposure detection window tak simat jaata hai.","Given comparison mein termination count aur settings fixed hain.","Provided workload same hai.","Replica count is comparison mein unchanged hai."] },
+        explain: 'Doosri row mein load balancer poore 2 second tak har teesri request mare hue instance ko bhejta raha. Teesri mein sirf pata chalne tak ki requests giri. Chauthi row mein retry bhi hai: beech ki giri hui request agle instance par dobara gayi → 0 giri. Aur pehli row (ek hi instance): har maut par poora andhera — 603–604 giri.',
+        choiceExplanations: [
+          'Doosri row mein load balancer poore 2 second tak har teesri request mare hue instance ko bhejta raha. Teesri mein sirf pata chalne tak ki requests giri. Chauthi row mein retry bhi hai: beech ki giri hui request agle instance par dobara gayi → 0 giri. Aur pehli row (ek hi instance): har maut par poora andhera — 603–604 giri.',
+          'Teeno instances ek jaise hain — koi kamzor nahi. Har maut ka asar ek jaisa.',
+          'Har row mein 100 req/s, 16 second. Requests barabar thi.',
+          'Doosri aur teesri dono row mein 3 instances the.',
+        ],
+      },
       lesson: 'Monkey har setup mein wahi karta hai. Jo badalta hai, woh hai system ka jawab — aur wahi naapna hai.',
     },
 
@@ -196,10 +251,21 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
       ],
       observe: {
         q: 'Aakhri tool ki teesri row (health check + retry) ka faisla "hypothesis tika" aaya. Par pehle tool ki table mein isi setup, isi chot ke "dheemi" wale khaane mein 133 likha tha. Dono sach kaise?',
-        choices: ["Success pass tha; timeout-wait latency baaki thi","Fault severity second tool mein ghata di gayi","First tool ne retry responses ko errors gina","Hypothesis ne latency percentile bhi enforce kiya"],
+        choices: [
+          'Andaaza sirf safal % dekhta tha — retry ne request safal ki, par pehle 500 ms ka timeout jhela',
+          'Doosre tool mein instance utna dheema tha hi nahi, isliye prayog aaram se pass ho gaya',
+          'Pehle tool ki ginti galat hai — retry wali requests ko galti se dheemi gin liya gaya',
+          'Retry ne timeout hata diya, isliye prayog mein kisi request ko intezaar nahi karna pada',
+        ],
         answer: 0,
-        explain: "Retry final success bacha sakti hai, par initial 500 ms timeout user latency mein judta hai. Scenario same fault aur setup compare karta hai. Slow aur failed responses distinct reported categories hain. Given hypothesis sirf success percent cover karti thi.",
-       choiceExplanations: ["Retry final success bacha sakti hai, par initial 500 ms timeout user latency mein judta hai.","Scenario same fault aur setup compare karta hai.","Slow aur failed responses distinct reported categories hain.","Given hypothesis sirf success percent cover karti thi."] },
+        explain: 'Isliye "prayog pass hua" ke saath hamesha poochho: kaunsa naap pass hua? Aur aakhri tool ki pehli row bhi dekho: rokne ka niyam 1.0 s par chala — aadhe-zinda instance ke 0.5 s se der mein, kyunki timeout hone tak fail dikhta nahi.',
+        choiceExplanations: [
+          'Isliye "prayog pass hua" ke saath hamesha poochho: kaunsa naap pass hua? Aur aakhri tool ki pehli row bhi dekho: rokne ka niyam 1.0 s par chala — aadhe-zinda instance ke 0.5 s se der mein, kyunki timeout hone tak fail dikhta nahi.',
+          'Dono tool mein wahi chot (slow) aur wahi setup tha.',
+          'Ginti sahi hai: retry hui requests ne sach mein 500 ms ka timeout jhela — p99 515–517 ms.',
+          'Retry timeout nahi hatata. Pehle timeout, phir doosre instance par koshish.',
+        ],
+      },
       lesson: 'Andaaza usi cheez ko bachata hai jo naapi ja rahi hai. Samay bhi naapo.',
     },
 
@@ -230,22 +296,55 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
     questions: [
       {
         q: '"Tumhari team chaos engineering shuru karna chahti hai. Pehle kuch mahino ka plan batao."',
-        choices: ["Observe, rehearse, small faults; phir expand karo","Production injector pehle; dashboards baad mein jodo","Annual staging pass ko permanent evidence maano","Har failure mode ek saath inject karke shuru karo"],
+        choices: [
+          'Pehle naap aur chot wapas lene ki taiyaari; phir staging mein chhoti chot, phir dheere badhao',
+          'Pehle hi din production mein random instances band karne wala tool chala do — seekh wahin hai',
+          'Sirf staging mein, saal mein ek baar — production ko kabhi mat chhuo, khatra bahut hai',
+          'Saari possible chot ki list banao, aur pehle hafte hi sab ek saath chala do',
+        ],
         answer: 0,
-        explain: "Measurement aur recovery rehearse karke scoped scenarios iterate karo, phir appropriate production exposure badhao. Blind injection diagnosis aur containment dono kamzor karti hai. System changes ke saath old evidence stale ho sakta hai. Combined first faults cause isolate karna mushkil banate hain.",
-       choiceExplanations: ["Measurement aur recovery rehearse karke scoped scenarios iterate karo, phir appropriate production exposure badhao.","Blind injection diagnosis aur containment dono kamzor karti hai.","System changes ke saath old evidence stale ho sakta hai.","Combined first faults cause isolate karna mushkil banate hain."] },
+        explain: 'Pehle tayyari: naap (safal %, samay) dikhna chahiye, aur chot wapas lene ka tareeka. Phir staging mein sabse aasaan chot (ek instance band), likhe hue andaaze aur rokne ke niyam ke saath. Jo kami mile, theek karo, aur wahi prayog dobara. Phir chot badlo (dheema, aadha-zinda). Phir production mein chhote daayre par. Aakhir mein apne aap, lagataar. Lab ne yahi kram dikhaya: "mar gaya" ne health check ki kami dikhayi (201 giri); health check + retry ke baad "dheema" ne nayi kami dikhayi (133 dheemi requests).',
+        choiceExplanations: [
+          'Pehle tayyari: naap (safal %, samay) dikhna chahiye, aur chot wapas lene ka tareeka. Phir staging mein sabse aasaan chot (ek instance band), likhe hue andaaze aur rokne ke niyam ke saath. Jo kami mile, theek karo, aur wahi prayog dobara. Phir chot badlo (dheema, aadha-zinda). Phir production mein chhote daayre par. Aakhir mein apne aap, lagataar. Lab ne yahi kram dikhaya: "mar gaya" ne health check ki kami dikhayi (201 giri); health check + retry ke baad "dheema" ne nayi kami dikhayi (133 dheemi requests).',
+          'Bina naap aur rollback ke production mein chot = andhera. Kami dikhegi, par na samajh aayegi, na rukegi.',
+          'System roz badalta hai — saal bhar purana nateeja aaj ka saboot nahi. Aur asli traffic production mein hi hai.',
+          'Sab chot ek saath doge toh pata hi nahi chalega ki kaunsi chot se kya toota.',
+        ],
+      },
       {
         q: '"Ek chaos experiment ne production mein asli outage kar diya. Kya galat hua hoga, aur aage kaise bachoge?"',
-        choices: ["Stop metric, rollback aur blast radius review karo","Injector vendor badlo; guardrails waise hi rakho","Same experiment low traffic mein bina changes chalao","Threshold badhao; outage ko test pass count karo"],
+        choices: [
+          'Rokne ka niyam, rollback aur daayra jaancho — aage chhota daayra aur pehle se parkha rollback',
+          'Chaos engineering band kar do — prayog hi outage ki wajah tha, toh prayog hi mat karo',
+          'Agli baar wahi prayog raat mein chalao, taaki kam log dekhein aur shikayat kam ho',
+          'Rokne ki hadd neeche kar do, aur outage ko "test pass" gin lo — kami toh dikh gayi',
+        ],
         answer: 0,
-        explain: "Incident ke baad containment controls aur unke actual operation ka evidence review karna chahiye. Vendor swap missing guardrails ko automatically fix nahi karta. Time-of-day root cause analysis ka replacement nahi. Acceptance threshold outcome dekhkar badalna success fabricate karta hai.",
-       choiceExplanations: ["Incident ke baad containment controls aur unke actual operation ka evidence review karna chahiye.","Vendor swap missing guardrails ko automatically fix nahi karta.","Time-of-day root cause analysis ka replacement nahi.","Acceptance threshold outcome dekhkar badalna success fabricate karta hai."] },
+        explain: 'Teen cheezein dekho. Rokne ka niyam tha — aur sahi naap par tha? Chot wapas lene ka tareeka chala? Daayra kitna bada tha? Aage: chhota daayra, rokne ka niyam jo naap girte hi chale, rollback jo pehle akele parkha gaya ho — aur aam din ka naap kharab ho toh prayog shuru hi nahi. Lab: rokne ke niyam ke saath chot 0.5 s chali (17 giri); niyam ke bina 6.0 s (200 giri). Aur aam din ka naap 68% tha → prayog shuru hi nahi hua.',
+        choiceExplanations: [
+          'Teen cheezein dekho. Rokne ka niyam tha — aur sahi naap par tha? Chot wapas lene ka tareeka chala? Daayra kitna bada tha? Aage: chhota daayra, rokne ka niyam jo naap girte hi chale, rollback jo pehle akele parkha gaya ho — aur aam din ka naap kharab ho toh prayog shuru hi nahi. Lab: rokne ke niyam ke saath chot 0.5 s chali (17 giri); niyam ke bina 6.0 s (200 giri). Aur aam din ka naap 68% tha → prayog shuru hi nahi hua.',
+          'Prayog band karne se kami gayab nahi hoti — bas outage asli raat mein, bina taiyaari ke aayega.',
+          'Raat mein kam log dikhenge, par wajah wahi rahegi. Pehle dekho niyam aur rollback kyun nahi chale.',
+          'Nateeja dekh ke hadd badalna andaaze ke saath beimaani hai. Hadd pehle tay hoti hai.',
+        ],
+      },
       {
         q: '"Prayog pass ho gaya. Kya ab hum keh sakte hain ki system resilient hai?"',
-        choices: ["Tested fault aur measured criteria tak evidence hai","Production pass se har fault mode cover ho gaya","Pass se future config changes bhi verified hain","Success sample se latency aur loss dono prove hain"],
+        choices: [
+          'Sirf us ek chot aur us naap ke liye — chot badlo, naap mein samay rakho, aur baar-baar chalao',
+          'Haan — prayog pass matlab system resilient hai, ab dobara chalane ki zaroorat nahi',
+          'Nahi — prayog kabhi kuch saabit nahi karte, isliye pass ya fail se farak nahi padta',
+          'Haan, agar prayog production mein chala ho — production ka pass har chot ko cover karta hai',
+        ],
         answer: 0,
-        explain: "Experiment confidence us fault, workload, state aur observed metrics ke scope tak deta hai. Environment breadth fault coverage ke barabar nahi. New code/config evidence ko change kar sakti hai. Success metric omitted properties prove nahi karti.",
-       choiceExplanations: ["Experiment confidence us fault, workload, state aur observed metrics ke scope tak deta hai.","Environment breadth fault coverage ke barabar nahi.","New code/config evidence ko change kar sakti hai.","Success metric omitted properties prove nahi karti."] },
+        explain: 'Sirf us ek chot ke liye, aur sirf us naap ke hisaab se jo andaaze mein tha. Chot badlo, aur naap mein samay bhi rakho. Phir prayog ko lagataar chalao, kyunki system roz badalta hai. Lab: dheeme instance par safal % wala andaaza tik gaya (hypothesis tika, 0 giri), jabki darj runs mein sabse dheemi 1% ko 515–517 ms ya zyada laga (p99; median 14 ms).',
+        choiceExplanations: [
+          'Sirf us ek chot ke liye, aur sirf us naap ke hisaab se jo andaaze mein tha. Chot badlo, aur naap mein samay bhi rakho. Phir prayog ko lagataar chalao, kyunki system roz badalta hai. Lab: dheeme instance par safal % wala andaaza tik gaya (hypothesis tika, 0 giri), jabki darj runs mein sabse dheemi 1% ko 515–517 ms ya zyada laga (p99; median 14 ms).',
+          'Pass sirf us chot aur us naap ka hai. Lab: safal % wala andaaza tika, par sabse dheemi 1% ko 515–517 ms ya zyada laga.',
+          'Prayog bharosa deta hai — par sirf us chot, us naap ke daayre tak. Bekaar nahi, seemit hai.',
+          'Production asli jagah hai, par ek chot ka pass doosri chot ka saboot nahi.',
+        ],
+      },
     ],
   },
   success: [

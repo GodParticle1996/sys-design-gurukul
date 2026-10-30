@@ -348,7 +348,7 @@ power of two choices (LB ki apni ginti)    13 ms    602 ms          2           
 bas dher mein.
 
 👉 **Ek server dheema**: round robin aur random dheeme server ko **barabar hissa** dete rehte hain (round robin: 480 requests) → round robin ki
-line 91–113, sabse dheemi 1% requests 1.8–3.0 s. Least connections dheeme server ko khud kam bhejta hai (201–245 requests):
+line 91–113, sabse dheemi 1% requests 1.8–3.0 s ya zyada (p99). Least connections dheeme server ko khud kam bhejta hai (201–245 requests):
 dheeme server ki requests der tak lauti nahi, toh LB ki ginti mein dheema server bhara dikhta hai.
 
 👉 **Power of two choices**: wahi purani jaankari, par line 29–32 (resource-based: 92–106). Sabse bhara server kabhi nahi chuna jaata, aur sab

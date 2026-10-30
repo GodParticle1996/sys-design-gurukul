@@ -86,11 +86,22 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           vars: { step: '1–3: naapa (100%) · chot di', naap: '100%', i2: '🧟 aadha-zinda (2.00 s se)' },
           ask: {
             q: 'Load balancer har 0.3 second par health check chala raha hai. Kya health check instance 2 ko list se hata dega?',
-            choices: ["Probe pass rahega; instance list mein bana rahega","Do failed user calls par active probe hata dega","Probe interval se request timeout badh jaayega","Health polling instance ka process restart karegi"],
+            choices: [
+              'Nahi — instance 2 health check ko "theek hoon" hi keh raha hai; kharabi asli kaam mein hai',
+              'Haan — do baar poochhne ke baad health check instance 2 ko list se hata dega',
+              'Haan — pehli giri request dekhte hi health check instance 2 ko turant hata dega',
+              'Nahi — par health check instance 2 ko restart kar dega, toh kharabi khud mit jaayegi',
+            ],
             answer: 0,
             hint: 'Health check kaunsa raasta kholta hai? Aur kharabi kaunse raaste mein hai?',
-            explain: "Health route healthy jawab de raha hai; active check ko business-route failure dikh nahi raha. Passive failures ko active probe threshold nahi ginta. Polling interval request timeout ko modify nahi karta. Is lab ka balancer probe process supervisor nahi hai.",
-           choiceExplanations: ["Health route healthy jawab de raha hai; active check ko business-route failure dikh nahi raha.","Passive failures ko active probe threshold nahi ginta.","Polling interval request timeout ko modify nahi karta.","Is lab ka balancer probe process supervisor nahi hai."] },
+            explain: 'Slow motion: 2.25 s #11 → instance 2 ✗ jawab 500, aur turant baad 2.30 s 🩺 health: 1 ✓ · 2 ✓ · 3 ✓. Health check ke liye sab theek hai.',
+            choiceExplanations: [
+              'Slow motion: 2.25 s #11 → instance 2 ✗ jawab 500, aur turant baad 2.30 s 🩺 health: 1 ✓ · 2 ✓ · 3 ✓. Health check ke liye sab theek hai.',
+              'Do baar fail par hatata — par yahan fail hi nahi hota. Har baar /health ✓ aata hai.',
+              'Health check user ki requests nahi dekhta. Health check sirf /health kholta hai, aur /health ✓ hai.',
+              'Load balancer ka health check sirf list badalta hai, instance restart nahi karta. Aur yahan list bhi nahi badlegi.',
+            ],
+          },
         },
         {
           clock: '3.00 s · naap',
@@ -101,11 +112,22 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           vars: { step: '4: dekh rahe hain', naap: '60%', fail: '2 (#11, #14)' },
           ask: {
             q: 'Andaaza tha: kam se kam 90%. Naap aaya: 60%. Rokne ki hadd: 70%. Ab kya hona chahiye?',
-            choices: ["Abort karo; injected fault rollback karo","Naye samples ke liye poori duration chalao","Threshold ghatao; isi experiment ko continue karo","Doosra instance fail karo; pattern confirm karo"],
+            choices: [
+              'Turant roko aur chot wapas lo — andaaza toot chuka, aage sirf requests girengi',
+              'Poore 4 second chalne do — plan 4 second ka tha, aur zyada naap se nateeja pakka hoga',
+              'Rokne ki hadd 50% kar do aur chalne do — 60% abhi bhi aadhe se zyada hai',
+              'Ek aur instance ko bhi chot do — taaki pakka ho jaaye ki kami sach mein hai',
+            ],
             answer: 0,
-            hint: 'Prayog ka maqsad kya tha: andaaza parakhna. Kya woh parakh ho chuki?',
-            explain: "60% measured result 70% abort floor ke neeche hai; pehle se tay stop rule ab apply hota hai. Duration budget stop condition ko override nahi karta. Experiment ke dauraan floor badalna control ko kamzor karta hai. Damage badhana breached floor ka response nahi hai.",
-           choiceExplanations: ["60% measured result 70% abort floor ke neeche hai; pehle se tay stop rule ab apply hota hai.","Duration budget stop condition ko override nahi karta.","Experiment ke dauraan floor badalna control ko kamzor karta hai.","Damage badhana breached floor ka response nahi hai."] },
+            hint: 'Prayog ka maqsad kya tha: andaaza parakhna. Kya andaaza parakh liya gaya?',
+            explain: 'Slow motion: 3.00 s 🛑 60% < 70% — abort rule lagi, ↩️ rollback: instance 2 theek kiya, 📋 faisla: ABORT. Andaaza (90%) toot chuka hai; aage chalane se sirf nuksaan badhta.',
+            choiceExplanations: [
+              'Slow motion: 3.00 s 🛑 60% < 70% — abort rule lagi, ↩️ rollback: instance 2 theek kiya, 📋 faisla: ABORT. Andaaza (90%) toot chuka hai; aage chalane se sirf nuksaan badhta.',
+              'Rokne ki hadd isi pal ke liye likhi thi. Plan ka samay hadd se bada nahi — har second aur requests girengi.',
+              'Prayog ke beech hadd badalna rokne ke button ko hi hata dena hai. Hadd pehle tay hoti hai, beech mein nahi.',
+              'Kami dikh chuki hai. Doosri chot nuksaan badhayegi, nayi baat nahi sikhayegi.',
+            ],
+          },
         },
         {
           clock: '3.00 s · band',
@@ -140,11 +162,22 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           vars: { step: '1: naapo', naap: '60%', i2: 'chal raha hai', fail: '—', verdict: '?' },
           ask: {
             q: 'Chot dene se pehle naap aaya: 60%. Andaaza tha "kam se kam 90%". Kya karna chahiye?',
-            choices: ["Fault inject mat karo; baseline pehle diagnose karo","Scheduled fault do; baad mein baseline compare karo","Hypothesis ghatao; isi unhealthy state se shuru karo","Fault bada do; signal zyada clearly dikh jaayega"],
+            choices: [
+              'Chot mat do — system pehle se bimaar hai; pehle purani kharabi dhoondho aur theek karo',
+              'Chot do — prayog ka samay pehle se tay tha, aur poori team taiyaar baithi hai',
+              'Andaaze ko 50% kar do, phir chot do — 60% se shuru karke bhi kuch seekhenge',
+              'Do instances ko ek saath chot do — kharabi badi hogi toh nateeja saaf dikhega',
+            ],
             answer: 0,
             hint: 'Prayog mein "pehle" aur "baad" ka muqabla hota hai. "Pehle" hi kharab ho toh?',
-            explain: "Baseline hi expected steady state se neeche hai, isliye experiment ki causal interpretation aur exposure dono kharab honge. Calendar readiness ka proof nahi hai. Unhealthy baseline ko target banana original question badal deta hai. Additional fault already degraded system ko aur hurt karega.",
-           choiceExplanations: ["Baseline hi expected steady state se neeche hai, isliye experiment ki causal interpretation aur exposure dono kharab honge.","Calendar readiness ka proof nahi hai.","Unhealthy baseline ko target banana original question badal deta hai.","Additional fault already degraded system ko aur hurt karega."] },
+            explain: 'Slow motion: 2.00 s 📏 naap: pichhle 1 s mein 5 requests, 3 safal = 60%, 📋 faisla: shuru hi mat karo. Chot kabhi di hi nahi gayi. Aur ek purani bimaari mil gayi — bina kuch tode.',
+            choiceExplanations: [
+              'Slow motion: 2.00 s 📏 naap: pichhle 1 s mein 5 requests, 3 safal = 60%, 📋 faisla: shuru hi mat karo. Chot kabhi di hi nahi gayi. Aur ek purani bimaari mil gayi — bina kuch tode.',
+              'Tay samay taiyaari ka saboot nahi. Bimaar system par chot doge toh pata nahi chalega ki nuksaan chot se hua ya purani bimaari se.',
+              'Andaaza ghataane se sawaal hi badal jaata hai. Pehle system ko aam din ke haal par lao.',
+              'Pehle se bimaar system par badi chot grahakon ka nuksaan aur badhayegi. Aur nateeja bhi uljha rahega.',
+            ],
+          },
         },
         {
           clock: 'asli raftaar',
@@ -184,11 +217,22 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           vars: { chot: 'instance mar gaya', setup: 'health check + retry', hc: 'haan — 1.40 s par', res: '0 fail', slow: '11 ms' },
           ask: {
             q: 'Ab instance 2 mare nahi, bas <b>dheema</b> ho jaaye: asli kaam mein 2 second lagein (load balancer 0.5 second se zyada nahi rukta), par "theek ho?" ka jawab turant de. Health check kya karega?',
-            choices: ["Active probe pass; business request timeout hogi","Active probe fail; slow app list se nikal jaayega","Probe retry hoga; business timeout badh jaayega","Probe slow hoga; app ko aadha traffic milega"],
+            choices: [
+              'Kuch nahi — "theek ho?" ka jawab turant aa raha hai, toh health check ke liye instance 2 theek hai',
+              'Do baar poochh ke instance 2 ko list se hata dega — dheema instance bhi bimaar gina jaata hai',
+              'Asli kaam ka 0.5 second ka timeout dekh ke health check instance 2 ko list se hata dega',
+              'Instance 2 ko aadha traffic dene lagega, taaki dheema instance thoda saans le sake',
+            ],
             answer: 0,
             hint: 'Health check kya naapta hai: asli kaam ki raftaar, ya "theek ho?" ka jawab?',
-            explain: "Health route turant jawab deta hai, jabki business route ka 2 s kaam 0.5 s deadline se lamba hai. Probe us slow business route ko test nahi karta. Health polling business deadline nahi badalti. Is setup mein automatic weighted routing nahi hai.",
-           choiceExplanations: ["Health route turant jawab deta hai, jabki business route ka 2 s kaam 0.5 s deadline se lamba hai.","Probe us slow business route ko test nahi karta.","Health polling business deadline nahi badalti.","Is setup mein automatic weighted routing nahi hai."] },
+            explain: 'Slow motion ke nateeje ki line: health check ne instance 2 ko bahar kiya: kabhi nahi. "Theek ho?" ka jawab turant tha, asli kaam 2 second ka — dheema instance health check ke saamne se nikal gaya.',
+            choiceExplanations: [
+              'Slow motion ke nateeje ki line: health check ne instance 2 ko bahar kiya: kabhi nahi. "Theek ho?" ka jawab turant tha, asli kaam 2 second ka — dheema instance health check ke saamne se nikal gaya.',
+              'Health check fail tab ginta hai jab "theek ho?" ka jawab na aaye. Yahan jawab turant aa raha hai.',
+              'Timeout asli requests par lagta hai, health check par nahi. Health check asli kaam ka samay dekhta hi nahi.',
+              'Is load balancer mein aadha traffic dene ka koi niyam nahi. Instance ya toh list mein hai, ya bahar.',
+            ],
+          },
         },
         {
           clock: 'doosri chot: dheema',
@@ -209,11 +253,22 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           vars: { setup: 'sirf health check', res: '4 fail (#5, #8, #11, #14)', slow: '500 ms' },
           ask: {
             q: 'Health check laga hua hai. Phir bhi har teesri request 2 second tak girti rahi. Health check ne instance 2 ko kyun nahi hataya?',
-            choices: ["Probe route healthy tha; business route slow tha","Probe interval ne business response ko delay kiya","User failures probe ke success count mein jude","Routing list se instance pehle hi nikal chuka tha"],
+            choices: [
+              'Health check "theek ho?" wala raasta kholta hai, aur us raaste par jawab turant aa raha tha',
+              'Health check us waqt band ho gaya tha, isliye kisi instance se kuch poochha hi nahi gaya',
+              'Health check ka fasla bahut lamba tha — agli baari se pehle hi 2 second khatam ho gaye',
+              'Instance 2 ne health check ke sawaal rok diye, isliye load balancer ko jawab mila hi nahi',
+            ],
             answer: 0,
             hint: 'Do alag raaste hain: ek "theek ho?" ka, ek asli kaam ka. Kharabi kis mein hai? Health check kise kholta hai?',
-            explain: "Alag route ka cheap health response slow application work ko hide kar raha tha. Interval detection ko affect karta hai, is case mein probe result hi healthy hai. Business failures passive detector ka signal ho sakte hain; active success nahi. Trace mein failed requests abhi usi instance tak ja rahi hain.",
-           choiceExplanations: ["Alag route ka cheap health response slow application work ko hide kar raha tha.","Interval detection ko affect karta hai, is case mein probe result hi healthy hai.","Business failures passive detector ka signal ho sakte hain; active success nahi.","Trace mein failed requests abhi usi instance tak ja rahi hain."] },
+            explain: 'Health check sirf wahi jaanta hai jo instance apne baare mein kehta hai. Instance asli kaam mein kya kar raha hai, health check ko nahi dikhta.',
+            choiceExplanations: [
+              'Health check sirf wahi jaanta hai jo instance apne baare mein kehta hai. Instance asli kaam mein kya kar raha hai, health check ko nahi dikhta.',
+              'Health check chal raha tha: slow motion mein har 0.3 s par 1 ✓ · 2 ✓ · 3 ✓ chhapa.',
+              '2 second mein health check kai baar chala (har 0.3 s). Har baar jawab ✓ tha.',
+              'Jawab na milta toh health check fail ginta aur instance hatata. Yahan jawab turant ✓ mil raha tha.',
+            ],
+          },
         },
         {
           clock: 'teesri chot: aadha-zinda',
@@ -237,12 +292,23 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           nodes: { lb: { tone: 'ok', badge: 'asli requests dekhta' }, i2: { tone: 'idle', badge: '2 s ke liye bahar' } },
           vars: { chot: 'dheema (aur aadha-zinda)', setup: 'health check + retry + naya niyam', hc: 'nahi — naye niyam ne hataya (2.15 s)', res: '0 fail · sirf 2 requests bimaar instance tak', slow: '510 ms' },
           ask: {
-            q: 'Yeh naya niyam health check se kaise alag hai?',
-            choices: ["Passive detection asli request results dekhti hai","Passive detection wahi probe zyada baar bhejti hai","Passive detection response ko success mein badalti hai","Passive detection instance ka process restart karti hai"],
+            q: 'Naya niyam health check se kaise alag hai?',
+            choices: [
+              'Health check poochhta hai "theek ho?"; naya niyam dekhta hai ki asli requests ka kya hua',
+              'Naya niyam wahi health check hai, bas "theek ho?" zyada jaldi-jaldi poochhta hai',
+              'Naya niyam fail hui requests ko safal gin leta hai, taaki instance list mein bana rahe',
+              'Naya niyam kharab instance ka process restart karta hai; health check sirf list badalta hai',
+            ],
             answer: 0,
             hint: 'Dono niyam kis cheez ko dekh ke faisla karte hain?',
-            explain: "Outlier detection actual traffic ke errors, resets ya timeouts observe kar sakti hai. Zyada active polling aur passive observation alag mechanisms hain. Detection error ko successful result nahi banati. Ejection traffic policy hai, process restart nahi.",
-           choiceExplanations: ["Outlier detection actual traffic ke errors, resets ya timeouts observe kar sakti hai.","Zyada active polling aur passive observation alag mechanisms hain.","Detection error ko successful result nahi banati.","Ejection traffic policy hai, process restart nahi."] },
+            explain: 'Health check = poochhna. Naya niyam = asli requests ke nateeje dekhna (passive ejection). Dono chahiye: mara hua instance poochhne se jaldi pakda jaata hai; dheema aur aadha-zinda instance dekhne se.',
+            choiceExplanations: [
+              'Health check = poochhna. Naya niyam = asli requests ke nateeje dekhna (passive ejection). Dono chahiye: mara hua instance poochhne se jaldi pakda jaata hai; dheema aur aadha-zinda instance dekhne se.',
+              'Jaldi poochhne se bhi jawab ✓ hi aayega. Naya niyam poochhta hi nahi — asli requests ke nateeje dekhta hai.',
+              'Ulta hai: naya niyam fail ginta hai, aur 2 lagataar fail par instance ko bahar karta hai.',
+              'Naya niyam bhi sirf list badalta hai — 2 second ke liye bahar, phir wapas. Restart kisi ka kaam nahi.',
+            ],
+          },
         },
         {
           clock: 'teen chot, teen setup',
@@ -261,7 +327,7 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           clock: 'asli raftaar',
           say: `Lab mein wahi, asli raftaar par: 100 requests/second, ek instance 4 second ke liye bimaar. Us dauraan 400 requests aayi; har teesri (133) ki baari bimaar instance ki thi. (Teen run.)
             <div class="dr-scroll"><table>
-              <tr><th>Chot</th><th>Sirf health check: giri</th><th>+ retry: giri</th><th>+ retry: sabse dheemi 1%</th><th>Bimaar instance tak pahunchi (retry → + dekhna)</th></tr>
+              <tr><th>Chot</th><th>Sirf health check: giri</th><th>+ retry: giri</th><th>+ retry: sabse dheemi 1% (kam se kam)</th><th>Bimaar instance tak pahunchi (retry → + dekhna)</th></tr>
               <tr><td>Mar gaya</td><td>12</td><td>0</td><td>16 ms</td><td>11 → 2</td></tr>
               <tr><td>Dheema</td><td><b>133–134</b></td><td>0</td><td><b>515–517 ms</b></td><td>133 → 36</td></tr>
               <tr><td>Aadha-zinda</td><td><b>133</b></td><td>0</td><td>27–28 ms</td><td>133 → 4</td></tr>
@@ -303,10 +369,21 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
       ],
       observe: {
         q: 'Aakhri do slow motion mein instance 2 utna hi dheema tha, aur health check dono mein laga tha. Pehle mein 4 requests giri, doosre mein 0. Kya badla tha?',
-        choices: ["Retry aur failure-based ejection dono jude the","Sirf active probe ka interval chhota hua tha","Sirf instance 2 ka service time ghat gaya tha","Sirf offered request rate kam kar diya tha"],
+        choices: [
+          'Doosre mein retry tha, aur 2 lagataar fail par load balancer ne instance 2 hataya',
+          'Doosre mein health check jaldi-jaldi poochh raha tha, isliye instance 2 jaldi pakda gaya',
+          'Doosre mein instance 2 jaldi theek ho gaya, isliye kam requests instance 2 tak gayi',
+          'Doosre mein requests kam bheji gayi, toh instance 2 ki baari bhi kam baar aayi',
+        ],
         answer: 0,
-        explain: "Second run mein retry healthy alternative use karta hai aur passive failures bad endpoint ko eject karte hain. Active probe dono runs mein slow business route miss karta tha. Fault ki severity unchanged di gayi hai. Comparison mein request schedule same hai.",
-       choiceExplanations: ["Second run mein retry healthy alternative use karta hai aur passive failures bad endpoint ko eject karte hain.","Active probe dono runs mein slow business route miss karta tha.","Fault ki severity unchanged di gayi hai.","Comparison mein request schedule same hai."] },
+        explain: 'Dono ke nateeje mein likha hai: health check ne instance 2 ko bahar kiya: kabhi nahi. Farak retry aur "asli requests dekhna" (passive ejection) ne banaya.',
+        choiceExplanations: [
+          'Dono ke nateeje mein likha hai: health check ne instance 2 ko bahar kiya: kabhi nahi. Farak retry aur "asli requests dekhna" (passive ejection) ne banaya.',
+          'Dono runs mein health check har 0.3 s par tha, aur dono mein instance 2 ko kabhi bahar nahi kiya.',
+          'Dono runs mein instance 2 1.00 s se 3.00 s tak utna hi dheema tha.',
+          'Dono runs mein wahi 25 requests, har 0.2 s par ek.',
+        ],
+      },
       lesson: 'Chot badlo, toh kami badalti hai. Ek hi chot baar-baar dene se ek hi kami baar-baar "theek" dikhti hai.',
     },
   ],
@@ -316,16 +393,38 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
     questions: [
       {
         q: '"Ek chaos experiment kaise chalate hain? Kadam batao."',
-        choices: ["Baseline, hypothesis, small fault, stop aur rollback","Fault, customer reports, metrics aur phir hypothesis","Baseline, fleet-wide fault, aur end par stop rule","Hypothesis, fault aur rollback ke bina final report"],
+        choices: [
+          'Aam din ka haal naapo, andaaza aur rokne ki hadd likho, chhoti chot do, naapte raho',
+          'Production mein ek random server band karo, aur dekho ki kaun-kaun grahak shikayat karta hai',
+          'Sab servers ek saath restart karo — system ki poori taakat ek hi baar mein pata chal jaayegi',
+          'Pehle asli outage hone do, phir outage ki report padh ke agla prayog plan karo',
+        ],
         answer: 0,
-        explain: "Pehle measurable baseline aur stop/recovery design karo, phir chhota fault inject karke hypothesis test karo. Customer complaints experiment measurement aur guardrail ka replacement nahi. Fleet-wide first fault avoidable blast radius badhata hai. Report rollback ko replace nahi karti.",
-       choiceExplanations: ["Pehle measurable baseline aur stop/recovery design karo, phir chhota fault inject karke hypothesis test karo.","Customer complaints experiment measurement aur guardrail ka replacement nahi.","Fleet-wide first fault avoidable blast radius badhata hai.","Report rollback ko replace nahi karti."] },
+        explain: 'Pehle aam din ka haal naapo (steady state). Phir andaaza likho, number mein (hypothesis), aur rokne ki hadd. Ek chot do, chhote daayre mein. Naapte raho; hadd paar ho toh turant roko. Chot wapas lo, aur likho ki andaaza tika ya toota. Aam din ka haal hi kharab ho, toh shuru hi mat karo. Lab: rokne ke niyam ke saath 17 requests giri (0.5 s mein roka); niyam ke bina 200 (6.0 s). Aam din ka haal 68% tha → prayog shuru hi nahi hua.',
+        choiceExplanations: [
+          'Pehle aam din ka haal naapo (steady state). Phir andaaza likho, number mein (hypothesis), aur rokne ki hadd. Ek chot do, chhote daayre mein. Naapte raho; hadd paar ho toh turant roko. Chot wapas lo, aur likho ki andaaza tika ya toota. Aam din ka haal hi kharab ho, toh shuru hi mat karo. Lab: rokne ke niyam ke saath 17 requests giri (0.5 s mein roka); niyam ke bina 200 (6.0 s). Aam din ka haal 68% tha → prayog shuru hi nahi hua.',
+          'Grahak ki shikayat naap nahi hai, nuksaan hai. Bina andaaze aur rokne ki hadd ke, kya seekha — pata hi nahi chalega.',
+          'Pehli chot poore system par? Nuksaan (blast radius) sabse bada. Shuruaat chhoti chot se karo.',
+          'Outage ka intezaar wahi hai jisse prayog bachata hai. Prayog kami ko outage se pehle dhoondhta hai.',
+        ],
+      },
       {
-        q: '"Health check laga hua hai, phir bhi ek bimaar instance traffic le raha hai aur requests gir rahi hain. Yeh kaise ho sakta hai?"',
-        choices: ["Probe aur real-route outcomes alag compare karo","Probe interval badhao; slow calls ko time mil jayega","Replicas double karo; detection ko waise rehne do","Business timeout hatao; errors pass ho jayenge"],
+        q: '"Health check laga hai, par ek instance asli requests fail karte hue bhi list mein bana hai. Kaise?"',
+        choices: [
+          '/health turant safal jawab deta hai, par /work load balancer ke timeout se zyada der leta hai',
+          '/health do baar fail ho chuka hai, par load balancer fail ki ginti rakhta hi nahi',
+          '/health jawab nahi deta, par har giri /work request health check ki ginti mita deti hai',
+          '/health fail aa raha hai, par load balancer instance ko sirf restart hone par hataata hai',
+        ],
         answer: 0,
-        explain: "Healthy probe ke saath broken business requests possible hain; request telemetry aur appropriate passive checks chahiye. Probe interval business execution deadline nahi hai. Extra capacity stale routing ke correctness gap ko close nahi karti. Unbounded waits availability ko aur kharab kar sakte hain.",
-       choiceExplanations: ["Healthy probe ke saath broken business requests possible hain; request telemetry aur appropriate passive checks chahiye.","Probe interval business execution deadline nahi hai.","Extra capacity stale routing ke correctness gap ko close nahi karti.","Unbounded waits availability ko aur kharab kar sakte hain."] },
+        explain: 'Instance "theek ho?" par theek jawab de raha hai, par asli kaam mein dheema hai ya error de raha hai — toh health check us instance ko kabhi nahi hatayega. Ilaaj: retry, timeout, aur asli requests ke nateeje dekh ke instance hatana (passive health check). Lab: dheema instance, sirf health check → 133–134 requests giri (66.5–66.8% safal). Retry ke saath 0 giri, par darj runs mein sabse dheemi 1% ko 515–517 ms ya zyada laga (p99). Asli requests dekhne par bimaar instance tak 133 ki jagah 36 pahunchi.',
+        choiceExplanations: [
+          'Instance "theek ho?" par theek jawab de raha hai, par asli kaam mein dheema hai ya error de raha hai — toh health check us instance ko kabhi nahi hatayega. Ilaaj: retry, timeout, aur asli requests ke nateeje dekh ke instance hatana (passive health check). Lab: dheema instance, sirf health check → 133–134 requests giri (66.5–66.8% safal). Retry ke saath 0 giri, par darj runs mein sabse dheemi 1% ko 515–517 ms ya zyada laga (p99). Asli requests dekhne par bimaar instance tak 133 ki jagah 36 pahunchi.',
+          'Lab ka load balancer ginti rakhta hai: lagataar 2 fail par instance bahar. /health fail hota toh instance hat jaata.',
+          'Asli requests ka fail hona health check ki ginti ko nahi chhoota. Ginti sirf /health ke jawab se badalti hai.',
+          'Health check fail par instance list se hatta hai — restart ki zaroorat nahi.',
+        ],
+      },
     ],
   },
   success: [
