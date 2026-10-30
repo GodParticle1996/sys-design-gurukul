@@ -165,7 +165,8 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex: 14 findings (6 P1, 7 P2, 1 P3) | all 14 fixed (3 differently, see below), plus step text, a card, a flashcard and 2 README lines |
 | Phase 3 rewrite: rn-kyun … rn-kab (26 MCQs) | Claude (Raft lab rerun: 409–1053 ms failovers, 119–125 elections) | Codex: 9 findings (3 P1, 6 P2) | all fixed (1 differently); `tools/election.js` crash and timeout-as-failover fixed |
 | Phase 3 rewrite: ch-kyun … ch-kab (39 MCQs) | Claude | Codex | review pending; not committed |
-| Phase 3 rewrite: dr-kyun … dr-kab | Codex (second writing job) | Claude | in progress |
+| Phase 3 rewrite: dr-kyun … dr-kab (45 MCQs) | Codex (second writing job, ~20 min) | Claude: timings checked against `tools/slowmo.js`, options read in full | applied (one word changed); Codex's 3 MCQ fact fixes kept, and its 3 step-text/flashcard findings fixed |
+| Tool: `dev/rewrite/scan.js` | Claude | — | per-track count of clipped-English strings; undercounts (options with glue words still read clipped), so treat it as a floor |
 | Phase 3 rewrite: hc-kyun … hc-kab (40 MCQs) | Codex (first writing job, ~20 min) | Claude: every option checked against `lib/health.js`, `lib/checker.js`, the README traces and the AWS/Kubernetes defaults | applied with light wording fixes; Codex also found 2 wrong step texts and a `slowmo-boot.js` bug, all fixed |
 | New Concurrency track (6 levels, Java lab 46) — the user asked Codex directly | Codex, ~37 min | Claude: shared-file diff, Java code, 24 + 42 checks rerun, browser pass at 390/1280 (0 broken) | merged as-is; language rewrite + real hints next (all 51 hints were one boilerplate line) |
 | Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex: 16 findings (2 P1, 12 P2, 2 P3) | all 16 fixed (3 differently, see below); `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
@@ -298,6 +299,14 @@ Eighth round (rn-*) — the P1s were Claude's own overclaims:
 - **Not adopted:** a long extra clue in the CPU-herding stem; the stem already shows the server-by-server rotation.
 - **Measured today:** the Raft lab's numbers move with machine load (random failovers 409–1053 ms, averages
   442–684 ms; equal timeouts 119–125 elections against the recorded 103–105), so the levels now word them loosely.
+
+Ninth round (dr-*), Codex writing — fact fixes Codex made inside the questions: `orders` in `lib/replicator.js` is a
+Map, not an array; A *is* killed in both real-time sync runs (the 75 failures are the 1.0–2.5 s window before the
+kill); the warm-standby question needed "B takes no ordinary traffic" to rule out active-active. Outside the
+questions, fixed by Claude after checking the code: async replication *can* lose nothing (the batch may have
+drained), so "zero nahi hota / hamesha jaata / zero kabhi nahi" became "zero ki guarantee nahi"; 500 ms × 3 is not
+a hard upper bound for the real router (a silent endpoint adds the last check's 300 ms timeout); and an error does
+not prove the order never happened, so the flashcard now says to retry with the same order number.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.
