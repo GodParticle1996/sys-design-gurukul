@@ -109,6 +109,12 @@ for (const p of patches) {
   const choices = p.choices || obj.choices;
   if (p.choices && p.choices.length !== obj.choices.length) problems.push(`${where}: options ki ginti badli (${obj.choices.length} → ${p.choices.length})`);
   if (p.choiceExplanations && p.choiceExplanations.length !== choices.length) problems.push(`${where}: har option ka ek reason chahiye`);
+  /* Yes/no giveaway: the right option alone says "Nahi" (or alone says "Haan") — learners pass on polarity alone. */
+  if (p.choices) {
+    const neg = s => /^(nahi|zaroori nahi|abhi nahi)\b/i.test(visible(s)), pos = s => /^haan\b/i.test(visible(s));
+    const right = p.choices[obj.answer], wrong = p.choices.filter((_, i) => i !== obj.answer);
+    if ((neg(right) && wrong.every(pos)) || (pos(right) && wrong.every(neg))) problems.push(`${where}: sirf sahi option "Nahi/Haan" se shuru hota hai — polarity se jawab mil jaata hai; prefix hatao ya mix karo`);
+  }
   if (p.choices && lengthBias(p.choices.map(visible), obj.answer)) problems.push(`${where}: length hint — sahi option ${lengthBias(p.choices.map(visible), obj.answer) === 'long' ? 'sabse lamba' : 'sabse chhota'} hai (${p.choices.map(c => [...visible(c)].length).join('/')}, sahi #${obj.answer})`);
   for (const [k, v] of Object.entries(p)) {
     if (['level', 'path'].includes(k)) continue;

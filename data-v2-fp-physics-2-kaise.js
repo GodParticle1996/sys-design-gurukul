@@ -34,11 +34,20 @@ SD.registerLevels('fp-core', [
           "say": "Maana reply 1000 bytes hai. Fixed component 40 ms hai. Link 100 Mbps se 1000 Mbps karte hain.",
           "ask": {
             "q": "Kya link das guna wide hone se poora response das guna tez ho jayega?",
-            "choices": ["Nahi; fixed 40 ms part bandwidth se nahi ghatta","Haan; total latency link width se divide hoti hai","Haan; more bandwidth request propagation hataati hai"],
+            "choices": [
+              "Fixed 40 ms wala hissa bandwidth se nahi ghat-ta",
+              "Poora latency link ki chaudai se bant jaata hai",
+              "Zyada bandwidth raaste ki doori bhi hata deti hai",
+            ],
             "answer": 0,
-            "explain": "Bandwidth serialization time reduce karti hai; given fixed propagation/setup component remain karta hai. Response time multiple components ka sum hai. Link capacity physical path distance eliminate nahi karti.",
-            "hint": "Fixed component aur bytes bhejne ka time alag karo."
-          , choiceExplanations: ["Bandwidth serialization time reduce karti hai; given fixed propagation/setup component remain karta hai.","Response time multiple components ka sum hai.","Link capacity physical path distance eliminate nahi karti."] }
+            "explain": "Bandwidth sirf bytes bhejne ka samay ghataati hai; raaste ka fixed 40 ms wahi rehta hai. Is ideal model mein 40.080 ms se 40.008 ms — chhoti reply ka bhejne ka samay pehle hi chhota tha.",
+            "hint": "Fixed component aur bytes bhejne ka time alag karo.",
+            "choiceExplanations": [
+              "Bandwidth sirf bytes bhejne ka samay ghataati hai; raaste ka fixed 40 ms wahi rehta hai. Is ideal model mein 40.080 ms se 40.008 ms — chhoti reply ka bhejne ka samay pehle hi chhota tha.",
+              "Response kai hisson ka jod hai. Sirf bytes bhejne wala hissa link se ghat-ta hai.",
+              "Link chauda karne se doori nahi ghat-ti. Signal ko phir bhi utna raasta tay karna hai.",
+            ],
+          }
         },
         {
           "title": "2. Bade packet par farak ab dikha?",
@@ -73,11 +82,20 @@ SD.registerLevels('fp-core', [
           "say": "Assumed delay 100 ns hai. Scale badalne par delay ke cycles ki ginti human seconds banegi.",
           "ask": {
             "q": "100 ns × 3 cycles/ns ka natija?",
-            "choices": ["300 human seconds; 100 × 3 cycles","100 human seconds; ns ko seedha lo","0.333 human seconds; 100 ko 300 se baanto"],
+            "choices": [
+              "300 insaani second — 100 × 3 cycles",
+              "100 insaani second — ns ko seedha le lo",
+              "0.333 insaani second — 100 ko 300 se baanto",
+            ],
             "answer": 0,
-            "explain": "Analogy har CPU cycle ko one human second maanti hai; 100 ns × 3 cycles/ns = 300 cycles. 1 ns is analogy mein 3 cycles hai, 1 nahi. Multiplication conversion hai, reciprocal throughput nahi.",
-            "hint": "100 ko 3 se multiply karo; ns cancel ho jayega."
-          , choiceExplanations: ["Analogy har CPU cycle ko one human second maanti hai; 100 ns × 3 cycles/ns = 300 cycles.","1 ns is analogy mein 3 cycles hai, 1 nahi.","Multiplication conversion hai, reciprocal throughput nahi."] }
+            "explain": "Har CPU cycle ko ek insaani second maano. 100 ns × 3 cycles/ns = 300 cycles = 300 insaani second. Har number ko ek hi scale se badlo.",
+            "hint": "100 ko 3 se multiply karo; ns cancel ho jayega.",
+            "choiceExplanations": [
+              "Har CPU cycle ko ek insaani second maano. 100 ns × 3 cycles/ns = 300 cycles = 300 insaani second. Har number ko ek hi scale se badlo.",
+              "1 ns is analogy mein 3 cycles hai, 1 nahi. 3 se guna karna padega.",
+              "Yahan guna karna hai, bhaag nahi. 100 ns × 3 = 300.",
+            ],
+          }
         },
         {
           "title": "3. 150 ms ka scale kya nikla?",
@@ -167,11 +185,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "Ek worker 100 ms lega. Doosra order 50 ms par aayega. Kya doosre order ko turant worker milega?",
-            "choices": ["Nahi; one worker first job par 100 ms tak busy","Haan; arrival se worker capacity ek aur badhti hai","Haan; available RAM extra service slot ban jaati hai"],
+            "choices": [
+              "Ek hi worker hai, aur pehla order 100 ms tak chalega",
+              "Order aate hi ek aur worker apne aap mil jaata hai",
+              "RAM khaali hai, toh khaali RAM naya worker ban jaati hai",
+            ],
             "answer": 0,
-            "explain": "One 100 ms worker start ke 50 ms baad abhi busy hai; next arrival queue karegi. Arriving work worker create nahi karta. Buffer memory service execution capacity nahi.",
-            "hint": "Pehle order ka completion 100 ms par hai."
-          , choiceExplanations: ["One 100 ms worker start ke 50 ms baad abhi busy hai; next arrival queue karegi.","Arriving work worker create nahi karta.","Buffer memory service execution capacity nahi."] }
+            "explain": "Ek worker 100 ms leta hai; shuru hone ke 50 ms baad worker abhi busy hai. Agla order line mein rukega. Worker milna aur order aana alag ghatnayein hain.",
+            "hint": "Pehle order ka completion 100 ms par hai.",
+            "choiceExplanations": [
+              "Ek worker 100 ms leta hai; shuru hone ke 50 ms baad worker abhi busy hai. Agla order line mein rukega. Worker milna aur order aana alag ghatnayein hain.",
+              "Aane wala kaam worker nahi banata. Worker ek hi hai.",
+              "RAM kaam rakhne ki jagah hai, kaam karne wala worker nahi.",
+            ],
+          }
         },
         {
           "title": "#1 shuru",
@@ -297,11 +324,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "Order #2 ko 50 ms wait aur 100 ms kaam mila. User ka total time?",
-            "choices": ["150 ms; 50 wait aur 100 service add karo","100 ms; queue waiting user time se hata do","50 ms; sirf queue wait response time maan lo"],
+            "choices": [
+              "150 ms — 50 intezaar aur 100 kaam, dono jodo",
+              "100 ms — sirf worker ka samay gino, line nahi",
+              "50 ms — sirf line ka intezaar gino, kaam nahi",
+            ],
             "answer": 0,
-            "explain": "End-to-end residence queue wait plus execution hai: 50 + 100 = 150 ms. User queued time bhi experience karta hai. Service completion ke bina response ready nahi.",
-            "hint": "End − arrival socho."
-          , choiceExplanations: ["End-to-end residence queue wait plus execution hai: 50 + 100 = 150 ms.","User queued time bhi experience karta hai.","Service completion ke bina response ready nahi."] },
+            "explain": "User ka kul samay = line ka intezaar + kaam: 50 + 100 = 150 ms. #2 aaya 50 ms par, khatam hua 200 ms par.",
+            "hint": "End − arrival socho.",
+            "choiceExplanations": [
+              "User ka kul samay = line ka intezaar + kaam: 50 + 100 = 150 ms. #2 aaya 50 ms par, khatam hua 200 ms par.",
+              "User line mein khada samay bhi jhelta hai. Intezaar bhi user ka samay hai.",
+              "Kaam poora hue bina jawab nahi aata. Kaam ka 100 ms bhi judta hai.",
+            ],
+          },
           "flows": [
             {
               "from": "line",
@@ -335,11 +371,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "System ke andar 3 orders ka matlab 3 orders ek saath cook ho rahe hain?",
-            "choices": ["Nahi; one serving, two waiting system ke andar","Haan; queue slot bhi execution worker hota hai","Haan; inside count concurrent service hi hota hai"],
+            "choices": [
+              "Ek par kaam chal raha hai, do line mein khade hain",
+              "Line mein khada order bhi ek worker ki tarah pakta hai",
+              "System ke andar ki ginti hamesha chalte kaam ki ginti hai",
+            ],
             "answer": 0,
-            "explain": "System boundary waiting queue aur active worker dono include karti hai; L service concurrency alone nahi. Stored waiting job useful execution nahi kar rahi. Population count aur active-service count different metrics hain.",
-            "hint": "Active aur waiting rows dono padho."
-          , choiceExplanations: ["System boundary waiting queue aur active worker dono include karti hai; L service concurrency alone nahi.","Stored waiting job useful execution nahi kar rahi.","Population count aur active-service count different metrics hain."] }
+            "explain": "System ke andar = line + worker. Ek order ban raha hai, do line mein khade hain. \"Andar kitne\" aur \"kitne par kaam chal raha\" alag ginti hain.",
+            "hint": "Active aur waiting rows dono padho.",
+            "choiceExplanations": [
+              "System ke andar = line + worker. Ek order ban raha hai, do line mein khade hain. \"Andar kitne\" aur \"kitne par kaam chal raha\" alag ginti hain.",
+              "Line mein khada order kuch nahi pakta — sirf intezaar karta hai.",
+              "Andar ki ginti mein line bhi aati hai. Chalte kaam ki ginti alag hai.",
+            ],
+          }
         },
         {
           "title": "#2 poora",
@@ -488,11 +533,20 @@ SD.registerLevels('fp-core', [
           "say": "System empty se shuru hua aur 400 ms par empty hua. Time-weighted occupancy = 700 request-ms / 400 ms = <b>1.75 requests</b>. Peak ek pal par 3 tha.",
           "ask": {
             "q": "Average 1.75 ka matlab har screenshot mein 1.75 request hogi?",
-            "choices": ["Nahi; time-average hai, instant count integer hoga","Haan; each snapshot mein fractional requests hoti hain","Haan; mean count given window ka maximum bhi hai"],
+            "choices": [
+              "Poore samay ka ausat hai; har pal ginti poori sankhya thi",
+              "Requests tukdon mein aati hain, toh 1.75 request bhi hoti hai",
+              "Ausat 1.75 hai, toh sabse zyada (peak) bhi 1.75 hi tha",
+            ],
             "answer": 0,
-            "explain": "1.75 time-weighted average hai; actual observed count discrete 0,1,2,... ho sakta hai. Fractional average fractional physical job imply nahi karta. Mean peak ko determine nahi karta.",
-            "hint": "Peak aur time-average ko alag rakho."
-          , choiceExplanations: ["1.75 time-weighted average hai; actual observed count discrete 0,1,2,... ho sakta hai.","Fractional average fractional physical job imply nahi karta.","Mean peak ko determine nahi karta."] }
+            "explain": "1.75 poore samay ka ausat hai. Asal ginti har pal 0, 1, 2 ya 3 thi. Har ginti par jitna waqt guzra, utna ausat mein juda.",
+            "hint": "Peak aur time-average ko alag rakho.",
+            "choiceExplanations": [
+              "1.75 poore samay ka ausat hai. Asal ginti har pal 0, 1, 2 ya 3 thi. Har ginti par jitna waqt guzra, utna ausat mein juda.",
+              "Aadhi request jaisi cheez nahi hoti. Ausat dashamlav mein ho sakta hai, ginti nahi.",
+              "Ausat se peak tay nahi hota. Peak 3 tha.",
+            ],
+          }
         },
         {
           "title": "3. Ab Little’s Law ka naam aur units",
@@ -526,11 +580,20 @@ SD.registerLevels('fp-core', [
       ],
       "observe": {
         "q": "W=175 ms ko 100 ms worker time se replace karke wahi system-average L nikaal sakte hain?",
-        "choices": ["Nahi; same system boundary mein queue wait bhi hai","Haan; CPU service time system residence ke equal hai","Haan; Little’s Law queue entries ko ignore karta hai"],
+        "choices": [
+          "Isi boundary mein line ka intezaar bhi W ka hissa hai",
+          "Line mein guzra samay W mein gina hi nahi jaata",
+          "W hamesha sirf CPU ka samay hota hai, bas",
+        ],
         "answer": 0,
-        "explain": "L = lambda W mein W same chosen boundary ka mean time hai; system queue include kare toh waiting include karo. Queue delay hone par service aur residence different hain. Queue-inclusive population ke liye queue-inclusive residence chahiye.",
-        "hint": "Order #4 ka wait 150 ms aur total 250 ms dekho."
-      , choiceExplanations: ["L = lambda W mein W same chosen boundary ka mean time hai; system queue include kare toh waiting include karo.","Queue delay hone par service aur residence different hain.","Queue-inclusive population ke liye queue-inclusive residence chahiye."] },
+        "explain": "L = λ × W mein W usi boundary ka samay hai jiska L gin rahe ho. Line + worker ki boundary mein W aane se khatam hone tak hai — intezaar bhi shaamil.",
+        "hint": "Order #4 ka wait 150 ms aur total 250 ms dekho.",
+        "choiceExplanations": [
+          "L = λ × W mein W usi boundary ka samay hai jiska L gin rahe ho. Line + worker ki boundary mein W aane se khatam hone tak hai — intezaar bhi shaamil.",
+          "Line hone par kaam ka samay aur andar rehne ka samay alag hain. Order #4: kaam 100 ms, kul 250 ms.",
+          "Little's Law boundary ke andar ka poora samay leta hai — line wala bhi.",
+        ],
+      },
       "lesson": "Units, boundary aur average ki definition calculation se pehle likho."
     }
   ],
@@ -540,18 +603,36 @@ SD.registerLevels('fp-core', [
     "questions": [
       {
         "q": "Same boundary par rate 10/s aur mean residence 0.175 s hai. Average inside?",
-        "choices": ["1.75 mean requests; rate × mean residence time","1750 mean requests; milliseconds directly use karo","3 mean requests; maximum queue depth hi mean hai"],
+        "choices": [
+          "1.75 ausat — rate × andar rehne ka ausat samay",
+          "1750 ausat — milliseconds seedhe guna kar do",
+          "Har pal 3 — sabse lambi line hi ausat hai",
+        ],
         "answer": 0,
-        "explain": "Consistent boundary/rate/window assumptions ke saath units cancel karke 1.75 average inside milta hai. Rate seconds mein hai; milliseconds ko seconds convert karna hai. Maximum aur time-average population distinct hain.",
-        "hint": "Milliseconds ko seconds mein badlo."
-      , choiceExplanations: ["Consistent boundary/rate/window assumptions ke saath units cancel karke 1.75 average inside milta hai.","Rate seconds mein hai; milliseconds ko seconds convert karna hai.","Maximum aur time-average population distinct hain."] },
+        "explain": "Units milao: 10/s × 0.175 s = 1.75 — andar ka ausat. Peak ya kisi pal ki ginti nahi. (Boundary, rate aur samay ki khidki ek hi honi chahiye.)",
+        "hint": "Milliseconds ko seconds mein badlo.",
+        "choiceExplanations": [
+          "Units milao: 10/s × 0.175 s = 1.75 — andar ka ausat. Peak ya kisi pal ki ginti nahi. (Boundary, rate aur samay ki khidki ek hi honi chahiye.)",
+          "Rate seconds mein hai, toh samay bhi seconds mein: 175 ms = 0.175 s.",
+          "Sabse zyada aur ausat alag cheezein hain.",
+        ],
+      },
       {
         "q": "Chhoti reply ka fixed path wait bada hai. Bas bandwidth das guna karne par response bhi das guna tez?",
-        "choices": ["Nahi; direct improvement serialization part mein hai","Haan; propagation aur queue wait bhi tenfold ghatte","Haan; bandwidth gain fixed RTT ko replace karta hai"],
+        "choices": [
+          "Seedha sirf bytes bhejne wala hissa ghat-ta hai",
+          "Raaste aur line ka intezaar bhi das guna ghat jaata hai",
+          "Zyada bandwidth fixed round trip ki jagah le leti hai",
+        ],
         "answer": 0,
-        "explain": "Short reply dominated by fixed wait ho toh bandwidth-only change total latency par limited effect dega. Queue/propagation independent causes se driven hain. Link throughput fixed round-trip propagation ko remove nahi karta.",
-        "hint": "Fixed component ko alag rakho."
-      , choiceExplanations: ["Short reply dominated by fixed wait ho toh bandwidth-only change total latency par limited effect dega.","Queue/propagation independent causes se driven hain.","Link throughput fixed round-trip propagation ko remove nahi karta."] }
+        "explain": "Chhoti reply mein zyada samay fixed raaste ka ho, toh sirf bandwidth badhane ka asar chhota hoga. Is hisaab mein 40.080 se 40.008 ms. Asli hisse naap ke dekho.",
+        "hint": "Fixed component ko alag rakho.",
+        "choiceExplanations": [
+          "Chhoti reply mein zyada samay fixed raaste ka ho, toh sirf bandwidth badhane ka asar chhota hoga. Is hisaab mein 40.080 se 40.008 ms. Asli hisse naap ke dekho.",
+          "Doori ka propagation delay bandwidth se nahi ghat-ta. Network ki line ka intezaar ghat sakta hai, par har wait das guna ghatne ki guarantee nahi. Is ideal hisaab mein line hai hi nahi; fixed 40 ms wahi rehta hai.",
+          "Link ki raftaar fixed round trip ko nahi hatati.",
+        ],
+      }
     ]
   },
   "success": [

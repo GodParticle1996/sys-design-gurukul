@@ -642,10 +642,10 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
         {
           q: 'Deep-page query se sirf us request ko nuksaan hota hai?',
           choices: [
-            'Nahi — doosron ka data cache se nikalta hai, replica peeche, ek connection bandha',
-            'Haan — sirf us caller ka socket der tak busy rehta hai, baaki sab bilkul theek',
-            'Haan — LIMIT 50 hai, toh query ka kharch utna hi, kisi aur par asar nahi padta',
-            'Haan — padhne wali query memory nahi khaati, toh doosri queries par farak nahi',
+            'Doosron ka data cache se nikalta hai, replica peeche, ek connection bandha',
+            'Sirf us caller ka socket der tak busy rehta hai, baaki sab bilkul theek',
+            'LIMIT 50 hai, toh query ka kharch utna hi, kisi aur par asar nahi padta',
+            'Padhne wali query memory nahi khaati, toh doosri queries par farak nahi',
           ],
           answer: 0,
           explain: 'Yahi is level ka sabse zaroori sabak. Ek deep-page query <b>saare users</b> ka anubhav kharab karti hai: cache se doosre logon ka data nikal jaata hai, replica peeche chala jaata hai, aur pool ka ek connection kai second ke liye bandhak ban jaata hai. Isiliye "sirf ek user hi toh karta hai" wali soch galat hai.',

@@ -104,11 +104,20 @@ SD.registerLevels('fp-core', [
           "say": "Tool ne 4 MiB temporary file banayi. File ko pehle <code>readFile</code> se padha: deliberate warmup. Phir same blocks ko sequential 4 KiB, shuffled 4 KiB aur sequential 64 KiB reads se padha. Bytes aur sampled checksum match kiye.",
           "ask": {
             "q": "Warm file read ka time kya seedha physical SSD read time hai?",
-            "choices": ["Nahi; ordinary warm reads page cache hit ho sakti","Haan; file API each read ko physical device bhejti","Haan; Node normal file reads OS cache bypass karti"],
+            "choices": [
+              "Garam file ki reads OS ke page cache se aa sakti hain",
+              "File API har read ko seedha SSD tak bhejti hai",
+              "Node ki aam file reads OS ka cache bypass karti hain",
+            ],
             "answer": 0,
-            "explain": "Normal filesystem reads Linux page cache se satisfy ho sakti hain; raw device latency infer mat karo. Buffered API physical access per-read guarantee nahi. Explicit bypass/O_DIRECT jaisi conditions ke bina normal reads cached ho sakti hain.",
-            "hint": "Warmup aur normal read ka path dekho."
-          , choiceExplanations: ["Normal filesystem reads Linux page cache se satisfy ho sakti hain; raw device latency infer mat karo.","Buffered API physical access per-read guarantee nahi.","Explicit bypass/O_DIRECT jaisi conditions ke bina normal reads cached ho sakti hain."] }
+            "explain": "Aam file reads Linux ke page cache se aa sakti hain — warmup ke baad aksar aati hain. Garam reads se SSD ka asli raw samay mat nikaalo. (Cache bypass karne ke liye O_DIRECT jaisi alag shartein chahiye.)",
+            "hint": "Warmup aur normal read ka path dekho.",
+            "choiceExplanations": [
+              "Aam file reads Linux ke page cache se aa sakti hain — warmup ke baad aksar aati hain. Garam reads se SSD ka asli raw samay mat nikaalo. (Cache bypass karne ke liye O_DIRECT jaisi alag shartein chahiye.)",
+              "Buffered API har read par SSD tak jaane ka vaada nahi karti.",
+              "Node ki aam reads bhi OS cache se hi guzarti hain.",
+            ],
+          }
         },
         {
           "title": "3. Shuffled reads actual run mein dheemi nikli?",
@@ -139,11 +148,20 @@ SD.registerLevels('fp-core', [
           "say": "Origin 100 GiB. Hot subset 5 GiB. Kalpanik origin rate 1 unit/GiB, cache rate 20 units/GiB. Yeh learning knobs hain; market ratios nahi.",
           "ask": {
             "q": "Poora 100 GiB RAM cache bana diya. Kya origin copy ka bill hata sakte hain?",
-            "choices": ["Nahi; is design mein durable origin copy ab bhi hai","Haan; full RAM cache se durable origin replace hai","Haan; duplicate cache bytes origin cost zero karti"],
+            "choices": [
+              "Is design mein pakki origin copy dono haal mein rehti hai",
+              "Poora RAM cache ban gaya, toh origin ki zaroorat nahi",
+              "Cache mein copy hai, toh origin ka kharcha zero ho gaya",
+            ],
             "answer": 0,
-            "explain": "Compared architecture cache ko additional copy maanta hai, durable source replacement nahi. Full-capacity volatile cache ki role definition automatically source nahi banti. Duplication extra storage hai, original invoice cancellation nahi.",
-            "hint": "Design ka data ownership promise padho."
-          , choiceExplanations: ["Compared architecture cache ko additional copy maanta hai, durable source replacement nahi.","Full-capacity volatile cache ki role definition automatically source nahi banti.","Duplication extra storage hai, original invoice cancellation nahi."] }
+            "explain": "Is design mein cache ek extra copy hai, pakka source nahi. RAM cache poora ho tab bhi origin rehta hai — cache udne par data origin se hi aayega. Copy jodna extra storage hai, purana bill khatam nahi.",
+            "hint": "Design ka data ownership promise padho.",
+            "choiceExplanations": [
+              "Is design mein cache ek extra copy hai, pakka source nahi. RAM cache poora ho tab bhi origin rehta hai — cache udne par data origin se hi aayega. Copy jodna extra storage hai, purana bill khatam nahi.",
+              "RAM cache restart par udd sakta hai. Pakka source origin hi hai.",
+              "Copy rakhne se original ka bill nahi kat-ta — extra kharcha judta hai.",
+            ],
+          }
         },
         {
           "title": "3. Dono designs ka hisaab?",
@@ -177,11 +195,20 @@ SD.registerLevels('fp-core', [
       ],
       "observe": {
         "q": "Warm reads aur invented cost units se production SSD ratio aur AWS bill prove ho gaya?",
-        "choices": ["Nahi; local timing aur illustrative cost ka scope hai","Haan; warm timing har SSD ka hardware ratio deta","Haan; cost units har AWS region ka actual bill hain"],
+        "choices": [
+          "Local timing aur banaye cost units, dono ki hadd alag hai",
+          "Garam timing har SSD ka hardware ratio bata deti hai",
+          "Cost units har AWS region ka asli bill hi hain",
+        ],
         "answer": 0,
-        "explain": "Warm local filesystem measurements aur invented units bounded illustrations hain, production hardware/pricing evidence nahi. Hardware, cache state, access and workload matter. Actual cloud bill service, region, tier, traffic aur current pricing par depend hai.",
-        "hint": "Measured, model aur hisaab ko alag rakho."
-      , choiceExplanations: ["Warm local filesystem measurements aur invented units bounded illustrations hain, production hardware/pricing evidence nahi.","Hardware, cache state, access and workload matter.","Actual cloud bill service, region, tier, traffic aur current pricing par depend hai."] },
+        "explain": "Garam local reads aur banaye hue cost units seemit misaalein hain — production hardware ya pricing ka saboot nahi. Asli SSD ratio hardware, cache aur workload par depend; asli cloud bill service, region, tier aur aaj ke daam par.",
+        "hint": "Measured, model aur hisaab ko alag rakho.",
+        "choiceExplanations": [
+          "Garam local reads aur banaye hue cost units seemit misaalein hain — production hardware ya pricing ka saboot nahi. Asli SSD ratio hardware, cache aur workload par depend; asli cloud bill service, region, tier aur aaj ke daam par.",
+          "Garam reads cache se aayi — SSD ka ratio naapa hi nahi gaya.",
+          "Units seekhne ke liye banaye gaye the, market ke daam nahi.",
+        ],
+      },
       "lesson": "Apne run ke changed timings compare karo; condition aur checksum pehle milao."
     },
     {
@@ -198,11 +225,20 @@ SD.registerLevels('fp-core', [
           "say": "Zyada work hold karna aur zyada useful work complete karna alag hain. Offered, accepted, rejected aur completed rates alag gino. Memory, timeout aur backlog age ko saath dekho. Formula alone positive-feedback collapse prove nahi karta.",
           "ask": {
             "q": "Worker ka kaam unchanged hai. Queue memory double ki. Guaranteed useful throughput double?",
-            "choices": ["Nahi; extra queue more waiting hold kar sakti hai","Haan; double memory worker service rate double karti","Haan; each queue slot ek independent worker hai"],
+            "choices": [
+              "Badi queue bas zyada intezaar wala kaam rakh sakti hai",
+              "Dugni memory worker ki raftaar bhi dugni kar deti hai",
+              "Queue ki har jagah ek alag worker ki tarah kaam karti hai",
+            ],
             "answer": 0,
-            "explain": "Unchanged service bottleneck ke saath buffer capacity alone useful completion rate double guarantee nahi deti. Memory service work automatically parallelize nahi karti. Waiting slots processing units nahi.",
-            "hint": "Holding capacity aur service capacity alag hain."
-          , choiceExplanations: ["Unchanged service bottleneck ke saath buffer capacity alone useful completion rate double guarantee nahi deti.","Memory service work automatically parallelize nahi karti.","Waiting slots processing units nahi."] }
+            "explain": "Bottleneck (worker) wahi hai, toh sirf line ki jagah badhane se poora hone wala kaam dugna nahi hota. Memory kaam ko parallel nahi karti. Line mein khadi jagah worker nahi.",
+            "hint": "Holding capacity aur service capacity alag hain.",
+            "choiceExplanations": [
+              "Bottleneck (worker) wahi hai, toh sirf line ki jagah badhane se poora hone wala kaam dugna nahi hota. Memory kaam ko parallel nahi karti. Line mein khadi jagah worker nahi.",
+              "Memory kaam rakhti hai, karti nahi. Worker ki raftaar wahi.",
+              "Line mein khadi jagah sirf intezaar karti hai — kaam nahi.",
+            ],
+          }
         },
         {
           "title": "3. Har number ke saath kya likhein?",
@@ -222,18 +258,36 @@ SD.registerLevels('fp-core', [
     "questions": [
       {
         "q": "Warm page-cache test mein shuffled reads tez aayi. Sahi conclusion?",
-        "choices": ["Local result report karo; device-wide claim mat banao","Random SSD reads universally faster conclude karo","Theory match karne ke liye observed result replace karo"],
+        "choices": [
+          "Is garam setup mein shuffled reads tez thi; physical SSD ka ratio nahi naapa",
+          "Is SSD par random reads tez hain; same bytes aur checksum ne ratio pakka kiya",
+          "Warmup ka waqt bhi jod do; total se physical SSD ka random-read ratio mil jaayega",
+        ],
         "answer": 0,
-        "explain": "Result cache state aur workload ke scope mein honest report karo; cold raw device experiment alag chahiye. Warm page cache device access pattern ranking prove nahi karti. Unexpected data ko hide karna measurement correctness todta hai.",
-        "hint": "Test ne physical I/O count kiya tha?"
-      , choiceExplanations: ["Result cache state aur workload ke scope mein honest report karo; cold raw device experiment alag chahiye.","Warm page cache device access pattern ranking prove nahi karti.","Unexpected data ko hide karna measurement correctness todta hai."] },
+        "explain": "Aam file reads page cache se aa sakti hain. Garam setup ka samay physical SSD ka random aur sequential read ratio nahi batata — SSD ke liye thanda, controlled prayog alag chahiye. Nateeja imaandaari se, us setup ke daayre mein batao.",
+        "hint": "Test ne physical I/O count kiya tha?",
+        "choiceExplanations": [
+          "Aam file reads page cache se aa sakti hain. Garam setup ka samay physical SSD ka random aur sequential read ratio nahi batata — SSD ke liye thanda, controlled prayog alag chahiye. Nateeja imaandaari se, us setup ke daayre mein batao.",
+          "Same bytes aur checksum data milne ki jaanch hain — physical device par kitni reads hui, pata nahi chalta.",
+          "Warmup ka waqt jodne se cache aur device ka kaam alag nahi hota. Physical SSD ke liye alag controlled test chahiye.",
+        ],
+      },
       {
         "q": "100 GiB origin + 5 GiB cache design hai. Cache cost calculate karte waqt origin?",
-        "choices": ["Origin cost plus incremental 5 GiB cache cost","Sirf cache cost; origin invoice replacement maan lo","Sirf origin cost; cached copy free memory maan lo"],
+        "choices": [
+          "Origin ka kharcha + 5 GiB cache ka extra kharcha, dono gino",
+          "Sirf cache ka kharcha — origin ka bill ab cache ne le liya",
+          "Sirf origin ka kharcha — cache ki copy muft memory hai",
+        ],
         "answer": 0,
-        "explain": "Architecture mein origin 100 GiB retained hai; extra cache resource separately account karo. Cache add karne se retained origin cost disappear nahi hoti. RAM/managed cache resource ki opportunity/service cost ho sakti hai.",
-        "hint": "Cache source of truth automatically nahi."
-      , choiceExplanations: ["Architecture mein origin 100 GiB retained hai; extra cache resource separately account karo.","Cache add karne se retained origin cost disappear nahi hoti.","RAM/managed cache resource ki opportunity/service cost ho sakti hai."] }
+        "explain": "Design mein origin ka 100 GiB rehta hai; extra cache ka kharcha alag se jodo. Cache jodne se origin ka kharcha gayab nahi hota — aur RAM/managed cache ka apna kharcha hota hai.",
+        "hint": "Cache source of truth automatically nahi.",
+        "choiceExplanations": [
+          "Design mein origin ka 100 GiB rehta hai; extra cache ka kharcha alag se jodo. Cache jodne se origin ka kharcha gayab nahi hota — aur RAM/managed cache ka apna kharcha hota hai.",
+          "Origin abhi bhi hai aur abhi bhi bill aata hai.",
+          "RAM ya managed cache muft nahi — cache ka bhi kharcha hai.",
+        ],
+      }
     ]
   },
   "success": [

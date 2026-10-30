@@ -568,10 +568,10 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
       {
         q: '"Validation client, gateway, service aur DB — chaaron jagah hai. Kya chaar layers ki validation duplicate kaam hai?"',
         choices: [
-          'Nahi — har layer alag khatra rokti hai: client UX, gateway kachra, service niyam, DB race',
-          'Haan — sirf client par validation rakho, server tak hamesha saaf data hi aayega',
-          'Haan — sirf gateway par saare niyam rakho, services halki aur saaf rahengi',
-          'Haan — sirf service mein check karo; DB ka UNIQUE constraint duplicate kaam hai',
+          'Har layer alag khatra rokti hai: client UX, gateway kachra, service niyam, DB race',
+          'Sirf client par validation rakho, server tak hamesha saaf data hi aayega',
+          'Sirf gateway par saare niyam rakho, services halki aur saaf rahengi',
+          'Sirf service mein check karo; DB ka UNIQUE constraint duplicate kaam hai',
         ],
         answer: 0,
         explain: 'Defence in depth hai, duplication nahi. Client wali hata do → form kharab lagega. DB wali hata do → data kharab ho jaayega. Alag layer, alag khatra, alag guarantee.',

@@ -91,11 +91,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "Ek-ek reply ke baad agla lookup bhejoge. Chaar baar 40 ms wait ka hisaab?",
-            "choices": ["160 ms; four serial 40 ms waits add honge","40 ms; four requests ke waits overlap honge","10 ms; four lookups fixed wait divide karenge"],
+            "choices": [
+              "160 ms — har reply ke baad agla, toh chaar 40 ms jud jaate hain",
+              "40 ms — data RAM mein hai, toh chaaron ka intezaar ek saath hota hai",
+              "10 ms — chaar calls hain, toh 40 ms chaaron mein bant jaata hai",
+            ],
             "answer": 0,
-            "explain": "Given each reply await karne ke baad next request starts, 4 × 40 = 160 ms fixed wait hai. Overlap concurrent start mein hota; sequential loop mein nahi. More serial calls per-call latency ko divide nahi karti.",
-            "hint": "Ek request ka wait agle request se overlap nahi ho raha."
-          , choiceExplanations: ["Given each reply await karne ke baad next request starts, 4 × 40 = 160 ms fixed wait hai.","Overlap concurrent start mein hota; sequential loop mein nahi.","More serial calls per-call latency ko divide nahi karti."] }
+            "explain": "Har reply ke baad hi agla request jaata hai: 4 × 40 = 160 ms. Ek saath shuru karte toh intezaar overlap hota; ek-ek karke loop mein nahi hota. (Fixed-clock model ka hisaab hai, asli HTTP ka naap nahi.)",
+            "hint": "Ek request ka wait agle request se overlap nahi ho raha.",
+            "choiceExplanations": [
+              "Har reply ke baad hi agla request jaata hai: 4 × 40 = 160 ms. Ek saath shuru karte toh intezaar overlap hota; ek-ek karke loop mein nahi hota. (Fixed-clock model ka hisaab hai, asli HTTP ka naap nahi.)",
+              "Agla lookup pichhle reply ke baad hi shuru hota hai. Intezaar overlap nahi hota, judta hai.",
+              "Zyada calls ek call ka intezaar baant-ti nahi. Har call apna 40 ms leti hai.",
+            ],
+          }
         },
         {
           "title": "bheje: dish-1",
@@ -116,11 +125,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "Request bhej di. Kya price abhi app ke paas aa gaya?",
-            "choices": ["Nahi; send ke baad reply ka wait abhi baaki","Haan; send completion reply receive ka proof hai","Haan; remote RAM ko caller direct read kar leta"],
+            "choices": [
+              "Request gayi hai, par reply abhi raaste mein hai",
+              "Request bhejna aur reply milna ek hi pal ki baat hai",
+              "Price server ki RAM mein hai, toh app ke paas bhi hai",
+            ],
             "answer": 0,
-            "explain": "Send request transmission ka event hai; price tab available hai jab response receive/parse ho. Sending aur receiving distinct network events hain. Remote memory access transport aur service work maangta hai.",
-            "hint": "Ready ki ginti reply aane par badhegi."
-          , choiceExplanations: ["Send request transmission ka event hai; price tab available hai jab response receive/parse ho.","Sending aur receiving distinct network events hain.","Remote memory access transport aur service work maangta hai."] },
+            "explain": "Data server ke paas hona aur app ko data milna alag ghatnayein hain. Price tab milta hai jab reply aaye aur padha jaaye.",
+            "hint": "Ready ki ginti reply aane par badhegi.",
+            "choiceExplanations": [
+              "Data server ke paas hona aur app ko data milna alag ghatnayein hain. Price tab milta hai jab reply aaye aur padha jaaye.",
+              "Bhejna aur paana do alag ghatnayein hain. Price tab milta hai jab reply aa ke padha jaaye.",
+              "Server ki RAM app ki RAM nahi. Beech mein network aur server ka kaam hai.",
+            ],
+          },
           "flows": [
             {
               "from": "app",
@@ -248,11 +266,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "Teen prices mil gaye. Chauthi independent key ab bhejni hai. Menu poora hua?",
-            "choices": ["Nahi; fourth key ka response abhi missing hai","Haan; three replies remaining price confirm karti","Haan; remote cached value app memory mein bhi hai"],
+            "choices": [
+              "Menu ko chaar prices chahiye, chauthi reply abhi baaki hai",
+              "Teen prices se chautha price andaaze se nikal aayega",
+              "Cache RAM mein hai, toh chautha price pehle se app ke paas",
+            ],
             "answer": 0,
-            "explain": "Menu contract four values ka hai, isliye fourth response required hai. Independent missing value others se derive nahi hoti. Remote cache data caller tak automatically copy nahi hoti.",
-            "hint": "Ready 3/4 ka matlab ek value baaki."
-          , choiceExplanations: ["Menu contract four values ka hai, isliye fourth response required hai.","Independent missing value others se derive nahi hoti.","Remote cache data caller tak automatically copy nahi hoti."] },
+            "explain": "User ko chaar prices chahiye. Pehle teen replies ka intezaar jud chuka hai, aur chauthi ka abhi baaki hai.",
+            "hint": "Ready 3/4 ka matlab ek value baaki.",
+            "choiceExplanations": [
+              "User ko chaar prices chahiye. Pehle teen replies ka intezaar jud chuka hai, aur chauthi ka abhi baaki hai.",
+              "Chautha price independent hai — baaki teen se nahi nikalta.",
+              "Remote cache ka data app tak apne aap copy nahi hota. Chauthi reply chahiye.",
+            ],
+          },
           "flows": [
             {
               "from": "cache",
@@ -342,11 +369,20 @@ SD.registerLevels('fp-core', [
           "say": "Asha ko chai, roti, dal aur lassi chahiye. Counter door hai. Runner chai poochh kar lautta hai, phir roti poochhne jaata hai.",
           "ask": {
             "q": "Runner ko saari independent cheezein pehle se pata hain. Pehla sudhaar?",
-            "choices": ["Known independent keys ek list mein poochho","Har lookup ke pehle connection dobara kholo","Same serial calls par retry count badhaao"],
+            "choices": [
+              "Ek list le jaaye aur ek hi chakkar mein saari cheezein poochh aaye",
+              "Har cheez ki parchi chhoti kare, par har cheez ke liye alag jaaye",
+              "Counter par har sawaal jaldi poochhe, par har cheez ke liye alag jaaye",
+            ],
             "answer": 0,
-            "explain": "Keys pehle se known aur bulk endpoint supported ho toh batching repeated fixed trips reduce kar sakti hai. New connections setup cost add kar sakte hain. Retries correct serial flow ko fewer round trips nahi banati.",
-            "hint": "Chakkaron ki ginti dekho."
-          , choiceExplanations: ["Keys pehle se known aur bulk endpoint supported ho toh batching repeated fixed trips reduce kar sakti hai.","New connections setup cost add kar sakte hain.","Retries correct serial flow ko fewer round trips nahi banati."] }
+            "explain": "Cheezein pehle se pata hain aur counter list le sakta hai, toh ek chakkar ka kharcha poori list mein bant jaata hai.",
+            "hint": "Chakkaron ki ginti dekho.",
+            "choiceExplanations": [
+              "Cheezein pehle se pata hain aur counter list le sakta hai, toh ek chakkar ka kharcha poori list mein bant jaata hai.",
+              "Parchi chhoti hone se padhne ka waqt bach sakta hai. Door counter ke baar-baar chakkar phir bhi lagenge.",
+              "Sawaal jaldi poochhne se counter ka kaam ghat sakta hai. Har cheez ka alag chakkar phir bhi lagega.",
+            ],
+          }
         },
         {
           "title": "2. Kya har list ek saath bhej sakte hain?",
@@ -427,11 +463,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "Chaar keys pehle se pata hain. Ek request chaar keys le sakti hai. Kitni request chahiye?",
-            "choices": ["Ek bulk request mein chaar known keys maango","Chaar requests; server bulk list process nahi karega","Do requests; first response next keys dega"],
+            "choices": [
+              "Ek request — chaaron keys pehle se pata hain, aur endpoint list leta hai",
+              "Chaar requests — server ek request mein list sambhal hi nahi sakta",
+              "Do requests — pehle reply se baaki keys pata chalengi, phir doosri",
+            ],
             "answer": 0,
-            "explain": "Prompt endpoint four keys accept karta aur keys already known batata hai, isliye one batch sufficient hai. Given contract bulk operation allow karta hai. Data dependency prompt mein explicitly absent hai.",
-            "hint": "Keys aur endpoint ka contract dekho."
-          , choiceExplanations: ["Prompt endpoint four keys accept karta aur keys already known batata hai, isliye one batch sufficient hai.","Given contract bulk operation allow karta hai.","Data dependency prompt mein explicitly absent hai."] }
+            "explain": "Keys independent aur pehle se pata hain, aur batch API chaar keys leti hai — ek request kaafi hai.",
+            "hint": "Keys aur endpoint ka contract dekho.",
+            "choiceExplanations": [
+              "Keys independent aur pehle se pata hain, aur batch API chaar keys leti hai — ek request kaafi hai.",
+              "Sawaal mein endpoint chaar keys leta hai. List chal jaayegi.",
+              "Keys pehle se pata hain — kisi reply ka intezaar nahi karna.",
+            ],
+          }
         },
         {
           "title": "bheje: dish-1, dish-2, dish-3, dish-4",
@@ -452,11 +497,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "Request bhej di. Kya price abhi app ke paas aa gaya?",
-            "choices": ["Nahi; response receive hona abhi baaki hai","Haan; request send hote hi response complete hai","Haan; RAM value caller ko bina network milti hai"],
+            "choices": [
+              "Chaar keys gayi hain, par reply abhi raaste mein hai",
+              "Request jaate hi chaaron prices app ke paas aa gaye",
+              "Prices RAM mein hain, toh bina network app ko mil gaye",
+            ],
             "answer": 0,
-            "explain": "Caller ke paas result tab aata hai jab remote service response return kare; outgoing request alone sufficient nahi. Send completion inbound response completion nahi. RAM placement remote boundary ko eliminate nahi karti.",
-            "hint": "Ready ki ginti reply aane par badhegi."
-          , choiceExplanations: ["Caller ke paas result tab aata hai jab remote service response return kare; outgoing request alone sufficient nahi.","Send completion inbound response completion nahi.","RAM placement remote boundary ko eliminate nahi karti."] },
+            "explain": "Data server ke paas hona aur app ko data milna alag ghatnayein hain. Chaaron prices tab milte hain jab ek reply aaye aur padha jaaye.",
+            "hint": "Ready ki ginti reply aane par badhegi.",
+            "choiceExplanations": [
+              "Data server ke paas hona aur app ko data milna alag ghatnayein hain. Chaaron prices tab milte hain jab ek reply aaye aur padha jaaye.",
+              "Bhejna poora hua, paana nahi. Reply aane tak prices app ke paas nahi.",
+              "RAM server ki hai. Beech ka network batch se bhi nahi hat-ta.",
+            ],
+          },
           "flows": [
             {
               "from": "app",
@@ -509,11 +563,20 @@ SD.registerLevels('fp-core', [
           },
           "ask": {
             "q": "Is change mein chaar prices ko chhoda gaya?",
-            "choices": ["Nahi; four values same, request grouping badli","Haan; batching ne teen required values drop ki","Haan; cache clear karne se fewer replies aayi"],
+            "choices": [
+              "Wahi chaar prices mile; bas requests ek mein jud gayi",
+              "Batch ne teen prices chhod diye, sirf ek price bacha",
+              "Cache saaf ho gaya, isliye kam replies wapas aayi",
+            ],
             "answer": 0,
-            "explain": "Comparison same four values retrieve karta hai; batching control flow aur request count badalti hai. Fewer requests fewer returned values ke barabar nahi. Cache deletion is change ka part nahi.",
-            "hint": "Ready ki aakhri ginti dekho."
-          , choiceExplanations: ["Comparison same four values retrieve karta hai; batching control flow aur request count badalti hai.","Fewer requests fewer returned values ke barabar nahi.","Cache deletion is change ka part nahi."] }
+            "explain": "Batch ne zaroori data nahi ghataaya — request ka fixed kharcha ek baar laga, chaar baar nahi.",
+            "hint": "Ready ki aakhri ginti dekho.",
+            "choiceExplanations": [
+              "Batch ne zaroori data nahi ghataaya — request ka fixed kharcha ek baar laga, chaar baar nahi.",
+              "Ready 4/4 hai — chaaron prices mile. Kam requests ka matlab kam data nahi.",
+              "Cache ko kisi ne nahi chhua. Badla sirf requests ka bantwaara.",
+            ],
+          }
         }
       ],
       "lesson": "🎯 <b>Asli baat:</b> Independent lookups ko ek bounded batch mein maangne se baar-baar ka wait bach sakta hai."
@@ -539,11 +602,20 @@ SD.registerLevels('fp-core', [
       ],
       "observe": {
         "q": "Dono runs mein chaar prices mile. Batch mein fixed wait kyun ghata?",
-        "choices": ["One batch ne four serial round trips replace kiye","RAM capacity badhi; har lookup locally serve hua","Batch ne server CPU time ko four se divide kiya"],
+        "choices": [
+          "Chaar alag requests ki jagah ek request gayi — fixed wait ek hi baar",
+          "RAM badh gayi, toh har lookup app ke andar hi ho gaya, bina network",
+          "Batch ne server ka CPU chaar guna tez kar diya, isliye wait ghata",
+        ],
         "answer": 0,
-        "explain": "Same keys grouped hone se per-request fixed waiting repeatedly pay nahi karni padti; per-key work ab bhi ho sakta hai. Storage placement unchanged hai. Batching har CPU component ko proportional faster guarantee nahi karti.",
-        "hint": "Ready aur calls dono dekho."
-      , choiceExplanations: ["Same keys grouped hone se per-request fixed waiting repeatedly pay nahi karni padti; per-key work ab bhi ho sakta hai.","Storage placement unchanged hai.","Batching har CPU component ko proportional faster guarantee nahi karti."] },
+        "explain": "Wahi lookup helpers chale. Fixed request overhead ek baar laga, chaar baar nahi. (Har key ka kaam ab bhi hota hai — bas reply ka intezaar ek baar.)",
+        "hint": "Ready aur calls dono dekho.",
+        "choiceExplanations": [
+          "Wahi lookup helpers chale. Fixed request overhead ek baar laga, chaar baar nahi. (Har key ka kaam ab bhi hota hai — bas reply ka intezaar ek baar.)",
+          "Data wahi server par hai. Badla sirf requests ki ginti.",
+          "Batch CPU tez nahi karta. Har key ka kaam ab bhi hota hai — bas reply ka intezaar ek baar.",
+        ],
+      },
       "lesson": "Output ki values aur request ginti dono milao; sirf elapsed number nahi."
     }
   ],
@@ -553,18 +625,36 @@ SD.registerLevels('fp-core', [
     "questions": [
       {
         "q": "Cache RAM mein hai. Kya remote access ka wait zero hai?",
-        "choices": ["Nahi; transport aur reply processing ab bhi hai","Haan; RAM means caller ke same address space mein","Haan; await remote network latency hata deta hai"],
+        "choices": [
+          "Raasta, server ka kaam aur reply ab bhi baaki hain",
+          "RAM har jagah ek jaisi local hi hoti hai",
+          "Await likhne se network ka intezaar mit jaata hai",
+        ],
         "answer": 0,
-        "explain": "Remote in-memory storage fast service de sakti hai, lekin network round trip aur serialization cost remain karti hai. RAM physical placement locality define nahi karti. Await waiting ko represent karta hai, distance remove nahi.",
-        "hint": "Server aur app ke beech ka raasta dekho."
-      , choiceExplanations: ["Remote in-memory storage fast service de sakti hai, lekin network round trip aur serialization cost remain karti hai.","RAM physical placement locality define nahi karti.","Await waiting ko represent karta hai, distance remove nahi."] },
+        "explain": "Remote in-memory cache tez ho sakta hai, par network round trip aur data ko bhejne-padhne (serialize/parse) ka kharch rehta hai. Apni RAM padhna aur remote request alag kaam hain.",
+        "hint": "Server aur app ke beech ka raasta dekho.",
+        "choiceExplanations": [
+          "Remote in-memory cache tez ho sakta hai, par network round trip aur data ko bhejne-padhne (serialize/parse) ka kharch rehta hai. Apni RAM padhna aur remote request alag kaam hain.",
+          "RAM kis machine ki hai, yahi farak hai. Remote RAM ke beech network hai.",
+          "await intezaar karta hai, doori nahi mitata.",
+        ],
+      },
       {
-        "q": "Ek item ke reply se agle item ki key milti hai. Seedha batch?",
-        "choices": ["Pehle dependency resolve karo; next key unknown hai","Unknown keys list mein daal do; server infer karega","Sab calls start karo; next key result ki need nahi"],
+        "q": "Menu ke A aur B prices ki keys pehle se pata hain. C ki key A ke reply se milegi. Pehli batch mein kaun-si keys bhejoge?",
+        "choices": [
+          "A aur B bhejo; C ki key milne par C ko alag maango",
+          "Sirf A bhejo; A ka reply aane par B aur C maango",
+          "Sirf B bhejo; B ka reply aane par A aur C maango",
+        ],
         "answer": 0,
-        "explain": "Agar response se next key aati hai toh ordinary client batching ke liye inputs pehle available nahi. Generic bulk API missing business key infer nahi karti. Data dependency ko concurrency syntax remove nahi karta.",
-        "hint": "Doosri key kab pata chalti hai?"
-      , choiceExplanations: ["Agar response se next key aati hai toh ordinary client batching ke liye inputs pehle available nahi.","Generic bulk API missing business key infer nahi karti.","Data dependency ko concurrency syntax remove nahi karta."] }
+        "explain": "A aur B ki keys ready hain, toh A aur B ek batch mein ja sakti hain. C ki key A ke reply ke baad milegi — C ko alag maango. Batch ko keys pehle chahiye.",
+        "hint": "Har key ke liye dekho: key abhi pata hai, ya kis reply ke baad milegi?",
+        "choiceExplanations": [
+          "A aur B ki keys ready hain, toh A aur B ek batch mein ja sakti hain. C ki key A ke reply ke baad milegi — C ko alag maango. Batch ko keys pehle chahiye.",
+          "B ki key pehle se ready hai. B ko A ke reply tak rokna zaroori nahi.",
+          "B ka reply C ki key nahi deta. A pehle maangna padega; A ko B ke reply tak rokne ki zaroorat nahi.",
+        ],
+      }
     ]
   },
   "success": [

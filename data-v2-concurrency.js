@@ -74,9 +74,9 @@
           { title: '1. Dono orders khule hain', say: '<b>Concurrency</b> mein kai tasks ek time window mein progress karte hain. Ek core ready kaam baari-baari chala sakta hai. Is MODEL mein A ko reply ka wait hai; B ka agla step ready hai.', vars: { a: 'Reply ka wait', b: 'Ready', cpu: 'B chala sakta hai' },
             ask: ask("A ka reply abhi nahi aaya, toh ek core B ka ready step chala deta hai. Kya A aur B concurrently chal rahe hain?",
               [
-                "Haan — dono kaam ek hi waqt ke daayre mein aage badhe, bhale core ek hi tha",
-                "Nahi — concurrency tabhi hai jab A aur B dono ek hi pal mein CPU par chalein",
-                "Nahi — jab tak A ka reply na aaye, B ka kaam shuru hi nahi ho sakta",
+                "Dono kaam ek hi waqt ke daayre mein aage badhe, bhale core ek hi tha",
+                "Concurrency tabhi hai jab A aur B dono ek hi pal mein CPU par chalein",
+                "Jab tak A ka reply na aaye, B ka kaam shuru hi nahi ho sakta",
               ],
               [
                 "Cook ne chai ke intezaar mein toast banaya — dono orders ek hi waqt ke daayre mein aage badhe. Concurrency ke liye do cores zaroori nahi; ek core bhi baari-baari dono kaam aage badha sakta hai.",
@@ -159,9 +159,9 @@
       interview: interview([
         ask("\"Ek event loop A ke reply ka intezaar karte hue B chala deta hai, aur thread sirf ek hai. Kya event loop concurrency de raha hai?\"",
           [
-            "Haan — ek thread bhi kai kaam baari-baari aage badha sakta hai, jaise cook ne kiya",
-            "Nahi — concurrency ke liye har kaam ko apna alag CPU core chahiye hota hai, ek kaafi nahi",
-            "Nahi — ek thread par ek kaam poora hone se pehle doosra kaam shuru ho hi nahi sakta",
+            "Ek thread bhi kai kaam baari-baari aage badha sakta hai, jaise cook ne kiya",
+            "Concurrency ke liye har kaam ko apna alag CPU core chahiye hota hai, ek kaafi nahi",
+            "Ek thread par ek kaam poora hone se pehle doosra kaam shuru ho hi nahi sakta",
           ],
           [
             "Concurrency kaamon ke overlap hone ka naam hai, threads ki ginti ka nahi. Event loop A ke intezaar mein B chala ke dono ko aage badhata hai — Node.js aur browser isi tarah chalte hain.",
@@ -171,9 +171,9 @@
           "Concurrency ki pehchaan kya thi: kai cores, ya kai kaamon ka ek hi waqt mein aage badhna?"),
         ask("\"Do processes ki apni memory alag hai. Dono database ki ek hi row badalte hain. Kya alag memory dono updates ko apne aap sambhaal legi?\"",
           [
-            "Nahi — row dono ki saajhi hai; dono updates ka kram alag se sambhaalna padega",
-            "Haan — har process ki alag memory database ki row ki bhi alag copy bana deti hai",
-            "Haan — alag process ka matlab alag database connection, jo ek doosre ka kaam nahi chhoote",
+            "Row dono ki saajhi hai; dono updates ka kram alag se sambhaalna padega",
+            "Har process ki alag memory database ki row ki bhi alag copy bana deti hai",
+            "Alag process ka matlab alag database connection, jo ek doosre ka kaam nahi chhoote",
           ],
           [
             "Alag process sirf app ki apni memory alag karta hai. Database, files aur doosri services dono processes ke liye saajhi hain — saajhi cheez par dono ke badlaav takra sakte hain. Takraav kaise hota hai aur kaise rokte hain, agla level dikhata hai.",
@@ -211,9 +211,9 @@
           { title: '4. Poora critical section bachao', say: '<b>Mutex</b> ek waqt par ek owner ko protected code mein aane deta hai. Read–add–write ka poora hissa <b>critical section</b> hai. Sab writers ko same lock maanna hoga.', vars: { a: 'Lock → 0+1 → unlock', count: '1', b: 'Ab lock lekar 1+1' },
             ask: ask("Sirf aakhri write par lock lagaya; padhna pehle jaisa, bina lock. Dono ne phir 0 padha. Bug ruka?",
               [
-                "Nahi — dono ke paas purana 0 hai; lock mein bhi dono 1 hi likhenge",
-                "Haan — dono writes ab alag-alag pal par hongi, toh count 2 hoga",
-                "Haan — write ka lock, pehle ho chuke read ko apne aap taaza kar dega",
+                "Dono ke paas purana 0 hai; lock mein bhi dono 1 hi likhenge",
+                "Dono writes ab alag-alag pal par hongi, toh count 2 hoga",
+                "Write ka lock, pehle ho chuke read ko apne aap taaza kar dega",
               ],
               [
                 "Mutex (lock) ek waqt mein ek hi thread ko andar aane deta hai. Par sirf write bachaya toh dono ke haath mein purana 0 pehle se hai. Padhna-jodna-likhna poora hissa ek hi lock ke andar ho — is hisse ka naam critical section hai.",
@@ -224,9 +224,9 @@
           { title: '5. Finally mein unlock', say: 'Mutex variant poore increment par lock leta hai aur finally mein unlock karta hai. Result 2 hai. <b>Atomic operation</b> apne defined scope mein indivisible update deta hai; <code>AtomicInteger.incrementAndGet()</code> bhi is single counter ko 2 karta hai.', vars: { count: 'Mutex 2 · atomic 2', b: 'Poora hua' },
             ask: ask("Balance aur stock do alag atomic counters hain. Kya order ka update (balance ghatao + stock ghatao) ek saath atomic hua?",
               [
-                "Nahi — har counter apne aap mein atomic hai; dono ka saath wala niyam alag banana padta hai",
-                "Haan — atomic class ke saare objects milkar apne aap ek hi transaction bana dete hain",
-                "Haan — dono atomic hain, toh beech mein exception aaye tab bhi dono badlaav ho jaayenge",
+                "Har counter apne aap mein atomic hai; dono ka saath wala niyam alag banana padta hai",
+                "Atomic class ke saare objects milkar apne aap ek hi transaction bana dete hain",
+                "Dono atomic hain, toh beech mein exception aaye tab bhi dono badlaav ho jaayenge",
               ],
               [
                 "AtomicInteger ek counter ka badlaav bina tukde ke karta hai. Do counters ka saath badalna alag niyam hai. Ek common lock doosre threads ko beech ki aadhi haalat dekhne se rokta hai — agar sab threads wahi lock lein. Par lock ke andar pehle badlaav ke baad exception aaye, toh lock pehla badlaav wapas nahi karta. \"Dono ya koi nahi\" chahiye toh transaction chahiye, ya failure par purani haalat lautane ka niyam.",
@@ -239,9 +239,9 @@
           { title: '1. Coarse ya fine?', say: '<b>Coarse-grained locking</b>: kai keys ke liye ek bada lock. <b>Fine-grained locking</b>: alag keys ya chhote regions ke locks. Lab mein A ka lock held hai; B ke alag key ka tryLock coarse par fail, fine par pass hota hai. Throughput ka benchmark nahi.',
             ask: ask("Do accounts ke transfer mein har account ka alag (chhota) lock lagaya. Kya design poora ho gaya?",
               [
-                "Nahi — transfer mein dono accounts saath badalte hain, toh dono ke locks saath chahiye",
-                "Haan — alag locks wale dono accounts ka milkar balance apne aap sahi rahega",
-                "Haan — do chhote locks lene se dono accounts ek hi pal mein ek saath lock ho jaate hain",
+                "Transfer mein dono accounts saath badalte hain, toh dono ke locks saath chahiye",
+                "Alag locks wale dono accounts ka milkar balance apne aap sahi rahega",
+                "Do chhote locks lene se dono accounts ek hi pal mein ek saath lock ho jaate hain",
               ],
               [
                 "Chhote (fine) locks alag accounts ke kaam ko saath chalne dete hain. Par transfer do accounts ek saath badalta hai — dono ke locks chahiye. Ek baat aage ke liye: do locks lene ka kram har jagah ek hi rakho. Kram ulta ho toh do threads ek doosre ka lock maangte hue phans sakte hain — Stuck wala level yahi dikhata hai.",
@@ -252,9 +252,9 @@
           { title: '2. Same thread phir lock le', say: '<b>Reentrant lock</b> same owner thread ko dobara lock lene deta hai. Hold count 2 par ek unlock ke baad count 1 rahega. Doosra thread tab tak owner nahi banta.',
             ask: ask("Ek thread ne wahi lock do baar liya (reentrant), aur ek baar chhoda. Kya doosra thread ab andar aa sakta hai?",
               [
-                "Nahi — ek hold abhi baaki hai; doosre unlock tak lock pehle thread ka hai",
-                "Haan — pehla unlock hi lock ka poora malik-record mita deta hai, ginti nahi",
-                "Haan — reentrant ka matlab doosre thread ko bhi andar aane ki chhoot hai",
+                "Ek hold abhi baaki hai; doosre unlock tak lock pehle thread ka hai",
+                "Pehla unlock hi lock ka poora malik-record mita deta hai, ginti nahi",
+                "Reentrant ka matlab doosre thread ko bhi andar aane ki chhoot hai",
               ],
               [
                 "Reentrant lock wahi thread dobara le sakta hai, aur har baar ginti badhti hai. Count 2 → ek unlock → count 1. Lock tab khulta hai jab count 0 ho. Har lock ke saath ek unlock.",
@@ -265,9 +265,9 @@
           { title: '3. Immutable snapshot', say: 'Java mein <code>final</code> field ka matlab: field ek baar set ho gayi, toh field ko kisi doosre object par nahi badal sakte. <b>Immutability</b> mein object banne ke baad value mutate nahi hoti. Lab <code>List.copyOf</code> se strings ki snapshot leta hai. Source list baad mein badle toh snapshot nahi badalti. Mutable nested objects ki deep copy is API ka promise nahi.',
             ask: ask("final field mein ek mutable list rakhi. Kya poori list ab immutable ho gayi?",
               [
-                "Nahi — final sirf reference pakka karta hai; list ke items ab bhi badal sakte hain",
-                "Haan — final reference ke saath list aur andar ka har object bhi jam jaata hai",
-                "Haan — final field hote hi list par saare concurrent updates apne aap ruk jaate hain",
+                "Final sirf reference pakka karta hai; list ke items ab bhi badal sakte hain",
+                "Final reference ke saath list aur andar ka har object bhi jam jaata hai",
+                "Final field hote hi list par saare concurrent updates apne aap ruk jaate hain",
               ],
               [
                 "final ka matlab: field kisi doosri list ko point nahi karegi. List ke andar add/remove phir bhi chalta hai. Na badalne wali snapshot chahiye toh List.copyOf jaisi immutable copy banao (lab mein List.copyOf); nested objects ki deep copy List.copyOf ka vaada nahi.",
@@ -293,9 +293,9 @@
       interview: interview([
         ask("\"Single-thread async server mein do requests purana stock padhti hain, await karti hain, phir stock likhti hain. Kya race ho sakti hai?\"",
           [
-            "Haan — await ke beech doosri request ghus ke wahi purana stock likh sakti hai",
-            "Nahi — ek thread par requests ka stock badalne ka kram hamesha tay rehta hai",
-            "Nahi — await ke baad server pehli request ka padha stock doosri ko de dega",
+            "Await ke beech doosri request ghus ke wahi purana stock likh sakti hai",
+            "Ek thread par requests ka stock badalne ka kram hamesha tay rehta hai",
+            "Await ke baad server pehli request ka padha stock doosri ko de dega",
           ],
           [
             "Race ke liye kai CPU threads zaroori nahi. Padhna → await → likhna ke beech doosri request chal jaati hai — dono purane stock se likhti hain, ek bikri kho jaati hai. Await ke beech saajhi cheez ko lock ya atomic update se bachao.",
@@ -358,9 +358,9 @@
           { title: '6. Backpressure ki boundary', say: '<b>Backpressure</b> intake ko consumer ki capacity ka signal deta hai. Is bounded producer ko wait milta hai, isliye producer aur kaam nahi banaata. Hazaar independent HTTP handlers ko wait karaao toh queue ke bahar pending calls ki memory badh sakti hai.',
             ask: ask("Queue ki capacity 2 hai, par har nayi request apna alag handler bana ke put par ruk jaati hai. Kya kul memory bounded hai?",
               [
-                "Nahi — queue ke items seemit hain, par ruke handlers ki ginti bhi seemit karni padegi",
-                "Haan — queue ke do slots process ke saare ruke calls ko bhi apne aap seemit karte hain",
-                "Haan — await par rukte hi handler ki request aur payload memory se hat jaate hain",
+                "Queue ke items seemit hain, par ruke handlers ki ginti bhi seemit karni padegi",
+                "Queue ke do slots process ke saare ruke calls ko bhi apne aap seemit karte hain",
+                "Await par rukte hi handler ki request aur payload memory se hat jaate hain",
               ],
               [
                 "Queue mein sirf 2 items, par bahar har ruka handler apni request, stack aur payload pakde hai — aur nayi requests aati rahin toh ruke handlers badhte jaate hain. Handlers ki ginti par bhi hadd chahiye, ya turant mana (admission) aur deadline.",
@@ -386,9 +386,9 @@
           { title: '2. Non-blocking ka kaunsa meaning?', say: 'API sense mein non-blocking ya nonwaiting call data/capacity ke liye nahi rukti. Is lab ki offer/poll phir bhi short bookkeeping lock leti hain. Formal <b>lock-free</b> progress guarantee alag concept hai; immediate capacity result se lock-free algorithm prove nahi hota.',
             ask: ask("offer jagah ka intezaar nahi karta, par andar ek chhota lock leta hai. Kya offer lock-free hai?",
               [
-                "Nahi — jagah ka intezaar na karna lock-free ka saboot nahi; chhota lock bhi lock hai",
-                "Haan — false lautane wali har queue apne aap formal lock-free hoti hai",
-                "Haan — chhote lock ka intezaar CPU scheduling jaisa hai, isliye lock nahi ginta",
+                "Jagah ka intezaar na karna lock-free ka saboot nahi; chhota lock bhi lock hai",
+                "False lautane wali har queue apne aap formal lock-free hoti hai",
+                "Chhote lock ka intezaar CPU scheduling jaisa hai, isliye lock nahi ginta",
               ],
               [
                 "\"Non-blocking API\" ka matlab: data ya jagah ke liye nahi rukta. \"Lock-free algorithm\" ek alag, pakka vaada hai ki koi na koi thread hamesha aage badhega. Is lab ka offer chhota lock leta hai — lock par bhi kheencha-taani ho sakti hai.",
@@ -536,9 +536,9 @@
       interview: interview([
         ask("\"Chaar pods hain, har pod ka connection semaphore 10. Kya database ke liye kul hadd 10 bani?\"",
           [
-            "Nahi — chaaron milkar 40 connections khol sakte hain; database ka budget pods mein baanto",
-            "Haan — semaphore ki ginti 10 saare processes ke beech apne aap baant li jaati hai",
-            "Haan — har connection ka ID alag hai, isliye kul hadd 10 hi bani rehti hai",
+            "Chaaron milkar 40 connections khol sakte hain; database ka budget pods mein baanto",
+            "Semaphore ki ginti 10 saare processes ke beech apne aap baant li jaati hai",
+            "Har connection ka ID alag hai, isliye kul hadd 10 hi bani rehti hai",
           ],
           [
             "Process ke andar ka semaphore sirf us process ki ginti rakhta hai. 4 × 10 = 40. Database ka kul budget pods, replicas aur deploy ke waqt ki extra pods mein baanto.",
@@ -548,9 +548,9 @@
           "Har pod ka semaphore kiski memory mein hai? Kya pods ek doosre ki ginti dekhte hain?"),
         ask("\"Pool ka borrow timeout aur query timeout — kya dono ek hi cheez hain?\"",
           [
-            "Nahi — pehla connection milne ka intezaar hai; doosra query ke kaam ki deadline",
-            "Haan — borrow ka timer query khatam hone tak permit ka intezaar ginta rehta hai",
-            "Haan — query ka timer free list aur semaphore ki ginti reset kar deta hai",
+            "Pehla connection milne ka intezaar hai; doosra query ke kaam ki deadline",
+            "Borrow ka timer query khatam hone tak permit ka intezaar ginta rehta hai",
+            "Query ka timer free list aur semaphore ki ginti reset kar deta hai",
           ],
           [
             "Andar aane ka intezaar aur kaam karna do alag hisse hain. User ki poori deadline dono mein baanto — jaise 200 ms borrow + 800 ms query.",
@@ -586,9 +586,9 @@
           { title: '3. Real detector, bounded cleanup', say: 'Java ThreadMXBean is demo ke dono thread IDs ko deadlock report mein dhoondhta hai. Demo <code>lockInterruptibly()</code> use karta hai, phir dono threads interrupt karta hai. finally acquired locks chhodta hai. Plain <code>lock()</code> ko interrupt karna aisa escape guarantee nahi deta.',
             ask: ask("Demo interrupt se band hua. Kya production mein plain lock() wala deadlock bhi aise hi theek hoga?",
               [
-                "Nahi — demo lockInterruptibly() par tika hai; plain lock() interrupt se nahi chhootta",
-                "Haan — Thread.interrupt kisi bhi pakde hue lock ko maalik se zabardasti chheen leta hai",
-                "Haan — deadlock detector Java ke saare locks apne aap khol deta hai, koi bhi lock ho",
+                "Demo lockInterruptibly() par tika hai; plain lock() interrupt se nahi chhootta",
+                "Thread.interrupt kisi bhi pakde hue lock ko maalik se zabardasti chheen leta hai",
+                "Deadlock detector Java ke saare locks apne aap khol deta hai, koi bhi lock ho",
               ],
               [
                 "Interrupt ek darkhwast hai, zabardasti nahi. lockInterruptibly() par ruka thread interrupt sun ke nikal aata hai, aur finally pakde locks chhod deta hai. Plain lock() par ruka thread interrupt ke baad bhi ruka rehta hai. ThreadMXBean sirf deadlock batata hai, theek nahi karta.",
@@ -600,9 +600,9 @@
           { title: '5. Fine locks ki checklist', say: 'Multi-resource updates mein lock order ek jagah define karo. Pehle lock hold karke unknown callback ya slow network call karoge toh naye waits jud sakte hain. Har participating path ka order verify karo.',
             ask: ask("Do transfer raaste stock → wallet kram mein lock lete hain, teesra wallet → stock. Kya repair poora hai?",
               [
-                "Nahi — teesra raasta ulta gola phir bana sakta hai; sab raaste ek hi kram mein lein",
-                "Haan — teesra raasta kam chalta hai, toh do aam raaston ka sahi kram kaafi hai",
-                "Haan — teesre raaste ko fair lock de do, toh ulte kram wala gola apne aap mit jaayega",
+                "Teesra raasta ulta gola phir bana sakta hai; sab raaste ek hi kram mein lein",
+                "Teesra raasta kam chalta hai, toh do aam raaston ka sahi kram kaafi hai",
+                "Teesre raaste ko fair lock de do, toh ulte kram wala gola apne aap mit jaayega",
               ],
               [
                 "Kram ka niyam tabhi kaam karta hai jab har raasta niyam maane. Kram ek jagah likho (jaise ID ke hisaab se), aur lock pakad ke anjaan callback ya dheema network call mat karo.",
@@ -670,9 +670,9 @@
       interview: interview([
         ask("\"Fair lock laga diya, par A aur B do resources ulte kram mein lete hain. Kya deadlock ka khatra gaya?\"",
           [
-            "Nahi — fair lock intezaar ka kram badalta hai, ulta gola nahi todta",
-            "Haan — fair lock dono resources ek hi thread ko ek saath de deta hai",
-            "Haan — fair lock intezaar shuru hote hi pehla pakda lock chhod deta hai",
+            "Fair lock intezaar ka kram badalta hai, ulta gola nahi todta",
+            "Fair lock dono resources ek hi thread ko ek saath de deta hai",
+            "Fair lock intezaar shuru hote hi pehla pakda lock chhod deta hai",
           ],
           [
             "Sab raaste ek hi kram mein locks lein. Ek aur tareeka: doosra lock waqt par na mile (tryLock + timeout) toh pehla lock chhod ke baad mein koshish karo. Fair lock sirf intezaar karne walon ki baari sambhaalta hai; do resources lene ka kram nahi badalta.",
@@ -721,9 +721,9 @@
           { title: '4. Latch khola', say: 'Unbounded run 5 accepted jobs finish karta hai. Bounded run 4 accepted jobs finish karta hai, 1 reject hai. Fewer accepted jobs ko faster throughput ka proof mat bolo.', vars: { active: 'Shutdown ke baad 0', waiting: '0', outcome: 'Bounded: 4 done, 1 rejected' },
             ask: ask("Bounded run mein 4 jobs poori hui, unbounded mein 5. Kya bounded pool ne wahi kaam tez kiya?",
               [
-                "Nahi — andar aaya kaam hi alag tha; yahan bas andar aane ki hadd jaanchi, raftaar nahi",
-                "Haan — chaar ka poora hona dikhata hai ki har job paanch wale run se tez chali",
-                "Haan — reject se paanchvi job ka nateeja bina chale hi mil gaya, toh kaam bacha",
+                "Andar aaya kaam hi alag tha; yahan bas andar aane ki hadd jaanchi, raftaar nahi",
+                "Chaar ka poora hona dikhata hai ki har job paanch wale run se tez chali",
+                "Reject se paanchvi job ka nateeja bina chale hi mil gaya, toh kaam bacha",
               ],
               [
                 "Bounded run ne 4 li aur 1 lautayi; unbounded ne 5 li. Ginti alag kaam ki hai, raftaar ki nahi. Reject hui job ka kya karna hai, caller ka faisla hai.",
@@ -735,9 +735,9 @@
           { title: '6. Fixed workers ka matlab bounded queue?', say: 'Java <code>Executors.newFixedThreadPool(2)</code> unbounded waiting queue use karta hai. Worker cap 2 hai, pending backlog ki cap nahi. Lab explicit ThreadPoolExecutor aur ArrayBlockingQueue(2) compare karta hai.',
             ask: ask("Worker threads tay 2 hain, par intezaar ki queue bina hadd ki hai. Kya overload mein memory ka khatra gaya?",
               [
-                "Nahi — intezaar wali jobs badhti rahengi; queue ki hadd aur reject ka niyam bhi chahiye",
-                "Haan — 2 workers ki hadd intezaar wali saari jobs ko bhi 2 par hi rok deti hai",
-                "Haan — queue mein jobs ka bas naam rehta hai; request ka data memory mein nahi rehta",
+                "Intezaar wali jobs badhti rahengi; queue ki hadd aur reject ka niyam bhi chahiye",
+                "2 workers ki hadd intezaar wali saari jobs ko bhi 2 par hi rok deti hai",
+                "Queue mein jobs ka bas naam rehta hai; request ka data memory mein nahi rehta",
               ],
               [
                 "Java ka Executors.newFixedThreadPool(2) bina hadd ki queue lagata hai: kaam karne wale 2, par intezaar ki koi chhat nahi. Kaam ki hadd aur intezaar ki hadd do alag budget hain. Lab ThreadPoolExecutor + ArrayBlockingQueue(2) se dono hadd lagata hai.",
@@ -750,9 +750,9 @@
           { title: '1. Thread-safe map, unsafe workflow', say: '<b>Idempotency</b> mein same logical operation repeat hone par business effect dobara nahi lagna chahiye. <b>Race</b> tab bhi ho sakti hai jab map ki individual get/put thread-safe hon. Broken code mein do requests same key absent dekhti hain, phir dono effect karti hain.',
             ask: ask("ConcurrentHashMap par pehle get(key), phir effect, phir put(key). Kya duplicate effect ruka?",
               [
-                "Nahi — dono requests key ko khaali dekh sakti hain; poora check-aur-effect ek saath bachao",
-                "Haan — map thread-safe hai, toh get aur baad ka effect apne aap ek hi step ban gaye",
-                "Haan — aakhri put pehle wala effect wapas le lega aur sirf naya nateeja rakhega",
+                "Dono requests key ko khaali dekh sakti hain; poora check-aur-effect ek saath bachao",
+                "Map thread-safe hai, toh get aur baad ka effect apne aap ek hi step ban gaye",
+                "Aakhri put pehle wala effect wapas le lega aur sirf naya nateeja rakhega",
               ],
               [
                 "Map ki ek-ek call safe hai, par get aur effect ke beech doosri request aa sakti hai. Lab: broken code mein dono requests ne key khaali dekhi aur effect 2 baar hua. Key jaanchna aur pehla effect karna ek hi kadam mein bachana padega — agla card dikhata hai kaise.",

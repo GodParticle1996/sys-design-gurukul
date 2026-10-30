@@ -357,10 +357,10 @@ docker-labs/42-chaos/tools/mini.js       ← dono ko jodna — jaisa tum apne ap
           ask: {
             q: 'Ek team ne inject likh liya (ek database node band karna). rollback ke liye team ne kaha: "baad mein likhenge". Kya prayog chalana chahiye?',
             choices: [
-              'Nahi — pehle rollback likho aur akele chala ke parakho; chot wapas na ho toh rokna bekaar',
-              'Haan — rokne ka niyam laga hai, naap girte hi prayog ruk jaayega, toh koi khatra nahi',
-              'Haan — health check band node ko pehchaan lega, aur system khud hi sambhal lega',
-              'Haan — bas prayog chhota rakho, 10 second ka, toh rollback ki zaroorat nahi padegi',
+              'Pehle rollback likho aur akele chala ke parakho; chot wapas na ho toh rokna bekaar',
+              'Rokne ka niyam laga hai, naap girte hi prayog ruk jaayega, toh koi khatra nahi',
+              'Health check band node ko pehchaan lega, aur system khud hi sambhal lega',
+              'Bas prayog chhota rakho, 10 second ka, toh rollback ki zaroorat nahi padegi',
             ],
             answer: 0,
             hint: 'Line 44 kahan se bulayi jaati hai? (Pichhle stage ka finally.) finally mein kuch na ho toh?',
