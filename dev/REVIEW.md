@@ -169,7 +169,7 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Tool: `dev/rewrite/labels.js` | Claude | Codex (in the API review) | rewrites incident `t` and design `label` texts with the same checks as `apply.js` |
 | Phase 3 rewrite, core track API (11 levels, 40 MCQs + 6 design labels) | Claude | Codex | review running; not committed |
 | Phase 3 rewrite, core track Data batch 1 (modeling … caching, 33 MCQs) | Codex | Claude: options read in full, "had" → "hadd" | applied; Codex's MCQ fact fixes kept; 9 lesson/flashcard overclaims Codex listed fixed by Claude |
-| Phase 3 rewrite, core track Data batch 2 (stampede … boss-data, 10 levels) | Codex | Claude | being written |
+| Phase 3 rewrite, core track Data batch 2 (stampede … boss-data, 48 MCQs) | Codex | Claude: spot-read, "had" → "hadd" | applied; Codex's style is denser and more English-heavy than mine — ask for simpler wording next time. Its 7 outside-MCQ findings fixed by Claude |
 | Phase 3 rewrite: dr-kyun … dr-kab (45 MCQs) | Codex (second writing job, ~20 min) | Claude: timings checked against `tools/slowmo.js`, options read in full | applied (one word changed); Codex's 3 MCQ fact fixes kept, and its 3 step-text/flashcard findings fixed |
 | Tool: `dev/rewrite/scan.js` | Claude | — | per-track count of clipped-English strings; undercounts (options with glue words still read clipped), so treat it as a floor |
 | Phase 3 rewrite: hc-kyun … hc-kab (40 MCQs) | Codex (first writing job, ~20 min) | Claude: every option checked against `lib/health.js`, `lib/checker.js`, the README traces and the AWS/Kubernetes defaults | applied with light wording fixes; Codex also found 2 wrong step texts and a `slowmo-boot.js` bug, all fixed |
@@ -335,6 +335,16 @@ carry several streams); a 98.9% product that assumes independent failures; "aam 
 (PostgreSQL takes ACCESS SHARE — the point is that a read reserves nothing); a 6.25 rps ceiling from "ek query 8 s"
 (only valid if every request holds a connection 8 s, now in the stem). Lesson for the core tracks: the audit's
 softening was usually right on facts and only wrong on language — keep the facts, restore only the voice.
+
+Thirteenth round (Data batch 2, Codex writing) — facts Codex fixed in the questions: 5,000 rps is not 5,000
+simultaneous misses (a 200 ms rebuild window is ~1,000 arrivals); single-flight is per app process; a 95% hit rate
+does not prove the DB falls over; sharding makes cross-shard features costly, not impossible; vnodes do not give a
+fixed skew; Redis resharding migrates slots live. Outside the questions, fixed by Claude: the same 5,000-miss claim
+and its diagram, "cross-shard JOIN/transaction — gaya" (now "mehnga ya engine par nirbhar"), vnode skew ~1.05x /
+~1.01x (lab 34 recorded 1.2x; the in-app simulator's 1.9x → 1.01x is now labelled as the simulator's), rollback "20
+second" vs deploy "20 minute" as universal numbers, "full-state events alone make duplicates safe" (needs the
+newer-version guard), "757 queries ek saath" (peak was 739) and "83,000 DB queries ek saath" (the tool counts routes,
+not DB load) in two READMEs and their cards.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

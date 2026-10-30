@@ -179,16 +179,27 @@ xfetch     3 DB reads                  p50  122 ms   p99  226 ms   (key kabhi th
         { text: 'Stampede test.', cmd: 'node tools/stampede.js', expect: 'none          757 (ek saath 739)    1087 ms    1339 ms   nahi\nmutex           3 (ek saath   2)     457 ms     472 ms   nahi\nswr             3 (ek saath   2)     122 ms     217 ms   haan (thodi der ke liye)\nxfetch          3 (ek saath   2)     122 ms     226 ms   nahi' },
       ],
       observe: {
-        q: 'Mutex ne DB bachaya (3 queries) par p50 457 ms kyun?',
-        choices: ["Waiters same slow rebuild completion ka wait kar rahe","Mutex acquisition itself har request par 400 ms leta","SWR har stale hit par full DB query wait karta","Old cache data fresh rebuild se slower serve hota"],
+        q: 'Lab ke recorded run mein mutex par 3 DB reads aur burst p50 457 ms tha. Requests kis baat par ruki?',
+        choices: [
+          'Har app ke callers apni shared DB rebuild poori hone ka intezaar kar rahe the',
+          'Har caller ko mutex ka taala lene mein hi fixed 400 ms ka samay lag raha tha',
+          'Har caller ko pehle purana price mila, phir DB rebuild ka jawab lena pad raha tha',
+          'Har caller ko mutex ne alag DB query di, par DB saari queries saath kar raha tha',
+        ],
         answer: 0,
-        explain: "Single-flight database work collapse karta hai, par stale response absent ho toh callers rebuild completion tak wait karte hain. 400 ms rebuild work hai, lock primitive ka fixed cost nahi. Stale-while-revalidate allowed old value return kar sakta hai. Stale serve time fresh data correctness se different tradeoff hai.",
-       choiceExplanations: ["Single-flight database work collapse karta hai, par stale response absent ho toh callers rebuild completion tak wait karte hain.","400 ms rebuild work hai, lock primitive ka fixed cost nahi.","Stale-while-revalidate allowed old value return kar sakta hai.","Stale serve time fresh data correctness se different tradeoff hai."] },
+        explain: 'Lab mein DB rebuild ka kaam 400 ms ka hai. Har app ki inflight map ek key ka rebuild jodti hai; baaki callers nateeje ka intezaar karte hain. Recorded 3 reads mein warm-up bhi shaamil hai. SWR purana value de sakta hai agar staleness manzoor ho. 457 ms p50 recorded run ka hai, lock ka fixed overhead nahi.',
+        choiceExplanations: [
+          'Lab mein DB rebuild ka kaam 400 ms ka hai. Har app ki inflight map ek key ka rebuild jodti hai; baaki callers nateeje ka intezaar karte hain. Recorded 3 reads mein warm-up bhi shaamil hai. SWR purana value de sakta hai agar staleness manzoor ho. 457 ms p50 recorded run ka hai, lock ka fixed overhead nahi.',
+          '400 ms DB rebuild ka configured samay hai; mutex lene ka fixed samay nahi.',
+          'Mutex path fresh rebuild ka nateeja wait karta hai. Purana value turant dena SWR ka alag behavior hai.',
+          'Mutex path har app mein same key ka refresh jodta hai, har caller ke liye alag query nahi bhejta.',
+        ],
+      },
       lesson: 'Stampede ke teen ilaaj — sabne DB bachaya, farq latency aur staleness mein.',
     },
   ],
   cards: [
-    { front: 'Lab 33: stampede?', back: 'None: 757 DB reads ek saath. Mutex/SWR/xfetch: 3 reads. Mutex p50 457 ms (intezaar), SWR/xfetch ~122 ms.' },
+    { front: 'Lab 33: stampede?', back: 'None: 757 DB reads (sabse zyada 739 ek saath). Mutex/SWR/xfetch: 3 reads. Mutex p50 457 ms (intezaar), SWR/xfetch ~122 ms.' },
   ],
 });
 
@@ -204,7 +215,7 @@ modulo     1.0×              83.3%                   85.9%
 ring       28.6×             26.6%                    8.9%
 vnodes     1.2×              17.7%                   14.3%
 weighted   2.1× (jaan-boojh) 15.1%                   12.5%</pre>
-     <p>Modulo: load ekdum barabar par N badla toh lagbhag sab hila → 83,000 queries DB par ek saath. Ek point per node: load 28× tedha. Vnodes:
+     <p>Modulo: load ekdum barabar par N badla toh lagbhag sab hila → ~83,000 keys ka cache thanda; un keys ki agli reads DB par jaayengi. Ek point per node: load 28× tedha. Vnodes:
      barabar + sirf zaroori keys hilin. Weighted: bade server ko zyada vnodes → zyada hissa, routing code wahi.</p>
      <h3>⏱️ Production mein node mara — timeline</h3>
      <ol>
@@ -231,11 +242,22 @@ weighted   2.1× (jaan-boojh) 15.1%                   12.5%</pre>
         { text: 'Rehash test.', cmd: 'node tools/rehash.js', expect: 'modulo      16761 / 16561  =   1.0x                          83288 (83.3%)                       85865 (85.9%)\nring        26583 / 931    =  28.6x                          26583 (26.6%)                        8928 (8.9%)\nvnodes      17722 / 14933  =   1.2x                          17722 (17.7%)                       14312 (14.3%)\nweighted    28472 / 13280  =   2.1x (node1 weight 2 → 28472)  15088 (15.1%)                       12534 (12.5%)' },
       ],
       observe: {
-        q: 'Modulo ka load sabse barabar (1.0×) — phir bhi sabse bura kyun?',
-        choices: ["Membership change ne many keys remap karke cache cold ki","Modulo CPU cost 80% requests ko timeout banaati hai","Even key counts imply same physical cached values remain","Modulo hash sirf six-node cluster tak defined hota hai"],
+        q: 'Lab ke recorded run mein modulo load ratio ~1.0x tha, par resize par 83-86% routes badle. Lesson?',
+        choices: [
+          'Placement ke saath membership change ka remap aur cold-path load bhi gino',
+          'Barabar placement se cached values safe hain; remap ka DB par kharcha nahi gino',
+          'Barabar placement se resize muft hai; node-list update ko hi poora rebalance maano',
+          'Barabar placement CPU bachata hai; 83-86% ko modulo calculation ka timeout maano',
+        ],
         answer: 0,
-        explain: "hash % N mein N change large key fraction remap kar sakta hai; measured 83–86% this run ka result hai. Problem resize movement hai, modulo arithmetic latency nahi. Balanced placement remapping cost zero nahi karti. Modulo any positive N ke liye defined hai.",
-       choiceExplanations: ["hash % N mein N change large key fraction remap kar sakta hai; measured 83–86% this run ka result hai.","Problem resize movement hai, modulo arithmetic latency nahi.","Balanced placement remapping cost zero nahi karti.","Modulo any positive N ke liye defined hai."] },
+        explain: 'Lab ke recorded run mein 6 se 5 nodes par 83.3% routes badle, aur 6 se 7 par 85.9%. Modulo ka normal placement balanced tha, par membership badli toh bahut routes badle. Cold cache se origin ka load badh sakta hai. Percentages run ke hain; router CPU latency ka measurement nahi.',
+        choiceExplanations: [
+          'Lab ke recorded run mein 6 se 5 nodes par 83.3% routes badle, aur 6 se 7 par 85.9%. Modulo ka normal placement balanced tha, par membership badli toh bahut routes badle. Cold cache se origin ka load badh sakta hai. Percentages run ke hain; router CPU latency ka measurement nahi.',
+          'Key count balanced hone se new owner ke paas value pehle se hone ka proof nahi milta.',
+          'Node list badalne ke baad keys ka route aur data/cold-path ka kaam bhi sambhaalna padta hai.',
+          'Tool routing changes aur misses ginta hai; 83-86% CPU timeouts ka number nahi.',
+        ],
+      },
       lesson: 'Consistent hashing ka asli kaam: node badle toh sirf ~1/N keys hilein.',
     },
   ],
@@ -846,11 +868,22 @@ CDC + L1 ko pub/sub se khabar            ~91–121 ms</pre>
         { text: 'Staleness test.', cmd: 'node tools/staleness.js', expect: 'sirf TTL (cache 5 s, L1 5 s)             app1 purana dikhaya  3998 ms   app2  4028 ms\nCDC → shared cache DEL (L1 ko pata nahi) app1 purana dikhaya  4040 ms   app2  4044 ms\nCDC + L1 ko pub/sub se khabar            app1 purana dikhaya    91 ms   app2   121 ms' },
       ],
       observe: {
-        q: 'CDC ne shared cache turant saaf kiya — phir bhi 4 sec galat kyun?',
-        choices: ["Local L1 invalidation missing thi; TTL tak stale rahi","Shared L2 purge operation actually execute nahi hua","DB commit CDC ke baad logically rollback ho gaya","CDC notification se all process caches reset ho jaati"],
+        q: 'Lab ke recorded run mein CDC se shared cache saaf hui, par price ~4 s purana raha. Kaunsi layer bachi?',
+        choices: [
+          'Har app ki local L1 copy bachi rahi; copy apne TTL tak purana price deti rahi',
+          'Shared L2 copy bachi rahi; successful DEL ke baad bhi wahi purana price deti rahi',
+          'DB ki value badli nahi thi; commit hone se pehle CDC ne naya price bhej diya tha',
+          'Client ka page bacha raha; app endpoint ne purane price ka response diya hi nahi',
+        ],
         answer: 0,
-        explain: "Trace mein remote cache invalidation complete thi, par independent process-local copies unchanged rahi. Prompt shared purge successful batata hai. DB rollback ka evidence nahi. Every cache layer ko explicit invalidation/version policy chahiye.",
-       choiceExplanations: ["Trace mein remote cache invalidation complete thi, par independent process-local copies unchanged rahi.","Prompt shared purge successful batata hai.","DB rollback ka evidence nahi.","Every cache layer ko explicit invalidation/version policy chahiye."] },
+        explain: 'Lab ke recorded run mein shared cache DEL ke baad app1/app2 lagbhag 4040/4044 ms tak purana price dete rahe. App ki local L1 ko invalidation nahi mili thi. CDC plus L1 notification ke run mein lagbhag 91/121 ms lage. Har cache layer ki invalidation aur allowed staleness alag design karo; timings har setup ki guarantee nahi.',
+        choiceExplanations: [
+          'Lab ke recorded run mein shared cache DEL ke baad app1/app2 lagbhag 4040/4044 ms tak purana price dete rahe. App ki local L1 ko invalidation nahi mili thi. CDC plus L1 notification ke run mein lagbhag 91/121 ms lage. Har cache layer ki invalidation aur allowed staleness alag design karo; timings har setup ki guarantee nahi.',
+          'Diye hue trace mein shared DEL safal thi; local L1 copy phir bhi bachi reh sakti hai.',
+          'Lab mein DB price change ho chuka tha. Purana response local copy se mil raha tha, rollback ka saboot nahi.',
+          'Tool app endpoints se price padhta hai; purana response server se aaya, sirf screen ki copy nahi.',
+        ],
+      },
       lesson: 'Record → views (tags/versions), aur key → har layer (pub/sub).',
     },
     {
@@ -871,17 +904,39 @@ CDC + L1 ko pub/sub se khabar            ~91–121 ms</pre>
     instructions: 'Do sawaal. 🎤',
     questions: [
       {
-        q: 'Interviewer: "Price badalne ke baad bhi kuch users ko purana price dikhta hai, kuch ko naya."',
-        choices: ["Trace cache layers; reliable version/invalidation design karo","L2 purge alone every app memory update guarantee karta","Client refresh server stale L1 ko invalidate kar deta","Short TTL alone every freshness requirement satisfy karta"],
+        q: 'Price badla, kuch users ko purana price aur kuch ko naya dikha. Pehla useful kadam?',
+        choices: [
+          'Request kis L1, L2 aur CDN se aayi, trace karo; freshness aur invalidation parkho',
+          'Sirf L2 ki key delete karo; app memory ki copies ko alag track karna baad mein dekho',
+          'Sirf browser refresh karao; server ki local copies ko waise hi expire hone do',
+          'Sirf TTL chhota karo; allowed staleness aur miss load ko naapna baad mein dekho',
+        ],
         answer: 0,
-        explain: "L1/L2/CDN copy paths identify karo; invalidation message loss/reconnect aur allowed staleness handle karo. Process-local cache state remote DEL se necessarily clear nahi. Client reload server-internal cached values still read kar sakta hai. TTL waiting window remains; target semantics verify karo.",
-       choiceExplanations: ["L1/L2/CDN copy paths identify karo; invalidation message loss/reconnect aur allowed staleness handle karo.","Process-local cache state remote DEL se necessarily clear nahi.","Client reload server-internal cached values still read kar sakta hai.","TTL waiting window remains; target semantics verify karo."] },
+        explain: 'Pehle response ka raasta dhoondho: app ki L1, shared L2 aur CDN mein kaunsi copy mili? Phir allowed staleness, invalidation, version pointer aur refresh races parkho. Notification kho jaaye ya app reconnect kare toh recovery ka plan chahiye. Redis Pub/Sub akela missed messages replay nahi karta.',
+        choiceExplanations: [
+          'Pehle response ka raasta dhoondho: app ki L1, shared L2 aur CDN mein kaunsi copy mili? Phir allowed staleness, invalidation, version pointer aur refresh races parkho. Notification kho jaaye ya app reconnect kare toh recovery ka plan chahiye. Redis Pub/Sub akela missed messages replay nahi karta.',
+          'Remote DEL app ki process memory apne aap nahi badalta; L1 ko bhi khabar ya version check chahiye.',
+          'Browser refresh bhi server ki purani cached copy padh sakta hai; serving layer ka saboot chahiye.',
+          'Chhota TTL stale window ghata sakta hai, par exact freshness ki guarantee nahi aur misses badh sakte hain.',
+        ],
+      },
       {
-        q: 'Interviewer: "Ek product badla, kaunse cached pages mitayein pata nahi."',
-        choices: ["Dependency tags ya version keys se derived views map karo","Full flush ko per-record invalidation ke equal maano","Each view ko independent fixed TTL se exact fresh rakho","Every cached view ko origin write path se disconnect karo"],
+        q: 'Product badla, par product se bane cached pages ki list nahi hai. Targeted invalidation kaise banao?',
+        choices: [
+          'Cached views ke source tags ya versions rakho, phir affected views saaf karo',
+          'Har product update par poora cache saaf karo, chahe baaki views badle na hon',
+          'Har cached page ko ek hi TTL do, phir product se pages ka rishta rakhna chhodo',
+          'Har page ki key alag rakho, phir DB updates ki khabar pahunchana band kar do',
+        ],
         answer: 0,
-        explain: "Cached result ki source dependencies track karke affected views invalidate/version karo; tag cardinality and race semantics design karo. Global flush unnecessary miss storm la sakta hai. TTL exact synchronous freshness guarantee nahi. Dependency relation absent ho toh targeted invalidation missing rahegi.",
-       choiceExplanations: ["Cached result ki source dependencies track karke affected views invalidate/version karo; tag cardinality and race semantics design karo.","Global flush unnecessary miss storm la sakta hai.","TTL exact synchronous freshness guarantee nahi.","Dependency relation absent ho toh targeted invalidation missing rahegi."] },
+        explain: 'View kai records se ban sakta hai. Source record ke tags ya version wali keys se affected views ka rishta rakho. Tags ka size, current version ki freshness aur refresh/invalidation races sambhalo. Poora flush extra misses laata hai; fixed TTL write ke saath exact freshness nahi deta.',
+        choiceExplanations: [
+          'View kai records se ban sakta hai. Source record ke tags ya version wali keys se affected views ka rishta rakho. Tags ka size, current version ki freshness aur refresh/invalidation races sambhalo. Poora flush extra misses laata hai; fixed TTL write ke saath exact freshness nahi deta.',
+          'Poora flush stale views hata sakta hai, par unrelated views bhi thandi hongi. Targeted invalidation ke liye dependency mapping chahiye.',
+          'TTL expire hone se pehle purana view mil sakta hai; same TTL dependency mapping ka badal nahi.',
+          'Alag keys naming ka masla hal karti hain; source badalne par kaunsi entry badalni hai, abhi bhi pata nahi chalega.',
+        ],
+      },
     ],
   },
   success: [

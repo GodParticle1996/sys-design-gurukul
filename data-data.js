@@ -1659,17 +1659,39 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
       title: 'Stampede ki samajh',
       questions: [
         {
-          q: "Stampede ka underlying trigger kya hai?",
-          choices: ["Many misses recompute same hot key","Only deployment can cause stampede","Only oversized objects cause stampede","More clients automatically share one refresh"],
+          q: 'Ek popular key cache mein nahi mili. Bahut requests ek saath aayi. Stampede kab banega?',
+          choices: [
+            'Har request bhaari DB query alag chalayegi, bina refresh ko aapas mein jode',
+            'Har request cache ki alag key maangegi, aur DB ka kul kaam pehle jitna hi rahega',
+            'Har request ek hi refresh ka nateeja legi, aur DB par ek hi query chalti rahegi',
+            'Har request ko purana jawab milta rahega, aur peeche ek refresh chalta rahega',
+          ],
           answer: 0,
-          explain: "Stampede tab jab same expensive work bahut requests simultaneously recompute karein. Expiry, cold start, invalidation aur burst sab triggers hain. Jitter keys ko spread karta hai; single flight per key concurrent refresh combine karta hai.",
-         choiceExplanations: ["Stampede tab jab same expensive work bahut requests simultaneously recompute karein. Expiry, cold start, invalidation aur burst sab triggers hain. Jitter keys ko spread karta hai; single flight per key concurrent refresh combine karta hai.","Expiry, cold start, invalidation and traffic bursts can trigger concurrent misses.","Tiny hot key can create huge origin concurrency too.","Single-flight/locking must coordinate refresh; clients do not do it automatically."] },
+          explain: 'Stampede mein kai requests ek hi key ka wahi bhaari kaam saath dobara karti hain. Expiry, cold start, invalidation ya traffic ka uchhaal wajah ho sakta hai. Jitter alag keys ki expiry bikherta hai; single-flight ek key ke refresh ko jodta hai.',
+          choiceExplanations: [
+            'Stampede mein kai requests ek hi key ka wahi bhaari kaam saath dobara karti hain. Expiry, cold start, invalidation ya traffic ka uchhaal wajah ho sakta hai. Jitter alag keys ki expiry bikherta hai; single-flight ek key ke refresh ko jodta hai.',
+            'Alag keys bhi DB par bojh daal sakti hain, par diye hue case mein khatra ek hi key ka kaam baar-baar karna hai.',
+            'Ek refresh ka nateeja baantna single-flight hai; same-key stampede ko rokne ka tareeka hai.',
+            'Purana jawab dete hue peeche ek refresh chalana repeated DB queries ko rok sakta hai; freshness ka alag sauda hai.',
+          ],
+        },
         {
-          q: '"Cache ke bina DB gir jaata hai" ka matlab?',
-          choices: ["Cache is load-bearing; plan cold failure","Cache down means business DB is corrupt","High hit rate proves failover is safe","HA cache removes need for load shedding"],
+          q: 'Cache band hote hi saari requests DB par jaati hain aur DB load nahi jhel paata. Design ka matlab?',
+          choices: [
+            'Cache par capacity tiki hai; cache band hone aur cold start ka plan chahiye',
+            'Cache hit rate achha hai; cache band ho toh DB ko wahi normal miss load milta rahega',
+            'Cache ki doosri copy hai; cache ke bina DB ka load naapna recovery ke liye kaafi hai',
+            'Cache dobara aayega; tab tak saare miss DB par bhejna recovery ka sabse sasta raasta',
+          ],
           answer: 0,
-          explain: "DBallmissload handle nahi karta toh cache load-bearing dependency hai. HA, admission control, fallback concurrency, cold start/warmup aur failure tests design karo. Load-bearing automatically single point of failure nahi; topology matter karti hai.",
-         choiceExplanations: ["DBallmissload handle nahi karta toh cache load-bearing dependency hai. HA, admission control, fallback concurrency, cold start/warmup aur failure tests design karo. Load-bearing automatically single point of failure nahi; topology matter karti hai.","Capacity failure and data corruption are different claims.","Hit rate says little about backend ability to serve all misses.","Correlated cache outage/cold start still requires bounded fallback load."] },
+          explain: 'Cache ne DB ka aam load ghata rakha hai. Cache na ho toh DB ki capacity paar ho sakti hai. DB tak jaane wale kaam ki hadd, dheere warm-up, fallback aur failure tests chahiye. Cache ki kai copies availability badha sakti hain; dependency hona akela single point of failure ka saboot nahi.',
+          choiceExplanations: [
+            'Cache ne DB ka aam load ghata rakha hai. Cache na ho toh DB ki capacity paar ho sakti hai. DB tak jaane wale kaam ki hadd, dheere warm-up, fallback aur failure tests chahiye. Cache ki kai copies availability badha sakti hain; dependency hona akela single point of failure ka saboot nahi.',
+            'Cache band ho toh pehle ke hits bhi DB tak jaa sakte hain; normal miss rate se kaafi zyada load aayega.',
+            'Doosri copy madad karti hai, par recovery mein kaam ki hadd aur cold-start handling bhi chahiye.',
+            'Saare miss bhejne se DB bhar sakta hai; recovery ke waqt fallback load baandhna zaroori hai.',
+          ],
+        },
       ],
     },
   ],
@@ -1678,11 +1700,22 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
     instructions: 'Yeh sawaal caching ke baad ka natural follow-up hai. 🎤',
     questions: [
       {
-        q: '"Redis restart hua aur poora system gir gaya. Kya galat tha?"',
-        choices: ["Bound fallback load and warm gradually","Never restart cache so outage impossible","Retry every cache miss without a bound","Double cache nodes and skip failure tests"],
+        q: 'Redis restart ke baad API timeouts aur DB load badha. Recovery plan mein kya jodoge?',
+        choices: [
+          'Cache ke bina DB ka load naapo, fallback baandho aur cache dheere-dheere bharo',
+          'Redis ki copies badhao, phir failover ke waqt har miss ko seedha DB tak bhejo',
+          'Miss par retry badhao, taaki DB cache ko zyada parallel requests se jaldi bhar de',
+          'Cache ko ek saath poora bharo, taaki warm-up ke dauraan traffic bhi tez aata rahe',
+        ],
         answer: 0,
-        explain: 'Sahi jawab pehle problem ka <b>naam</b> deta hai (dependency vs optimization), phir chaar alag ilaaj deta hai. "Aur Redis nodes" sirf isi failure ko kam sambhav banata hai — us din ke liye tayyari nahi karta jab woh phir bhi ho jaaye.',
-       choiceExplanations: ["Sahi jawab pehle problem ka <b>naam</b> deta hai (dependency vs optimization), phir chaar alag ilaaj deta hai. \"Aur Redis nodes\" sirf isi failure ko kam sambhav banata hai — us din ke liye tayyari nahi karta jab woh phir bhi ho jaaye.","Failures and maintenance still happen; recovery must be designed.","Unbounded retries amplify origin load while cache cold.","Replication helps availability but not every correlated/capacity failure."] },
+        explain: 'Pehle trace aur hit/miss metrics se cold cache ka asar confirm karo. Cache ke bina DB ka load naapo; fallback concurrency aur admission ki hadd rakho. Cache dheere bharo aur failover test karo. Redis ki replicas failure ka chance ghata sakti hain, par cold start ya shared failure ki tayyari phir bhi chahiye.',
+        choiceExplanations: [
+          'Pehle trace aur hit/miss metrics se cold cache ka asar confirm karo. Cache ke bina DB ka load naapo; fallback concurrency aur admission ki hadd rakho. Cache dheere bharo aur failover test karo. Redis ki replicas failure ka chance ghata sakti hain, par cold start ya shared failure ki tayyari phir bhi chahiye.',
+          'Copies availability mein madad karti hain, par sab miss DB par bhejna capacity ki hadd paar kar sakta hai.',
+          'Retry extra DB kaam badha sakta hai; bounded refresh aur request admission zyada seedha bachav hain.',
+          'Ek saath warm-up live traffic se resources ke liye lad sakta hai; batch aur rate dono baandho.',
+        ],
+      },
     ],
   },
   success: [
@@ -1787,17 +1820,39 @@ arrays, ranges → bahut se special cases</pre>
       title: 'Storage ki samajh',
       questions: [
         {
-          q: 'Purana data archive karne ka sabse bada faayda kya hai?',
-          choices: ["Live working set and indexes may shrink","Archive makes every query faster","Archive guarantees lower total storage","Archive deletes all compliance obligations"],
+          q: 'Purane records active DB se archive mein le jaane se query performance ko kya faayda ho sakta hai?',
+          choices: [
+            'Active indexes aur working set chhote ho sakte hain, query pattern fit ho toh',
+            'Archive se har query tez hogi, chahe query active data ko chhooti bhi na ho',
+            'Archive ki copy alag rakhne se total bytes ghatenge, retention badle bina bhi',
+            'Archive mein data bhejne se access aur deletion policies rakhna band kar sakte ho',
+          ],
           answer: 0,
-          explain: "Archiving active rows/indexes/working-set reduce kar sakta hai; benefit query pattern aur storage engine par depend hai. Every query faster ya total storage smaller guaranteed nahi; retention/access/recovery plan bhi chahiye.",
-         choiceExplanations: ["Archiving active rows/indexes/working-set reduce kar sakta hai; benefit query pattern aur storage engine par depend hai. Every query faster ya total storage smaller guaranteed nahi; retention/access/recovery plan bhi chahiye.","Queries unrelated to archived rows may not improve.","Copying archive retains data elsewhere; total storage depends on policy.","Retention, deletion and access obligations apply to archived data too."] },
+          explain: 'Active rows aur indexes kam hone se working set memory mein behtar fit ho sakta hai. Faayda query pattern aur engine par depend karta hai. Archive mein data ab bhi store hota hai; total storage, retention, restore aur access ka plan alag chahiye. Har query tez hone ki guarantee nahi.',
+          choiceExplanations: [
+            'Active rows aur indexes kam hone se working set memory mein behtar fit ho sakta hai. Faayda query pattern aur engine par depend karta hai. Archive mein data ab bhi store hota hai; total storage, retention, restore aur access ka plan alag chahiye. Har query tez hone ki guarantee nahi.',
+            'Archive se unrelated query ya kisi aur bottleneck wali query ko faayda zaroor mile, aisa nahi.',
+            'Data ki archive copy bhi jagah leti hai; total bytes policy, compression aur duplicates par depend karte hain.',
+            'Archive par bhi access aur deletion ki policies lagti hain; location badalna obligations nahi hataata.',
+          ],
+        },
         {
-          q: '"Har kaam ke liye best DB" — is soch mein problem?',
-          choices: ["Operational surface grows with engines","Specialized engine has no recovery cost","Five DBs share identical upgrade plans","DB brand alone decides project success"],
+          q: 'Har access pattern ke liye alag database lene se kaunsi nayi keemat judti hai?',
+          choices: [
+            'Har engine ke backup, recovery, upgrades aur monitoring ka alag kaam judta hai',
+            'Sirf storage bill badhta hai; recovery ka flow saare engines mein ek reh sakta hai',
+            'Sirf network hops badhte hain; backups aur upgrades purane plan se chal sakte hain',
+            'Sirf query syntax badalti hai; on-call ko naye failure modes seekhne nahi padenge',
+          ],
           answer: 0,
-          explain: "Har naya data store ek naya <b>operational</b> system hai — backups, monitoring, upgrades, on-call knowledge. Ek team jo Postgres achhe se chala sakti hai, woh 5 stores kharab chalayegi. Ek se shuru karo aur naya tab lo jab access pattern sach mein fit na ho.",
-         choiceExplanations: ["Har naya data store ek naya <b>operational</b> system hai — backups, monitoring, upgrades, on-call knowledge. Ek team jo Postgres achhe se chala sakti hai, woh 5 stores kharab chalayegi. Ek se shuru karo aur naya tab lo jab access pattern sach mein fit na ho.","Every engine needs backup, recovery, monitoring and expertise.","Different engines can have different failure and upgrade contracts.","Workload, team capacity and correctness matter more than slogans."] },
+          explain: 'Har naya store backup, recovery, monitoring, upgrades aur team ki expertise maangta hai. Specialized engine useful ho sakta hai, par access-pattern ka faayda operational keemat ke saath parkho. Ek engine jaanna kai engines sambhaalne ki guarantee nahi; chhoti team bhi planning se kai stores chala sakti hai.',
+          choiceExplanations: [
+            'Har naya store backup, recovery, monitoring, upgrades aur team ki expertise maangta hai. Specialized engine useful ho sakta hai, par access-pattern ka faayda operational keemat ke saath parkho. Ek engine jaanna kai engines sambhaalne ki guarantee nahi; chhoti team bhi planning se kai stores chala sakti hai.',
+            'Storage bill ke alawa restore aur failure behavior bhi badal sakta hai; recovery plan test karo.',
+            'Naye engine ki backup, version aur upgrade shartein alag ho sakti hain; purana plan akela kaafi nahi.',
+            'Query language ke saath failure modes aur on-call diagnosis bhi badalte hain.',
+          ],
+        },
       ],
     },
   ],
@@ -1806,11 +1861,22 @@ arrays, ranges → bahut se special cases</pre>
     instructions: 'Yahan "depends" sahi jawab hai — bas batao kis par. 🎤',
     questions: [
       {
-        q: '"SQL ya NoSQL?"',
-        choices: ["Model access, invariants and operations","NoSQL alone guarantees linear scaling","SQL alone guarantees app correctness","Use both before access patterns are known"],
+        q: 'Naye product ke liye SQL ya NoSQL ka faisla kaise shuru karoge?',
+        choices: [
+          'Reads, writes, rishte aur correctness ke niyam se suitable data stores chuno',
+          'NoSQL pehle chuno, phir hot keys aur partitioning ko scale badhne par sambhaalo',
+          'SQL pehle chuno, phir app ke correctness rules ko database ke bharose chhod do',
+          'Dono pehle jodo, phir data sync aur operations ka budget traffic aane par gino',
+        ],
         answer: 0,
-        explain: 'Yeh sawaal ka framing hi galat hai, aur sabse achha jawab use theek karta hai: sawaal "SQL ya NoSQL" nahi, <b>"access pattern kya hai"</b> hai. Aur "NoSQL scale karta hai" ek purana myth hai — modern Postgres bahut door tak jaata hai.',
-       choiceExplanations: ["Yeh sawaal ka framing hi galat hai, aur sabse achha jawab use theek karta hai: sawaal \"SQL ya NoSQL\" nahi, <b>\"access pattern kya hai\"</b> hai. Aur \"NoSQL scale karta hai\" ek purana myth hai — modern Postgres bahut door tak jaata hai.","Partitioning, hot keys and consistency choices still constrain NoSQL scale.","Schema constraints help; application contracts still need correct design.","Unneeded engines add sync and operational burden."] },
+        explain: 'Pehle access pattern, data ke rishte, transactions aur correctness ke niyam samjho. Phir scale, operations aur recovery ke saath stores compare karo. NoSQL naam linear scaling ki guarantee nahi; SQL naam app ko apne aap correct nahi banata. Postgres JSONB jaise features kuch document workloads bhi sambhaal sakte hain.',
+        choiceExplanations: [
+          'Pehle access pattern, data ke rishte, transactions aur correctness ke niyam samjho. Phir scale, operations aur recovery ke saath stores compare karo. NoSQL naam linear scaling ki guarantee nahi; SQL naam app ko apne aap correct nahi banata. Postgres JSONB jaise features kuch document workloads bhi sambhaal sakte hain.',
+          'NoSQL mein bhi hot keys, partitioning aur consistency scale ko limit kar sakte hain; workload pehle chahiye.',
+          'DB constraints madad karti hain, par app ke workflow aur permissions bhi sahi design karne padte hain.',
+          'Bina zaroorat dono stores jodne se sync aur recovery ka extra kaam aata hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -1870,8 +1936,8 @@ arrays, ranges → bahut se special cases</pre>
      baantna padta hai, live traffic ke saath. Isliye yeh woh faisla hai
      jispar din 1 par sabse zyada sochna chahiye.</p>
      <p>Aur sharding ke baad kya khota hai:</p>
-     <pre>• Cross-shard JOIN — gaya. Ab app mein merge karo.
-• Cross-shard transaction — gaya. Ab saga likho.
+     <pre>• Cross-shard JOIN — mehnga ya engine par nirbhar; aksar app mein merge karna padta hai.
+• Cross-shard transaction — mehngi (2PC) ya engine par nirbhar; aksar saga likhni padti hai.
 • Global unique auto-increment — gaya. UUID ya snowflake id lo.
 • "SELECT COUNT(*) FROM users" — ab woh N queries hai.</pre>
      <h3>📋 Shard karne se PEHLE ke 5 kadam</h3>
@@ -1938,23 +2004,56 @@ arrays, ranges → bahut se special cases</pre>
       title: 'Sharding ki samajh',
       questions: [
         {
-          q: "Single-primary DB mein read replicas ka write throughput par effect?",
-          choices: ["Read offload may indirectly help primary","Every replica adds a new write leader","Two read replicas triple write capacity","Replica count removes same-row contention"],
+          q: 'Single-primary DB mein read replicas jodne se write capacity par kya asar ho sakta hai?',
+          choices: [
+            'Read offload se headroom mil sakta hai; writes phir bhi primary par hain',
+            'Har replica naya write leader banta hai; writes ka kaam primaries mein bantta hai',
+            'Do replicas se write limit teen guna hoti hai; storage ka kaam seedha bantta hai',
+            'Ek row ka lock replicas baantte hain; same-row writes parallel ho sakti hain',
+          ],
           answer: 0,
-          explain: "Single-primary asynchronous read replicas primary ke writes ko direct shard nahi karti. Read offload freed resources se indirect write headroom improve ho sakta hai; write capacity replica count se linearly nahi badhti.",
-         choiceExplanations: ["Single-primary asynchronous read replicas primary ke writes ko direct shard nahi karti. Read offload freed resources se indirect write headroom improve ho sakta hai; write capacity replica count se linearly nahi badhti.","Single-primary replication still commits writes on the primary.","Read replicas do not directly multiply primary write execution resources.","Primary hot-row serialization remains even with replicas."] },
+          explain: 'Single-primary setup mein writes primary par hi commit hote hain. Reads replicas par bhejne se primary ke resources khaali ho sakte hain aur indirectly writes ko headroom mil sakta hai. Replicas write execution ko seedha shard nahi karti; count badhne se linear write scaling nahi milti.',
+          choiceExplanations: [
+            'Single-primary setup mein writes primary par hi commit hote hain. Reads replicas par bhejne se primary ke resources khaali ho sakte hain aur indirectly writes ko headroom mil sakta hai. Replicas write execution ko seedha shard nahi karti; count badhne se linear write scaling nahi milti.',
+            'Read replica normal write leader nahi banti; single-primary ka write owner wahi primary hai.',
+            'Replica count primary ki write capacity ka multiplier nahi; actual resource bottleneck naapo.',
+            'Primary ki hot row ka serialization replicas se nahi hat-ta; write pattern alag badalna hoga.',
+          ],
+        },
         {
-          q: 'Shard key chunne mein sabse bada khatra?',
-          choices: ["Bad key makes live redistribution costly","Changing key is metadata-only operation","Balanced row count guarantees balanced load","Shard key choice affects only disk bytes"],
+          q: 'Galat shard key baad mein badalni pade toh sabse badi keemat kya ho sakti hai?',
+          choices: [
+            'Live data move karke routing aur writers ka taal-mel rakhna pad sakta hai',
+            'Sirf metadata badal kar purane data ko waise hi padhte rehna pad sakta hai',
+            'Sirf rows ki ginti barabar karke request load barabar maana ja sakta hai',
+            'Sirf disk size badal kar cross-shard query ka extra kharcha hat sakta hai',
+          ],
           answer: 0,
-          explain: 'Index galat ho toh naya bana lo. Shard key galat ho toh tumhe <b>poora dataset re-shard</b> karna padega — live traffic ke saath, dual-write ke saath, mahino ka project. Isiliye yeh din 1 ka sabse zyada sochne wala faisla hai.',
-         choiceExplanations: ["Index galat ho toh naya bana lo. Shard key galat ho toh tumhe <b>poora dataset re-shard</b> karna padega — live traffic ke saath, dual-write ke saath, mahino ka project. Isiliye yeh din 1 ka sabse zyada sochne wala faisla hai.","Different routing may require moving live records and coordinating writers.","Hot tenants/keys can concentrate traffic despiteequal row counts.","Routing, cross-shard queries, transactions and resharding also depend on key."] },
+          explain: 'Shard key routing aur data placement tay karti hai. Key badalne par live records move karne, writers coordinate karne aur compatibility rakhne ka kaam aa sakta hai. Migration ki mushkil topology aur tools par depend karti hai; har change mahino ka ya irreversible nahi. Barabar row count barabar request load ki guarantee nahi.',
+          choiceExplanations: [
+            'Shard key routing aur data placement tay karti hai. Key badalne par live records move karne, writers coordinate karne aur compatibility rakhne ka kaam aa sakta hai. Migration ki mushkil topology aur tools par depend karti hai; har change mahino ka ya irreversible nahi. Barabar row count barabar request load ki guarantee nahi.',
+            'Agar nayi key ownership badalti hai toh sirf metadata kaafi nahi; old/new routes ko data milna chahiye.',
+            'Hot tenants aur keys ke kaaran same row count par traffic bahut alag ho sakta hai.',
+            'Disk badhane se routing, cross-shard joins aur transaction coordination ka kaam nahi mitta.',
+          ],
+        },
         {
-          q: 'Read-after-write problem ka sabse simple ilaaj?',
-          choices: ["Read primary or wait for replica position","Wait fixed 2s and freshness guaranteed","Add cache so all reads become current","Send read to any replica immediately"],
+          q: 'Write ke turant baad user ko naya data padhana hai. Async replicas ke saath kaunsa guard chahiye?',
+          choices: [
+            'Primary se padho, ya replica par committed write position apply hone tak ruko',
+            'Do second ruk kar kisi replica se padho; fixed wait ko freshness ka proof maano',
+            'Cache jod kar wahi key padho; cache ki copy ko naya commit maana jaaye',
+            'Kisi replica se turant padho; primary commit ko replica apply ka proof maano',
+          ],
           answer: 0,
-          explain: "Strong read-after-write ke liye primary read ya committed replication position tak wait/route karo. Fixed sticky time practical heuristic hai, lag usse badhe toh guarantee fail. Consistency token/session policy stronger evidence de sakti hai.",
-         choiceExplanations: ["Strong read-after-write ke liye primary read ya committed replication position tak wait/route karo. Fixed sticky time practical heuristic hai, lag usse badhe toh guarantee fail. Consistency token/session policy stronger evidence de sakti hai.","Replica lag can exceed fixed delay; causal position/freshness proof is stronger.","Cache may be stale too; invalidations and consistency still needed.","Async replica may not yet have applied committed write."] },
+          explain: 'Primary read ya committed write ki replication position tak catch-up ka check read-after-write mein madad karta hai. Fixed sticky-read window practical heuristic hai, guarantee nahi: lag window se badh sakta hai. Session/consistency token se required position ko serving replica tak pahunchao aur wait ki deadline/fallback tay karo.',
+          choiceExplanations: [
+            'Primary read ya committed write ki replication position tak catch-up ka check read-after-write mein madad karta hai. Fixed sticky-read window practical heuristic hai, guarantee nahi: lag window se badh sakta hai. Session/consistency token se required position ko serving replica tak pahunchao aur wait ki deadline/fallback tay karo.',
+            'Async lag do second se zyada ho sakta hai; fixed wait write apply hone ka saboot nahi.',
+            'Cache bhi stale ho sakta hai; nayi value ya version ka reliable update chahiye.',
+            'Primary commit aur async replica par apply alag events hain; immediate read purana ho sakta hai.',
+          ],
+        },
       ],
     },
   ],
@@ -1963,17 +2062,39 @@ arrays, ranges → bahut se special cases</pre>
     instructions: 'Yahan jaldi sharding bol dena sabse aam galti hai. 🎤',
     questions: [
       {
-        q: '"DB load nahi jhel raha. Shard karein?"',
-        choices: ["Locate bottleneck before changing topology","More shards fix every inefficient query","Read replicas solve any write bottleneck","Larger machine has unlimited headroom"],
+        q: 'DB load nahi jhel raha. Sharding chunne se pehle kya karoge?',
+        choices: [
+          'Reads, writes aur hot queries naapo; bottleneck se candidates parkho',
+          'Pehle shards badhao; query plans aur N+1 ko distribution ke baad parkho',
+          'Pehle read replicas badhao; hot-row writes ki hadd ko same plan se parkho',
+          'Pehle machine badi karo; capacity ki bachi hadd ko traffic badhne par parkho',
+        ],
         answer: 0,
-        explain: 'Sabse achha jawab pehle <b>diagnose</b> karta hai. Zyadatar "shard karna padega" wali situations sach mein ek missing index ya ek N+1 hoti hain. Aur sharding ki keemat — cross-shard JOIN, transactions, global counts sab chale jaate hain — use aakhri option banati hai.',
-       choiceExplanations: ["Sabse achha jawab pehle <b>diagnose</b> karta hai. Zyadatar \"shard karna padega\" wali situations sach mein ek missing index ya ek N+1 hoti hain. Aur sharding ki keemat — cross-shard JOIN, transactions, global counts sab chale jaate hain — use aakhri option banati hai.","Scatter-gather, N+1 and skew can remain or worsen across shards.","Replicas offload reads; hot primary writes may remain bottleneck.","Vertical resources are finite; measure remaining headroom and economics."] },
+        explain: 'Trace aur plans se bottleneck dhoondho: query ka kaam, indexes, N+1, read pressure, write pressure ya hot keys? Phir cache, replicas, hardware aur sharding ke saude compare karo. Sharding routing aur operations ko mehenga karti hai; cross-shard joins aur transactions kuch systems support karte hain, par coordination ki keemat badh sakti hai.',
+        choiceExplanations: [
+          'Trace aur plans se bottleneck dhoondho: query ka kaam, indexes, N+1, read pressure, write pressure ya hot keys? Phir cache, replicas, hardware aur sharding ke saude compare karo. Sharding routing aur operations ko mehenga karti hai; cross-shard joins aur transactions kuch systems support karte hain, par coordination ki keemat badh sakti hai.',
+          'Inefficient query ya N+1 shards par bhi reh sakti hai; scatter-gather extra kaam jod sakta hai.',
+          'Replicas reads offload kar sakti hain; same primary ki hot writes ka bottleneck reh sakta hai.',
+          'Badi machine useful ho sakti hai, par finite headroom aur cost bina naape chunna diagnosis nahi.',
+        ],
+      },
       {
-        q: "Write primary committed hai; followingread laggingreplica se aaya. Profile purana kyun?",
-        choices: ["Check serving replica and freshness proof","Committed primary row rules out stale read","Profile save automatically waits all replicas","Frontend cache cannot ever cause this"],
+        q: 'Profile save safal tha, par next GET mein purana naam mila. Pehla useful check?',
+        choices: [
+          'Write commit aur GET ki serving replica/cache trace karo, freshness parkho',
+          'Write ka 200 dekhkar DB freshness maan lo, phir client ko root cause likh do',
+          'Write ka commit dekhkar har replica current maano, phir frontend rollback karo',
+          'Write ka naya naam log mein dekho, phir bina read trace cache saaf karte raho',
+        ],
         answer: 0,
-        explain: "Given write primary mein committed aur following read laggingreplica se hai, toh stale read visible ho sakta hai. Primary read or causal position check se confirm/repair karo. Bina read path evidence cache/frontend cause bhi possible hai.",
-       choiceExplanations: ["Given write primary mein committed aur following read laggingreplica se hai, toh stale read visible ho sakta hai. Primary read or causal position check se confirm/repair karo. Bina read path evidence cache/frontend cause bhi possible hai.","Committed primary data may not yet be visible on async replica.","Application must explicitly request stronger synchronization where supported.","Cache/client state is another plausible cause; trace serving path to distinguish."] },
+        explain: 'Pehle primary commit aur GET ka actual source confirm karo. Async replica ne write abhi apply na kiya ho toh stale read mil sakta hai; cache/client state bhi possible hai. Primary read ya required replication position se compare karo. Sirf save success ka matlab har serving copy updated nahi.',
+        choiceExplanations: [
+          'Pehle primary commit aur GET ka actual source confirm karo. Async replica ne write abhi apply na kiya ho toh stale read mil sakta hai; cache/client state bhi possible hai. Primary read ya required replication position se compare karo. Sirf save success ka matlab har serving copy updated nahi.',
+          'Write success read path ki freshness nahi batata; client ko blame karne se pehle trace chahiye.',
+          'Async replicas commit ke baad bhi peeche ho sakti hain; frontend rollback bina saboot galat target ho sakta hai.',
+          'Cache flush symptom badal sakta hai, par serving replica aur cache trace ke bina cause confirm nahi hoga.',
+        ],
+      },
     ],
   },
   success: [
@@ -1986,7 +2107,7 @@ arrays, ranges → bahut se special cases</pre>
     <b>read-after-write</b> ka koi handling hai? Ek test karo — profile update karke turant
     reload karo, 10 baar. Ek baar bhi purana data dikha toh tumhare paas woh bug hai.`,
   cards: [
-    { front: 'Replication vs Partitioning vs Sharding?', back: '<b>Replication</b> = read scale + HA (write scale ❌). <b>Partitioning</b> = ek server, chhote tukde (capacity ❌). <b>Sharding</b> = kai servers, write scale ✅ (cross-shard JOIN ❌).' },
+    { front: 'Replication vs Partitioning vs Sharding?', back: '<b>Replication</b> = read scale + HA (write scale ❌). <b>Partitioning</b> = ek server, chhote tukde (capacity ❌). <b>Sharding</b> = kai servers, write scale ✅ (cross-shard JOIN mehnga ya engine par nirbhar).' },
     { front: 'Read-after-write?', back: 'Write primary par, read replica se → <b>purana data dikha</b>. Ilaaj: sticky reads (kuch second primary se), ya write timestamp track karo.' },
     { front: 'Shard key ke liye kya achha hai?', back: '<b>user_id / tenant_id</b> — queries ek shard par, data barabar. ❌ <code>created_at</code> (saare naye writes ek shard par) · ❌ <code>country</code> (India 100x bada).' },
     { front: 'Shard key badal sakte hain?', back: '<b>Lagbhag nahi.</b> Poora data live traffic ke saath dobara baantna padta hai — mahino ka project. Isliye yeh din 1 ka sabse bada faisla hai.' },
@@ -2054,17 +2175,39 @@ arrays, ranges → bahut se special cases</pre>
       title: 'Track ka nichod',
       questions: [
         {
-          q: 'Optimization ka sahi kram kya hai?',
-          choices: ["Measure; bound work; then test tradeoffs","Cache before identifying correctness needs","Shards before measuring query or load","Hardware before identifying blocked resource"],
+          q: 'Dashboard slow hai. Optimization ka pehla framework kya hoga?',
+          choices: [
+            'Bottleneck aur correctness naapo, kaam baandho, phir candidates ka sauda test karo',
+            'Pehle cache lagao, phir data freshness aur cache-down ka DB load baad mein naapo',
+            'Pehle shards badhao, phir plans aur request load ka actual bottleneck baad mein naapo',
+            'Pehle CPU double karo, phir lock, I/O aur pool wait ka actual bottleneck baad mein naapo',
+          ],
           answer: 0,
-          explain: "Naapo bottleneck aur correctness first, work bound karo, phir index/query/cache/hardware/topology candidates ko SLO, cost aur failure behavior se test karo. Cache hamesha last ya always merelysymptom universal rule nahi.",
-         choiceExplanations: ["Naapo bottleneck aur correctness first, work bound karo, phir index/query/cache/hardware/topology candidates ko SLO, cost aur failure behavior se test karo. Cache hamesha last ya always merelysymptom universal rule nahi.","Cache without freshness/cold-path design can hide or amplify problems.","Sharding adds routing, rebalance and operational complexity.","More hardware does not resolve every lock, leak or query-shape issue."] },
+          explain: 'Pehle request ka waqt aur correctness contract samjho. Query/rows ka kaam baandho, phir indexes, cache, hardware aur topology ko SLO, cost aur failures par test karo. Cache useful optimization ya load-bearing dependency ho sakta hai; har design mein cache last ho, aisa universal rule nahi. Har change ke baad naapo.',
+          choiceExplanations: [
+            'Pehle request ka waqt aur correctness contract samjho. Query/rows ka kaam baandho, phir indexes, cache, hardware aur topology ko SLO, cost aur failures par test karo. Cache useful optimization ya load-bearing dependency ho sakta hai; har design mein cache last ho, aisa universal rule nahi. Har change ke baad naapo.',
+            'Freshness aur cold-path capacity ke bina cache stale data ya outage ka risk badha sakta hai.',
+            'Sharding routing aur operational keemat jodti hai; inefficient query ka actual work phir bhi reh sakta hai.',
+            'CPU extra ho tab bhi lock wait, leak ya I/O bottleneck reh sakta hai; target measured resource hona chahiye.',
+          ],
+        },
         {
-          q: 'Ek query 12 second le rahi thi aur index lagane se 380 ms ho gayi. Aage kya?',
-          choices: ["Compare 380 ms to SLO; profile remaining work","380 ms means every user SLO is met","Existing index means next step sharding","Add indexes without checking current plan"],
+          q: 'Index se query 12 s se 380 ms ho gayi. Agla decision kaise loge?',
+          choices: [
+            '380 ms ko required percentile SLO se milaao; baaki query aur response work naapo',
+            '380 ms ko kaafi maano; single sample ke baad user SLO ka comparison band karo',
+            'Index lag chuka hai toh shard karo; remaining plan aur row count ko baad mein dekho',
+            'Aur indexes jodo; existing plan aur write cost ka comparison deploy ke baad karo',
+          ],
           answer: 0,
-          explain: "380 ms acceptable hai ya slow yehSLO aur percentile target se compare karo. Remaining plan work, coverage, count, serialization aur cache tradeoffs measure karke choose karo; faster possible hone ka matlab necessary nahi.",
-         choiceExplanations: ["380 ms acceptable hai ya slow yehSLO aur percentile target se compare karo. Remaining plan work, coverage, count, serialization aur cache tradeoffs measure karke choose karo; faster possible hone ka matlab necessary nahi.","SLO and percentiles determine whether 380 ms is acceptable.","Coverage, row count, joins, sorts or cache may offer simpler improvements.","Extra indexes add cost; test measured plan changes."] },
+          explain: 'Boss ticket ka target p99 200 ms se neeche hai; 380 ms ka single sample p99 compliance saabit nahi karta. Load par percentiles aur remaining work naapo: scans, sorts, COUNT, heap fetches aur serialization. Covering index bhi zero heap reads guarantee nahi karta. Required behavior bachate hue improvement candidates test karo.',
+          choiceExplanations: [
+            'Boss ticket ka target p99 200 ms se neeche hai; 380 ms ka single sample p99 compliance saabit nahi karta. Load par percentiles aur remaining work naapo: scans, sorts, COUNT, heap fetches aur serialization. Covering index bhi zero heap reads guarantee nahi karta. Required behavior bachate hue improvement candidates test karo.',
+            'Fast sample percentile SLO ka proof nahi; given ticket ka p99 target bhi check karna hai.',
+            'Sharding se pehle remaining query work aur simpler changes parkho; existing index next architecture nahi chunta.',
+            'Extra indexes writes aur storage ko mehenga karte hain; plan aur measured response benefit compare karo.',
+          ],
+        },
       ],
     },
   ],
@@ -2073,11 +2216,22 @@ arrays, ranges → bahut se special cases</pre>
     instructions: 'Aakhri round.',
     questions: [
       {
-        q: '"Ek dashboard query 12 second le rahi hai. Poora approach batao."',
-        choices: ["Trace and EXPLAIN; change then remeasure","Only add index; skip measuring response","Only add cache; skip cold-path capacity","Only add replica; skip query complexity"],
+        q: 'Dashboard query 12 s leti hai. Poora debugging approach kaunsa hai?',
+        choices: [
+          'Trace aur EXPLAIN se kaam dhoondho, focused change karo aur load par dobara naapo',
+          'Sirf index banao, phir count, sort aur response serialization ko waise hi chhod do',
+          'Sirf cache banao, phir misses aur cache-down par DB ki capacity ko waise hi chhod do',
+          'Sirf replica jodo, phir expensive query ka algorithm aur row count waise hi chhod do',
+        ],
         answer: 0,
-        explain: 'Sabse achha jawab ek <b>kram</b> deta hai aur "har kadam ke baad naapunga" bolta hai. Yeh dikhata hai ki tum jaante ho ki agla bottleneck pehle wale se alag hota hai — aur ki cache ek <b>multiplier</b> hai, band-aid nahi.',
-       choiceExplanations: ["Sabse achha jawab ek <b>kram</b> deta hai aur \"har kadam ke baad naapunga\" bolta hai. Yeh dikhata hai ki tum jaante ho ki agla bottleneck pehle wale se alag hota hai — aur ki cache ek <b>multiplier</b> hai, band-aid nahi.","One index may help but count, sort, N+1 and serialization can remain.","Cache miss/outage still needs safe backend behavior.","Replica isolates reads but does not change scan algorithm/work."] },
+        explain: 'Trace mein query ke saath pool wait aur response ka kaam dekho. EXPLAIN se scans, joins, sorts aur examined rows samjho. Access pattern se index/row limits/count ka sauda parkho; cache ki freshness aur cold-path capacity design karo. Har focused change ke baad response percentiles aur errors load par naapo. Cache ya replica useful ho sakte hain, par measured bottleneck target karo.',
+        choiceExplanations: [
+          'Trace mein query ke saath pool wait aur response ka kaam dekho. EXPLAIN se scans, joins, sorts aur examined rows samjho. Access pattern se index/row limits/count ka sauda parkho; cache ki freshness aur cold-path capacity design karo. Har focused change ke baad response percentiles aur errors load par naapo. Cache ya replica useful ho sakte hain, par measured bottleneck target karo.',
+          'Index madad kar sakta hai, par COUNT, sorting, N+1 ya serialization ab bhi bottleneck ho sakte hain.',
+          'Cache miss ya outage par backend ko safe load jhelna chahiye; cache akela cold path nahi theek karta.',
+          'Replica read pressure alag kar sakti hai, par same query ka scan work khud nahi badalti.',
+        ],
+      },
     ],
   },
   success: [
@@ -2179,9 +2333,9 @@ baaki 7  ·                        0 rps   😴 khaali baithe hain</pre>
      <h3>🤝 Coalescing — stampede ka doosra taala</h3>
      <p>Pichhle level mein tumne <b>TTL jitter</b> lagaya tha. Woh expiry ko
      <b>bikherta</b> hai. Par ek popular key toh phir bhi kisi na kisi pal expire
-     hogi hi — aur us pal 5,000 requests ek saath miss karengi.</p>
-     <pre>bina coalescing:  5,000 miss  →  5,000 DB queries  💥
-saath mein:       5,000 miss  →      1 DB query    ✅
+     hogi hi — aur cache dobara bharne tak aayi har request miss karegi (5,000 rps par 200 ms ki khidki = lagbhag 1,000 requests).</p>
+     <pre>bina coalescing:  ~1,000 miss  →  ~1,000 DB queries  💥
+saath mein:       ~1,000 miss  →       1 DB query    ✅  (har app process mein ek)
                   (pehli request "lock" leti hai, baaki usi ka intezaar karti hain)</pre>
      <p class="tip">🎯 Jitter <b>alag-alag keys</b> ko ek saath expire hone se rokta hai.
      Coalescing <b>ek key</b> par ek saath aaye miss ko sambhaalta hai.
@@ -2250,23 +2404,56 @@ saath mein:       5,000 miss  →      1 DB query    ✅
       title: 'Cache internals',
       questions: [
         {
-          q: "Nightly scan ke baad morningAPI slow hai. Cache hypothesis kaise validate karoge?",
-          choices: ["Check eviction and cache-hit evidence","Nightly timing alone proves DB locks","Morning slowness proves Redis restarted","Daily periodicity proves TTL too short"],
+          q: 'Nightly scan ke baad morning API slow hai. Cache pollution ka shak kaise parkhoge?',
+          choices: [
+            'Scan ke waqt evictions, hit rate aur DB I/O ko trace ke saath mila kar dekho',
+            'Scan ke waqt sirf job ka end time dekho, phir DB locks ko root cause likh do',
+            'Scan ke waqt sirf API latency dekho, phir Redis restart ko root cause likh do',
+            'Scan ke waqt sirf calendar dekho, phir chhote TTL ko root cause maan lo',
+          ],
           answer: 0,
-          explain: "Nightly job scan hot working-set evict kar sakta hai; eviction count, hit/miss rate aurDBIO evidence correlate karo. Timing alone root cause proven nahi; locks, lag, GC ya resource exhaustion investigate karo.",
-         choiceExplanations: ["Nightly job scan hot working-set evict kar sakta hai; eviction count, hit/miss rate aurDBIO evidence correlate karo. Timing alone root cause proven nahi; locks, lag, GC ya resource exhaustion investigate karo.","Locks need wait/holder evidence; timing alone is not diagnosis.","Restart requires process/uptime evidence.","Expiry is plausible; distinguish expiry from evictions with metrics."] },
+          explain: 'Bada scan hot working set ki keys nikaal sakta hai. Evictions, hit/miss rate aur DB I/O ka badlaav scan ke saath mila kar dekho. Sirf roz ek waqt slow hona cause ka saboot nahi; locks, GC pauses aur doosra load bhi parkho.',
+          choiceExplanations: [
+            'Bada scan hot working set ki keys nikaal sakta hai. Evictions, hit/miss rate aur DB I/O ka badlaav scan ke saath mila kar dekho. Sirf roz ek waqt slow hona cause ka saboot nahi; locks, GC pauses aur doosra load bhi parkho.',
+            'Locks ke liye wait aur lock-holder ka saboot chahiye; job ka waqt akela locks saabit nahi karta.',
+            'Restart ke liye uptime, logs ya process events chahiye; latency akeli restart saabit nahi karti.',
+            'Expiry aur memory eviction alag hain; counters aur key lifetimes se dono ko alag karo.',
+          ],
+        },
         {
-          q: 'TTL par jitter laga diya hai. Phir bhi ek popular key expire hote hi DB spike karta hai. Kya missing hai?',
-          choices: ["Single-flight per hot-key refresh","Only TTLjitter across many keys","Only larger cache for same expiry","Only extra DB connections per miss"],
+          q: 'TTL jitter ke baad bhi ek popular key expire hote hi kai identical DB queries aati hain. Kya jodoge?',
+          choices: [
+            'Ek key ka refresh single-flight se jodo, callers ek nateeje ka intezaar karein',
+            'Alag keys ka TTL jitter aur badhao, taaki same key ke callers apne aap bant jaayein',
+            'Cache ki memory aur badhao, taaki same key ki expiry par DB ka kaam kam ho jaaye',
+            'DB pool ki capacity aur badhao, taaki har caller apna alag refresh chalaata rahe',
+          ],
           answer: 0,
-          explain: 'Jitter <b>alag-alag keys</b> ko ek saath expire hone se rokta hai. Par <b>ek</b> key toh kisi na kisi pal expire hogi hi — aur agar us key par 5,000 rps hai, toh us ek pal mein 5,000 miss ek saath honge. Coalescing unhe ek query mein baandh deta hai. Dono chahiye.',
-         choiceExplanations: ["Jitter <b>alag-alag keys</b> ko ek saath expire hone se rokta hai. Par <b>ek</b> key toh kisi na kisi pal expire hogi hi — aur agar us key par 5,000 rps hai, toh us ek pal mein 5,000 miss ek saath honge. Coalescing unhe ek query mein baandh deta hai. Dono chahiye.","Jitter spreads different keys; one hot key can still have concurrent misses.","Capacity does not prevent simultaneous expiry of that key.","More concurrent queries can overload origin ratherthan coalesce work."] },
+          explain: 'Jitter alag keys ki expiry bikherta hai. Ek popular key par rebuild chalne ke dauraan kai misses aa sakte hain. Single-flight same key ke refresh ko jodta hai. Coordination ki hadd saaf rakho: process-local map ho toh har app apna ek rebuild chala sakti hai. 5000 rps ka matlab ek hi pal 5000 misses nahi; ginti rebuild window par depend karti hai.',
+          choiceExplanations: [
+            'Jitter alag keys ki expiry bikherta hai. Ek popular key par rebuild chalne ke dauraan kai misses aa sakte hain. Single-flight same key ke refresh ko jodta hai. Coordination ki hadd saaf rakho: process-local map ho toh har app apna ek rebuild chala sakti hai. 5000 rps ka matlab ek hi pal 5000 misses nahi; ginti rebuild window par depend karti hai.',
+            'Alag keys ka jitter same key par ek waqt chal rahe refresh ko nahi jodta.',
+            'Memory badhne se capacity evictions ghatti hain; given key ka TTL phir bhi expire ho sakta hai.',
+            'Zyada concurrent DB queries same kaam dohraati hain; pool badhana coalescing ka badal nahi.',
+          ],
+        },
         {
-          q: '8-node Redis cluster hai. Ek key par 50,000 rps aa raha hai aur ek node 100% CPU par hai. Node badhane se kya hoga?',
-          choices: ["One hot key stays on its serving shard","New node splits every hot key equally","Vnodes parallelize one key operation","Cluster auto-copies read load everywhere"],
+          q: '8-primary Redis Cluster mein ek key par 50,000 reads/s se ek primary busy hai. Primary jodne ka asar?',
+          choices: [
+            'Key ka slot ek primary ka hai; extra primary akela reads nahi baantega',
+            'Key ke reads naye primary par bantenge; client ko wahi ek key bhejni kaafi hogi',
+            'Key ki value tukdon mein tootegi; naye primary par aadhi value chali jaayegi',
+            'Key ki copies sab primaries par aayengi; cluster apne aap har read alag bhejega',
+          ],
           answer: 0,
-          explain: "Redis Cluster mein one hash slot ek serving primary par hai; extra primary node same key writes/read routing automatically split nahi karta. Local caches, replica reads, explicit replicated keys or value partitioning ke correctness tradeoffs consider karo.",
-         choiceExplanations: ["Redis Cluster mein one hash slot ek serving primary par hai; extra primary node same key writes/read routing automatically split nahi karta. Local caches, replica reads, explicit replicated keys or value partitioning ke correctness tradeoffs consider karo.","Standard sharding assigns one key/hash slot toa serving primary.","Vnodes balance many keys; one key still has one route.","Replica reads/local caches require explicit routing and consistency design."] },
+          explain: 'Redis Cluster key ko 16,384 hash slots mein map karta hai. Ek slot ka serving primary hota hai; primary jodne se same key ka read load apne aap nahi bantta. Local cache, explicitly routed replica reads ya multiple keys par copies madad kar sakti hain; freshness aur write/invalidation ka sauda parkho.',
+          choiceExplanations: [
+            'Redis Cluster key ko 16,384 hash slots mein map karta hai. Ek slot ka serving primary hota hai; primary jodne se same key ka read load apne aap nahi bantta. Local cache, explicitly routed replica reads ya multiple keys par copies madad kar sakti hain; freshness aur write/invalidation ka sauda parkho.',
+            'Extra primary keys/slots ka load baant sakta hai; ek key ke reads ko baantne ki alag routing chahiye.',
+            'Cluster primary jodne par ek value ko tukdon mein nahi todta; value partitioning app ka design hai.',
+            'Redis Cluster read routing ko sab primaries mein automatic broadcast nahi banata; copies aur routing explicit chahiye.',
+          ],
+        },
       ],
     },
     {
@@ -2286,17 +2473,39 @@ saath mein:       5,000 miss  →      1 DB query    ✅
     instructions: 'Yahan "Redis laga denge" kaafi nahi hai. 🎤',
     questions: [
       {
-        q: '"Cache hit rate 40% hai. Kaise badhaoge?"',
-        choices: ["Separate cold, expiry, eviction miss causes","Always double memory before measuring","Always raiseTTL regardless of freshness","Always switch to LFU without traffic data"],
+        q: 'Cache hit rate 40% hai. Sudhaar chunne se pehle kya naapoge?',
+        choices: [
+          'Misses cold start, expiry, eviction ya invalidation se hain, ginti alag karo',
+          'Pehle memory double karo, phir bache misses ko cold start aur expiry mein baanto',
+          'Pehle TTL double karo, phir freshness aur invalidation ka allowed budget parkho',
+          'Pehle LFU lagao, phir traffic mein recency aur frequency ka pattern dhoondho',
+        ],
         answer: 0,
-        explain: 'Teenon "sudhaar" bina diagnosis ke tukka hain. Agar miss <b>eviction</b> se hain toh size badhao. <b>Expiry</b> se hain toh TTL dekho. Aur agar keys itni bikhri hui hain ki har key sirf ek baar maangi jaati hai, toh cache is data ke liye galat aujaar hi hai — key design badlo. Isiliye evictions aur expirations ko <b>alag-alag</b> count karo.',
-       choiceExplanations: ["Teenon \"sudhaar\" bina diagnosis ke tukka hain. Agar miss <b>eviction</b> se hain toh size badhao. <b>Expiry</b> se hain toh TTL dekho. Aur agar keys itni bikhri hui hain ki har key sirf ek baar maangi jaati hai, toh cache is data ke liye galat aujaar hi hai — key design badlo. Isiliye evictions aur expirations ko <b>alag-alag</b> count karo.","More memory helps capacity misses, not unique-key/expiry/invalidation misses.","Freshness budget may forbid longerTTL.","Eviction policy helps specific locality patterns; measure cause first."] },
+        explain: 'Miss ki wajah se ilaaj chuno. Memory evictions mein madad kar sakti hai; TTL freshness budget ke andar badal sakta hai. Har key ek hi baar maangi jaati ho toh repeat hits kam rahenge. Cold start, expiry, eviction aur invalidation alag count karo; policy aur key design traffic se parkho.',
+        choiceExplanations: [
+          'Miss ki wajah se ilaaj chuno. Memory evictions mein madad kar sakti hai; TTL freshness budget ke andar badal sakta hai. Har key ek hi baar maangi jaati ho toh repeat hits kam rahenge. Cold start, expiry, eviction aur invalidation alag count karo; policy aur key design traffic se parkho.',
+          'Extra memory capacity misses ghata sakti hai; expiry ya one-time keys ka masla alag hai.',
+          'Lamba TTL purana data zyada der rakh sakta hai; freshness ka contract pehle chahiye.',
+          'LFU kuch frequency patterns ko suit karta hai; miss ki wajah bina jaane policy badalna andaaza hai.',
+        ],
+      },
       {
-        q: '"Cache (Redis) poora down ho gaya. API ka kya hoga?"',
-        choices: ["Protect DB with bounded fallback work","HA means total cache failure impossible","Every miss can safely pass through toDB","Retries make unavailable cache cheaper"],
+        q: 'Redis cache band ho jaaye toh API ko DB bachane ke liye kya karna chahiye?',
+        choices: [
+          'DB tak fallback kaam ki hadd rakho; zaroorat par kuch requests saaf mana karo',
+          'DB tak saare requests bhejo; cache hit rate achha tha toh capacity mil jaayegi',
+          'DB tak har miss kai baar retry karo; cache lautne tak extra load chalta rahega',
+          'DB tak sab warm-up jobs saath bhejo; live requests ka budget baad mein dekho',
+        ],
         answer: 0,
-        explain: 'Yeh sabse under-rated failure mode hai. 95% hit rate ka matlab hai DB sirf 5% traffic dekh raha tha — cache girte hi woh <b>20x</b> ho jaata hai, aur DB turant girta hai. Cache ko "optional speedup" maano, "chhupa hua load-bearing wall" nahi: DB par concurrency cap lagao, aur cache-down mode mein degrade karo.',
-       choiceExplanations: ["Yeh sabse under-rated failure mode hai. 95% hit rate ka matlab hai DB sirf 5% traffic dekh raha tha — cache girte hi woh <b>20x</b> ho jaata hai, aur DB turant girta hai. Cache ko \"optional speedup\" maano, \"chhupa hua load-bearing wall\" nahi: DB par concurrency cap lagao, aur cache-down mode mein degrade karo.","Correlated failures/config errors/cold restarts remain possible.","DB maybesized for normal miss traffic, not all requests.","Retries consume more work and can amplify failure."] },
+        explain: 'Cache band hone par pehle ke hits bhi DB tak pahunch sakte hain. Same traffic aur one-query-per-miss model mein 95% hit rate se all-miss DB demand 20 guna ho sakti hai; DB zaroor girega, aisa fixed rule nahi. Capacity naapo, fallback concurrency baandho, aur allowed stale data ya saaf rejection se degrade karo. Cache load-bearing dependency bhi ho sakta hai.',
+        choiceExplanations: [
+          'Cache band hone par pehle ke hits bhi DB tak pahunch sakte hain. Same traffic aur one-query-per-miss model mein 95% hit rate se all-miss DB demand 20 guna ho sakti hai; DB zaroor girega, aisa fixed rule nahi. Capacity naapo, fallback concurrency baandho, aur allowed stale data ya saaf rejection se degrade karo. Cache load-bearing dependency bhi ho sakta hai.',
+          'Hit rate normal DB load batata hai; all-miss load jhelne ki capacity alag naapni padegi.',
+          'Retry DB ka kaam badhaata hai; bachi capacity ke andar bounded retry hi socho.',
+          'Warm-up aur live requests ek hi DB capacity ke liye lad sakte hain; dono ke budgets chahiye.',
+        ],
+      },
     ],
   },
   success: [
@@ -2466,23 +2675,56 @@ COLUMNAR (OLAP):    [id id id...] [name name...] [amount amount...]
       title: 'Engine ki samajh',
       questions: [
         {
-          q: 'LSM par writes tez kyun hain?',
-          choices: ["Buffer writes; flush sorted runs; compact later","LSM skips persistence of most writes","LSMnever reads disk while writing","Sequential append removes compaction cost"],
+          q: 'LSM engine writes ka kharcha kis tarah baantta hai?',
+          choices: [
+            'Writes memory mein jodta hai, sorted files flush karta hai, merge baad mein karta hai',
+            'Writes sirf memory mein rakhta hai, durable mode mein disk par likhna chhod deta hai',
+            'Writes seedhe final sorted jagah rakhta hai, purani files ko merge karna chhod deta hai',
+            'Writes ke liye alag file rakhta hai, isliye delete aur merge ka I/O bach jaata hai',
+          ],
           answer: 0,
-          explain: "LSM writes commonly WALappend aur memtable se buffer hoti hain; sorted SSTables flush aur later compaction costs pay hote hain. Writes never read disk ya Postgres always slower blanket claim nahi; write/read/space amplification measured hai.",
-         choiceExplanations: ["LSM writes commonly WALappend aur memtable se buffer hoti hain; sorted SSTables flush aur later compaction costs pay hote hain. Writes never read disk ya Postgres always slower blanket claim nahi; write/read/space amplification measured hai.","Durable LSMtypically logs writes and flushes memtables; it does not skip them.","Conditional operations and compaction may read; write-path efficiency is not no-reads theorem.","Merging sorted runs addswrite/space/IO amplification later."] },
+          explain: 'Aam durable LSM path pehle write-ahead log mein record likhta hai; phir memory ki memtable mein update rakhta hai. Sorted SSTables flush hoti hain aur compaction baad mein versions merge karti hai. Random updates ka kuch kharcha shift hota hai; compaction ka read/write I/O mita nahi. Har LSM write disk read se mukt ya har B-tree se tez nahi.',
+          choiceExplanations: [
+            'Aam durable LSM path pehle write-ahead log mein record likhta hai; phir memory ki memtable mein update rakhta hai. Sorted SSTables flush hoti hain aur compaction baad mein versions merge karti hai. Random updates ka kuch kharcha shift hota hai; compaction ka read/write I/O mita nahi. Har LSM write disk read se mukt ya har B-tree se tez nahi.',
+            'Durable LSM aam taur par log aur flush se data persist karta hai; memory akeli durable storage nahi.',
+            'Multiple sorted files ko compaction mein merge karna LSM ka aham kharcha hai.',
+            'Append ka faayda merge aur deletion markers ki cleanup ko muft nahi banata.',
+          ],
+        },
         {
-          q: "Cassandra readp 99 periodically 3x hai. Compaction hypothesis kaise validate karoge?",
-          choices: ["Correlate spikes with compaction andIO","Periodic spike proves disk compaction","p99 spike alone rules out GCpause","Adding nodes proves no storage cause"],
+          q: 'Cassandra ka read p99 kuch intervals mein 3 guna badhta hai. Compaction ka shak kaise parkhoge?',
+          choices: [
+            'Spikes ko compaction, disk I/O queue aur latency ke metrics se mila kar dekho',
+            'Spikes ka interval dekho, phir bina I/O metrics compaction throttle karna chuno',
+            'Spikes mein CPU kam dekho, phir GC pause ko evidence ke bina list se hata do',
+            'Spikes ke baad nodes jodo, phir storage I/O ka cause hona list se hata do',
+          ],
           answer: 0,
-          explain: "Compaction saturation periodic read tail cause ho sakti hai; IOlatency/queue and compaction metrics correlatekaro. GCpause, repair, cache miss aur network competing hypotheses hain; p99 spike alone cause prove nahi.",
-         choiceExplanations: ["Compaction saturation periodic read tail cause ho sakti hai; IOlatency/queue and compaction metrics correlatekaro. GCpause, repair, cache miss aur network competing hypotheses hain; p99 spike alone cause prove nahi.","GC, repair, cache and network can also cause periodic spikes.","GC remains plausible until pause/trace evidence excludes it.","Topology changes do not substitute for IO and compaction measurements."] },
+          explain: 'Compaction reads ke saath disk aur CPU ke liye lad sakti hai. Read p99 spikes ko compaction activity, I/O latency aur queue ke saath mila kar dekho. GC pauses, repair, cache misses aur network bhi parkho. 3 guna yahan observed symptom hai; periodic spike compaction saabit nahi karta.',
+          choiceExplanations: [
+            'Compaction reads ke saath disk aur CPU ke liye lad sakti hai. Read p99 spikes ko compaction activity, I/O latency aur queue ke saath mila kar dekho. GC pauses, repair, cache misses aur network bhi parkho. 3 guna yahan observed symptom hai; periodic spike compaction saabit nahi karta.',
+            'Periodicity akeli diagnosis nahi; repair ya GC bhi intervals mein ho sakte hain.',
+            'CPU ka aggregate kam hona GC pause ko rule out nahi karta; pause metrics aur traces dekho.',
+            'Nodes badhne se storage contention ka cause khud saabit ya reject nahi hota.',
+          ],
+        },
         {
-          q: 'LSM mein ek row DELETE karne se disk par kya hota hai?',
-          choices: ["Tombstone now; safe reclamation later","Delete immediately rewrites every SSTable","Delete instantly removes all disk copies","Tombstone makes replica repair unnecessary"],
+          q: 'LSM mein DELETE ke baad disk space turant khaali kyun nahi ho sakti?',
+          choices: [
+            'Tombstone likhta hai; purane versions ko safe compaction baad mein hataati hai',
+            'Delete har purani SSTable ko turant dobara likhta hai; marker rakhna nahi padta',
+            'Delete sirf memory ki value hataata hai; disk aur replicas ko khabar dena nahi padta',
+            'Delete marker purane replicas ko update karta hai; repair aur retention hata sakte hain',
+          ],
           answer: 0,
-          explain: "LSM deletion marker tombstone likhta hai; old versions compaction aur replica/retention safety conditions tak remain kar sakti hain. Space immediate free hone ki guarantee nahi; delete work ke baad temporary space badh sakti hai.",
-         choiceExplanations: ["LSM deletion marker tombstone likhta hai; old versions compaction aur replica/retention safety conditions tak remain kar sakti hain. Space immediate free hone ki guarantee nahi; delete work ke baad temporary space badh sakti hai.","LSMusually adds delete marker; compaction merges old versions later.","Old versions may remain until compaction/retention/safety conditions.","Replicas andtombstone retention must prevent deleted data resurrection."] },
+          explain: 'LSM delete aksar tombstone, yaani deletion marker, likhta hai. Purane versions disk par reh sakte hain; safe compaction aur retention/replica conditions ke baad jagah milti hai. Marker se temporary space badh bhi sakti hai. Cassandra mein tombstone jaldi hataane se purane replica ka deleted data wapas aa sakta hai.',
+          choiceExplanations: [
+            'LSM delete aksar tombstone, yaani deletion marker, likhta hai. Purane versions disk par reh sakte hain; safe compaction aur retention/replica conditions ke baad jagah milti hai. Marker se temporary space badh bhi sakti hai. Cassandra mein tombstone jaldi hataane se purane replica ka deleted data wapas aa sakta hai.',
+            'Delete aam taur par marker likhta hai; har SSTable turant rewrite nahi hoti.',
+            'Sirf memory se hataana durable deletion ya replicas ki consistency nahi sambhaalega.',
+            'Tombstone khud har replica ke catch-up ka saboot nahi; repair aur retention ki shartein chahiye.',
+          ],
+        },
       ],
     },
     {
@@ -2507,17 +2749,39 @@ COLUMNAR (OLAP):    [id id id...] [name name...] [amount amount...]
     instructions: 'Yeh sawaal alag karta hai ki tumne DB <b>use</b> kiya hai ya <b>samjha</b> hai. 🎤',
     questions: [
       {
-        q: "Metrics 10 lakh writes/sec; DB short list kaise choose karoge?",
-        choices: ["Benchmark TSDB/LSM and partitioned options","Postgres cannot store any time-series data","Redisram is irrelevant to retained data","One million RPS alone picks exactDB"],
+        q: 'Metrics ki 10 lakh writes/second aani hain. DB shortlist kaise banao?',
+        choices: [
+          'Row size, retention aur queries lo; TSDB, LSM aur partitioned SQL benchmark karo',
+          'Writes ki ginti se Cassandra chuno; row size aur retention benchmark ke baad dekho',
+          'Memory ki raftaar se Redis chuno; retained data aur durability ko baad mein dekho',
+          'SQL ki reliability se Postgres chuno; query pattern aur hardware ko baad mein dekho',
+        ],
         answer: 0,
-        explain: "10 lakh writes/sec headline enough nahi:bytes/write, retention, cardinality, query pattern, durability, hardware and operational budget chahiye. TSDB/LSM/wide column aur partitioned relational options benchmark karo; Postgres incapable universal claim nahi.",
-       choiceExplanations: ["10 lakh writes/sec headline enough nahi:bytes/write, retention, cardinality, query pattern, durability, hardware and operational budget chahiye. TSDB/LSM/wide column aur partitioned relational options benchmark karo; Postgres incapable universal claim nahi.","Postgres/time-series extensions can fit some workloads; blanket exclusion unsupported.","Retention and cardinality affect memory and durability cost.","Row size, retention, queries, hardware and consistency are also required."] },
+        explain: '10 lakh writes/second akela engine nahi chunta. Bytes/write, retention, unique series ki ginti, queries, durability, hardware aur operational budget chahiye. Time-series DB, LSM aur partitioned relational options ko representative load par benchmark karo. Postgres ko sirf time-series naam se reject mat karo.',
+        choiceExplanations: [
+          '10 lakh writes/second akela engine nahi chunta. Bytes/write, retention, unique series ki ginti, queries, durability, hardware aur operational budget chahiye. Time-series DB, LSM aur partitioned relational options ko representative load par benchmark karo. Postgres ko sirf time-series naam se reject mat karo.',
+          'Same write count par row size aur retention alag hon toh disk, memory aur compaction ka load alag hoga.',
+          'Retained data aur durability Redis ki memory aur persistence cost ko badalte hain.',
+          'Postgres fit ho sakta hai, par workload aur hardware bina benchmark ki capacity maan lena sahi nahi.',
+        ],
+      },
       {
-        q: '"Ek hi Postgres par OLTP aur analytics dono chal rahe hain. Kya galat hai?"',
-        choices: ["Isolate large scans if OLTP SLO hurts","AnalyticsandOLTP can never sharean engine","Night schedule prevents all contention","Any index makes full analytics scans free"],
+        q: 'Ek Postgres par OLTP aur analytics chal rahe hain. Kab isolation ka faisla loge?',
+        choices: [
+          'Jab scans se OLTP ka measured SLO bigde; replica ya warehouse ka sauda parkho',
+          'Jab analytics query pehli baar chale; shared engine ko bina naape reject kar do',
+          'Jab nightly schedule mil jaaye; OLTP se resource contention ko solved maan lo',
+          'Jab naya index ban jaaye; bade aggregates ka I/O aur CPU kam naapna chhod do',
+        ],
         answer: 0,
-        explain: "Broad analytics OLTP ke CPU, I/O, memory/cache aur lock budgets compete kar sakti hai; cache pollution ek possible mechanism hai. Query plan, working set aur SLO measure karo. Read replica/warehouse isolation useful candidates hain; columnar storage broad column aggregates fit kar sakti hai, universal row-count cutoff nahi.",
-       choiceExplanations: ["Broad analytics OLTP ke CPU, I/O, memory/cache aur lock budgets compete kar sakti hai; cache pollution ek possible mechanism hai. Query plan, working set aur SLO measure karo. Read replica/warehouse isolation useful candidates hain; columnar storage broad column aggregates fit kar sakti hai, universal row-count cutoff nahi.","Sharing is valid while capacity/isolation meetsSLO; measure tradeoff.","Jobs can overrun or leave cache/IO pressure; night is not hard isolation.","Broad aggregations may still read large fractions despiteindexes."] },
+        explain: 'Bade analytics scans OLTP ke CPU, I/O, memory/cache aur locks se resources baant sakte hain. Plan, working set aur SLO naap kar isolation chuno. Read replica ya warehouse madad kar sakte hain; columnar layout broad column aggregates ko suit kar sakta hai. Shared engine kuch workloads mein theek hai; universal row-count cutoff nahi.',
+        choiceExplanations: [
+          'Bade analytics scans OLTP ke CPU, I/O, memory/cache aur locks se resources baant sakte hain. Plan, working set aur SLO naap kar isolation chuno. Read replica ya warehouse madad kar sakte hain; columnar layout broad column aggregates ko suit kar sakta hai. Shared engine kuch workloads mein theek hai; universal row-count cutoff nahi.',
+          'Dono workloads saath chal sakte hain agar capacity aur isolation SLO meet karein; pehle naapo.',
+          'Night job lambi chal sakti hai ya cache/I/O pressure chhod sakti hai; schedule hard isolation nahi.',
+          'Index ke baad bhi broad aggregate ko bahut data padhna pad sakta hai; actual work naapo.',
+        ],
+      },
     ],
   },
   success: [
@@ -2619,8 +2883,8 @@ WHILE (rows bache):                            ← chhote batches
      truth hai</b>. Jis pal tum purani jagah likhna band karte ho, darwaza band ho
      jaata hai — uske baad "wapas" jaane ka matlab hai naya data khona.
      Isiliye dual-write cutover ke <b>baad bhi</b> kuch din chalne do,
-     aur cutover ek <b>flag</b> ho: deploy rollback mein 20 minute lagte hain,
-     flag palatne mein 20 second.</p>`,
+     aur cutover ek <b>flag</b> ho: deploy rollback mein aksar minutes lagte hain,
+     flag palatna aksar seconds ka kaam (kitna tez — flag system par depend).</p>`,
   ],
   stages: [
     {
@@ -2661,7 +2925,7 @@ WHILE (rows bache):                            ← chhote batches
         { text: 'App ko DONO columns likhne lago, padho abhi bhi purane se', explain: '<b>Dual-write.</b> Ab se koi naya data chhootega nahi. Yeh backfill se PEHLE aana chahiye — yahi poore kram ka dil hai.' },
         { text: 'Purane rows ko chhote batches mein backfill karo', explain: '5k–10k rows per batch + beech mein sleep. Resumable, replica-friendly, aur rok ke dobara shuru kiya ja sakta hai.' },
         { text: 'Verify — count + checksum + shadow reads', explain: 'Yahan tumhe <b>saboot</b> milta hai. Bina iske cutover ek ummeed hai, decision nahi.' },
-        { text: 'Reads ko naye column par shift karo — ek feature flag se', explain: '<b>Cutover.</b> 1% → 10% → 100%. Flag isliye ki wapas aana 20 second ka kaam ho, 20 minute ka deploy nahi.' },
+        { text: 'Reads ko naye column par shift karo — ek feature flag se', explain: '<b>Cutover.</b> 1% → 10% → 100%. Flag isliye ki wapas aana seconds ka kaam ho, minutes ka deploy nahi (asli samay flag system par depend).' },
         { text: 'Kuch din baad purane column mein likhna band karo', explain: 'Ab rollback ka darwaza band ho raha hai — isliye "kuch din baad", turant nahi. Tab tak dono bharte raho.' },
         { text: 'Purana column drop karo', explain: '<b>Contract.</b> Sabse aakhir mein, aur tab jab metrics kah dein ki koi use nahi kar raha. Yeh kadam mahine baad aa sakta hai — koi jaldi nahi.' },
       ],
@@ -2702,7 +2966,7 @@ WHILE (rows bache):                            ← chhote batches
           summary: `<b>Seekh:</b> Galti "backfill" mein nahi thi — <b>kram</b> mein thi.
             <br><br><b>Sahi kram:</b> <code>dual-write → backfill → verify → cutover</code>
             <br><br><b>Teen cheezein jinhone bachaya:</b>
-            <br>• Cutover ek <b>flag</b> tha — rollback 20 second ka kaam tha, 20 minute ka deploy nahi
+            <br>• Cutover ek <b>flag</b> tha — rollback seconds ka kaam tha, minutes ka deploy nahi (aur purana data abhi taaza tha)
             <br>• Purani table abhi bhi <b>source of truth</b> thi — isliye wapas jaana mumkin tha
             <br>• Gayab rows ka <b>ek hi time window</b> hona seedha root cause tak le gaya
             <br><br><b>Aur ek:</b> yeh galti koi error nahi deti. Sirf <code>verify</code> ise pakadta hai —
@@ -2715,23 +2979,56 @@ WHILE (rows bache):                            ← chhote batches
       title: 'Migration ki samajh',
       questions: [
         {
-          q: "Backfill snapshot ke dauraan concurrent writes miss na hon. Kya chahiye?",
-          choices: ["Capture concurrent changes before snapshot","Dual-write is the only capture mechanism","Snapshot copies future changes automatically","Backfill speed guarantees no missed writes"],
+          q: 'Backfill snapshot ke dauraan writes chalti rahengi. Naye store mein gap rokne ke liye kya chahiye?',
+          choices: [
+            'Snapshot boundary se capture jodo; concurrent writes baad mein replay kar sako',
+            'Snapshot pehle poora karo, phir snapshot ke baad se writes ki capture shuru karo',
+            'Snapshot batches ko tez karo, phir beech ki writes ke liye capture chhod do',
+            'Snapshot ke row counts milaao, phir badli values ki capture ko poora maan lo',
+          ],
           answer: 0,
-          explain: "Snapshot start se changes capture karo taaki concurrent writes miss na hon. Coordinated dual write, CDC/log stream ya other correct migration protocol valid hain. Plain dual writes mein partial failures aur ordering handle karna hoga.",
-         choiceExplanations: ["Snapshot start se changes capture karo taaki concurrent writes miss na hon. Coordinated dual write, CDC/log stream ya other correct migration protocol valid hain. Plain dual writes mein partial failures aur ordering handle karna hoga.","CDC/log-based capture or other coordinated migration can also cover changes.","Point-in-time copy does not include subsequent mutations.","Fast copy still has concurrency window unless captured/reconciled."] },
+          explain: 'Snapshot aur change-log position ka taal-mel rakho, taaki snapshot ke dauraan ki commits replay ho sakein. CDC, coordinated dual-write ya doosra recoverable protocol fit ho sakta hai. Plain independent dual writes mein partial failure aur ordering ka gap sambhaalna hoga; snapshot akela future writes copy nahi karta.',
+          choiceExplanations: [
+            'Snapshot aur change-log position ka taal-mel rakho, taaki snapshot ke dauraan ki commits replay ho sakein. CDC, coordinated dual-write ya doosra recoverable protocol fit ho sakta hai. Plain independent dual writes mein partial failure aur ordering ka gap sambhaalna hoga; snapshot akela future writes copy nahi karta.',
+            'Snapshot ke dauraan badli rows ka gap bachega; capture ko snapshot boundary ke saath coordinate karo.',
+            'Tez backfill bhi nonzero concurrency window rakhta hai; writes capture ya reconcile karni padengi.',
+            'Equal row counts values ki equality nahi batate; updates count badle bina data badal sakti hain.',
+          ],
+        },
         {
-          q: 'Cutover ko feature flag se karna kyun behtar hai, deploy se nahi?',
-          choices: ["Flag makes controlled switch and rollback","Flag rollback always takes exactly 20 seconds","Deploy rollback always takes 20 minutes","Feature flag eliminates data compatibility"],
+          q: 'Migration cutover ko feature flag ke peeche rakhne ka faayda kya hai?',
+          choices: [
+            'Traffic dheere shift aur wapas route karo; compatibility pehle verify karo',
+            'Flag palat kar purane store ka missed data la sakte ho; replay baad mein dekho',
+            'Flag laga kar purana schema hata sakte ho; data compatibility baad mein dekho',
+            'Flag ke fixed fast time par bharosa karo; propagation test rollout ke baad karo',
+          ],
           answer: 0,
-          explain: "Feature flag rollout/routing control aur quick rollback de sakta hai; exact propagation time implementation-specific hai. Old/new path compatibility aur data reversal remain required; deploy rollback always 20 minutes nahi.",
-         choiceExplanations: ["Feature flag rollout/routing control aur quick rollback de sakta hai; exact propagation time implementation-specific hai. Old/new path compatibility aur data reversal remain required; deploy rollback always 20 minutes nahi.","Propagation/caching/failure behavior depend on implementation.","Deployment rollback time is environment-specific.","Old/new code and data must remain compatible during rollout."] },
+          explain: 'Feature flag routing ko controlled stages mein badal sakta hai aur rollback tez kar sakta hai. Propagation ka time implementation par depend karta hai; 20 second ya 20 minute universal nahi. Purana path current data padh sake aur code/schema compatible hon, pehle verify karo. Flag missing data ko khud wapas nahi laata.',
+          choiceExplanations: [
+            'Feature flag routing ko controlled stages mein badal sakta hai aur rollback tez kar sakta hai. Propagation ka time implementation par depend karta hai; 20 second ya 20 minute universal nahi. Purana path current data padh sake aur code/schema compatible hon, pehle verify karo. Flag missing data ko khud wapas nahi laata.',
+            'Flag route badalta hai; old store se chhoote writes ke liye replay ya reverse replication chahiye.',
+            'Purana schema hataane se old readers toot sakte hain aur rollback band ho sakta hai; flag akela compatibility nahi deta.',
+            'Flag caches aur delivery mein delay ho sakta hai; measured propagation aur failure behavior pehle test karo.',
+          ],
+        },
         {
-          q: "Old store par new writes bandh hue. Safe rollback ki requirement?",
-          choices: ["Old store stale unless replay path exists","Stopping dual writes always loses data","Backfill complete means rollback impossible","Feature flag alone restores missed writes"],
+          q: 'Cutover ke baad writes sirf naye store mein jaa rahi hain. Purane store par safe rollback kaise bachega?',
+          choices: [
+            'New writes old store tak replay karo; reverse replication aur parity test karo',
+            'Sirf read flag wapas karo; purane store mein aakhri backfill ko current maan lo',
+            'Sirf nayi writes band karo; purane store mein beech ke updates apne aap maan lo',
+            'Sirf purani table bachi rakho; latest values dono jagah hone ka proof maan lo',
+          ],
           answer: 0,
-          explain: "Old store updates stop hon toh stale hoga; rollback ko preserved changelog/reverse replication/replay chahiye. Without that path rollback data loss risk rakhta hai; stopping dual write universally irreversible nahi.",
-         choiceExplanations: ["Old store updates stop hon toh stale hoga; rollback ko preserved changelog/reverse replication/replay chahiye. Without that path rollback data loss risk rakhta hai; stopping dual write universally irreversible nahi.","CDC/reverse replication/replay can keep rollback possible if designed.","Backfill completion does not itself stop old store updates.","Flag changes read routing, not missing data propagation."] },
+          explain: 'Purane store ko updates nahi mil rahe toh rollback se nayi writes chhoot sakti hain. Preserved changelog, reverse replication ya tested reconciliation se old path ko current banao. Data parity aur writer ownership verify karne ke baad route badlo. Dual-write band hona akela permanent irreversibility nahi, par simple flag rollback unsafe ho sakta hai.',
+          choiceExplanations: [
+            'Purane store ko updates nahi mil rahe toh rollback se nayi writes chhoot sakti hain. Preserved changelog, reverse replication ya tested reconciliation se old path ko current banao. Data parity aur writer ownership verify karne ke baad route badlo. Dual-write band hona akela permanent irreversibility nahi, par simple flag rollback unsafe ho sakta hai.',
+            'Last backfill ke baad aayi writes old store mein nahi hongi; read flag data sync nahi karta.',
+            'Naye writes rokne se pehle ke missing updates replay nahi hote; missing updates ka recovery path chahiye.',
+            'Table ka hona latest data ka proof nahi; applied position aur values verify karo.',
+          ],
+        },
       ],
     },
   ],
@@ -2740,17 +3037,39 @@ WHILE (rows bache):                            ← chhote batches
     instructions: 'Yeh sawaal senior aur staff ko alag karta hai. 🎤',
     questions: [
       {
-        q: '"2 crore rows wali table ko naye schema par le jaana hai, bina downtime. Plan bolo."',
-        choices: ["Expand; capture; backfill; verify; cutover","Copy live table then instant read switch","Large blocking ALTERwithout lock analysis","Drop old schema before checking new reads"],
+        q: '2 crore rows ko naye schema par bina downtime le jaana hai. Kaunsa plan choose karoge?',
+        choices: [
+          'Expand, changes capture, bounded backfill, parity verify, phir staged cutover karo',
+          'Expand, live rows copy, sirf counts verify, phir reads ek saath naye store par karo',
+          'Expand, bada ALTER chalao, lock behavior parkhe bina cutover ka time pakka karo',
+          'Expand, copy verify, purana schema drop karo, phir canary se readers ko parkho',
+        ],
         answer: 0,
-        explain: "Concurrent-change capture pehle, phir bounded backfill, parity verification aur controlled cutover. Purani read/write compatibility aur rollback path verify karo. Bare dual writes partial failures/order ko solve nahi karti; coordinated CDC ya another recoverable protocol bhi valid hai. DDL lock/rewrite operation aur version par depend karta hai.",
-       choiceExplanations: ["Concurrent-change capture pehle, phir bounded backfill, parity verification aur controlled cutover. Purani read/write compatibility aur rollback path verify karo. Bare dual writes partial failures/order ko solve nahi karti; coordinated CDC ya another recoverable protocol bhi valid hai. DDL lock/rewrite operation aur version par depend karta hai.","Concurrent changes can bemissed without capture/reconciliation.","DDLlock/rewrite behavior depends on operation/version; test bounded plan.","Drop removes rollback path before parity/consumer validation."] },
+        explain: 'Naya schema compatible rakho. Concurrent changes capture karo, backfill ke batches aur DB/replica load baandho. Counts, keys, values aur important queries compare karo; phir canary cutover aur tested rollback rakho. Dual writes akeli atomic nahi. DDL locks aur table rewrite operation/version par depend karte hain; representative environment mein test karo.',
+        choiceExplanations: [
+          'Naya schema compatible rakho. Concurrent changes capture karo, backfill ke batches aur DB/replica load baandho. Counts, keys, values aur important queries compare karo; phir canary cutover aur tested rollback rakho. Dual writes akeli atomic nahi. DDL locks aur table rewrite operation/version par depend karte hain; representative environment mein test karo.',
+          'Live copy ki concurrent updates miss ho sakti hain; count equal hona values equal hone ka proof nahi.',
+          'ALTER ka lock/rewrite behavior operation aur version par depend karta hai; latency budget bina test pakka nahi.',
+          'Old schema jaldi drop karne se readers aur rollback path toot sakte hain; contract phase baad mein chahiye.',
+        ],
+      },
       {
-        q: '"Cutover ke baad tumhe kaise pata chalega ki sab theek hai?"',
-        choices: ["Parity plus errors, business and latency","Only latency proves migration correctness","Zero support tickets proves data parity","QAonce replaces canary and monitoring"],
+        q: 'Migration cutover par correctness ka bharosa kaise badhaoge?',
+        choices: [
+          'Parity aur shadow reads ke saath errors, latency aur business outcomes dekho',
+          'Sirf low latency par rollout badhao; silent data mismatch ko logs par chhod do',
+          'Sirf 200 responses par rollout badhao; orders aur values ka comparison chhod do',
+          'Sirf QA pass par rollout badhao; live traffic aur lag ka monitoring baad mein karo',
+        ],
         answer: 0,
-        explain: 'Silent data bugs <b>error rate par dikhte hi nahi</b> — API 200 lauta rahi hai, bas galat data ke saath. Isiliye business metric chahiye (orders/min, revenue/hour): agar woh gir jaaye toh kuch toota hai chahe har request 200 ho. Aur shadow read cutover se pehle hi jawab de deta hai.',
-       choiceExplanations: ["Silent data bugs <b>error rate par dikhte hi nahi</b> — API 200 lauta rahi hai, bas galat data ke saath. Isiliye business metric chahiye (orders/min, revenue/hour): agar woh gir jaaye toh kuch toota hai chahe har request 200 ho. Aur shadow read cutover se pehle hi jawab de deta hai.","Fast incorrect results can still lose orders ormoney.","Customers may not notice/report immediately; compare actual data.","Live workloads, lag and scale need observable rollout checks."] },
+        explain: 'Cutover se pehle shadow reads aur chunk/key/value parity check karo. Canary mein error rate, latency aur orders jaise business outcomes dekho. Fast 200 response bhi galat data de sakta hai. Shadow sampling har row ya future failure ka proof nahi; async lag aur comparison timing samajh kar mismatches classify karo.',
+        choiceExplanations: [
+          'Cutover se pehle shadow reads aur chunk/key/value parity check karo. Canary mein error rate, latency aur orders jaise business outcomes dekho. Fast 200 response bhi galat data de sakta hai. Shadow sampling har row ya future failure ka proof nahi; async lag aur comparison timing samajh kar mismatches classify karo.',
+          'Galat data bhi tez aa sakta hai; latency correctness ya complete migration ka proof nahi.',
+          '200 transport/API success bata sakta hai, correct business outcome nahi; data parity bhi chahiye.',
+          'QA useful hai, par live load, replication lag aur real query patterns rollout monitoring maangte hain.',
+        ],
+      },
     ],
   },
   success: [
@@ -2768,7 +3087,7 @@ WHILE (rows bache):                            ← chhote batches
     { front: 'Dual-write pehle kyun?', back: 'Backfill <b>ateet</b> copy karta hai (snapshot), dual-write <b>vartaman</b> sambhaalta hai. Kram ulta = beech mein khaali khidki = silent data loss.' },
     { front: 'Backfill batch size?', back: '5k–10k rows + beech mein sleep. Bade batch = lambi transaction = locks + undo bloat + replica lag. Dhyeya "jaldi" nahi, <b>"kisi ko pata na chale"</b>.' },
     { front: 'Verify ke teen level?', back: '<b>Count</b> (sasta) → <b>Checksum</b> (values bhi) → <b>Shadow read</b> (asli traffic dono jagah, compare + log). Sabse pakka teesra.' },
-    { front: 'Cutover flag se kyun, deploy se nahi?', back: 'Flag 20 second mein palatta hai, deploy 20 minute leta hai. Aur flag se 1%→10%→100% kar sakte ho.' },
+    { front: 'Cutover flag se kyun, deploy se nahi?', back: 'Flag aksar seconds mein palat-ta hai, deploy minutes leta hai (setup par depend). Aur flag se 1%→10%→100% kar sakte ho. Shart: purana raasta abhi bhi taaza data padh sake.' },
     { front: 'Rollback ka darwaza kab band?', back: 'Jis pal <b>purani table par likhna band</b> hota hai. Isliye dual-write cutover ke baad bhi kuch din chalao.' },
   ],
 },
@@ -3166,23 +3485,56 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
       title: 'Probabilistic ki samajh',
       questions: [
         {
-          q: "Healthy standard insert-only Bloom filter mein insertedkey absent kyun nahi aati?",
-          choices: ["Insert sets bits; normal query cannot clear","Perfect hash functions store exact membership","Bloom stores every original item","False positive proves false negatives exist"],
+          q: 'Healthy, poore updated insert-only Bloom filter mein added item ko absent kyun nahi batata?',
+          choices: [
+            'Add par item ke hash bits set hue the; normal checks un bits ko clear nahi karte',
+            'Add par item ka poora naam rakha tha; har check exact naam se comparison karta hai',
+            'Add par hash unique ban gaya tha; doosre items same bits ko kabhi set nahi karte',
+            'Add par item ka count rakha tha; har check negative result ko positive kar deta hai',
+          ],
           answer: 0,
-          explain: "Standard insert-only Bloom filter bitset:insertedkey ke hash bits set hote hain aur delete/bit loss nahi, is scope mein false negatives nahi. Corruption, concurrent publication, filter lag or deletions operational false-negatives la sakte hain; contract distinguish karo.",
-         choiceExplanations: ["Standard insert-only Bloom filter bitset:insertedkey ke hash bits set hote hain aur delete/bit loss nahi, is scope mein false negatives nahi. Corruption, concurrent publication, filter lag or deletions operational false-negatives la sakte hain; contract distinguish karo.","Hash collisions cause false positives; perfect hashing not assumed.","Bitsummarize membership; original items not stored.","All required bits set forinserted items; false positive is different error direction."] },
+          explain: 'Normal bit Bloom filter item ke hash positions par bits set karta hai. Healthy insert-only filter mein added item ke bits clear nahi hote, isliye false negative nahi. Doosre items bits share kar sakte hain, isliye false positive ho sakta hai. Lag, corruption, incomplete publication ya unsafe deletion is contract se alag failures hain.',
+          choiceExplanations: [
+            'Normal bit Bloom filter item ke hash positions par bits set karta hai. Healthy insert-only filter mein added item ke bits clear nahi hote, isliye false negative nahi. Doosre items bits share kar sakte hain, isliye false positive ho sakta hai. Lag, corruption, incomplete publication ya unsafe deletion is contract se alag failures hain.',
+            'Bloom filter original items ki exact list nahi rakhta; membership bits ka summary rakhta hai.',
+            'Hash positions share ho sakti hain; collisions hi false positives ki ek wajah hain.',
+            'Normal bit Bloom filter per-item counter ya negative-to-positive correction nahi rakhta.',
+          ],
+        },
         {
-          q: "Standard bit Bloom filter mein bits clear karke deletion unsafe kyun?",
-          choices: ["Clearing shared bits can hide other items","Every Bloom variant forbids any deletion","Deletion requires rewriting original items","Deletingonebit cannot affect other keys"],
+          q: 'Normal bit Bloom filter se ek item hataane ke liye hash bits zero karna unsafe kyun hai?',
+          choices: [
+            'Items same bits baant sakte hain; zero karne se doosra added item chhup sakta hai',
+            'Har bit sirf ek item ki hoti hai; delete ke waqt hash ko dobara banana pad sakta hai',
+            'Filter original items rakhta hai; ek bit clear karne se saari list copy karni pad sakti hai',
+            'Har Bloom variant delete rokta hai; counters rakhne par bhi item hat nahi sakta hai',
+          ],
           answer: 0,
-          explain: "Ordinary Bloom filter bits shares karta hai; one key ke bits clear karne se other insertedkey false-negative ho sakti hai. Counting Bloom or Cuckoo filters deletion support kar sakte hain; variant contract specify karo.",
-         choiceExplanations: ["Ordinary Bloom filter bits shares karta hai; one key ke bits clear karne se other insertedkey false-negative ho sakti hai. Counting Bloom or Cuckoo filters deletion support kar sakte hain; variant contract specify karo.","Counting Bloom filters support deletion with appropriate counters/contracts.","Standard bit filter does not store original items to rewrite.","Different items may share hash positions; clearing creates false negatives."] },
+          explain: 'Ek bit kai items se set ho sakti hai. Ek item ke bits clear karoge toh doosre added item ka check false negative de sakta hai. Counting Bloom filter bits ki jagah counters rakhta hai aur sahi deletion contract ke saath delete support kar sakta hai. Normal bit variant aur deletion variants alag hain.',
+          choiceExplanations: [
+            'Ek bit kai items se set ho sakti hai. Ek item ke bits clear karoge toh doosre added item ka check false negative de sakta hai. Counting Bloom filter bits ki jagah counters rakhta hai aur sahi deletion contract ke saath delete support kar sakta hai. Normal bit variant aur deletion variants alag hain.',
+            'Hash collision se items same bits share karte hain; bit par unique item ownership nahi hoti.',
+            'Normal filter original item list rakhta hi nahi; problem shared bits clear karna hai.',
+            'Counting Bloom jaise variants valid deletions support kar sakte hain; har variant ko ek rule se mat gino.',
+          ],
+        },
         {
-          q: "Fixed precision HLL ka core memory cardinality ke saath kyun nahi badhta?",
-          choices: ["Fixed register count bounds core memory","HLLstores every unique value compressed","HLLkeeps fixed percentage of all values","HLLoffloads excess exact values to disk"],
+          q: 'HLL har unique id yaad rakhe bina unique count ka andaaza kaise rakhta hai?',
+          choices: [
+            'Hash patterns ka register summary rakhta hai; precision se register count chunta hai',
+            'Har unique id compress karke rakhta hai; badhti cardinality par bhi bytes fixed hain',
+            'Har unique id ka fixed hissa rakhta hai; sample badhe toh bachi ids disk par jaati hain',
+            'Har unique id ka exact hash rakhta hai; memory bhare toh purane hashes disk par jaate hain',
+          ],
           answer: 0,
-          explain: "Fixed precision HLL core register count independent of cardinality hota hai; approximate error chosen precision se aata hai. Sparse implementation encoding memory small sets par vary kar sakti hai; exact item list store nahi hoti.",
-         choiceExplanations: ["Fixed precision HLL core register count independent of cardinality hota hai; approximate error chosen precision se aata hai. Sparse implementation encoding memory small sets par vary kar sakti hai; exact item list store nahi hoti.","HLL estimates cardinality with register statistics, not exact value list.","Register precision fixed; stored sample count does not grow with set size.","Core HLL algorithm has no exact set spill store."] },
+          explain: 'HLL original ids ki list ke bajay hash patterns ka register summary rakhta hai. Chuni hui precision par core register count cardinality ke saath nahi badhta; estimate approximate hota hai. Sparse encodings chhote sets par storage size badal sakti hain. Fixed core registers ka matlab har encoding mein har waqt same allocated bytes nahi.',
+          choiceExplanations: [
+            'HLL original ids ki list ke bajay hash patterns ka register summary rakhta hai. Chuni hui precision par core register count cardinality ke saath nahi badhta; estimate approximate hota hai. Sparse encodings chhote sets par storage size badal sakti hain. Fixed core registers ka matlab har encoding mein har waqt same allocated bytes nahi.',
+            'Har unique id ka lossless compressed record rakhoge toh set badhne par memory badhegi; HLL list nahi rakhta.',
+            'HLL fixed percentage wala growing sample aur exact overflow store nahi rakhta; core register summary hai.',
+            'HLL disk par exact ids spill karke count nahi nikaalta; register statistics se estimate karta hai.',
+          ],
+        },
       ],
     },
     {
@@ -3202,17 +3554,39 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
     instructions: 'Yeh jawab dikhata hai ki tum tradeoffs sochte ho. 🎤',
     questions: [
       {
-        q: "Random code allocation mein Bloom filter ka safe role?",
-        choices: ["Bloom negative hint; DBunique insert final","Bloom positive means keydefinitelyexists","Bloom negative replaces DBuniqueness","Bloom alone detects concurrent code claim"],
+        q: 'Random short code allocate karna hai. Bloom filter ke saath uniqueness kaise pakki karoge?',
+        choices: [
+          'Negative par lookup bachao, par final claim DB ke atomic UNIQUE insert se karo',
+          'Negative par seedha code do, phir DB mein uniqueness ki jaanch baad mein karo',
+          'Positive par code taken maano, phir user ko exact collision ka result dikha do',
+          'Positive par naya code lo, par concurrent writers ki final DB claim ko chhod do',
+        ],
         answer: 0,
-        explain: "Complete insert-only Bloom negative expensive existence lookup skip karne ka hint hai; positive false ho sakta hai. Concurrent writers/filter lag ke against authoritative DB unique insert/claim required hai. Bloom filter alone unique allocation oracle nahi.",
-       choiceExplanations: ["Complete insert-only Bloom negative expensive existence lookup skip karne ka hint hai; positive false ho sakta hai. Concurrent writers/filter lag ke against authoritative DB unique insert/claim required hai. Bloom filter alone unique allocation oracle nahi.","False positives exist; positive requires authoritative check if needed.","Filter lag/concurrent allocation can race; atomic unique claim needed.","Approximate filter is not atomic cross-writer ownership record."] },
+        explain: 'Complete aur fresh insert-only filter ka negative unnecessary lookup bacha sakta hai. Positive false ho sakta hai. Concurrent writers ya filter lag se bachne ke liye DB mein atomic UNIQUE insert/claim final guard hai. Filter uniqueness ka authoritative record nahi; positive candidates chhodna policy ho sakti hai, exact existence ka proof nahi.',
+        choiceExplanations: [
+          'Complete aur fresh insert-only filter ka negative unnecessary lookup bacha sakta hai. Positive false ho sakta hai. Concurrent writers ya filter lag se bachne ke liye DB mein atomic UNIQUE insert/claim final guard hai. Filter uniqueness ka authoritative record nahi; positive candidates chhodna policy ho sakti hai, exact existence ka proof nahi.',
+          'Negative filter response concurrent writer ka claim nahi rokta; final atomic uniqueness guard abhi chahiye.',
+          'Positive ka matlab shayad present hai; exact collision batane ke liye authoritative check chahiye.',
+          'Naya candidate chunne se do writers ki race nahi hat-ti; final unique claim phir bhi chahiye.',
+        ],
+      },
       {
-        q: '"Bloom filter ka size kaise chunoge?"',
-        choices: ["ChooseN and false positive cost; derive bits","Ten bits per item satisfies any error budget","Memory available alone defines correctness","More hash functions always improve error rate"],
+        q: 'Bloom filter ki memory aur hash count chunne ka shuruati hisaab kya hoga?',
+        choices: [
+          'Expected items aur error budget chuno, phir bits aur hash count nikalo',
+          'Har item ko 10 bits do, phir har workload ke error budget ko poora maan lo',
+          'Bachi RAM jitni bits do, phir expected item count ko planning se hata do',
+          'Hashes ki ginti badhaate raho, phir bits ka same size har budget par rakh do',
+        ],
         answer: 0,
-        explain: "Expected cardinality n aur acceptable false-positive probability p se m=-n ln(p)/(ln2)^2 bits derive karo; hash count bhi size se choose karo. Bloom positive kabhi user-visible correctness decision directly mat banao, authoritative verification chahiye.",
-       choiceExplanations: ["Expected cardinality n aur acceptable false-positive probability p se m=-n ln(p)/(ln2)^2 bits derive karo; hash count bhi size se choose karo. Bloom positive kabhi user-visible correctness decision directly mat banao, authoritative verification chahiye.","Bits per item corresponds toaparticular error target, not every target.","Expected cardinality and acceptable false positive cost determine required size.","Optimal hash count depends onm/n; excesshashing canworsen occupancy/cost."] },
+        explain: 'Expected item count n aur acceptable false-positive probability p chuno. Required bits m = -n ln(p)/(ln 2)^2; achha hash count k lagbhag (m/n) ln 2 hai. Positive galat ho toh cost kya hai, pehle tay karo. Exact correctness chahiye toh authoritative verification rakho; har approximate application ka contract alag ho sakta hai.',
+        choiceExplanations: [
+          'Expected item count n aur acceptable false-positive probability p chuno. Required bits m = -n ln(p)/(ln 2)^2; achha hash count k lagbhag (m/n) ln 2 hai. Positive galat ho toh cost kya hai, pehle tay karo. Exact correctness chahiye toh authoritative verification rakho; har approximate application ka contract alag ho sakta hai.',
+          '10 bits/item ek error range se juda estimate hai; har error target ke liye kaafi nahi.',
+          'Bits ke saath expected cardinality badhegi toh false-positive rate bhi badlega; RAM akeli target nahi batati.',
+          'Optimal count ke baad zyada hashing cost aur bit occupancy badha kar false-positive rate bigaad sakti hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -3311,7 +3685,7 @@ Niyam: har key GHADI KI DISHA mein pehle milne wale node ki hai.</pre>
      <p>Ilaaj: har node ko ring par <b>kai baar</b> rakho —
      <code>node-A#0</code>, <code>node-A#1</code>, ... <code>node-A#149</code>.
      Ab har node bahut saare chhote tukdon ka maalik hai, aur unka jod
-     lagbhag barabar ho jaata hai (150 vnodes par skew ~1.05x).</p>
+     lagbhag barabar ho jaata hai (150 vnodes par skew kaafi kam — kitna, nodes aur keys par depend; lab 34 ke ek run mein 1.2x).</p>
      <p class="tip">🎯 Virtual nodes ka doosra, aur shayad bada faayda:
      jab ek node <b>girta</b> hai, uska load <b>saare</b> nodes mein bant jaata hai —
      sirf uske ek padosi par nahi. Bina vnodes ke ek node ka girna uske padosi ko
@@ -3334,7 +3708,7 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
       tasks: T_RING,
       success: SD.allTasks(T_RING),
       successText: `Do numbers yaad rakhne laayak hain: <b>~80% vs ~20%</b> keys move,
-        aur <b>skew 1.9x se 1.01x</b> virtual nodes ke saath.
+        aur is simulator mein <b>skew 1.9x se lagbhag 1.01x</b> virtual nodes ke saath (asli cluster mein naap ke dekho).
         Aur ek baat jo log bhool jaate hain — <b>ring bina vnodes ke aadha hi kaam
         karta hai</b>: distribution bekaar rehti hai aur node girne par uska poora
         load ek padosi par pad jaata hai.`,
@@ -3356,29 +3730,73 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
       title: 'Ring ki samajh',
       questions: [
         {
-          q: '4 se 5 nodes karne par <code>hash % N</code> kitni keys hila deta hai?',
-          choices: ["About 80% under uniform h modulo 20","About 20% becauseonlynewnode changes","About 25%becauseoldnode count is four","0%becauseunderlying hashstays same"],
+          q: 'Same hash aur stable node labels par modulo routing 4 se 5 nodes ho gayi. Uniform hashes par kitna remap?',
+          choices: [
+            'Lagbhag 80% keys — hash % 4 aur hash % 5 adhiktar residues par alag milte hain',
+            'Lagbhag 20% keys — sirf naye node ko mili keys ka route badalta maana jaata hai',
+            'Lagbhag 25% keys — purane chaar nodes mein se ek ka hissa badalta maana jaata hai',
+            'Lagbhag 0% keys — same hash rehne se node ka remainder bhi same maana jaata hai',
+          ],
           answer: 0,
-          explain: 'Hash toh wahi rehta hai — par <b>modulo</b> badal gaya, aur wahi node decide karta hai. Sirf woh keys apni jagah rehti hain jinka <code>hash % 4 === hash % 5</code> ho, jo lagbhag 1/5 hain. Baaki sab hil jaati hain.',
-         choiceExplanations: ["Hash toh wahi rehta hai — par <b>modulo</b> badal gaya, aur wahi node decide karta hai. Sirf woh keys apni jagah rehti hain jinka <code>hash % 4 === hash % 5</code> ho, jo lagbhag 1/5 hain. Baaki sab hil jaati hain.","h%4 andh%5 differ for 16 of20 residues, not 4.","Modulo remaps many old node to old node routes aswell.","Hash constant canyield different remainder whenmodulus changes."] },
+          explain: 'Uniform hash residues modulo 20 aur stable labels 0..N-1 maano. 20 residues mein 4 par h%4 = h%5, 16 par alag: 16/20 = 80% remap. Hash same hai, modulus badla hai. Actual keys ka percentage hash distribution aur node-list labeling par depend karega.',
+          choiceExplanations: [
+            'Uniform hash residues modulo 20 aur stable labels 0..N-1 maano. 20 residues mein 4 par h%4 = h%5, 16 par alag: 16/20 = 80% remap. Hash same hai, modulus badla hai. Actual keys ka percentage hash distribution aur node-list labeling par depend karega.',
+            '20% naye node ka balanced share hai; modulo purane nodes ke beech bhi kaafi keys remap karta hai.',
+            'Purane node ka 25% share expansion ke total remap ka formula nahi; residues compare karo.',
+            'Same hash ka 4 aur 5 se remainder alag ho sakta hai; node routing remainder se nikalti hai.',
+          ],
+        },
         {
-          q: 'Consistent hashing mein node add karne par kitni keys move honi chahiye?',
-          choices: ["New node target share about 1/(N+1)","Exactly half keys for any node count","Exactly zero keys on new node","All keys must move to new node"],
+          q: 'Balanced N-node consistent-hash cluster mein ek barabar-capacity node jodo. Ideal movement kitna?',
+          choices: [
+            'Lagbhag 1/(N+1) keys naye node par; baaki owners ka zyada hissa reh sakta hai',
+            'Lagbhag 1/2 keys naye node par; purane nodes kitne bhi hon, aadha hissa chahiye',
+            'Lagbhag zero keys naye node par; node jodne par data transfer bachna chahiye',
+            'Lagbhag saari keys naye node par; ring ka naya member pehla owner banta hai',
+          ],
           answer: 0,
-          explain: "Noldbalanced nodes tonewN+1 node ideal share 1/(N+1) move hoga. Real ring skew/weights/vnodes se variance hoti hai;1/Ndefinition meinNpost-add total ho toh notation explicit rakho.",
-         choiceExplanations: ["Noldbalanced nodes tonewN+1 node ideal share 1/(N+1) move hoga. Real ring skew/weights/vnodes se variance hoti hai;1/Ndefinition meinNpost-add total ho toh notation explicit rakho.","BalancedN-to-N+1 expansion allocates new node oneofN+1 shares.","New node needs keys or stores no load; zero movement cannot populateit.","Existing nodes keep most ownership under consistent hashing."] },
+          explain: 'Expansion ke baad total N+1 barabar-capacity nodes hain; naye node ka ideal balanced share 1/(N+1) hai. Consistent hashing baaki ownership ka zyada hissa bachata hai. Real ring mein token placement, vnodes aur weights se movement aur skew alag ho sakte hain.',
+          choiceExplanations: [
+            'Expansion ke baad total N+1 barabar-capacity nodes hain; naye node ka ideal balanced share 1/(N+1) hai. Consistent hashing baaki ownership ka zyada hissa bachata hai. Real ring mein token placement, vnodes aur weights se movement aur skew alag ho sakte hain.',
+            'Naye node ka target share total N+1 nodes se aata hai; har expansion mein aadha nahi.',
+            'Naye node ko zero keys doge toh storage/load ka hissa nahi milega; useful expansion mein movement chahiye.',
+            'Ring par naya node keyspace ka hissa leta hai, poori keyspace nahi.',
+          ],
+        },
         {
-          q: 'Virtual nodes ke bina consistent hashing mein kya galat hai?',
-          choices: ["Unequal ring intervals concentrate failover","All physical nodes get exact equal traffic","Losingonenode cannot affect neighbors","More keys automatically remove token skew"],
+          q: 'Har physical node ring par sirf ek random point par hai. Kya risk hai?',
+          choices: [
+            'Unequal intervals se keys tedhi bant sakti hain; failure par padosi ka load badhe',
+            'Kaafi keys aate hi intervals barabar ho jaayenge; failure load khud bant jaayega',
+            'Same node count se har interval barabar hoga; padosi ki capacity dekhni nahi padegi',
+            'Node failure par ring baaki owners ko na chhooegi; failed keys ko route nahi milega',
+          ],
           answer: 0,
-          explain: 'Do alag problems ek hi ilaaj se hal hote hain. <b>Skew</b> dikh jaata hai (koi node garam rehta hai). <b>Cascade</b> nahi dikhta jab tak hota nahi: ek node gira, uski saari keys ek padosi ko mili, woh dab ke gira, aur uska load agle ko... 150 vnodes ke saath gire hue node ka load <b>sabme</b> bant jaata hai.',
-         choiceExplanations: ["Do alag problems ek hi ilaaj se hal hote hain. <b>Skew</b> dikh jaata hai (koi node garam rehta hai). <b>Cascade</b> nahi dikhta jab tak hota nahi: ek node gira, uski saari keys ek padosi ko mili, woh dab ke gira, aur uska load agle ko... 150 vnodes ke saath gire hue node ka load <b>sabme</b> bant jaata hai.","Random tokens leave unequal intervals; more keys do not fix node geometry.","Failed interval responsibility typicallyfalls to next owner.","More keys sample unequal intervals moreaccurately; vnodes improve distribution."] },
+          explain: 'Ek random point per node par ring intervals unequal ho sakte hain. Simple next-owner routing mein failed interval padosi ko mil sakta hai. Vnodes physical node ko kai intervals dete hain; failed load kai owners tak bant sakta hai. Har owner ko barabar failover load ya 150 vnodes par fixed skew milna guaranteed nahi.',
+          choiceExplanations: [
+            'Ek random point per node par ring intervals unequal ho sakte hain. Simple next-owner routing mein failed interval padosi ko mil sakta hai. Vnodes physical node ko kai intervals dete hain; failed load kai owners tak bant sakta hai. Har owner ko barabar failover load ya 150 vnodes par fixed skew milna guaranteed nahi.',
+            'Zyada keys wahi unequal geometry ko aur saaf sample karengi; token intervals khud barabar nahi honge.',
+            'Node count barabar hone se random points ki distances equal nahi hoti; capacity planning abhi chahiye.',
+            'Failed node hataane par next surviving owner ko routes milte hain; cached data na ho toh misses aa sakte hain.',
+          ],
+        },
         {
-          q: 'Consistent hashing hot key ka problem hal karti hai?',
-          choices: ["Many keys balance; one hot key stayshot","Vnodes split one key amongallnodes","Addingnodes shards any single value","Hashuniformity guarantees uniform request load"],
+          q: 'Ek popular key par request load bahut zyada hai. Consistent hashing akeli kya kar sakti hai?',
+          choices: [
+            'Kai keys ka ownership baant sakti hai; ek hot key ka load ek owner par rehta hai',
+            'Vnodes se same key har request par alag owner ko milegi; load sab nodes mein batega',
+            'Nodes badhne se same value apne aap tootegi; ek read kai owners se poori hogi',
+            'Uniform hash se request popularity barabar hogi; hot key ka load halka ho jaayega',
+          ],
           answer: 0,
-          explain: 'Yeh bilkul wahi baat hai jo tumne <b>eviction</b> level mein dekhi thi, ab doosri taraf se. Consistent hashing <b>rebalancing</b> ka problem hal karti hai, <b>skew</b> ka nahi jo ek hi key se aata ho. Hot key ke liye ilaaj alag hai: key ki N copies, ya local cache.',
-         choiceExplanations: ["Yeh bilkul wahi baat hai jo tumne <b>eviction</b> level mein dekhi thi, ab doosri taraf se. Consistent hashing <b>rebalancing</b> ka problem hal karti hai, <b>skew</b> ka nahi jo ek hi key se aata ho. Hot key ke liye ilaaj alag hai: key ki N copies, ya local cache.","Vnodes partition keyspace; single key still has one owner for writes.","Single value split needs application/replication design, not node count alone.","Keys can have skewed popularity even when hash distribution uniform."] },
+          explain: 'Consistent hashing membership changes par remapping ko simit karti hai. Vnodes keyspace baantte hain; ek hot key ki popularity ko nahi. Local cache, read replicas ya explicit key copies ke saath read load baant sakte ho. Har design mein routing, writes aur freshness ka alag sauda hai.',
+          choiceExplanations: [
+            'Consistent hashing membership changes par remapping ko simit karti hai. Vnodes keyspace baantte hain; ek hot key ki popularity ko nahi. Local cache, read replicas ya explicit key copies ke saath read load baant sakte ho. Har design mein routing, writes aur freshness ka alag sauda hai.',
+            'Vnodes par deterministic routing same key ka owner chunti hai; har request automatic random copy par nahi jaati.',
+            'Value partitioning alag app design hai; node jodne se same value khud tukdon mein nahi banti.',
+            'Uniform keys aur uniform request load alag hain; ek key ko bahut zyada reads mil sakti hain.',
+          ],
+        },
       ],
     },
     {
@@ -3411,17 +3829,39 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
     instructions: 'Yeh lagbhag har sharding sawaal mein aata hai. 🎤',
     questions: [
       {
-        q: "Redis Cluster 4 se 8 primaries expand karna hai. Kya monitor/plan karoge?",
-        choices: ["Hash slots move; rate-limit cold path pressure","Redis Cluster expands by consistent hash ring","Moving half keys means half the data is lost","Rebalance cannot increase origin load"],
+        q: 'Redis Cluster ko 4 se 8 primaries karna hai. Rebalance ka plan kaise banao?',
+        choices: [
+          'Hash-slot migration dheere karo; data movement aur origin/cold-path load naapo',
+          'Consistent-hash ring par nodes jodo; Redis slots ko bina move kiye ready maano',
+          'Aadhi keys ka owner badle toh loss maano; migration ki copies ko jaanchna chhodo',
+          'Naye primaries start karo; slot ownership aur client redirects baad mein dekho',
+        ],
         answer: 0,
-        explain: "Redis Cluster consistent hash ring use nahi karta;16384 fixed hash slots ka ownership reshard hota hai. Balanced 4 to8 primaries mein new nodes~half slot share le sakte hain. Key skew/migration/cold cache origin pressure measure aur bound karo.",
-       choiceExplanations: ["Redis Cluster consistent hash ring use nahi karta;16384 fixed hash slots ka ownership reshard hota hai. Balanced 4 to8 primaries mein new nodes~half slot share le sakte hain. Key skew/migration/cold cache origin pressure measure aur bound karo.","Redis Cluster uses 16384 hash slots, not consistent hashing; planned slot moves assign new nodes.","Migration moves ownership; data loss is not necessary outcome.","Cold local caches/migration bursts can increase fallback work; measure and bound it."] },
+        explain: 'Redis Cluster consistent-hash ring ke bajay 16,384 fixed hash slots rakhta hai. Balanced 4 se 8 expansion mein naye primaries lagbhag aadhe slots le sakte hain; key count/bytes skew alag ho sakta hai. Live slot migration keys transfer kar sakti hai, har moved key cache miss nahi banti. Migration load, redirects, hit rate aur origin pressure naapo aur baandho.',
+        choiceExplanations: [
+          'Redis Cluster consistent-hash ring ke bajay 16,384 fixed hash slots rakhta hai. Balanced 4 se 8 expansion mein naye primaries lagbhag aadhe slots le sakte hain; key count/bytes skew alag ho sakta hai. Live slot migration keys transfer kar sakti hai, har moved key cache miss nahi banti. Migration load, redirects, hit rate aur origin pressure naapo aur baandho.',
+          'Redis Cluster slots ka ownership badalta hai; generic ring add akela Redis resharding nahi karta.',
+          'Ownership transfer data loss ka matlab nahi; migration copied keys ko nayi jagah serve kar sakti hai.',
+          'Primaries start hone se slots automatic balanced nahi ho jaate; routing aur migration plan chahiye.',
+        ],
+      },
       {
-        q: '"Consistent hashing kab NAHI chahiye?"',
-        choices: ["Explicit tenant mapping may fit control needs","Consistent hashing required for every table","Few keys makes any routing scheme invalid","Stable cluster needs none of the data routing"],
+        q: 'Explicit tenant-to-shard mapping kab consistent hashing se zyada seedha control de sakti hai?',
+        choices: [
+          'Hot tenant ko specific shard par move karna ho aur mapping sambhaal sako',
+          'Har client ko sirf node list se owner chahiye, central mapping rakhna nahi hai',
+          'Har tenant ke data ko sab shards se padhna ho, directory ko JOIN engine maano',
+          'Har read ko alag node par bhejna ho, directory ko read-load balancer maano',
+        ],
         answer: 0,
-        explain: "Yeh jawab isliye achha hai ki yeh technique ko uski <b>jagah</b> par rakhta hai. Consistent hashing tab chamakti hai jab nodes <b>apne aap</b> aate-jaate hain (cache clusters, Cassandra). Par ek explicit lookup table (tenant → shard) tumhe woh cheez deti hai jo ring nahi de sakti: <b>control</b> — hot tenant ko utha ke alag shard par rakh dena.",
-       choiceExplanations: ["Yeh jawab isliye achha hai ki yeh technique ko uski <b>jagah</b> par rakhta hai. Consistent hashing tab chamakti hai jab nodes <b>apne aap</b> aate-jaate hain (cache clusters, Cassandra). Par ek explicit lookup table (tenant → shard) tumhe woh cheez deti hai jo ring nahi de sakti: <b>control</b> — hot tenant ko utha ke alag shard par rakh dena.","Directory-based mappings, range/hash partitioning are valid alternatives.","Small key count may fit single instance or explicit routing.","Stable membership stillneedsa way to find owner; algorithm is achoice."] },
+        explain: 'Tenant-to-shard directory se hot tenant ko specific shard par route ya migrate karne ka seedha control milta hai. Mapping availability, updates aur migration ka protocol sambhaalna padega. Ring, modulo aur directory alternatives hain; stable membership mein bhi owner dhoondhne ka tareeka chahiye. Ring implementations bhi manual placement controls rakh sakti hain.',
+        choiceExplanations: [
+          'Tenant-to-shard directory se hot tenant ko specific shard par route ya migrate karne ka seedha control milta hai. Mapping availability, updates aur migration ka protocol sambhaalna padega. Ring, modulo aur directory alternatives hain; stable membership mein bhi owner dhoondhne ka tareeka chahiye. Ring implementations bhi manual placement controls rakh sakti hain.',
+          'Sirf node list se local owner nikaalna hash routing ka faayda hai; directory mapping ko available rakhna padega.',
+          'Directory owner dhoondhti hai; cross-shard JOIN execute ya local nahi banaati.',
+          'Tenant-to-shard directory placement tay karti hai; read replicas par load baantna alag design hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -3437,7 +3877,7 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
   cards: [
     { front: '<code>hash % N</code> par node add karne se?', back: '~<b>80%</b> keys move (4→5 nodes). Cache mein = 80% turant thanda; sharding mein = 80% data transfer. Isliye woh scale karte waqt hi kaatta hai.' },
     { front: 'Hash ring ka niyam?', back: 'Keys <b>aur nodes dono</b> ko ek gol daayre par hash karo. Har key <b>ghadi ki disha</b> mein pehle milne wale node ki. Node add par sirf ~1/N keys move.' },
-    { front: 'Virtual nodes kyun?', back: 'Do wajah: (1) <b>skew</b> — ek jagah baithne se koi node 45% le leta hai; (2) <b>cascade</b> — node girne par uska poora load ek padosi par. 150 vnodes se skew ~1.01x aur load sabme bant jaata hai.' },
+    { front: 'Virtual nodes kyun?', back: 'Do wajah: (1) <b>skew</b> — ek jagah baithne se koi node 45% le leta hai; (2) <b>cascade</b> — node girne par uska poora load ek padosi par. Vnodes se skew bahut ghat-ta hai (lab 34 ke ek run mein 1.2x), aur girne wale node ka load kai nodes mein bant sakta hai.' },
     { front: 'Ring lookup?', back: 'vnode hashes ki <b>sorted list</b> + binary search (pehla point jo key se bada ho) + <b>wrap-around</b> (koi bada na mile toh pehla point). Wrap bhoolna sabse aam bug hai.' },
     { front: 'Consistent hashing hot key theek karti hai?', back: '<b>Nahi.</b> Woh keys ko baantti hai, <b>ek key ko nahi</b>. Hot key ke liye: key ki N copies ya local cache.' },
     { front: 'Kab ring NAHI chahiye?', back: 'Jab shard set stable ho — tab <b>explicit mapping</b> (tenant → shard table) behtar hai: hot tenant ko haath se move kar sakte ho, aur "data kahan hai" pakka pata hota hai.' },

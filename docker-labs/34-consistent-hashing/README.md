@@ -25,7 +25,7 @@ weighted    28472 / 13280  =   2.1x (node1 weight 2 → 28472)  15088 (15.1%)   
 Ideal: node mara → sirf **uski** keys (~1/6 = 16.7%) miss. Node joda → sirf ~1/7 = 14.3% keys hilen.
 
 - **modulo**: load ekdum barabar, par N badla (6 → 5 ya 6 → 7) toh **83–86%** keys ki jagah badli → poora cache ek saath
-  thanda → 83,000 queries DB par ek saath. Isi ko "rehash storm" kehte hain.
+  thanda → ~83,000 keys ki agli reads DB par jaayengi. Isi ko "rehash storm" kehte hain. (Tool sirf routes ginta hai; DB ka bojh naapa nahi gaya.)
 - **ring** (ek jagah per node): sirf padosi ki keys hilti hain, par load **28.6× tedha** — ek node ke paas 931 keys, dusre ke 26,583.
   Wahi bada node mara toh 26.6% miss.
 - **vnodes** (150 per node): load 1.2× ke andar, node mara → **17.7%**, node joda → **14.3%** — lagbhag ideal.

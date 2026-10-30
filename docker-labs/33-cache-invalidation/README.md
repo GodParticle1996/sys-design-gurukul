@@ -47,7 +47,7 @@ xfetch          3 (ek saath   2)     122 ms     226 ms   nahi
 
 (DB reads mein 1 warm-up read shaamil hai; "none" run-to-run 300–750 ke beech aata hai.)
 
-- **none**: har request khud DB ki taraf → **757 bhaari queries ek saath**. Asli DB yahin gir jaata.
+- **none**: har request khud DB ki taraf → **757 bhaari queries** (sabse zyada 739 ek saath). Asli DB yahin gir jaata.
 - **mutex** (single-flight): har app se sirf ek jaata hai, baaki usi ka intezaar → 3 reads, par sab ~400 ms ruke.
 - **swr** (stale-while-revalidate): purana price turant, peeche ek refresh → tez, par thodi der purana data.
 - **xfetch** (probabilistic early refresh): expire ke paas har request thode chance se pehle hi refresh kar deti hai (ek waqt
