@@ -165,7 +165,9 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex: 14 findings (6 P1, 7 P2, 1 P3) | all 14 fixed (3 differently, see below), plus step text, a card, a flashcard and 2 README lines |
 | Phase 3 rewrite: rn-kyun … rn-kab (26 MCQs) | Claude (Raft lab rerun: 409–1053 ms failovers, 119–125 elections) | Codex: 9 findings (3 P1, 6 P2) | all fixed (1 differently); `tools/election.js` crash and timeout-as-failover fixed |
 | Phase 3 rewrite: ch-kyun … ch-kab (39 MCQs) | Claude | Codex: 7 findings (2 P1, 5 P2) | all fixed; the p99 wording fix also swept Randomness, Noisy Neighbour and two lab READMEs |
-| Phase 3 rewrite, core track Flow (10 levels, 48 MCQs) | Claude | Codex | review pending; not committed. Incident/design option labels still clipped — need a label tool |
+| Phase 3 rewrite, core track Flow (10 levels, 48 MCQs + 9 incident/design labels) | Claude | Codex: 20 findings (7 P1, 12 P2, 1 P3) | all fixed, plus the lifecycle lesson that repeated the 20 ms overclaim |
+| Tool: `dev/rewrite/labels.js` | Claude | Codex (in the API review) | rewrites incident `t` and design `label` texts with the same checks as `apply.js` |
+| Phase 3 rewrite, core track API (11 levels, 40 MCQs + 6 design labels) | Claude | Codex | review running; not committed |
 | Phase 3 rewrite, core track Data batch 1 (modeling … caching, 33 MCQs) | Codex | Claude: options read in full, "had" → "hadd" | applied; Codex's MCQ fact fixes kept; 9 lesson/flashcard overclaims Codex listed fixed by Claude |
 | Phase 3 rewrite, core track Data batch 2 (stampede … boss-data, 10 levels) | Codex | Claude | being written |
 | Phase 3 rewrite: dr-kyun … dr-kab (45 MCQs) | Codex (second writing job, ~20 min) | Claude: timings checked against `tools/slowmo.js`, options read in full | applied (one word changed); Codex's 3 MCQ fact fixes kept, and its 3 step-text/flashcard findings fixed |
@@ -325,6 +327,14 @@ so it fits neither a 64-bit ID nor a mandated UUIDv4 API). Outside the questions
 "index tabhi laga jab 90%+ rows kaate" / "30% par seq scan sasta" (no fixed cutoff), "covering = heap kabhi nahi,
 2-3x tez" (visibility map), "outage hamesha saturation se" (four places), "cache tab lagao jab teenon sach" and
 "write-through: cache hamesha fresh", and "ek bhool = hamesha stale" (TTL or the next write clears it).
+
+Twelfth round (Flow) — the P1s were pre-audit absolutes I had restored because the wording read well: "query
+bilkul theek, index lagane se kuch nahi hoga" from one 20 ms sample; "200 bhejna jhooth hai" (201 is right when the
+resource exists; a status endpoint's 200 can show a pending state); "QUIC loss sirf usi stream ko" (one packet can
+carry several streams); a 98.9% product that assumes independent failures; "aam SELECT kuch lock nahi karta"
+(PostgreSQL takes ACCESS SHARE — the point is that a read reserves nothing); a 6.25 rps ceiling from "ek query 8 s"
+(only valid if every request holds a connection 8 s, now in the stem). Lesson for the core tracks: the audit's
+softening was usually right on facts and only wrong on language — keep the facts, restore only the voice.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

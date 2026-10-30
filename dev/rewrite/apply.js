@@ -103,6 +103,7 @@ for (const p of patches) {
   const level = levels.get(p.level);
   const obj = level && at(level, p.path);
   if (!obj) { problems.push(`${where}: object nahi mila`); continue; }
+  if (!Array.isArray(obj.choices)) { problems.push(`${where}: yahan MCQ nahi hai (choices nahi mile) — path dobara dekho`); continue; }
   /* '=explain' in a reason list means "the explanation itself", exact HTML included */
   if (p.choiceExplanations) p.choiceExplanations = p.choiceExplanations.map(r => r === '=explain' ? (p.explain != null ? p.explain : obj.explain) : r);
   const choices = p.choices || obj.choices;
