@@ -162,8 +162,11 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: rt-kaise, rt-code | Claude | Codex: 8 findings (7 P2, 1 P3) | all 8 fixed after checking `lib/retry.js` and the README trace; 3 more found while fixing |
 | Phase 3 rewrite: rt-lib, rt-kab | Claude | Codex: 9 findings (5 P1, 2 P2, 2 P3) | all 9 fixed; Codex checked p-retry 8.0.1's tagged source |
 | Phase 3 rewrite: bp-kyun … bp-kab | Claude | Codex: 20 findings (9 P1, 10 P2, 1 P3) | all 20 fixed (2 differently, see below), plus step text, cards, lab tool label and README |
-| Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex | review pending; not committed |
+| Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex: 14 findings (6 P1, 7 P2, 1 P3) | all 14 fixed (3 differently, see below), plus step text, a card, a flashcard and 2 README lines |
+| Phase 3 rewrite: rn-kyun … rn-kab | Claude | Codex | review pending; not committed |
+| Phase 3 rewrite: hc-kyun … hc-kab | Codex (first writing job) | Claude | in progress |
 | New Concurrency track (6 levels, Java lab 46) — the user asked Codex directly | Codex, ~37 min | Claude: shared-file diff, Java code, 24 + 42 checks rerun, browser pass at 390/1280 (0 broken) | merged as-is; language rewrite + real hints next (all 51 hints were one boilerplate line) |
+| Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex | review pending; not committed. `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
 
 What Codex's review caught (all confirmed before fixing):
 
@@ -220,6 +223,28 @@ Fourth round (bp-*) — most P1s were claims stronger than the lab measured:
 - **Not adopted:** Retry-After counts as known (the Retries topic teaches it first), so only the wait wording
   changed (the lab client waits 0.8–1.2 × retry-after-ms). The "disable animations" distractor was replaced, since
   the lab model has no animations.
+
+Fifth round (nn-*) — 2026-10-30, after a fresh Codex conversation (the old one was 70% full):
+
+- **Numbers the rewrite got wrong:** fair queuing *did* cut failures in the "average" scenario (FIFO 138, quota 148,
+  fair 43), so "baari-baari ne fail ghataye nahi" was false (interview, true/myth item). The token bucket keeps
+  0.2 tokens from the step before, so 10.2 is capped at 2 and 8.2 spill, not 8. Pool and fair both do 9.50 s of work,
+  so "alag khidki mein kul kaam kam hua" was false; only Annapurna finishes later (7.00 vs 5.02 s).
+- **Inherited from the README:** "200 mein se 140 khaali" — 140/s is what B + C leave over, before counting A. With A
+  capped at 80/s about 60/s sat idle (fair queuing gave A 1,046 vs 721). Fixed in step text, a badge, a table, a
+  myth, an interview and README line 262.
+- **Kubernetes QoS:** the card, flashcard and myth said evictions go BestEffort → Burstable → Guaranteed. The kubelet
+  ranks by usage over request, then priority; the docs say the QoS class only *estimates* the order.
+- **Invented or invalid reasons:** a "microseconds" scheduler cost the lab never measures; windows "busy the whole
+  time" (9.50 of 15 s); "no errors after scaling, so workers were not reduced" (the code only ever adds workers —
+  that is the reason now); "3 workers hamesha khaali" (they *can* serve users).
+- **Stems:** "Agli baari Bholu Dhaba ki hai" gave the answer; now the learner works out the turn from who was served.
+- **Not adopted as written:** Codex's nn-kyun fix used "token" and "baalti", which only nn-kaise teaches, so the
+  option says "hadd ki raftaar se" instead. For two interviews Codex put the cause into the stem; the stems now close
+  the loophole only ("network trace theek aaya", "wahi IP, wahi API key") and the distractor that the loophole made
+  valid was replaced.
+- **Tool:** `dev/rewrite/merge.js` turns small fixes (one reason, one stem) into full `apply.js` items from the
+  current data, so untouched options are never retyped.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

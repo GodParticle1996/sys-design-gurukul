@@ -259,7 +259,7 @@ fair queuing (baari-baari)       24 ms     41 ms      0/580      1046 /    0 / 1
 
 👉 **Ek line**: B aur C ki **578 mein se 233 requests fail** (40%), sabse dheemi 1% ko 1,031 ms. B aur C ne kuch galat nahi kiya.
 
-👉 **Quota (80/s har tenant)**: B, C bach gaye (0 error). Par A ki **1,453** requests 429 se lauti — jabki 200 mein se 140 khaali tha.
+👉 **Quota (80/s har tenant)**: B, C bach gaye (0 error). Par A ki **1,453** requests 429 se lauti — jabki B + C sirf 60/s le rahe the, aur 200/s ki chhat mein se lagbhag 60/s khaali padi rahi.
 
 👉 **Fair queuing**: B, C ka p99 **41 ms**, 0 error — **aur** A ko quota se zyada mila (1,046 banaam 721). A ke 503 A ki apni line bharne se.
 
@@ -336,7 +336,7 @@ roka nahi ja sakta.
 - **"Beech mein queue laga do."** Ek saajhi line bheed ko sokhti hai, baant-ti nahi (ex0, ex1 ki pehli line).
 - **"Rate limit mein koi nuksaan nahi."** Hadd khaali jagah nahi dekhti (ex1: A ki 1,453 ko 429).
 - **"Rate limit IP par."** Ek IP ke peeche bahut log (ex0, express-rate-limit: B ki doosri request ko 429).
-- **"Kubernetes ki QoS class noisy neighbour ko rokti hai."** QoS class tangi mein nikaalne ka kram hai. Hadd = CPU limit, baari ka wazan = CPU request.
+- **"Kubernetes ki QoS class noisy neighbour ko rokti hai."** QoS class tangi mein nikaalne ke kram ka sirf andaaza deti hai (kubelet asal mein request se zyada use aur priority dekhta hai). Hadd = CPU limit, baari ka wazan = CPU request.
 
 ## Khud try karo
 

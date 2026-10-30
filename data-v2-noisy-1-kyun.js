@@ -96,11 +96,22 @@ SD.registerLevels('sdd-resil', [
           vars: { line: A(10).concat(Bq(1)), b: ['ok', 'wait:#2'] },
           ask: {
             q: 'B#2 ke aage Annapurna ke 10 kaam hain. Do khidkiyan har 0.5 second mein 2 kaam nipta-ti hain. Bholu Dhaba ka tablet 1.5 second rukta hai. B#2 ka kya hoga?',
-            choices: ["FIFO backlog se baari 4 s; client deadline pehle aati","Next free worker B ko seedha de; latency 1.5 s hogi","Low-volume tenant ko FIFO apne aap priority dega","Bulk tenant pause hoga; quiet tenant pehle nikal jaayega"],
+            choices: [
+              'B#2 ki baari ~4.0 s par aayegi, par tablet 2.75 s par hi haar maan lega — B#2 fail',
+              'B#2 ~1.5 s par ho jaayega — jo khidki pehle khaali hogi, B#2 ko seedha utha legi',
+              'partner-api B#2 ko pehle karega — Bholu Dhaba ki bas ek request hai, Annapurna ki 10',
+              'Annapurna ke kaam ruk jaayenge, aur khidkiyan pehle B#2 ko uthayengi, phir baaki',
+            ],
             answer: 0,
             hint: '10 kaam, har 0.5 second mein 2. Kitne second lagenge? B#2 kab aaya tha, aur tablet kab tak rukega?',
-            explain: '10 kaam ÷ 4 per second = 2.5 second. B#2 1.25 s par aaya; tablet 1.25 + 1.5 = <b>2.75 s</b> tak rukega. Line ko nahi pata ki B#2 kiska hai — line sirf yeh jaanti hai ki kaun pehle aaya.',
-           choiceExplanations: ["10 kaam ÷ 4 per second = 2.5 second. B#2 1.25 s par aaya; tablet 1.25 + 1.5 = <b>2.75 s</b> tak rukega. Line ko nahi pata ki B#2 kiska hai — line sirf yeh jaanti hai ki kaun pehle aaya.","Shared FIFO mein next free worker pehle se queued jobs leta hai, latest B ko bypass nahi.","FIFO tenant identity ya low volume ko priority nahi deta.","Aisa tenant-aware pause/admission mechanism initial model mein nahi."] },
+            explain: 'Khidkiyan 1.50 s se line ke 10 kaam uthati hain: 2 khidki × har 0.5 s = 4 kaam/second, toh 10 kaam mein 2.5 s. B#2 ki baari 1.50 + 2.5 = 4.00 s par. Tablet 1.25 + 1.5 = 2.75 s tak hi rukta hai. Line ko nahi pata ki B#2 kiska hai — line sirf itna jaanti hai ki kaun pehle aaya.',
+            choiceExplanations: [
+              'Khidkiyan 1.50 s se line ke 10 kaam uthati hain: 2 khidki × har 0.5 s = 4 kaam/second, toh 10 kaam mein 2.5 s. B#2 ki baari 1.50 + 2.5 = 4.00 s par. Tablet 1.25 + 1.5 = 2.75 s tak hi rukta hai. Line ko nahi pata ki B#2 kiska hai — line sirf itna jaanti hai ki kaun pehle aaya.',
+              'Khaali khidki line ke sabse aage wala kaam uthati hai. B#2 se aage Annapurna ke 10 kaam khade hain.',
+              'Line ko nahi pata kaunsi request kiski hai. Line sirf aane ka kram dekhti hai.',
+              'Line mein kisi ke kaam rokne ka koi niyam nahi. Jo pehle aaya, pehle hoga.',
+            ],
+          },
         },
         {
           clock: '2.25–2.75 s',
@@ -122,12 +133,23 @@ SD.registerLevels('sdd-resil', [
           nodes: { a: { tone: 'ok', badge: '12 mein se 12 ✅ · 4.02 s' }, api: { tone: 'slow', badge: 'B#2, B#3 par bekaar kaam' } },
           vars: { win: ['skip:B#2', 'skip:B#3'], line: Bq(2), b: ['ok', 'bad', 'bad', 'wait:#4', 'wait:#5'], a: '12 mein se 12 hue ✅ (4.02 s par)' },
           ask: {
-            q: 'Annapurna ka burst 1.22 s par khatam ho gaya tha, aur Annapurna ka saara kaam 4.02 s par. B#4 3.25 s par aaya tha, B#5 4.25 s par. Inka kya hoga?',
-            choices: ["B4 deadline miss; B5 backlog ghatne se bach jaayega","Dono turant; bulk completion sab waiting B saaf kare","Dono fail; tenant burst ke baad quota reset nahi hua","B5 pehle; arrival time se latest request priority leti"],
+            q: 'Annapurna ka burst 1.22 s par khatam ho gaya tha, aur Annapurna ka saara kaam 4.02 s par. B#4 3.25 s par aaya tha, B#5 4.25 s par. B#4 aur B#5 ka kya hoga?',
+            choices: [
+              'B#4 fail — tablet 4.75 s par haar maanega, jawab 5.00 s par; B#5 0.77 s mein bach jaayega',
+              'Dono turant ho jaayenge — Annapurna ka kaam khatam, toh khidkiyan ab Bholu ke liye khaali',
+              'Dono fail honge — burst ke baad partner-api Bholu Dhaba ko bhi thodi der rok ke rakhega',
+              'B#5 pehle hoga, phir B#4 — line naye aaye kaam ko pehle uthati hai, purane ko baad mein',
+            ],
             answer: 0,
             hint: 'Khidkiyan abhi kis kaam mein lagi hain? B#4 ke aage line mein kaun hai?',
-            explain: 'B#4 ke aage B#2 aur B#3 ka bekaar kaam tha. B#4 4.50 s par khidki tak pahuncha; tablet 4.75 s par ja chuka. <b>Shor khatam hone ke baad bhi line saaf hone mein waqt lagta hai.</b>',
-           choiceExplanations: ["B#4 ke aage B#2 aur B#3 ka bekaar kaam tha. B#4 4.50 s par khidki tak pahuncha; tablet 4.75 s par ja chuka. <b>Shor khatam hone ke baad bhi line saaf hone mein waqt lagta hai.</b>","Bulk ka kaam khatam hone ke baad bhi pehle queued quiet requests ka pending work ho sakta hai.","FIFO model mein permanent tenant quota lock nahi; backlog drain hota hai.","Current queue FIFO hai; newer request ko older request ke aage priority nahi."] },
+            explain: 'B#4 ke aage B#2 aur B#3 ka bekaar kaam tha — dono ke tablet pehle hi haar maan chuke the. B#4 4.50 s par khidki tak pahuncha; tablet 4.75 s par ja chuka, jawab 5.00 s par bana. Shor khatam hone ke baad bhi line saaf hone mein waqt lagta hai.',
+            choiceExplanations: [
+              'B#4 ke aage B#2 aur B#3 ka bekaar kaam tha — dono ke tablet pehle hi haar maan chuke the. B#4 4.50 s par khidki tak pahuncha; tablet 4.75 s par ja chuka, jawab 5.00 s par bana. Shor khatam hone ke baad bhi line saaf hone mein waqt lagta hai.',
+              'Khidkiyan 4.02 s tak Annapurna mein, phir B#2 aur B#3 ke bekaar kaam mein lagi. B#4 ki baari 4.50 s par aayi.',
+              'Is line mein kisi ko rokne ka niyam nahi. B#5 4.25 s par aaya aur 5.02 s par ho gaya ✅.',
+              'Line aane ke kram se chalti hai: B#4 3.25 s par aaya, B#5 4.25 s par. B#4 pehle uthta hai.',
+            ],
+          },
         },
         {
           clock: 'nateeja',
@@ -178,11 +200,22 @@ SD.registerLevels('sdd-resil', [
           vars: { rule: 'har tenant: 2 requests / second', win: ['free', 'free'], b: 'pichhli baar: 7 mein se 3 ❌', a: 'pichhli baar: 12 mein se 12 ✅', idle: 'pichhli baar: 9.50 s (1.50 s bekaar)' },
           ask: {
             q: 'Annapurna 1.00 s par 12 requests ek saath bhejega. Is niyam ke saath kya hoga?',
-            choices: ["Burst budget 2; do admit, baaki das turant reject","Do workers se twelve requests automatically queue hongi","Tenant ko permanent block; budget refill nahi hoga","Quiet tenant ko reject; bulk tenant shared cap lega"],
+            choices: [
+              'Pehli 2 andar jaayengi, aur baaki 10 ko turant "mana" milega — line mein lagengi hi nahi',
+              'Baarah ki baarah andar jaayengi, bas hadd ke hisaab se dheere-dheere line mein khadi hokar',
+              'Annapurna hamesha ke liye band — hadd todne wale tenant ko partner-api block kar deta hai',
+              'Bholu Dhaba ki requests mana hongi — Annapurna ne sabki milkar wali hadd poori le li',
+            ],
             answer: 0,
             hint: 'Hadd 2 per second hai. Annapurna ne 0.22 second mein kitni bheji?',
-            explain: 'Hadd se upar ki request line mein lagti hi nahi. partner-api us request ko turant lauta deta hai: status <code>429</code> — "bahut zyada requests".',
-           choiceExplanations: ["Hadd se upar ki request line mein lagti hi nahi. partner-api us request ko turant lauta deta hai: status <code>429</code> — \"bahut zyada requests\".","This policy rate admission limit hai, implicit twelve-job waiting queue nahi.","Token budget refill hota hai; burst denial permanent ban nahi.","Stated limiter tenant-specific hai; bulk requests apne quota se judge hoti hain."] },
+            explain: 'Hadd se upar ki request line mein lagti hi nahi. partner-api us request ko turant lauta deta hai: status 429 — "bahut zyada requests".',
+            choiceExplanations: [
+              'Hadd se upar ki request line mein lagti hi nahi. partner-api us request ko turant lauta deta hai: status 429 — "bahut zyada requests".',
+              'Is niyam mein hadd se upar wali requests ke liye koi line nahi — 10 requests turant lautti hain.',
+              'Hadd sirf raftaar rokti hai, tenant ko band nahi karti. Thodi der baad Annapurna phir bhej sakta hai.',
+              'Hadd har tenant ki alag hai. Annapurna apni hadd khatam karta hai, Bholu Dhaba ki nahi.',
+            ],
+          },
         },
         {
           clock: '1.00–1.22 s',
@@ -205,11 +238,22 @@ SD.registerLevels('sdd-resil', [
           vars: { win: ['free', 'free'] },
           ask: {
             q: 'Khidkiyan khaali hain. Annapurna ki 10 requests mana ho chuki hain. Annapurna ka menu sync kaise poora hoga?',
-            choices: ["Client bounded retry kare; tenant rate cap ab bhi hai","Free workers rejected jobs ko apne aap resume karenge","Free workers aate hi tenant rate policy disable hogi","Accepted do jobs ke saath full sync successful maana jaaye"],
+            choices: [
+              'Annapurna ko bachi 10 dobara bhejni padengi — hadd ki raftaar se, chaahe khidkiyan khaali hon',
+              'partner-api khaali khidki dekh ke mana ki hui 10 requests khud utha lega aur poori kar dega',
+              'Khidkiyan khaali dikhte hi hadd apne aap hat jaayegi, aur Annapurna ki requests chal padengi',
+              'Menu sync poora ho chuka — 2 requests andar gayi, toh partner-api baaki khud sambhal lega',
+            ],
             answer: 0,
             hint: 'Mana ki hui request kahan gayi? Kya hadd ko pata hai ki khidkiyan khaali hain?',
-            explain: 'Hadd sirf ginti dekhti hai: "is tenant ne is second mein kitni bheji". Hadd ko nahi dikhta ki khidkiyan khaali hain. Mana ki hui request partner-api ke paas hai hi nahi.',
-           choiceExplanations: ["Hadd sirf ginti dekhti hai: \"is tenant ne is second mein kitni bheji\". Hadd ko nahi dikhta ki khidkiyan khaali hain. Mana ki hui request partner-api ke paas hai hi nahi.","Rejected work server queue mein retained nahi, isliye server use automatically resume nahi kar sakta.","Fixed tenant rate capacity free hone se automatically change nahi hota.","Do admitted jobs twelve required jobs ke barabar nahi. Partial acceptance ko full completion mat samjho."] },
+            explain: 'Hadd sirf ginti dekhti hai: tenant kitni tezi se bhej raha hai. Hadd ko nahi dikhta ki khidkiyan khaali hain. Mana ki hui request partner-api ke paas hai hi nahi — Annapurna ko khud dobara bhejni padegi.',
+            choiceExplanations: [
+              'Hadd sirf ginti dekhti hai: tenant kitni tezi se bhej raha hai. Hadd ko nahi dikhta ki khidkiyan khaali hain. Mana ki hui request partner-api ke paas hai hi nahi — Annapurna ko khud dobara bhejni padegi.',
+              'Mana ki hui request partner-api ne rakhi hi nahi. Khaali khidki ke paas uthane ko kuch nahi.',
+              'Hadd ek tay ginti hai. Khidkiyan khaali hon ya bhari, hadd wahi rehti hai.',
+              '12 mein se sirf 2 andar gayi. Baaki 10 outlets ke daam abhi bhi purane hain.',
+            ],
+          },
         },
         {
           clock: 'nateeja',
@@ -229,9 +273,9 @@ SD.registerLevels('sdd-resil', [
               <li>B aur C: 580 mein se <b>0 fail</b>.</li>
               <li>A: sirf <b>721</b> hui; <b>1,453</b> ko 429. (Ek line mein A ki 1,376 hui thi.)</li>
             </ul>
-            B aur C sirf 60/second le rahe the. 200 mein se 140 khaali tha. A ko phir bhi 80 par rok diya gaya.`,
+            B aur C sirf 60/second le rahe the, aur A ko 80 par rok diya gaya. 200/second ki chhat mein se lagbhag 60/second khaali padi rahi.`,
           nodes: { a: { tone: 'slow', badge: 'lab: 1,453 ko 429' }, b: { tone: 'ok', badge: 'lab: 0 fail' }, api: { tone: 'idle', badge: 'lab: jagah khaali thi' } },
-          vars: { rule: 'lab: har tenant 80 / second', win: 'lab: 200 requests/second', b: 'lab: 580 mein se 0 fail', a: 'lab: 721 hui · 1,453 mana', idle: 'lab: 200 mein se 140 khaali, A phir bhi ruka' },
+          vars: { rule: 'lab: har tenant 80 / second', win: 'lab: 200 requests/second', b: 'lab: 580 mein se 0 fail', a: 'lab: 721 hui · 1,453 mana', idle: 'lab: ~60/s khaali, A phir bhi ruka' },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> har tenant par hadd lagane se shaant tenant bach jaata hai. Par hadd andhi hoti hai: hadd ko sirf ginti dikhti hai, khaali khidki nahi.<br>Agla sawaal apne aap banta hai: Bholu Dhaba ko bachate hue, khaali jagah Annapurna ko kaise dein?',
@@ -256,11 +300,22 @@ SD.registerLevels('sdd-resil', [
           say: 'Babu ko ek aisa niyam chahiye jisme tumhe agent ke 40 form ke peeche na rukna pade — aur jab line mein koi na ho, tab agent ka kaam bhi chalta rahe.',
           ask: {
             q: 'Kaunsa niyam dono kaam karega?',
-            choices: ["Har tenant ki turn; idle turn doosre tenant ko mil jaaye","Bulk tenant ko band karo; sirf quiet tenant allow rahe","Global FIFO rakho; earlier bulk batch pehle process karo","Bulk ke liye fixed night slot; idle daytime reserve rakho"],
+            choices: [
+              '"Ek baar mein ek form, phir line ke peeche jao — peeche koi na ho toh tum hi phir aa jao"',
+              '"Agent ko khidki par aane hi mat do" — sirf aam log aayein, agent ka kaam kahin aur ho',
+              '"Jo pehle aaya, saare form pehle bhare" — agent pehle aaya toh 40 ke 40 form pehle',
+              '"Agent ke form raat ko bharenge" — din mein khidki khaali rahe toh bhi agent ruke',
+            ],
             answer: 0,
             hint: 'Tumhe jaldi baari chahiye. Agent ko khaali khidki chahiye. Kaunsa niyam kisi ko rokta nahi, bas baari baant-ta hai?',
-            explain: 'Yeh hadd nahi, <b>baari</b> hai. Tum ek form ke baad nikal jaate ho; agent ek-ek karke bharta rehta hai, aur jab koi aur nahi hota tab lagataar. Agla level isi niyam ka hai.',
-           choiceExplanations: ["Yeh hadd nahi, <b>baari</b> hai. Tum ek form ke baad nikal jaate ho; agent ek-ek karke bharta rehta hai, aur jab koi aur nahi hota tab lagataar. Agla level isi niyam ka hai.","Quiet users protected hain, par bulk ka useful idle-capacity work starve hoga.","FIFO bulk backlog ke peeche quiet tenant ko phir wait karaayega.","Fixed reserve non-work-conserving hai; stated goal unused capacity ka use bhi hai."] },
+            explain: '"Ek form, phir peeche" hadd nahi, baari hai. Tum ek form ke baad nikal jaate ho; agent ek-ek karke bharta rehta hai, aur jab koi aur nahi hota tab lagataar. Agla level isi niyam ka hai.',
+            choiceExplanations: [
+              '"Ek form, phir peeche" hadd nahi, baari hai. Tum ek form ke baad nikal jaate ho; agent ek-ek karke bharta rehta hai, aur jab koi aur nahi hota tab lagataar. Agla level isi niyam ka hai.',
+              'Tum bach gaye, par khidki khaali hone par bhi agent ka kaam ruka — khaali khidki bekaar.',
+              'Wahi purana niyam: tum phir agent ke 40 form ke peeche khade ho.',
+              'Din mein khidki khaali ho tab bhi agent ruka — khaali waqt bekaar gaya.',
+            ],
+          },
         },
         {
           title: '4. In cheezon ke naam',
@@ -297,17 +352,39 @@ SD.registerLevels('sdd-resil', [
     instructions: 'Interviewer yahan "kyun" sunna chahta hai, naam nahi. 🎤',
     questions: [
       {
-        q: '"Ek customer shikayat karta hai ki hamari API kabhi chalti hai, kabhi timeout. Us customer ke apne requests bahut kam hain, aur hamara dashboard theek dikhta hai. Kahan dekhoge?"',
-        choices: ["Per-tenant p99, queue wait aur shared-resource usage dekho","Client network trace pehle; tenant queue breakdown skip karo","Shared service restart; traffic shape same rehne do","Caller timeout badhao; queue wait aur tenant tags skip karo"],
+        q: '"Ek customer shikayat karta hai ki hamari API kabhi chalti hai, kabhi timeout. Us customer ke apne requests bahut kam hain, customer ka network trace theek aaya, aur hamara dashboard (sabka jod) theek dikhta hai. Server par kahan dekhoge?"',
+        choices: [
+          'Dekhunga us waqt koi doosra tenant bahut zyada bhej raha tha ya nahi — graph tenant-wise',
+          'Database ka slow query log dekhunga — shayad customer ki koi query kabhi-kabhi atak jaati hai',
+          'Server restart kar dunga — atki hui cheezein saaf hongi, aur API phir theek chalegi',
+          'Timeout badha dunga — request ko zyada waqt milega toh timeout aana band ho jaayega',
+        ],
         answer: 0,
-        explain: 'Slow motion: Annapurna ke 12 mein se 12 ✅, Bholu Dhaba ke 7 mein se 3 ❌ — "kabhi chalta hai, kabhi nahi". Lab: shaant tenants ki 578 mein se 233 fail.',
-       choiceExplanations: ["Slow motion: Annapurna ke 12 mein se 12 ✅, Bholu Dhaba ke 7 mein se 3 ❌ — \"kabhi chalta hai, kabhi nahi\". Lab: shaant tenants ki 578 mein se 233 fail.","Network cause possible hai, lekin given low-volume tenant/shared healthy average pattern ko per-tenant evidence se separate karo.","Restart noisy workload ya shared queue coupling nahi hataata.","Longer waiting timeout root cause aur unfair resource allocation ko hide kar sakta hai."] },
+        explain: 'Saajhi line mein shaant tenant ka kaam shor karne wale ke kaam ke peeche khada ho jaata hai. Graph tenant ke hisaab se alag-alag dekhne padenge — sabka jod theek dikh sakta hai. Slow motion: Annapurna ke 12 mein se 12 ✅, Bholu Dhaba ke 7 mein se 3 ❌ — "kabhi chalta hai, kabhi nahi". Lab: shaant tenants ki 578 mein se 233 fail.',
+        choiceExplanations: [
+          'Saajhi line mein shaant tenant ka kaam shor karne wale ke kaam ke peeche khada ho jaata hai. Graph tenant ke hisaab se alag-alag dekhne padenge — sabka jod theek dikh sakta hai. Slow motion: Annapurna ke 12 mein se 12 ✅, Bholu Dhaba ke 7 mein se 3 ❌ — "kabhi chalta hai, kabhi nahi". Lab: shaant tenants ki 578 mein se 233 fail.',
+          'Ho sakta hai, par sab customers ki requests ek hi database se guzarti hain, aur sabka jod theek hai. Dikkat ek hi customer ko kyun? Pehle tenant-wise graph.',
+          'Restart se shor karne wala tenant nahi rukta. Wapas aate hi wahi saajhi line, wahi dikkat.',
+          'Lamba timeout sirf intezaar badhata hai. Shaant tenant phir bhi shor ke peeche khada rahega.',
+        ],
+      },
       {
         q: '"Noisy neighbour se bachne ke liye humne har tenant par rate limit laga di. Ab ek bada customer keh raha hai ki raat 3 baje bhi us customer ke bulk job ko 429 milta hai, jab system khaali hota hai. Kya galat hai?"',
-        choices: ["Fixed rate budget idle capacity borrow nahi karne deta","Tenant ki night schedule wrong hai; work daytime karao","Quota hatao; shared FIFO mein bulk ko phir aane do","429 ko success maano; client se bulk sync complete karao"],
+        choices: [
+          'Rate limit sirf ginti dekhti hai, khaali jagah nahi — baari-baari wali line dono kaam karti',
+          'Customer ko raat 3 baje bulk job nahi chalana chahiye — job din mein chalwao, tab theek',
+          'Rate limit hata do — bina hadd ke bada customer khaali system poora istemaal kar lega',
+          'Kuch galat nahi — hadd ke upar 429 aana sahi hai, customer ka job dheere poora ho jaayega',
+        ],
         answer: 0,
-        explain: 'Lab: har tenant 80/second ki hadd → A ki sirf 721 hui, 1,453 ko 429 — jabki 200 mein se 140 khaali tha.',
-       choiceExplanations: ["Lab: har tenant 80/second ki hadd → A ki sirf 721 hui, 1,453 ko 429 — jabki 200 mein se 140 khaali tha.","Night work valid ho sakta hai; capacity-aware fairness design ka issue schedule morality nahi.","Limits poori tarah hatane se noisy-neighbor protection bhi chali jaayegi.","429 rejected work hai; successful processing ya complete sync nahi."] },
+        explain: 'Shaant tenants bache, par khaali capacity bekaar ja rahi hai. Baari baantne wala tareeka (har tenant ki apni line, baari-baari) dono kaam karta hai. Lab: har tenant 80/second ki hadd → A ki sirf 721 hui, 1,453 ko 429. B aur C milkar sirf 60/second le rahe the, toh 200/second ki chhat mein se lagbhag 60/second khaali padi rahi. Baari-baari wali line mein A ki 1,046 hui — wahi khaali jagah A ko mili.',
+        choiceExplanations: [
+          'Shaant tenants bache, par khaali capacity bekaar ja rahi hai. Baari baantne wala tareeka (har tenant ki apni line, baari-baari) dono kaam karta hai. Lab: har tenant 80/second ki hadd → A ki sirf 721 hui, 1,453 ko 429. B aur C milkar sirf 60/second le rahe the, toh 200/second ki chhat mein se lagbhag 60/second khaali padi rahi. Baari-baari wali line mein A ki 1,046 hui — wahi khaali jagah A ko mili.',
+          'Raat ka bulk job bilkul sahi kaam hai. Dikkat khaali system mein bhi 429 dene wali hadd ki hai.',
+          'Hadd hatate hi saajhi line wapas — din mein phir shaant tenants fail honge (578 mein se 233).',
+          '429 wala kaam hua hi nahi. Khaali system mein 1,453 requests lautana bekaar hai.',
+        ],
+      },
     ],
   },
   success: [

@@ -97,11 +97,22 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
             (Teen run mein pehli line ke fail: 354–377 (472 mein se).) Baari-baari ke saath autoscaling ka kaam sirf yeh reh gaya ki A ko zyada mile: A ki 2,162 ki jagah 3,058 requests hui.`,
           ask: {
             q: 'Bheed 2 s par aayi. Autoscaler 3 second dekhta hai, phir machine 5 second mein uthti hai. Us 8 second mein shaant tenants ko kaun bachayega?',
-            choices: ["Immediate admission/isolation; scale capacity baad mein aayegi","Scale metrics polling zero karo; boot delay bhi zero hoga","Quiet clients retries badhaayein; queue apne aap fair hogi","Caller deadline badhao; competing backlog same rakho"],
+            choices: [
+              'Isolation — hadd, baari ya alag khidki; bheed aate hi usi pal kaam karti hai, scaling baad mein',
+              'Koi nahi — 8 second sehna hi padega, autoscaling ke aane tak har tenant ko rukna padega',
+              'Autoscaler ka dekhne ka waqt 0 kar do — tab nayi machine bhi turant, bina der ke uth jaayegi',
+              'Shaant tenants ko zyada retry karne ko bolo — baar-baar bhejne se koi na koi request nikal jaayegi',
+            ],
             answer: 0,
-            hint: 'Table ki doosri line dekho: wahan autoscaling thi hi nahi. Shaant tenants ke kitne fail hue?',
-            explain: 'Isolation <b>abhi</b> bachati hai; autoscaling <b>thodi der baad</b> jagah banata hai. Pehle isolation, uske upar autoscaling — uske badle nahi.',
-           choiceExplanations: ["Isolation <b>abhi</b> bachati hai; autoscaling <b>thodi der baad</b> jagah banata hai. Pehle isolation, uske upar autoscaling — uske badle nahi.","Detection interval hataane se machine/application startup time vanish nahi hota.","More retries overloaded shared queue ko aur pressure deti hain.","Longer deadlines retained work badha sakti hain; tenant service share isolate nahi karti."] },
+            hint: 'Table ki doosri line dekho: us line mein autoscaling thi hi nahi. Shaant tenants ke kitne fail hue?',
+            explain: 'Isolation abhi bachati hai; autoscaling thodi der baad jagah banata hai. Pehle isolation, phir upar se autoscaling — autoscaling isolation ki jagah nahi.',
+            choiceExplanations: [
+              'Isolation abhi bachati hai; autoscaling thodi der baad jagah banata hai. Pehle isolation, phir upar se autoscaling — autoscaling isolation ki jagah nahi.',
+              'Baari-baari wali line (bina autoscaling) mein shaant tenants ke 814 mein se 0 fail hue. Sehna zaroori nahi.',
+              'Dekhne ka waqt 0 karne par bhi nayi machine ko uthne mein 5 second lagte hain.',
+              'Zyada retry saajhi line par aur bojh daalta hai. Shaant tenant ki baari phir bhi nahi aati.',
+            ],
+          },
         },
         {
           title: '3. Jab koi shor nahi kar raha',
@@ -139,7 +150,7 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
           title: '5. Har setting: bahut kam, bahut zyada',
           say: `<div class="dr-scroll"><table>
               <tr><th>Setting</th><th>Bahut kam</th><th>Bahut zyada</th></tr>
-              <tr><td>Har tenant ki hadd</td><td>Paise dene wale tenant ko 429, jabki jagah khaali hai (lab: 200 mein se 140 khaali, A phir bhi ruka)</td><td>Bachav khatam: sab hadd ka jod chhat se upar ho toh hadd kabhi lagti hi nahi (lab: 3 × 80 = 240, chhat 200)</td></tr>
+              <tr><td>Har tenant ki hadd</td><td>Paise dene wale tenant ko 429, jabki jagah khaali hai (lab: chhat 200/s, teeno milkar ~140/s, A phir bhi ruka)</td><td>Bachav khatam: sab hadd ka jod chhat se upar ho toh hadd kabhi lagti hi nahi (lab: 3 × 80 = 240, chhat 200)</td></tr>
               <tr><td>Ek tenant ki line ki lambai</td><td>Chhota sa burst bhi "na" ban jaata hai</td><td>Us tenant ki apni requests bahut der line mein rehti hain</td></tr>
               <tr><td>Job ke workers</td><td>Job kabhi khatam nahi hota</td><td>Users dheeme (lab: 141 ms)</td></tr>
             </table></div>
@@ -163,10 +174,21 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
       ],
       observe: {
         q: 'Pehli line mein autoscaling thi, aur scale ke baad B aur C ka ek bhi error nahi aaya. Phir scale se pehle 472 mein se 354 kyun fail hue?',
-        choices: ["Scale-up se pehle shared backlog ne quiet requests delay ki","Autoscaler ne steady capacity ko permanently kam kiya","Quiet tenants ne own admission budget cross kiya tha","New workers slow the; post-scale success ignore karo"],
+        choices: [
+          'Bheed 2 s par aayi, naye workers 10.1 s par — us beech sab A ki bheed wali ek hi line mein the',
+          'Autoscaler kharab tha — scale hone se pehle autoscaler ne purane workers bhi kam kar diye the',
+          'B aur C ne apni hadd tod di thi, isliye scale se pehle B aur C ki requests fail hui',
+          'Naye workers purane workers se dheeme the, isliye scale ke aas-paas requests fail hui',
+        ],
         answer: 0,
-        explain: 'Autoscaling hamesha thodi der se aata hai. Doosri line dekho: baari-baari ke saath, bina kisi nayi machine ke, B aur C ka ek bhi error nahi.',
-       choiceExplanations: ["Autoscaling hamesha thodi der se aata hai. Doosri line dekho: baari-baari ke saath, bina kisi nayi machine ke, B aur C ka ek bhi error nahi.","Post-scale all quiet requests successful hona permanent capacity reduction hypothesis support nahi karta.","Stated quiet traffic burst origin nahi; shared noisy FIFO delay cause hai.","Failures pre-scale window mein thi; post-scale worker slowness timing match nahi."] },
+        explain: 'Autoscaling hamesha thodi der se aata hai. Doosri line dekho: baari-baari ke saath, bina kisi nayi machine ke, B aur C ki 814 mein se 0 fail.',
+        choiceExplanations: [
+          'Autoscaling hamesha thodi der se aata hai. Doosri line dekho: baari-baari ke saath, bina kisi nayi machine ke, B aur C ki 814 mein se 0 fail.',
+          'Lab ka autoscaler workers kabhi ghatata nahi: services/shared.js mein workers 4 se shuru hote hain, aur scale par sirf 4 naye judte hain.',
+          'B aur C shaant the — kisi ne hadd nahi todi. Fail hone ki wajah A ki bheed wali saajhi line thi.',
+          'Fail scale se pehle hue, baad mein nahi (0/342). Naye workers ki raftaar wajah nahi.',
+        ],
+      },
       lesson: 'Autoscaling jagah ka ilaaj hai, padosi ka nahi. Pehle tenants ko alag karo; phir autoscaling ko jagah badhane do.',
     },
 
@@ -184,10 +206,21 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
       ],
       observe: {
         q: '"Kam zaroori" karne par users ka jawab 141 ms se 42 ms ho gaya — par 22 ms nahi. Baaki farak kahan se aa raha hai?',
-        choices: ["Running job chunk nonpreemptive; priority sirf next pick hai","Low priority label ignored; scheduler ne ranking nahi badli","User arrival rate suddenly job duration se double hua","Database latency rose; worker scheduling ka role nahi"],
+        choices: [
+          'Job ka chalta hua 100 ms ka tukda beech mein nahi rukta — user ko tukda khatam hone tak rukna padta',
+          '"Kam zaroori" wali setting kaam hi nahi karti — scheduler job aur users ko ek jaisa gin raha hai',
+          'Users ne zyada requests bhejna shuru kar diya, isliye 42 ms se neeche latency nahi aayi',
+          'Database dheema ho gaya tha — 20 ms ka farak database ki wajah se hai, workers ki wajah se nahi',
+        ],
         answer: 0,
-        explain: '"Pehle kaun" (priority) sirf yeh tay karta hai ki agla kaam kaunsa uthega. Chalte kaam ko priority nahi rokti. Isliye lambe kaam ko "kam zaroori" ke saath <b>workers ki hadd</b> bhi chahiye.',
-       choiceExplanations: ["\"Pehle kaun\" (priority) sirf yeh tay karta hai ki agla kaam kaunsa uthega. Chalte kaam ko priority nahi rokti. Isliye lambe kaam ko \"kam zaroori\" ke saath <b>workers ki hadd</b> bhi chahiye.","Priority effective ho sakti hai phir bhi running chunk interrupt na ho.","Given comparison same input load use karta hai; unexplained traffic change assume mat karo.","Measured delay shared nonpreemptive worker chunk se explain hai; DB slowdown evidence nahi."] },
+        explain: '"Pehle kaun" (priority) sirf tay karta hai ki agla kaam kaunsa uthega. Chalte kaam ko priority nahi rokti. Isliye lambe kaam ko "kam zaroori" ke saath workers ki hadd bhi chahiye: job zyada se zyada 1 worker le sakti hai, toh baaki 3 workers users ke liye bache rehte hain. Users ki bheed zyada ho toh intezaar phir bhi badhega.',
+        choiceExplanations: [
+          '"Pehle kaun" (priority) sirf tay karta hai ki agla kaam kaunsa uthega. Chalte kaam ko priority nahi rokti. Isliye lambe kaam ko "kam zaroori" ke saath workers ki hadd bhi chahiye: job zyada se zyada 1 worker le sakti hai, toh baaki 3 workers users ke liye bache rehte hain. Users ki bheed zyada ho toh intezaar phir bhi badhega.',
+          'Setting kaam karti hai: 141 ms se 42 ms hua. Bacha farak chalte tukde ka hai.',
+          'Dono run mein users ka bojh wahi tha. Sirf job ka niyam badla.',
+          'Lab mein database hi nahi hai. Bacha farak worker par chalte job ke tukde se aata hai.',
+        ],
+      },
       lesson: 'Background job ke liye do cheezein saath: kam zaroori, aur workers ki hadd. Raat ko chalana madad karta hai — par "raat" bhi kisi ka din hota hai.',
     },
 
@@ -203,11 +236,11 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
       items: [
         { text: '"Autoscaling laga do, noisy neighbour khatam."', bin: 'myth', explain: 'Nayi machines der se aati hain. Lab: bheed 2 s par, naye workers 10.1 s par; us beech shaant tenants ki 472 mein se 354 fail.' },
         { text: '"Beech mein ek queue laga do, load barabar ho jaayega."', bin: 'myth', explain: 'Ek saajhi line bheed ko sokhti hai, baant-ti nahi. Slow motion: ek line thi, aur Bholu Dhaba ke 7 mein se 3 fail hue.' },
-        { text: '"Rate limit lagane mein koi nuksaan nahi."', bin: 'myth', explain: 'Hadd khaali jagah nahi dekhti. Lab: A ki 1,453 requests ko 429, jabki 200 mein se 140 khaali tha.' },
+        { text: '"Rate limit lagane mein koi nuksaan nahi."', bin: 'myth', explain: 'Hadd khaali jagah nahi dekhti. Lab: A ki 1,453 requests ko 429, jabki 200/s ki chhat mein se lagbhag 60/s khaali thi.' },
         { text: '"Rate limit IP par laga do, sab theek."', bin: 'myth', explain: 'Ek IP ke peeche bahut log ho sakte hain (office, load balancer). Lab ki asli library: A ki 12 requests ke baad B ki doosri request ko 429.' },
-        { text: '"Kubernetes ki QoS class noisy neighbour ko rokti hai."', bin: 'myth', explain: 'QoS class sirf yeh tay karti hai ki tangi mein pehle kaun nikala jaaye. Hadd CPU limit se aati hai, baari ka wazan CPU request se. (Kubernetes documentation.)' },
+        { text: '"Kubernetes ki QoS class noisy neighbour ko rokti hai."', bin: 'myth', explain: 'QoS class na hadd hai, na baari — tangi mein kaun pehle nikal sakta hai, bas us kram ka andaaza deti hai. Hadd CPU limit se aati hai, baari ka wazan CPU request se. (Kubernetes documentation.)' },
         { text: '"Job raat ko chala do toh kisi par asar nahi."', bin: 'myth', explain: 'Kam log prabhavit hote hain, "koi nahi" nahi. Lab: raat mein aayi 164 requests ko 73 ms lage (din mein bina job ke ~20 ms).' },
-        { text: 'Isolation takleef baant sakti hai, jagah nahi bana sakti.', bin: 'true', explain: 'Lab: teen ausat tenants, jod chhat se upar → har niyam mein sab dheeme. Baari-baari ne fail barabar kar diye (2% har ek), ghataye nahi.' },
+        { text: 'Isolation takleef baant sakti hai, jagah nahi bana sakti.', bin: 'true', explain: 'Lab: teen ausat tenants, jod chhat se upar → teeno niyamon mein aadhi requests ko ~0.8 s lage (aam din ~20 ms). Baari-baari ne fail barabar baante (14, 14, 15), par sab dheeme hi rahe — jagah nahi bani.' },
         { text: '"Kam zaroori" (low priority) chalte hue kaam ko nahi rok sakta.', bin: 'true', explain: 'Lab: sirf "kam zaroori" → users 42 ms. Saath mein 1 worker ki hadd → 22 ms.' },
         { text: 'Shor ki keemat shor karne wale ko deni chahiye.', bin: 'true', explain: 'Baari-baari yahi karti hai. Slow motion: Annapurna ka kaam 1 second der se; Bholu Dhaba par koi asar nahi. Lab: A ki 1,121 requests ko "na" — A ki apni line bharne se.' },
       ],
@@ -219,22 +252,55 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
     questions: [
       {
         q: '"Multi-tenant SaaS hai. Ek tenant ke bulk import se doosre tenants ke requests timeout ho jaate hain. Tum autoscaling ka sujhaav doge?"',
-        choices: ["Bound tenant queues/concurrency; scale for sustained demand","Autoscaler threshold lower; queue sharing unchanged rakho","Bulk tenant permanent block; imports support hata do","Caller timeout badhao; global FIFO intact rehne do"],
+        choices: [
+          'Akela nahi — pehle tenants alag karo (apni line, baari-baari), phir autoscaling jagah badhaye',
+          'Haan — bas autoscaling ka threshold kam kar do, nayi machine jaldi aayegi aur dikkat khatam',
+          'Bulk import wale tenant ko hamesha ke liye block kar do — baaki tenants apne aap bach jaayenge',
+          'Timeout badha do — doosre tenants ki requests ko line mein zyada der rukne ka waqt milega',
+        ],
         answer: 0,
-        explain: 'Lab: ek line + autoscaling → naye workers 10.1 s par, us se pehle shaant tenants ki 472 mein se 354 fail. Baari-baari (autoscaling ke bina) → 814 mein se 0.',
-       choiceExplanations: ["Lab: ek line + autoscaling → naye workers 10.1 s par, us se pehle shaant tenants ki 472 mein se 354 fail. Baari-baari (autoscaling ke bina) → 814 mein se 0.","Detection/boot gap phir bhi rehta hai; immediate isolation ka replacement nahi.","Temporary emergency block ho sakta hai, par legitimate tenant workload ko fair capacity chahiye.","Longer timeout quiet tenant ki service share nahi badhaata."] },
+        explain: 'Nayi machines pehchaan + boot ke baad aati hain; us beech sab ek hi line mein hain. Pehle tenants ko alag karo (har tenant ki apni line, baari-baari; upar se ek hadd), phir autoscaling ko jagah badhane do. Lab: ek line + autoscaling → naye workers 10.1 s par, us se pehle shaant tenants ki 472 mein se 354 fail. Baari-baari (autoscaling ke bina) → 814 mein se 0.',
+        choiceExplanations: [
+          'Nayi machines pehchaan + boot ke baad aati hain; us beech sab ek hi line mein hain. Pehle tenants ko alag karo (har tenant ki apni line, baari-baari; upar se ek hadd), phir autoscaling ko jagah badhane do. Lab: ek line + autoscaling → naye workers 10.1 s par, us se pehle shaant tenants ki 472 mein se 354 fail. Baari-baari (autoscaling ke bina) → 814 mein se 0.',
+          'Kam threshold se bhi machine ko uthne mein waqt lagta hai. Us beech saajhi line wahi hai.',
+          'Bulk import bhi asli kaam hai. Use rokna nahi, baari dena hai — baari-baari mein import bhi chalta hai.',
+          'Lamba timeout sirf intezaar badhata hai. Shaant tenant phir bhi bheed ke peeche khada rahega.',
+        ],
+      },
       {
         q: '"Dashboard par har tenant apni hadd ke andar hai, phir bhi sabko latency badhi hui dikh rahi hai. Kaunsa tenant noisy hai?"',
-        choices: ["Total admitted demand vs effective shared capacity maapo","Largest tenant block; allowed traffic ko abuse maan lo","All per-tenant budgets halve; cause diagnose mat karo","Latency panel ignore; within-limit users slow nahi ho sakte"],
+        choices: [
+          'Shayad koi nahi — pehle dekho sabka jod service ki chhat se upar toh nahi; tab jagah badhao',
+          'Jo tenant sabse zyada bhej raha hai wahi noisy hai — us tenant ko block kar do, latency giregi',
+          'Har tenant ki hadd aadhi kar do — sab apni hadd ke andar rahenge aur latency apne aap theek',
+          'Latency ka metric galat hoga — hadd ke andar wale tenants ki latency badh hi nahi sakti',
+        ],
         answer: 0,
-        explain: 'Lab: teen tenants, har ek 80/s (hadd 80), jod 240, chhat 200. Har niyam mein aadhi requests ko ~846 ms lage; baari-baari ne fail barabar kiye (2% har ek), ghataye nahi.',
-       choiceExplanations: ["Lab: teen tenants, har ek 80/s (hadd 80), jod 240, chhat 200. Har niyam mein aadhi requests ko ~846 ms lage; baari-baari ne fail barabar kiye (2% har ek), ghataye nahi.","Individually valid budgets ka sum capacity se zyada ho sakta; largest tenant abusive zaroori nahi.","Admission reduction temporary relief de sakti hai, but total demand/cost diagnose aur budgets justify karo.","Rate per tenant allowed hona latency/capacity sufficient hone ka proof nahi."] },
+        explain: 'Har tenant hadd ke andar ho aur phir bhi sab dheeme hon, toh pehle sabka jod aur service ki chhat milao. Jod chhat se upar ho toh dikkat capacity ki hai: isolation takleef baant sakti hai, jagah nahi bana sakti — jagah badhao, ya kam zaroori kaam girao. Lab: teen tenants, har ek 80/s (hadd 80), jod 240, chhat 200. Teeno niyamon mein aadhi requests ko ~0.8 s lage (aam din ~20 ms). Fail: ek line mein 138, har tenant ki hadd ke saath 148, baari-baari mein 43 — aur baari-baari ne fail barabar baante (14, 14, 15). Par sab dheeme hi rahe.',
+        choiceExplanations: [
+          'Har tenant hadd ke andar ho aur phir bhi sab dheeme hon, toh pehle sabka jod aur service ki chhat milao. Jod chhat se upar ho toh dikkat capacity ki hai: isolation takleef baant sakti hai, jagah nahi bana sakti — jagah badhao, ya kam zaroori kaam girao. Lab: teen tenants, har ek 80/s (hadd 80), jod 240, chhat 200. Teeno niyamon mein aadhi requests ko ~0.8 s lage (aam din ~20 ms). Fail: ek line mein 138, har tenant ki hadd ke saath 148, baari-baari mein 43 — aur baari-baari ne fail barabar baante (14, 14, 15). Par sab dheeme hi rahe.',
+          'Hadd ke andar wala tenant niyam tod nahi raha. Lab mein teeno 80/s par hadd ke andar the, aur dikkat jod ki thi.',
+          'Hadd aadhi karne se bojh kam ho sakta hai, par zaroori requests bhi mana hongi. Pehle kul bojh aur chhat naapo, phir har tenant ka budget tay karo.',
+          'Hadd ke andar rehna jagah ki guarantee nahi. Lab: 3 × 80 = 240, chhat 200 — latency badhni hi thi.',
+        ],
+      },
       {
         q: '"Ek maintenance job ko humne low priority kar diya, phir bhi users ko latency spike dikhte hain. Kyun?"',
-        choices: ["Long running chunks bound karo; job concurrency isolate","User priority higher; running chunks ko same rehne do","Job workers badhao; shared resources pehle jaise rakho","Background retries badhao; pending work jaldi refill karo"],
+        choices: [
+          'Priority sirf agla kaam chunti hai — job ke workers par hadd lagao ya job ke tukde chhote karo',
+          'Low priority kaam hi nahi karti — scheduler priority ko nazarandaaz karke sabko barabar ginta hai',
+          'Users ki priority aur badha do — sabse upar ki priority chalte job ko bhi beech mein rok degi',
+          'Job ko aur workers de do — job jaldi khatam hogi toh users ko latency spike kam der dikhega',
+        ],
         answer: 0,
-        explain: 'Lab: users ki line mein → 141 ms. Kam zaroori → 42 ms. Kam zaroori + 1 worker → 22 ms (job aadhi raftaar par).',
-       choiceExplanations: ["Lab: users ki line mein → 141 ms. Kam zaroori → 42 ms. Kam zaroori + 1 worker → 22 ms (job aadhi raftaar par).","Next-pick priority nonpreemptive running work interrupt nahi kar sakti.","More concurrent jobs quiet-user reserved capacity aur ghata sakte hain.","Retry concurrency contention aur queue pressure badha sakti hai."] },
+        explain: 'Priority sirf agla kaam chunti hai; chalte hue lambe kaam ko nahi rokti. Job ke workers par hadd lagao (jaise zyada se zyada 1), ya job ke tukde chhote karo, ya job ko kam bheed wale waqt par le jao. Lab: users ki line mein → 141 ms. Kam zaroori → 42 ms. Kam zaroori + 1 worker → 22 ms (job aadhi raftaar par).',
+        choiceExplanations: [
+          'Priority sirf agla kaam chunti hai; chalte hue lambe kaam ko nahi rokti. Job ke workers par hadd lagao (jaise zyada se zyada 1), ya job ke tukde chhote karo, ya job ko kam bheed wale waqt par le jao. Lab: users ki line mein → 141 ms. Kam zaroori → 42 ms. Kam zaroori + 1 worker → 22 ms (job aadhi raftaar par).',
+          'Low priority kaam karti hai: 141 ms se 42 ms. Bacha spike chalte tukde ka hai.',
+          'Priority kitni bhi badi ho, chalte kaam ko nahi rokti — sirf agla kaam chunti hai.',
+          'Zyada workers job ko diye toh users ke liye kam workers bache. Spike aur badhega.',
+        ],
+      },
     ],
   },
   success: [
