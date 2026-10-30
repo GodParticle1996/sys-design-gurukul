@@ -166,7 +166,8 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: rn-kyun … rn-kab (26 MCQs) | Claude (Raft lab rerun: 409–1053 ms failovers, 119–125 elections) | Codex: 9 findings (3 P1, 6 P2) | all fixed (1 differently); `tools/election.js` crash and timeout-as-failover fixed |
 | Phase 3 rewrite: ch-kyun … ch-kab (39 MCQs) | Claude | Codex: 7 findings (2 P1, 5 P2) | all fixed; the p99 wording fix also swept Randomness, Noisy Neighbour and two lab READMEs |
 | Phase 3 rewrite, core track Flow (10 levels, 48 MCQs) | Claude | Codex | review pending; not committed. Incident/design option labels still clipped — need a label tool |
-| Phase 3 rewrite, core track Data batch 1 (8 levels) / batch 2 (10 levels) | Codex | Claude | batch 1 waiting for review; batch 2 being written |
+| Phase 3 rewrite, core track Data batch 1 (modeling … caching, 33 MCQs) | Codex | Claude: options read in full, "had" → "hadd" | applied; Codex's MCQ fact fixes kept; 9 lesson/flashcard overclaims Codex listed fixed by Claude |
+| Phase 3 rewrite, core track Data batch 2 (stampede … boss-data, 10 levels) | Codex | Claude | being written |
 | Phase 3 rewrite: dr-kyun … dr-kab (45 MCQs) | Codex (second writing job, ~20 min) | Claude: timings checked against `tools/slowmo.js`, options read in full | applied (one word changed); Codex's 3 MCQ fact fixes kept, and its 3 step-text/flashcard findings fixed |
 | Tool: `dev/rewrite/scan.js` | Claude | — | per-track count of clipped-English strings; undercounts (options with glue words still read clipped), so treat it as a floor |
 | Phase 3 rewrite: hc-kyun … hc-kab (40 MCQs) | Codex (first writing job, ~20 min) | Claude: every option checked against `lib/health.js`, `lib/checker.js`, the README traces and the AWS/Kubernetes defaults | applied with light wording fixes; Codex also found 2 wrong step texts and a `slowmo-boot.js` bug, all fixed |
@@ -317,6 +318,13 @@ the same fix went through Randomness, Noisy Neighbour and the lab 39/41 READMEs.
 nateeja degi" (real timers vary); "dono bekaar" (rollback alone still ends the fault on schedule); finally *calls*
 rollback, it does not guarantee rollback succeeded (also in the level's caption); the Chaos Monkey stem gave the
 answer away; an interview whose three distractors were actions while the stem asked for a cause.
+
+Eleventh round (Data batch 1, Codex writing): Codex fixed facts inside the questions (no universal % cutoff decides
+seq vs index scan; N+1 happens in REST too; the pool sweep's 256 row had 200 real connections; UUIDv7 is 128-bit,
+so it fits neither a 64-bit ID nor a mandated UUIDv4 API). Outside the questions, Claude fixed what Codex listed:
+"index tabhi laga jab 90%+ rows kaate" / "30% par seq scan sasta" (no fixed cutoff), "covering = heap kabhi nahi,
+2-3x tez" (visibility map), "outage hamesha saturation se" (four places), "cache tab lagao jab teenon sach" and
+"write-through: cache hamesha fresh", and "ek bhool = hamesha stale" (TTL or the next write clears it).
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.
