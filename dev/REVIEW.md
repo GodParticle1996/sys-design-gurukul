@@ -163,7 +163,9 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: rt-lib, rt-kab | Claude | Codex: 9 findings (5 P1, 2 P2, 2 P3) | all 9 fixed; Codex checked p-retry 8.0.1's tagged source |
 | Phase 3 rewrite: bp-kyun … bp-kab | Claude | Codex: 20 findings (9 P1, 10 P2, 1 P3) | all 20 fixed (2 differently, see below), plus step text, cards, lab tool label and README |
 | Phase 3 rewrite: nn-kyun … nn-kab | Claude | Codex: 14 findings (6 P1, 7 P2, 1 P3) | all 14 fixed (3 differently, see below), plus step text, a card, a flashcard and 2 README lines |
-| Phase 3 rewrite: rn-kyun … rn-kab | Claude | Codex | review pending; not committed |
+| Phase 3 rewrite: rn-kyun … rn-kab (26 MCQs) | Claude (Raft lab rerun: 409–1053 ms failovers, 119–125 elections) | Codex: 9 findings (3 P1, 6 P2) | all fixed (1 differently); `tools/election.js` crash and timeout-as-failover fixed |
+| Phase 3 rewrite: ch-kyun … ch-kab (39 MCQs) | Claude | Codex | review pending; not committed |
+| Phase 3 rewrite: dr-kyun … dr-kab | Codex (second writing job) | Claude | in progress |
 | Phase 3 rewrite: hc-kyun … hc-kab (40 MCQs) | Codex (first writing job, ~20 min) | Claude: every option checked against `lib/health.js`, `lib/checker.js`, the README traces and the AWS/Kubernetes defaults | applied with light wording fixes; Codex also found 2 wrong step texts and a `slowmo-boot.js` bug, all fixed |
 | New Concurrency track (6 levels, Java lab 46) — the user asked Codex directly | Codex, ~37 min | Claude: shared-file diff, Java code, 24 + 42 checks rerun, browser pass at 390/1280 (0 broken) | merged as-is; language rewrite + real hints next (all 51 hints were one boilerplate line) |
 | Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex: 16 findings (2 P1, 12 P2, 2 P3) | all 16 fixed (3 differently, see below); `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
@@ -281,6 +283,21 @@ Seventh round (hc-*) — the first batch Codex *wrote* and Claude reviewed:
   dependency in readiness; it is a separate routing choice. `tools/slowmo-boot.js` returned on every failed startup
   probe before its restart branch, so a boot longer than the allowance never restarted; fixed, published output
   unchanged byte for byte, and a 5-failure copy restarts on the 5th failure.
+
+Eighth round (rn-*) — the P1s were Claude's own overclaims:
+
+- **"Koi lambi lane mein nahi jaata":** comparing two lanes avoids only the longer of the *sampled* two; both can be
+  long. **"Baar-baar takraav nahi":** each Raft round's collision chance stays the same; only a long *run* of
+  collisions is unlikely (Raft §5.2 says "reduced likelihood"). **"Alag CPU → ek server hamesha bhara":** different
+  capacity does not mean permanent saturation.
+- **Stems with loopholes:** a slow disk can also cause timeouts (and NGINX `max_fails`), so the stem now says every
+  request returns before the timeout; the least-connections answer now fits both the lab (requests) and NGINX
+  (connections); "kab random NAHI" became four concrete situations with one affinity case.
+- **Lab tool:** `tools/election.js` averaged a 15 s "no leader" timeout as if it were a failover; now it prints the
+  failed round and averages only completed ones.
+- **Not adopted:** a long extra clue in the CPU-herding stem; the stem already shows the server-by-server rotation.
+- **Measured today:** the Raft lab's numbers move with machine load (random failovers 409–1053 ms, averages
+  442–684 ms; equal timeouts 119–125 elections against the recorded 103–105), so the levels now word them loosely.
 
 The round also exposed two bugs in `dev/rewrite/apply.js`, now fixed: it could not re-patch an array it had already
 rewritten (multi-line form), and when one item changed `q`, `hint` and `explain` together it spliced at stale offsets.

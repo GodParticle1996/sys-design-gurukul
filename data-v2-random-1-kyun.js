@@ -90,11 +90,22 @@ SD.registerLevels('sdd-resil', [
           vars: { age: '0.25 s purani' },
           ask: {
             q: 'Load balancer ko abhi bhi dikh raha hai: S1 2 · S2 1 · S3 0. Asal mein S3 par ab 1 kaam hai. #2 kahan jaayegi?',
-            choices: ["S3: stale advertised load table abhi zero batati hai","S2: real load change proxy ne bina feedback jaan liya","S1: stale least-loaded policy round-robin mode ban gayi","Wait: every dispatch ke pehle fresh snapshot mandatory hai"],
+            choices: [
+              'S3 par — load balancer ko S3 abhi bhi khaali dikhta hai, aur faisla dikhe hue haal se hota hai',
+              'S2 par — #1 S3 par ja chuki hai, toh ab S2 aur S3 dono par ek-ek kaam barabar ho gaya hai',
+              'S1 par — teen servers hain, aur do requests ke baad ab ghoom ke S1 ki baari aa gayi hai',
+              'Kahin nahi — load balancer 1.00 s par aane wale naye haal ka intezaar karke tab bhejega',
+            ],
             answer: 0,
-            hint: 'Load balancer faisla kis par karta hai: jo asal mein hai, ya jo use dikh raha hai?',
-            explain: 'Load balancer ko apni hi bheji hui #1 ka pata nahi. Load balancer ko sirf servers ka bheja haal dikhta hai, aur yeh haal 0.25 s purana hai. Slow motion ki line: <code>#2 → S3 (LB ko dikha: S1 2 · S2 1 · S3 0) asal mein ab: S1 2 · S2 1 · S3 2</code>',
-           choiceExplanations: ["Load balancer ko apni hi bheji hui #1 ka pata nahi. Load balancer ko sirf servers ka bheja haal dikhta hai, aur yeh haal 0.25 s purana hai. Slow motion ki line: <code>#2 → S3 (LB ko dikha: S1 2 · S2 1 · S3 0) asal mein ab: S1 2 · S2 1 · S3 2</code>","This policy local in-flight feedback update nahi karti; real S3 change abhi advertised snapshot mein nahi.","Least-load selection policy round robin mein automatically switch nahi hoti.","Model cached snapshot se route karta hai, fresh status wait nahi."] },
+            hint: 'Load balancer faisla kis par karta hai: jo asal mein hai, ya jo load balancer ko dikh raha hai?',
+            explain: 'Load balancer ko apni hi bheji hui #1 ka pata nahi. Load balancer ko sirf servers ka bheja haal dikhta hai, aur servers ka haal 0.25 s purana hai. Slow motion ki line: <code>#2 → S3 (LB ko dikha: S1 2 · S2 1 · S3 0) asal mein ab: S1 2 · S2 1 · S3 2</code>',
+            choiceExplanations: [
+              'Load balancer ko apni hi bheji hui #1 ka pata nahi. Load balancer ko sirf servers ka bheja haal dikhta hai, aur servers ka haal 0.25 s purana hai. Slow motion ki line: <code>#2 → S3 (LB ko dikha: S1 2 · S2 1 · S3 0) asal mein ab: S1 2 · S2 1 · S3 2</code>',
+              'Load balancer apni bheji hui #1 ko ginta hi nahi. Load balancer ko sirf servers ka bheja haal dikhta hai, aur us haal mein S3 abhi bhi 0 hai.',
+              'Is niyam mein baari ka koi hisaab nahi. Niyam sirf dekhta hai ki kis server ka number sabse chhota dikh raha hai.',
+              'Load balancer kisi request ko rokta nahi. Jo purana haal paas hai, wahi dekh ke turant bhej deta hai.',
+            ],
+          },
         },
         {
           clock: '0.50–0.75 s',
@@ -110,11 +121,22 @@ SD.registerLevels('sdd-resil', [
           vars: { seen: 'S1 1 · <b>S2 0</b> · S3 3', age: 'abhi aayi' },
           ask: {
             q: 'Agle ek second mein chaar requests aayengi: #5, #6, #7, #8. Yeh kahan jaayengi?',
-            choices: ["Four S2 par; same stale minimum har decision ko dikhe","S1,S2,S3,S1; policy request count ko round robin baante","Two S1, two S2; scheduler healthy nodes equal kare","Four S3 par; pichhla selected server sticky ho jaaye"],
+            choices: [
+              'Chaaron S2 par — agle ek second tak load balancer ko S2 hi sabse khaali dikhega',
+              'Ek-ek karke S1, S2, S3, S1 par — ab har server ko barabar mauka diya jaayega',
+              'Do S1 par, do S2 par — dono halke servers mein kaam aadha-aadha baant diya jaayega',
+              'Chaaron S3 par — pichhli baar S3 chuna tha, toh load balancer S3 par hi tika rahega',
+            ],
             answer: 0,
             hint: 'Pichhle second mein kya hua tha, jab S3 sabse khaali dikh raha tha?',
             explain: 'Wahi galti, doosre server par. Slow motion: #5, #6, #7, #8 → S2. 1.75 s par asal mein: <code>S1 0 · S2 3 · S3 2</code>.',
-           choiceExplanations: ["Wahi galti, doosre server par. Slow motion: #5, #6, #7, #8 → S2. 1.75 s par asal mein: <code>S1 0 · S2 3 · S3 2</code>.","Selected algorithm per-request rotating turn nahi, unchanged minimum snapshot use karta hai.","Stale deterministic minimum equal split nahi karta.","Previous destination sticky key nahi; updated stale snapshot mein S2 minimum hai."] },
+            choiceExplanations: [
+              'Wahi galti, doosre server par. Slow motion: #5, #6, #7, #8 → S2. 1.75 s par asal mein: <code>S1 0 · S2 3 · S3 2</code>.',
+              'Niyam har request par wahi dikha hua haal dekhta hai. Haal 2.00 s tak nahi badlega, toh har baar S2 hi sabse chhota.',
+              'Niyam halke servers mein baant-ta nahi. Har request ko ek hi sabse chhota number milta hai: S2 ka 0.',
+              'Naye haal mein S3 par 3 kaam dikh rahe hain, sabse zyada. Niyam pichhla chuna hua server yaad nahi rakhta.',
+            ],
+          },
         },
         {
           clock: '1.00–2.75 s',
@@ -170,11 +192,22 @@ SD.registerLevels('sdd-resil', [
           vars: { rule: 'sabse khaali ko (purani jaankari)', avg: '1.13 s', worst: '1.65 s', s3: jobs(0) },
           ask: {
             q: 'Baari-baari se kya badlega?',
-            choices: ["Counts spread; server speed/load ka feedback ab nahi","Snapshot har request fresh; least-loaded routing rahegi","Arrival volume ghatega; round robin overload reject kare","Session affinity badhegi; client har baar same node jaayega"],
+            choices: [
+              'Dher khatam, koi server lagataar chaar nahi paayega — par servers ka haal ab koi dekhega hi nahi',
+              'Haal har request par taaza ho jaayega, aur har baar sach mein sabse khaali server hi chuna jaayega',
+              'Requests kam aayengi — baari-baari zyada requests ko load balancer se aage jaane hi nahi dega',
+              'Har user hamesha ek hi server par jaayega, toh us user ka saara kaam ek hi jagah tez chalega',
+            ],
             answer: 0,
             hint: 'Baari-baari mein ek server ko agli request kab milti hai? Aur kya is niyam ko load ki zaroorat hai?',
             explain: 'Har server ko har teesri request milti hai: 0.75 second mein ek. Kaam 0.6 second ka hai, toh server ke paas saans lene ki jagah hai. Par niyam andha hai.',
-           choiceExplanations: ["Har server ko har teesri request milti hai: 0.75 second mein ek. Kaam 0.6 second ka hai, toh server ke paas saans lene ki jagah hai. Par niyam andha hai.","Round robin load telemetry ko fresh nahi banaata; us telemetry ko selection mein use hi nahi karta.","Routing selection arrival admission rate ko automatically reduce nahi karta.","Round robin requests rotate karta hai; key-based sticky routing nahi."] },
+            choiceExplanations: [
+              'Har server ko har teesri request milti hai: 0.75 second mein ek. Kaam 0.6 second ka hai, toh server ke paas saans lene ki jagah hai. Par niyam andha hai.',
+              'Baari-baari haal ko taaza nahi karta — haal dekhta hi nahi. Agla server sirf baari se tay hota hai.',
+              'Bhejne ka tareeka badalne se aane wali requests kam nahi hoti. Baari-baari kisi request ko mana nahi karta.',
+              'Baari-baari har nayi request ko agle server par bhejta hai. Ek hi user ki requests bhi teeno servers par ghoomti hain.',
+            ],
+          },
         },
         {
           clock: '0.00 s',
@@ -202,11 +235,22 @@ SD.registerLevels('sdd-resil', [
           vars: { rule: 'baari-baari · S3 teen guna dheema', avg: '—', worst: '—' },
           ask: {
             q: 'Baari-baari ab S3 ko kitna hissa dega?',
-            choices: ["Har third request; unweighted round robin speed nahi dekhta","Slow node half share; observed service time weight banta","Slow node removed; slowness active health failure hoti","Slow node extra share; current queue ko drain karna hai"],
+            choices: [
+              'Utna hi — har teesri request, kyunki baari-baari ko S3 ki dheemi raftaar dikhti hi nahi',
+              'Kam — baari-baari dekh leta hai ki S3 ke jawab der se aate hain, aur hissa ghata deta hai',
+              'Kuch nahi — S3 ko dheema dekh ke baari-baari S3 ko servers ki list se hi hata deta hai',
+              'Zyada — taaki S3 ki line jaldi khaali ho jaaye aur baaki do servers ko thoda aaram mile',
+            ],
             answer: 0,
             hint: 'Baari-baari kya-kya dekhta hai? (Pichhle sawaal ka jawab yaad karo.)',
             explain: 'S3 ko har 0.75 second par ek request milti rahi, jabki S3 ko ek request mein 1.8 second lagte hain. Line sirf badh sakti hai.',
-           choiceExplanations: ["S3 ko har 0.75 second par ek request milti rahi, jabki S3 ko ek request mein 1.8 second lagte hain. Line sirf badh sakti hai.","Unweighted round robin mein response-time-derived weights configured nahi.","Slow but successful response health failure necessarily nahi; failure checks separate hain.","More work slow node ko dena pending queue drain nahi karega."] },
+            choiceExplanations: [
+              'S3 ko har 0.75 second par ek request milti rahi, jabki S3 ko ek request mein 1.8 second lagte hain. Line sirf badh sakti hai.',
+              'Baari-baari sirf ginta hai ki kiski baari hai. Jawab kitni der mein aaya, baari-baari ko is baat ka pata hi nahi chalta.',
+              'S3 dheema hai, par jawab de raha hai. Server ko list se hatana baari-baari ka kaam nahi.',
+              'Dheeme server ko zyada kaam dene se line aur lambi hoti hai, chhoti nahi.',
+            ],
+          },
         },
         {
           clock: '0.50–5.75 s',
@@ -260,11 +304,22 @@ SD.registerLevels('sdd-resil', [
           say: 'Socho tum khud toll par pahunche ho. Na koi announcement hai, na gate wala aadmi.',
           ask: {
             q: 'Tum lane kaise chunte ho?',
-            choices: ["Kuch lanes sample karke unmein chhoti choose karo","Har lane ka exact count lo; global minimum ka wait karo","Fixed lane ka turn lo; queue length kabhi observe na karo","Random lane lo; sampled queue lengths compare na karo"],
+            choices: [
+              'Saamne ki do-teen lanes par nazar daalte ho, aur jo lane chhoti dikhe, us lane mein chale jaate ho',
+              'Gaadi rok ke baarah ki baarah lanes ginte ho, phir jo sabse chhoti nikle, us lane mein jaate ho',
+              'Hamesha lane 1 mein jaate ho — lane 1 sabse paas hai, toh soch-vichaar ki zaroorat hi nahi',
+              'Aankh band karke koi bhi lane chun lete ho — kisi bhi lane ki line dekhne ki zaroorat nahi',
+            ],
             answer: 0,
             hint: 'Baarah lanes ginne mein kitna waqt lagega? Aur aankh band karke jaane mein kya khatra hai?',
-            explain: 'Har driver apne saamne ki <b>alag</b> do lanes dekhta hai. Isliye sab ek hi lane mein nahi pahunchte — aur phir bhi koi lambi lane mein nahi jaata. Agla level isi tareeke ka hai.',
-           choiceExplanations: ["Har driver apne saamne ki <b>alag</b> do lanes dekhta hai. Isliye sab ek hi lane mein nahi pahunchte — aur phir bhi koi lambi lane mein nahi jaata. Agla level isi tareeke ka hai.","Global exact survey ka cost/staleness high ho sakta hai; analogy partial sampling compare karti hai.","Fixed choice current sampled load advantage nahi leti.","Pure random aur power-of-two alag: latter sampled queues compare karta hai."] },
+            explain: 'Har driver saamne ki do-teen lanes dekhta hai aur un mein se chhoti lane chunta hai. Dekhi hui saari lanes lambi hon, toh chuni hui lane bhi lambi ho sakti hai. Par alag drivers alag lanes dekhte hain, toh sab ek hi lane par toot nahi padte. Agla level isi tareeke ka hai.',
+            choiceExplanations: [
+              'Har driver saamne ki do-teen lanes dekhta hai aur un mein se chhoti lane chunta hai. Dekhi hui saari lanes lambi hon, toh chuni hui lane bhi lambi ho sakti hai. Par alag drivers alag lanes dekhte hain, toh sab ek hi lane par toot nahi padte. Agla level isi tareeke ka hai.',
+              'Gaadi rok ke ginne mein waqt lagta hai, aur tab tak lanes badal jaati hain. Aur sab drivers ek hi sabse chhoti lane chunenge — phir wahi dher.',
+              'Lane 1 lambi ho tab bhi tum lane 1 mein phanse rahoge. Saamne dikh rahi chhoti lane ka fayda hi nahi uthaya.',
+              'Bina dekhe chunoge toh kabhi-kabhi sabse lambi lane mein phansoge. Do-teen lanes dekh lena mehenga nahi.',
+            ],
+          },
         },
         {
           title: '4. In cheezon ke naam',
@@ -302,16 +357,38 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Hamara load balancer har server ka CPU dekh ke sabse khaali server ko bhejta hai. Phir bhi graph mein ek server spike karta hai, phir doosra, phir teesra. Kyun?"',
-        choices: ["Stale common minimum herd; local load ya random sample dekho","CPU vendor difference pehle; snapshot age ignore kar do","Process restart pehle; same routing policy restore karo","Payload count equal karo; stale snapshots ko exact maano"],
+        choices: [
+          'CPU ka haal kuch der purana hota hai — tab tak saari requests ek hi "sabse khaali" server par jaati hain',
+          'Servers ke CPU alag company ke hain — ek company ka CPU baaki servers se jaldi bhar jaata hai',
+          'Load balancer mein bug hai — load balancer restart karo, spike apne aap aana band ho jaayega',
+          'Requests ka size alag hai — badi requests kabhi ek server par, kabhi doosre server par pahunchti hain',
+        ],
         answer: 0,
-        explain: 'Slow motion: #1–#4 → S3, #5–#8 → S2, #9–#12 → S1. Lab: 0.5 s purani jaankari par ek server ki line 92–106; baari-baari mein 8–9.',
-       choiceExplanations: ["Slow motion: #1–#4 → S3, #5–#8 → S2, #9–#12 → S1. Lab: 0.5 s purani jaankari par ek server ki line 92–106; baari-baari mein 8–9.","Hardware differences possible hain, par cycling herd pattern ko telemetry age plus deterministic choices explain karti hain.","Restart underlying feedback delay/coordination behavior retain karega.","Request-cost variance alag factor hai; old load snapshots ko exact current state nahi maano."] },
+        explain: 'CPU ka haal kuch der purana hota hai. Us beech aayi saari requests ko wahi "sabse khaali" server dikhta hai, toh sab ek hi server par jaati hain. Agle haal mein wahi server bhara dikhta hai, aur dher agle server par chala jaata hai. Slow motion: #1–#4 → S3, #5–#8 → S2, #9–#12 → S1. Lab: 0.5 s purani jaankari par ek server ki line 92–106; baari-baari mein 8–9. Ilaaj: load balancer ki apni taaza ginti, ya do random servers mein se behtar.',
+        choiceExplanations: [
+          'CPU ka haal kuch der purana hota hai. Us beech aayi saari requests ko wahi "sabse khaali" server dikhta hai, toh sab ek hi server par jaati hain. Agle haal mein wahi server bhara dikhta hai, aur dher agle server par chala jaata hai. Slow motion: #1–#4 → S3, #5–#8 → S2, #9–#12 → S1. Lab: 0.5 s purani jaankari par ek server ki line 92–106; baari-baari mein 8–9. Ilaaj: load balancer ki apni taaza ginti, ya do random servers mein se behtar.',
+          'Alag CPU se servers ki capacity alag ho sakti hai. Par spike ka ek server se doosre, phir teesre par ghoomna capacity ka farak nahi — purane haal ka nishaan hai.',
+          'Restart ke baad bhi haal utni hi der purana aayega. Niyam wahi rahega, toh spike bhi wahi.',
+          'Alag size se kabhi-kabhi ek server bhar sakta hai. Par spike ka ek tay kram mein server-dar-server ghoomna purane haal ka nishaan hai.',
+        ],
+      },
       {
-        q: '"Round robin sabse simple hai aur requests barabar baant-ta hai. Use hi rakh lein?"',
-        choices: ["Similar capacity/cost ho toh RR; variance par adapt karo","Equal request count hi objective; service times ignore karo","Round robin hatao; fleet size badhte hi invalid hota hai","Only two nodes ho tab RR; more nodes par random use karo"],
+        q: '"Round robin sabse simple hai aur requests barabar baant-ta hai. Round robin hi rakh lein?"',
+        choices: [
+          'Tab theek, jab servers aur requests lagbhag ek jaise hon — tab barabar ginti se bojh bhi kareeb rahega',
+          'Theek, chahe requests ka kaam alag-alag ho — barabar ginti har server ka bojh barabar rakhegi',
+          'Theek, chahe ek server dheema ho — round robin dheeme jawab dekh ke us server ka hissa ghata dega',
+          'Theek, chahe servers alag size ke hon — round robin bade server ko apne aap zyada bhejta hai',
+        ],
         answer: 0,
         explain: 'Lab: ek server teen guna dheema → round robin ne dheeme server ko phir bhi 480 requests di; dheeme server ki line 91–113, sabse dheemi 1% requests 1.8–3.0 s.',
-       choiceExplanations: ["Lab: ek server teen guna dheema → round robin ne dheeme server ko phir bhi 480 requests di; dheeme server ki line 91–113, sabse dheemi 1% requests 1.8–3.0 s.","Same request count unequal CPU/time work ya queue latency nahi imply karta.","Round robin large fleets mein bhi valid choice ho sakta hai; workload/capacity decide karte hain.","Algorithm arbitrary two-node limit nahi rakhta."] },
+        choiceExplanations: [
+          'Lab: ek server teen guna dheema → round robin ne dheeme server ko phir bhi 480 requests di; dheeme server ki line 91–113, sabse dheemi 1% requests 1.8–3.0 s.',
+          'Ginti barabar, bojh nahi. Ek request 10 ms ki, doosri 200 ms ki — barabar ginti par bhi ek server zyada bhar sakta hai.',
+          'Round robin jawab ka samay dekhta hi nahi. Lab mein teen guna dheeme server ko bhi 480 requests mili, aur dheeme server ki line 91–113 tak gayi.',
+          'Bina weight ke round robin har server ko barabar deta hai, size kuch bhi ho. Bade server ko zyada dena ho toh weight khud likhna padta hai.',
+        ],
+      },
     ],
   },
   success: [

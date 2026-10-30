@@ -42,7 +42,7 @@ SD.registerLevels('sdd-resil', [
        <li>Ek <b>cluster</b> ko naya leader chunna tha. 10 second tak koi leader nahi bana.</li>
      </ul>
      <pre>lab (leader chunna): paanch nodes, sab ka intezaar barabar
-10 s mein koi leader nahi · 103–105 elections · har baar vote bant gaye</pre>
+10 s mein koi leader nahi · 100 se zyada elections · har baar vote bant gaye</pre>
      <p>Teeno mein kisi ne galat kaam nahi kiya. Sab ne <b>wahi sahi kaam, ek hi pal par</b> kiya.</p>
      <p class="tip">👉 Is level mein pehle tum faisla karoge: sikka kahan uchhaalna hai. Phir number: random kya deta hai, aur kya leta hai.</p>`,
   ],
@@ -92,16 +92,27 @@ SD.registerLevels('sdd-resil', [
           say: `<ul>
               <li><b>Akela random andha hai.</b> "Koi bhi ek" dheeme server ko barabar hissa deta hai. Lab: line 139–152.</li>
               <li><b>Random barabar nahi baant-ta.</b> Lab, paanch ek jaise servers: baari-baari ne 480 / 480 / 480 / 480 / 480 di; "koi bhi ek" ne 502 / 456 / 488 / 436 / 518.</li>
-              <li><b>Random bhi kabhi takraata hai.</b> Leader chunne wale lab ke ek run mein ek baar 882 ms lage — do round. Baaki baar 273–544 ms.</li>
+              <li><b>Random bhi kabhi takraata hai.</b> Leader chunne wale lab mein naya leader aam taur par aadhe second ke aas-paas bana — par kabhi-kabhi do round lage (lagbhag 1 second).</li>
               <li><b>Random ko dobara banana mushkil hai.</b> Kal ka bug aaj nahi dikhta. Isliye test mein random ka beej tay rakhte hain — is course ke slow motion isi wajah se har baar wahi output dete hain.</li>
             </ul>`,
           ask: {
             q: 'Random intezaar ke saath bhi ek baar leader banne mein do round lage. Kya random fail ho gaya?',
-            choices: ["Collision possible; randomized retries odds improve karte","Two rounds proof hai random timeout broken hai","Equal timeouts karo; next round synchronization hategi","Real Raft mein timing collision nahi; model wrong hai"],
+            choices: [
+              'Nahi — random takraav kam karta hai, khatam nahi; agle round mein sab phir naya samay chunte hain',
+              'Haan — ek baar bhi takraav hua, matlab random intezaar ka tareeka hi theek se kaam nahi karta',
+              'Haan — sab ka intezaar barabar kar do, toh agle round mein sab ek saath theek se chalenge',
+              'Nahi — asli Raft mein do round kabhi nahi lagte; do round sirf is chhote lab ki galti hai',
+            ],
             answer: 0,
             hint: 'Barabar samay ke saath kya hua tha: kitne second, kitne elections? Aur random ke saath sabse bura kya tha?',
-            explain: 'Barabar samay: 10 s mein 103–105 elections, koi leader nahi — takraav har baar, hamesha ke liye. Random samay: sabse bura 882 ms. Random ka vaada "kabhi nahi" nahi, "baar-baar nahi" hai.',
-           choiceExplanations: ["Barabar samay: 10 s mein 103–105 elections, koi leader nahi — takraav har baar, hamesha ke liye. Random samay: sabse bura 882 ms. Random ka vaada \"kabhi nahi\" nahi, \"baar-baar nahi\" hai.","Randomization probability improve karti hai, guaranteed one-round completion nahi.","Equal timeouts repeated synchronized candidacy aur split vote badha sakte hain.","Real networks/elections bhi races/split votes face karte hain."] },
+            explain: 'Lab ke barabar intezaar wale runs mein 10 second tak leader nahi bana, aur 100 se zyada elections hue. Random intezaar wale runs mein naya leader aam taur par aadhe second ke aas-paas bana; kabhi do round lage (lagbhag 1 second). Har round mein sab naya random samay chunte hain, toh lagataar kai round takraane ka mauka bahut chhota hai — par namumkin nahi.',
+            choiceExplanations: [
+              'Lab ke barabar intezaar wale runs mein 10 second tak leader nahi bana, aur 100 se zyada elections hue. Random intezaar wale runs mein naya leader aam taur par aadhe second ke aas-paas bana; kabhi do round lage (lagbhag 1 second). Har round mein sab naya random samay chunte hain, toh lagataar kai round takraane ka mauka bahut chhota hai — par namumkin nahi.',
+              'Ek takraav random ki nakaami ka saboot nahi. Agle round mein nodes phir naya samay chunte hain. Lagataar kai round takraane ka mauka bahut chhota hai.',
+              'Barabar intezaar hi asli dikkat thi: lab mein 10 second tak koi leader nahi bana, aur votes har baar bant gaye.',
+              'Asli Raft mein bhi votes bant sakte hain. Raft random timeout isi wajah se rakhta hai, aur bante votes par naya round chalata hai.',
+            ],
+          },
         },
         {
           title: '3. Random kab bilkul nahi?',
@@ -142,10 +153,21 @@ SD.registerLevels('sdd-resil', [
       ],
       observe: {
         q: 'Barabar intezaar ke saath 10 second mein 104 elections hue aur koi leader nahi bana. Har election mein kya hua hoga?',
-        choices: ["Repeated synchronized self-votes; kisi ko majority nahi","Leader elected; har round process crash se usko kho diya","Network partition proven; timing policy ka role nahi","Vote count random tha; majority threshold change ho gayi"],
+        choices: [
+          'Paanchon nodes ek hi pal jaage, sab ne khud ko vote diya — kisi ko 3 vote nahi mile',
+          'Leader har baar ban gaya, par banne ke turant baad leader ka process crash ho gaya',
+          'Nodes ke beech network toot gaya tha, toh vote maangne wale messages pahunche hi nahi',
+          'Vote ginne mein galti hui — majority ke liye 3 ki jagah saare 5 vote maange gaye',
+        ],
         answer: 0,
         explain: 'Wahi jhund: bahut saare, ek hi ghadi, ek hi niyam, ek hi pal. Random intezaar mein ek node baaki se pehle jaagta hai, vote maangta hai, aur baaki nodes usi node ko vote de dete hain.',
-       choiceExplanations: ["Wahi jhund: bahut saare, ek hi ghadi, ek hi niyam, ek hi pal. Random intezaar mein ek node baaki se pehle jaagta hai, vote maangta hai, aur baaki nodes usi node ko vote de dete hain.","Stated trace repeated split elections hai; repeated successful leader/crash evidence nahi.","Same timing alone split votes model explain karta hai; partition extra hypothesis hai.","Majority five voters mein three fixed hai; timing experiment threshold nahi badalta."] },
+        choiceExplanations: [
+          'Wahi jhund: bahut saare, ek hi ghadi, ek hi niyam, ek hi pal. Random intezaar mein ek node baaki se pehle jaagta hai, vote maangta hai, aur baaki nodes usi node ko vote de dete hain.',
+          'Lab ka tool 10 second tak leader dhoondhta raha — ek bhi leader nahi mila. Leader ban ke girne ka koi nishaan nahi.',
+          'Random intezaar wale run mein wahi nodes, wahi network — leader aadhe second ke aas-paas ban gaya. Sirf intezaar ka niyam badla tha.',
+          'Dono runs mein majority 5 mein se 3 hi thi. Random wale run mein 3 vote milte hi leader ban gaya.',
+        ],
+      },
       lesson: 'Retries mein random ne phones ko alag-alag pal par lautaya. Yahan random ne nodes ko alag-alag pal par jagaya. Auzaar wahi hai.',
     },
 
@@ -176,22 +198,55 @@ SD.registerLevels('sdd-resil', [
     questions: [
       {
         q: '"Distributed systems mein randomness kahan-kahan jaan-boojh ke daali jaati hai, aur kyun?"',
-        choices: ["Independent timing/sample choices correlated herds ghataaye","Only retry timers random; election timers equal rakhe","Only cryptography random; capacity decisions fixed rakhe","Only load tests random; production expiries sync rakhe"],
+        choices: [
+          'Jahan bahut saare hisse ek saath ek jaisa faisla lete hain — retry, server chunna, leader chunna',
+          'Sirf retries ke intezaar mein — leader chunne ka intezaar sab nodes mein barabar rakhte hain',
+          'Sirf password aur encryption mein — baaki har faisla pakka aur har baar ek jaisa hona chahiye',
+          'Sirf load testing mein — production mein cache expiry aur jobs ek hi samay par chalne chahiye',
+        ],
         answer: 0,
-        explain: 'Lab: retries 6 mein se 0 → 6 mein se 6 order. Server chunna: line 92–106 → 29–32. Leader chunna: 10 s mein koi nahi → 273–882 ms.',
-       choiceExplanations: ["Lab: retries 6 mein se 0 → 6 mein se 6 order. Server chunna: line 92–106 → 29–32. Leader chunna: 10 s mein koi nahi → 273–882 ms.","Leader election aur other synchronized transitions bhi intentional randomness use karte hain.","Security randomness ke alawa jitter/load selection ke independent choices useful hain.","Production synchronized expiry/jobs retry-like bursts la sakte hain."] },
+        explain: 'Jahan bahut saare hisse ek saath ek jaisa faisla lete hain: retry ke intezaar mein (jitter), server chunne mein (do random mein se behtar), leader chunne ke intezaar mein, cache expiry aur scheduled jobs ke samay mein. Maqsad har jagah ek: sab ek hi pal par ek hi jagah na pahunchein. Lab: retries 6 mein se 0 → 6 mein se 6 order. Server chunna: line 92–106 → 29–32. Leader chunna: barabar intezaar par 10 s mein koi leader nahi → random par aam taur par aadhe second ke aas-paas.',
+        choiceExplanations: [
+          'Jahan bahut saare hisse ek saath ek jaisa faisla lete hain: retry ke intezaar mein (jitter), server chunne mein (do random mein se behtar), leader chunne ke intezaar mein, cache expiry aur scheduled jobs ke samay mein. Maqsad har jagah ek: sab ek hi pal par ek hi jagah na pahunchein. Lab: retries 6 mein se 0 → 6 mein se 6 order. Server chunna: line 92–106 → 29–32. Leader chunna: barabar intezaar par 10 s mein koi leader nahi → random par aam taur par aadhe second ke aas-paas.',
+          'Leader chunne mein bhi random chahiye: barabar intezaar par lab mein 10 second tak koi leader nahi bana.',
+          'Security ka random alag kaam hai. Ek saath faisla lene wale hisson ko alag karne ke liye bhi random chahiye — jaise retry ka jitter.',
+          'Cache expiry aur scheduled jobs ek hi samay par hon toh wahi retry jaisi lehar aati hai. Production mein bhi thoda random milao.',
+        ],
+      },
       {
         q: '"Raft jaise algorithm mein election timeout random kyun hota hai?"',
-        choices: ["Split-vote chance ghataaye; candidates alag waqt jaagein","Timeout hide kare; election ka goal attacker secrecy ho","Network rate limit kare; majority votes ka role na ho","Clock errors cancel kare; all followers exact sync ho"],
+        choices: [
+          'Taaki leader ke jaane par saare followers ek hi pal ummeedvaar na banein, aur votes na bantein',
+          'Taaki koi hacker timeout ka andaaza na laga sake, aur cluster par hamla karna mushkil ho',
+          'Taaki network par bojh kam ho — sab nodes ek saath messages na bhejein, maqsad bas itna hai',
+          'Kyunki nodes ki ghadiyan kabhi theek se nahi milti — random ghadiyon ki galti mita deta hai',
+        ],
         answer: 0,
-        explain: 'Lab: barabar timeout → 10 s mein 103–105 elections, koi leader nahi. Random (300–600 ms) → teen run mein ausat 374–557 ms.',
-       choiceExplanations: ["Lab: barabar timeout → 10 s mein 103–105 elections, koi leader nahi. Random (300–600 ms) → teen run mein ausat 374–557 ms.","Election timeout randomization cryptographic secrecy guarantee nahi; liveness/tie breaking primary role hai.","Less repetition possible outcome hai, par mechanism split candidacy avoid karna hai.","Random timeouts clock synchronization algorithm nahi."] },
+        explain: 'Barabar timeout ho toh sab ek saath khud ko vote dete hain aur kisi ko majority nahi milti — baar-baar. Random timeout mein ek node pehle jaagta hai, vote maangta hai, aur baaki nodes us node ko vote de dete hain. Lab: barabar timeout → 10 s mein 100 se zyada elections, koi leader nahi. Random (300–600 ms) → aam taur par aadhe second ke aas-paas naya leader.',
+        choiceExplanations: [
+          'Barabar timeout ho toh sab ek saath khud ko vote dete hain aur kisi ko majority nahi milti — baar-baar. Random timeout mein ek node pehle jaagta hai, vote maangta hai, aur baaki nodes us node ko vote de dete hain. Lab: barabar timeout → 10 s mein 100 se zyada elections, koi leader nahi. Random (300–600 ms) → aam taur par aadhe second ke aas-paas naya leader.',
+          'Timeout koi raaz nahi hai — timeout ki range config mein likhi hoti hai. Maqsad votes ka bantna rokna hai.',
+          'Bojh thoda kam ho sakta hai, par asli maqsad hai ki ek node pehle jaage aur baaki nodes us node ko vote dein.',
+          'Random ghadiyan nahi milata. Ghadiyan theek bhi hon, barabar timeout par sab ek saath jaagenge.',
+        ],
+      },
       {
-        q: '"Kab tum random load balancing NAHI lagaoge?"',
-        choices: ["Affinity ya unequal costs ho toh hash/adaptive policy dekho","More than ten servers ho toh random policy invalid ho","Low traffic ho toh randomness request duplication kare","Shared cache ho toh pure random sticky routing guarantee"],
+        q: '"In mein se kis haal mein tum akela random (bina load dekhe koi bhi ek server) nahi lagaoge?"',
+        choices: [
+          'User ka cart ek server ki memory mein hai — agli request ko wahi cart wala server chahiye',
+          'Har server cart ek shared database se padhta hai — agli request kisi bhi server par chal sakti hai',
+          'Servers aur requests lagbhag ek jaise hain, aur kisi user ko ek pakka server nahi chahiye',
+          'Naye servers abhi jude hain, sab ek jaise hain, aur kisi server ki apni alag state nahi hai',
+        ],
         answer: 0,
-        explain: 'Lab: ek dheeme server ke saath random ki line 139–152; load balancer ki apni ginti ke saath 0–1.',
-       choiceExplanations: ["Lab: ek dheeme server ke saath random ki line 139–152; load balancer ki apni ginti ke saath 0–1.","Algorithm arbitrary fleet-size cutoff nahi rakhta.","Routing choice randomness same request duplicate nahi karti.","Pure random same key ko same node nahi bhejta; hash/affinity separately define karo."] },
+        explain: 'Jab user ko hamesha wahi server chahiye (server ki memory mein session ya cart) — tab hash ya sticky routing. Aur jab servers ya requests ek jaisi na hon, tab load dekhne wala tareeka (load balancer ki apni ginti, ya do mein se behtar), kyunki akela random dheeme server ko barabar hissa deta hai. Lab: ek dheeme server ke saath random ki line 139–152; load balancer ki apni ginti ke saath 0–1. Random ek hi faisla dohrane wala jhund kam karta hai, par sanyog se dher phir bhi lag sakta hai.',
+        choiceExplanations: [
+          'Jab user ko hamesha wahi server chahiye (server ki memory mein session ya cart) — tab hash ya sticky routing. Aur jab servers ya requests ek jaisi na hon, tab load dekhne wala tareeka (load balancer ki apni ginti, ya do mein se behtar), kyunki akela random dheeme server ko barabar hissa deta hai. Lab: ek dheeme server ke saath random ki line 139–152; load balancer ki apni ginti ke saath 0–1. Random ek hi faisla dohrane wala jhund kam karta hai, par sanyog se dher phir bhi lag sakta hai.',
+          'Cart shared database mein hai, toh koi bhi server cart padh sakta hai. Pakke server ki zaroorat nahi — random chal jaayega.',
+          'Ek jaise servers aur requests par random theek chalta hai (round robin se ginti thodi aur barabar hogi).',
+          'Ek jaise naye servers, aur kisi server ki alag state nahi — random yahan bhi chal jaayega.',
+        ],
+      },
     ],
   },
   success: [
