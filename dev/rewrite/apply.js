@@ -24,7 +24,7 @@ const patches = JSON.parse(fs.readFileSync(patchFile, 'utf8'));
 
 const NON_LATIN = /[Ѐ-ӿऀ-ॿ؀-ۿ]/;
 /* ADHD writing rule (labs.js header): name the thing again instead of pointing back with a pronoun. */
-const STAND_IN = /\b(woh|yeh|isse|usse|uska|uski|uske|iska|iski|iske|wahan|unhe|inhe|unka|unki|unke|unko|inko|ise)\b|\b(usi|isi) (ka|ki|ke|ko|se|mein|par|ne|tak)\b/i;  // "usi pal" names its noun; "usi ka" stands in for one
+const STAND_IN = require('./standin-re');
 const app = loadApp();
 const levels = new Map(app.levels.map(({ level }) => [level.id, level]));
 const dataFiles = app.files.filter(f => /^data-/.test(f));
