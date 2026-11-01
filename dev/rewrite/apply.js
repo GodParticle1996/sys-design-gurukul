@@ -25,6 +25,7 @@ const patches = JSON.parse(fs.readFileSync(patchFile, 'utf8'));
 const NON_LATIN = /[Ѐ-ӿऀ-ॿ؀-ۿ]/;
 /* ADHD writing rule (labs.js header): name the thing again instead of pointing back with a pronoun. */
 const STAND_IN = require('./standin-re');
+const SKIP_TELL = /\b(chhod|chhodo|chhodkar|mat |baad mein|bekaar|zaroori nahi|apne aap|hamesha|kabhi nahi|bina (jaanch|test|saboot|niyam|hadd)|maan lo|maan leta|bas$|, bas)\b/i;
 const app = loadApp();
 const levels = new Map(app.levels.map(({ level }) => [level.id, level]));
 const dataFiles = app.files.filter(f => /^data-/.test(f));
@@ -114,6 +115,13 @@ for (const p of patches) {
     const neg = s => /^(nahi|zaroori nahi|abhi nahi)\b/i.test(visible(s)), pos = s => /^haan\b/i.test(visible(s));
     const right = p.choices[obj.answer], wrong = p.choices.filter((_, i) => i !== obj.answer);
     if ((neg(right) && wrong.every(pos)) || (pos(right) && wrong.every(neg))) problems.push(`${where}: sirf sahi option "Nahi/Haan" se shuru hota hai — polarity se jawab mil jaata hai; prefix hatao ya mix karo`);
+  }
+  /* "Skip the check" giveaway: every wrong option carries a neglect/absolute word ("chhod do", "baad mein", "hamesha", "apne aap"…)
+     and the right one none — learners pick the careful-sounding option without understanding the topic. */
+  if (p.choices) {
+    const tell = s => SKIP_TELL.test(visible(s));
+    const right = p.choices[obj.answer], wrong = p.choices.filter((_, i) => i !== obj.answer);
+    if (wrong.every(tell) && !tell(right)) problems.push(`${where}: har galat option mein "chhod do / baad mein / hamesha / apne aap" jaisa ishaara hai aur sahi mein nahi — kam se kam ek galat option ko aisi galatfehmi banao jo bina in shabdon ke sach lage`);
   }
   if (p.choices && lengthBias(p.choices.map(visible), obj.answer)) problems.push(`${where}: length hint — sahi option ${lengthBias(p.choices.map(visible), obj.answer) === 'long' ? 'sabse lamba' : 'sabse chhota'} hai (${p.choices.map(c => [...visible(c)].length).join('/')}, sahi #${obj.answer})`);
   for (const [k, v] of Object.entries(p)) {
