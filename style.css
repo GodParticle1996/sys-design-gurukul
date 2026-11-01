@@ -52,6 +52,7 @@ pre {
 }
 
 /* ---------- topbar ---------- */
+html { scroll-padding-top: calc(var(--topbar-h, 0px) + 8px); }   /* scrollIntoView wala content chipke topbar ke neeche ruke */
 #topbar {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; justify-content: space-between;
@@ -1222,9 +1223,10 @@ pre {
 .dr-pline { font-family: 'Cascadia Code', monospace; font-size: .8rem; line-height: 1.5; color: var(--soft-ink); word-break: break-word; }
 .dr-pline.muted { color: var(--muted); }
 .dr-codebox { min-width: 0; }
-.dr-code { position: relative; margin: 0; max-height: 340px; overflow: auto; background: var(--code-surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 0; font-size: .78rem; line-height: 1.6; white-space: normal; }
+.dr-code { position: relative; tab-size: 4; margin: 0; max-height: 340px; overflow: auto; background: var(--code-surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 0; font-size: .78rem; line-height: 1.6; white-space: normal; }
 /* lambi line mud jaati hai; mudi hui line number ke neeche nahi, code ke neeche se shuru hoti hai (hanging indent) */
-.dr-ln { display: block; padding: 0 12px 0 47px; text-indent: -47px; white-space: pre-wrap; overflow-wrap: anywhere; border-left: 3px solid transparent; color: var(--muted); }
+.dr-ln { display: block; padding: 0 12px 0 calc(47px + (var(--ind, 0) * var(--tabw, 1) + 2) * 1ch); text-indent: calc(-47px - (var(--ind, 0) * var(--tabw, 1) + 2) * 1ch); white-space: pre-wrap; overflow-wrap: anywhere; border-left: 3px solid transparent; color: var(--muted); }
+/* lambi line toote toh agla hissa apni line ke indent + 2 par shuru ho (--ind = shuru ke spaces, explain.js), gutter par nahi */
 .dr-ln b { display: inline-block; width: 34px; text-align: right; margin-right: 10px; text-indent: 0; color: var(--muted); font-weight: 400; user-select: none; }
 .dr-file { text-transform: none; letter-spacing: 0; font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; overflow-wrap: anywhere; }
 .dr-ln.on { background: #ffb34726; border-left-color: var(--gold); color: #fff; }
@@ -1250,13 +1252,13 @@ pre {
 
   /* PHONE: picture (ya code) → uske turant neeche "kya hua" → phir andar ka haal → sawaal → buttons.
      .dr-cols ke bachche seedhe .dr-wrap ke flex items ban jaate hain (display: contents). */
-  .dr-wrap { display: flex; flex-direction: column; scroll-margin-top: 132px; }   /* phone par topbar do line ka hota hai */
+  .dr-wrap { display: flex; flex-direction: column; }
   .dr-cols, .dr-cols.two { display: contents; }
   .dr-top { order: 0; } .dr-diagram { order: 1; } .dr-codebox { order: 2; margin-top: 10px; } .dr-say { order: 3; }
   .dr-state { order: 4; margin-top: 8px; } .dr-ask { order: 5; } .dr-nav { order: 6; } .dr-end { order: 7; }
   /* bhaari dabbe panel ke padding mein thoda phail jaate hain — phone par har pixel kaam ka hai */
   .dr-diagram, .dr-codebox, .dr-state, .dr-say, .dr-ask { margin-left: -10px; margin-right: -10px; }
-  .dr-code { font-size: .72rem; max-height: 300px; }
+  .dr-code { font-size: .72rem; max-height: 300px; tab-size: 2; --tabw: .5; }   /* indent aadha — gehri Java lines phone par bhi ek line mein */
   .dr-say pre { white-space: pre-wrap; overflow-wrap: anywhere; }      /* lab ka output phone par mud jaaye, khisakna na pade */
   .dr-say code, .dr-ask code, .dr-end code { overflow-wrap: anywhere; word-break: break-word; }   /* lamba naam (jaise ek 43-akshar ki setting) button ya card se bahar na nikle */
 
@@ -1346,4 +1348,16 @@ pre {
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* PHONE topbar: 2 line — upar brand + theme, neeche streak · rank · XP. Pehle 4 line (154 px) thi aur dry-run ka upari hissa dhak leti thi. */
+@media (max-width: 640px) {
+  #topbar { padding: 8px 12px; gap: 6px 10px; }
+  .brand { font-size: 1rem; }
+  #topbar .theme-toggle { margin-left: auto; padding: 4px 10px; }
+  .rankbox { order: 2; flex: 1 1 100%; flex-wrap: nowrap; gap: 8px; min-width: 0; font-size: .85rem; }
+  .rank { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .xpbar { flex: 1 1 40px; width: auto; min-width: 40px; }
+  .xpnext { display: none; }
+  .storage-note { order: 3; flex-basis: 100%; }
 }

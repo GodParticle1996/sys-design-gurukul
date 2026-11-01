@@ -33,6 +33,14 @@
 (function () {
   const el = SD.el, shake = SD.shake, escapeHtml = SD.escapeHtml;
 
+  /* code ki ek line: shuru ka indent TAB ban jaata hai (phone par tab-size 2 = aadha indent; copy karo toh bhi sahi Java),
+     aur --ind se lambi line ka toota hissa apne indent ke neeche aata hai (style.css .dr-ln) */
+  function drLine(ln, no, on) {
+    const lead = ln.match(/^[ \t]*/)[0], ind = lead.replace(/\t/g, '    ').length;
+    const body = '\t'.repeat(ind >> 2) + ' '.repeat(ind & 3) + escapeHtml(ln.slice(lead.length));
+    return `<span class="dr-ln${on ? ' on' : ''}" style="--ind:${ind}"><b>${no}</b>${body || ' '}</span>`;
+  }
+
   /* ------------------------------------------------------------------
      SD.viz
      ------------------------------------------------------------------ */
@@ -279,7 +287,7 @@
         const on = lineSet(s.line), from = stage.code.from || 1;
         codeBox.innerHTML = (stage.code.title ? `<div class="dr-ptitle dr-file">${stage.code.title}</div>` : '') +
           '<pre class="dr-code">' + String(stage.code.text).split('\n').map((ln, k) =>
-            `<span class="dr-ln${on.has(from + k) ? ' on' : ''}"><b>${from + k}</b>${escapeHtml(ln) || ' '}</span>`).join('') + '</pre>';
+            drLine(ln, from + k, on.has(from + k))).join('') + '</pre>';
         /* chalti hui line dikhe — sirf code ke dabbe ke andar scroll (page nahi hilta) */
         const pre = codeBox.querySelector('.dr-code'), cur = codeBox.querySelector('.dr-ln.on');
         if (pre && cur && typeof cur.offsetTop === 'number') pre.scrollTop = Math.max(0, cur.offsetTop - 70);

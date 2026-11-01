@@ -8,6 +8,9 @@
 const el = SD.el, escapeHtml = SD.escapeHtml, shake = SD.shake;
 const appEl = document.getElementById('app');
 const topbarEl = document.getElementById('topbar');
+/* chipka hua topbar kitna ooncha hai (phone par 2 line) → --topbar-h; html ka scroll-padding isse content ko topbar ke peeche chhupne nahi deta */
+if (typeof ResizeObserver !== 'undefined')
+  new ResizeObserver(() => document.documentElement.style.setProperty('--topbar-h', topbarEl.getBoundingClientRect().height + 'px')).observe(topbarEl);
 let viewEpoch = 0;
 function leaveSession() { SD.session = null; viewEpoch++; }
 function stageSignature(level) {
@@ -52,9 +55,9 @@ function renderTopbar() {
     <button class="brand" id="brand" aria-label="System Gurukul home">🏛️ <b>System Gurukul</b></button>
     <div class="rankbox">
       <span class="streakbox${alive ? '' : ' cold'}" title="Roz khelo, streak badhao! Best: ${st.best} din">${alive ? '🔥' : '🩶'} ${alive ? st.count : 0} din</span>
-      <span class="rank">${rank.icon} ${rank.name}</span>
+      <span class="rank" title="${rank.name}">${rank.icon} ${rank.name}</span>
       <div class="xpbar"><div class="xpfill" style="width:${pct}%"></div></div>
-      <span class="xptext">${SD.state.xp} XP${next ? ` · ${next.xp - SD.state.xp} to ${next.icon}` : ` · MAX RANK ${rank.icon}`}</span>
+      <span class="xptext">${SD.state.xp} XP<span class="xpnext">${next ? ` · ${next.xp - SD.state.xp} to ${next.icon}` : ` · MAX RANK ${rank.icon}`}</span></span>
     </div>`;
   topbarEl.querySelector('#brand').onclick = showHome;
   const theme = el('button', 'btn ghost small theme-toggle', SD.applyTheme() === 'dark' ? 'Light theme' : 'Dark theme');
