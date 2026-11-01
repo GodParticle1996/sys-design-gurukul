@@ -84,11 +84,20 @@ SD.registerLevels('sdd-eda', [
           },
           "ask": {
             "q": "Publish fail ho toh line 17 se accepted milega?",
-            "choices": ["Accepted nahi; rejection propagate, save reh sakta","Accepted aayega; async failure caller tak nahi pahunchti","Accepted nahi; separate save transaction undo ho jaayegi"],
+            "choices": [
+              "Nahi — await error aage bhejega; par save ka kaam phir bhi reh sakta hai",
+              "Haan — accepted hamesha milega, async failure caller tak nahi pahunchti",
+              "Nahi — aur saath mein save hua order bhi apne aap wapas ho jaayega",
+            ],
             "answer": 0,
             "hint": "Line 11 aur line 12 do alag operations hain.",
-            "explain": "Awaited publish rejection return se pehle propagate karti hai, lekin separately committed save remain kar sakta hai. Awaited rejection caller try/catch ya rejection path tak jaati hai. Independent save+publish distributed atomic transaction nahi."
-          , choiceExplanations: ["Awaited publish rejection return se pehle propagate karti hai, lekin separately committed save remain kar sakta hai.","Awaited rejection caller try/catch ya rejection path tak jaati hai.","Independent save+publish distributed atomic transaction nahi."] }
+            "explain": "await kiya hua publish fail ho toh error return se pehle hi aage chala jaata hai — accepted nahi milta. Par alag se ho chuka save reh sakta hai. Save + publish milke koi atomic transaction nahi.",
+            "choiceExplanations": [
+              "await kiya hua publish fail ho toh error return se pehle hi aage chala jaata hai — accepted nahi milta. Par alag se ho chuka save reh sakta hai. Save + publish milke koi atomic transaction nahi.",
+              "await kiya hua error caller ke try/catch tak jaata hai — line 17 tak pahunchta hi nahi.",
+              "Save aur publish alag kaam hain. Publish fail hone se save apne aap wapas nahi hota.",
+            ],
+          }
         }
       ],
       "lesson": "🎯 <b>Asli baat:</b> naya flow consumer ke kaam ka wait hataata hai. Broker ko publish ka wait aur save/publish ke beech ka failure ab bhi hain."
@@ -148,11 +157,20 @@ SD.registerLevels('sdd-eda', [
           "say": "<code>queue(name)[0]</code> head padhta hai. Shift yahan nahi hai. Worker ko apni data copy milti hai; broker ki entry kaam ke baad ke ack tak rehti hai.",
           "ask": {
             "q": "Kitchen ne read() kar liya. Pending kitni?",
-            "choices": ["Kitchen 1, notify 1; read ke baad explicit ack pending","Kitchen 0, notify 1; read ne kitchen copy delete ki","Kitchen 0, notify 0; read dono subscriptions close karta"],
+            "choices": [
+              "Kitchen 1, notify 1 — read ke baad ack abhi baaki hai",
+              "Kitchen 0, notify 1 — read ne kitchen ki copy hata di",
+              "Kitchen 0, notify 0 — read ne dono lines band kar di",
+            ],
             "answer": 0,
             "hint": "Read wale code mein array se hataane wali line dhoondo.",
-            "explain": "Shown read operation entry return karta hai; successful processing ka ack alag hai. Read and removal is code mein distinct operations hain. Subscription isolation ke kaaran kitchen read notify state delete nahi karta."
-          , choiceExplanations: ["Shown read operation entry return karta hai; successful processing ka ack alag hai.","Read and removal is code mein distinct operations hain.","Subscription isolation ke kaaran kitchen read notify state delete nahi karta."] }
+            "explain": "read() entry lautata hai, hataata nahi; kaam safal hone ka ack alag hai. Aur kitchen ka read notify ki line ko nahi chhoota.",
+            "choiceExplanations": [
+              "read() entry lautata hai, hataata nahi; kaam safal hone ka ack alag hai. Aur kitchen ka read notify ki line ko nahi chhoota.",
+              "Read wale code mein array se hataane wali (shift) line hai hi nahi.",
+              "Har subscription ki line alag hai. Kitchen ka read notify ko nahi chhoota.",
+            ],
+          }
         },
         {
           "title": "5. Kaam poora: kis line ka ack?",
@@ -164,11 +182,20 @@ SD.registerLevels('sdd-eda', [
           },
           "ask": {
             "q": "Kitchen ka ack notify ko bhi mitaata hai?",
-            "choices": ["Nahi; named kitchen queue ka array mutate hua","Haan; event ID shared hai toh queues ek state hain","Haan; ack producer acceptance ko reverse karta hai"],
+            "choices": [
+              "Queue(name) ne sirf kitchen ka array chuna",
+              "Event ID dono jagah ek hai, toh state bhi ek",
+              "Ack producer ka accepted wala jawab bhi palat deta hai",
+            ],
             "answer": 0,
             "hint": "Naam kis array ko chunta hai?",
-            "explain": "queue(name) particular subscription state select karta hai; notify array independent hai. Same event ID per-subscription delivery state ko collapse nahi karta. Consumer ack producer HTTP response undo nahi karta."
-          , choiceExplanations: ["queue(name) particular subscription state select karta hai; notify array independent hai.","Same event ID per-subscription delivery state ko collapse nahi karta.","Consumer ack producer HTTP response undo nahi karta."] }
+            "explain": "queue(name) ek khaas subscription ki line chunta hai; notify ka array alag hai. Event ID ek hone se lines ki state nahi judti. Aur consumer ka ack producer ka HTTP jawab wapas nahi leta.",
+            "choiceExplanations": [
+              "queue(name) ek khaas subscription ki line chunta hai; notify ka array alag hai. Event ID ek hone se lines ki state nahi judti. Aur consumer ka ack producer ka HTTP jawab wapas nahi leta.",
+              "Wahi event ID hone se lines ek nahi ho jaati. Naam se array chuna jaata hai.",
+              "Ack sirf broker ki line ka kaam hai. Producer ka HTTP jawab ja chuka.",
+            ],
+          }
         },
         {
           "title": "6. Ek aur run: cap 2 par teesra publish?",
@@ -181,11 +208,20 @@ SD.registerLevels('sdd-eda', [
           },
           "ask": {
             "q": "Hadd ki check loop se pehle hai. Teesre event ka kya hoga?",
-            "choices": ["Publish reject; no third copy, earlier save reh sakta","Kitchen copy add; notify check baad mein reject karegi","Third copy add; cap warning-only condition hai"],
+            "choices": [
+              "Publish reject — kisi line mein teesri copy nahi; par pehle wala save reh sakta hai",
+              "Kitchen ko teesri copy mil jaayegi; notify ki jaanch baad mein reject karegi",
+              "Teesri copy jud jaayegi — hadd bas ek chetavni hai, roka nahi jaata",
+            ],
             "answer": 0,
             "hint": "Error ka return loop tak pahunchne deta hai?",
-            "explain": "Capacity precheck fanout loop se pehle fail hota hai; independent order save prior side effect ho sakta hai. Pre-loop guard partial fanout avoid karta hai. Code cap ko rejection condition banata hai."
-          , choiceExplanations: ["Capacity precheck fanout loop se pehle fail hota hai; independent order save prior side effect ho sakta hai.","Pre-loop guard partial fanout avoid karta hai.","Code cap ko rejection condition banata hai."] }
+            "explain": "Hadd ki jaanch fanout loop se pehle fail hoti hai — aadhi copies nahi bant-ti. Par alag se ho chuka order ka save reh sakta hai.",
+            "choiceExplanations": [
+              "Hadd ki jaanch fanout loop se pehle fail hoti hai — aadhi copies nahi bant-ti. Par alag se ho chuka order ka save reh sakta hai.",
+              "Jaanch loop se pehle hai — error ke baad loop chalta hi nahi, toh kisi ko copy nahi.",
+              "Code hadd par error deta hai, sirf chetavni nahi.",
+            ],
+          }
         }
       ],
       "lesson": "🎯 <b>Asli baat:</b> alag arrays alag progress deti hain. Read kaam nahi mitaata. Ack sahi subscription ki entry hataata hai. Disk ke bina yeh yaad restart par nahi bachegi."
@@ -216,12 +252,21 @@ SD.registerLevels('sdd-eda', [
           "line": "11-12",
           "say": "<pre>API: accepted\nnotify pending: 1</pre>Yeh mini run ka exact output hai. Consumer ka kaam abhi nahi chala.",
           "ask": {
-            "q": "Notify pending 1 ho aur API accepted kahe: kya yeh galti hai?",
-            "choices": ["Valid, agar accepted aur pending status sach bataye","Invalid, kyunki accepted SMS delivered ka status hai","Invalid, kyunki broker publish consumers ko await karta"],
+            "q": "Notify pending 1 hai aur API \"accepted\" kehti hai. Kya API galat bol rahi hai?",
+            "choices": [
+              "Agar API ka vaada sirf \"le liya\" hai, aur pending sach dikhaya jaata hai",
+              "Accepted ka matlab SMS pahunch chuka, toh pending 1 jhooth hai",
+              "Publish karte hi broker saare consumers ke poore hone ka intezaar karta",
+            ],
             "answer": 0,
             "hint": "Accepted aur completed ko alag rakho.",
-            "explain": "API explicitly async acceptance promise kare toh pending consumer work expected ho sakta hai. Accepted aur delivered business states same nahi. Given broker publish per-consumer execution await nahi karta."
-          , choiceExplanations: ["API explicitly async acceptance promise kare toh pending consumer work expected ho sakta hai.","Accepted aur delivered business states same nahi.","Given broker publish per-consumer execution await nahi karta."] }
+            "explain": "API ka vaada sirf \"le liya\" ho aur pending haal sach dikhaya jaaye, toh consumer ka kaam pending hona theek hai. Accepted aur delivered alag states hain.",
+            "choiceExplanations": [
+              "API ka vaada sirf \"le liya\" ho aur pending haal sach dikhaya jaaye, toh consumer ka kaam pending hona theek hai. Accepted aur delivered alag states hain.",
+              "Accepted aur delivered alag business states hain.",
+              "Broker publish consumers ke kaam ka intezaar nahi karta.",
+            ],
+          }
         },
         {
           "title": "4. Apna kaam, phir apna ack?",
@@ -245,11 +290,20 @@ SD.registerLevels('sdd-eda', [
           "say": "<pre>async emit se pehle\nasync listener shuru\nasync emit ke baad\nasync listener poora</pre>Async listener await tak abhi chala, baaki kaam baad mein poora hua. Emit ke baad wali line pehle aa gayi.",
           "ask": {
             "q": "Async emit ke baad wali line aa gayi. Kya listener ka kaam poora hua?",
-            "choices": ["Nahi; async listener ka awaited work baad mein hua","Haan; emit har listener promise complete hone deta","Haan; async keyword body ka wait zero banaata hai"],
+            "choices": [
+              "Output mein \"async listener poora\" baad mein aata hai",
+              "Emit saare async listeners ke poore hone ka intezaar karta hai",
+              "Async function ka kaam turant, bina intezaar poora ho jaata hai",
+            ],
             "answer": 0,
             "hint": "Aakhri do output lines ka kram padho.",
-            "explain": "Native emit listeners synchronously invoke karta hai, par returned promises ke completion ko await nahi karta. Synchronous invocation promise completion ke barabar nahi. Async work actual awaited operations ke saath later resume ho sakta hai."
-          , choiceExplanations: ["Native emit listeners synchronously invoke karta hai, par returned promises ke completion ko await nahi karta.","Synchronous invocation promise completion ke barabar nahi.","Async work actual awaited operations ke saath later resume ho sakta hai."] }
+            "explain": "Node ka emit listeners ko turant (sync) bulata hai, par listeners ke lautaye promises ka intezaar nahi karta. Async listener ka await wala kaam baad mein poora hota hai.",
+            "choiceExplanations": [
+              "Node ka emit listeners ko turant (sync) bulata hai, par listeners ke lautaye promises ka intezaar nahi karta. Async listener ka await wala kaam baad mein poora hota hai.",
+              "emit listener ko bulata hai, promise ka intezaar nahi karta.",
+              "async function await par rukta hai; baaki kaam baad mein chalta hai.",
+            ],
+          }
         },
         {
           "title": "3. emit() lagaane se kya apne aap mil gaya?",
@@ -265,16 +319,34 @@ SD.registerLevels('sdd-eda', [
     "questions": [
       {
         "q": "viaEvent() mein publish reject hua. Saved order ka kya hua?",
-        "choices": ["Save remain kar sakta; event publish missing hai","Save rollback; do awaits ek atomic transaction hain","Publish retry automatic; save/event gap possible nahi"],
+        "choices": [
+          "Save alag kaam tha — order reh sakta hai, event nahi gaya",
+          "Save apne aap wapas ho gaya — do awaits milke ek transaction hain",
+          "Publish apne aap retry hoga — save aur event ka gap ho hi nahi sakta",
+        ],
         "answer": 0,
-        "explain": "Separate committed save aur failed publish ke beech consistency gap hai; transactional outbox jaise design isse address karte hain. Await sequencing atomicity provide nahi karti. Implicit reliable retry is function mein configured nahi."
-      , choiceExplanations: ["Separate committed save aur failed publish ke beech consistency gap hai; transactional outbox jaise design isse address karte hain.","Await sequencing atomicity provide nahi karti.","Implicit reliable retry is function mein configured nahi."] },
+        "explain": "Ho chuka save aur fail hua publish — beech mein ek gap hai: order hai, event nahi. Transactional outbox jaisa design order aur event dono saath likh ke gap bharta hai. Do await ek ke baad ek likhna atomic nahi banata.",
+        "choiceExplanations": [
+          "Ho chuka save aur fail hua publish — beech mein ek gap hai: order hai, event nahi. Transactional outbox jaisa design order aur event dono saath likh ke gap bharta hai. Do await ek ke baad ek likhna atomic nahi banata.",
+          "Ek ke baad ek await atomic transaction nahi hai.",
+          "Is function mein koi automatic retry nahi. Gap asli hai.",
+        ],
+      },
       {
         "q": "Native EventEmitter mein async listener lagaaya. emit() return ho gaya. Kya kaam complete?",
-        "choices": ["Async listener work abhi pending ho sakta hai","Emit return sab listener promises settle hone ka proof","Event name completion ho toh listener sync ho jaata"],
+        "choices": [
+          "Listener ka async kaam abhi pending ho sakta hai — emit bas bulata hai",
+          "emit() lautne ka matlab saare listener promises poore ho chuke hain",
+          "emit() ko await kar lo — phir listener ka async kaam bhi poora milega",
+        ],
         "answer": 0,
-        "explain": "Node EventEmitter.emit promises aggregate/await nahi karta; listener async completion ko explicit handle karo. Listener invocation return aur asynchronous completion separate events hain. Event string naming scheduler behavior change nahi karti."
-      , choiceExplanations: ["Node EventEmitter.emit promises aggregate/await nahi karta; listener async completion ko explicit handle karo.","Listener invocation return aur asynchronous completion separate events hain.","Event string naming scheduler behavior change nahi karti."] }
+        "explain": "Node ka EventEmitter.emit listeners ke promises ka intezaar nahi karta; async listener ka poora hona alag se sambhalo. Listener ka bulaya jaana aur async kaam ka poora hona alag ghatnayein hain.",
+        "choiceExplanations": [
+          "Node ka EventEmitter.emit listeners ke promises ka intezaar nahi karta; async listener ka poora hona alag se sambhalo. Listener ka bulaya jaana aur async kaam ka poora hona alag ghatnayein hain.",
+          "emit promises ka intezaar nahi karta — lautna poora hona nahi.",
+          "emit() true/false lautata hai, listener ka promise nahi. true/false ko await karne se listener ka intezaar nahi hota.",
+        ],
+      }
     ]
   },
   "success": [

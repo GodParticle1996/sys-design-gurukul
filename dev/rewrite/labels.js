@@ -18,7 +18,7 @@ const { loadApp } = require('../load-app');
 const { lengthBias, text: visible } = require('../../tools/quiz-quality');
 
 const NON_LATIN = /[Ѐ-ӿऀ-ॿ؀-ۿ]/;
-const STAND_IN = /\b(woh|yeh|isse|usse|uska|uski|uske|iska|iski|iske|wahan|unhe|inhe|unka|unki|unke|unko|inko)\b/i;
+const STAND_IN = /\b(woh|yeh|isse|usse|uska|uski|uske|iska|iski|iske|wahan|unhe|inhe|unka|unki|unke|unko|inko|ise)\b|\b(usi|isi) (ka|ki|ke|ko|se|mein|par|ne|tak)\b/i;  // "usi pal" names its noun; "usi ka" stands in for one
 const [patchFile, flag] = process.argv.slice(2);
 if (!patchFile) { console.error('usage: node dev/rewrite/labels.js patch.json [--dry]'); process.exit(1); }
 const patches = JSON.parse(fs.readFileSync(patchFile, 'utf8'));

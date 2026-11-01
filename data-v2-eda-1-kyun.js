@@ -199,11 +199,20 @@ SD.registerLevels('sdd-eda', [
           ],
           "ask": {
             "q": "Kitchen ne #1 le liya. App abhi notify ka jawab dekh raha hai. Kya Asha ko order ka jawab mil chuka hai?",
-            "choices": ["Nahi; response notify ke await ke baad hai","Haan; kitchen ACK caller ko turant release karta","Haan; local save remaining awaits cancel karta"],
+            "choices": [
+              "Is flow mein app notify ka jawab aane tak rukta hai",
+              "Kitchen ne le liya, toh app ka jawab bhi chala gaya",
+              "Order save hote hi jawab laut gaya, baaki kaam baad mein",
+            ],
             "answer": 0,
             "hint": "Code ka kram dekho: save → kitchen → notify → response.",
-            "explain": "Shown synchronous handler notify completion tak caller response hold karta hai. Kitchen completion is handler ke remaining await ko bypass nahi karti. Local persistence response control-flow ko cancel nahi karti."
-          , choiceExplanations: ["Shown synchronous handler notify completion tak caller response hold karta hai.","Kitchen completion is handler ke remaining await ko bypass nahi karti.","Local persistence response control-flow ko cancel nahi karti."] }
+            "explain": "Is flow mein app notify ka jawab aane tak Asha ko jawab nahi bhejta. Kitchen ka kaam ho chuka, par code abhi notify ke await par ruka hai.",
+            "choiceExplanations": [
+              "Is flow mein app notify ka jawab aane tak Asha ko jawab nahi bhejta. Kitchen ka kaam ho chuka, par code abhi notify ke await par ruka hai.",
+              "Kitchen ka kaam ho gaya, par code abhi notify ke await par ruka hai. Jawab notify ke baad jaata hai.",
+              "Save karne se baaki awaits nahi hat-te. Code ka kram: save → kitchen → notify → jawab.",
+            ],
+          }
         },
         {
           "title": "Notify ka jawab fail",
@@ -264,11 +273,20 @@ SD.registerLevels('sdd-eda', [
           },
           "ask": {
             "q": "Asha ko 503 mila. Kya #1 ko bina pehchaan badle dobara bhejna hamesha surakshit hai?",
-            "choices": ["Pehle status aur idempotency se outcome resolve karo","503 ko missing order samjho; naya order ID bhejo","Same payload ko nayi key se bhejo; effect rollback tha"],
+            "choices": [
+              "Pehle #1 ka status dekho; order aur kitchen ka kaam ho chuka hai",
+              "503 ka matlab order bana hi nahi, toh naya order bhej do",
+              "Wahi order nayi key se bhejo, pichhla kaam wapas ho chuka hai",
+            ],
             "answer": 0,
             "hint": "Saved aur kitchen ki ginti dekho.",
-            "explain": "Failed response ke pehle durable side effects ho sakte hain; identity preserve karke dedupe/status reconciliation chahiye. HTTP status transaction rollback ka universal guarantee nahi. New key prior side effect se dedupe relation tod sakti hai."
-          , choiceExplanations: ["Failed response ke pehle durable side effects ho sakte hain; identity preserve karke dedupe/status reconciliation chahiye.","HTTP status transaction rollback ka universal guarantee nahi.","New key prior side effect se dedupe relation tod sakti hai."] }
+            "explain": "Fail hue jawab se pehle pakke kaam ho chuke ho sakte hain (save, kitchen). Order ki pehchaan wahi rakho, aur status ya idempotency se pata karo kya hua. HTTP error rollback ki guarantee nahi.",
+            "choiceExplanations": [
+              "Fail hue jawab se pehle pakke kaam ho chuke ho sakte hain (save, kitchen). Order ki pehchaan wahi rakho, aur status ya idempotency se pata karo kya hua. HTTP error rollback ki guarantee nahi.",
+              "Save aur kitchen dono ho chuke the. 503 ka matlab \"kuch nahi hua\" nahi.",
+              "Nayi key se server pehchaan hi nahi paayega ki order pehle aa chuka — doosra order ban sakta hai.",
+            ],
+          }
         }
       ],
       "lesson": "🎯 <b>Asli baat:</b> notification ka intezaar order ke jawab se jud gaya. Response fail hone se pehle ka kaam apne aap wapas nahi hua."
@@ -283,11 +301,20 @@ SD.registerLevels('sdd-eda', [
           "say": "Dhabe par counter ne parchi likh di. Rasoi parchi le sakti hai. Message bhejne wala abhi nahi hai. Kya message wale ke lautne tak grahak ko counter par rakhna zaroori hai?",
           "ask": {
             "q": "Agar order lena aur notification bhejna alag promises hain, kya badlein?",
-            "choices": ["Acceptance ko notification completion se decouple karo","Notification failure par saved order bhi invalid maano","Notification ko ignore karke delivered status return karo"],
+            "choices": [
+              "Order ka jawab notification ke poora hone se alag kar do",
+              "Notification fail ho toh save hua order bhi radd maan lo",
+              "Notification chhod do, aur jawab mein \"bhej diya\" bata do",
+            ],
             "answer": 0,
             "hint": "Parchi lene aur message bhejne ki zimmedari alag socho.",
-            "explain": "Business acceptance aur background notification ke separate promises/statuses define kar sakte ho; durable delivery design alag chahiye. Already saved/acted-on order ko nonexistent report karna ambiguity badhaata hai. Pending work ko delivered kehna API contract galat banata hai."
-          , choiceExplanations: ["Business acceptance aur background notification ke separate promises/statuses define kar sakte ho; durable delivery design alag chahiye.","Already saved/acted-on order ko nonexistent report karna ambiguity badhaata hai.","Pending work ko delivered kehna API contract galat banata hai."] }
+            "explain": "Order lena aur message bhejna alag vaade hain. Jawab order lene par do; message ka kaam alag chale, aur message ka apna status ho. (Pakki delivery ka design alag chahiye.)",
+            "choiceExplanations": [
+              "Order lena aur message bhejna alag vaade hain. Jawab order lene par do; message ka kaam alag chale, aur message ka apna status ho. (Pakki delivery ka design alag chahiye.)",
+              "Bana hua aur kitchen tak gaya order radd bolna ulajhan badhata hai.",
+              "Pending kaam ko \"bhej diya\" kehna jhooth hai — contract galat.",
+            ],
+          }
         },
         {
           "title": "2. \"Liya\" aur \"poora\" ek baat hain?",
@@ -321,10 +348,19 @@ SD.registerLevels('sdd-eda', [
       ],
       "observe": {
         "q": "Run ke aakhir mein saved 1 aur kitchen 1 hai, phir bhi 503. Dikkat kahan bani?",
-        "choices": ["Notify failure order response ke saath coupled thi","Save failure ke baad kitchen effect bhi absent tha","Kitchen capacity failure ne order save cancel kiya"],
+        "choices": [
+          "Save aur kitchen ke baad notify fail hua, aur notify ki failure order ke jawab tak aayi",
+          "Save poora tha, par kitchen ka jawab atka raha — order ka jawab kitchen par ruka",
+          "Save aur kitchen poore the; notify bulane se pehle hi app ka kul timeout beet gaya",
+        ],
         "answer": 0,
-        "explain": "Trace saved/kitchen state completed dikhata hai, par awaited notify failure response ko 503 banaati hai. State counters save aur kitchen effect already confirm karte hain. No kitchen capacity failure given hai."
-      , choiceExplanations: ["Trace saved/kitchen state completed dikhata hai, par awaited notify failure response ko 503 banaati hai.","State counters save aur kitchen effect already confirm karte hain.","No kitchen capacity failure given hai."] },
+        "explain": "Saved aur kitchen ho chuke, par await kiya hua notify fail hua aur jawab 503 ban gaya. Notify ki dikkat order ke jawab se bandhi thi.",
+        "choiceExplanations": [
+          "Saved aur kitchen ho chuke, par await kiya hua notify fail hua aur jawab 503 ban gaya. Notify ki dikkat order ke jawab se bandhi thi.",
+          "Trace mein kitchen ka kaam 0.10 s par poora hai. API kitchen ke baad notify ka intezaar karti hai.",
+          "Is seedhe run mein aisa koi kul timeout nahi. 1.10 s par notify ki failure aati hai, aur tabhi 503.",
+        ],
+      },
       "lesson": "Response ki failure aur business ke effects ko alag dekhna shuru karo."
     }
   ],
@@ -334,16 +370,34 @@ SD.registerLevels('sdd-eda', [
     "questions": [
       {
         "q": "Order saved, kitchen done, notify failed. Kya response 503 ka matlab order nahi bana?",
-        "choices": ["Nahi; save aur kitchen ke effects reh sakte hain","Haan; HTTP 503 earlier storage changes undo karta hai","Haan; error response kitchen execution cancel karta hai"],
+        "choices": [
+          "Fail hone se pehle ke kaam (save, kitchen) reh sakte hain",
+          "HTTP 503 pehle hue DB badlaav bhi wapas kar deta hai",
+          "Error ka jawab jaate hi kitchen ka kaam bhi radd ho jaata",
+        ],
         "answer": 0,
-        "explain": "HTTP failure response pehle se completed independent operations automatically rollback nahi karta. HTTP protocol distributed transaction rollback implement nahi karta. Already executed kitchen side effect response se undo nahi hota."
-      , choiceExplanations: ["HTTP failure response pehle se completed independent operations automatically rollback nahi karta.","HTTP protocol distributed transaction rollback implement nahi karta.","Already executed kitchen side effect response se undo nahi hota."] },
+        "explain": "HTTP failure ka jawab pehle ho chuke alag kaamon ko apne aap wapas nahi karta. Kitchen ka kaam aur DB save reh jaate hain.",
+        "choiceExplanations": [
+          "HTTP failure ka jawab pehle ho chuke alag kaamon ko apne aap wapas nahi karta. Kitchen ka kaam aur DB save reh jaate hain.",
+          "HTTP koi distributed rollback nahi karta. DB mein save reh jaata hai.",
+          "Kitchen ka kaam ho chuka; error ka jawab kitchen ka kaam wapas nahi karta.",
+        ],
+      },
       {
         "q": "Accepted ka sahi business matlab kya rakhein?",
-        "choices": ["Recorded acceptance; downstream completion alag state","Kitchen aur notification dono complete hone ka proof","Inventory aur payment checks complete hone ka proof"],
+        "choices": [
+          "Order mil gaya aur rakh liya, aage ke kaam ke liye — poora hona alag",
+          "Khana ban gaya aur SMS bhi chala gaya — dono kaam poore ho gaye",
+          "Payment aur stock dono confirm — chahe jaanch hui ho ya nahi",
+        ],
         "answer": 0,
-        "explain": "Accepted ka documented contract queued/recorded work ho sakta hai; actual completion trackable honi chahiye. Async acceptance completed cooking/SMS delivery ka evidence nahi. Unperformed checks ko acceptance status confirm nahi karta."
-      , choiceExplanations: ["Accepted ka documented contract queued/recorded work ho sakta hai; actual completion trackable honi chahiye.","Async acceptance completed cooking/SMS delivery ka evidence nahi.","Unperformed checks ko acceptance status confirm nahi karta."] }
+        "explain": "Accepted ka likha hua matlab: kaam rakh liya, aage chalega. Asli poora hona (khana, SMS) alag state hai, jo track honi chahiye.",
+        "choiceExplanations": [
+          "Accepted ka likha hua matlab: kaam rakh liya, aage chalega. Asli poora hona (khana, SMS) alag state hai, jo track honi chahiye.",
+          "Accepted ka matlab kaam liya, poora nahi. Khana aur SMS baad ki states hain.",
+          "Accepted bina hui jaanch ko confirm nahi karta.",
+        ],
+      }
     ]
   },
   "success": [

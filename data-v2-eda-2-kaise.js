@@ -269,11 +269,20 @@ SD.registerLevels('sdd-eda', [
           },
           "ask": {
             "q": "Asha ko 202 mil gaya. Kya notification bhej di gayi?",
-            "choices": ["Nahi; notify pending 1, completed count 0 hai","Haan; 202 notification delivery confirm karta hai","Haan; publish call notify worker ka execution hai"],
+            "choices": [
+              "Notify poore 0 hain, aur pending 1",
+              "202 ka matlab sab kaam poore ho gaye",
+              "Publish karte hi worker ne SMS bhej diya",
+            ],
             "answer": 0,
             "hint": "Notify ki poore aur pending rows saath dekho.",
-            "explain": "202 response request accepted batata hai; counters notify work abhi pending dikhate hain. 202 completion/delivery receipt nahi. Producer publish aur consumer side effect different steps hain."
-          , choiceExplanations: ["202 response request accepted batata hai; counters notify work abhi pending dikhate hain.","202 completion/delivery receipt nahi.","Producer publish aur consumer side effect different steps hain."] }
+            "explain": "202 batata hai ki request le li gayi; ginti dikhati hai ki notify ka kaam abhi pending hai.",
+            "choiceExplanations": [
+              "202 batata hai ki request le li gayi; ginti dikhati hai ki notify ka kaam abhi pending hai.",
+              "202 = request le li gayi. Kaam poora hone ki raseed nahi.",
+              "Publish aur consumer ka kaam alag kadam hain. Ginti notify pending 1 dikhati hai.",
+            ],
+          }
         },
         {
           "title": "Kitchen ne apni copy padhi; entry abhi line mein",
@@ -318,11 +327,20 @@ SD.registerLevels('sdd-eda', [
           ],
           "ask": {
             "q": "Kitchen ne entry padh li. Kitchen pending abhi bhi 1 kyun?",
-            "choices": ["Read ne copy di; successful ack abhi baaki hai","Read ne delete ki; pending count stale bug hai","Read ne notify ka ack bhi isi entry par kar diya"],
+            "choices": [
+              "Read ne copy di hai; kaam ke baad ack aane par hi entry hategi",
+              "Read ne entry mita di; pending ki ginti purani reh gayi, bug hai",
+              "Read ne notify ka ack bhi isi entry par saath mein kar diya",
+            ],
             "answer": 0,
             "hint": "Is lab mein read() aur ack() alag functions hain.",
-            "explain": "Lab broker read ke baad work retain karta hai, explicit ack completion mark karta hai. Read-only delivery aur removal code paths alag hain. Different subscriptions ke acknowledgments independent hain."
-          , choiceExplanations: ["Lab broker read ke baad work retain karta hai, explicit ack completion mark karta hai.","Read-only delivery aur removal code paths alag hain.","Different subscriptions ke acknowledgments independent hain."] }
+            "explain": "Is lab ka broker read ke baad entry rakhta hai; ack kaam poora hone ka nishaan hai. read() aur ack() alag functions hain.",
+            "choiceExplanations": [
+              "Is lab ka broker read ke baad entry rakhta hai; ack kaam poora hone ka nishaan hai. read() aur ack() alag functions hain.",
+              "Is lab ka read() entry nahi mitaata — mitane ka kaam ack() karta hai.",
+              "Har subscription ka ack alag hai. Kitchen ka read notify ko nahi chhoota.",
+            ],
+          }
         },
         {
           "title": "Kitchen ka kaam + ack; sirf kitchen ki copy hati",
@@ -367,11 +385,20 @@ SD.registerLevels('sdd-eda', [
           ],
           "ask": {
             "q": "Kitchen ka ack aa gaya. Notify ki copy ka kya hua?",
-            "choices": ["Notify ki pending copy apni queue mein rahegi","Same event ID se dono subscription copies hatengi","Kitchen ack ko notify delivery receipt maana jaayega"],
+            "choices": [
+              "Notify ki copy apni line mein pending rahegi — kitchen ka ack alag hai",
+              "Event ID ek hai, toh dono subscriptions ki copies ek saath hat jaayengi",
+              "Kitchen ka ack notify ki delivery ki raseed bhi maan li jaayegi, bas",
+            ],
             "answer": 0,
             "hint": "Kis subscription ka ack tha?",
-            "explain": "Kitchen ack us subscription ke pending work ko touch karta hai; notify ko apna processing/ack chahiye. Shared event identity separate subscription state merge nahi karti. Other consumer completion notify side effect prove nahi karti."
-          , choiceExplanations: ["Kitchen ack us subscription ke pending work ko touch karta hai; notify ko apna processing/ack chahiye.","Shared event identity separate subscription state merge nahi karti.","Other consumer completion notify side effect prove nahi karti."] }
+            "explain": "Kitchen ka ack sirf kitchen ki line ka kaam poora karta hai; notify ko apna kaam aur apna ack chahiye.",
+            "choiceExplanations": [
+              "Kitchen ka ack sirf kitchen ki line ka kaam poora karta hai; notify ko apna kaam aur apna ack chahiye.",
+              "Event ID ek hone se subscriptions ki state nahi judti. Har line apni.",
+              "Doosre consumer ka kaam notify ke SMS ka saboot nahi.",
+            ],
+          }
         },
         {
           "title": "Notify band hai; notify ki copy line mein ruki",
@@ -509,11 +536,20 @@ SD.registerLevels('sdd-eda', [
           "say": "RabbitMQ ke Publish/Subscribe tutorial mein fanout exchange apne se judi har queue ko copy deta hai. Is lab mein <b>kitchen</b> aur <b>notify</b> alag subscription names hain. Ek queue ke do workers se dono business kaam karwana alag design hai.",
           "ask": {
             "q": "Kitchen bhi har order dekhe aur notify bhi. Kaisa bantwara chahiye?",
-            "choices": ["Har subscription ko copy aur independent ack do","Ek shared work queue mein kitchen/notify compete karein","Ek shared ack se dono consumers complete maan lein"],
+            "choices": [
+              "Do alag subscriptions, do copies — har subscription apna ack kare",
+              "Ek shared queue — kitchen aur notify mein jo pehle uthaye, wahi kare",
+              "Ek hi ack — kitchen ack kare toh notify ka kaam bhi poora maano",
+            ],
             "answer": 0,
             "hint": "Kaam baant rahe ho, ya khabar ki copies baant rahe ho?",
-            "explain": "Both consumers ko har event chahiye toh independent subscriptions/queues chahiye; ek queue ke workers generally compete karte hain. Competing workers task distribute karte hain, har worker ko copy nahi. Independent side effects ka completion ek ack se prove nahi hota."
-          , choiceExplanations: ["Both consumers ko har event chahiye toh independent subscriptions/queues chahiye; ek queue ke workers generally compete karte hain.","Competing workers task distribute karte hain, har worker ko copy nahi.","Independent side effects ka completion ek ack se prove nahi hota."] }
+            "explain": "Dono ko har event chahiye toh alag subscriptions (queues) chahiye. Ek queue ke workers aapas mein kaam baant-te hain — har worker ko copy nahi milti.",
+            "choiceExplanations": [
+              "Dono ko har event chahiye toh alag subscriptions (queues) chahiye. Ek queue ke workers aapas mein kaam baant-te hain — har worker ko copy nahi milti.",
+              "Ek queue ke workers kaam baant-te hain — har order ek hi worker ko milega, dono ko nahi.",
+              "Do alag kaamon ka poora hona ek ack se saabit nahi hota.",
+            ],
+          }
         },
         {
           "title": "3. Khabar ka naam ya kisi ko diya hua kaam?",
@@ -542,10 +578,19 @@ SD.registerLevels('sdd-eda', [
       ],
       "observe": {
         "q": "Events mein 202 ki median 4–7 ms thi. Kya chaar SMS bhi utne waqt mein bheje gaye?",
-        "choices": ["Nahi; acceptance fast thi, worker work pending tha","Haan; API median downstream delivery latency bhi thi","Haan; broker receipt ne offline consumer work kiya"],
+        "choices": [
+          "Jawab tez tha, par notify worker band; 4 copies pending rahi",
+          "API ka median hi SMS pahunchne ka samay bhi hota hai, wahi",
+          "Broker ne band worker ka kaam bhi khud hi poora kar diya",
+        ],
         "answer": 0,
-        "explain": "Given run mein 202 fast tha par notify worker offline hone se four copies pending rahi. Producer response latency aur end-to-end work latency alag metrics hain. Broker receipt consumer side effect execute nahi karti."
-      , choiceExplanations: ["Given run mein 202 fast tha par notify worker offline hone se four copies pending rahi.","Producer response latency aur end-to-end work latency alag metrics hain.","Broker receipt consumer side effect execute nahi karti."] },
+        "explain": "Is run mein 202 tez tha (median 4–7 ms), par notify worker band hone se 4 copies pending rahi; worker lautne par 4 poore hue. Jawab ki latency aur poore kaam ki latency alag hain.",
+        "choiceExplanations": [
+          "Is run mein 202 tez tha (median 4–7 ms), par notify worker band hone se 4 copies pending rahi; worker lautne par 4 poore hue. Jawab ki latency aur poore kaam ki latency alag hain.",
+          "Jawab ka samay aur poore kaam ka samay alag naap hain.",
+          "Broker message rakhta hai, consumer ka kaam nahi karta.",
+        ],
+      },
       "lesson": "API latency aur end-to-end completion dono dekho. Tez acceptance ko tez completion mat samjho."
     }
   ],
@@ -555,16 +600,34 @@ SD.registerLevels('sdd-eda', [
     "questions": [
       {
         "q": "Kitchen ka ack aa gaya; notify band hai. OrderPlaced ki notify copy hata dein?",
-        "choices": ["Retain karo; notify ko apna effect aur ack chahiye","Hata do; kitchen completion same event ko close karti","Hata do; API acceptance producer responsibility poori karti"],
+        "choices": [
+          "Notify ki copy rakho; notify ko apna kaam aur ack chahiye",
+          "Kitchen ka kaam ho gaya, toh event ka saara kaam band",
+          "API ne 202 de diya, toh producer ki zimmedari khatam",
+        ],
         "answer": 0,
-        "explain": "Notify subscription ka pending obligation kitchen ack se complete nahi hota. Consumer responsibilities distinct hain. API response completion of all subscribers ka evidence nahi."
-      , choiceExplanations: ["Notify subscription ka pending obligation kitchen ack se complete nahi hota.","Consumer responsibilities distinct hain.","API response completion of all subscribers ka evidence nahi."] },
+        "explain": "Notify subscription ka pending kaam kitchen ke ack se poora nahi hota. Consumers ki zimmedariyan alag hain.",
+        "choiceExplanations": [
+          "Notify subscription ka pending kaam kitchen ke ack se poora nahi hota. Consumers ki zimmedariyan alag hain.",
+          "Har consumer ki zimmedari alag. Kitchen ka kaam notify ka kaam nahi.",
+          "202 sabhi subscribers ke poore hone ka saboot nahi.",
+        ],
+      },
       {
-        "q": "Is lab ke workers broker ko HTTP se poll karte hain. Kya yeh events wala flow nahi raha?",
-        "choices": ["Events flow hai; HTTP polling delivery mechanism hai","HTTP poll use hua toh event semantics RPC ban gayi","Events sirf persistent WebSocket connection se bante"],
+        "q": "Is lab ke workers broker ko HTTP se poll karte hain. Kya flow ab bhi events wala hai?",
+        "choices": [
+          "Events hi hain; HTTP polling bas pahunchane ka tareeka hai",
+          "HTTP poll laga toh flow RPC ban gaya, events nahi raha",
+          "Events sirf hamesha khule WebSocket connection se bante",
+        ],
         "answer": 0,
-        "explain": "Event-driven boundaries message contract aur producer/consumer coupling se aati hain; transport HTTP bhi ho sakta hai. Polling delivery async event semantics ke saath compatible hai. WebSocket ek optional transport hai, event architecture requirement nahi."
-      , choiceExplanations: ["Event-driven boundaries message contract aur producer/consumer coupling se aati hain; transport HTTP bhi ho sakta hai.","Polling delivery async event semantics ke saath compatible hai.","WebSocket ek optional transport hai, event architecture requirement nahi."] }
+        "explain": "Event-driven ki pehchaan message ka contract aur producer-consumer ki dhili jodi hai; pahunchane ka tareeka HTTP bhi ho sakta hai.",
+        "choiceExplanations": [
+          "Event-driven ki pehchaan message ka contract aur producer-consumer ki dhili jodi hai; pahunchane ka tareeka HTTP bhi ho sakta hai.",
+          "Event flow message ke contract se banta hai. Polling async events ke saath chal jaati hai.",
+          "WebSocket ek tareeka hai, events ki shart nahi.",
+        ],
+      }
     ]
   },
   "success": [

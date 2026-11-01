@@ -93,22 +93,40 @@ SD.registerLevels('sdd-eda', [
           "say": "<pre>kaam ke baad ack na pahunche: same id do baar padha · SMS 2\nid yaad rakhi (isi process mein): SMS 1</pre>Demo mein same entry ack se pehle do baar padhi. Dono baar SMS effect hua: 2. ID yaad rakhi toh 1. Par yeh Set isi process ki memory hai.",
           "ask": {
             "q": "SMS effect ho gaya, ack nahi pahuncha. Entry dobara padhi toh kya khatra?",
-            "choices": ["Duplicate effect risk; event ID se dedupe chahiye","Missing ack prior SMS ko provider se undo karega","Missing ack prove karta hai pehla SMS nahi bheja"],
+            "choices": [
+              "Wahi SMS dobara ja sakta hai — effect ko event ID se dedupe karna padega",
+              "Ack nahi aaya toh broker provider se pehla SMS wapas le lega",
+              "Ack nahi aaya, matlab pehla SMS gaya hi nahi tha — dobara bhejo",
+            ],
             "answer": 0,
             "hint": "Consumer ka effect aur broker ka ack do alag cheezein hain.",
-            "explain": "Effect-before-ack crash redelivery par effect repeat kar sakta hai; durable consumer dedupe/transaction boundary design chahiye. Acknowledgment broker metadata hai, external SMS rollback nahi. Ack failure effect outcome ko ambiguous chhod sakti hai."
-          , choiceExplanations: ["Effect-before-ack crash redelivery par effect repeat kar sakta hai; durable consumer dedupe/transaction boundary design chahiye.","Acknowledgment broker metadata hai, external SMS rollback nahi.","Ack failure effect outcome ko ambiguous chhod sakti hai."] }
+            "explain": "Kaam ho gaya par ack nahi pahuncha → entry dobara aayegi aur SMS dobara ja sakta hai. Consumer ko event ID ke saath pakka dedupe chahiye (memory ka Set restart par khaali ho jaata hai). Ack broker ki entry hai, SMS ko wapas nahi leta.",
+            "choiceExplanations": [
+              "Kaam ho gaya par ack nahi pahuncha → entry dobara aayegi aur SMS dobara ja sakta hai. Consumer ko event ID ke saath pakka dedupe chahiye (memory ka Set restart par khaali ho jaata hai). Ack broker ki entry hai, SMS ko wapas nahi leta.",
+              "Ack broker ka record hai. Bhej diya SMS koi wapas nahi le sakta.",
+              "Ack na aana effect ko anjaan chhodta hai — SMS ja chuka ho sakta hai.",
+            ],
+          }
         },
         {
           "title": "2. Publish ka successful jawab mila. Restart par bach gaya?",
           "say": "<pre>asli broker process restart: kitchen 4 → 0 · notify 4 → 0\npublish ke HTTP jawab mil chuke the; RAM ki 8 pending copies gayi</pre>Tool ne sirf apna broker process restart kiya. Kitchen aur notify ki 4–4 pending copies gayin. Broker ne RAM mein rakha tha, disk par nahi.",
           "ask": {
             "q": "Publish ko HTTP success milna kya disk durability prove karta hai?",
-            "choices": ["Nahi; in-memory broker restart par copies kho sakta","Haan; HTTP success disk fsync ka built-in promise hai","Haan; JSON event data restart ke baad khud restore hota"],
+            "choices": [
+              "RAM wala broker restart par copies kho sakta hai, jaise 8 gayi",
+              "HTTP success ka matlab data disk par likh diya gaya",
+              "JSON event restart ke baad apne aap wapas aa jaata hai",
+            ],
             "answer": 0,
             "hint": "Broker code mein file ya database write hai?",
-            "explain": "Durability successful HTTP response se infer nahi hoti; broker storage/ack contract verify karo. HTTP status durable storage semantics define nahi karta. Serialization format persistent storage ka replacement nahi."
-          , choiceExplanations: ["Durability successful HTTP response se infer nahi hoti; broker storage/ack contract verify karo.","HTTP status durable storage semantics define nahi karta.","Serialization format persistent storage ka replacement nahi."] }
+            "explain": "Is broker ne copies RAM mein rakhi thi; restart par 8 copies gayi, jabki publish ko HTTP success mil chuka tha. Durability HTTP jawab se nahi, broker ke storage aur ack ke contract se pata chalti hai.",
+            "choiceExplanations": [
+              "Is broker ne copies RAM mein rakhi thi; restart par 8 copies gayi, jabki publish ko HTTP success mil chuka tha. Durability HTTP jawab se nahi, broker ke storage aur ack ke contract se pata chalti hai.",
+              "HTTP status disk ka vaada nahi karta. Broker kya karta hai, wahi dekho.",
+              "Format storage nahi hai. RAM mein rakha JSON restart par chala jaata hai.",
+            ],
+          }
         },
         {
           "title": "3. Notification band rahe aur line bhar jaaye?",
@@ -142,10 +160,19 @@ SD.registerLevels('sdd-eda', [
       ],
       "observe": {
         "q": "Publish ka reply milne ke baad bhi copies gayin, aur save ke baad publish fail bhi hua. Kya sirf broker jodna reliable delivery ke liye kaafi hai?",
-        "choices": ["Durability, atomic publish intent aur dedupe chahiye","Broker install se save/publish atomic ho jaate hain","202 producer response consumer delivery prove karta"],
+        "choices": [
+          "Durability, save + publish ka saath, aur duplicate ka ilaaj alag chahiye",
+          "Broker lagate hi save aur publish apne aap atomic ho jaate hain",
+          "202 ka jawab consumer tak pahunchne ki pakki raseed hai",
+        ],
         "answer": 0,
-        "explain": "End-to-end reliability producer gap, broker persistence aur duplicate consumer effects teen boundaries cover karti hai. Separate systems ko queue add karna atomic commit nahi deta. Acceptance response downstream completion receipt nahi."
-      , choiceExplanations: ["End-to-end reliability producer gap, broker persistence aur duplicate consumer effects teen boundaries cover karti hai.","Separate systems ko queue add karna atomic commit nahi deta.","Acceptance response downstream completion receipt nahi."] },
+        "explain": "Poori reliability teen jagah chahiye: producer ka gap (save ke baad publish fail), broker ki durability (restart par copies gayi), aur consumer ka duplicate effect. Queue jodna akela atomic commit nahi deta.",
+        "choiceExplanations": [
+          "Poori reliability teen jagah chahiye: producer ka gap (save ke baad publish fail), broker ki durability (restart par copies gayi), aur consumer ka duplicate effect. Queue jodna akela atomic commit nahi deta.",
+          "Alag systems ke beech queue jodna atomic commit nahi deta.",
+          "202 producer ka jawab hai, consumer ke kaam ki raseed nahi.",
+        ],
+      },
       "lesson": "Pehle business promise likho. Phir us promise ko failure ke saath chala ke naapo."
     }
   ],
@@ -155,16 +182,34 @@ SD.registerLevels('sdd-eda', [
     "questions": [
       {
         "q": "Har saved order ka event chahiye. Save ke baad process band ho sakta hai. Kya save(); publish(); kaafi?",
-        "choices": ["Order aur publish intent transaction mein record karo","Do awaits sequential hain; atomic transaction maan lo","Try/catch jodo; process-crash gap eliminate ho jaayega"],
+        "choices": [
+          "Order aur event ka irada ek hi DB transaction mein likho; relay baad mein bheje",
+          "Do awaits ek ke baad ek hain, toh dono ko ek atomic transaction maan lo",
+          "Try/catch jod do — process crash wala gap bhi try/catch se khatam ho jaayega",
+        ],
         "answer": 0,
-        "explain": "Transactional outbox order aur event intent same durable transaction mein record karke relay retry enable kar sakti hai; duplicates phir bhi handle karo. Sequencing alone crash atomicity nahi. Process death application catch code ko execute karne ki guarantee nahi deti."
-      , choiceExplanations: ["Transactional outbox order aur event intent same durable transaction mein record karke relay retry enable kar sakti hai; duplicates phir bhi handle karo.","Sequencing alone crash atomicity nahi.","Process death application catch code ko execute karne ki guarantee nahi deti."] },
+        "explain": "Transactional outbox: order aur event ka irada ek hi DB transaction mein likho; relay baad mein retry kar ke bhejta hai. Duplicates phir bhi aa sakte hain — consumer dedupe kare. Ek ke baad ek await crash se nahi bachata.",
+        "choiceExplanations": [
+          "Transactional outbox: order aur event ka irada ek hi DB transaction mein likho; relay baad mein retry kar ke bhejta hai. Duplicates phir bhi aa sakte hain — consumer dedupe kare. Ek ke baad ek await crash se nahi bachata.",
+          "Kram atomic nahi. Save aur publish ke beech process mar sakta hai.",
+          "Process mar jaaye toh catch chalta hi nahi.",
+        ],
+      },
       {
         "q": "Notify consumer band hai; API 202 de rahi hai. Healthy kehne ke liye kya dekhein?",
-        "choices": ["Backlog age, failures aur recovery trend dekho","API median low ho toh consumer health pass maano","Broker process alive ho toh pending work ignore karo"],
+        "choices": [
+          "Pending kaam, sabse purana kitna, failures aur recovery — sirf API jawab nahi",
+          "Sirf API ki tez median — median kam hai toh consumer bhi theek hai",
+          "Sirf broker process zinda hai ya nahi — pending kaam ki fikr mat karo",
+        ],
         "answer": 0,
-        "explain": "Async pipeline health acceptance ke saath completion lag, oldest work aur failed/retried delivery se assess hoti hai. Fast enqueue blocked consumer ko hide kar sakta hai. Process availability useful hai, end-to-end progress ka proof nahi."
-      , choiceExplanations: ["Async pipeline health acceptance ke saath completion lag, oldest work aur failed/retried delivery se assess hoti hai.","Fast enqueue blocked consumer ko hide kar sakta hai.","Process availability useful hai, end-to-end progress ka proof nahi."] }
+        "explain": "Async pipeline ki sehat: kitna kaam pending hai, sabse purana kitna purana, kitne fail/retry, aur recovery ka trend. Tez jawab (fast enqueue) atke hue consumer ko chhupa sakta hai.",
+        "choiceExplanations": [
+          "Async pipeline ki sehat: kitna kaam pending hai, sabse purana kitna purana, kitne fail/retry, aur recovery ka trend. Tez jawab (fast enqueue) atke hue consumer ko chhupa sakta hai.",
+          "Tez jawab atke hue consumer ko chhupa sakta hai.",
+          "Process zinda hona kaam aage badhne ka saboot nahi.",
+        ],
+      }
     ]
   },
   "success": [
