@@ -83,7 +83,7 @@ VISUALS['pm-datadog'] = {
         <div class="dg-cap">Har machine: same Ubuntu, same update source, same auto-update job, same UTC ghadi. Region ka koi matlab nahi.</div></div>
     </div>
     <div class="dg-rule"></div>
-    <div class="dg-cap">8 March 2023, 06:00 UTC: <b>~40,000 servers</b>, har region, ek hi minute mein. 13 ghante zyadatar ke liye, baaki ~ek din.
+    <div class="dg-cap">8 March 2023, 06:00 UTC: <b>~40,000 servers</b>, har region, ek hi ghante ki window mein. 13 ghante zyadatar ke liye, baaki ~ek din.
       Pragmatic Engineer ke andaaze se ~$5M revenue. Trigger: 27 mahine purana systemd badlaav.</div>`,
 };
 
@@ -173,7 +173,7 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
      se check kiya, <b>sensor code</b> se nahi. Tests the aur pass hue (Feb ka stress test, wildcards ke saath) — tests maujooda duniya ka
      sample hain; zehreela input abhi likha hi nahi gaya tha.</p>
      <p>19 July: do naye IPC instances; ek ne <b>pehli baar</b> field 21 mein asli value daali. Validator: 21 fields = pass. Named pipe event
-     aaya (lagatar aate hain) → fields 1..21 compare → 20 wale array se <code>input[21]</code> → kernel mein galat address →
+     aaya (lagatar aate hain) → fields 1..21 compare → 20 wale array se 21vi value, <code>input[20]</code> → kernel mein galat address →
      <code>PAGE_FAULT_IN_NONPAGED_AREA</code> (csagent.sys) → BSOD. Sab jagah ek saath.</p>`,
   ],
   stages: [
@@ -191,15 +191,37 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
         { t: 'Feb 2024', event: 'Sensor 7.11: naya IPC template type. Contract 21 fields, sensor deta hai 20 inputs. Sab rules mein field 21 = wildcard.', metrics: { down: 0 } },
         { t: 'Feb–Jul', event: 'Har content release validator pass, har test pass. Bam 5 mahine se laga hai.', metrics: { down: 0 }, tone: 'warn',
           ask: { q: 'Validator ne kaunsi cheez check nahi ki?',
-                 choices: ["Engine inputs and rule access contract","Only file length determines array safety","Signature guarantees runtime bounds safety","Rule count determines every input pointer"], answer: 0,
-                 explain: 'Do components apne aap mein sahi the. Beech ka contract kisi ke zimme nahi tha.',
-                 wrongHints: ['Size theek tha — 40 KB.', 'Signature sahi tha — file asli thi.', 'Ginti ka lena-dena nahi.'] , choiceExplanations: ["Do components apne aap mein sahi the. Beech ka contract kisi ke zimme nahi tha.","File size alone does not verify which sensor inputs interpreter will access.","Signed content can still contain incompatible validly published data.","Input schema/access positions require direct contract validation."] } },
+                 choices: [
+                   'Rule jis input ko padhega, sensor sach mein utne inputs deta hai ya nahi',
+                   'File ka total size hi rule ke har field access ki safety bataata hai',
+                   'File ki signature check karo; signed rules ko memory-safe maan lo',
+                   'Rules ki ginti check karo; input positions ki jaanch alag se mat karo',
+                 ], answer: 0,
+                 explain: 'Template 21 fields kehta tha, par sensor 20 values deta tha. Validator ko engine aur rule ka actual contract jaanchna tha; interpreter mein runtime bounds check bhi chahiye. Spec pass karna mismatch ko sahi nahi banaata.',
+                 wrongHints: ['Size theek tha — 40 KB.', 'Signature sahi tha — file asli thi.', 'Ginti ka lena-dena nahi.'] , choiceExplanations: [
+                   'Template 21 fields kehta tha, par sensor 20 values deta tha. Validator ko engine aur rule ka actual contract jaanchna tha; interpreter mein runtime bounds check bhi chahiye. Spec pass karna mismatch ko sahi nahi banaata.',
+                   'File ke bytes ka size input array mein available fields nahi bataata.',
+                   'Signature origin aur integrity check karti hai; compatible fields ya safe memory access nahi.',
+                   'Rules ki ginti se har rule ke field access ka valid hona nahi nikalta.',
+                 ],
+               } },
         { t: '19 Jul 04:09', event: 'Channel file 291 fast lane se poore fleet ko. Ek naye rule mein field 21 mein pehli baar asli value.', metrics: { down: 20 }, tone: 'bad' },
-        { t: '04:15', event: 'Named pipe events aate hi <code>input[21]</code> → kernel page fault → BSOD. Sydney dopahar, Europe jaag raha, US so raha.', metrics: { down: 60 }, tone: 'bad',
+        { t: '04:15', event: 'Named pipe events aate hi 21vi value, <code>input[20]</code> → kernel page fault → BSOD. Sydney dopahar, Europe jaag raha, US so raha.', metrics: { down: 60 }, tone: 'bad',
           ask: { q: 'Itni tezi se har jagah kyun?',
-                 choices: ["Rapid content channel had fleet wide exposure","Confirmed malware spread through all hosts","Windows update carried malicious file","Network attacker changed every routing table"], answer: 0,
-                 explain: 'N-1/N-2 chunne wale customers ko bhi content turant mila tha.',
-                 wrongHints: ['Koi malware nahi — CrowdStrike ka apna content.', 'Microsoft ka update nahi tha.', 'Attack nahi, config.'] , choiceExplanations: ["N-1/N-2 chunne wale customers ko bhi content turant mila tha.","CrowdStrike RCA described a content update defect, not malware propagation.","Faulty Rapid Response Content was the trigger described in RCA.","No such attack mechanism supported by this incident record."] } },
+                 choices: [
+                   'Rapid content raasta eligible Windows fleet tak jaldi update le gaya',
+                   'Malware phaila tha; naye hosts ko infect karke machines giraata gaya',
+                   'Windows update ne driver badla; channel file ka koi role nahi tha',
+                   'Network attacker ne routes badle; failed input access doosra issue tha',
+                 ], answer: 0,
+                 explain: 'Rapid Response Content sensor ke normal version rollout se alag tha. Sensor release mein N-1/N-2 chunna is content push ko delay nahi karta tha. Faulty content ne vulnerable Windows sensors tak jaldi pahunch kar bada asar kiya.',
+                 wrongHints: ['Koi malware nahi — CrowdStrike ka apna content.', 'Microsoft ka update nahi tha.', 'Attack nahi, config.'] , choiceExplanations: [
+                   'Rapid Response Content sensor ke normal version rollout se alag tha. Sensor release mein N-1/N-2 chunna is content push ko delay nahi karta tha. Faulty content ne vulnerable Windows sensors tak jaldi pahunch kar bada asar kiya.',
+                   'RCA mein content defect bataya gaya; malware propagation incident ki wajah nahi thi.',
+                   'Trigger CrowdStrike ka Rapid Response Content tha, Windows update nahi.',
+                   'Incident ke record mein routing attack cause nahi; interpreter ka out-of-bounds read tha.',
+                 ],
+               } },
         { t: '05:27', event: 'Content wapas liya (78 minute). Par jo machines crash ho chuki thin, woh reboot par phir crash.', metrics: { down: 85 }, tone: 'bad' },
         { t: 'Din–hafte', event: 'Safe mode, BitLocker keys, haath se file delete. Delta ~5 din. Mac aur Linux par zero crashes.', metrics: { down: 40 }, tone: 'warn' },
       ],
@@ -210,16 +232,38 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
       questions: [
         {
           q: 'BSOD ko "design faisla" kyun kaha?',
-          choices: ["Kernel fault can require fail-stop machine halt","Any user-space crash must halt Windows","BSOD proves underlying hardware failed","Crash stop intentionally guarantees no data loss"],
+          choices: [
+            'Kernel fault se state unsafe ho sakti hai; bug check machine rokta hai',
+            'User process crash hote hi Windows ka poora kernel rukna zaroori hai',
+            'Blue screen dikhe, toh hardware kharab hone ka saboot mil jaata hai',
+            'Machine ruk gayi, toh pending data ke durable hone ki guarantee milti hai',
+          ],
           answer: 0,
-          explain: "Kernel memory corruption can leave system state unsafe; Windows bug check stops execution. Moving work to isolated user space can reduce direct crash domain, but resource exhaustion, privilege and kernel-interface risks remain. Fail-stop is not guarantee of zero data loss.",
-         choiceExplanations: ["Kernel memory corruption can leave system state unsafe; Windows bug check stops execution. Moving work to isolated user space can reduce direct crash domain, but resource exhaustion, privilege and kernel-interface risks remain. Fail-stop is not guarantee of zero data loss.","User process crash normally has smaller fault domain than kernel fault.","Software out-of-bounds kernel access can trigger a bug check.","Fail stop reduces unsafe continuation risk; does not guarantee all pending writes durable."] },
+          explain: 'Kernel ka galat memory access unsafe state chhod sakta hai; bug check aage execution rokta hai. User mode direct crash domain chhota kar sakta hai, par resource aur kernel-interface risks rehte hain. Fail-stop zero data loss ka vaada nahi.',
+          choiceExplanations: [
+            'Kernel ka galat memory access unsafe state chhod sakta hai; bug check aage execution rokta hai. User mode direct crash domain chhota kar sakta hai, par resource aur kernel-interface risks rehte hain. Fail-stop zero data loss ka vaada nahi.',
+            'User process ka crash aam taur par process tak reh sakta hai; kernel fault ka daayra bada ho sakta hai.',
+            'Software ka invalid kernel access bhi BSOD laa sakta hai.',
+            'Rukne se unsafe continuation ghat sakti hai; pending writes durable hone ka proof nahi milta.',
+          ],
+        },
         {
           q: 'Wildcard ne bug ko 5 mahine kaise chhupaya?',
-          choices: ["Wildcard avoided unsafe 21 st-input read","Wildcard repaired actual 20-input sensor","No tests ever existed for any templates","Five months proves boundary index valid"],
+          choices: [
+            'Wildcard se missing 21st input padha nahi gaya; real value ne path khola',
+            'Wildcard ne 20-input array ko badha kar 21-input array bana diya',
+            'Template par koi tests the hi nahi; wildcard seedha publish hota raha',
+            'Paanch mahine pass hue, toh field ka index valid hone ka proof tha',
+          ],
           answer: 0,
-          explain: 'Passing test sirf un inputs ko cover karta hai jo pehle se hain. Content pipeline ko fuzz karo.',
-         choiceExplanations: ["Passing test sirf un inputs ko cover karta hai jo pehle se hain. Content pipeline ko fuzz karo.","Schema mismatch remained; new non wildcard exercised unsafe access.","RCA describes tests that failed to catch specific mismatch, not no testing.","Unexercised branch can hide defect until new input shape."] },
+          explain: 'Wildcard par 21st field ko compare karne ke liye missing input padhna nahi pada. Non-wildcard value ne unsafe branch chala di. Tests the, par mismatch nahi pakda; real values, bounds aur fuzz cases ka coverage chahiye.',
+          choiceExplanations: [
+            'Wildcard par 21st field ko compare karne ke liye missing input padhna nahi pada. Non-wildcard value ne unsafe branch chala di. Tests the, par mismatch nahi pakda; real values, bounds aur fuzz cases ka coverage chahiye.',
+            'Sensor 20 inputs hi deta raha; wildcard ne mismatch ko repair nahi kiya.',
+            'RCA testing ka zikr karti hai; kami specific contract aur input coverage mein thi.',
+            'Na chala path lambi der bug chhupa sakta hai; waqt memory safety prove nahi karta.',
+          ],
+        },
       ],
     },
   ],
@@ -229,16 +273,38 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
     questions: [
       {
         q: 'Interviewer: "Config/rules file ko code jaisa treat kyun?"',
-        choices: ["Behavior changes need code-like gates","Git storage alone makes config code-safe","Signed config needs no interpreter bounds","Small config cannot affect machine safety"],
+        choices: [
+          'Rules behavior badalte hain; contract tests, rollout aur rollback chahiye',
+          'Rules Git mein rakho; version history ko hi runtime safety samjho',
+          'Rules signed hain; interpreter mein bounds ki jaanch hata sakte hain',
+          'Config file chhoti hai; chhote size ko chhote crash domain ka proof maano',
+        ],
         answer: 0,
-        explain: 'Cloudflare 2019 (regex) aur CrowdStrike 2024 — dono config the.',
-       choiceExplanations: ["Cloudflare 2019 (regex) aur CrowdStrike 2024 — dono config the.","Version control supports audit, but runtime contract still required.","Signature proves origin/integrity, not semantic compatibility or memory safety.","Tiny behavioral input can exercise dangerous kernel branch."] },
+        explain: 'Rules production behavior badalte hain. Review, engine ke saath compatibility tests, resource checks, staged rollout aur rollback chahiye. Cloudflare ka regex aur CrowdStrike ka channel content chhote data badlav ke bade asar dikhate hain.',
+        choiceExplanations: [
+          'Rules production behavior badalte hain. Review, engine ke saath compatibility tests, resource checks, staged rollout aur rollback chahiye. Cloudflare ka regex aur CrowdStrike ka channel content chhote data badlav ke bade asar dikhate hain.',
+          'Version history audit aur rollback mein madad karti hai; runtime compatibility alag jaancho.',
+          'Signed content bhi engine ke inputs se mismatch kar sakta hai; bounds checks bachao.',
+          'Chhota input kernel ke kharab path ko trigger karke poori machine gira sakta hai.',
+        ],
+      },
       {
         q: 'Interviewer: "Do teams: ek engine, ek rules. Bug beech mein kaise na aaye?"',
-        choices: ["Shared machine contract plus runtime bounds","Merge teams and all boundary bugs vanish","Meeting schedule replaces compatibility tests","Low change frequency proves contract stable"],
+        choices: [
+          'Shared readable schema se actual engine match karo; bounds checks bhi rakho',
+          'Dono teams mila do; ek team ke andar interface bugs bach nahi sakte',
+          'Meetings badhao; agreement ko executable compatibility test ke barabar maano',
+          'Rules kam release karo; low frequency se boundary cases valid maan lo',
+        ],
         answer: 0,
-        explain: '"Validate contracts, not just artifacts."',
-       choiceExplanations: ["\"Validate contracts, not just artifacts.\"","One team can still implement mismatched producer/consumer interfaces.","Human coordination shouldbe backed by executable contract checks.","Rare changes canintroduce untested boundary cases."] },
+        explain: 'Ek machine-readable contract rakho aur supported sensor versions ke actual inputs se rules test karo. Runtime bounds checks doosri deewar hain. Team coordination madad karti hai, par code aur content ka mismatch check karna phir bhi padta hai.',
+        choiceExplanations: [
+          'Ek machine-readable contract rakho aur supported sensor versions ke actual inputs se rules test karo. Runtime bounds checks doosri deewar hain. Team coordination madad karti hai, par code aur content ka mismatch check karna phir bhi padta hai.',
+          'Ek team bhi producer aur consumer ka alag contract implement kar sakti hai.',
+          'Meeting mein hua agreement galat field access khud nahi pakadta; executable tests chahiye.',
+          'Rare change bhi pehli baar unsafe branch chala sakta hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -249,7 +315,7 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
   homework: `<p>Apne system mein ek "fuel" dhoondho — rules, feature flags, ML model, config — jo "engine" (code) se alag, tez raaste se jaata
     hai. Engine us fuel se kya maanta hai (fields, ranges, size)? Kya koi validator engine ki <b>asli</b> seemaon se check karta hai?</p>`,
   cards: [
-    { front: 'CrowdStrike 2024 ka root cause?', back: 'IPC template type ka contract 21 inputs, sensor code 20 deta tha. Rule mein pehli baar field 21 mein asli value → input[21] out-of-bounds → kernel BSOD.' },
+    { front: 'CrowdStrike 2024 ka root cause?', back: 'IPC template type ka contract 21 inputs, sensor code 20 deta tha. Rule mein pehli baar field 21 mein asli value → input[20] (21vi value) out-of-bounds → kernel BSOD.' },
     { front: 'Bug 5 mahine kyun chhupa?', back: 'Feb–July har rule mein field 21 wildcard — interpreter use padhta hi nahi. Validator spec se check karta tha, sensor code se nahi.' },
     { front: 'Engine vs fuel?', back: 'Engine: csagent.sys (WHQL signed, slow lane). Fuel: channel files (template instances, fast lane). Industry ka aam pattern.' },
   ],
@@ -317,11 +383,22 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
         { text: 'Contract validator.', cmd: 'node tools/incident.js --validator contract --rollout global', expect: 'publish c291 (jul-19) → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inputs deta hai\n  t=1s  up=500 bootloop=  0 manual=  0 | kabhi crash hue: 0' },
       ],
       observe: {
-        q: "Lab canary stops after 5 hosts. Why also validate engine-content contract?",
-        choices: ["Validation prevents; staging bounds missed defects","Canary 5 crashes mean validation unnecessary","Schema validation guarantees all runtime safety","One layer can replace every other layer"],
+        q: 'Lab mein canary ne 5 hosts ke baad rollout roka. Engine-content contract bhi kyun jaanchein?',
+        choices: [
+          'Contract pehle bug rokta hai; rings chhooti galti ka asar ghataati hain',
+          'Paanch canary gire, toh input contract ki jaanch ab extra kaam hai',
+          'Schema pass hua, toh runtime bounds aur recovery ki zaroorat nahi',
+          'Rings ka health gate hai, toh baaki har safety layer hata sakte hain',
+        ],
         answer: 0,
-        explain: "In this teaching lab rings stop after 5 canary failures; contract validator rejects incompatible input earlier. These are lab counts, not CrowdStrike production percentages. Validation, staging, runtime bounds and recovery address different failureclasses.",
-       choiceExplanations: ["In this teaching lab rings stop after 5 canary failures; contract validator rejects incompatible input earlier. These are lab counts, not CrowdStrike production percentages. Validation, staging, runtime bounds and recovery address different failureclasses.","Staging limits impact, but affected canary hosts still lose service.","Runtime bounds, fuzzing, compatibility and recovery cover other defectclasses.","Defense layers address different failure conditions and blind spots."] },
+        explain: 'Lab mein rings ne 5 hosts ke baad rollout roka; contract validator ne incompatible content publish se pehle roka. Counts lab ke hain. Validation, staged rollout, runtime guards aur recovery alag galtiyon se bachaate hain.',
+        choiceExplanations: [
+          'Lab mein rings ne 5 hosts ke baad rollout roka; contract validator ne incompatible content publish se pehle roka. Counts lab ke hain. Validation, staged rollout, runtime guards aur recovery alag galtiyon se bachaate hain.',
+          'Canary ke 5 hosts phir bhi gire; validation pehle crash rok sakti thi.',
+          'Schema check runtime defects aur broken recovery ke har case ko nahi pakadta.',
+          'Health gate ko bhi coverage aur detection ki seema hai; doosri layers alag kaam karti hain.',
+        ],
+      },
       lesson: 'Fast lane ko bhi rings chahiye, aur validator ko contract. Deployment radius tay karta hai blast radius.',
     },
     {
@@ -344,16 +421,38 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     questions: [
       {
         q: 'Interviewer: "Security rules ghante mein poore fleet par chahiye — rollout ka kya?"',
-        choices: ["Fast bounded waves with compatible safety gates","Threat urgency requires every test bypass","Weekly delay only possible safety strategy","Customer ring replaces all producer tests"],
+        choices: [
+          'Chhoti rings, health gates aur contract tests ko response budget se milao',
+          'Threat urgent hai; checks hata kar turant global publish karna sahi hai',
+          'Safety chahiye, toh har update ko fixed ek hafta rokna zaroori hai',
+          'Customer ring chun le, toh producer ke compatibility tests ka kaam khatam',
+        ],
         answer: 0,
-        explain: 'Tez aur surakshit ek saath — rings minutes ki ho sakti hain.',
-       choiceExplanations: ["Tez aur surakshit ek saath — rings minutes ki ho sakti hain.","Rapid response still needs bounded blast radius and contract validation.","Gate cadence can fit risk/urgency without fixed week delay.","Ring choice limits exposure, but malformed artifact prevention still useful."] },
+        explain: 'Threat response ka budget aur failure risk saath dekho. Chhoti waves aur automated gates fast delivery de sakte hain; relevant workload aur observation time bhi chahiye. Har rollout ke liye fixed minutes ya week ka niyam nahi.',
+        choiceExplanations: [
+          'Threat response ka budget aur failure risk saath dekho. Chhoti waves aur automated gates fast delivery de sakte hain; relevant workload aur observation time bhi chahiye. Har rollout ke liye fixed minutes ya week ka niyam nahi.',
+          'Urgency se checks ka kaam nahi hatta; fast path par bhi bounded exposure chahiye.',
+          'Gate timing risk aur urgency se tay ho sakti hai; ek hafta universal requirement nahi.',
+          'Customer exposure control producer ke malformed content tests ki jagah nahi leta.',
+        ],
+      },
       {
         q: 'Interviewer: "Hamare paas aisi kaunsi cheezein ho sakti hain jo 1 ghante mein 100% fleet tak jaati hain?"',
-        choices: ["Inventory all coordinated fleet wide changes","Only application code can globally change","Only migrations affect runtime behavior","Certificate and DNS changes have no blast radius"],
+        choices: [
+          'Code, flags, config, agents, images, certificates aur DNS ka scope dekho',
+          'Sirf app releases gino; code deploy list hi fleet ke changes bataati hai',
+          'Sirf DB migrations gino; data structure hi runtime behavior badalta hai',
+          'Certificates aur DNS chhodo; trust aur routing ka impact local rehta hai',
+        ],
         answer: 0,
-        explain: 'Har auto-updating agent = vendor ke CI se har machine tak pipe, tumhare change management ke bahar.',
-       choiceExplanations: ["Har auto-updating agent = vendor ke CI se har machine tak pipe, tumhare change management ke bahar.","Config, agents, OSimages, certificates and DNS also have fleet reach.","Many non migration changes affect same shared system.","Trust/routing changes can simultaneously break many deployments."] },
+        explain: 'Fleet tak saath pahunchne wale har badlav ki inventory banao. Agents aur vendor updates bhi scope mein hain; customer controls hain ya nahi, jaancho. Config, certificates aur DNS bhi shared failure laa sakte hain.',
+        choiceExplanations: [
+          'Fleet tak saath pahunchne wale har badlav ki inventory banao. Agents aur vendor updates bhi scope mein hain; customer controls hain ya nahi, jaancho. Config, certificates aur DNS bhi shared failure laa sakte hain.',
+          'Config, agents aur trust/routing changes code release ke bina bhi fleet par asar karte hain.',
+          'Runtime behavior flags, rules aur dependencies se bhi badalta hai.',
+          'Certificate aur DNS galti kai deployments ko ek saath tod sakti hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -397,7 +496,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
   t=6s  up=408 bootloop=0  manual=92   ← 15 reboots ke baad bhi 18% haath se</pre>`,
     `<h3>🔑 BitLocker — chaabi usi ghar mein jismein aag lagi</h3>
      <p>Safe mode ke liye BitLocker ki <b>48-digit recovery key</b> chahiye. Keys escrowed thin Active Directory management servers mein — jo
-     <b>khud blue screen</b> the. USB sticks, seedhiyan, keys print karke; bootable USB tools aane mein hafte.</p>
+     <b>khud blue screen</b> the. USB sticks, seedhiyan, keys print karke; Microsoft ka USB recovery tool agle din (20 July) aaya, par har machine tak pahunchne mein din-hafte lage.</p>
      <p class="tip">🎯 Yahi pattern Datadog mein bhi (monitoring apne hi outage ke andar): <b>recovery ka raasta failure ke peeche band</b>.
      Plan karo us din ke liye jab machines kuch madad nahi kar sakti — no network, no agents, no remote hands. BitLocker keys kahan hain?</p>
      <h3>💸 Nuksaan aur ajeeb baat</h3>
@@ -418,26 +517,26 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
         first: {
           text: 'Pehla kadam?',
           choices: [
-            { t: "Triage critical hosts;use tested recovery", good: true, next: 'keys', explain: '600 machines, 8 log — sab ek saath nahi. Patient safety wali pehle; reboot loop kuch ko khud theek kar dega.' },
-            { t: "Safe-mode all hosts without priority", good: false, explain: '8 log, 600 machines, har ek par recovery key — bina priority ke zaroori machines ghanton baad.' },
-            { t: "Wait vendor while critical systems staydown", good: false, explain: 'Fix aa chuka hai — machines use le hi nahi paa rahi. Intezaar se kuch nahi hoga.' },
-            { t: "Assume remote uninstall works preboot", good: false, explain: 'Remote tools ko chalta OS chahiye — woh hai hi nahi.' },
+            { t: "Critical machines pehle chuno; tested recovery se kaam shuru karo", good: true, next: 'keys', explain: '600 machines, 8 log — sab ek saath nahi. Patient safety wali pehle; tested restart kuch machines par madad kar sakta hai; restart se recovery pakki nahi.' },
+            { t: "Sab machines par ek saath safe mode karo; priority list mat banao", good: false, explain: '8 log, 600 machines, har ek par recovery key — bina priority ke zaroori machines ghanton baad.' },
+            { t: "Vendor ka wait karo; zaroori machines ko bhi abhi band rehne do", good: false, explain: 'Fix aa chuka hai — boot loop wali machines fix le hi nahi paa rahi. Intezaar se kuch nahi hoga.' },
+            { t: "OS boot hone se pehle normal remote uninstall chalaane par tik jaao", good: false, explain: 'Aam in-OS remote uninstall ko chalta OS chahiye — boot loop mein OS nahi chal raha; tested out-of-band access alag ho sakta hai.' },
           ],
         },
         keys: {
           sitrep: '✅ 40 zaroori machines ki list bani. 15 reboots se 20% khud theek.',
           text: 'Safe mode ke liye BitLocker recovery keys chahiye. Keys AD server mein hain — jo khud blue screen hai.',
           choices: [
-            { t: "Recover key authority with offline keys", good: true, next: 'fix', explain: 'Recovery ki recovery pehle — jo system baaki keys deta hai, use pehle uthao.' },
-            { t: "Disable encryption without unlocking", good: false, explain: 'Bina key ke disable bhi nahi hota.' },
-            { t: "Reimage hosts before data/key assessment", good: false, explain: 'Local data, settings — aur reimage bhi ghanton ka. Keys mil sakti hain.' },
+            { t: "Alag rakhi keys se key-server uthao; phir baaki hosts recover karo", good: true, next: 'fix', explain: 'Recovery ki recovery pehle — jo system baaki keys deta hai, key-server ko pehle uthao.' },
+            { t: "Encrypted disk unlock kiye bina encryption hataane ki koshish karo", good: false, explain: 'Bina key ke disable bhi nahi hota.' },
+            { t: "Keys aur local data jaane bina hosts ko seedha reimage kar do", good: false, explain: 'Local data, settings — aur reimage bhi ghanton ka. Keys mil sakti hain.' },
           ],
         },
         fix: {
           text: 'Aage ke liye kya badloge?',
           choices: [
-            { t: "Independent keys/runbook;recovery drills", good: true, next: 'end', explain: 'Recovery ka raasta failure se alag, aur test kiya hua.' },
-            { t: "Remove endpoint security without replacement", good: false, explain: 'Breach risk — ek outage ke badle roz ka khatra.' },
+            { t: "Keys aur runbook ka alag raasta rakho; recovery drills chalao", good: true, next: 'end', explain: 'Recovery ka raasta failure se alag, aur test kiya hua.' },
+            { t: "Endpoint security hata do; replacement aur coverage ko chhod do", good: false, explain: 'Breach risk — ek outage ke badle roz ka khatra.' },
           ],
         },
         end: {
@@ -471,16 +570,38 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     questions: [
       {
         q: 'Interviewer: "Recovery plan ka sabse chhupa khatra?"',
-        choices: ["Recovery tools can share failed dependencies","Backup freshness alone proves recoverability","Small team necessarily cannot restore service","More runbook pages guarantee access during outage"],
+        choices: [
+          'Keys, runbook aur tools bhi kharab system par nirbhar ho sakte hain',
+          'Backup latest hai, toh keys aur access ke bina bhi restore ho jaayega',
+          'Team chhoti hai, toh automation aur priority se recovery badal nahi sakti',
+          'Runbook mein zyada pages hain, toh outage mein access pakka milega',
+        ],
         answer: 0,
-        explain: 'CrowdStrike (BitLocker keys) aur Datadog (monitoring) — dono.',
-       choiceExplanations: ["CrowdStrike (BitLocker keys) aur Datadog (monitoring) — dono.","Restore needs keys, network, identity, control plane and validated procedure too.","Capacity/procedure/automation determine recovery, not headcount alone.","Runbook location/auth may itself be down."] },
+        explain: 'Recovery ke har kadam ki dependency likho: keys, identity, network, runbook aur tools. Koi dependency bhi gir gayi ho toh tested alag raasta chahiye. Latest backup akela poori recoverability ka proof nahi hai.',
+        choiceExplanations: [
+          'Recovery ke har kadam ki dependency likho: keys, identity, network, runbook aur tools. Koi dependency bhi gir gayi ho toh tested alag raasta chahiye. Latest backup akela poori recoverability ka proof nahi hai.',
+          'Backup ke saath keys, access, healthy infrastructure aur sahi procedure bhi chahiye.',
+          'Headcount ke saath automation, priority aur procedure recovery time badalte hain.',
+          'Runbook ki hosting ya login bhi down ho sakta hai; pages ki ginti access nahi deti.',
+        ],
+      },
       {
-        q: "Boot-start agent fault path ko safer kaise design/test karoge?",
-        choices: ["Bounds-check content; crash loop recovery plan","Last good content always bypasses broken driver","Network fetch always works before boot failure","Never update any endpoint security component"],
+        q: 'Boot-start agent ka failure path zyada surakshit kaise banaoge aur jaanchoge?',
+        choices: [
+          'Bounds checks aur crash-loop fallback ko asli boot sequence mein test karo',
+          'Aakhri accha content rakho; fallback code ke chalne ka waqt maayne nahi',
+          'Boot se pehle network fetch rakho; har crash loop mein network mil jaayega',
+          'Agent update karna band karo; purana code hi recovery ki suraksha hai',
+        ],
         answer: 0,
-        explain: "Boot-start code needs safe bounds checked input and tested failure recovery. Last known-good content or safe fallback works only if recovery state executes before fatalpath; network availability cannot be assumed during boot loop. Prototype and drill actual boot sequence.",
-       choiceExplanations: ["Boot-start code needs safe bounds checked input and tested failure recovery. Last known-good content or safe fallback works only if recovery state executes before fatalpath; network availability cannot be assumed during boot loop. Prototype and drill actual boot sequence.","If crashoccurs before fallback logic, content choice alone insufficient.","Network/driver dependencies may not become available in boot loop.","Staying unpatched creates security risk; controlled safe delivery needed."] },
+        explain: 'Invalid content ka safe handling aur recovery state fatal path se pehle chalni chahiye. Aakhri acchi copy tabhi kaam karegi jab fallback code execute ho. Boot mein network milega, aisa maan kar design mat karo; actual sequence ki drill chalao.',
+        choiceExplanations: [
+          'Invalid content ka safe handling aur recovery state fatal path se pehle chalni chahiye. Aakhri acchi copy tabhi kaam karegi jab fallback code execute ho. Boot mein network milega, aisa maan kar design mat karo; actual sequence ki drill chalao.',
+          'Fatal crash fallback se pehle aaya toh purani copy rakhna akele kaafi nahi.',
+          'Network ya driver dependency crash se pehle available nahi bhi ho sakti hai.',
+          'Updates band karna security risk badhaata hai; safe delivery aur recovery chahiye.',
+        ],
+      },
     ],
   },
   success: [
@@ -551,11 +672,22 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
         { text: 'Spec + global push.', cmd: 'node tools/incident.js --validator spec --rollout global', expect: '  t=2s  up=500 bootloop=  0 manual=  0 | kabhi crash hue: 500 | agent restarts 4773\n  t=8s  up=500 bootloop=  0 manual=  0 | kabhi crash hue: 500 | agent restarts 7163' },
       ],
       observe: {
-        q: "Teachinglab:agent restarts 7163 times but 500 hosts up. What conclusion?",
-        choices: ["Host safe; agent coverage still impaired","Host up proves endpoint security is healthy","User space inherently useless for protection","Lab restart count proves real host crash rate"],
+        q: 'Lab mein agent 7,163 baar restart hua, par 500 hosts up hain. Kya samajhoge?',
+        choices: [
+          '500 hosts up rahe; baar-baar crash se agent ki coverage kamzor hai',
+          '500 hosts up hain, toh endpoint protection bhi poori healthy hogi',
+          'Agent crash ho raha hai, toh user-space protection ka koi fayda nahi',
+          '7,163 lab restarts se real CrowdStrike host crashes ki rate mil gayi',
+        ],
         answer: 0,
-        explain: "Lab keeps 500 hosts up while simulated agent repeatedly restarts;7163 is lab result, not a real CrowdStrike statistic. Isolation reduces direct machine crash impact, but security coverage and CPU/restart loops still need controls.",
-       choiceExplanations: ["Lab keeps 500 hosts up while simulated agent repeatedly restarts;7163 is lab result, not a real CrowdStrike statistic. Isolation reduces direct machine crash impact, but security coverage and CPU/restart loops still need controls.","Unavailable agent leaves detection/enforcement gaps despite machine availability.","User space with appropriate interfaces/privileges can provide valuable controls.","7163 count is teachinglab output, not production measurement."] },
+        explain: 'Lab mein 500 hosts up hain, par simulated agent 7,163 baar restart hua. Machine ka crash domain chhota hua; agent coverage, CPU aur restart loop phir bhi sambhaalne hain. Lab count production ka statistic nahi hai.',
+        choiceExplanations: [
+          'Lab mein 500 hosts up hain, par simulated agent 7,163 baar restart hua. Machine ka crash domain chhota hua; agent coverage, CPU aur restart loop phir bhi sambhaalne hain. Lab count production ka statistic nahi hai.',
+          'Host up hone se detection aur enforcement healthy hone ka proof nahi milta.',
+          'Sahi interfaces aur privileges ke saath user-space agent useful protection de sakta hai.',
+          '7,163 lab ka simulated agent count hai; real machines ka crash rate nahi.',
+        ],
+      },
       lesson: 'Crash domain machine se chhota karo — ek process ka marna, machine ka nahi.',
     },
     {
@@ -581,17 +713,39 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     instructions: 'Do sawaal. 🎤',
     questions: [
       {
-        q: "Privileged monitoring agent ka real risk reduce kaise karein?",
-        choices: ["Least privilege; isolation; bounded staged updates","Running root means no risk controls possible","eBPF verifier proves entire kernel bug-free","User-space agent cannot harm any host resource"],
+        q: 'Privileged monitoring agent ka risk kaise ghataaoge?',
+        choices: [
+          'Privileges ghataao; isolation, resource limits aur staged updates rakho',
+          'Root access hai, toh sandbox ya rollout se risk ghat nahi sakta',
+          'eBPF verifier pass hua, toh poore kernel ki correctness prove hai',
+          'Agent user space mein hai, toh host ke resources ko nuksaan nahi hoga',
+        ],
         answer: 0,
-        explain: "Least privilege and user space isolation can reduce blast radius. eBPF verifier checks specific safety properties under kernel assumptions, not universal absence of kernel bugs or all agent harm. Staged updates, resource limits, watchdog and kernel interfaces still need testing.",
-       choiceExplanations: ["Least privilege and user space isolation can reduce blast radius. eBPF verifier checks specific safety properties under kernel assumptions, not universal absence of kernel bugs or all agent harm. Staged updates, resource limits, watchdog and kernel interfaces still need testing.","Capabilities, sandboxing, permissions and rollout controls can reduce risk.","Verifier checks properties of accepted programs under assumptions, not all kernel correctness.","Resource exhaustion or privileged helper effects still need containment."] },
+        explain: 'Least privilege aur isolation se direct crash ka daayra ghat sakta hai. eBPF verifier kuch stated properties ko kernel ke model ke andar check karta hai. Kernel bugs, helpers, resource exhaustion aur update recovery ka risk alag test karo.',
+        choiceExplanations: [
+          'Least privilege aur isolation se direct crash ka daayra ghat sakta hai. eBPF verifier kuch stated properties ko kernel ke model ke andar check karta hai. Kernel bugs, helpers, resource exhaustion aur update recovery ka risk alag test karo.',
+          'Capabilities, permissions, sandbox aur rollout controls root-related risk ghata sakte hain.',
+          'Verifier accepted program ki limited properties check karta hai; poora kernel bug-free prove nahi hota.',
+          'User-space process CPU, memory ya privileged helpers ko phir bhi prabhavit kar sakta hai.',
+        ],
+      },
       {
         q: 'Interviewer: "Tests pass the phir bhi production gira — kya badloge?"',
-        choices: ["Exercise boundary/state cases; layer verification","Only repeat same happy-path tests more","Formal verifier proves every product property","Passing unit tests removes need for canary"],
+        choices: [
+          'Boundary, state aur contract tests badhao; scoped proof aur guards jodo',
+          'Wahi happy-path tests aur baar chalao; input coverage kaafi hai',
+          'Formal verifier lagao; har product behavior safe hone ka proof mil jaayega',
+          'Unit tests pass karao; production canary aur rollback ka kaam poora hai',
+        ],
         answer: 0,
-        explain: "Expand tests across boundary inputs, lifecycle state, contracts, fuzzing and faults. Formal verification can prove stated properties in a model, not every future implementation/environment outcome. Runtime guards, canary and rollback remain needed.",
-       choiceExplanations: ["Expand tests across boundary inputs, lifecycle state, contracts, fuzzing and faults. Formal verification can prove stated properties in a model, not every future implementation/environment outcome. Runtime guards, canary and rollback remain needed.","Same samples may miss incompatible fields or new state combinations.","Proof scope/model and runtime assumptions are limited; do not claim all behavior safe.","Canary tests representative runtime conditions and bounds missed defects."] },
+        explain: 'Tests ko boundary inputs, state changes, faults aur fuzzing tak badhao. Verification ka proof model aur stated properties tak hota hai. Runtime checks, representative canary aur rollback phir bhi chahiye.',
+        choiceExplanations: [
+          'Tests ko boundary inputs, state changes, faults aur fuzzing tak badhao. Verification ka proof model aur stated properties tak hota hai. Runtime checks, representative canary aur rollback phir bhi chahiye.',
+          'Same samples naye fields ya state combinations ko phir chhod sakte hain.',
+          'Proof ki scope aur assumptions hoti hain; har environment aur behavior cover nahi hota.',
+          'Canary real runtime conditions mein chhooti galti pakad sakta hai; recovery bhi alag chahiye.',
+        ],
+      },
     ],
   },
   success: [
@@ -614,7 +768,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
 {
   id: 'pm-datadog',
   icon: '🐶',
-  title: 'Postmortem — Datadog: 40,000 servers, ek hi minute',
+  title: 'Postmortem — Datadog: 40,000 servers, ek hi ghanta',
   badge: 'Supply Chain Sipahi',
   objectives: [
     '8 March 2023: 5 regions, 3 clouds, ek saath andhera',
@@ -624,7 +778,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
   ],
   lesson: [
     `<h3>📰 06:00 UTC, har region ek saath</h3>
-     <p>8 March 2023: Datadog ke har region (5 regions, 3 clouds — AWS, Azure, GCP, kai AZs) mein <b>ek hi minute</b> mein andhera; 2 ghante mein
+     <p>8 March 2023: Datadog ke har region (5 regions, 3 clouds — AWS, Azure, GCP, kai AZs) mein <b>ek hi ghante</b> (06:00–07:00 UTC) mein andhera; 2 ghante mein
      product gayab (dashboards, APIs, alerting). ~40,000 servers. Zyadatar ke liye 13 ghante, baaki ~ek din. Pragmatic Engineer: ~$5M revenue.
      Cloud outage nahi, kharab deploy nahi — Linux software ka ~2 saal purana ek badlaav, 40,000 machines par taiyaar.</p>
      <h3>🗺️ Multi-region kya bachata hai</h3>
@@ -666,11 +820,22 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
         { text: 'Aakhri do lines padho.', cmd: 'node tools/fleet.js | tail -2', expect: 'Staged rollout tabhi kaam karta hai jab canary us HAALAT mein ho jisme prod hai (purani, in-place patch wali).\n"Multi-region" ne yahan kuch nahi bachaya — 5 regions, 3 clouds, par upar ek hi package mirror aur ek hi ghadi.' },
       ],
       observe: {
-        q: "Datadog lab:196 nodes failed despite fresh canary. Missing test dimension?",
-        choices: ["Fresh boot missed in-place update state","Canary percentage alone explains every missed bug","Longer bake inevitably reproduces any state","Monitoring absent means no need reproduce"],
+        q: 'Lab mein fresh canary green thi, phir 196 nodes dark hue. Kaunsa test dimension chhoota?',
+        choices: [
+          'Fresh canary mein pehle se Cilium rules aur in-place restart nahi the',
+          'Canary chhoti thi; percentage badhne se har state apne aap cover hoti',
+          'Fresh canary ko aur bake do; time se har purani host-state ban jaati',
+          'Monitoring missing thi; prod jaisa upgrade reproduce karna kaafi nahi',
+        ],
         answer: 0,
-        explain: "Datadog reported fresh/rebootedhosts did not reproduce systemd-networkd restart on already configured CNI state. The 196 nodes here is lab result; production affected tens of thousands. Representative lifecycle/state coverage mattered, not only canary percentage.",
-       choiceExplanations: ["Datadog reported fresh/rebootedhosts did not reproduce systemd-networkd restart on already configured CNI state. The 196 nodes here is lab result; production affected tens of thousands. Representative lifecycle/state coverage mattered, not only canary percentage.","Exposure matters, but relevant lifecycle state was key difference in this case.","Waiting on fresh node may never exercise restart with preexisting CNI routes.","Reproduction against production-like upgrade sequence improves causal evidence."] },
+        explain: 'Lab mein 196 failed nodes model ka result hain. Fresh boot par networkd Cilium se pehle chalta hai; in-place restart existing Cilium rules dekhta hai. Canary mein production ka relevant lifecycle aur state bhi chahiye.',
+        choiceExplanations: [
+          'Lab mein 196 failed nodes model ka result hain. Fresh boot par networkd Cilium se pehle chalta hai; in-place restart existing Cilium rules dekhta hai. Canary mein production ka relevant lifecycle aur state bhi chahiye.',
+          'Canary ka size exposure badhaata hai, par missing lifecycle state khud nahi jodta.',
+          'Time se fresh host par wahi update sequence zaroori nahi chalega.',
+          'Monitoring zaroori hai; prod jaisi sequence reproduce karna cause aur gate jaanchne mein bhi madad karta hai.',
+        ],
+      },
       lesson: 'Staged rollout + prod jaisi canary — warna "green" jhooth bolti hai.',
     },
     {
@@ -696,17 +861,39 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     instructions: 'Do sawaal. 🎤',
     questions: [
       {
-        q: "Three cloud providers use sameOS/updater. What risk remains?",
-        choices: ["Cloud diversity can share stack failure","Three providers eliminate OS common cause","Five regions guarantee every dependency isolated","ProviderSLA guarantees application update safety"],
+        q: 'Teen clouds par same OS aur updater hai. Kaunsa risk bacha hai?',
+        choices: [
+          'Alag clouds bhi same OS, updater aur config ka failure saath jhel sakte hain',
+          'Teen providers hain, toh common OS ka bug har cloud mein alag hoga',
+          'Paanch regions hain, toh trust aur control-plane dependencies isolated hain',
+          'Provider SLA hai, toh app ke auto-update ki compatibility bhi covered hai',
+        ],
         answer: 0,
-        explain: "Multi-cloud reduces some provider-correlated risk, butsharedOS, updater, images, trust, DNS or CI can cause common failure. Geographic independence is not absolute either if shared network/control plane persists; inventory actual failure paths.",
-       choiceExplanations: ["Multi-cloud reduces some provider-correlated risk, butsharedOS, updater, images, trust, DNS or CI can cause common failure. Geographic independence is not absolute either if shared network/control plane persists; inventory actual failure paths.","Same image/updater/config can affect every provider together.","Shared control planes, trust and software can crossregion boundaries.","Provider availability contract does not validate customer stack changes."] },
+        explain: 'Multi-cloud kuch provider-related risk ghataata hai. Shared OS, images, updater, DNS, trust ya CI phir bhi common failure path ho sakte hain. Regions ke naam ke saath actual dependencies aur recovery capacity bhi jaancho.',
+        choiceExplanations: [
+          'Multi-cloud kuch provider-related risk ghataata hai. Shared OS, images, updater, DNS, trust ya CI phir bhi common failure path ho sakte hain. Regions ke naam ke saath actual dependencies aur recovery capacity bhi jaancho.',
+          'Same image ya updater ka bug sab providers ke hosts par pahunch sakta hai.',
+          'Shared trust aur control planes region boundaries paar kar sakte hain.',
+          'Provider availability agreement customer ke app updates validate nahi karta.',
+        ],
+      },
       {
-        q: "Datadog style unintended auto patch bypasses controlled pipeline. Correct policy?",
-        choices: ["Replace bypass channel with controlled patching","Disable every security patch indefinitely","Every patch must apply globally sameUTCtime","Weekends make any upgrade safe automatically"],
+        q: 'Unattended patch controlled pipeline ko bypass kar raha hai. Policy kaise sudhaaroge?',
+        choices: [
+          'Bypass auto-update hata kar timely patches controlled waves se pahunchao',
+          'Security updates band kar do; patch na aana hi incident ka permanent hal hai',
+          'Har patch same UTC minute par bhejo; schedule common rahe toh risk kam hai',
+          'Weekends par patch karo; kam traffic se state compatibility pakki hoti hai',
+        ],
         answer: 0,
-        explain: "Datadog disabled legacy unattended channel because security updates already flowed through controlled blue/green rollout. General recommendation is maintain timely patching with representative checks and bounded waves, not disable all updates or force only old hosts.",
-       choiceExplanations: ["Datadog disabled legacy unattended channel because security updates already flowed through controlled blue/green rollout. General recommendation is maintain timely patching with representative checks and bounded waves, not disable all updates or force only old hosts.","Removing all patches creates known vulnerability exposure.","Synchronized waves increase correlated blast radius.","Low user traffic does not guarantee state compatibility or recovery."] },
+        explain: 'Datadog ke security patches controlled rollout se aate the; legacy unattended channel pipeline ko bypass kar raha tha. Aise bypass ko hatao, par timely patching rakho. Relevant states, gates aur bounded waves ka coverage chahiye.',
+        choiceExplanations: [
+          'Datadog ke security patches controlled rollout se aate the; legacy unattended channel pipeline ko bypass kar raha tha. Aise bypass ko hatao, par timely patching rakho. Relevant states, gates aur bounded waves ka coverage chahiye.',
+          'Saare patches band karne se known security vulnerabilities khuli rehti hain.',
+          'Same clock se correlated exposure badhta hai; failure gate se pehle fleet prabhavit ho sakta hai.',
+          'Kam traffic state compatibility aur recovery prove nahi karta.',
+        ],
+      },
     ],
   },
   success: [
@@ -717,7 +904,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
   homework: `<p>Apne infrastructure ka "doosra diagram" banao: har region ke upar ki woh cheezein jo sab jagah ek jaisi hain (OS version, base image,
     package mirror, auto-update schedule, CI, registry, CA, DNS provider). Har ek ke saamne: kya yeh sab jagah ek saath badal sakti hai?</p>`,
   cards: [
-    { front: 'Datadog 8 March 2023?', back: '06:00 UTC, 5 regions, 3 clouds, ~40,000 servers ek minute mein dark. Trigger: systemd patch (unattended-upgrades) → networkd reapply.' },
+    { front: 'Datadog 8 March 2023?', back: '06:00–07:00 UTC, 5 regions, 3 clouds, ~40,000 servers ek ghante ke andar dark. Trigger: systemd patch (unattended-upgrades) → networkd reapply.' },
     { front: 'Multi-region ≠ multi-fault-domain?', back: 'Regions geographic failures se bachate hain. Same OS/updater/ghadi har jagah = software supply chain failure sab regions mein ek saath.' },
     { front: 'Lab 23: canary?', back: 'Same clock: 200/200 dark. Fresh canary: green, phir 196 dark. Prod jaisi purani canary: 4 dark, HALT.' },
   ],
@@ -781,11 +968,22 @@ MANAGE_FOREIGN=0 (setting)           → 0 saaf → 100/100</pre>
         { text: 'Fix: rules par apna naam.', cmd: 'PROTO=cilium npm start ex1-rules\nnode tools/incident.js --case in-place', expect: '06:00 UTC — systemd patch → networkd reapply → 0 rule(s) saaf: koi nahi\n  pod packets: 100 / 100 pahunche  ✅ bach gaya' },
       ],
       observe: {
-        q: 'Reboot test mein networkd ne bhi reapply kiya — phir wahan rule kyun nahi mita?',
-        choices: ["Boot order installed CNI rules after networkd","Reboot never starts systemd-networkd","Cilium repaired every deleted rule instantly","Fresh boot exactly reproduces in-place restart"],
+        q: 'Reboot test mein networkd ne config reapply ki. Phir Cilium ka rule kyun nahi mita?',
+        choices: [
+          'Boot par networkd pehle chala; Cilium rules baad mein aaye',
+          'Reboot ke dauraan networkd start hi nahi hota, isliye safe tha',
+          'Cilium ne har delete ko turant repair kiya, isliye test pass tha',
+          'Fresh boot aur in-place restart ne bilkul wahi state check ki',
+        ],
         answer: 0,
-        explain: 'Test us STATE ko check kare jisme prod sach mein hai — purani machine, in-place restart.',
-       choiceExplanations: ["Test us STATE ko check kare jisme prod sach mein hai — purani machine, in-place restart.","Normal boot runs networkd; ordering difference explains symptom.","Postmortem describes persistence of lost connectivity, not instant universal repair.","In-place restart sees existing foreign rules; fresh boot may not."] },
+        explain: 'Lab ke fresh boot mein networkd ki safai ke waqt Cilium rules the hi nahi. Cilium baad mein rules daalta hai. In-place restart par existing rules maujood hain, isliye same code alag state mein connectivity todta hai.',
+        choiceExplanations: [
+          'Lab ke fresh boot mein networkd ki safai ke waqt Cilium rules the hi nahi. Cilium baad mein rules daalta hai. In-place restart par existing rules maujood hain, isliye same code alag state mein connectivity todta hai.',
+          'Normal boot mein networkd chalta hai; farq service order ka hai.',
+          'Test pass ki wajah baad mein rules install hona tha, deleted rules ka universal instant repair nahi.',
+          'In-place restart pehle se configured Cilium rules dekhta hai; fresh boot ka order alag hai.',
+        ],
+      },
       lesson: 'Saajhi cheez bina maalik ke = ek din koi "safai" karega. Ownership explicit karo.',
     },
     {
@@ -793,17 +991,39 @@ MANAGE_FOREIGN=0 (setting)           → 0 saaf → 100/100</pre>
       title: 'Ownership ki samajh',
       questions: [
         {
-          q: "Known networkd fix vs broader resource ownership:which distinction useful?",
-          choices: ["Local fix plus resource ownership contract","Every config change is merely a reboot","Only deleting Cilium fixes shared ownership","One setting proves all future agents compatible"],
+          q: 'networkd ki setting fix aur shared resource ownership ke contract mein kya farq hai?',
+          choices: [
+            'Known behavior ko setting se roko; shared ownership ka contract bhi banao',
+            'Setting badalna reboot ke barabar hai; policy ka alag role nahi',
+            'Cilium hataana hi hal hai; shared resource ka contract kaam nahi aayega',
+            'Ek setting sahi hai, toh future agents bhi compatible prove ho gaye',
+          ],
           answer: 0,
-          explain: "networkd configuration fix can effectively prevent this known behavior. Broader resource ownership/arbitration and integration contracts reduce class recurrence; calling one fix shallow must not dismiss useful mitigation. Clearly scope what control covers.",
-         choiceExplanations: ["networkd configuration fix can effectively prevent this known behavior. Broader resource ownership/arbitration and integration contracts reduce class recurrence; calling one fix shallow must not dismiss useful mitigation. Clearly scope what control covers.","Config policy, implementation patch and architecture ownership distinct controls hain.","Other agents can collide too; ownership/arbitration generalizes lesson.","Future components and upgrades need clear ownership and integration tests."] },
+          explain: 'Setting known deletion behavior ko effectively rok sakti hai. Owner-scoped edits aur integration tests broader class ka risk ghataate hain. Mitigation ko bekaar kehna sahi nahi; har control ki scope saaf rakho.',
+          choiceExplanations: [
+            'Setting known deletion behavior ko effectively rok sakti hai. Owner-scoped edits aur integration tests broader class ka risk ghataate hain. Mitigation ko bekaar kehna sahi nahi; har control ki scope saaf rakho.',
+            'Configuration policy, reboot aur implementation patch alag controls hain.',
+            'Doosre agents bhi collide kar sakte hain; ownership ka niyam software badalne se bhi zaroori rehta hai.',
+            'Future agents aur upgrades ko ownership aur sequence tests chahiye.',
+          ],
+        },
         {
-          q: 'Aisa test jo yeh bug pakadta, kaisa hota?',
-          choices: ["Old host, in-place restart, network assertions","Only clean reboot repeats equivalent state","Only pure unit test covers full host lifecycle","Only highQPS reproduces route ownership"],
+          q: 'Existing Cilium rules delete hone ka bug pakadne wala test kaisa hoga?',
+          choices: [
+            'Configured host par in-place restart karo; pod connectivity jaancho',
+            'Fresh reboot ko baar-baar chalao; purani state kaafi cover hogi',
+            'Pure unit tests chalao; host service order bhi cover maan lo',
+            'High-QPS load test chalao; route ownership ka bug zaroor dikhega',
+          ],
           answer: 0,
-          explain: 'Test us state ko check karo jisme prod hai — long-running machines, in-place restarts.',
-         choiceExplanations: ["Test us state ko check karo jisme prod hai — long-running machines, in-place restarts.","Clean boot order can avoid existing routes that trigger deletion.","Host services/kernels/CNI integration and state may not exist in unit tests.","Failure depends sequence/state, not necessarily traffic volume."] },
+          explain: 'Prod jaisa configured host aur in-place update/restart ka sequence chalao. Rules aur pod connectivity pehle-baad assert karo. Uptime akela maqsad nahi; relevant existing state aur order reproduce karna hai.',
+          choiceExplanations: [
+            'Prod jaisa configured host aur in-place update/restart ka sequence chalao. Rules aur pod connectivity pehle-baad assert karo. Uptime akela maqsad nahi; relevant existing state aur order reproduce karna hai.',
+            'Clean boot order existing-rule deletion wala case chhod sakta hai.',
+            'Unit test mein real kernel, CNI aur service restart ka state zaroori nahi ho.',
+            'Failure specific sequence aur state se juda hai; high QPS apne aap restart sequence nahi banaata.',
+          ],
+        },
       ],
     },
   ],
@@ -813,16 +1033,38 @@ MANAGE_FOREIGN=0 (setting)           → 0 saaf → 100/100</pre>
     questions: [
       {
         q: 'Interviewer: "Do agents ek hi config file/iptables/cron edit karte hain. Kya dekhoge?"',
-        choices: ["Owner-scoped edits and operation-order tests","Different schedule prevents all overlap forever","File lock alone prevents semantic deletion","Any two agents can overwrite whole resource"],
+        choices: [
+          'Owner ke hisaab se edits rakho; dono agents ke operation orders test karo',
+          'Schedules alag rakho; alag waqt ka matlab semantic conflict khatam',
+          'File lock rakho; serialized writes se doosre ka data delete nahi hoga',
+          'Dono ko poori file overwrite karne do; latest write sahi owner chunta hai',
+        ],
         answer: 0,
-        explain: 'Datadog: do programs, dono "jo pehchana nahi, saaf karo".',
-       choiceExplanations: ["Datadog: do programs, dono \"jo pehchana nahi, saaf karo\".","Crashes, restarts and delays can still overlap; semantics still matter.","Lock serializes writes, but second agent can still delete first agent data.","Ownership must be explicit and preserved across all mutators."] },
+        explain: 'Ek owner ya clear arbitration rakho; entries par owner convention ho toh sab writers niyam maanein. Lock ek waqt par writers ghataata hai, par agla writer pichhle writer ka valid data phir bhi mita sakta hai.',
+        choiceExplanations: [
+          'Ek owner ya clear arbitration rakho; entries par owner convention ho toh sab writers niyam maanein. Lock ek waqt par writers ghataata hai, par agla writer pichhle writer ka valid data phir bhi mita sakta hai.',
+          'Restart, delays aur edits alag waqt par bhi valid shared state tod sakte hain.',
+          'Lock mutual exclusion deta hai; edit ka meaning sahi hone ka proof nahi.',
+          'Latest overwrite doosre agent ka valid data mita sakta hai; ownership explicit chahiye.',
+        ],
+      },
       {
         q: 'Interviewer: "CI green tha, prod gira. Test coverage kaise badhaoge?"',
-        choices: ["Test lifecycle state and upgrade sequences","More unit lines alone proves lifecycle coverage","Faster CI makes every old-host state covered","Never test deployment behavior out side fresh boot"],
+        choices: [
+          'Prod lifecycle, in-place upgrade aur alag start orders ko tests mein lao',
+          'Unit coverage badhao; lines cover hon toh upgrade lifecycle bhi cover hai',
+          'CI jaldi chalao; speed se purane hosts ki state represent ho jaayegi',
+          'Clean reboot ka test rakho; configured host ka restart extra case hai',
+        ],
         answer: 0,
-        explain: 'Lab: reboot-test 100/100, in-place 0/100.',
-       choiceExplanations: ["Lab: reboot-test 100/100, in-place 0/100.","Coverage percent does not ensure in-place upgrade/start order modeled.","CIspeed changes feedback time, not representativeness.","Fresh boot alone missed exact production sequence here."] },
+        explain: 'Lab mein reboot par 100/100 packets gaye, in-place patch par 0/100. Unit coverage ke saath lifecycle aur integration checks chahiye: existing rules, service order aur upgrade sequence. Counts lab ke hain.',
+        choiceExplanations: [
+          'Lab mein reboot par 100/100 packets gaye, in-place patch par 0/100. Unit coverage ke saath lifecycle aur integration checks chahiye: existing rules, service order aur upgrade sequence. Counts lab ke hain.',
+          'Line coverage se relevant host state aur service sequence cover hona tay nahi.',
+          'CI speed feedback jaldi deti hai; missing state ko test mein nahi jodti.',
+          'Configured host restart wahi case tha jo clean boot test chhod raha tha.',
+        ],
+      },
     ],
   },
   success: [
@@ -889,10 +1131,21 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
       ],
       observe: {
         q: 'Herd mein asli kaam wahi (5,000 registrations) — phir 30 s kyun?',
-        choices: ["Rejected retries consumed control-plane work","Rejecting request has necessarily zero CPU cost","More attempts imply more useful registrations","Simultaneous retry improves every recovery rate"],
+        choices: [
+          '35,548 rejected retries ne CPU liya; useful registrations ke liye kam waqt bacha',
+          'Rejected request ka CPU cost zero hai; kaam bas successful registration hai',
+          '40,548 attempts ka matlab 40,548 useful registrations poore hue',
+          'Sab retries saath aaye, toh har node ka recovery wait kam hona chahiye',
+        ],
         answer: 0,
-        explain: 'Recovery ka load recovery ko hi rok deta hai — backoff/jitter/waves se todo.',
-       choiceExplanations: ["Recovery ka load recovery ko hi rok deta hai — backoff/jitter/waves se todo.","Authentication, parsing, routing and logging may cost even on reject.","Duplicates/rejections consume capacity without useful progress.","Backoff/jitter/admission can avoid wasteful synchronized attempts."] },
+        explain: 'Lab mein useful kaam 5,000 registrations tha. Rejects bhi per-attempt CPU lete hain; herd ne 35,548 extra attempts banaaye. Backoff, jitter aur waves waste ghataate hain. Exact timings lab model ke hain.',
+        choiceExplanations: [
+          'Lab mein useful kaam 5,000 registrations tha. Rejects bhi per-attempt CPU lete hain; herd ne 35,548 extra attempts banaaye. Backoff, jitter aur waves waste ghataate hain. Exact timings lab model ke hain.',
+          'Parsing, auth, routing ya logging reject par bhi CPU le sakte hain; lab har attempt ka cost model karta hai.',
+          'Attempts mein rejected aur duplicate work bhi hai; useful progress 5,000 registrations hai.',
+          'Saath retries recovering control plane ko bhar sakti hain; har node ko faster recovery zaroori nahi.',
+        ],
+      },
       lesson: 'Wapas aana bhi ek load hai — use baanto.',
     },
     {
@@ -902,7 +1155,7 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
       steps: [
         { text: 'Out-of-band raasta kholo (cloud console, alag SSH) — apne monitoring par bharosa nahi', explain: 'Andhe ho — pehle aankhein.' },
         { text: 'Wajah pakdo aur trigger roko (patch/auto-update band)', explain: 'Warna theek ki hui machines phir giregi.' },
-        { text: 'Parent control planes theek karo', explain: 'Unke bina nodes register nahi ho sakte.' },
+        { text: 'Parent control planes theek karo', explain: 'Control-plane services ke bina nodes register nahi ho sakte.' },
         { text: 'Worker machines waves mein, backoff ke saath', explain: 'Thundering herd se bachao.' },
         { text: 'Services upar lao, phir monitoring confirm kare', explain: 'Sabse upar ki layer aakhir mein.' },
       ],
@@ -913,17 +1166,39 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
     instructions: 'Do sawaal. 🎤',
     questions: [
       {
-        q: "Monitoring runs with workload. Independence ka defensible goal?",
-        choices: ["Independent path for critical visibility and access","Two replicas in one failure domain is complete isolation","S3 logs alone guarantee live alerting works","Separate provider means no shared trust dependency"],
+        q: 'Monitoring workload ke saath chalti hai. Independence ka practical goal kya hoga?',
+        choices: [
+          'Critical metrics aur emergency access ka tested alag raasta rakho',
+          'Do replicas same cluster mein rakho; poori failure independence mil gayi',
+          'Logs S3 mein rakh do; live collection aur alerting ka raasta mil gaya',
+          'Alag cloud lo; identity aur DNS ka shared risk bhi khatam ho jaayega',
+        ],
         answer: 0,
-        explain: "Independent critical observability and emergency access reduces common failure blind spots. Absolute share nothing often impossible; inventory network, identity, DNS, CA, CIandprovider dependencies and test degraded path. Separate provider alone not sufficient.",
-       choiceExplanations: ["Independent critical observability and emergency access reduces common failure blind spots. Absolute share nothing often impossible; inventory network, identity, DNS, CA, CIandprovider dependencies and test degraded path. Separate provider alone not sufficient.","Correlated config/network/control plane failure can hit every replica.","Archive logs need reachable capture/query/alerting pipeline.","Identity, DNS, CA, CI and operators can remain common dependencies."] },
+        explain: 'Critical diagnosis aur recovery ke liye common failure se bachne wala path banao. Network, identity, DNS, CA, CI aur provider dependencies likho. Bilkul kuch share na karna mushkil ho sakta hai; degraded path ki drill karo.',
+        choiceExplanations: [
+          'Critical diagnosis aur recovery ke liye common failure se bachne wala path banao. Network, identity, DNS, CA, CI aur provider dependencies likho. Bilkul kuch share na karna mushkil ho sakta hai; degraded path ki drill karo.',
+          'Same config, network ya control-plane fault dono replicas ko saath rok sakta hai.',
+          'Archive logs tab useful hain jab capture, query aur alerts ka reachable raasta bhi ho.',
+          'Alag provider ke saath bhi shared SSO, DNS, trust ya CI failure baaki reh sakta hai.',
+        ],
+      },
       {
         q: 'Interviewer: "Outage ke baad sab clients ek saath reconnect karte hain aur server phir girta hai."',
-        choices: ["Jittered retries, bounded admission and waves","Unlimited reconnect immediately after failure","Reject expensive full auth before any rate cap","Manual restart every client as universal fix"],
+        choices: [
+          'Backoff-jitter, incoming-work limits aur recovery waves saath lagao',
+          'Reconnect requests ko khula chhodo; pehle aane se sab jaldi uth jaayenge',
+          'Har reject par mehenga full auth chalao; rate cap auth ke baad rakho',
+          'Har client manually restart karo; restart hi retry bheed ka hal hai',
+        ],
         answer: 0,
-        explain: 'Lab: 30.2 s → 6.6 s.',
-       choiceExplanations: ["Lab: 30.2 s → 6.6 s.","Synchronized attempts overload recovering backend and auth providers.","Cheap early rejection protects scarce backend resources.","Restart can trigger additional herd; bounded protocol better recovery design."] },
+        explain: 'Client retries ko backoff aur jitter se baanto. Server par cheap early admission limits aur bounded queue rakho; capacity dekh kar waves laao. Lab mein herd 30.2 s, backoff 6.6 s tha; production result workload se badlega.',
+        choiceExplanations: [
+          'Client retries ko backoff aur jitter se baanto. Server par cheap early admission limits aur bounded queue rakho; capacity dekh kar waves laao. Lab mein herd 30.2 s, backoff 6.6 s tha; production result workload se badlega.',
+          'Saath reconnect auth providers aur recovering backend ko phir bhar sakte hain.',
+          'Mehenga kaam reject se pehle ho toh refused requests bhi scarce resources khaati hain.',
+          'Manual restart nayi synchronized bheed bana sakta hai; retry protocol ko bound karo.',
+        ],
+      },
     ],
   },
   success: [
@@ -997,7 +1272,7 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
       flaws: [
         { id: 'image', why: 'Ek image sab regions mein ek saath = ek bug har jagah. Image rollout bhi region-dar-region, bake ke saath.' },
         { id: 'cron', why: 'Datadog 2023: same updater, same UTC time. Waves mein karo, pehle prod jaisi purani machines par.' },
-        { id: 'flags', why: 'Global flag service par har request live — woh gira ya kharab flag gaya toh sab regions. Regional cache + last-known-good + staged flag rollout.' },
+        { id: 'flags', why: 'Global flag service par har request live — flag service giri ya kharab flag gaya toh sab regions. Regional cache + last-known-good + staged flag rollout.' },
         { id: 'ca', why: 'Ek CA, ek expiry date = sab mTLS ek saath toot-ta hai. Rotation stagger karo, expiry alert, aur CA ka apna failure plan.' },
       ],
       fine: {
@@ -1012,16 +1287,38 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
       questions: [
         {
           q: 'Stack pass mein teen sawaal kya hain?',
-          choices: ["Origin, mutation trigger and coordinated exposure","Only cost, owner and purchase date matter","Only region count proves software isolation","Only implementation language predicts blast scope"],
+          choices: [
+            'Source kya hai, badlav ka trigger kya hai, kitni jagah saath pahunchta hai?',
+            'Keemat kya hai, khareedne wala kaun tha, purchase date kaunsi thi?',
+            'Kitne regions hain, kitne clouds hain, kitne AZs mein fleet banta hai?',
+            'Kaunsi language hai, kaunsa framework hai, app ka DB kaunsa hai?',
+          ],
           answer: 0,
-          explain: 'Yeh sawaal geography se upar ki cheezein pakadte hain.',
-         choiceExplanations: ["Yeh sawaal geography se upar ki cheezein pakadte hain.","Those operational details useful, but miss common change propagation paths.","Same global updater can cross all regions.","Language alone does not identify shared artifacts/control channels."] },
+          explain: 'Stack pass shared source aur change path dhoondhta hai. Updater, image, CI, CA ya DNS ka badlav kai regions tak saath pahunch sakta hai. Geography aur purchase details useful hain, par propagation ka jawab alag chahiye.',
+          choiceExplanations: [
+            'Stack pass shared source aur change path dhoondhta hai. Updater, image, CI, CA ya DNS ka badlav kai regions tak saath pahunch sakta hai. Geography aur purchase details useful hain, par propagation ka jawab alag chahiye.',
+            'Cost aur ownership kaam ke hain; shared update ke trigger aur scope ka pata nahi dete.',
+            'Region count geography bataata hai; same updater ya image sab regions ko jod sakta hai.',
+            'Language aur framework se shared artifact aur control channel ka exposure tay nahi hota.',
+          ],
+        },
         {
-          q: "Prevention controls ki continuingcost kya hai?",
-          choices: ["Ongoing prevention work needs maintained ownership","Only license price is prevention maintenance","Preventiononceinstalled needs no review","No incident for 2 years proves safeguards unnecessary"],
+          q: 'Prevention controls ki lagataar keemat kya hai?',
+          choices: [
+            'Reviews, tests, rollout aur drills ka owner aur maintenance chahiye',
+            'Licence fee de di, toh prevention ka ongoing kaam poora hua',
+            'Control install ho gaya, toh naye states ke liye review zaroori nahi',
+            'Do saal outage nahi aaya, toh safeguards ka ab koi kaam nahi',
+          ],
           answer: 0,
-          explain: "Prevention consumes continuing review, test, rollout and drill effort, and benefits may look invisible. Ownership, automated checks and periodic verification keep controls effective; exact 2 year discipline claim is illustrative, not empirical constant.",
-         choiceExplanations: ["Prevention consumes continuing review, test, rollout and drill effort, and benefits may look invisible. Ownership, automated checks and periodic verification keep controls effective; exact 2 year discipline claim is illustrative, not empirical constant.","Review, time, testing and rollout operating cost also matter.","Components/requirements evolve; controls need maintenance and drills.","Low incident frequency mayreflect effective controls, notlackofrisk."] },
+          explain: 'Prevention ko reviews, automation, representative tests aur drills se chalaye rakhna padta hai. Faayda aksar avoided incident hota hai, jo dikhta kam hai. Do saal mein discipline tootna fixed law nahi; ownership aur checks se controls zinda rakho.',
+          choiceExplanations: [
+            'Prevention ko reviews, automation, representative tests aur drills se chalaye rakhna padta hai. Faayda aksar avoided incident hota hai, jo dikhta kam hai. Do saal mein discipline tootna fixed law nahi; ownership aur checks se controls zinda rakho.',
+            'Time, testing aur rollout operation ka kharcha licence ke alawa bhi hai.',
+            'Software aur requirements badalti hain; controls ki scope aur recovery phir jaancho.',
+            'Low incident rate effective controls ka nateeja bhi ho sakta hai.',
+          ],
+        },
       ],
     },
   ],
@@ -1031,16 +1328,38 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
     questions: [
       {
         q: 'Interviewer: "Hamare architecture ka blast radius review karo."',
-        choices: ["Geographic and software/control-plane failure paths","Count regions alone guarantees bounded impact","CloudSLA alone covers stack changes","Load test alone covers every common cause"],
+        choices: [
+          'Geography aur shared software/control-plane paths dono ka review karo',
+          'Regions gino; zyada regions ka matlab impact apne aap bounded hai',
+          'Provider SLA padho; customer ke stack updates bhi cover ho jaayenge',
+          'Load test karo; capacity test se har shared failure path pakad lenge',
+        ],
         answer: 0,
-        explain: 'Doosra diagram.',
-       choiceExplanations: ["Doosra diagram.","Shared images, certificates, DNS or updates can hit every region.","Application-owned controls and dependencies need own failure analysis.","Load tests cover capacity; destructive config/lifecycle cases need different tests."] },
+        explain: 'Geographic pass mein zones, data aur failover capacity dekho. Stack pass mein OS, images, updater, CI, CA, DNS aur flags ke shared paths dekho. Har change ka scope aur recovery dependency jaancho.',
+        choiceExplanations: [
+          'Geographic pass mein zones, data aur failover capacity dekho. Stack pass mein OS, images, updater, CI, CA, DNS aur flags ke shared paths dekho. Har change ka scope aur recovery dependency jaancho.',
+          'Same image, cert ya update sab regions par ek saath asar kar sakta hai.',
+          'App-owned changes aur dependencies ke failure mode alag review karne hain.',
+          'Load test capacity dikhaata hai; lifecycle aur destructive config cases ko alag test chahiye.',
+        ],
+      },
       {
         q: 'Interviewer: "Ek saajha resource do teams edit karti hain — long-term fix?"',
-        choices: ["Explicit resource owner or validated arbitration","Weekly meeting alone enforces runtime ownership","Document alone blocksforeign rule deletion","File locking alone preserves semantic ownership"],
+        choices: [
+          'Explicit owner ya arbiter rakho; integration tests se edit contract jaancho',
+          'Weekly meeting rakho; agreement hi runtime ownership enforce karega',
+          'Owner documentation likho; document foreign rule deletion rok dega',
+          'File lock rakho; writes ka order hi semantic ownership bacha lega',
+        ],
         answer: 0,
-        explain: 'Warna "bugs ki category" — ek-ek karke patch.',
-       choiceExplanations: ["Warna \"bugs ki category\" — ek-ek karke patch.","Human coordination does not prevent bad mutator behavior.","Runtime authorization/policy and integration tests enforce contract.","Serialized agents can still delete others entries if ownership rules wrong."] },
+        explain: 'Saajhe resource ke mutators ko owner-scoped policy ya ek arbiter ke through chalao. Permissions aur integration checks se contract enforce karo. Lock writers ko serialize kar sakta hai, par agla writer valid entry phir bhi mita sakta hai.',
+        choiceExplanations: [
+          'Saajhe resource ke mutators ko owner-scoped policy ya ek arbiter ke through chalao. Permissions aur integration checks se contract enforce karo. Lock writers ko serialize kar sakta hai, par agla writer valid entry phir bhi mita sakta hai.',
+          'Meeting coordination karti hai; galat mutator ko runtime par khud nahi rokti.',
+          'Documentation niyam bataati hai; code aur authorization ko niyam maanna hoga.',
+          'Serialization se edit ka meaning sahi hona prove nahi hota.',
+        ],
+      },
     ],
   },
   success: [
