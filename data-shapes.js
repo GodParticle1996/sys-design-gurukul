@@ -158,21 +158,21 @@ SD.registerLevels('shapes', [
         { text: 'IoT sensors se 5 lakh readings/sec', bin: 'write', explain: 'Append-only, kabhi update nahi, reads range-scan by time. LSM + time-partitioning ka classic case.' },
         { text: 'Cricket ka live score 50 lakh screens par', bin: 'fan', explain: 'Ek write, laakhon receivers. Sawaal "DB kaisa" nahi — "connections kaun rakhega aur update kaise pahunchega" hai.' },
         { text: 'Wallet — paisa add karo, kharch karo, balance dikhao', bin: 'txn', explain: 'Yahan galat jawab ki keemat sabse zyada hai. Double-entry ledger, strong consistency, aur reconciliation — cache ka sawaal baad mein aata hai.' },
-        { text: 'Group chat mein message bhejna', bin: 'fan', explain: 'Ek message → N members ko turant. Aur asli sawaal: jo member offline hai uska kya? Yahi is shape ka signature failure mode hai.' },
+        { text: 'Group chat mein message bhejna', bin: 'fan', explain: 'Ek message → N members ko turant. Aur asli sawaal: offline member ka kya? Yahi is shape ka signature failure mode hai.' },
         { text: 'Application logs ingest karna — 2 TB/din', bin: 'write', explain: 'Bhaari append, kabhi update nahi, aur read pattern "aakhri ek ghanta" hota hai. Kafka + object storage + retention policy.' },
         { text: 'News homepage — sabko lagbhag ek jaisa dikhta hai', bin: 'read', explain: 'Ek hi content laakhon ko. Yahan precompute + CDN itna kaam kar dete hain ki backend lagbhag idle rehta hai.' },
-        { text: 'Refund — merchant se paise wapas user ke wallet mein', bin: 'txn', explain: 'Do systems ke beech paisa. Idempotency, ledger entries, aur reconciliation job — teenon zaroori. Yeh workflow bhi hai, par uska DIL transactional hai.' },
+        { text: 'Refund — merchant se paise wapas user ke wallet mein', bin: 'txn', explain: 'Do systems ke beech paisa. Idempotency, ledger entries, aur reconciliation job — teenon zaroori. Workflow bhi hai, par system ka DIL transactional hai.' },
       ],
     },
     {
       type: 'match',
       title: 'Shape → uska jaana-pehchana failure mode',
       pairs: [
-        { left: 'Search & filtering', right: 'Indexing lag — "maine save kiya, search mein nahi dikh raha"', explain: 'Search index lagbhag hamesha <b>async</b> bharta hai. Yeh bug nahi hai, design hai — par user ko dikhna chahiye ("indexing ho raha hai") warna woh dobara save karega.' },
+        { left: 'Search & filtering', right: 'Indexing lag — "maine save kiya, search mein nahi dikh raha"', explain: 'Search index lagbhag hamesha <b>async</b> bharta hai. Bug nahi, design hai — par user ko dikhna chahiye ("indexing ho raha hai"), warna user dobara save karega.' },
         { left: 'Geo / spatial', right: 'Hot cell — airport par surge, ek cell mein saare drivers', explain: 'Geo data <b>uniformly</b> nahi bikhra hota. Aadha shehar ek cell mein aa jaata hai. Cell size fixed rakhna hi galti hai — adaptive grid ya cell splitting chahiye.' },
         { left: 'Notification', right: '9:00 AM par 50 lakh notifications ek saath', explain: 'Sabne "subah 9 baje" chuna. Ilaaj: schedule ko jaan-boojh ke <b>stagger</b> karo (±15 min jitter) aur user ke timezone se baandho.' },
         { left: 'File & media', right: 'App server ke through 4 GB video proxy karna', explain: 'Upload app ke through jaane ka matlab hai poore upload ke doraan ek thread + ek connection block. Ilaaj: presigned URL se client seedha object storage par likhe.' },
-        { left: 'Distributed coordination', right: 'Split brain — do nodes ek saath "main leader hoon" maante hain', explain: 'Network partition mein purana leader ko pata hi nahi chalta ki uska lease khatam ho gaya. Ilaaj: fencing token — har write ke saath ek badhta hua number, aur storage purana number reject kare.' },
+        { left: 'Distributed coordination', right: 'Split brain — do nodes ek saath "main leader hoon" maante hain', explain: 'Network partition mein purana leader ko pata hi nahi chalta ki leader ka lease khatam ho gaya. Ilaaj: fencing token — har write ke saath ek badhta hua number, aur storage purana number reject kare.' },
         { left: 'Batch / analytics', right: 'Pipeline chup-chaap fail — dashboard purana data dikhata raha', explain: 'Sabse khatarnak isliye ki koi error nahi dikhta. Ilaaj: <b>freshness</b> par alert karo ("aakhri successful run 3 ghante purana hai"), sirf failure par nahi.' },
       ],
     },
@@ -182,22 +182,55 @@ SD.registerLevels('shapes', [
       questions: [
         {
           q: 'Pattern ka naam lene ka asli faayda kya hai?',
-          choices: ["Known tradeoffs aur failure questions milte","Pattern name se capacity prove hoti","Pattern name se code correctness milti","Diagram same ho toh workload same hota"],
+          choices: [
+            'Naam ke saath pattern ke jaane-pehchaane tradeoffs aur failure ke sawaal aa jaate hain',
+            'Pattern ka naam le liya toh system ki capacity apne aap saabit ho jaati hai, bas',
+            'Pattern ka naam lene se code bhi apne aap sahi likha jaata hai, bina kisi bug ke',
+            'Do systems ka diagram ek jaisa dikhe toh dono ka workload bhi ek jaisa hota hai',
+          ],
           answer: 0,
-          explain: 'Naam ek <b>checklist unlock</b> karta hai. "Realtime fanout" bolte hi khud pooch loge: offline user ka kya? connection storm par kya? fanout write par ya read par? Bina naam ke tum wahi 3 boxes banaate ho jo pichhli baar banaye the.',
-         choiceExplanations: ["Naam ek <b>checklist unlock</b> karta hai. \"Realtime fanout\" bolte hi khud pooch loge: offline user ka kya? connection storm par kya? fanout write par ya read par? Bina naam ke tum wahi 3 boxes banaate ho jo pichhli baar banaye the.","Capacity ko actual rates, service times aur bottleneck se validate karo.","Implementation and failure handling still verify karni hogi.","Same component boxes different workloads/guarantees serve kar sakte hain."] },
+          explain: 'Naam ek checklist khol deta hai. "Realtime fanout" bolte hi khud poochhoge: offline user ka kya? connection storm par kya? fanout likhte waqt ya padhte waqt? Bina naam ke tum wahi 3 boxes banaate ho jo pichhli baar banaye the.',
+          choiceExplanations: [
+            'Naam ek checklist khol deta hai. "Realtime fanout" bolte hi khud poochhoge: offline user ka kya? connection storm par kya? fanout likhte waqt ya padhte waqt? Bina naam ke tum wahi 3 boxes banaate ho jo pichhli baar banaye the.',
+            'Naam sirf sahi sawaal deta hai. Capacity naap ke hi pata chalti hai.',
+            'Naam design ki disha deta hai. Code ki galtiyan phir bhi test se pakadni padti hain.',
+            'Ek jaise boxes ke peeche bilkul alag load ho sakta hai. Workload numbers se naapo.',
+          ],
+        },
         {
           q: 'Instagram ka shape kya hai?',
-          choices: ["Feed, media, graph aur realtime alag shapes","Only media; feed ka access pattern same","Only graph; storage cost irrelevant hai","Only reads; uploads independent nahi hain"],
+          choices: [
+            'Feed read-heavy, photos media, follow rishton ka graph, notifications realtime fanout',
+            'Feed read-heavy, photos ledger, follow rishton ka graph, notifications realtime fanout',
+            'Feed batch analytics, photos media, follow rishton ka graph, notifications realtime fanout',
+            'Feed read-heavy, photos media, follow rishton ka graph, notifications batch analytics',
+          ],
           answer: 0,
-          explain: 'Yahi woh baat hai jo "pattern rat lena" aur "pattern samajhna" ko alag karti hai. Asli systems mein 2–3 shapes hote hain, aur har hisse ka <b>alag</b> failure mode hota hai. Ek hi hathoda sab par chalane se hi log photos ko DB mein daal dete hain.',
-         choiceExplanations: ["Yahi woh baat hai jo \"pattern rat lena\" aur \"pattern samajhna\" ko alag karti hai. Asli systems mein 2–3 shapes hote hain, aur har hisse ka <b>alag</b> failure mode hota hai. Ek hi hathoda sab par chalane se hi log photos ko DB mein daal dete hain.","Media ingestion/processing aur feed serving ke contracts different hain.","Social graph relationships matter, but objects/feeds also matter.","Uploads own write/storage/processing workloads create karte hain."] },
+          explain: '"Pattern rat lena" aur "pattern samajhna" mein yahi farak hai. Asli systems mein 2–3 shapes hote hain, aur har hisse ka alag failure mode. Ek hi hathoda sab par chalaya toh log photos ko DB mein daal dete hain.',
+          choiceExplanations: [
+            '"Pattern rat lena" aur "pattern samajhna" mein yahi farak hai. Asli systems mein 2–3 shapes hote hain, aur har hisse ka alag failure mode. Ek hi hathoda sab par chalaya toh log photos ko DB mein daal dete hain.',
+            'Photos bytes hain — media shape. Ledger paise ke hisaab ke liye hota hai.',
+            'Feed har request par padhi jaati hai — read-heavy. Batch analytics der se chalne wali reports ke liye hai.',
+            'Notifications turant pahunchni chahiye — realtime fanout. Batch analytics der se chalti hai.',
+          ],
+        },
         {
           q: 'Chaar classification sawaalon ke baad, paanchva sawaal jo sabse zyada matter karta hai?',
-          choices: ["Wrong or stale outcome ka risk poochho","Only user count se consistency choose","Only tech budget se correctness choose","Only team size se privacy choose"],
+          choices: [
+            '"Yahan galat ya purana jawab kitna mehenga hai?" — caching aur consistency yahi tay karta',
+            '"Kitne users honge?" — bas users ki ginti dekh ke consistency chuno, aur kuch nahi',
+            '"Tech ka budget kitna hai?" — bas budget dekh ke sahi-galat ka faisla kar lo',
+            '"Team kitni badi hai?" — bas team ke size se privacy ka faisla kar lo, seedha',
+          ],
           answer: 0,
-          explain: 'Ek feed mein 30 second purana post dikhna theek hai — isliye wahan aggressive caching aur eventual consistency chalti hai. Ek wallet mein purana balance dikhna theek nahi — isliye wahan cache ek <b>khatra</b> hai. Ek hi sawaal ne dono systems ka poora data layer decide kar diya.',
-         choiceExplanations: ["Ek feed mein 30 second purana post dikhna theek hai — isliye wahan aggressive caching aur eventual consistency chalti hai. Ek wallet mein purana balance dikhna theek nahi — isliye wahan cache ek <b>khatra</b> hai. Ek hi sawaal ne dono systems ka poora data layer decide kar diya.","Scale influences cost, but business invariant risk remains.","Budget constraints wrong money/privacy outcomes acceptable nahi banati.","Team size implementation choices guide karti hai; privacy obligations remain."] },
+          explain: 'Feed mein 30 second purana post dikhe toh chalta hai — isliye tez caching aur eventual consistency. Wallet mein purana balance dikhe toh nahi chalta — wallet mein cache khatra hai. Ek hi sawaal ne dono systems ka data layer tay kar diya.',
+          choiceExplanations: [
+            'Feed mein 30 second purana post dikhe toh chalta hai — isliye tez caching aur eventual consistency. Wallet mein purana balance dikhe toh nahi chalta — wallet mein cache khatra hai. Ek hi sawaal ne dono systems ka data layer tay kar diya.',
+            'Users ki ginti scale batati hai. Galat jawab kitna dard dega, users ki ginti nahi batati.',
+            'Budget zaroori hai, par sahi-galat ki keemat pehle aati hai. Wallet sasta karke galat nahi chal sakta.',
+            'Team ka size kaam baantne ka sawaal hai. Privacy aur sahi jawab data se tay hote hain.',
+          ],
+        },
       ],
     },
     {
@@ -217,32 +250,32 @@ SD.registerLevels('shapes', [
         {
           id: 'shape', label: 'Timeline ka mukhya shape', icon: '🏷️',
           options: [
-            { id: 'rh', label: "Read-heavy personalized fanout", score: 3, why: 'Sahi. Ek tweet likha jaata hai, laakhon baar padha jaata hai. Read:write ~1000:1. Isliye poora design read path ke around banega — aur likhne par extra kaam karna manzoor hai.' },
-            { id: 'wh', label: "Write-heavy append-only audit log", score: -2, why: 'Tweets ki sankhya reads ke saamne kuch bhi nahi hai. Is naam se tum galat cheez optimize karoge — ingest pipeline banaoge jabki dard timeline read mein hai.' },
-            { id: 'tx', label: "Strongly atomic multi-resource ledger", score: -3, why: 'Tweet kho jaana bura hai par vittiya nuksaan nahi. Yahan strong consistency ki keemat chukane ki koi wajah nahi — aur woh keemat latency mein chukani padti.' },
+            { id: 'rh', label: "Read-heavy, har user ka alag fanout", score: 3, why: 'Sahi. Ek tweet likha jaata hai, laakhon baar padha jaata hai. Read:write ~1000:1. Isliye poora design read path ke around banega — aur likhne par extra kaam karna manzoor hai.' },
+            { id: 'wh', label: "Write-heavy, sirf jodne wala audit log", score: -2, why: 'Tweets ki sankhya reads ke saamne kuch bhi nahi hai. Is naam se tum galat cheez optimize karoge — ingest pipeline banaoge jabki dard timeline read mein hai.' },
+            { id: 'tx', label: "Pakka atomic, kai resources wala ledger", score: -3, why: 'Tweet kho jaana bura hai par vittiya nuksaan nahi. Yahan strong consistency ki keemat chukane ki koi wajah nahi — strong consistency ki keemat latency mein chukani padti.' },
           ],
         },
         {
           id: 'fanout', label: 'Timeline kab banega', icon: '📡',
           options: [
-            { id: 'hybrid', label: "Hybrid fanout for celebrity skew", score: 3, why: 'Yahi asli jawab hai. Aam user ke liye write par fanout (200 inboxes likhna sasta hai, aur read turant ho jaata hai). Celeb ke liye woh 5 crore writes ban jaata — isliye celeb tweets read par merge hote hain. Twitter yahi karta hai.' },
-            { id: 'write', label: "Materialize every follower inbox", score: -1, why: 'Aam users ke liye sahi, par ek celeb ka tweet 5 crore inbox writes bana dega — ek tweet se poora cluster ruk jaayega. Yeh "celebrity problem" is shape ka signature failure mode hai.' },
-            { id: 'read', label: "Compute every timeline on read", score: -1, why: 'Har timeline load par 200 logon ki latest tweets fetch aur merge karni padengi — p99 200ms lagbhag namumkin. Read-heavy system mein kaam <b>write</b> par karo, read par nahi.' },
+            { id: 'hybrid', label: "Hybrid fanout: celeb ke tweets read par jodo", score: 3, why: 'Yahi asli jawab hai. Aam user ke liye write par fanout (200 inboxes likhna sasta hai, aur read turant ho jaata hai). Celeb ke liye write-fanout 5 crore writes ban jaata — isliye celeb tweets read par merge hote hain. Twitter yahi karta hai.' },
+            { id: 'write', label: "Har follower ka inbox likhte waqt bharo", score: -1, why: 'Aam users ke liye sahi, par ek celeb ka tweet 5 crore inbox writes bana dega — ek tweet se poora cluster ruk jaayega. "Celebrity problem" is shape ka signature failure mode hai.' },
+            { id: 'read', label: "Har timeline padhte waqt naye sire se banao", score: -1, why: 'Har timeline load par 200 logon ki latest tweets fetch aur merge karni padengi — p99 200ms lagbhag namumkin. Read-heavy system mein kaam <b>write</b> par karo, read par nahi.' },
           ],
         },
         {
           id: 'media', label: 'Tweet ke saath images', icon: '🖼️',
           options: [
-            { id: 'obj', label: "Object store and bounded CDN reuse", score: 3, why: 'Sahi — yeh ek alag shape (media) hai aur use alag design chahiye. DB mein sirf metadata; bytes S3 par, aur users ke paas CDN se.' },
-            { id: 'blob', label: "Large BLOBs on transaction hot path", score: -3, why: 'Yeh classic galti hai. Images DB ka buffer pool kha jaayengi (jisse asli queries slow hongi), backup ka size 100x ho jaayega, aur replication lag chad jaayega. DB metadata ke liye hai, bytes ke liye nahi.' },
-            { id: 'fs', label: "Only disposable app local disk", score: -2, why: 'Instance ephemeral hai — restart par gaya. Aur do instances ka data alag ho jaayega. Yeh sirf single-server duniya mein chalta hai.' },
+            { id: 'obj', label: "Object store + CDN, DB mein sirf metadata", score: 3, why: 'Sahi — images ek alag shape (media) hain, aur media ko alag design chahiye. DB mein sirf metadata; bytes S3 par, aur users ke paas CDN se.' },
+            { id: 'blob', label: "Bade BLOBs transaction wale DB mein", score: -3, why: 'Classic galti. Images DB ka buffer pool kha jaayengi (asli queries slow hongi), backup ka size 100x ho jaayega, aur replication lag chad jaayega. DB metadata ke liye hai, bytes ke liye nahi.' },
+            { id: 'fs', label: "Sirf app ki local disk, jo restart par mitti", score: -2, why: 'Instance ephemeral hai — restart par gaya. Aur do instances ka data alag ho jaayega. Local disk sirf single-server duniya mein chalti hai.' },
           ],
         },
         {
           id: 'cost', label: 'Galat jawab ki keemat', icon: '⚖️',
           options: [
-            { id: 'eventual', label: "Explicit bounded staleness budget", score: 2, why: 'Sahi soch. Yeh ek line poore data layer ko khol deti hai: aggressive caching, async fanout, read replicas — sab manzoor ho jaate hain kyunki thodi purani timeline se kisi ka nuksaan nahi.' },
-            { id: 'strong', label: "Immediate global visibility required", score: -2, why: 'Yeh 5 crore synchronous writes maangta hai. Tumne apne aap par woh shart laga li jiski business ko zaroorat hi nahi thi — aur uski keemat latency aur availability dono mein chukani padti hai.' },
+            { id: 'eventual', label: "Kitna purana chalega, saaf budget tay karo", score: 2, why: 'Sahi soch. Ek line poore data layer ko khol deti hai: aggressive caching, async fanout, read replicas — sab manzoor ho jaate hain kyunki thodi purani timeline se kisi ka nuksaan nahi.' },
+            { id: 'strong', label: "Har jagah turant, global visibility zaroori", score: -2, why: 'Har jagah turant taaza timeline ki shart se reads ko writes ke saath taal-mel rakhna padega — latency aur availability ka kharcha badhta hai, jiski business ko zaroorat hi nahi thi. (Strong visibility ka matlab har follower ka inbox sync likhna nahi; inbox kab banana hai, alag faisla hai.)' },
           ],
         },
       ],
@@ -258,17 +291,39 @@ SD.registerLevels('shapes', [
     instructions: 'Pehle 60 second mein pattern bol dena hi aadha jawab hai. 🎤',
     questions: [
       {
-        q: "UberEats design start:scope and shapes ka defensible approach?",
-        choices: ["Requirements; geo, workflow and tracking scope","Microservices count ko pehle lock karo","DB brand choose; user journey baad mein","Queue add karke payment correctness maano"],
+        q: '"UberEats design karo." Shuruaat kaise karoge?',
+        choices: [
+          'Pehle requirements; phir shapes pehchaano — geo, order workflow aur live tracking',
+          'Pehle microservices ki ginti tay karo — kitni services, yahi pehla faisla hai',
+          'Pehle DB ka brand chuno — user ki journey baad mein dekh lenge, aaram se',
+          'Ek queue laga do — queue lagate hi payment bhi apne aap sahi chalne lagega',
+        ],
         answer: 0,
-        explain: "Pehle user journey, NFRs and invariants clarify karo; phir geo lookup, order workflow and live tracking jaise shapes identify karo. Matching/order se shuru karna chosen scope ka decision hai, universal mandatory first sentence nahi.",
-       choiceExplanations: ["Pehle user journey, NFRs and invariants clarify karo; phir geo lookup, order workflow and live tracking jaise shapes identify karo. Matching/order se shuru karna chosen scope ka decision hai, universal mandatory first sentence nahi.","Deployment boundaries requirements se justify karo.","Latency, invariants and access patterns se storage choose hota hai.","Queue asynchronous transport hai; payment effects need explicit correctness."] },
+        explain: 'Pehle user journey, non-functional zaroorat (latency, scale) aur niyam (paisa do baar na kate) saaf karo. Phir shapes pehchaano: paas ke restaurants aur riders (geo), order ka lifecycle (workflow), live tracking (realtime fanout). Kahan se shuru karna hai — order se ya matching se — scope ka faisla hai, koi pakka pehla vaakya nahi.',
+        choiceExplanations: [
+          'Pehle user journey, non-functional zaroorat (latency, scale) aur niyam (paisa do baar na kate) saaf karo. Phir shapes pehchaano: paas ke restaurants aur riders (geo), order ka lifecycle (workflow), live tracking (realtime fanout). Kahan se shuru karna hai — order se ya matching se — scope ka faisla hai, koi pakka pehla vaakya nahi.',
+          'Services ki ginti design ka nateeja hai, shuruaat nahi. Pehle samjho kya banana hai.',
+          'Brand tab chuno jab pata ho data kaisa hai aur kaise padha jaayega.',
+          'Queue kaam ko baad mein karti hai, sahi nahi karti. Payment ke niyam alag se chahiye.',
+        ],
+      },
       {
-        q: '"Yeh problem read-heavy hai — aage kya poochhoge?"',
-        choices: ["Freshness, key, reuse and cold path poochho","Redis brand se all read risks close","Replicas se staleness automatically zero","CDN se every user data safely share"],
+        q: '"Problem read-heavy hai — aage kya poochhoge?"',
+        choices: [
+          'Data kitna taaza chahiye, cache kis key par, kitna reuse, aur cache miss par kya hoga',
+          'Redis lo — Redis ka brand chunte hi padhne ke saare risk apne aap band ho jaate hain',
+          'Read replicas laga do — replicas se purana data dikhna apne aap zero ho jaata hai',
+          'CDN laga do — CDN har user ka private data bhi sabke saath safe share karta hai',
+        ],
         answer: 0,
-        explain: 'Baaki teenon <b>jawab</b> hain bina sawaal ke. Shape ki checklist tumhe sahi kram mein le jaati hai: pehle source of truth, phir kya-kahan cache, phir miss ka rasta, phir staleness ka budget. Tool ka naam (Redis vs Memcached) sabse aakhir mein aata hai aur sabse kam matter karta hai.',
-       choiceExplanations: ["Baaki teenon <b>jawab</b> hain bina sawaal ke. Shape ki checklist tumhe sahi kram mein le jaati hai: pehle source of truth, phir kya-kahan cache, phir miss ka rasta, phir staleness ka budget. Tool ka naam (Redis vs Memcached) sabse aakhir mein aata hai aur sabse kam matter karta hai.","Cache invalidation, capacity and ownership engine name se solve nahi.","Async replicas lag rakh sakti hain.","Private responses need safe cache policy and key isolation."] },
+        explain: 'Baaki teen jawab bina sawaal ke jawab hain. Shape ki checklist sahi kram deti hai: source of truth kya hai, kya aur kis key par cache hoga, miss par kya hota hai, aur kitna purana data chalega. Tool ka naam (Redis ya Memcached) sabse aakhir mein aata hai, aur sabse kam matter karta hai.',
+        choiceExplanations: [
+          'Baaki teen jawab bina sawaal ke jawab hain. Shape ki checklist sahi kram deti hai: source of truth kya hai, kya aur kis key par cache hoga, miss par kya hota hai, aur kitna purana data chalega. Tool ka naam (Redis ya Memcached) sabse aakhir mein aata hai, aur sabse kam matter karta hai.',
+          'Brand chunna sawaal ka jawab nahi. Taazgi, key aur miss ka raasta pehle tay karo.',
+          'Replicas peeche chal sakte hain — purana data dikh sakta hai. Lag naapna padta hai.',
+          'Private data CDN par galat key se doosre ko dikh sakta hai. Har cheez share karne layak nahi.',
+        ],
+      },
     ],
   },
   success: [
@@ -375,23 +430,56 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
       title: 'Search ki buniyaad',
       questions: [
         {
-          q: "Ordinary B-tree aur LIKE%wireless%:kaunsa statement accurate?",
-          choices: ["Ordinary B-tree lacks substring seek","Every LIKE predicate ignores all indexes","Text columns cannot use any index","Wildcard means trigram also unusable"],
+          q: 'Saada B-tree index aur LIKE \'%wireless%\' — kaunsi baat sahi hai?',
+          choices: [
+            'Saada B-tree beech ke shabd tak seedha nahi pahunchta — shuru ke aksharon se dhoondta hai',
+            'Har LIKE query har index ko hamesha nazarandaaz karti hai — prefix wali query bhi',
+            'Text columns par koi bhi index ban hi nahi sakta — text ke liye index hota hi nahi',
+            'Wildcard hai toh trigram index bhi kabhi kaam nahi aa sakta — koi raasta hi nahi',
+          ],
           answer: 0,
-          explain: "Ordinary B-tree leading-wildcard substring ko direct prefix seek nahi deta. PostgreSQL pg_trgm GIN/GiST certain LIKE/ILIKE patterns acceleratekar sakte hain. Index/operator/collation and selectivity EXPLAIN se verify karo; every LIKE full scan claim inaccurate.",
-         choiceExplanations: ["Ordinary B-tree leading-wildcard substring ko direct prefix seek nahi deta. PostgreSQL pg_trgm GIN/GiST certain LIKE/ILIKE patterns acceleratekar sakte hain. Index/operator/collation and selectivity EXPLAIN se verify karo; every LIKE full scan claim inaccurate.","Anchored prefix queries supported index/operator/collation par seek kar sakti hain.","B-tree, GIN, trigram and full-text indexes text workloads support karte hain.","Trigram indexes some nonanchored LIKE/ILIKE patterns accelerate kar sakte hain."] },
+          explain: 'B-tree sorted hai — shuru ke aksharon se dhoondta hai (LIKE \'wire%\' tez). Beech mein match (LIKE \'%wireless%\') ke liye saada B-tree seedha seek nahi de sakta, toh scan. PostgreSQL ka pg_trgm (GIN/GiST) aise LIKE/ILIKE ko tez kar sakta hai. EXPLAIN se jaancho — "har LIKE full scan" galat hai.',
+          choiceExplanations: [
+            'B-tree sorted hai — shuru ke aksharon se dhoondta hai (LIKE \'wire%\' tez). Beech mein match (LIKE \'%wireless%\') ke liye saada B-tree seedha seek nahi de sakta, toh scan. PostgreSQL ka pg_trgm (GIN/GiST) aise LIKE/ILIKE ko tez kar sakta hai. EXPLAIN se jaancho — "har LIKE full scan" galat hai.',
+            'LIKE \'wire%\' jaisa prefix B-tree use kar sakta hai. Dikkat sirf aage wale wildcard ki hai.',
+            'Text columns par B-tree, trigram aur full-text, sab index ban sakte hain.',
+            'pg_trgm ka trigram index \'%wireless%\' jaise pattern ko tez kar sakta hai.',
+          ],
+        },
         {
-          q: "Async derived search mein source product saved hai, index mein missing. Pehla approach?",
-          choices: ["Check indexing lag; show honest pending state","Refresh instantly fixes every missing document","Async indexing means write was lost","Search rank alone proves DB missing row"],
+          q: 'Product DB mein save ho gaya, par search mein nahi dikh raha (indexing async hai). Pehle kya karoge?',
+          choices: [
+            'Indexing ka lag jaancho, aur user ko saaf "indexing ho rahi hai" dikhao',
+            'Index refresh kar do — refresh se har gayab document turant aa jaata hai',
+            'Async indexing ka matlab write kho gaya — product dobara save karwao',
+            'Search rank neeche hai, toh pakka DB mein row hi nahi — DB theek karo',
+          ],
           answer: 0,
-          explain: "Given derived search async hai, toh source commit ke baad ingestion/refresh lag possible hai. Ingestion failure vs visibility delay inspect karo; honest indexing/pending state or owned-item source path use karo. Forced refresh every write costly ho sakta hai.",
-         choiceExplanations: ["Given derived search async hai, toh source commit ke baad ingestion/refresh lag possible hai. Ingestion failure vs visibility delay inspect karo; honest indexing/pending state or owned-item source path use karo. Forced refresh every write costly ho sakta hai.","Refresh only indexed data visible karega; ingestion may be delayed/failed.","Durable source write can exist before derived index catches up.","Document membership and ranking separate diagnostics hain."] },
+          explain: 'Search index source se async banta hai, toh commit ke baad thoda lag normal hai. Pehle alag karo: indexing fail hui, ya bas der hai? User ko saaf pending state dikhao, ya seller ke apne products seedha DB se dikhao. Har write par zabardasti refresh mehenga pad sakta hai.',
+          choiceExplanations: [
+            'Search index source se async banta hai, toh commit ke baad thoda lag normal hai. Pehle alag karo: indexing fail hui, ya bas der hai? User ko saaf pending state dikhao, ya seller ke apne products seedha DB se dikhao. Har write par zabardasti refresh mehenga pad sakta hai.',
+            'Refresh sirf indexed data ko dikhata hai. Document pipeline mein atka ho toh refresh se nahi aayega.',
+            'Product DB mein save hai. Async ka matlab der hai, khoya nahi.',
+            'Rank aur DB ki row alag cheezein hain. Pehle dekho document index mein hai bhi ya nahi.',
+          ],
+        },
         {
           q: "Is design mein search derived projection kyun rakhein?",
-          choices: ["Derived index ko authoritative source se rebuild","Search engines cannot persist any data","Every search system must be disposable","Index rebuild proves source can be deleted"],
+          choices: [
+            'Index ko asli source se kabhi bhi dobara banaya ja sake — mapping badle ya index bigde',
+            'Search engines kisi bhi data ko pakka save kar hi nahi sakte — kabhi bhi nahi',
+            'Har search system hamesha phenkne layak hona chahiye — yahi pakka niyam hai',
+            'Index dobara ban sakta hai, toh asli source data ab delete kar sakte ho, bas',
+          ],
           answer: 0,
-          explain: "Is lesson mein search index derived projection hai, rebuildable authoritative records/changelog se. Search engine intrinsically never source of truth universal rule nahi; chosen architecture durability/recovery guarantees specify karo.",
-         choiceExplanations: ["Is lesson mein search index derived projection hai, rebuildable authoritative records/changelog se. Search engine intrinsically never source of truth universal rule nahi; chosen architecture durability/recovery guarantees specify karo.","Search engines can store durable data; architecture here chooses derived projection.","Authoritative search-oriented stores exist; data durability contract decide karo.","Rebuild requires retained source/changelog or proven recovery input."] },
+          explain: 'Is lesson mein search index ek nikla hua (derived) roop hai — asli records ya changelog se dobara ban sakta hai. Mapping badli, index kharab hua, ya version upgrade — dobara banao. "Search engine kabhi source of truth nahi" har jagah ka niyam nahi; apne design ki durability aur recovery saaf likho.',
+          choiceExplanations: [
+            'Is lesson mein search index ek nikla hua (derived) roop hai — asli records ya changelog se dobara ban sakta hai. Mapping badli, index kharab hua, ya version upgrade — dobara banao. "Search engine kabhi source of truth nahi" har jagah ka niyam nahi; apne design ki durability aur recovery saaf likho.',
+            'Search engines data pakka rakh sakte hain. Is design mein bas asli source DB hai.',
+            'Kuch designs mein search hi source hota hai. Yahan derived chuna — design ka faisla hai.',
+            'Index dobara banane ke liye hi source chahiye. Source delete kiya toh rebuild namumkin.',
+          ],
+        },
       ],
     },
     {
@@ -401,9 +489,9 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
       steps: [
         { text: 'Lowercase karo', explain: '"Wireless" aur "wireless" ek hi hone chahiye. Sabse pehla aur sabse sasta normalization.' },
         { text: 'Tokenize — vaakya ko shabdon mein todo', explain: 'Yahan bhasha ka faisla shuru hota hai: "iphone-15" ek token hai ya do? Hindi/Chinese mein toh space bhi bharosemand nahi hai.' },
-        { text: 'Punctuation aur stopwords hatao', explain: '"the", "a", "is" har document mein hain — woh filter karne mein madad nahi karte, sirf index phulaate hain. (Par "to be or not to be" jaisi phrase search ke liye kabhi-kabhi rakhne padte hain.)' },
-        { text: 'Stemming — shabd ko uske mool tak lao', explain: '"headphones" → "headphone", "running" → "run". Isse "headphone" search karne par "headphones" bhi milta hai. Har bhasha ka apna stemmer hota hai.' },
-        { text: 'Synonyms lagao', explain: '"earphone" → "headphone", "mobile" → "phone". Yeh poori tarah <b>product</b> ka faisla hai — aur ise galat karne se search "kuch bhi" dikhane lagta hai.' },
+        { text: 'Punctuation aur stopwords hatao', explain: '"the", "a", "is" har document mein hain — aise shabd filter karne mein madad nahi karte, sirf index phulaate hain. (Par "to be or not to be" jaisi phrase search ke liye kabhi-kabhi rakhne padte hain.)' },
+        { text: 'Stemming — shabd ko mool roop tak lao', explain: '"headphones" → "headphone", "running" → "run". Ab "headphone" search karne par "headphones" bhi milta hai. Har bhasha ka apna stemmer hota hai.' },
+        { text: 'Synonyms lagao', explain: '"earphone" → "headphone", "mobile" → "phone". Synonyms poori tarah <b>product</b> ka faisla hain — aur synonyms galat hon toh search "kuch bhi" dikhane lagta hai.' },
         { text: 'Inverted index mein postings likho', explain: 'Ab har token ke saamne document ids ki sorted list ban gayi. Query bhi <b>isi</b> pipeline se guzarti hai — warna query aur index ka token match hi nahi karega.' },
       ],
     },
@@ -416,25 +504,25 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
         s1: {
           text: 'Product page sahi hai, search results galat. Pehla kadam?',
           choices: [
-            { t: "Inspect index lag and source versions", good: true, next: 's2', explain: 'Sahi. Do jagah ka data alag hai, aur unke beech ek async pipeline hai. Pehla sawaal hamesha "pipeline kitni peechhe hai" hona chahiye.' },
-            { t: "Rebuild entire index immediately", good: false, explain: 'Sale ke beech mein full reindex ghante le sakta hai aur us doraan search aur bhi bura ho jaayega. Pehle maapo ki lag kitna hai — shayad woh khud pakad lega.' },
-            { t: "Clear cache before verifying indexed data", good: false, explain: 'Agar cache hota toh product page bhi purana dikhata. Yahan farak <b>do systems</b> ke beech hai, cache aur origin ke beech nahi.' },
+            { t: "Index ka lag aur source ke versions jaancho", good: true, next: 's2', explain: 'Sahi. Do jagah ka data alag hai, aur dono ke beech ek async pipeline hai. Pehla sawaal hamesha "pipeline kitni peechhe hai" hona chahiye.' },
+            { t: "Poora index turant dobara banao, abhi", good: false, explain: 'Sale ke beech mein full reindex ghante le sakta hai aur us doraan search aur bhi bura ho jaayega. Pehle maapo ki lag kitna hai — shayad pipeline khud pakad legi.' },
+            { t: "Indexed data jaanche bina cache saaf karo", good: false, explain: 'Search ka cache aur product page ka cache alag ho sakte hain. Pehle index ka daam source se milao — tab pata chalega purana daam index mein hai ya cache mein. Bina jaanch cache saaf karne se asli wajah chhip sakti hai.' },
           ],
         },
         s2: {
           text: 'Indexing lag 47 minute hai (normally 3 second). Queue mein 12 lakh events pade hain. Ab?',
           choices: [
-            { t: "Serve verified price;bound ingest", good: true, next: 's3', explain: 'Do kadam ek saath: pipeline ka backlog kam karo, aur us beech user ko sahi daam dikhao. Search ka kaam <b>dhoondna</b> hai; daam jaisi badalne wali cheez search index se dikhana hi risk tha.' },
-            { t: "Only wait for consumers to catch up", good: false, explain: 'Backlog kam ho jaayega, par tab tak users galat daam dekhte rahenge — aur sale ke beech woh seedha revenue aur bharosa ka nuksaan hai.' },
-            { t: "Disable all browse and product pages", good: false, explain: 'Sale ke din search band karna backlog se bada nuksaan hai. Degrade karo, bandh mat karo.' },
+            { t: "Sahi daam source se dikhao, ingest ko baandho", good: true, next: 's3', explain: 'Do kadam ek saath: pipeline ka backlog kam karo, aur us beech user ko sahi daam dikhao. Search ka kaam <b>dhoondna</b> hai; daam jaisi badalne wali cheez search index se dikhana hi risk tha.' },
+            { t: "Bas consumers ke backlog pakadne ka intezaar karo", good: false, explain: 'Backlog kam ho jaayega, par tab tak users galat daam dekhte rahenge — aur sale ke beech galat daam seedha revenue aur bharosa ka nuksaan hai.' },
+            { t: "Sale mein browse aur product pages band kar do", good: false, explain: 'Sale ke din search band karna backlog se bada nuksaan hai. Degrade karo, bandh mat karo.' },
           ],
         },
         s3: {
           text: 'Backlog saaf ho gaya. Root cause: sale shuru hote hi 12 lakh price updates ek saath aaye. Permanent fix?',
           choices: [
-            { t: "Bound ingestion;verify display freshness", good: true, next: 'end', explain: 'Asli seekh: search index mein woh data mat rakho jo <b>tezi se badalta</b> hai aur jiska galat hona mehenga hai. Daam se filter karna theek hai (thodi galti chalti hai), par daam <b>dikhana</b> live source se hona chahiye. Aur bulk updates ko hamesha throttle karo warna woh realtime updates ko peechhe dhakel dete hain.' },
-            { t: "Permanent overcapacity;no burst control", good: false, explain: 'Yeh peak ke liye har waqt paisa jalaana hai, aur agli baar 12 lakh ki jagah 50 lakh updates aayenge. Capacity backlog ka jawab hai, <b>design</b> ka nahi.' },
-            { t: "Sync index mutation in every source write", good: false, explain: 'Ab har price update Elasticsearch par nirbhar ho gaya — ES slow hua toh <b>catalog writes</b> slow. Tumne search ka problem availability ka problem bana diya.' },
+            { t: "Ingest ko baandho; dikhaya daam taaza jaancho", good: true, next: 'end', explain: 'Asli seekh: search index mein aisa data mat rakho jo <b>tezi se badalta</b> hai aur jiska galat hona mehenga hai. Daam se filter karna theek hai (thodi galti chalti hai), par daam <b>dikhana</b> live source se hona chahiye. Aur bulk updates ko hamesha throttle karo, warna bulk updates realtime updates ko peechhe dhakel dete hain.' },
+            { t: "Hamesha extra capacity; burst par koi control nahi", good: false, explain: 'Hamesha extra capacity = peak ke liye har waqt paisa jalaana, aur agli baar 12 lakh ki jagah 50 lakh updates aayenge. Capacity backlog ka jawab hai, <b>design</b> ka nahi.' },
+            { t: "Har source write ke saath index bhi sync likho", good: false, explain: 'Ab har price update Elasticsearch par nirbhar ho gaya — ES slow hua toh <b>catalog writes</b> slow. Tumne search ka problem availability ka problem bana diya.' },
           ],
         },
         end: {
@@ -461,31 +549,31 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
         {
           id: 'store', label: 'Search kis par chalega', icon: '🔍',
           options: [
-            { id: 'es', label: "Dedicated relevance/search engine", score: 3, why: 'Sahi. Inverted index, analyzers, relevance scoring aur aggregations — yeh sab OLTP DB ka kaam hi nahi hai. Aur search ka load main DB se poori tarah alag ho jaata hai.' },
-            { id: 'like', label: "Plain substringLIKE on source table", score: -3, why: '5 crore rows par har search ek full table scan hai. Aur woh scan buffer pool bhi dho dega, jisse tumhari <b>baaki</b> queries bhi slow ho jaayengi. Yeh sirf prototype tak chalta hai.' },
-            { id: 'gin', label: "Postgres full-text GIN baseline", score: 1, why: 'Vaajib chunav — agar tum already Postgres par ho aur relevance simple hai toh yeh ek poora system bachaa deta hai. Par 5 crore products + custom ranking + facets par yeh dab jaata hai. "Chhote se shuru karo" ka sahi jawab, is scale ka nahi.' },
+            { id: 'es', label: "Alag search engine, relevance ke liye bana", score: 3, why: 'Sahi. Inverted index, analyzers, relevance scoring aur aggregations — OLTP DB ka kaam hi nahi. Aur search ka load main DB se poori tarah alag ho jaata hai.' },
+            { id: 'like', label: "Source table par saada substring LIKE query", score: -3, why: '5 crore rows par har search ek full table scan hai. Aur scan buffer pool bhi dho dega, jisse tumhari <b>baaki</b> queries bhi slow ho jaayengi. LIKE sirf prototype tak chalta hai.' },
+            { id: 'gin', label: "Postgres full-text GIN index se shuruaat", score: 1, why: 'Vaajib chunav — agar tum already Postgres par ho aur relevance simple hai toh GIN ek poora system bachaa deta hai. Par 5 crore products + custom ranking + facets par GIN dab jaata hai. "Chhote se shuru karo" ka sahi jawab, is scale ka nahi.' },
           ],
         },
         {
           id: 'sync', label: 'Data index tak kaise pahunche', icon: '🔄',
           options: [
-            { id: 'cdc', label: "Transactional outbox/CDC to indexer", score: 3, why: 'Sahi. Write path DB par khatam hota hai (source of truth), aur index usse derive hota hai. Agar indexer gir jaaye toh events queue mein bache rehte hain — kuch kho nahi sakta.' },
-            { id: 'dual', label: "Uncoordinated app dual write", score: -2, why: 'Do systems mein ek saath likhne ka koi atomic tareeka nahi hai. DB write chal gaya aur ES write fail ho gaya — ab woh product hamesha ke liye search se gayab hai, aur kisi ko pata bhi nahi chalega.' },
-            { id: 'cron', label: "Periodic whole-dataset replacement", score: -1, why: 'Chalega par bhaari hai: 10 minute ka lag, aur har run poora dataset chhuta hai. Seller ko apna product 10 minute baad dikhna aaj ke standard par kharab UX hai.' },
+            { id: 'cdc', label: "Transactional outbox/CDC se indexer tak", score: 3, why: 'Sahi. Product aur outbox row ek DB transaction mein likho, ya DB ka CDC log padho — index DB se derive hota hai. Indexer ruk jaaye toh bache events se kaam dobara chale. Log ki retention, backups aur backlog par nazar rakho; indexer duplicate events bhi sambhaale.' },
+            { id: 'dual', label: "App se dono jagah alag-alag likho", score: -2, why: 'Do systems mein ek saath likhne ka koi atomic tareeka nahi hai. DB write chal gaya aur ES write fail ho gaya — ab product hamesha ke liye search se gayab hai, aur kisi ko pata bhi nahi chalega.' },
+            { id: 'cron', label: "Har kuch minute poora dataset badlo", score: -1, why: 'Chalega par bhaari hai: 10 minute ka lag, aur har run poora dataset chhuta hai. Seller ko apna product 10 minute baad dikhna aaj ke standard par kharab UX hai.' },
           ],
         },
         {
           id: 'price', label: 'Daam kahan se dikhega', icon: '💰',
           options: [
-            { id: 'live', label: "Search candidates;verified source display", score: 3, why: 'Sahi — aur yeh woh sabak hai jo log incident ke baad seekhte hain. Daam se filter karne mein thodi galti chalti hai; daam <b>dikhane</b> mein nahi. Isliye ranking/filter index se, aur final display ek live batch fetch se.' },
-            { id: 'idx', label: "Trust index as current transaction price", score: -2, why: 'Daam ghante-ghante badalta hai aur index async hai. Sale ke din yeh seedha "galat daam dikha" wala incident ban jaata hai.' },
+            { id: 'live', label: "Search se candidates, daam source se jaanch ke", score: 3, why: 'Sahi — aur log yahi sabak incident ke baad seekhte hain. Daam se filter karne mein thodi galti chalti hai; daam <b>dikhane</b> mein nahi. Isliye ranking/filter index se, aur final display ek live batch fetch se.' },
+            { id: 'idx', label: "Index ke daam ko hi aaj ka asli daam maano", score: -2, why: 'Daam ghante-ghante badalta hai aur index async hai. Sale ke din index ka daam seedha "galat daam dikha" wala incident ban jaata hai.' },
           ],
         },
         {
           id: 'own', label: 'Seller ko apna naya product', icon: '👤',
           options: [
-            { id: 'bypass', label: "Owner view from authoritative source", score: 2, why: 'Read-your-own-writes. Sasta, aur woh exact confusion khatam kar deta hai jo duplicate submissions banata hai.' },
-            { id: 'wait', label: "Force owner to wait on derived search", score: -1, why: '"Kuch second" backlog ke waqt 47 minute ban jaate hain. Aur user tab tak maan lega ki save hi nahi hua — woh dobara submit karega.' },
+            { id: 'bypass', label: "Seller ko apna product seedha source se dikhao", score: 2, why: 'Read-your-own-writes. Sasta, aur duplicate submissions banane wali confusion khatam kar deta hai.' },
+            { id: 'wait', label: "Seller ko search index ka intezaar karwao", score: -1, why: '"Kuch second" backlog ke waqt 47 minute ban jaate hain. Aur user tab tak maan lega ki save hi nahi hua — aur dobara submit karega.' },
           ],
         },
       ],
@@ -502,16 +590,38 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     questions: [
       {
         q: '"Elasticsearch poora chala gaya. Kya hoga?"',
-        choices: ["Degrade search; rebuild derived projection","Every request must use search engine","Fallback query unbounded origin par do","Rebuild bina source/backups assume karo"],
+        choices: [
+          'Search band, par site chalegi — browse aur direct links chalao, index source se banao',
+          'Har request search engine se hi jaati hai — ES gaya toh poori site band, bas',
+          'DB par fallback kar do — har search ko bina hadd seedha DB par bhej do',
+          'Index dobara bana lenge — source ya backup ke bina bhi rebuild ho jaayega',
+        ],
         answer: 0,
-        explain: 'Poora sawaal isi par hai ki tumne ES ko <b>derived</b> maana ya nahi. Agar catalog writes ES par depend karte hain, toh ES ka girna ek company-wide outage hai. Agar nahi, toh yeh ek degraded feature hai. (Aur "DB par fallback" attractive lagta hai par woh girti hui site par full scans chalane jaisa hai — aksar cheezein aur bigadta hai.)',
-       choiceExplanations: ["Poora sawaal isi par hai ki tumne ES ko <b>derived</b> maana ya nahi. Agar catalog writes ES par depend karte hain, toh ES ka girna ek company-wide outage hai. Agar nahi, toh yeh ek degraded feature hai. (Aur \"DB par fallback\" attractive lagta hai par woh girti hui site par full scans chalane jaisa hai — aksar cheezein aur bigadta hai.)","If lookup/browse paths independent hain, partial service continue kar sakti hai.","Fallback can collapse transactional DB; bound cost/capacity.","Recovery source, changelog, backups and mapping contract chahiye."] },
+        explain: 'Sawaal yahi hai: tumne ES ko derived maana ya nahi. Catalog writes ES par tike hon toh ES ka girna poori company ka outage. Nahi toh sirf ek degraded feature: category browse aur direct links chalein, aur index source se dobara bane. "DB par fallback" lalchata hai, par girti site par bina hadd full scans chalana aag mein ghee hai.',
+        choiceExplanations: [
+          'Sawaal yahi hai: tumne ES ko derived maana ya nahi. Catalog writes ES par tike hon toh ES ka girna poori company ka outage. Nahi toh sirf ek degraded feature: category browse aur direct links chalein, aur index source se dobara bane. "DB par fallback" lalchata hai, par girti site par bina hadd full scans chalana aag mein ghee hai.',
+          'ES derived ho toh product page, cart, checkout ES ke bina chalte hain. Sirf search rukta hai.',
+          'Bina hadd DB fallback = har search ek full scan. DB bhi gir jaayega.',
+          'Rebuild ke liye source ya backup chahiye. Source hi asli bachav hai.',
+        ],
+      },
       {
         q: '"Search results kharab hain. Debug kaise karoge?"',
-        choices: ["Membership, indexing, query and ranking alag karo","Weights tune; missing documents ignore karo","Only more training data add karo","Only RAM add; relevance prove ho jaayegi"],
+        choices: [
+          'Alag karo: document index mein hai? query sahi bani? phir rank — har ek ke tool alag',
+          'Ranking weights tune karo — gayab documents ko nazarandaaz karo, bas itna kaafi',
+          'Bas aur training data jod do — data badhega toh results apne aap sudhar jaayenge',
+          'Bas RAM badha do — RAM badhte hi relevance apne aap saabit ho jaayegi, pakka',
+        ],
         answer: 0,
-        explain: 'Yeh <b>pehla</b> kaanta hai aur log ise aksar skip kar dete hain. "Missing" ka matlab hai analyzer/pipeline/mapping dekho. "Neeche rank" ka matlab hai scoring aur signals dekho. Bina alag kiye tum ranking weights tune karte reh jaoge jabki document index mein hai hi nahi.',
-       choiceExplanations: ["Yeh <b>pehla</b> kaanta hai aur log ise aksar skip kar dete hain. \"Missing\" ka matlab hai analyzer/pipeline/mapping dekho. \"Neeche rank\" ka matlab hai scoring aur signals dekho. Bina alag kiye tum ranking weights tune karte reh jaoge jabki document index mein hai hi nahi.","Absent document ko ranking weight se return nahi kara sakte.","Analyzer, filters, ingestion and relevance evidence pehle inspect karo.","Capacity tuning query semantics or document membership fix nahi karti."] },
+        explain: 'Pehla kaanta: document index mein hai hi nahi (indexing — analyzer, pipeline, mapping dekho), ya hai par neeche rank hua (relevance — scoring aur signals dekho). Beech mein query bhi galat ban sakti hai. Bina alag kiye log ranking weights ghumate reh jaate hain, jabki document index mein tha hi nahi.',
+        choiceExplanations: [
+          'Pehla kaanta: document index mein hai hi nahi (indexing — analyzer, pipeline, mapping dekho), ya hai par neeche rank hua (relevance — scoring aur signals dekho). Beech mein query bhi galat ban sakti hai. Bina alag kiye log ranking weights ghumate reh jaate hain, jabki document index mein tha hi nahi.',
+          'Document index mein hi nahi toh koi weight document ko upar nahi laayega.',
+          'Training data relevance ka ek hissa hai. Gayab document ki dikkat indexing mein hai.',
+          'RAM speed deti hai, sahi results nahi. Relevance alag naapni padti hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -562,7 +672,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      Wajah alag hai, shape wahi hai.</p>
      <h3>✅ Presigned URL — bytes ko backend se bahar nikaal do</h3>
      <pre>1. client → POST /uploads          "mujhe ek 4GB mp4 daalna hai"
-2. app   → S3 se signed URL banao (5 min valid, size cap, content-type fix)
+2. app   → S3 se ek key ka signed URL banao (5 min valid, content-type fix)
         → 201 { upload_url, file_id }        ← 40 ms mein khatam
 3. client → PUT &lt;upload_url&gt;  (SEEDHA S3 par — app server beech mein hai hi nahi)
 4. S3    → event: "file aa gaya"
@@ -571,9 +681,9 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      process se guzre hi nahi. Aur bonus: S3 khud resumable/multipart upload
      deta hai, jo tumhe warna khud banana padta.</p>
      <p class="tip">🎯 Signed URL ko <b>tight</b> banao: chhoti expiry (5–15 min),
-     ek hi key ke liye, <code>Content-Length</code> ki max limit, aur
-     <code>Content-Type</code> fix. Warna woh ek "koi bhi kuch bhi upload kar de"
-     wala darwaza ban jaata hai — aur uska bill tumhara hai.</p>`,
+     ek hi key ke liye, aur <code>Content-Type</code> fix. Size ki max hadd chahiye toh
+     presigned <b>POST</b> policy (content-length-range) lo — saada PUT URL max size nahi baandhta.
+     Warna signed URL "koi bhi kuch bhi upload kar de" wala darwaza ban jaata hai — aur bill tumhara hai.</p>`,
     `<h3>🗄️ Bytes kahan, metadata kahan</h3>
      <table>
        <tr><th></th><th>Object storage (S3)</th><th>Database</th></tr>
@@ -609,12 +719,12 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
       title: 'Presigned upload ka flow',
       instructions: 'Kadam sahi kram mein rakho.',
       steps: [
-        { text: 'Client app se poochhta hai: "mujhe yeh file daalni hai"', explain: 'Sirf metadata jaata hai — naam, size, type. Bytes abhi kahin nahi ja rahe.' },
+        { text: 'Client app se poochhta hai: "mujhe ek file daalni hai"', explain: 'Sirf metadata jaata hai — naam, size, type. Bytes abhi kahin nahi ja rahe.' },
         { text: 'App permission check karta hai aur quota dekhta hai', explain: 'Yahi ek jagah hai jahan tum "nahi" keh sakte ho. Ek baar signed URL de diya, toh tumhara control khatam.' },
-        { text: 'App ek signed URL banata hai — chhoti expiry, size cap, content-type fix', explain: 'Signature mein yeh sab shartein bandhi hoti hain. Isliye client unhe badal nahi sakta — S3 khud reject kar dega.' },
+        { text: 'App ek key ka signed PUT URL banata hai — chhoti expiry aur zaroori signed headers', explain: 'S3 signature mein bandhi shartein jaanchta hai — client shartein badle toh S3 reject karega. Max size ki hadd chahiye toh presigned POST policy lo; upload ke baad asli size aur file type bhi jaancho.' },
         { text: 'Client SEEDHA object storage par PUT karta hai', explain: 'Yahan poora faayda hai: 4 GB bytes tumhare app server se guzre hi nahi. Aur multipart/resume S3 khud sambhaalta hai.' },
-        { text: 'Object storage se event aata hai: "file aa gaya"', explain: 'Client par bharosa mat karo ("maine daal diya") — woh jhooth bol sakta hai ya beech mein mar sakta hai. Sach storage se aana chahiye.' },
-        { text: 'App metadata row banata hai (status = uploaded)', explain: 'Ab file DB mein "maujood" hai. Isse pehle woh ek adhoora, orphan object tha.' },
+        { text: 'Object storage se event aata hai: "file aa gaya"', explain: 'Client par bharosa mat karo ("maine daal diya") — client jhooth bol sakta hai ya beech mein mar sakta hai. Sach storage se aana chahiye.' },
+        { text: 'App metadata row banata hai (status = uploaded)', explain: 'Ab file DB mein "maujood" hai. Event se pehle file ek adhoora, orphan object thi.' },
         { text: 'Background worker: scan, thumbnail, transcode — phir status = ready', explain: 'Minute ka kaam hai, isliye async. Aur beech ka status UI ko dikhna chahiye, warna user samjhega upload toot gaya.' },
       ],
     },
@@ -627,11 +737,11 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
         { id: 'db', label: '🗄️ Database' },
       ],
       items: [
-        { text: 'Original 4 GB video file', bin: 'obj', explain: 'Bytes hamesha object storage mein. Sasta, unlimited, aur CDN seedha usse serve kar sakta hai.' },
-        { text: 'Video ka owner, title aur visibility', bin: 'db', explain: 'Yeh query aur permission ka data hai — ispar joins, filters aur transactions chahiye.' },
-        { text: '480p / 720p / 1080p transcoded versions', bin: 'obj', explain: 'Yeh bhi bytes hain. DB mein sirf unke keys aur "kaun-kaun ready hai" rehta hai.' },
-        { text: 'Upload ka status (uploaded → processing → ready)', bin: 'db', explain: 'Yeh state machine hai jispar tum query karoge ("saare stuck uploads dikhao"). Object storage query karne ke liye nahi bana.' },
-        { text: 'Thumbnail images', bin: 'obj', explain: 'Chhoti hain isliye DB mein rakhne ka lalach hota hai — par woh crore ho jaati hain aur buffer pool kha jaati hain. Bytes = object storage, apwaad nahi.' },
+        { text: 'Original 4 GB video file', bin: 'obj', explain: 'Bytes hamesha object storage mein. Sasta, unlimited, aur CDN seedha object storage se serve kar sakta hai.' },
+        { text: 'Video ka owner, title aur visibility', bin: 'db', explain: 'Metadata query aur permission ka data hai — joins, filters aur transactions chahiye.' },
+        { text: '480p / 720p / 1080p transcoded versions', bin: 'obj', explain: 'Thumbnails bhi bytes hain. DB mein sirf thumbnails ke keys aur "kaun-kaun ready hai" rehta hai.' },
+        { text: 'Upload ka status (uploaded → processing → ready)', bin: 'db', explain: 'Upload status ek state machine hai, jispar tum query karoge ("saare stuck uploads dikhao"). Object storage query karne ke liye nahi bana.' },
+        { text: 'Thumbnail images', bin: 'obj', explain: 'Chhoti hain isliye DB mein rakhne ka lalach hota hai — par chhoti files bhi crore ho jaati hain aur buffer pool kha jaati hain. Bytes = object storage, apwaad nahi.' },
         { text: 'Video par kitne views aaye', bin: 'db', explain: 'Badalta hua counter — DB ya ek counter store. Object storage immutable objects ke liye hai, badalte numbers ke liye nahi.' },
       ],
     },
@@ -640,23 +750,56 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
       title: 'Media ki samajh',
       questions: [
         {
-          q: "App server-through upload ka potential resource cost?",
-          choices: ["Proxy path bandwidth and concurrency consumes","Every upload necessarily owns DB connection","Async server upload has zero memory cost","Object upload path has no backpressure"],
+          q: 'Upload app server ke beech se guzre, toh kaunsa resource kharch hota hai?',
+          choices: [
+            'Har upload app server ki bandwidth aur ek concurrency slot poori der pakde rakhta hai',
+            'Har upload apne aap ek DB connection bhi pakad leta hai — hamesha, har haal mein',
+            'Async server par upload karo toh memory ka koi kharcha hi nahi lagta, bilkul zero',
+            'Seedha object storage par upload mein backpressure jaisi koi cheez hoti hi nahi',
+          ],
           answer: 0,
-          explain: "Proxy upload app ke network, sockets, buffers and concurrency capacity consume karta hai. Async streaming thread per upload avoid kar sakti hai; DBconnection automatically required nahi. Direct upload valuableoption hai, not every proxy inherently broken.",
-         choiceExplanations: ["Proxy upload app ke network, sockets, buffers and concurrency capacity consume karta hai. Async streaming thread per upload avoid kar sakti hai; DBconnection automatically required nahi. Direct upload valuableoption hai, not every proxy inherently broken.","DB connection only if implementation unnecessarily holds it.","Async IO still buffers, sockets and bandwidth use karta hai.","Bounded streaming/admission limits needed even without worker-per-upload."] },
+          explain: 'Bytes app server se guzrein toh har upload poori der bandwidth aur ek concurrency slot (thread, socket, buffer) pakde rehta hai. 50 dheeme mobile uploads pool bhar dete hain aur baaki API bhi atakne lagti hai. Isliye client ko seedha storage par bhejo; app server sirf permission deta hai.',
+          choiceExplanations: [
+            'Bytes app server se guzrein toh har upload poori der bandwidth aur ek concurrency slot (thread, socket, buffer) pakde rehta hai. 50 dheeme mobile uploads pool bhar dete hain aur baaki API bhi atakne lagti hai. Isliye client ko seedha storage par bhejo; app server sirf permission deta hai.',
+            'DB connection tabhi bandhta hai jab code upload ke beech transaction khula rakhe. Har upload mein zaroori nahi.',
+            'Async server bhi buffers aur sockets rakhta hai. Kharcha kam ho sakta hai, zero nahi.',
+            'Object storage ki bhi hadd aur throttling hoti hai. Bas bojh app server par nahi padta.',
+          ],
+        },
         {
-          q: "Direct object storage upload authorization mein kya enforce karoge?",
-          choices: ["Scope key, expiry and upload constraints","URL secret ho toh expiry unnecessary","Content-Type alone proves safe image","Presigned PUT always enforces max size"],
+          q: 'Client seedha storage par upload kare — permission mein kya-kya bandhoge?',
+          choices: [
+            'Ek hi key, chhoti expiry (5–15 min), aur size va content-type ki shartein',
+            'URL secret hai toh expiry ki zaroorat nahi — link hamesha chalta rahe',
+            'Content-Type image/png likha hai toh file pakka safe image hai, bas',
+            'Presigned PUT URL har haal mein max size apne aap laga deta hai',
+          ],
           answer: 0,
-          explain: "Object key/permissions/expiry tightly scope karo. Upload size/type constraints provider API supports us mechanism se enforce karo; S3 POST policy content-length-range de sakti hai, presigned PUT universally max-size binding nahi. Server-side post-upload verify/scanning still needed.",
-         choiceExplanations: ["Object key/permissions/expiry tightly scope karo. Upload size/type constraints provider API supports us mechanism se enforce karo; S3 POST policy content-length-range de sakti hai, presigned PUT universally max-size binding nahi. Server-side post-upload verify/scanning still needed.","Leaked reusable URL expiry tak access de sakti hai.","Claimed MIME type spoof ho sakti hai; inspect/scan content.","Provider/API supports different constraints; POST policy supports content-length-range."] },
+          explain: 'Upload ki permission chhoti aur tang rakho: ek hi object key, 5–15 minute ki expiry, aur jahan ho sake size ki hadd (jaise presigned POST ki content-length-range) aur content-type ki shart. Upload ke baad file ko khud jaancho — header jhooth bol sakta hai.',
+          choiceExplanations: [
+            'Upload ki permission chhoti aur tang rakho: ek hi object key, 5–15 minute ki expiry, aur jahan ho sake size ki hadd (jaise presigned POST ki content-length-range) aur content-type ki shart. Upload ke baad file ko khud jaancho — header jhooth bol sakta hai.',
+            'URL leak hota hai — logs, history, share. Bina expiry ke link hamesha ke liye khula darwaza hai.',
+            'Content-Type client khud likhta hai. Asli file ki jaanch upload ke baad karo.',
+            'Saada presigned PUT size ki hadd nahi lagata. Size ke liye presigned POST policy ya baad ki jaanch chahiye.',
+          ],
+        },
         {
-          q: "Upload completion ka trustworthy evidence?",
-          choices: ["Stored-object proof; event plus repair","Client says done so object trusted","One storage event means no duplicates","Storage callback forbids any missed event"],
+          q: 'Upload poora hone ka bharose layak saboot kya hai?',
+          choices: [
+            'Storage mein object sach mein hai — storage ka event, aur chhoote events ke liye repair',
+            'Client ne "ho gaya" bola, toh object par bharosa karo — client jhooth nahi bolta',
+            'Storage ka ek event aaya toh duplicate event kabhi nahi aayega — bas ek hi baar',
+            'Storage callback hai toh koi event kabhi chhootta nahi — repair ki zaroorat nahi',
+          ],
           answer: 0,
-          explain: "Authoritative completion stored object state se verify karo. Storage notification useful trigger hai, but duplicate/out-of-order/missing delivery assumptions handle karo; idempotent consumer, reconciliation or verified finalization API valid hain. Client claim alone trust mat karo.",
-         choiceExplanations: ["Authoritative completion stored object state se verify karo. Storage notification useful trigger hai, but duplicate/out-of-order/missing delivery assumptions handle karo; idempotent consumer, reconciliation or verified finalization API valid hain. Client claim alone trust mat karo.","Client can fail/lie or upload incomplete/wrong object.","Object storage notifications may redeliver; consumer idempotent ho.","Event delivery assumptions and repair scans/reconciliation needed hain."] },
+          explain: 'Client jhooth bol sakta hai ya beech mein mar sakta hai — saboot storage se lo. Storage events (jaise S3 notification) aksar at-least-once aate hain: kabhi duplicate, kabhi der se, kabhi chhoot bhi jaate hain. Toh handler idempotent ho, aur ek repair job atke uploads (status = pending) ko storage se milaaye.',
+          choiceExplanations: [
+            'Client jhooth bol sakta hai ya beech mein mar sakta hai — saboot storage se lo. Storage events (jaise S3 notification) aksar at-least-once aate hain: kabhi duplicate, kabhi der se, kabhi chhoot bhi jaate hain. Toh handler idempotent ho, aur ek repair job atke uploads (status = pending) ko storage se milaaye.',
+            'Client ka call beech mein mar sakta hai, ya jhooth bol sakta hai. Storage se jaancho.',
+            'Storage events duplicate bhi aa sakte hain. Handler idempotent hona chahiye.',
+            'Events chhoot sakte hain ya der se aa sakte hain. Repair job atke uploads pakadti hai.',
+          ],
+        },
       ],
     },
     {
@@ -671,32 +814,32 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
         {
           id: 'path', label: 'Upload ka raasta', icon: '📤',
           options: [
-            { id: 'signed', label: "Scoped upload direct to storage", score: 3, why: 'Sahi. App server 40ms kaam karta hai, bytes uske paas se guzarte hi nahi. Multipart aur resume storage khud deta hai.' },
-            { id: 'proxy', label: "Stream via application API tier", score: -3, why: 'Har upload poore duration ke liye ek concurrency slot pakdta hai. 50 slow uploads = pool khatam = poori API down. Yeh presigned URL ka poora karan hai.' },
-            { id: 'chunk', label: "Custom application chunk protocol", score: -1, why: 'Kaam karega, par tum multipart, resume, retry aur cleanup khud likh rahe ho — jo S3 muft mein deta hai. Aur bytes phir bhi tumhare server se guzar rahe hain.' },
+            { id: 'signed', label: "Ek key ka direct upload, seedha storage par", score: 3, why: 'Sahi. App server 40ms kaam karta hai, bytes app server ke paas se guzarte hi nahi. Multipart aur resume storage khud deta hai.' },
+            { id: 'proxy', label: "App API ke beech se bytes stream karo", score: -3, why: 'Har upload poore duration ke liye ek concurrency slot pakdta hai. 50 slow uploads = pool khatam = poori API down. Presigned URL ka poora karan yahi hai.' },
+            { id: 'chunk', label: "Apna khud ka chunk protocol, app ke through", score: -1, why: 'Kaam karega, par tum multipart, resume, retry aur cleanup khud likh rahe ho — jo S3 muft mein deta hai. Aur bytes phir bhi tumhare server se guzar rahe hain.' },
           ],
         },
         {
           id: 'store', label: 'Bytes kahan', icon: '🪣',
           options: [
-            { id: 's3', label: "Object bytes;owned DB metadata", score: 3, why: 'Standard aur sahi. Bytes sasti, unlimited, CDN-ready jagah par; metadata wahan jahan query aur permission chalti hai.' },
-            { id: 'blob', label: "All bytes on transactional DB", score: -3, why: 'Buffer pool bytes se bhar jaayega (asli queries slow), backup 100x, replication lag. Aur ek din woh migration karni hi padegi.' },
-            { id: 'disk', label: "Only disposable app node storage", score: -3, why: 'Instance ephemeral hai aur do instances ka data alag ho jaayega. Yeh sirf ek server wali duniya mein chalta hai.' },
+            { id: 's3', label: "Bytes object store mein, metadata apne DB mein", score: 3, why: 'Standard aur sahi. Bytes sasti, unlimited, CDN-ready jagah par; metadata DB mein, jahan query aur permission chalti hai.' },
+            { id: 'blob', label: "Saare bytes transaction wale DB mein", score: -3, why: 'Buffer pool bytes se bhar jaayega (asli queries slow), backup 100x, replication lag. Aur ek din bytes bahar nikalne ki migration karni hi padegi.' },
+            { id: 'disk', label: "Sirf app node ki disk, jo restart par mitti", score: -3, why: 'Instance ephemeral hai aur do instances ka data alag ho jaayega. Local disk sirf ek server wali duniya mein chalti hai.' },
           ],
         },
         {
           id: 'proc', label: 'Transcoding', icon: '⚙️',
           options: [
-            { id: 'async', label: "Workers plus progress status", score: 3, why: 'Transcoding minute leti hai — woh request cycle ka kaam hai hi nahi. Queue burst sambhaalti hai, workers alag scale hote hain, aur status UI ko sach dikhata hai.' },
-            { id: 'sync', label: "CPU work inside upload request", score: -3, why: 'Request minute tak latki rahegi, gateway timeout karega, aur retry par poora kaam dobara. Yeh async ka textbook case hai.' },
+            { id: 'async', label: "Queue + workers, aur progress ka status", score: 3, why: 'Transcoding minute leti hai — request cycle ka kaam hai hi nahi. Queue burst sambhaalti hai, workers alag scale hote hain, aur status UI ko sach dikhata hai.' },
+            { id: 'sync', label: "Upload request ke andar hi CPU ka kaam", score: -3, why: 'Request minute tak latki rahegi, gateway timeout karega, aur retry par poora kaam dobara. Async ka textbook case.' },
           ],
         },
         {
           id: 'serve', label: 'Playback', icon: '🌍',
           options: [
-            { id: 'cdn', label: "Authorized CDN segment delivery", score: 2, why: 'Video badi aur immutable hai — CDN ke liye ideal. Signed URL private content ko bhi CDN se serve karne deta hai, aur origin par load lagbhag zero rehta hai.' },
-            { id: 'origin', label: "Direct object-storage segment delivery", score: 0, why: 'Kaam karega par har viewer ko origin region tak jaana padega — door ke users ke liye buffering, aur egress bill zyada. CDN yahan lagbhag muft ki jeet hai.' },
-            { id: 'app', label: "Application proxies every segment", score: -3, why: 'Wahi galti, ab read side par. Ek 2-ghante ka video stream ek slot ko 2 ghante ke liye pakad lega.' },
+            { id: 'cdn', label: "Permission wale CDN se video segments", score: 2, why: 'Video badi aur immutable hai — CDN ke liye ideal. Signed URL private content ko bhi CDN se serve karne deta hai, aur origin par load lagbhag zero rehta hai.' },
+            { id: 'origin', label: "Seedha object storage se video segments", score: 0, why: 'Kaam karega par har viewer ko origin region tak jaana padega — door ke users ke liye buffering, aur egress bill zyada. CDN yahan lagbhag muft ki jeet hai.' },
+            { id: 'app', label: "App har segment beech mein se bheje", score: -3, why: 'Wahi galti, ab read side par. Ek 2-ghante ka video stream ek slot ko 2 ghante ke liye pakad lega.' },
           ],
         },
       ],
@@ -713,16 +856,38 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     questions: [
       {
         q: '"Users profile photo upload karte hain. Design bolo."',
-        choices: ["Scoped direct upload; verify then publish","Trust uploaded MIME then publish immediately","Keep DB transaction open during upload","Make entire user bucket publicly writable"],
+        choices: [
+          'Ek key ka direct upload; phir jaancho (size, type, resize) aur tab publish karo',
+          'Upload hua MIME type maan lo, aur photo turant sabko dikha do — jaanch bekaar',
+          'Upload chalne tak DB transaction khula rakho — upload ke saath hi commit karo',
+          'User ki poori bucket ko public writable kar do — upload aasan ho jaayega, bas',
+        ],
         answer: 0,
-        explain: "Scoped direct upload ke baad object ownership, size, actual file type aur safe decoding validate karo; tab published metadata commit karo. Small bounded uploads ko application proxy bhi kar sakti hai if capacity/SLO fit ho. Base64 payload roughly 33% badhaata hai; yeh streaming ko inherently impossible nahi banata.",
-       choiceExplanations: ["Scoped direct upload ke baad object ownership, size, actual file type aur safe decoding validate karo; tab published metadata commit karo. Small bounded uploads ko application proxy bhi kar sakti hai if capacity/SLO fit ho. Base64 payload roughly 33% badhaata hai; yeh streaming ko inherently impossible nahi banata.","MIME, malware, size, ownership and image decoding verify karo.","Slow client upload DB resources indefinitely hold kar sakta hai.","Least privilege specific object access do, whole bucket write nahi."] },
+        explain: 'Presigned URL se client seedha storage par; DB mein sirf key aur status (pending). Storage event par file jaancho (asli type, size), async resize karo, phir status = ready aur CDN se serve. Header par bharosa mat karo, aur upload ke dauraan DB transaction mat kholo.',
+        choiceExplanations: [
+          'Presigned URL se client seedha storage par; DB mein sirf key aur status (pending). Storage event par file jaancho (asli type, size), async resize karo, phir status = ready aur CDN se serve. Header par bharosa mat karo, aur upload ke dauraan DB transaction mat kholo.',
+          'MIME type client likhta hai. Bina jaanch ke kharab ya galat file sabko dikh jaayegi.',
+          'Upload minute le sakta hai. Itni der khula transaction locks aur connections pakde rakhega.',
+          'Public writable bucket mein koi bhi kuch bhi daal sakta hai. Har upload ek key tak bandha ho.',
+        ],
+      },
       {
         q: '"Storage bill har mahine badhta ja raha hai. Kya karoge?"',
-        choices: ["Retention and access cost model inspect karo","Every object 30 days par archive mandatory","Delete every orphan without race grace","Storage compression makes retention irrelevant"],
+        choices: [
+          'Retention aur access ka hisaab dekho — lifecycle rules, orphans, purane versions',
+          'Har object ko 30 din par archive karna zaroori hai — bina dekhe, sab objects par',
+          'Har orphan object turant delete karo — upload chal rahe hon tab bhi, bina ruke',
+          'Storage compress kar do — compression ke baad retention ka sawaal hi khatam',
+        ],
         answer: 0,
-        explain: "Access frequency, retention, restore latency, minimum storage and legal requirements se lifecycle tier choose karo.30/90 days examples hain, universal policy nahi. Orphan cleanup grace/recheck and audit ke saath karo.",
-       choiceExplanations: ["Access frequency, retention, restore latency, minimum storage and legal requirements se lifecycle tier choose karo.30/90 days examples hain, universal policy nahi. Orphan cleanup grace/recheck and audit ke saath karo.","Retrieval latency/minimum retention/access charges differ by tier.","In-flight uploads, event lag or legal hold ko grace/recheck chahiye.","Compression volume reduce karti hai; retention/privacy still required."] },
+        explain: 'Pehle dekho kya pada hai aur kitna padha jaata hai. Lifecycle rules (jaise 30 din baad infrequent-access, 90 din baad archive — access pattern dekh ke), orphan objects saaf karo (DB mein jinki row nahi — par thoda ruk ke, kyunki naya upload abhi row bana raha ho sakta hai), aur purane transcoded versions ki retention tay karo. Archive se padhna mehenga aur dheema hai — har cheez archive nahi.',
+        choiceExplanations: [
+          'Pehle dekho kya pada hai aur kitna padha jaata hai. Lifecycle rules (jaise 30 din baad infrequent-access, 90 din baad archive — access pattern dekh ke), orphan objects saaf karo (DB mein jinki row nahi — par thoda ruk ke, kyunki naya upload abhi row bana raha ho sakta hai), aur purane transcoded versions ki retention tay karo. Archive se padhna mehenga aur dheema hai — har cheez archive nahi.',
+          'Jo cheez roz padhi jaati hai, archive mein mehengi padegi. Access pattern dekh ke niyam banao.',
+          'Upload ke beech object pehle aata hai, row baad mein. Turant delete se asli uploads mit jaayenge — thoda grace period rakho.',
+          'Compression bytes kam karta hai, faltu data nahi hatata. Retention phir bhi tay karni hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -736,7 +901,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     (4) failed uploads ke orphan objects kaun saaf karta hai?`,
   cards: [
     { front: 'Upload app server se kyun na guzre?', back: 'Har upload poore duration ke liye ek <b>concurrency slot</b> (thread + aksar DB connection) pakadta hai. 50 slow uploads = pool khatam = poori API timeout. Wahi pool-exhaustion shape.' },
-    { front: 'Presigned URL flow?', back: 'client poochhe → app permission check kare → signed URL de (chhoti expiry, size cap, content-type) → client SEEDHA storage par PUT → <b>storage ka event</b> → metadata row → async processing.' },
+    { front: 'Presigned URL flow?', back: 'client poochhe → app permission check kare → signed URL de (chhoti expiry, ek key, content-type; size cap ke liye POST policy) → client SEEDHA storage par PUT → <b>storage ka event</b> → metadata row → async processing.' },
     { front: '"File aa gaya" kaun batayega?', back: '<b>Object storage ka event</b> — client nahi. Client jhooth bol sakta hai ya beech mein mar sakta hai.' },
     { front: 'Bytes vs metadata?', back: 'Bytes → object storage (sasta, CDN-ready). Metadata → DB (query, permission, transaction). DB mein BLOB = buffer pool khatam + backup 100x.' },
     { front: 'Storage bill kaise ghataayein?', back: 'Lifecycle rules (30d IA → 90d archive) + <b>orphan objects</b> saaf karo (jinka DB row nahi) + transcoded versions ki retention. Lifecycle rule din 1 par likho.' },
@@ -822,7 +987,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
         { left: 'Order tracking page — status har kuch minute badalta hai', right: 'Polling (har 10s)', explain: 'Update kam hai aur turant nahi chahiye. Polling simple hai, proxy-friendly hai, aur ismein koi connection state nahi rakhni padti. Kabhi-kabhi sabse boring jawab hi sahi hai.' },
         { left: 'Notification bell — server se client ki taraf', right: 'SSE', explain: 'Ek-tarfa stream. SSE plain HTTP hai, isliye reconnect, proxies aur HTTP/2 sab muft mein kaam karte hain. WebSocket yahan zyada hai.' },
         { left: 'Group chat — dono taraf messages', right: 'WebSocket', explain: 'Client bhi bhejta hai (typing indicators, read receipts, messages), isliye do-tarfa channel chahiye.' },
-        { left: 'LLM ka jawab token-by-token', right: 'SSE', explain: 'Server se client ek-tarfa stream — SSE isi ke liye bana hai. Isiliye lagbhag saari LLM APIs SSE par streaming deti hain, WebSocket par nahi.' },
+        { left: 'LLM ka jawab token-by-token', right: 'SSE', explain: 'Server se client ek-tarfa stream — SSE aise stream ke liye hi bana hai. Isiliye lagbhag saari LLM APIs SSE par streaming deti hain, WebSocket par nahi.' },
         { left: 'Collaborative document editing', right: 'WebSocket + CRDT/OT', explain: 'Do-tarfa aur bahut baar. Aur transport se bada sawaal hai <b>conflict resolution</b> — do log ek hi line ek saath badlein toh kya ho.' },
         { left: 'Live cricket score — 50 lakh viewers', right: 'SSE/WebSocket + edge fanout', explain: 'Ek hi data sabko. Isliye origin ek baar bheje aur edge/CDN layer use laakhon connections tak phailaaye — origin ko 50 lakh connections chhoona hi nahi chahiye.' },
       ],
@@ -833,22 +998,55 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
       questions: [
         {
           q: 'Realtime chat design mein sabse zaroori sawaal kaunsa hai?',
-          choices: ["Offline recovery and durable message contract","Only WebSocket library defines reliability","Only socket count defines message delivery","TLS alone stores missed messages forever"],
+          choices: [
+            'Offline user ko message kaise milega — message pehle pakka store, phir push',
+            'Kaunsi WebSocket library lein — library hi delivery ka bharosa tay karti hai',
+            'Har node par kitne sockets — sockets ki ginti hi delivery tay karti hai',
+            'TLS laga do — TLS chhoote hue messages ko hamesha ke liye store kar leta hai',
+          ],
           answer: 0,
-          explain: 'Connected users ko bhejna aasan hissa hai. Poora design us sawaal se nikalta hai jo offline user ke baare mein hai: message ko <b>durable</b> hona padega, use ek <b>order</b> chahiye (id/sequence), aur reconnect par gap bharne ka rasta chahiye. WebSocket sirf ek tez raasta hai — source of truth nahi.',
-         choiceExplanations: ["Connected users ko bhejna aasan hissa hai. Poora design us sawaal se nikalta hai jo offline user ke baare mein hai: message ko <b>durable</b> hona padega, use ek <b>order</b> chahiye (id/sequence), aur reconnect par gap bharne ka rasta chahiye. WebSocket sirf ek tez raasta hai — source of truth nahi.","Transport disconnect ke baad history/delivery state handle nahi karta.","Connection capacity aur durable catch-up different concerns hain.","Encryption privacy deta hai; durability/replay separate needs."] },
+          explain: '"Jo user offline tha, message kaise paayega?" — isi sawaal se design khulta hai: message pehle durable store mein, badhti ID ke saath, phir push. Library, sockets ki ginti aur encryption baad ke sawaal hain.',
+          choiceExplanations: [
+            '"Jo user offline tha, message kaise paayega?" — isi sawaal se design khulta hai: message pehle durable store mein, badhti ID ke saath, phir push. Library, sockets ki ginti aur encryption baad ke sawaal hain.',
+            'Library sirf connection sambhalti hai. Offline user ka message store se aata hai.',
+            'Sockets ki ginti capacity hai. Delivery ka vaada store aur cursor se banta hai.',
+            'TLS raaste mein data chhupata hai. Message store karna alag kaam hai.',
+          ],
+        },
         {
           q: 'Ek gateway node (50,000 connections) restart hua. Sabse bada khatra?',
-          choices: ["Reconnect/auth/catch up burst can cascade","Every restart necessarily loses durable chats","50k sockets imply 50k leaked objects","Reconnect clients automatically add jitter"],
+          choices: [
+            'Sab ek saath reconnect — auth, subscriptions, backlog ek pal mein; agla node bhi gire',
+            'Restart par har durable chat pakka kho jaati hai — store mein kuch bhi nahi bachta',
+            '50k sockets ka matlab 50k leak hue objects — memory leak hi sabse bada khatra hai',
+            'Clients reconnect karte waqt apne aap jitter laga dete hain — koi dikkat hi nahi',
+          ],
           answer: 0,
-          explain: 'Reconnect sasta nahi hai — usme auth, subscriptions aur "maine kya miss kiya" ka fetch shaamil hai. 50,000 ek saath = ek self-inflicted DDoS. Ilaaj wahi hai jo retry storm ka tha: <b>exponential backoff + full jitter</b>, aur backlog fetch par limit.',
-         choiceExplanations: ["Reconnect sasta nahi hai — usme auth, subscriptions aur \"maine kya miss kiya\" ka fetch shaamil hai. 50,000 ek saath = ek self-inflicted DDoS. Ilaaj wahi hai jo retry storm ka tha: <b>exponential backoff + full jitter</b>, aur backlog fetch par limit.","Durable store can preserve messages despite gateway restart.","Socket count is workload; leak needs lifecycle evidence.","Backoff/jitter explicitly implement/test karna hota hai."] },
+          explain: '50,000 clients ek pal mein laut-te hain: har ek auth, subscription restore aur chhoote messages ki fetch karta hai. Lehar agle node ko bhi gira sakti hai — ek ke baad ek. Ilaaj: client par jitter wala reconnect, server par admission ki hadd, aur restarts dheere-dheere (staggered).',
+          choiceExplanations: [
+            '50,000 clients ek pal mein laut-te hain: har ek auth, subscription restore aur chhoote messages ki fetch karta hai. Lehar agle node ko bhi gira sakti hai — ek ke baad ek. Ilaaj: client par jitter wala reconnect, server par admission ki hadd, aur restarts dheere-dheere (staggered).',
+            'Messages store mein hain — restart sirf connections todta hai. Dikkat wapas aane ki bheed hai.',
+            'Sockets ki ginti leak ka saboot nahi. Khatra ek saath laut-ne ka hai.',
+            'Jitter tabhi hai jab client code mein likha ho. Bina likhe sab ek saath laut-te hain.',
+          ],
+        },
         {
-          q: "One-way notifications ke liye WebSocket vsSSE ka correct decision?",
-          choices: ["One-way events may fit SSE; compare costs","WebSocket cannot support one-way traffic","SSE has unlimited proxy timeout immunity","Browser SSE makes server recovery automatic"],
+          q: 'Sirf server se client tak notifications jaani hain. WebSocket ya SSE — sahi soch?',
+          choices: [
+            'Ek taraf ke events ke liye SSE fit ho sakta hai — dono ka kharcha milao',
+            'WebSocket ek taraf ka traffic bhej hi nahi sakta — sirf do-taraf chalta hai',
+            'SSE par proxy timeout kabhi lagta hi nahi — bina hadd khula reh sakta hai',
+            'Browser ka SSE server ki recovery bhi apne aap kar deta hai — kuch nahi likhna',
+          ],
           answer: 0,
-          explain: "One-way updates SSE ke liye good fit ho sakti hain; WebSocket bhi valid. Compare browser/auth limits, HTTP version, proxy buffering/timeouts, bidirectional need and backpressure. SSE client reconnect useful hai, but server durability/replay free nahi.",
-         choiceExplanations: ["One-way updates SSE ke liye good fit ho sakti hain; WebSocket bhi valid. Compare browser/auth limits, HTTP version, proxy buffering/timeouts, bidirectional need and backpressure. SSE client reconnect useful hai, but server durability/replay free nahi.","WebSocket one-way notifications validly carry kar sakta hai.","HTTP intermediaries buffering/idle timeouts tune/test karne honge.","Reconnect useful hai; durable event IDs and replay server design still needed."] },
+          explain: 'Data sirf ek taraf ja raha hai, toh SSE plain HTTP par chal jaata hai: proxies aur LB ke saath aasan, aur browser khud reconnect karta hai (Last-Event-ID ke saath). Par server ko chhoote events dobara dene ka intezaam phir bhi karna hai, aur proxy timeouts ke liye heartbeat. WebSocket bhi chalega — bas zyada kaam khud sambhalna padta hai. Dono ka kharcha milao.',
+          choiceExplanations: [
+            'Data sirf ek taraf ja raha hai, toh SSE plain HTTP par chal jaata hai: proxies aur LB ke saath aasan, aur browser khud reconnect karta hai (Last-Event-ID ke saath). Par server ko chhoote events dobara dene ka intezaam phir bhi karna hai, aur proxy timeouts ke liye heartbeat. WebSocket bhi chalega — bas zyada kaam khud sambhalna padta hai. Dono ka kharcha milao.',
+            'WebSocket do-taraf hai, par ek taraf bhejna bhi bilkul chalta hai. Sawaal kharche ka hai.',
+            'Proxies lambi idle connection kaat dete hain. SSE ko bhi heartbeat chahiye.',
+            'Browser sirf reconnect karta hai. Chhoote events dobara dena server ka kaam hai.',
+          ],
+        },
       ],
     },
     {
@@ -858,27 +1056,27 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
       start: 'r1',
       nodes: {
         r1: {
-          text: 'Refresh par bhi nahi dikhta — yeh bada clue hai. Ab?',
+          text: 'Refresh par bhi nahi dikhta — bada clue hai. Ab?',
           choices: [
-            { t: "Verify durable message membership", good: true, next: 'r2', explain: 'Sahi. "Refresh par bhi nahi" ka matlab hai yeh delivery ka problem nahi, <b>persistence</b> ka hai. Agar sirf live push toota hota toh refresh par dikh jaata.' },
-            { t: "Only inspect socket connection log", good: false, explain: 'Connection ki jaanch tab kaam aati hai jab message store hai par pahunch nahi raha. Yahan refresh par bhi nahi dikh raha — toh pehle dekho ki woh likha bhi gaya tha ya nahi.' },
-            { t: "Only inspect client display logic", good: false, explain: 'Ho sakta hai, par sabse pehla aur sasta test yeh hai: message DB mein hai? Ek query se aadha search space kat jaata hai.' },
+            { t: "Jaancho: message pakka store hua tha?", good: true, next: 'r2', explain: 'Sahi. "Refresh par bhi nahi" ka matlab hai problem delivery ka nahi, <b>persistence</b> ka hai. Agar sirf live push toota hota toh refresh par dikh jaata.' },
+            { t: "Sirf socket connection ke logs dekho", good: false, explain: 'Connection ki jaanch tab kaam aati hai jab message store hai par pahunch nahi raha. Yahan refresh par bhi nahi dikh raha — toh pehle dekho ki message likha bhi gaya tha ya nahi.' },
+            { t: "Sirf client ka dikhane wala code dekho", good: false, explain: 'Ho sakta hai, par sabse pehla aur sasta test: message DB mein hai? Ek query se aadha search space kat jaata hai.' },
           ],
         },
         r2: {
           text: 'Message DB mein hai HI NAHI. Code: pehle sabko WebSocket par broadcast, phir async DB insert. Kya galat hai?',
           choices: [
-            { t: "Durable write before delivery ACK", good: true, next: 'r3', explain: 'Bilkul. Broadcast pehle karne se connected users ko message dikh gaya, par woh kahin likha hi nahi gaya. DB insert fail hua toh kisi ko pata bhi nahi chala — aur refresh par message gayab. <b>Pehle store, phir push.</b>' },
-            { t: "Make insert sync after early broadcast", good: false, explain: 'Sync karne se latency badhegi par asli galti kram ki hai, sync/async ki nahi. Agar tum pehle persist karke phir push karo toh async bhi bilkul theek hai.' },
-            { t: "Add retry after acknowledged push", good: false, explain: 'Retry madad karega par yeh sirf khidki chhoti karta hai. Jab tak push persist se pehle hai, tab tak "dikha par save nahi hua" mumkin rahega.' },
+            { t: "Pehle pakka store, phir push aur ACK", good: true, next: 'r3', explain: 'Bilkul. Broadcast pehle karne se connected users ko message dikh gaya, par message kahin likha hi nahi gaya. DB insert fail hua toh kisi ko pata bhi nahi chala — aur refresh par message gayab. <b>Pehle store, phir push.</b>' },
+            { t: "Pehle broadcast, phir insert ko sync karo", good: false, explain: 'Sync karne se latency badhegi par asli galti kram ki hai, sync/async ki nahi. Agar tum pehle persist karke phir push karo toh async bhi bilkul theek hai.' },
+            { t: "Push ke baad insert par retry jod do", good: false, explain: 'Retry madad karega, par sirf khidki chhoti karta hai. Jab tak push persist se pehle hai, tab tak "dikha par save nahi hua" mumkin rahega.' },
           ],
         },
         r3: {
-          text: 'Kram theek kar diya. Ab offline users ka kya — unka message kaise aayega?',
+          text: 'Kram theek kar diya. Ab offline users ka kya — offline users ko message kaise milega?',
           choices: [
-            { t: "Stable ordered cursor;bounded catch-up", good: true, next: 'end', explain: 'Yahi is shape ka standard hal hai. Ab live push sirf ek <b>optimization</b> hai — sach hamesha store mein hai, aur client kabhi bhi gap bhar sakta hai. Limit isliye ki 3 din baad wapas aane wale ko 40,000 messages ek saath na bhejein.' },
-            { t: "Durable inbox and reconnect delivery", good: false, explain: 'Ab tumhe per-user queues ka state rakhna padega, jo bade paimane par mehenga hai. Aur agar user 3 mahine na aaye? Store + cursor (last_seen_id) wahi kaam bina alag infra ke karta hai.' },
-            { t: "Push service as only message history", good: false, explain: 'Woh alag feature hai (user ko batana). Yahan sawaal yeh hai ki app khulne par woh purane messages <b>dekhega</b> kaise.' },
+            { t: "Badhti ID ka cursor; hadd wala catch-up", good: true, next: 'end', explain: 'Yahi is shape ka standard hal hai. Ab live push sirf ek <b>optimization</b> hai — sach hamesha store mein hai, aur client kabhi bhi gap bhar sakta hai. Limit isliye ki 3 din baad wapas aane wale ko 40,000 messages ek saath na bhejein.' },
+            { t: "Har user ki durable inbox, reconnect par", good: false, explain: 'Ab tumhe per-user queues ka state rakhna padega, jo bade paimane par mehenga hai. Aur agar user 3 mahine na aaye? Store + cursor (last_seen_id) wahi kaam bina alag infra ke karta hai.' },
+            { t: "Push service hi poori message history", good: false, explain: 'Push notification alag feature hai (user ko batana). Yahan sawaal hai: app khulne par user purane messages <b>dekhega</b> kaise?' },
           ],
         },
         end: {
@@ -904,10 +1102,10 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
         wapas na aayein, iske liye client par {3} lagao.`,
       tokens: ['SSE', 'WebSocket', 'gateway', 'backoff + jitter', 'polling', 'cache'],
       blanks: [
-        { answer: 'SSE', explain: 'Server-Sent Events plain HTTP par chalta hai — proxies, LB aur auto-reconnect sab muft. Notifications aur LLM streaming iska classic use hai.' },
+        { answer: 'SSE', explain: 'Server-Sent Events plain HTTP par chalta hai — proxies, LB aur auto-reconnect sab muft. Notifications aur LLM streaming SSE ke classic use hain.' },
         { answer: 'WebSocket', explain: 'Tab jab client bhi bhejta ho — chat, collab editing, gaming.' },
         { answer: 'gateway', explain: 'Gateway nodes sirf sockets rakhte hain (memory + FDs ki hadd). Business logic peechhe, aur beech mein pub/sub — kyunki do users do alag gateways par hote hain.' },
-        { answer: 'backoff + jitter', explain: 'Warna 50,000 clients theek ek saath wapas aayenge aur agla node giraayenge. Yeh wahi retry storm hai jo Resilience track mein dekha tha.' },
+        { answer: 'backoff + jitter', explain: 'Warna 50,000 clients theek ek saath wapas aayenge aur agla node giraayenge. Wahi retry storm jo Resilience track mein dekha tha.' },
       ],
     },
   ],
@@ -917,16 +1115,38 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     questions: [
       {
         q: '"WhatsApp jaisa chat design karo. Message delivery kaise?"',
-        choices: ["Durable store then push; cursor catch up","Only online socket broadcast makes history","Push notification itself authoritative log","Socket ACK means message stored forever"],
+        choices: [
+          'Pehle durable store (badhti ID), phir push; reconnect par cursor se gap bharo',
+          'Sirf online sockets par broadcast karo — broadcast hi history ban jaata hai',
+          'Push notification ko hi pakka record maano — push hi asli log hai, bas',
+          'Socket ka ACK aa gaya matlab message hamesha ke liye store ho gaya, pakka',
+        ],
         answer: 0,
-        explain: 'Yahi ek jawab hai jo offline users, reconnects, multi-device sync aur "message kho gaya" — chaaron ko ek saath hal karta hai. Aur ismein delivery/read receipts bhi natural roop se fit ho jaate hain: woh bas per-user cursors hain.',
-       choiceExplanations: ["Yahi ek jawab hai jo offline users, reconnects, multi-device sync aur \"message kho gaya\" — chaaron ko ek saath hal karta hai. Aur ismein delivery/read receipts bhi natural roop se fit ho jaate hain: woh bas per-user cursors hain.","Offline recipients message miss kar sakte hain.","Push delivery can delay/drop/collapse; durable app history needed.","ACK contract persistence/replication explicitly define kare."] },
+        explain: 'Message pehle durable store mein, badhti ID ke saath. Phir connected recipients ko push. Reconnect par client last_seen_id bheje aur gap bhare. Push ek optimization hai, source of truth nahi.',
+        choiceExplanations: [
+          'Message pehle durable store mein, badhti ID ke saath. Phir connected recipients ko push. Reconnect par client last_seen_id bheje aur gap bhare. Push ek optimization hai, source of truth nahi.',
+          'Offline user tak broadcast nahi pahunchta. Store ke bina history bachti hi nahi.',
+          'Push notification chhoot sakti hai ya user band kar sakta hai. Asli record store hai.',
+          'Socket ACK sirf "mil gaya" batata hai. Store tab hua jab durable write hua.',
+        ],
+      },
       {
         q: '"1 crore concurrent connections chahiye. Kya sochoge?"',
-        choices: ["Measure sockets/node; scale and storm limits","50k sockets/node universal hardware law","Load balancer alone stores all sessions","Autoscale alone recovers all disconnected users"],
+        choices: [
+          'Ek node par kitne sockets, naap ke dekho; gateway alag scale karo, storm ki hadd rakho',
+          '50k sockets per node ek pakka hardware niyam hai — har machine par bilkul wahi',
+          'Load balancer akela saare sessions store kar leta hai — aur kuch nahi chahiye',
+          'Autoscaling akele saare toote users ko wapas jod deti hai, apne aap, turant',
+        ],
         answer: 0,
-        explain: "Given illustrative 50 kconnections/node,10 million/50k=200 nodes raw capacity, plus headroom/failure margin. Actual per node capacity measured protocol/traffic/heartbeats/platform limits par depend hai. Reconnect/auth/catch up storm limit separately design karo.",
-       choiceExplanations: ["Given illustrative 50 kconnections/node,10 million/50k=200 nodes raw capacity, plus headroom/failure margin. Actual per node capacity measured protocol/traffic/heartbeats/platform limits par depend hai. Reconnect/auth/catch up storm limit separately design karo.","Protocol, memory, heartbeats, traffic and platform limits decide capacity.","Gateways/session registry/backplane also need sizing and failure handling.","Reconnect jitter, auth quota and catch-up admission still needed."] },
+        explain: 'Connection layer alag rakho: gateway nodes sirf sockets sambhalein (kitne per node — load test se naapo; ~50k ek shuruaati andaaza hai), beech mein pub/sub, aur business logic alag scale ho. Reconnect storm ke liye jitter, admission ki hadd aur staggered restarts.',
+        choiceExplanations: [
+          'Connection layer alag rakho: gateway nodes sirf sockets sambhalein (kitne per node — load test se naapo; ~50k ek shuruaati andaaza hai), beech mein pub/sub, aur business logic alag scale ho. Reconnect storm ke liye jitter, admission ki hadd aur staggered restarts.',
+          'Sockets per node memory, CPU aur message rate par depend karta hai. Naap ke tay karo.',
+          'LB traffic baant-ta hai. Kaun kis node par hai aur kise kya bhejna hai — alag registry chahiye.',
+          'Naye nodes aane mein waqt lagta hai, aur bheed pehle aati hai. Jitter aur hadd chahiye.',
+        ],
+      },
     ],
   },
   success: [
@@ -1064,29 +1284,73 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
       title: 'Geo ki samajh',
       questions: [
         {
-          q: "Ordinary composite B-tree(lat, lng) se radius query ka limitation?",
-          choices: ["B-tree lacks spatial radius locality","Float values cannot ever be indexed","Two columns cannot share an index","BETWEEN never uses a B-tree scan"],
+          q: 'Saada composite B-tree (lat, lng) se radius wali query mein kya dikkat hai?',
+          choices: [
+            'Lat ki range ke baad index paas ka ilaka nahi pakad paata — lambi patti scan hoti hai',
+            'Float values ka index ban hi nahi sakta — lat aur lng par index namumkin hai',
+            'Do columns ek index mein ho hi nahi sakte — composite index hota hi nahi',
+            'BETWEEN kabhi B-tree scan use nahi karta — har baar poori table scan hoti hai',
+          ],
           answer: 0,
-          explain: "Ordinary lat/lng B-tree two-dimensional radius ko spatial index jaise model nahi karta. Leading range predicate broad scan chhod sakta hai; skip scan, index combination and planner exceptions exist. PostGIS GiST/SP-GiST, geo cells or other spatial indexes evaluate karo.",
-         choiceExplanations: ["Ordinary lat/lng B-tree two-dimensional radius ko spatial index jaise model nahi karta. Leading range predicate broad scan chhod sakta hai; skip scan, index combination and planner exceptions exist. PostGIS GiST/SP-GiST, geo cells or other spatial indexes evaluate karo.","Numeric values ordinary indexed types ho sakte hain.","Composite indexes exist; geometric locality a different optimization goal hai.","Range bounds B-tree scan useful ho sakta hai; geometry/filtering cost remains."] },
+          explain: 'B-tree jagahon ko ek sorted kram mein rakhta hai. Lat ki range (BETWEEN) par index ki ek lambi patti padhni padti hai — lng ki shart index ke andar jaanchi jaati hai, par padhne wala hissa chhota nahi hota (kuch naye plans skip scan se ghataate hain). Radius ke liye spatial index (geohash/H3 cells, ya PostGIS GiST) se tulna karo, aur EXPLAIN se asli scan dekho.',
+          choiceExplanations: [
+            'B-tree jagahon ko ek sorted kram mein rakhta hai. Lat ki range (BETWEEN) par index ki ek lambi patti padhni padti hai — lng ki shart index ke andar jaanchi jaati hai, par padhne wala hissa chhota nahi hota (kuch naye plans skip scan se ghataate hain). Radius ke liye spatial index (geohash/H3 cells, ya PostGIS GiST) se tulna karo, aur EXPLAIN se asli scan dekho.',
+            'Float columns par index bilkul banta hai. Dikkat 2D doori ki hai.',
+            'Composite index kai columns par banta hai. Dikkat radius ki 2D banawat hai; baad ka column bekaar nahi hota.',
+            'BETWEEN B-tree par range scan karta hai. Dikkat doosre column ki hai.',
+          ],
+        },
         {
-          q: "Geohash proximity ke baare mein accurate property?",
-          choices: ["Nearby area often shares cell prefix","Every nearby pair has same geohash prefix","One prefix guarantees exact radius results","Geohash makes all geographic cells equal size"],
+          q: 'Geohash aur paas-paas ki jagah — kaunsi baat sahi hai?',
+          choices: [
+            'Paas ki jagahon ka prefix aksar ek jaisa — par cell ki seema par hamesha nahi',
+            'Har paas wali jodi ka geohash prefix hamesha same hota hai, bina exception',
+            'Ek prefix pakka radius ke saare sahi nateeje de deta hai — aur kuch nahi',
+            'Geohash har jagah saare cells ko bilkul barabar size ka bana deta hai',
+          ],
           answer: 0,
-          explain: "Geohash prefixes spatial cells represent karte hain; common prefix means same coarse cell, but nearby locations boundary ke across different prefix ho sakti hain. Exact radius ke liye cell cover and distance filter needed.",
-         choiceExplanations: ["Geohash prefixes spatial cells represent karte hain; common prefix means same coarse cell, but nearby locations boundary ke across different prefix ho sakti hain. Exact radius ke liye cell cover and distance filter needed.","Adjacent locations boundary ke across different prefixes rakh sakti hain.","Cells candidates approximate karte hain; distance filter needed hai.","Cell dimensions depend on precision and latitude."] },
+          explain: 'Geohash mein paas ki jagahein aksar same prefix share karti hain — isliye "nearby" ek B-tree prefix scan ban jaata hai. Par cell ki seema par do paas ke points ke prefix bilkul alag ho sakte hain. Isliye padosi cells bhi dekho, phir asli doori nikaalo. Cells ka size latitude ke saath badalta hai.',
+          choiceExplanations: [
+            'Geohash mein paas ki jagahein aksar same prefix share karti hain — isliye "nearby" ek B-tree prefix scan ban jaata hai. Par cell ki seema par do paas ke points ke prefix bilkul alag ho sakte hain. Isliye padosi cells bhi dekho, phir asli doori nikaalo. Cells ka size latitude ke saath badalta hai.',
+            'Cell ki seema ke dono taraf paas ke points ka prefix alag ho sakta hai.',
+            'Prefix sirf candidates deta hai. Asli doori se filter karna padta hai.',
+            'Geohash cells latitude ke saath chhote-bade hote hain. Barabar size nahi.',
+          ],
+        },
         {
-          q: "Query cell boundary par hai. Nearby candidates ko correctly cover kaise karein?",
-          choices: ["Cover radius across cells; then exact distance","Only current cell always covers nearest","Always exactly 8 neighbors for any radius","H3 always has 8 adjacent hexagons"],
+          q: 'Query cell ki seema par hai. Paas ke candidates sahi tarah kaise dhakoge?',
+          choices: [
+            'Radius dhakne wale saare cells lo, phir candidates ki asli doori nikaal ke filter',
+            'Sirf apni cell dekho — apni cell hamesha sabse paas wale ko dhak leti hai',
+            'Har radius ke liye hamesha theek 8 padosi cells — na kam, na zyada',
+            'H3 mein hamesha 8 padosi hexagon hote hain — bilkul geohash jaisa hi',
+          ],
           answer: 0,
-          explain: "Query radius cover karne wale cells lo, phir exact distance filter/sort. Rectangular geohash grid mein immediate 8 neighbors useful case hai, but radius/precision may require more. H3 hexagon neighbors different hain; one universal 8 neighbor rule nahi.",
-         choiceExplanations: ["Query radius cover karne wale cells lo, phir exact distance filter/sort. Rectangular geohash grid mein immediate 8 neighbors useful case hai, but radius/precision may require more. H3 hexagon neighbors different hain; one universal 8 neighbor rule nahi.","Boundary ke across nearest driver other cell mein ho sakta hai.","Required neighbor coverage cell size, radius and indexing scheme se change hoti hai.","H3 hexagon neighborhood and geohash rectangular adjacency different hain."] },
+          explain: 'Query seema par ho toh paas wala driver padosi cell mein ho sakta hai. Radius ko dhakne wale saare cells lo (geohash mein aksar apni + 8 padosi; bada radius ho toh aur), phir candidates par asli doori (haversine) nikaal ke filter aur sort karo. H3 hexagon ke 6 padosi hote hain.',
+          choiceExplanations: [
+            'Query seema par ho toh paas wala driver padosi cell mein ho sakta hai. Radius ko dhakne wale saare cells lo (geohash mein aksar apni + 8 padosi; bada radius ho toh aur), phir candidates par asli doori (haversine) nikaal ke filter aur sort karo. H3 hexagon ke 6 padosi hote hain.',
+            'Sirf apni cell dekhoge toh seema ke paar wala driver chhoot jaayega.',
+            'Radius cell se bada ho toh 8 se zyada cells chahiye. Ginti radius par depend karti hai.',
+            'Hexagon ke 6 padosi hote hain, 8 nahi.',
+          ],
+        },
         {
-          q: '8 PM par airport wali cell par 40,000 rps aa raha hai. Yeh kaunsa problem hai?',
-          choices: ["Hot cell; measure skew and refine partitions","Geo workloads cannot have hot partitions","Smaller cells remove all regional traffic","More nodes split one cell automatically"],
+          q: '8 PM par airport wali cell par 40,000 rps aa raha hai. Kaunsi dikkat hai?',
+          choices: [
+            'Hot cell (hot key) — skew naapo, cell ko chhote hisson mein todo ya replicate karo',
+            'Geo workload mein hot partition ho hi nahi sakta — yahan kuch aur galat hai',
+            'Chhote cells se poore ilaake ka traffic hi khatam ho jaata hai, bas',
+            'Aur nodes jod do — nodes ek cell ko apne aap kai hisson mein baant lenge',
+          ],
           answer: 0,
-          explain: "Hot cell traffic workload skew hai. Finer precision/sub cells, replica reads/local caches or partitioned aggregation consider karo; coarser precision normally larger areas combine karti hai. Radius coverage and freshness tradeoffs measure karo.",
-         choiceExplanations: ["Hot cell traffic workload skew hai. Finer precision/sub cells, replica reads/local caches or partitioned aggregation consider karo; coarser precision normally larger areas combine karti hai. Radius coverage and freshness tradeoffs measure karo.","Popularity concentration geo cell ko hot key bana sakti hai.","Sub cells redistribute keys; request scatter/candidate coverage tradeoffs remain.","Routing/sharding rules need actual repartitioning or replication."] },
+          explain: 'Cache level wala hot key, naye roop mein: ek cell par bahut bheed. Pehle skew naapo, phir garam cell ko chhoti precision par todo (adaptive cells) ya cell ka data replicate karke reads baanto. Nodes jodne se ek cell apne aap nahi bant-ti.',
+          choiceExplanations: [
+            'Cache level wala hot key, naye roop mein: ek cell par bahut bheed. Pehle skew naapo, phir garam cell ko chhoti precision par todo (adaptive cells) ya cell ka data replicate karke reads baanto. Nodes jodne se ek cell apne aap nahi bant-ti.',
+            'Airport, stadium, station — geo mein hot cells aam hain.',
+            'Chhote cells load baant-te hain, traffic khatam nahi karte. Log wahi hain.',
+            'Ek key ek hi node par rehti hai jab tak tum khud na todo. Nodes jodne se cell nahi bant-ta.',
+          ],
+        },
       ],
     },
     {
@@ -1100,9 +1364,9 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
       items: [
         { text: 'Geohash prefix se candidates, phir haversine se exact doori', bin: 'good', explain: 'Do-kadam design: index mota chhanna karta hai, asli hisaab sirf bache hue candidates par chalta hai. Yahi har production geo system karta hai.' },
         { text: 'Poore shehar ke liye ek fixed cell size', bin: 'bad', explain: 'Density kahin 100x zyada hai. Ek cell size ka matlab hai kahin cell khaali aur kahin cell jal rahi hai. Adaptive grid ya cell splitting chahiye.' },
-        { text: 'Driver locations Redis mein, DB mein sirf snapshot', bin: 'good', explain: 'Location har 4 second par update hoti hai — yeh ek <b>hot, ephemeral</b> data hai. Har update DB mein likhna write storm hai. Redis (GEO commands ke saath) yahan sahi jagah hai.' },
+        { text: 'Driver locations Redis mein, DB mein sirf snapshot', bin: 'good', explain: 'Location har 4 second par update hoti hai — <b>hot, ephemeral</b> data. Har update DB mein likhna write storm hai. Redis (GEO commands ke saath) yahan sahi jagah hai.' },
         { text: 'Sirf apni cell query karo, padosi cells chhodo', bin: 'bad', explain: "Cell boundary ka problem: 50 meter door ka driver bagal ki cell mein hoga aur kabhi nahi milega. Supported radius cover karne wali neighboring cells lo;count resolution/radius aur grid scheme par depend hai." },
-        { text: 'Har driver ping ko DB mein insert karo (4 sec par ek)', bin: 'bad', explain: '1 lakh drivers × 15 ping/min = 15 lakh writes/min, aur purana location ka koi mol nahi. Yeh ek <b>current state</b> hai, history nahi — use in-memory store mein rakho.' },
+        { text: 'Har driver ping ko DB mein insert karo (4 sec par ek)', bin: 'bad', explain: '1 lakh drivers × 15 ping/min = 15 lakh writes/min, aur purana location ka koi mol nahi. Location ek <b>current state</b> hai, history nahi — in-memory store mein rakho.' },
         { text: 'H3 hexagons use karna square cells ki jagah', bin: 'good', explain: "H3 hierarchical hexagonal cells useful adjacency dete hain,butpentagons/distortion aur resolution-dependent coverage handle karo.Exact radius distance filter separately chahiye." },
       ],
     },
@@ -1112,17 +1376,39 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
     instructions: 'Yahan "hot cell" bolna hi tumhe alag kar deta hai. 🎤',
     questions: [
       {
-        q: "Nearby drivers design mein essential spatial correctness?",
-        choices: ["Cell/radius coverage; freshness; exact filter","Any PostGIS use is inherently too slow","Current cell alone guarantees nearest driver","Any cell scheme always uses 8 neighbors"],
+        q: '"Nearby drivers design karo" — sahi nateeje ke liye kya zaroori hai?',
+        choices: [
+          'Radius dhakne wale cells, taaza locations, aur aakhir mein asli doori se filter',
+          'PostGIS ka koi bhi istemaal apne aap mein bahut dheema hai — kabhi mat lo',
+          'Sirf apni cell dekho — apni cell sabse paas ke driver ki guarantee hai',
+          'Koi bhi cell scheme ho, hamesha theek 8 padosi cells hi dekhne hain',
+        ],
         answer: 0,
-        explain: "Current locations freshness/TTL, supported radius, cell coverage and exact distance filtering define karo. Geohash, H3, S2 or PostGIS valid options hain, measured SLO se choose karo. H3 hexagons ko universal 8 neighbors assume mat karo.",
-       choiceExplanations: ["Current locations freshness/TTL, supported radius, cell coverage and exact distance filtering define karo. Geohash, H3, S2 or PostGIS valid options hain, measured SLO se choose karo. H3 hexagons ko universal 8 neighbors assume mat karo.","PostGIS spatial indexes valid solution hain; benchmark target workload.","Radius coverage adjacentcells require kar sakti hai.","Geohash, H3 and S2 topology/neighborhood algorithms differ."] },
+        explain: 'Locations in-memory geo store mein (har ~4 s update), geohash ya H3 cell se index. Query = radius dhakne wale cells, phir asli doori (haversine) se filter aur sort. Purani location wale drivers hatao (taazgi), aur hot cells ke liye adaptive precision ya replication. PostGIS bhi chal sakta hai — load naap ke chuno.',
+        choiceExplanations: [
+          'Locations in-memory geo store mein (har ~4 s update), geohash ya H3 cell se index. Query = radius dhakne wale cells, phir asli doori (haversine) se filter aur sort. Purani location wale drivers hatao (taazgi), aur hot cells ke liye adaptive precision ya replication. PostGIS bhi chal sakta hai — load naap ke chuno.',
+          'PostGIS ka GiST index nearby query tez karta hai. Write load ke hisaab se chuno.',
+          'Seema ke paar wala driver padosi cell mein ho sakta hai.',
+          'Padosi cells ki ginti scheme aur radius par depend karti hai (H3 ke 6).',
+        ],
+      },
       {
-        q: "100 kdrivers every 4s location update. Current query and history design?",
-        choices: ["Current geo state plus required durable history","Every location update must be discarded","Postgres cannot sustain 25k writes/second","Kafka alone answers nearest-driver query"],
+        q: '1 lakh drivers har 4 second location bhejte hain. Abhi ki location aur history kaise rakhoge?',
+        choices: [
+          'Abhi ki location in-memory geo store mein; history sirf utni jitni zaroori, alag',
+          'Har location update phenk do — kisi bhi location ko kabhi save mat karo',
+          'Postgres 25k writes/second kabhi jhel hi nahi sakta — namumkin hai',
+          'Kafka akela sabse paas ka driver bata deta hai — query ki zaroorat nahi',
+        ],
         answer: 0,
-        explain: "Current geo projection low latency ephemeral updates ke liye fit ho sakti hai.100000 drivers/4s=25000 updates/s(1.5 million/min). Required trip/audit/history durable pipeline alag retain karo. Postgres cannot 25k/s blanket claim nahi; benchmark hardware/schema/durability.",
-       choiceExplanations: ["Current geo projection low latency ephemeral updates ke liye fit ho sakti hai.100000 drivers/4s=25000 updates/s(1.5 million/min). Required trip/audit/history durable pipeline alag retain karo. Postgres cannot 25k/s blanket claim nahi; benchmark hardware/schema/durability.","Trip audit, safety, replay or fraud requirements history retention demand kar sakti hain.","Capacity schema, hardware, batching and durability par depend hai; universal exclusion nahi.","Stream log ingestion/history useful; queryable current geo projection separately chahiye."] },
+        explain: '1 lakh ÷ 4 s = 25,000 updates/second. Abhi ki location ek in-memory geo store (jaise Redis GEO) mein — current state, history nahi. History utni hi rakho jitni chahiye (trip ka raasta, billing, jhagde), alag store mein ya stream se batch karke. Har update DB mein bhejna zaroori nahi — par "Postgres 25k writes/s kar hi nahi sakta" bhi galat; naap ke chuno.',
+        choiceExplanations: [
+          '1 lakh ÷ 4 s = 25,000 updates/second. Abhi ki location ek in-memory geo store (jaise Redis GEO) mein — current state, history nahi. History utni hi rakho jitni chahiye (trip ka raasta, billing, jhagde), alag store mein ya stream se batch karke. Har update DB mein bhejna zaroori nahi — par "Postgres 25k writes/s kar hi nahi sakta" bhi galat; naap ke chuno.',
+          'Trip ka raasta, billing aur jhagde ke liye kuch history chahiye. Sab phenkna galat hai.',
+          'Sahi hardware aur batching ke saath Postgres 25k writes/s kar sakta hai. Sawaal kharche aur zaroorat ka hai.',
+          'Kafka log hai, geo query nahi karta. "Sabse paas kaun" ke liye geo index chahiye.',
+        ],
+      },
     ],
   },
   success: [
