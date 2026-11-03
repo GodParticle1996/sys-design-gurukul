@@ -130,16 +130,38 @@ SD.registerLevels('ai', [
       questions: [
         {
           q: 'Replit ne agent ke liye naye custom tools banane ki jagah insaan wale tools (shell, files, packages) kyun diye?',
-          choices: ["Familiar tools aur observable actions","Familiar tool means safe by default","Human shell has zero attack surface","New API always worse than shell"],
+          choices: [
+            'Model insaanon ke inhi tools par train hua hai, infra ke failure pehle se pata, aur user har action samjhe',
+            'Jaana-pehchaana tool apne aap safe hota hai — shell dene se khatre ki fikar khatam ho jaati hai',
+            'Insaan wale shell ka attack surface zero hai — files aur packages se kuch bigad hi nahi sakta',
+            'Naya custom API hamesha shell se bura hota hai — isliye koi bhi naya tool banana hi galat hai',
+          ],
           answer: 0,
-          explain: 'Agent = insaan jaisa user. Model ka training, infra ki maturity, aur user ka bharosa — teeno isse aate hain.',
-         choiceExplanations: ["Agent = insaan jaisa user. Model ka training, infra ki maturity, aur user ka bharosa — teeno isse aate hain.","Familiarity explicit capability restrictions ka replacement nahi.","Shell broad file/process/network capabilities expose kar sakti hai.","Narrow custom APIs useful ho sakti hain; task and risk compare karo."] },
+          explain: 'Agent = insaan jaisa user. Model ka training, infra ki maturity aur user ka bharosa — teeno jaane-pehchaane tools se aate hain. Safety phir bhi deewar se aati hai.',
+          choiceExplanations: [
+            'Agent = insaan jaisa user. Model ka training, infra ki maturity aur user ka bharosa — teeno jaane-pehchaane tools se aate hain. Safety phir bhi deewar se aati hai.',
+            'Shell bahut kuch kar sakta hai — isliye isolation chahiye.',
+            'Shell se files mit sakti hain aur network khul sakta hai.',
+            'Kuch kaam ke liye custom tool behtar ho sakta hai — "hamesha" galat.',
+          ],
+        },
         {
           q: 'Kisi agent system ka design kis sawaal se shuru karna chahiye (video)?',
-          choices: ["Failure impact aur isolation requirements","Only model benchmark rank se start","Only UI layout ko threat model maano","Only tool count ko risk score banao"],
+          choices: [
+            '"Agent galti karega tab kya hoga?" aur "kaunsi isolation guarantee chahiye?"',
+            '"Benchmark par sabse upar kaunsa model hai?" — sabse bada model hi design tay karega',
+            '"UI kaisa dikhega?" — UI ka layout hi agent ka threat model bata deta hai',
+            '"Kitne tools chahiye?" — tools ki ginti hi system ka risk score hai',
+          ],
           answer: 0,
           explain: 'Video ki line: agent = intelligence ki patli layer, isolation + reversibility + ops ke mote stack par.',
-         choiceExplanations: ["Video ki line: agent = intelligence ki patli layer, isolation + reversibility + ops ke mote stack par.","Higher benchmark score privilege boundaries define nahi karta.","UI design external effects and data exposure ka complete model nahi.","One powerful tool many narrow tools se riskier ho sakta hai."] },
+          choiceExplanations: [
+            'Video ki line: agent = intelligence ki patli layer, isolation + reversibility + ops ke mote stack par.',
+            'Model badal jaata hai; galti ka plan wahi rehna chahiye.',
+            'UI khatre nahi batata.',
+            'Ek tool bhi bahut khatarnaak ho sakta hai — ginti risk nahi.',
+          ],
+        },
       ],
     },
   ],
@@ -149,16 +171,38 @@ SD.registerLevels('ai', [
     questions: [
       {
         q: 'Interviewer: "Hamara agent sirf code likhta hai, user khud chalata hai. Replit jaisa banana hai. Pehla kadam?"',
-        choices: ["Per-session isolated reversible workspace","One shared privileged shell for all","User host files ko unrestricted access","Only model size ko improve karo"],
+        choices: [
+          'Kaam ki ikaai badlo — har session ka poora, isolated, reversible environment do',
+          'Sab users ke agents ek shared, privileged shell mein chalao — ek setup, sabka kaam ho jaaye',
+          'Agent ko user ki machine ki saari files ka khula access do — sab kuch paas mein hai',
+          'Sirf model ka size badhao — bada model khud code chala ke test kar lega',
+        ],
         answer: 0,
-        explain: 'User ki machine = unki files ka risk; shared server = ek agent doosre ko chhu sakta hai.',
-       choiceExplanations: ["User ki machine = unki files ka risk; shared server = ek agent doosre ko chhu sakta hai.","Shared privilege cross-user data and execution risk laati hai.","User device par broad writes sensitive data ko affect kar sakti hain.","Model quality runtime isolation aur rollback supply nahi karti."] },
+        explain: 'User ki machine = user ki files ka khatra; shared server = ek agent doosre ko chhoo sakta hai.',
+        choiceExplanations: [
+          'User ki machine = user ki files ka khatra; shared server = ek agent doosre ko chhoo sakta hai.',
+          'Shared shell mein ek agent doosre ka kaam bigaad sakta hai.',
+          'User ki saari files agent ki ek galti se mit sakti hain.',
+          'Model bada ho, code chalane ke liye phir bhi environment chahiye.',
+        ],
+      },
       {
         q: 'Interviewer: "Poore environment ki keemat?"',
-        choices: ["Compute aur recovery complexity","Only source code storage ka cost","No operations after one snapshot","Sandbox label se threat surface zero"],
+        choices: [
+          'Asli compute, cold start, surface area — snapshot galat = data loss, isolation galat = incident',
+          'Sirf source code ki storage ka kharcha — baaki sab muft hai, kyunki code hi asli keemti cheez hai',
+          'Ek snapshot ke baad koi operations nahi — snapshot ban gaya toh platform khud chalta hai',
+          'Sandbox ka label lagate hi threat surface zero — label hi poori suraksha ki guarantee hai',
+        ],
         answer: 0,
         explain: 'Video: powerful capability ka tax roz, hamesha.',
-       choiceExplanations: ["Video: powerful capability ka tax roz, hamesha.","Running environments CPU, RAM, startup and orchestration demand karte hain.","Snapshots verify, retain and restore karni hoti hain.","Packages, kernels, mounts and tools attack surface rakhte hain."] },
+        choiceExplanations: [
+          'Video: powerful capability ka tax roz, hamesha.',
+          'Poora environment chalana compute khaata hai — storage se kahin zyada.',
+          'Snapshot engine ko lagataar test aur chalana padta hai.',
+          'Sandbox ki deewar mein bhi bug ho sakta hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -222,7 +266,7 @@ SD.registerLevels('ai', [
       ],
       flaws: [
         { id: 'deploy', why: 'Is diagram mein shared privileged identity aur flat networking tenant data expose karte hain. Namespace alone access nahi deta; IAM/RBAC, network policy aur workload isolation configure karo. Separate project ek additional policy boundary ho sakti hai.' },
-        { id: 'db', why: 'Agent ko prod DB = uski har galti prod par. Dev DB architecture se alag ho, aur wahan bhi fork (lab: fork mein DROP TABLE, prod 500,000 rows safe).' },
+        { id: 'db', why: 'Agent ko prod DB = agent ki har galti prod par. Dev DB architecture se alag ho, aur dev DB ka bhi fork (lab: fork mein DROP TABLE, prod 500,000 rows safe).' },
         { id: 'net', why: 'Flat network = ek bigda environment doosron ko scan/attack kar sakta hai. Har environment ka apna network namespace, dusron tak raasta band.' },
         { id: 'snap', why: 'Raat ka ek backup = din bhar ki galti ka koi undo nahi. Agent ko har kadam par snapshot chahiye (CoW se constant-time).' },
       ],
@@ -247,10 +291,21 @@ SD.registerLevels('ai', [
       ],
       observe: {
         q: "Fork banana 0.005 ms mein kaise hua jab table mein 5 lakh rows hain?",
-        choices: ["Reference fork, writes overlay mein","All rows foreground mein copied","All rows hidden compression mein","No durable backing needed for fork"],
+        choices: [
+          'Fork kuch copy nahi karta — parent ka reference; badlaav overlay mein (copy-on-write)',
+          'Saari rows foreground mein copy hui, bas copy itni tez thi ki 0.005 ms laga',
+          'Saari rows chupke se compress hui, aur compressed rows ki copy karna lagbhag muft hai',
+          'Fork ko pakki backing ki zaroorat hi nahi — fork sirf memory mein jeeta hai',
+        ],
         answer: 0,
-        explain: "CoW ka poora jaadu: jo nahi badla woh share hota hai. Isliye metadata fork cheap ho sakta hai; overlay writes, retained base versions, cleanup, IO aur storage cost phir bhi hoti hai.",
-       choiceExplanations: ["CoW ka poora jaadu: jo nahi badla woh share hota hai. Isliye metadata fork cheap ho sakta hai; overlay writes, retained base versions, cleanup, IO aur storage cost phir bhi hoti hai.","Measured tiny fork time full eager copy se explain nahi hota.","Compression alone constant-time parent reference model nahi.","Shared parent state durable and retained rehni chahiye."] },
+        explain: 'CoW ka jaadu: jo nahi badla, share hota hai. Isliye metadata fork sasta hai; overlay writes, purane base versions, cleanup, IO aur storage ka kharcha phir bhi hai.',
+        choiceExplanations: [
+          'CoW ka jaadu: jo nahi badla, share hota hai. Isliye metadata fork sasta hai; overlay writes, purane base versions, cleanup, IO aur storage ka kharcha phir bhi hai.',
+          '5 lakh rows 0.005 ms mein copy nahi hoti.',
+          'Compression lab mein tha hi nahi.',
+          'Fork ke badlaav bhi pakki jagah likhe jaate hain.',
+        ],
+      },
       lesson: 'Agent ko prod ka access nahi, fork do. Fork muft hai, aur sabse buri galti bhi fork tak simit.',
     },
   ],
@@ -260,16 +315,38 @@ SD.registerLevels('ai', [
     questions: [
       {
         q: 'Interviewer: "Har customer ke deploy ke liye alag cloud project — bahut bhaari nahi?"',
-        choices: ["IAM boundary vs project-fleet operations","Project ID automatically secures apps","All cloud boundaries equally strong","Shared project always wrong design"],
+        choices: [
+          'Bhaari hai (provisioning, cleanup), par IAM, quota aur billing ki saaf boundary deta hai',
+          'Project ID lagate hi app apne aap surakshit — identity aur network ki fikar nahi',
+          'Saari cloud boundaries barabar mazboot hain — alag project ho ya ek namespace, koi farq nahi',
+          'Shared project hamesha galat design hai — har haal mein alag project hi sahi',
+        ],
         answer: 0,
-        explain: "Separate cloud projects IAM, quota aur billing isolation ko simplify kar sakte hain. Correct identities, network controls aur application isolation still required hain; project boundary automatically strongest universal sandbox nahi.",
-       choiceExplanations: ["Separate cloud projects IAM, quota aur billing isolation ko simplify kar sakte hain. Correct identities, network controls aur application isolation still required hain; project boundary automatically strongest universal sandbox nahi.","IAM, service accounts, networks and deployment policy correctly configure karni hoti hai.","Projects, processes and VMs different threat boundaries hain.","Shared project appropriate controls ke saath valid ho sakta hai."] },
+        explain: 'Alag cloud projects IAM, quota aur billing isolation simple karte hain. Sahi identities, network controls aur app isolation phir bhi chahiye; project boundary apne aap sabse mazboot sandbox nahi.',
+        choiceExplanations: [
+          'Alag cloud projects IAM, quota aur billing isolation simple karte hain. Sahi identities, network controls aur app isolation phir bhi chahiye; project boundary apne aap sabse mazboot sandbox nahi.',
+          'Galat identity ya khula network project ke andar bhi khatra hai.',
+          'Boundaries alag mazbooti ki hain.',
+          'Kuch cases mein shared project + mazboot controls bhi theek hain.',
+        ],
+      },
       {
         q: 'Interviewer: "Agent ko production DB kab dena chahiye?"',
-        choices: ["Scoped access aur reviewed changes","Trusted model ko broad prod writes","Read-only se all data risks solve","Night time ko authorization maano"],
+        choices: [
+          'Seedha kabhi nahi — alag dev DB, dev DB ka bhi fork; prod badlaav sirf review wale deploy se',
+          'Jab model trusted ho jaaye — tab prod par khule writes de do, model galti nahi karega',
+          'Read-only de do — read-only mein data ka koi khatra nahi, sirf likhna khatarnaak',
+          'Raat ko de do — raat mein users kam hain, toh raat hi authorization hai',
+        ],
         answer: 0,
-        explain: "Agent ko sirf approved task ke liye minimum permissions do. Unreviewed autonomous production mutations ko isolated dev/fork workflow aur reviewed deployment se constrain karo; even read-only access sensitive data risk rakhta hai.",
-       choiceExplanations: ["Agent ko sirf approved task ke liye minimum permissions do. Unreviewed autonomous production mutations ko isolated dev/fork workflow aur reviewed deployment se constrain karo; even read-only access sensitive data risk rakhta hai.","Model trust permissions and change approvals ka substitute nahi.","Read-only sensitive data expose kar sakta hai.","Time of day authorization ya rollback contract nahi."] },
+        explain: 'Agent ko sirf manzoor kaam ke liye kam se kam permissions do. Bina review ke prod badlaav ko alag dev/fork workflow aur review wale deployment se roko; read-only bhi sensitive data ka khatra rakhta hai.',
+        choiceExplanations: [
+          'Agent ko sirf manzoor kaam ke liye kam se kam permissions do. Bina review ke prod badlaav ko alag dev/fork workflow aur review wale deployment se roko; read-only bhi sensitive data ka khatra rakhta hai.',
+          'Trusted model bhi galti karta hai — Replit ka incident yahi tha.',
+          'Read-only mein bhi customer data padha aur leak ho sakta hai.',
+          'Samay permission nahi hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -313,7 +390,7 @@ SD.registerLevels('ai', [
       exercise: 'ex1-snapshots',
       goal: '1 MB aur 200 MB project par 10 kadam, har kadam se pehle snapshot — full copy vs CoW. Phir agent project todta hai → rollback.',
       why: `<code>services/workspace.js</code> asli disk par project banata hai. <code>cow</code> = files 64 KB
-        blocks mein, har block ka naam uska SHA-256, snapshot = sirf "kaunse blocks" ki list, aur na badli file
+        blocks mein, har block ka naam block ka SHA-256, snapshot = sirf "kaunse blocks" ki list, aur na badli file
         dobara hash bhi nahi hoti (dirty tracking).`,
       steps: [
         { text: 'Workspace service chalao.', cmd: 'cd docker-labs/29-replit && npm start ex1-snapshots', expect: 'ex1-snapshots\n[workspace] :5071 data=…/data' },
@@ -321,10 +398,21 @@ SD.registerLevels('ai', [
       ],
       observe: {
         q: 'CoW ka PEHLA snapshot full copy se bhi dheema (1541 vs 324 ms). Phir bhi CoW kyun jeeta?',
-        choices: ["Upfront image cost, cheap later deltas","First sample invalid by definition","Full copies inherently lose data","CoW guarantees every workload faster"],
+        choices: [
+          'Pehla ek baar ka kharcha — baad mein har snapshot 5.7 ms aur disk 10× kam',
+          'Pehla sample galat naapa gaya — pehla naap hamesha bekaar hota hai',
+          'Full copy mein data hamesha khota hai, isliye full copy kabhi jeet hi nahi sakti, chahe tez ho',
+          'CoW har workload par har baar tez hota hai — pehli baar bhi, bas lab galat tha',
+        ],
         answer: 0,
         explain: 'Mehenga kaam ek baar, sasta kaam har baar — wahi asymmetry jo YouTube ke transcode mein bhi hai.',
-       choiceExplanations: ["Mehenga kaam ek baar, sasta kaam har baar — wahi asymmetry jo YouTube ke transcode mein bhi hai.","Observed first snapshot overhead ko amortization ke saath assess karo.","Full copy correctly implemented durable ho sakti hai.","CoW changed bytes, read patterns and metadata overhead par depend karta hai."] },
+        choiceExplanations: [
+          'Mehenga kaam ek baar, sasta kaam har baar — wahi asymmetry jo YouTube ke transcode mein bhi hai.',
+          '1541 ms asli tha — pehli baar poori image banti hai.',
+          'Full copy data nahi khoti — bas mehengi hai.',
+          'Lab ne hi dikhaya ki pehla CoW snapshot dheema tha.',
+        ],
+      },
       lesson: 'Snapshot ki keemat tay karti hai ki woh kitni baar liya ja sakta hai — aur wahi tay karta hai ki undo kitna kaam ka hai.',
     },
     {
@@ -342,10 +430,21 @@ SD.registerLevels('ai', [
       ],
       observe: {
         q: "3 parallel forks ne sahi projects sirf 71% → 74.8% kiye, par compute 3× kar diya. Kyun?",
-        choices: ["Test oracle ki blind spots persist","Fork count proves independent correctness","Parallel attempts cannot share flaws","More compute fixes missing assertions"],
+        choices: [
+          'Bachi galtiyan tests pakadte hi nahi — forks bhi nahi dekhte; faayda wall-clock mein',
+          '3 forks ne alag-alag jaanch ki, toh 74.8% sahi saabit — fork ki ginti hi sahi hone ka saboot',
+          'Parallel koshishein ek jaisi galti kar hi nahi sakti, isliye zyada forks zaroori the',
+          'Aur compute lagao — 30 forks se tests ke chhoote hue assertions bhi pakde jaayenge',
+        ],
         answer: 0,
-        explain: 'Rollback ki limit test ki limit hai. Behtar tests > zyada forks.',
-       choiceExplanations: ["Rollback ki limit test ki limit hai. Behtar tests > zyada forks.","More attempts same incomplete tests pass karke same bug ship kar sakte hain.","Correlated models/tests same semantic errors miss kar sakte hain.","Missing correctness checks extra compute se automatically nahi aatin."] },
+        explain: 'Rollback ki hadd test ki hadd hai. Behtar tests > zyada forks.',
+        choiceExplanations: [
+          'Rollback ki hadd test ki hadd hai. Behtar tests > zyada forks.',
+          'Forks wahi tests chalate hain — wahi andhe kone.',
+          'Forks ek hi model aur tests se chalte hain — ek jaisi galti aam hai.',
+          'Compute se gayab assertion nahi aata.',
+        ],
+      },
       lesson: 'Undo galtiyon ko "jama" hone se rokta hai. Par kaunsi galti hai, yeh test batata hai.',
     },
   ],
@@ -355,16 +454,38 @@ SD.registerLevels('ai', [
     questions: [
       {
         q: 'Interviewer: "Agent ke liye undo design karo — files, code, DB."',
-        choices: ["Files/DB snapshots aur safe restore","Night backup per-action undo hai","Prompt se irreversible effects undo","Only local git resets all services"],
+        choices: [
+          'Files: CoW snapshots; code: auto commits; DB: fork per kadam — ek button; bahar ke asar alag',
+          'Raat ka backup per-action undo hai — subah tak ka sab wapas laa sakte ho',
+          'Prompt mein "galti mat karo" likho — prompt ke baad bheja hua email bhi wapas aa jaata hai',
+          'Sirf local git reset — git reset se saari services aur DB bhi pichhli haalat mein',
+        ],
         answer: 0,
-        explain: "Files, code aur DB ke versioned restore points ko consistent operation boundary se coordinate karo. Email, payment ya already-published external effects local snapshot se undo nahi hote; idempotency/compensation/reconciliation contract alag chahiye.",
-       choiceExplanations: ["Files, code aur DB ke versioned restore points ko consistent operation boundary se coordinate karo. Email, payment ya already-published external effects local snapshot se undo nahi hote; idempotency/compensation/reconciliation contract alag chahiye.","Night backup intermediate acknowledged changes lose kar sakta hai.","Email/payment/external effects reverse karne ko compensations chahiye.","Git files cover karta hai; DB and external services separate state hain."] },
+        explain: 'Files, code aur DB ke restore points ek hi kadam ki boundary par jodo. Email, payment ya publish ho chuke bahar ke asar local snapshot se undo nahi hote — idempotency, compensation aur reconciliation alag chahiye.',
+        choiceExplanations: [
+          'Files, code aur DB ke restore points ek hi kadam ki boundary par jodo. Email, payment ya publish ho chuke bahar ke asar local snapshot se undo nahi hote — idempotency, compensation aur reconciliation alag chahiye.',
+          'Raat ka backup din bhar ke kadam nahi bachata.',
+          'Bheja email wapas nahi aata — prompt se bhi nahi.',
+          'Git sirf code ko wapas laata hai; DB aur services nahi.',
+        ],
+      },
       {
         q: 'Interviewer: "Snapshot engine mein bug ho toh?"',
-        choices: ["Verified restore aur independent durability","New snapshot old corruption repair kare","Agent can reconstruct lost state exactly","Snapshot count is recovery proof"],
+        choices: [
+          'Data loss — isliye restore jaancho aur alag durability rakho; engine sabse zyada test ho',
+          'Koi baat nahi — naya snapshot purani kharabi khud theek kar dega',
+          'Agent khoyi hui state theek wahi dobara bana lega — agent ko har kadam yaad rehta hai',
+          'Snapshots ki ginti hi recovery ka saboot hai — jitne zyada snapshots, utna surakshit data',
+        ],
         answer: 0,
         explain: 'Video: surface area ka kharcha — snapshot galat = data loss, isolation galat = security incident.',
-       choiceExplanations: ["Video: surface area ka kharcha — snapshot galat = data loss, isolation galat = security incident.","Corrupted parent se later snapshots damage inherit kar sakti hain.","Agent unavailable lost information reliably invent nahi kar sakta.","Recovery proof actual restore and integrity checks se milta hai."] },
+        choiceExplanations: [
+          'Video: surface area ka kharcha — snapshot galat = data loss, isolation galat = security incident.',
+          'Naya snapshot kharab data ki copy banayega.',
+          'Agent ko poori purani state yaad nahi.',
+          'Restore test kiye bina snapshots ki ginti kuch saabit nahi karti.',
+        ],
+      },
     ],
   },
   success: [
