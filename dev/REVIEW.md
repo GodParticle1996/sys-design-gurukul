@@ -44,8 +44,8 @@ Style measurement, all 244 levels, pre-audit tree `ce2f297` versus now:
 | --- | --- | --- |
 | 1 | Quick fixes: README/docs breakage, stale counts, rendering bugs, validator guards | ✅ done 2026-10-29 |
 | 2 | Engine and code review: simulator, renderers, app shell, test tools; tests for each fix | ✅ done 2026-10-29 |
-| 3 | Content, track by track: language (decision 1), guides (decision 2), teaching order, facts | open |
-| 4 | Browser pass: phone and desktop screenshots, layout fixes | open |
+| 3 | Content, track by track: language (decision 1), guides (decision 2), teaching order, facts | answer options done for all 14 tracks 2026-11-03; guides (decision 2) and mission hints still open |
+| 4 | Browser pass: phone and desktop screenshots, layout fixes | phone top bar + code-pane wraps done; SVG labels left as is (user) |
 | 5 | Wrap-up: docs, notes, commits | open |
 
 ## Findings log
@@ -382,3 +382,20 @@ Phase 3 findings logged while reading:
   `uuid7` kind.
 - The canvas review reveals the best options; a retry after a failed review can copy them. First-try scoring
   already accounts for this. Keep.
+
+### Phase 3 — Codex queue finished by Claude (2026-11-03)
+
+Codex's queue (`sdg-codex-xp/jobs/queue/QUEUE.txt`) stopped at its usage limit after 37 levels (`st-reddit-cache`).
+Claude wrote the remaining 85 levels itself: the rest of Stories (Reddit strangler, Cloudflare, Jira, Snowflake,
+Airtable, Slack, Discord, Instagram, Stripe, Prime Video, Dropbox, WhatsApp, Roblox, Notion), all 20 AI levels and
+all 24 Planet levels — about 330 MCQs plus the design-slot and incident labels in those levels. Commits `5d96282`
+to `3b4b80b`. Patches are kept in `sdg-codex-xp/jobs/claude/`.
+
+Same bar as the earlier tracks: natural Hinglish options of balanced length (wrong options lengthened, right ones
+not clipped), a reason per option, the audit's fact caveats kept, stems with stand-ins or spacing artifacts
+("ko10000servers", "18: 30") reworded, and every lesson pronoun stand-in in these levels named outright.
+`quiz-quality` now reports 0 length flags across 1,279 MCQs, 43 incidents and 108 design slots.
+
+**Not yet cross-reviewed.** These 85 levels were written without a Codex review pass. When Codex's weekly limit
+resets, send it the review brief for Stories (from `st-reddit-strangle`), AI and Planet before treating them as
+final.
