@@ -75,10 +75,21 @@ SD.registerLevels('planet', [
       ],
       observe: {
         q: '256 MB blob 40 koshish mein bhi poora kyun nahi hua?',
-        choices: ["Restart-only transfer exceeded stable span","Server rejected every correct chunk","File format guaranteed corrupted","More retries guarantee quick completion"],
+        choices: [
+          'Link ~30 MB par toot-ta hai — 256 MB ek baar mein bina toote jaana lagbhag namumkin, har baar shuru se',
+          'Server ne har sahi chunk ko reject kiya, isliye 40 koshishon mein bhi file poori nahi hui',
+          'File ka format pakka kharab tha — kharab file kitni bhi baar bhejo, poori nahi hogi',
+          '40 se zyada koshishein karo toh poora hona pakka — retries badhao, file jaldi poori',
+        ],
         answer: 0,
         explain: "Chance ≈ e^(−256/30) ≈ 0.02%. Chunks mein har tukde ka chance ~87% — aur toota sirf wahi dobara.",
-       choiceExplanations: ["Chance ≈ e^(−256/30) ≈ 0.02%. Chunks mein har tukde ka chance ~87% — aur toota sirf wahi dobara.","Question repeated link interruptions model karta hai, server policy reject nahi.","Transfer failure content corruption ka proof nahi.","Large restart-only payload ki low success probability retries expensive banati hai."] },
+        choiceExplanations: [
+          'Chance ≈ e^(−256/30) ≈ 0.02%. Chunks mein har tukde ka chance ~87% — aur toota sirf wahi dobara.',
+          'Server ne kuch reject nahi kiya — link beech mein toota.',
+          'File theek thi — chunks mein wahi file poori pahunchi.',
+          'Har baar shuru se ho toh zyada koshishein bhi 0.02% hi deti hain.',
+        ],
+      },
       lesson: 'Kamzor link par bada kaam chhote, dobara chalane layak tukdon mein karo — progress kabhi mat khoo.',
     },
     {
@@ -109,16 +120,38 @@ SD.registerLevels('planet', [
     questions: [
       {
         q: 'Interviewer: "Mobile users ke bade video uploads aadhe raaste fail hote hain."',
-        choices: ["Resume chunks aur integrity check","Only timeout ko arbitrarily badhao","Only compression without resume","Full file restart after every loss"],
+        choices: [
+          'Resumable chunks — server batata kaunse aa gaye, toota chunk hi dobara, aakhir mein hash jaancho',
+          'Timeout ko aur lamba kar do — lambe timeout mein toota link bhi upload poora kar lega',
+          'Upload compress karo — chhoti file aadhe raaste nahi tootegi, resume ki zaroorat nahi',
+          'Har baar loss par poori file shuru se bhejo — simple hai, aur aakhir mein pahunch jaayegi',
+        ],
         answer: 0,
-        explain: "Lab: 256 MB blob kabhi poora nahi, chunks 1.1× bytes mein poore.",
-       choiceExplanations: ["Lab: 256 MB blob kabhi poora nahi, chunks 1.1× bytes mein poore.","Longer timeout acknowledged progress preserve nahi karta.","Compression helps bytes; link drop ke baad partial progress still lost ho sakti hai.","Repeated full transfer same failure amplification retain karta hai."] },
+        explain: 'Lab: 256 MB blob kabhi poora nahi; chunks 1.1× bytes mein poore.',
+        choiceExplanations: [
+          'Lab: 256 MB blob kabhi poora nahi; chunks 1.1× bytes mein poore.',
+          'Timeout toote connection ko nahi jodta.',
+          'Chhoti file bhi beech mein toot sakti hai.',
+          'Lab ne dikhaya — poori file shuru se kabhi khatam nahi hoti.',
+        ],
+      },
       {
         q: 'Interviewer: "Video ko play time par transcode karein (on-the-fly)? Storage bachega."',
-        choices: ["Demand-tiered precompute and lazy formats","Every format every video upfront","Every view re-encodes same content","Only storage price determines policy"],
+        choices: [
+          'Popular videos ke liye nahi — encode ek baar, view karodon baar; long tail ke kuch formats lazy',
+          'Har video ke har format ko upload par hi bana do — storage ki fikar hi nahi',
+          'Har view par wahi content dobara encode karo — storage bachega, CPU ka sawaal nahi',
+          'Sirf storage ka daam policy tay kare — storage sasta toh sab pehle, mehenga toh sab lazy',
+        ],
         answer: 0,
-        explain: 'Long tail: kam dekhe videos par mehenga kaam kam karo; popular par sab pehle.',
-       choiceExplanations: ["Long tail: kam dekhe videos par mehenga kaam kam karo; popular par sab pehle.","Long-tail assets par unused variants encoding/storage waste ho sakti hai.","Repeated expensive work and startup delay hot content par costly hai.","Views, codec/device support, compute, latency and storage compare karne honge."] },
+        explain: 'Long tail: kam dekhe videos par mehenga kaam kam karo; popular par sab pehle. On-the-fly har view par CPU aur latency.',
+        choiceExplanations: [
+          'Long tail: kam dekhe videos par mehenga kaam kam karo; popular par sab pehle. On-the-fly har view par CPU aur latency.',
+          'Kam dekhe videos ke har format ka kharcha kabhi wapas nahi aata.',
+          'Karodon views par baar-baar encode bahut mehenga hai.',
+          'CPU, latency aur views bhi policy ka hissa hain.',
+        ],
+      },
     ],
   },
   success: [
@@ -178,10 +211,21 @@ SD.registerLevels('planet', [
       ],
       observe: {
         q: 'Overlap ke saath bhi 5 kharab units kyun bache?',
-        choices: ["Leading boundary lacked earlier context","All distributed chunks corrupted","Every worker had clock drift","Stitching always introduces artifacts"],
+        choices: [
+          'Movie ki sabse pehli shuruaat — pehle koi frame hi nahi jisse encoder garam ho',
+          'Saare distributed chunks kharab ho gaye the — overlap ne sirf kuch bachaye',
+          'Har worker ki ghadi aage-peechhe thi, isliye 5 units ki timing galat ho gayi',
+          'Stitching mein hamesha artifacts aate hain — chahe overlap kitna bhi ho',
+        ],
         answer: 0,
         explain: "Baaki 11 seams overlap ne theek kiye; 60 → 5, sirf +0.8% extra encode.",
-       choiceExplanations: ["Baaki 11 seams overlap ne theek kiye; 60 → 5, sirf +0.8% extra encode.","Output most seams repaired dikhata hai.","Toy encoder context model hai; clocks ka evidence nahi.","Correct boundary handling stitching artifacts avoid kar sakti hai."] },
+        choiceExplanations: [
+          'Baaki 11 seams overlap ne theek kiye; 60 → 5, sirf +0.8% extra encode.',
+          '60 mein se 55 theek hue — saare kharab nahi.',
+          'Lab mein ghadi ka koi role nahi.',
+          'Overlap ne 11 seams ke artifacts hata diye.',
+        ],
+      },
       lesson: 'Parallel karo, seams ki keemat thode extra kaam se chukao.',
     },
     {
@@ -203,16 +247,38 @@ SD.registerLevels('planet', [
     questions: [
       {
         q: 'Interviewer: "4K upload process hone mein 6 ghante lagte hain. Tez karo."',
-        choices: ["Parallel chunks, priority formats","Only one larger worker forever","Only lower maximum resolution","Publish unfinished corrupt output"],
+        choices: [
+          'Chunked parallel transcode (GOP par kaato, overlap); chhoti resolutions pehle',
+          'Hamesha ek bada worker rakho — bada server akela 4K ko jaldi khatam kar dega',
+          'Sirf maximum resolution ghata do — 4K hi nahi toh 6 ghante ka sawaal nahi',
+          'Adhoora, kharab output turant publish kar do — user ko jaldi kuch toh dikhe',
+        ],
         answer: 0,
-        explain: 'Parallelism + priority: pehle jo jaldi chahiye.',
-       choiceExplanations: ["Parallelism + priority: pehle jo jaldi chahiye.","Vertical scaling some benefit de sakti hai; task parallelism assess karo.","Resolution cut product requirement change kar sakta hai.","Early usable renditions publish karo, invalid output nahi."] },
+        explain: 'Parallelism + priority: pehle jo jaldi chahiye. Queue se workers par.',
+        choiceExplanations: [
+          'Parallelism + priority: pehle jo jaldi chahiye. Queue se workers par.',
+          'Ek bade worker ki bhi chhat hai — parallel tukde zyada tez.',
+          'Users 4K maangte hain — feature kaatna ilaaj nahi.',
+          'Kharab output user ka bharosa todta hai.',
+        ],
+      },
       {
         q: 'Interviewer: "AV1 har video ke liye encode karein?"',
-        choices: ["Views vs encode/delivery economics","All videos need every codec now","Only pixel count decides economics","AV1 impossible for long-tail assets"],
+        choices: [
+          'Popular par haan (bachat views se guna); long tail par shayad nahi',
+          'Har video ko abhi har codec chahiye — AV1 bhi sabke liye turant banao',
+          'Sirf pixel count economics tay karta hai — 8K ho toh AV1 banao, warna kabhi nahi',
+          'Long-tail videos par AV1 namumkin hai — kam views wale videos AV1 mein encode hi nahi hote',
+        ],
         answer: 0,
-        explain: 'Mehenga kaam wahan jahan maang hai.',
-       choiceExplanations: ["Mehenga kaam wahan jahan maang hai.","Unviewed renditions upfront compute waste kar sakti hain.","Playback support, views and bitrate savings also matter.","Long-tail encoding possible hai; economic benefit may be smaller."] },
+        explain: 'Mehenga kaam sirf us video par jahan maang hai.',
+        choiceExplanations: [
+          'Mehenga kaam sirf us video par jahan maang hai.',
+          'Kam views par AV1 ka mehenga encode wapas nahi aata.',
+          'Views aur delivery ka kharcha pixel count se zyada maayne rakhta hai.',
+          'Mumkin hai — bas aksar faayde ka nahi.',
+        ],
+      },
     ],
   },
   success: [
@@ -275,10 +341,21 @@ SD.registerLevels('planet', [
       ],
       observe: {
         q: 'Consolidation band karne par errors 0 rahe par p50 2 sec kyun ho gaya?',
-        choices: ["Bounded pool ne queued demand retain ki","Pool means all queries run instantly","Connection limit itself proves overload fix","Duplicate reads cannot be coalesced"],
+        choices: [
+          'Pool ne DB bachaya (20 connections), par 10,000 queries 20 ki line mein khadi — line lambi',
+          'Pool ka matlab saari queries turant chalti hain — p50 2 sec network ki wajah se tha',
+          'Connection limit hi overload ka ilaaj saabit hai — p50 2 sec theek nateeja hai',
+          'Ek jaisi reads ko jodna namumkin hai — isliye consolidation ka koi faayda nahi tha',
+        ],
         answer: 0,
-        explain: "Pool database concurrency bound karta hai, duplicate query demand ko remove nahi. Queue delay arrival/service distribution par depend karta hai; 10000*20 ms/20=10s total ideal drain time hai, observed p50 ka direct formula nahi.",
-       choiceExplanations: ["Pool database concurrency bound karta hai, duplicate query demand ko remove nahi. Queue delay arrival/service distribution par depend karta hai; 10000*20 ms/20=10s total ideal drain time hai, observed p50 ka direct formula nahi.","Pool bounds concurrency; offered work still wait kar sakta hai.","Capacity protection and response latency separate outcomes hain.","Same authorized query/options share in-flight execution kar sakte hain."] },
+        explain: 'Pool DB ki concurrency baandhta hai, duplicate query demand nahi hata-ta. Queue ka delay aane aur service ke pattern par nirbhar hai; 10,000 × 20 ms / 20 = 10 s poori line khaali hone ka ideal waqt hai, p50 ka seedha formula nahi. Consolidation same query ko 1 bana ke line hi khatam kar deta tha.',
+        choiceExplanations: [
+          'Pool DB ki concurrency baandhta hai, duplicate query demand nahi hata-ta. Queue ka delay aane aur service ke pattern par nirbhar hai; 10,000 × 20 ms / 20 = 10 s poori line khaali hone ka ideal waqt hai, p50 ka seedha formula nahi. Consolidation same query ko 1 bana ke line hi khatam kar deta tha.',
+          'Pool sirf 20 ko saath chalne deta hai — baaki line mein.',
+          'Errors 0 the, par 2 sec p50 users ke liye bura hai.',
+          'Consolidation ne hi ek jaisi queries jodi thi.',
+        ],
+      },
       lesson: 'Boring DB ke saamne ek smart bodyguard: pool, dedup, aur galat query ka rok.',
     },
     {
@@ -301,16 +378,38 @@ SD.registerLevels('planet', [
     questions: [
       {
         q: 'Interviewer: "Viral video par ek hi row ki SELECT 50,000/sec aa rahi hai."',
-        choices: ["Scoped coalescing/cache plus bounded pool","Only add replicas for identical work","Only raise timeout on every request","Drop all users of popular content"],
+        choices: [
+          'Proxy par in-flight dedup + cache, aur pool DB connections ko bounded rakhe',
+          'Sirf replicas badhao — 50 replicas par wahi query baant do, dedup ki zaroorat nahi',
+          'Har request ka timeout badha do — lamba timeout 50,000/sec bhi sambhal lega',
+          'Popular video ke saare users ko rok do — viral video par bheed hi nahi aayegi',
+        ],
         answer: 0,
-        explain: 'Lab: 10,000 identical → 6 DB queries.',
-       choiceExplanations: ["Lab: 10,000 identical → 6 DB queries.","Replicas can help capacity; avoidable duplicate work retain hota hai.","Timeout waiting time badhata hai; work reduction nahi.","Admission/degradation product rules ke saath target honi chahiye."] },
+        explain: 'Lab: 10,000 ek jaisi requests → sirf 6 DB queries.',
+        choiceExplanations: [
+          'Lab: 10,000 ek jaisi requests → sirf 6 DB queries.',
+          'Replicas wahi kaam baar-baar karte hain — dedup sasta hai.',
+          'Timeout se DB par bojh kam nahi hota.',
+          'Viral video product ki jeet hai — users rokna galat.',
+        ],
+      },
       {
         q: 'Interviewer: "Resharding mein pehle writes switch karein?"',
-        choices: ["Verify caught-up replicas before gated cutover","Switch writes before verifying replication","Move both paths without rollback","Treat any read result as parity proof"],
+        choices: [
+          'Nahi — pehle replicas jaancho, reads switch, phir gated writes; har kadam rollback',
+          'Haan — writes pehle switch karo, replication jaanchna baad mein, jaldi khatam',
+          'Dono raaste ek saath badal do — reads aur writes saath, rollback ki zaroorat nahi',
+          'Koi bhi read result sahi aaya toh parity pakki — ek read sahi toh saara data sahi',
+        ],
         answer: 0,
-        explain: 'Sabse kam risk wala kadam pehle.',
-       choiceExplanations: ["Sabse kam risk wala kadam pehle.","Unverified write authority move rollback/data divergence risk badhata hai.","Ungated cutover diagnosis and safe reversal hard karta hai.","Parity workload coverage, lag and invariant checks maangti hai."] },
+        explain: 'Sabse kam risk wala kadam pehle: reads galat hon toh bina data bigaade wapas aa sakte ho.',
+        choiceExplanations: [
+          'Sabse kam risk wala kadam pehle: reads galat hon toh bina data bigaade wapas aa sakte ho.',
+          'Bina jaanche writes switch karna data ko do jagah bata deta hai.',
+          'Ek saath dono badle aur galat hua toh wapas aana mushkil.',
+          'Ek read sample hai — poori parity ka saboot nahi.',
+        ],
+      },
     ],
   },
   success: [
@@ -368,17 +467,28 @@ SD.registerLevels('planet', [
       exercise: 'ex4',
       goal: '10,000 jode writes alag DCs mein — kitne "ulte order" aur commit wait ki keemat kitni?',
       why: `<code>tools/truetime.js</code>: har DC ki ghadi random aage/peeche. Violation = baad wale write ka timestamp pehle wale se
-        chhota. Commit wait = TT.now().latest par timestamp, phir tab tak ruko jab tak TT.now().earliest usse aage na nikle.`,
+        chhota. Commit wait = TT.now().latest par timestamp, phir tab tak ruko jab tak TT.now().earliest timestamp se aage na nikle.`,
       steps: [
         { text: 'Simulation chalao.', cmd: 'cd docker-labs/21-youtube && node tools/truetime.js', expect: 'NTP ghadi, seedha timestamp                3973 (39.7%)            0\nNTP ghadi, chhoti skew (±10 ms)            1398 (14.0%)            0\nTrueTime (±7 ms) + commit wait                0 (0.0%)            14.0 ms\nNTP-size ε (±50 ms) + commit wait             0 (0.0%)            100.0 ms' },
         { text: 'Ek asli misaal dekho.', cmd: 'node tools/truetime.js | grep -A1 Misaal', expect: 'Misaal: T1 (Frankfurt) ts=1369.9, T2 (Mumbai) ts=1359.7 — asli mein T2 16.5 ms BAAD hua,\n        par timestamp kehta hai PEHLE. Snapshot ts=1364.8 par: photo dikhi, ex abhi bhi ACL mein.' },
       ],
       observe: {
         q: 'NTP-size ε ke saath bhi commit wait ne 0 violations diye. Toh atomic clocks kyun?',
-        choices: ["Trusted uncertainty bound shapes commit wait","NTP label alone proves clock bounds","Atomic clocks remove consensus need","Every commit always waits exactly 2epsilon"],
+        choices: [
+          'Sahi dono mein; wait ε ke saath badhta — NTP ε par 100 ms, TrueTime par ~14 ms',
+          'NTP ka naam hi clock bound ka saboot hai — atomic clocks sirf dikhawe ke liye',
+          'Atomic clocks hone se Paxos jaise consensus ki zaroorat hi khatam ho jaati hai',
+          'Har commit hamesha theek 2ε wait karta hai — clock badlo toh bhi wait wahi',
+        ],
         answer: 0,
-        explain: "Lab explicitly assumed epsilon bounds ka wait cost compare karti hai. Spanner uses TT.after(commit timestamp) and replication/transaction protocol; actual commit wait always exactly 2epsilon nahi, aur NTP name alone trusted bound guarantee nahi.",
-       choiceExplanations: ["Lab explicitly assumed epsilon bounds ka wait cost compare karti hai. Spanner uses TT.after(commit timestamp) and replication/transaction protocol; actual commit wait always exactly 2epsilon nahi, aur NTP name alone trusted bound guarantee nahi.","Correctness assumed time bounds and protocol par depend karti hai.","Durable replicated writes still coordination protocol use karti hain.","Actual TT.after wait timestamps/overlap par depend karta hai; toy bound not universal."] },
+        explain: 'Lab maane gaye ε bounds ka wait cost milati hai. Spanner TT.after(commit timestamp) aur replication/transaction protocol use karta hai; asli wait hamesha theek 2ε nahi, aur NTP ka naam trusted bound ki guarantee nahi.',
+        choiceExplanations: [
+          'Lab maane gaye ε bounds ka wait cost milati hai. Spanner TT.after(commit timestamp) aur replication/transaction protocol use karta hai; asli wait hamesha theek 2ε nahi, aur NTP ka naam trusted bound ki guarantee nahi.',
+          'Bound pe bharosa chahiye — NTP ka naam kaafi nahi.',
+          'Spanner Paxos bhi chalata hai — clock consensus ki jagah nahi.',
+          'Wait ε par nirbhar hai — chhota ε, chhota wait.',
+        ],
+      },
       lesson: 'Verified uncertainty bounds commit-wait budget shape karti hain. Real wait transaction/replication work se overlap ho sakta hai; lab fixed wait ek simplification hai.',
     },
     {
@@ -387,16 +497,38 @@ SD.registerLevels('planet', [
       questions: [
         {
           q: 'ISP apne network ke andar Google ka cache kyun lagne deta hai?',
-          choices: ["Local serving reduces external transit demand","All private peer caches are illegal","Cache gives publisher all ISP credentials","Hosting cache makes every miss free"],
+          choices: [
+            'Bahar ka transit mehenga, andar ka sasta — video andar se aaye toh ISP ka paisa bache',
+            'Saare private peer caches gair-kanooni hain — isliye ISP ko kanoon ke tehet lagana padta',
+            'Cache lagate hi Google ko ISP ke saare credentials mil jaate hain — wahi sauda hai',
+            'Cache lagne se har miss muft ho jaata hai — miss par bhi koi transit nahi lagta',
+          ],
           answer: 0,
-          explain: 'Dono ka faayda = offload. Isi liye 1,300+ shehar.',
-         choiceExplanations: ["Dono ka faayda = offload. Isi liye 1,300+ shehar.","Mutually agreed embedded caching common delivery design hai.","Cache placement unnecessary credential sharing require nahi karti.","Misses, interconnect and capacity still consume resources."] },
+          explain: 'Dono ka faayda = offload; user ko speed milti hai. Isliye 1,300+ shehar.',
+          choiceExplanations: [
+            'Dono ka faayda = offload; user ko speed milti hai. Isliye 1,300+ shehar.',
+            'Peer caches kanooni hain aur aam hain.',
+            'Cache ko ISP ke credentials nahi milte.',
+            'Miss par video upar ke cache se aata hai — transit lagta hai.',
+          ],
+        },
         {
           q: 'Kam dekhe videos ke liye GGC kya karta hai?',
-          choices: ["Long-tail demand-fill plus tiered cache","Every possible video preloaded locally","Every first miss permanently rejected","One cached byte proves full residency"],
+          choices: [
+            'Pull — pehli request par miss, upar ke cache se laao aur rakh lo; popular pehle se push',
+            'Har mumkin video pehle se local rakhta hai — har video ki copy har sheher mein',
+            'Pehli miss ko hamesha ke liye reject karta hai — kam dekha video kabhi nahi chalta',
+            'Ek byte cache mein aa gaya toh poora video cache mein maana jaata hai',
+          ],
           answer: 0,
-          explain: 'Push jahan maang pakki, pull jahan anishchit — long tail ka hisaab.',
-         choiceExplanations: ["Push jahan maang pakki, pull jahan anishchit — long tail ka hisaab.","Finite edge capacity all content/renditions store nahi kar sakti.","Miss parent tier/origin se fetch karke serve ho sakta hai.","Partial/chunk residency and replacement policy matter karte hain."] },
+          explain: 'Push jahan maang pakki, pull jahan anishchit — long tail ka hisaab, tiered cache ke saath.',
+          choiceExplanations: [
+            'Push jahan maang pakki, pull jahan anishchit — long tail ka hisaab, tiered cache ke saath.',
+            'Har video har sheher mein rakhne ki jagah nahi.',
+            'Miss par video upar se aata hai — reject nahi hota.',
+            'Video tukdon mein cache hota hai — ek byte poora video nahi.',
+          ],
+        },
       ],
     },
   ],
@@ -406,16 +538,38 @@ SD.registerLevels('planet', [
     questions: [
       {
         q: 'Interviewer: "Multi-region DB mein writes ko timestamp se order karenge. Theek?"',
-        choices: ["Protocol + verified clock bounds","UTC formatting makes wall clocks agree","HLC alone guarantees linearizable DB","NTP name eliminates all clock error"],
+        choices: [
+          'Sirf ghadiyon par nahi — consensus/transaction protocol, aur bounded clocks + commit wait',
+          'UTC format mein likho — UTC hone se saari wall clocks ek doosre se mil jaati hain',
+          'HLC laga do — HLC akela poore DB ko linearizable bana deta hai',
+          'NTP chalao — NTP ke naam se hi saari clock errors khatam ho jaati hain',
+        ],
         answer: 0,
-        explain: "Wall-clock timestamps alone distributed writes ko externally consistent nahi banate. Consensus/transaction protocol and, when used, verified bounded-uncertainty clocks plus commit wait needed hain. HLC useful ordering aid hai, standalone linearizability guarantee nahi.",
-       choiceExplanations: ["Wall-clock timestamps alone distributed writes ko externally consistent nahi banate. Consensus/transaction protocol and, when used, verified bounded-uncertainty clocks plus commit wait needed hain. HLC useful ordering aid hai, standalone linearizability guarantee nahi.","Timezone representation synchronization guarantee nahi.","HLC event ordering help karta hai; consensus/external consistency free nahi.","Clock bounds failures, drift and measurement uncertainty assess karne honge."] },
+        explain: 'Wall-clock timestamps akele distributed writes ko externally consistent nahi banate. Consensus/transaction protocol aur, jahan use ho, verified bounded-uncertainty clocks + commit wait chahiye. HLC order mein madad karta hai, linearizability ki guarantee nahi.',
+        choiceExplanations: [
+          'Wall-clock timestamps akele distributed writes ko externally consistent nahi banate. Consensus/transaction protocol aur, jahan use ho, verified bounded-uncertainty clocks + commit wait chahiye. HLC order mein madad karta hai, linearizability ki guarantee nahi.',
+          'UTC sirf format hai — ghadiyon ka skew wahi rehta hai.',
+          'HLC madad hai, akela guarantee nahi.',
+          'NTP mein bhi skew hota hai — ms tak.',
+        ],
+      },
       {
         q: 'Interviewer: "Video start time kam karna hai mobile par."',
-        choices: ["Near content, small start chunks and ABR","QUIC eliminates every kind of blocking","Full download before playback starts","Only increase backend CPU cores"],
+        choices: [
+          'Paas ke caches (kam RTT), chhota pehla chunk, aur adaptive bitrate — QUIC bhi madad',
+          'QUIC laga do — QUIC har tarah ki blocking hamesha ke liye khatam kar deta hai',
+          'Playback se pehle poora video download karo — phir beech mein kabhi nahi rukega',
+          'Sirf backend ke CPU cores badhao — zyada cores se mobile par video jaldi shuru',
+        ],
         answer: 0,
-        explain: "Near caches and a small playable first chunk startup help kar sakte hain. QUIC TCP cross-stream head-of-line blocking avoid karta hai; individual ordered streams still lost bytes wait kar sakti hain. Resumption/0-RTT depends on conditions and replay constraints.",
-       choiceExplanations: ["Near caches and a small playable first chunk startup help kar sakte hain. QUIC TCP cross-stream head-of-line blocking avoid karta hai; individual ordered streams still lost bytes wait kar sakti hain. Resumption/0-RTT depends on conditions and replay constraints.","QUIC avoids TCP cross-stream HOL, but ordered stream loss still block kar sakti hai.","Full download startup wait and transfer size maximize karta hai.","Access path/bitrate/handshake issues extra CPU se directly solve nahi."] },
+        explain: 'Paas ke caches aur chhota chalne layak pehla chunk shuruaat tez karte hain. QUIC TCP ke cross-stream HOL blocking se bachata hai; ek stream ke andar khoye bytes ka intezaar phir bhi ho sakta hai. 0-RTT shartein aur replay ki seemaon par nirbhar hai.',
+        choiceExplanations: [
+          'Paas ke caches aur chhota chalne layak pehla chunk shuruaat tez karte hain. QUIC TCP ke cross-stream HOL blocking se bachata hai; ek stream ke andar khoye bytes ka intezaar phir bhi ho sakta hai. 0-RTT shartein aur replay ki seemaon par nirbhar hai.',
+          'Ek stream ke andar khoye bytes ka intezaar QUIC mein bhi hai.',
+          'Poora download shuruaat ko aur dheema karta hai.',
+          'Mobile par dikkat network ki hai, backend CPU ki nahi.',
+        ],
+      },
     ],
   },
   success: [
