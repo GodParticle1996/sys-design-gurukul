@@ -82,10 +82,21 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Score gaya par hat bacha. Kya score ko bhi bachana chahiye tha?',
-        choices: ["Product recovery contract se state choose","All match ticks ko purchase jaisa save","All inventory ko temporary state maano","Runtime crash ko data backup maano"],
+        choices: [
+          'Nahi — 10 minute ka match pakka banana mehenga aur bekaar; sirf hat, Robux jaisi platform state bachao',
+          'Haan — match ka har tick purchase jitna hi pakka save ho, warna player naraaz ho jaayega',
+          'Nahi — aur hat bhi temporary maano; crash par inventory bhi naye match ke saath nayi shuru ho',
+          'Haan — runtime khud backup hai; crash ke baad naya instance purana score wapas laa deta hai',
+        ],
         answer: 0,
-        explain: 'Protect only what must survive — ek layer mein.',
-       choiceExplanations: ["Protect only what must survive — ek layer mein.","Har tick durable karna cost/latency tradeoff hai; requirement pehle define karo.","Purchases aur inventory ka durability contract match score se different ho sakta hai.","Crash behavior backup ya durability guarantee nahi deta."] },
+        explain: 'Sirf wahi bachao jo bachna hi chahiye — ek layer mein. Player seconds mein naye match mein; hat aur Robux kabhi nahi khone chahiye.',
+        choiceExplanations: [
+          'Sirf wahi bachao jo bachna hi chahiye — ek layer mein. Player seconds mein naye match mein; hat aur Robux kabhi nahi khone chahiye.',
+          'Har tick pakka save karna bahut mehenga hai, aur match ka score itna keemti nahi.',
+          'Hat aur Robux paise se khareede gaye — inventory kabhi nahi khoni chahiye.',
+          'Crash ke saath instance ki memory bhi gayi. Runtime backup nahi hai.',
+        ],
+      },
       lesson: 'Chhote instances = chhota blast radius; game state phenkne layak, platform state kabhi nahi.',
     },
     {
@@ -112,16 +123,38 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Multiplayer game platform — ek bada world ya kai chhote servers?"',
-        choices: ["Sessions alag, platform durable","One global world bina coordination","P2P clients ko currency authority","Every player ka separate full world"],
+        choices: [
+          'Sessions alag hain toh chhote per-session instances + matchmaking, aur pakki state alag platform layer mein',
+          'Ek bada global world, bina kisi coordination ke — sab players ek hi jagah, sabse simple design',
+          'P2P — har player ka client hi currency aur inventory ka maalik, server ki zaroorat hi nahi',
+          'Har player ka apna poora world server — har player alag, toh koi kisi ko nahi gira sakta',
+        ],
         answer: 0,
-        explain: 'Roblox: "unit chhoti karo, bahut chalao."',
-       choiceExplanations: ["Roblox: \"unit chhoti karo, bahut chalao.\"","Shared world ko synchronization/partition policy chahiye.","Untrusted clients ko economic state authority dena cheating risk hai.","Per-player world group interaction contract tod sakta hai."] },
+        explain: 'Roblox: "unit chhoti karo, bahut chalao." Blast radius chhota, scale by count.',
+        choiceExplanations: [
+          'Roblox: "unit chhoti karo, bahut chalao." Blast radius chhota, scale by count.',
+          'Ek bada world ek galti se sabko gira deta hai, aur coordination bhaari hai.',
+          'Client par currency ka maalik = cheating ka khula darwaaza.',
+          'Multiplayer mein players ko saath khelna hai — alag world kaam ka nahi.',
+        ],
+      },
       {
         q: 'Interviewer: "Instance crash par player ki inventory?"',
-        choices: ["Durable owner, idempotent grants","Only shutdown hook par inventory save","Every minute snapshot hi enough","Client balance ko source of truth"],
+        choices: [
+          'Inventory instance mein kabhi nahi — platform service mein; instance sirf poochhe/likhe, idempotent grants',
+          'Instance band hone se theek pehle shutdown hook mein inventory save karo — bas itna kaafi hai',
+          'Har minute inventory ka snapshot lo — beech ka ek minute khona bhi chalega',
+          'Client ka balance hi asli sach maano — client ke paas hai, toh crash ka asar hi nahi',
+        ],
         answer: 0,
-        explain: 'Lab: 120/120 hats bache.',
-       choiceExplanations: ["Lab: 120/120 hats bache.","Crash/shutdown hook execute hona guaranteed nahi.","Periodic snapshot acknowledged recent grants lose kar sakti hai.","Client state tamper ho sakti hai; trusted authority chahiye."] },
+        explain: 'Lab: 120/120 hats bache. Crash mein shutdown hook chalta hi nahi — isliye inventory pehle se bahar rehni chahiye.',
+        choiceExplanations: [
+          'Lab: 120/120 hats bache. Crash mein shutdown hook chalta hi nahi — isliye inventory pehle se bahar rehni chahiye.',
+          'Crash mein shutdown hook chalta hi nahi.',
+          'Ek minute mein khareedi hui cheezein kho jaayengi — paise wali cheez ke liye galat.',
+          'Client ko badla ja sakta hai — cheating.',
+        ],
+      },
     ],
   },
   success: [
@@ -181,16 +214,38 @@ SD.registerLevels('stories', [
       questions: [
         {
           q: 'Roblox ne LuaJIT kyun nahi liya?',
-          choices: ["Platform/JIT constraints aur control","LuaJIT ki paid license compulsory","JIT har console par available","Interpreter ko sandbox ki need nahi"],
+          choices: [
+            'Consoles par JIT nahi chalta aur maintain karna mushkil — isliye apna tez C++ interpreter',
+            'LuaJIT ka paid license zaroori tha, aur Roblox ke paas license ka budget nahi tha',
+            'JIT har console par chalta tha, par LuaJIT dheema tha, isliye apna banaya',
+            'Interpreter ko sandbox ki zaroorat nahi hoti, toh Roblox ne interpreter hi chuna',
+          ],
           answer: 0,
-          explain: 'Platform ki zaroorat (har device) ne faisla kiya.',
-         choiceExplanations: ["Platform ki zaroorat (har device) ne faisla kiya.","License fee is platform tradeoff ka established reason nahi.","Many target platforms runtime code generation restrict karti hain.","Interpreter bhi capabilities, resource limits aur isolation maangta hai."] },
+          explain: 'Platform ki zaroorat (har device par chale) ne faisla kiya, aur apna interpreter poora control deta hai.',
+          choiceExplanations: [
+            'Platform ki zaroorat (har device par chale) ne faisla kiya, aur apna interpreter poora control deta hai.',
+            'LuaJIT open source hai. License wajah nahi thi.',
+            'Consoles par JIT allowed hi nahi hota.',
+            'Anjaan code ke liye sandbox zaroori hai — Luau ka sandbox hi toh khaas hai.',
+          ],
+        },
         {
           q: 'Colab (gVisor) aur Roblox (Luau) ke sandbox mein farq?',
-          choices: ["Language capability vs syscall boundary","Dono arbitrary native code allow","Luau se host kernel automatically private","gVisor only source code types check"],
+          choices: [
+            'Colab ki deewar OS/syscall par (anjaan Python chale); Roblox ki bhasha par (sirf Luau, andar sab band)',
+            'Dono mein koi bhi native code chal sakta hai — farq sirf naam ka hai, deewar ek jaisi',
+            'Luau chalane se host ka kernel apne aap private ho jaata hai — OS ki deewar ki zaroorat nahi',
+            'gVisor sirf source code ke types check karta hai — syscalls se gVisor ka koi lena-dena nahi',
+          ],
           answer: 0,
-          explain: 'Deewar kahan lagao — us par depend karta hai ki kaunsa code chalana hai.',
-         choiceExplanations: ["Deewar kahan lagao — us par depend karta hai ki kaunsa code chalana hai.","Boundary allowed code/capabilities ke saath vary karti hai.","Embedding host APIs aur runtime implementation boundary define karte hain.","gVisor syscall interface reimplementation hai, type checker nahi."] },
+          explain: 'Deewar kahan lagao — is par nirbhar hai ki kaunsa code chalana hai.',
+          choiceExplanations: [
+            'Deewar kahan lagao — is par nirbhar hai ki kaunsa code chalana hai.',
+            'Luau native code nahi chalata — sirf Luau.',
+            'Bhasha ki deewar ke saath bahar ki OS deewar bhi rakhte hain.',
+            'gVisor syscalls ko beech mein pakad ke jaanchta hai.',
+          ],
+        },
       ],
     },
   ],
@@ -200,16 +255,38 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Hamare SaaS mein customers apne scripts (automation) chalayenge. Kaise?"',
-        choices: ["Sandbox plus outer resource limits","Customer code ko app process eval","Image name ko complete security proof","Only code review se runtime safe"],
+        choices: [
+          'Sandboxed language/VM ya WASM (CPU, memory, time limits) — aur bahar process/container ki deewar bhi',
+          'Customer ka code app ke process mein hi eval() karo — sabse tez, aur alag setup bhi zero',
+          'Customer ka Docker image chalao — image ka naam bharosemand hai toh security poori ho gayi',
+          'Sirf code review karo — review ho gaya toh runtime par CPU ya memory limit ki zaroorat nahi',
+        ],
         answer: 0,
-        explain: 'Defense in depth — bhasha + OS.',
-       choiceExplanations: ["Defense in depth — bhasha + OS.","Eval app capabilities/secrets expose kar sakta hai.","Container image bina kernel/isolation/network policy complete boundary nahi.","Review resource exhaustion aur runtime flaws ka substitute nahi."] },
+        explain: 'Defense in depth — bhasha + OS dono.',
+        choiceExplanations: [
+          'Defense in depth — bhasha + OS dono.',
+          'App ke process mein eval = customer ka code app ki saari permissions ke saath.',
+          'Image ka naam security nahi; container ki deewar aur limits chahiye.',
+          'Review runtime ki galti ya loop nahi rokta.',
+        ],
+      },
       {
         q: 'Interviewer: "Types optional rakhein ya zaroori?"',
-        choices: ["Gradual types, explicit trusted boundaries","Optional type ko runtime validation maano","Annotations se sandbox enforce karo","Only mandatory types se scale milega"],
+        choices: [
+          'Gradual — beginners bina types, bade codebases types ke saath; bharose wali boundaries par saaf types',
+          'Optional types ko runtime validation maano — type likh diya toh galat data andar aa hi nahi sakta',
+          'Annotations se sandbox laagu karo — type likhne se code ki permissions bhi tay ho jaati hain',
+          'Sirf zaroori types — bina zaroori types ke koi bhi codebase bada ho hi nahi sakta',
+        ],
         answer: 0,
-        explain: 'Luau aur Sorbet dono ka tareeka.',
-       choiceExplanations: ["Luau aur Sorbet dono ka tareeka.","Static typing untrusted runtime values ko automatically validate nahi karti.","Types capability isolation/resource quotas nahi enforce kartin.","Type policy developer needs aur tooling tradeoffs par depend karti hai."] },
+        explain: 'Luau aur Sorbet dono ka tareeka. Inference madad karta hai, aur annotations compiler optimizations bhi dete hain.',
+        choiceExplanations: [
+          'Luau aur Sorbet dono ka tareeka. Inference madad karta hai, aur annotations compiler optimizations bhi dete hain.',
+          'Optional types runtime par data nahi jaanchte.',
+          'Types aur sandbox alag kaam hain.',
+          'Beginners ke liye zaroori types rukawat hain — gradual dono ko jagah deta hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -259,10 +336,21 @@ SD.registerLevels('stories', [
       ],
       observe: {
         q: 'Nearest mein 30% groups kyun toot gaye jabki sab paas ke DC mein the?',
-        choices: ["Party ke liye seats reserve nahi thi","Nearest routing ne geography badli","Smart mode ne latency zero ki","All servers ka size double hua"],
+        choices: [
+          'Party ke liye seats rok ke nahi rakhi — dost der se aaye, tab tak instance bhar chuka tha',
+          'Nearest routing ne dosto ka region badal diya, isliye dost alag-alag DC mein gaye',
+          'Smart mode ne latency zero kar di, isliye smart mein sab ek saath pahunch gaye',
+          'Smart mode mein har server ka size dugna tha, isliye dosto ko jagah mil gayi',
+        ],
         answer: 0,
-        explain: "Nearest policy ne late party members ke liye seats reserve nahi ki. Instance almost full ho gaya toh baad ke friends elsewhere place hue. Smart mode bounded party reservation use karta hai.",
-       choiceExplanations: ["Nearest policy ne late party members ke liye seats reserve nahi ki. Instance almost full ho gaya toh baad ke friends elsewhere place hue. Smart mode bounded party reservation use karta hai.","Both cases nearby DC hain; group capacity key variable hai.","Placement party completion improve karta hai, physical RTT zero nahi.","Question reservation logic compare karta hai, server-size change nahi."] },
+        explain: 'Nearest policy ne der se aane wale dosto ke liye seats nahi rokhi. Instance lagbhag bhar gaya toh baad ke dost kahin aur gaye. Smart mode party size jitni seats thodi der ke liye rok leta hai.',
+        choiceExplanations: [
+          'Nearest policy ne der se aane wale dosto ke liye seats nahi rokhi. Instance lagbhag bhar gaya toh baad ke dost kahin aur gaye. Smart mode party size jitni seats thodi der ke liye rok leta hai.',
+          'Sawaal kehta hai sab paas ke DC mein the — region nahi badla.',
+          'Latency zero nahi hoti. Farq seats rokne se aaya.',
+          'Server ka size dono modes mein same tha.',
+        ],
+      },
       lesson: 'Matchmaker ek real-time scheduler hai — har factor ka apna dukh, aur unka balance hi product.',
     },
     {
@@ -304,10 +392,21 @@ SD.registerLevels('stories', [
         doosra dheela padta hai — tight latency + zyada packing kabhi-kabhi naya server maangti hai.`,
       quiz: {
         q: 'Matchmaker ko platform ka "asli SPOF" kyun kehte hain?',
-        choices: ["Shared admission ka wide impact","It must be one physical server","It must cost more than game fleet","Every matchmaker is one database"],
+        choices: [
+          'Instance mara = 40 log; matchmaker mara = koi naya game shuru hi nahi — asar sab par',
+          'Matchmaker ek hi physical server par chalna zaroori hai, toh server gira toh sab gaya',
+          'Matchmaker poore game fleet se mehenga hai, isliye matchmaker girna sabse bada nuksaan',
+          'Har matchmaker asal mein ek database hai, aur database hamesha SPOF hota hai',
+        ],
         answer: 0,
-        explain: 'Chhote instances ne blast radius ghataya — par coordination layer ki zimmedari badhi.',
-       choiceExplanations: ["Chhote instances ne blast radius ghataya — par coordination layer ki zimmedari badhi.","Logical dependency redundant deployments ke saath bhi broad impact rakh sakti hai.","Cost failure blast radius ka definition nahi.","Implementation database hona necessary nahi."] },
+        explain: 'Chhote instances ne blast radius ghataya — par coordination layer ki zimmedari badhi. Reliability ka dabav upar ki layer par.',
+        choiceExplanations: [
+          'Chhote instances ne blast radius ghataya — par coordination layer ki zimmedari badhi. Reliability ka dabav upar ki layer par.',
+          'Matchmaker kai servers par chal sakta hai — par saajha hai, isliye asar bada.',
+          'SPOF ka matlab asar hai, kharcha nahi.',
+          'Matchmaker placement ka faisla karta hai, database nahi hai.',
+        ],
+      },
     },
   ],
   interview: {
@@ -316,16 +415,38 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Dost ek saath game join karein par alag servers mein chale jaate hain."',
-        choices: ["Party seats reserve + TTL/affinity","Nearest full instance ko hi choose","Every friend random instance bhejo","UI invite se capacity guarantee"],
+        choices: [
+          'Pehle member par party size jitni seats rok lo (TTL ke saath); baaki dost wahi instance',
+          'Sabse paas wala instance chuno, chahe bhara ho — doori kam toh dost bhi khush',
+          'Har dost ko random instance par bhejo — random se load barabar, dost baad mein mil lenge',
+          'UI mein invite button do — invite bhej diya toh instance mein jagah bhi pakki',
+        ],
         answer: 0,
-        explain: 'Lab: nearest 70% → smart 100%.',
-       choiceExplanations: ["Lab: nearest 70% → smart 100%.","Almost-full target late friends ke liye seats nahi rakhega.","Random placement party separation badha sakti hai.","Invite actual capacity reserve nahi karta."] },
+        explain: 'Lab: nearest 70% → smart 100%. Lagbhag bhare instance mein party mat bhejo.',
+        choiceExplanations: [
+          'Lab: nearest 70% → smart 100%. Lagbhag bhare instance mein party mat bhejo.',
+          'Bhare instance mein dost ke liye jagah nahi bachti.',
+          'Random placement dosto ko pakka alag kar dega.',
+          'Invite seat nahi rokta — instance phir bhi bhar sakta hai.',
+        ],
+      },
       {
         q: 'Interviewer: "Roblox public cloud par kyun nahi?"',
-        choices: ["Workload TCO aur steady demand compare","Cloud platform inherently unreliable","Owned hardware always lower cost","Security cloud use prohibit karti"],
+        choices: [
+          'Is workload ka network kharcha cloud par ~10× tak — steady bada load apne metal par sasta; burst cloud par',
+          'Public cloud bharosemand nahi hota — cloud ke servers apne aap girte rehte hain',
+          'Apna hardware har workload ke liye hamesha sasta hota hai — cloud kabhi sasta nahi padta',
+          'Security ke niyam cloud ka istemaal mana karte hain — game platform cloud par chal hi nahi sakta',
+        ],
         answer: 0,
         explain: '"Cloud default hai, kanoon nahi — jaano sabse badi cost line kahan palatti hai."',
-       choiceExplanations: ["\"Cloud default hai, kanoon nahi — jaano sabse badi cost line kahan palatti hai.\"","Reliability architecture aur operations par depend karti hai.","Utilization, staffing, egress aur capex assumptions compare karne honge.","Security policy workload-specific hai; universal ban nahi."] },
+        choiceExplanations: [
+          '"Cloud default hai, kanoon nahi — jaano sabse badi cost line kahan palatti hai."',
+          'Cloud ki reliability theek hai; faisla kharche ka tha.',
+          '"Hamesha" galat — chhote ya spiky load ke liye cloud sasta ho sakta hai.',
+          'Aisa koi niyam nahi. Roblox burst ke liye cloud use karta hai.',
+        ],
+      },
     ],
   },
   success: [
@@ -429,10 +550,21 @@ SD.registerLevels('stories', [
       lesson: `Weekend ka time pata hai (Friday extra), size nahi (cloud burst). Aur cells failure ko simit rakhte hain — tabhi burst bhi saaf hota hai.`,
       quiz: {
         q: 'Cells hone se cloud burst aasaan kyun hota hai?',
-        choices: ["Repeatable unit se placement portable","Cells se interconnect latency zero","Cloud capacity automatically free","All shared control planes gayab"],
+        choices: [
+          'Cell khud mein poora hai — cloud mein bas ek aur cell khada karo, matchmaker use bhi baaki jaisa maane',
+          'Cells hone se DC aur cloud ke beech ki latency zero ho jaati hai, toh cell kahin bhi chala do',
+          'Cells ke saath cloud ki capacity muft mil jaati hai — burst ka alag se koi bill nahi aata',
+          'Cells aane se saare shared control planes gayab — matchmaker tak kuch bhi saajha nahi bachta',
+        ],
         answer: 0,
-        explain: 'Self-contained unit = kahin bhi chala do.',
-       choiceExplanations: ["Self-contained unit = kahin bhi chala do.","Remote dependencies aur network RTT phir bhi assess karne honge.","Portable deployment cloud bill eliminate nahi karta.","Cell design common admission/config/identity dependencies rakh sakta hai."] },
+        explain: 'Khud-mein-poori unit = kahin bhi chala do. Koi saajhi cheez nahi jo cloud aur DC ko jode.',
+        choiceExplanations: [
+          'Khud-mein-poori unit = kahin bhi chala do. Koi saajhi cheez nahi jo cloud aur DC ko jode.',
+          'Latency doori se aati hai; cells use nahi mitaate.',
+          'Cloud ka burst bhi paise ka hai.',
+          'Matchmaker jaisa control plane phir bhi saajha hai.',
+        ],
+      },
     },
     {
       type: 'order',
@@ -453,16 +585,38 @@ SD.registerLevels('stories', [
     questions: [
       {
         q: 'Interviewer: "Kabhi-kabhi ek viral event se load 3× ho jaata hai, kab pata nahi."',
-        choices: ["Bounded baseline plus tested burst cells","Unlimited on-demand capacity assume","Event ke baad manual hosts order","Reject users bina product priority"],
+        choices: [
+          'Baseline apne/reserved par; anishchit hissa cloud cells se burst; chaos tests se saabit karo',
+          'Maan lo cloud mein anant on-demand capacity hamesha milegi — plan ki zaroorat hi nahi',
+          'Event ke baad manually naye hosts order karo — viral load ke saath hosts aa jaayenge',
+          'Load badhe toh users ko wapas bhej do — product ki priority dekhne ki zaroorat nahi',
+        ],
         answer: 0,
-        explain: 'Roblox ka mix: apna + burst + cells.',
-       choiceExplanations: ["Roblox ka mix: apna + burst + cells.","Provider quotas, startup delay aur dependent services burst bound karte hain.","Manual provisioning viral peak ke liye late ho sakti hai.","Admission/degradation useful ho sakte hain; priorities aur SLO explicit hon."] },
+        explain: 'Roblox ka mix: apna + burst + cells. Self-contained cells se burst aur failure dono simit rehte hain.',
+        choiceExplanations: [
+          'Roblox ka mix: apna + burst + cells. Self-contained cells se burst aur failure dono simit rehte hain.',
+          'Cloud capacity bhi region mein khatam ho sakti hai — pehle se plan aur test chahiye.',
+          'Hosts aane mein hafte lagte hain. Viral event ghanton mein aata hai.',
+          'Kuch users ko rokna theek ho sakta hai, par product priority ke saath.',
+        ],
+      },
       {
         q: 'Interviewer: "Chaos testing production mein kyun?"',
-        choices: ["Bounded fault tests se assumptions verify","Production mein random damage daily","Staging coverage ko irrelevant maano","Fault injection bina rollback chalao"],
+        choices: [
+          '"Failure cell ke andar rahega" ka vaada test ke bina bekaar — chhote, rok sakne wale prod tests',
+          'Production mein roz random nuksaan karo — jitna zyada todoge, utna mazboot system',
+          'Staging bekaar hai — sirf production test hi sach batata hai, staging ki zaroorat nahi',
+          'Fault daalo par rollback ki zaroorat nahi — fault khud hi thodi der mein theek ho jaata hai',
+        ],
         answer: 0,
-        explain: "Approved bounded experiments mein hypothesis, representative baseline, limited radius, abort thresholds aur verified cleanup rakho. Production optional context hai, uncontrolled damage goal nahi.",
-       choiceExplanations: ["Approved bounded experiments mein hypothesis, representative baseline, limited radius, abort thresholds aur verified cleanup rakho. Production optional context hai, uncontrolled damage goal nahi.","Uncontrolled faults unnecessary customer damage kar sakte hain.","Staging useful hai; production conditions ki kuch gaps reh sakti hain.","Hypothesis, scope, monitoring aur abort thresholds chahiye."] },
+        explain: 'Approved, simit experiments: hypothesis, asli jaisa baseline, chhota radius, abort ki hadd aur jaanchi hui cleanup. Production ek jagah hai, bina rok ke nuksaan maqsad nahi.',
+        choiceExplanations: [
+          'Approved, simit experiments: hypothesis, asli jaisa baseline, chhota radius, abort ki hadd aur jaanchi hui cleanup. Production ek jagah hai, bina rok ke nuksaan maqsad nahi.',
+          'Bina hadd ka nuksaan users ko dukh deta hai — experiment simit ho.',
+          'Staging bhi kaam ka hai; production test staging ki jagah nahi leta.',
+          'Abort aur rollback ke bina experiment khud outage ban sakta hai.',
+        ],
+      },
     ],
   },
   success: [
