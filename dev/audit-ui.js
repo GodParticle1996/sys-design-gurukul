@@ -85,7 +85,7 @@ function contrastInPage() {
       for (const { track, id, stages } of entries) {
         await page.evaluate(({ track, id }) => SD.ui.showIntro(SD.levelSets[track].find(l => l.id === id)), { track, id });
         await sample(`${id}/intro`);
-        /* The topic guide is an end-of-level recap now; render that same box here to measure it. */
+        /* The topic recap shows after a guide's last level in each track; render that same box here to measure it. */
         await page.evaluate(({ track, id }) => {
           const guideBox = SD.ui.topicGuide(SD.levelSets[track].find(l => l.id === id));
           if (guideBox) document.querySelector('#app .panel').appendChild(guideBox);
@@ -94,7 +94,7 @@ function contrastInPage() {
         if (await guide.count()) {
           await guide.evaluate(e => { e.open = true; });
           await sample(`${id}/guide-expanded`);
-          if (['fp-physics-kyun', 'pool', 'ai-safety-filter'].includes(id)) {
+          if (['fp-physics-kab', 'pool', 'replit-undo'].includes(id)) {
             const name = `${theme}-${id}-guide-360.png`;
             await page.screenshot({ path: path.join(OUT, name), fullPage: true }); report.screenshots.push(name);
           }

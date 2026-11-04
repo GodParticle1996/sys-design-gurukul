@@ -44,7 +44,7 @@ Style measurement, all 244 levels, pre-audit tree `ce2f297` versus now:
 | --- | --- | --- |
 | 1 | Quick fixes: README/docs breakage, stale counts, rendering bugs, validator guards | ✅ done 2026-10-29 |
 | 2 | Engine and code review: simulator, renderers, app shell, test tools; tests for each fix | ✅ done 2026-10-29 |
-| 3 | Content, track by track: language (decision 1), guides (decision 2), teaching order, facts | answer options done for all 14 tracks 2026-11-03; guides (decision 2) and mission hints still open |
+| 3 | Content, track by track: language (decision 1), guides (decision 2), teaching order, facts | answer options done for all 14 tracks 2026-11-03; guides (decision 2) done 2026-11-04; mission hints in progress |
 | 4 | Browser pass: phone and desktop screenshots, layout fixes | phone top bar + code-pane wraps done; SVG labels left as is (user) |
 | 5 | Wrap-up: docs, notes, commits | open |
 
@@ -185,6 +185,7 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | New Concurrency track (6 levels, Java lab 46) — the user asked Codex directly | Codex, ~37 min | Claude: shared-file diff, Java code, 24 + 42 checks rerun, browser pass at 390/1280 (0 broken) | merged as-is; language rewrite + real hints next (all 51 hints were one boilerplate line) |
 | Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex: 16 findings (2 P1, 12 P2, 2 P3) | all 16 fixed (3 differently, see below); `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
 | Stories (from st-reddit-strangle), AI, Planet: 85 levels, 320 MCQs, 24 label sets | Claude | Codex: 43 findings (~30 P1) in ~10 min | all 43 checked and fixed in Claude's wording; see "Codex queue finished by Claude" |
+| Decision guides → short recaps: 59 guides (53 + 6 Concurrency) | Codex (draft ~8 min, revision ~10 min); Health Checks + Retries models by Claude | Claude: every batch read, all 58 notes checked, 44 "Level mein…" openings rewritten | applied with `dev/rewrite/guides.js`; renderer, validator and audit tool updated |
 
 What Codex's review caught (all confirmed before fixing):
 
@@ -411,3 +412,25 @@ Claude applied the fixes in its own wording rather than Codex's (Codex's lesson 
 scoped the stem with a situation instead. Three questions also got new wrong options because every old one was
 impossible or started with "Sirf …" (`ai-safety-filter`, `prime-boundary-tax`, and the Cloudflare CPU-leak slot).
 Fix files: `sdg-codex-xp/jobs/claude/r85/`.
+
+### Phase 3 — decision guides become short topic recaps (2026-11-04, decision 2)
+
+User choices (2026-11-04): **short card + "Aur gehraai"**, and **shown after the topic's last level**. Because 32
+of the 59 guides span several tracks, the rule is per track: the recap shows on the Level complete screen of the
+guide's last level *in that track* (105 of 250 levels), so every idea in it has just been taught there.
+
+New format (`data-guidance.js`, and `guide('cc-…')` in `data-v2-concurrency.js`): `title`, `misaal` (the levels'
+own story), `asli` + 2–4 `points` (one idea each), `use`, `avoid`, `mistake`; collapsed: `compare` (2 rows),
+`followup`, `sources`. Dropped: `why`, `concept`, `example`, `handsOn`, `tree`, `production`. Tool:
+`dev/rewrite/guides.js new.json [--dry]` checks lengths (point ≤ 120, asli ≤ 110, use/avoid/mistake ≤ 130,
+misaal ≤ 240), script, stand-ins, clipped English and source keys, then rewrites the blocks and reloads the app.
+
+Codex drafted all 58 (Claude wrote Health Checks and Retries as models). The first draft was accurate but dense
+(points averaged 127 characters with 2–3 ideas, jargon piles like "randomize option full-jitter formula ka proof
+nahi", new scenes instead of the lessons' stories); after a revision brief with the two models and tighter limits
+the median point is 78 characters and the analogies reuse the levels' stories (Asha's order, Annapurna and Bholu,
+the six phones, the coffee shop). Claude rewrote 44 meta openings ("Level mein …", "Slack ke historical level
+mein …" → "Slack ki purani kahani mein …"). Codex's notes list only secondary details dropped for brevity, plus one
+correction: the migration guide now follows the level (live-change capture starts before the backfill).
+`dev/rewrite/scan.js` now exports `clipped()` and knows common verb endings ("hoga", "padega"), which were false
+positives.

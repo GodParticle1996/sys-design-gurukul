@@ -13,7 +13,8 @@ const { loadApp } = require('../load-app');
 
 const GLUE = new Set(('hai hain tha thi the ho hota hoti hote nahi na ka ki ke ko se mein me par pe aur ya toh to bhi hi jo jab tak '
   + 'kya kyun kaise kitna kitni kitne wala wali wale apna apni apne sab koi kuch ek do teen agar phir lekin isliye kyunki jaise '
-  + 'karo karta karti karte kar diya liya gaya gayi raha rahi rahe sakta sakti sakte chahiye milta milti dekho dekhta').split(' '));
+  + 'karo karta karti karte kar diya liya gaya gayi raha rahi rahe sakta sakti sakte chahiye milta milti dekho dekhta '
+  + 'hoga hogi honge padega padegi padta padti padte jaata jaati jaate rakho rakhna dena lena').split(' '));
 const words = s => String(s).replace(/<[^>]+>/g, ' ').toLowerCase().match(/[a-z][a-z'-]*/g) || [];
 
 function clipped(s) {

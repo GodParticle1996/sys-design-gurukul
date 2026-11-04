@@ -78,27 +78,32 @@ function diagramFor(id, hero) {
   return d;
 }
 
-function topicGuide(level) {
+/* Topic recap (dev/REVIEW.md, decision 2): shown once per track, after the guide's LAST level in that
+   track, so every idea in it has been taught. Short card open; table, interview and sources collapsed. */
+function guideFor(level) {
   const registry = SD.guidance;
   const guide = registry && registry.topics[registry.byLevel[level.id]];
   if (!guide) return null;
+  const track = Object.values(SD.levelSets).find(set => set.some(l => l.id === level.id)) || [];
+  const mine = track.filter(l => guide.levels.includes(l.id));
+  return mine.length && mine[mine.length - 1].id === level.id ? guide : null;
+}
+
+function topicGuide(level) {
+  const guide = guideFor(level);
+  if (!guide) return null;
   const box = el('section', 'topic-guide');
   box.appendChild(el('h3', null, `📒 Yaad rakhne layak: ${guide.title}`));
-  box.appendChild(el('p', null, `<b>Kyun matter karta hai:</b> ${guide.why}`));
+  box.appendChild(el('div', 'guide-chunk', `<h4>💡 Misaal</h4><p>${guide.misaal}</p>`));
+  box.appendChild(el('div', 'guide-chunk', `<h4>🎯 Asli baat</h4><p>${guide.asli}</p><ul>${guide.points.map(p => `<li>${p}</li>`).join('')}</ul>`));
+  box.appendChild(el('ul', 'guide-when', `<li>✅ <b>Kab:</b> ${guide.use}</li><li>❌ <b>Kab nahi:</b> ${guide.avoid}</li>`));
+  box.appendChild(el('aside', 'guide-mistake', `<h4>⚠️ Aam galti</h4><p>${guide.mistake}</p>`));
   const details = el('details', 'guide-details');
-  details.appendChild(el('summary', null, 'Poori cheat sheet kholo — example, kab use / kab nahi, decision tree, production'));
-  const sections = [
-    ['Concept', guide.concept], ['Tiny example', guide.example], ['Ab kya karo', guide.handsOn],
-    ['Kab use karein', guide.use], ['Kab nahi', guide.avoid],
-  ];
-  sections.forEach(([title, text]) => details.appendChild(el('div', 'guide-chunk', `<h4>${title}</h4><p>${text}</p>`)));
+  details.appendChild(el('summary', null, 'Aur gehraai: tulna table · interview sawaal · sources'));
   const comparison = el('div', 'guide-compare');
-  comparison.innerHTML = `<table><caption>X vs Y: tradeoffs compare karo</caption><thead><tr><th>Choice</th><th>Kab</th><th>Keemat</th></tr></thead><tbody>${guide.compare.map(r => `<tr><td data-label="Choice">${r.choice}</td><td data-label="Kab">${r.when}</td><td data-label="Keemat">${r.tradeoff}</td></tr>`).join('')}</tbody></table>`;
+  comparison.innerHTML = `<table><caption>Kaunsa kab chunein</caption><thead><tr><th>Choice</th><th>Kab</th><th>Keemat</th></tr></thead><tbody>${guide.compare.map(r => `<tr><td data-label="Choice">${r.choice}</td><td data-label="Kab">${r.when}</td><td data-label="Keemat">${r.tradeoff}</td></tr>`).join('')}</tbody></table>`;
   details.appendChild(comparison);
-  details.appendChild(el('div', 'guide-chunk', `<h4>Chhota decision tree</h4><ol>${guide.tree.map(s => `<li>${s}</li>`).join('')}</ol>`));
-  details.appendChild(el('aside', 'guide-mistake', `<h4>Galti jo sab karte hain</h4><p>${guide.mistake}</p>`));
-  details.appendChild(el('aside', 'guide-production', `<h4>Production mein kya hota hai</h4><p>${guide.production}</p>`));
-  details.appendChild(el('div', 'guide-chunk', `<h4>Interview follow-up</h4><p>${guide.followup}</p>`));
+  details.appendChild(el('div', 'guide-chunk', `<h4>🎤 Interview sawaal</h4><p>${guide.followup}</p>`));
   const sources = el('ul', 'guide-sources');
   guide.sources.forEach(s => {
     const row = el('li'); const link = el('a'); link.textContent = s.title; link.href = s.url;
@@ -591,7 +596,7 @@ function levelComplete() {
     wrap.appendChild(el('ul', 'success-list', level.success.map(s => `<li>${s}</li>`).join('')));
   }
 
-  /* Topic ka cheat sheet level ke AAKHIR mein — pehle khud karke dekho, phir saar padho */
+  /* Topic ka recap topic ke aakhri level ke baad — pehle khud karke dekho, phir saar padho */
   const guide = topicGuide(level);
   if (guide) wrap.appendChild(guide);
 

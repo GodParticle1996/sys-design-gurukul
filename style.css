@@ -1302,16 +1302,18 @@ html { scroll-padding-top: calc(var(--topbar-h, 0px) + 8px); }   /* scrollIntoVi
 .topic-guide h3 { margin-top: 0; color: var(--accent); }
 .guide-details > summary { cursor: pointer; color: var(--accent); font-weight: 600; }
 .guide-chunk { margin: 14px 0; }
-.guide-chunk h4, .guide-mistake h4, .guide-production h4 { margin: 0 0 4px; }
+.guide-chunk h4, .guide-mistake h4 { margin: 0 0 4px; }
 .guide-chunk p { margin: 0; }
+.guide-chunk ul { margin: 6px 0 0; padding-left: 20px; }
+.guide-when { list-style: none; padding: 0; margin: 12px 0; }
+.guide-when li { margin: 6px 0; }
 .guide-compare { overflow-x: auto; }
 .guide-compare table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .guide-compare caption { text-align: left; font-weight: 700; margin: 12px 0 6px; }
 .guide-compare th, .guide-compare td { border: 1px solid var(--border); padding: 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
 .guide-compare th { color: var(--accent); }
-.guide-mistake, .guide-production { padding: 10px 12px; margin: 12px 0; border-left: 3px solid var(--gold); background: var(--panel); }
-.guide-production { border-left-color: var(--accent); }
-.guide-mistake p, .guide-production p { margin: 0; }
+.guide-mistake { padding: 10px 12px; margin: 12px 0; border-left: 3px solid var(--gold); background: var(--panel); }
+.guide-mistake p { margin: 0; }
 .guide-sources a { color: var(--accent); overflow-wrap: anywhere; }
 .case-study-note { color: var(--muted); font-size: .88rem; line-height: 1.5; }
 :root[data-theme="light"] .es-input { background: var(--code-surface); }
@@ -1341,6 +1343,7 @@ html { scroll-padding-top: calc(var(--topbar-h, 0px) + 8px); }   /* scrollIntoVi
 @media (max-width: 600px) {
   .guide-compare table, .guide-compare tbody, .guide-compare tr, .guide-compare td { display: block; width: 100%; }
   .guide-compare thead { display: none; }
+  .guide-compare caption { display: block; width: 100%; }
   .guide-compare tr { margin: 10px 0; border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; }
   .guide-compare td { border: 0; padding: 7px 0; }
   .guide-compare td::before { content: attr(data-label); display: block; color: var(--muted); font-size: .78rem; font-weight: 700; }

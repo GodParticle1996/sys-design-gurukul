@@ -523,11 +523,11 @@ function structure() {
   allLevels.forEach(({ level }) => {
     const topic = guidance.topics[guidance.byLevel[level.id]];
     if (!topic) return fail(`${level.id}: major-topic decision guide missing`);
-    ['title', 'why', 'concept', 'example', 'handsOn', 'use', 'avoid', 'mistake', 'production', 'followup'].forEach(key => {
+    ['title', 'misaal', 'asli', 'use', 'avoid', 'mistake', 'followup'].forEach(key => {
       if (typeof topic[key] !== 'string' || !topic[key].trim()) fail(`${level.id}: guidance.${key} missing`); else ok();
     });
-    if (!(topic.compare || []).length || topic.compare.some(row => !row.choice || !row.when || !row.tradeoff)) fail(`${level.id}: X-vs-Y comparison missing`); else ok();
-    if ((topic.tree || []).length < 3 || topic.tree.some(step => !step)) fail(`${level.id}: decision tree incomplete`); else ok();
+    if (!Array.isArray(topic.points) || topic.points.length < 2 || topic.points.length > 4 || topic.points.some(p => !p)) fail(`${level.id}: guidance.points needs 2–4 bullets`); else ok();
+    if ((topic.compare || []).length < 2 || topic.compare.some(row => !row.choice || !row.when || !row.tradeoff)) fail(`${level.id}: X-vs-Y comparison missing`); else ok();
     if (!(topic.sources || []).length || topic.sources.some(source => !source.title || !/^https:\/\//.test(source.url || ''))) fail(`${level.id}: primary guidance sources missing`); else ok();
   });
 
