@@ -44,7 +44,7 @@ Style measurement, all 244 levels, pre-audit tree `ce2f297` versus now:
 | --- | --- | --- |
 | 1 | Quick fixes: README/docs breakage, stale counts, rendering bugs, validator guards | ✅ done 2026-10-29 |
 | 2 | Engine and code review: simulator, renderers, app shell, test tools; tests for each fix | ✅ done 2026-10-29 |
-| 3 | Content, track by track: language (decision 1), guides (decision 2), teaching order, facts | answer options done for all 14 tracks 2026-11-03; guides (decision 2) done 2026-11-04; mission hints in progress |
+| 3 | Content, track by track: language (decision 1), guides (decision 2), teaching order, facts | answer options done for all 14 tracks 2026-11-03; guides (decision 2) and mission hints done 2026-11-04 |
 | 4 | Browser pass: phone and desktop screenshots, layout fixes | phone top bar + code-pane wraps done; SVG labels left as is (user) |
 | 5 | Wrap-up: docs, notes, commits | open |
 
@@ -187,6 +187,7 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex: 16 findings (2 P1, 12 P2, 2 P3) | all 16 fixed (3 differently, see below); `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
 | Stories (from st-reddit-strangle), AI, Planet: 85 levels, 320 MCQs, 24 label sets | Claude | Codex: 43 findings (~30 P1) in ~10 min | all 43 checked and fixed in Claude's wording; see "Codex queue finished by Claude" |
 | Decision guides → short recaps: 59 guides (53 + 6 Concurrency) | Codex (draft ~8 min, revision ~10 min); Health Checks + Retries models by Claude | Claude: every batch read, all 58 notes checked, 44 "Level mein…" openings rewritten | applied with `dev/rewrite/guides.js`; renderer, validator and audit tool updated |
+| Mission hint ladders: 49 terminal missions + 3 interview tasks | Codex (46 missions, ~10 min); Claude: 3 models + 3 interview tasks | Claude: coverage script (hint 3 = solution, exactly, everywhere), read every ladder, browser check | applied via `apply.js` (new `hints` path); 40 mission text/check discrepancies Codex found are logged below |
 
 What Codex's review caught (all confirmed before fixing):
 
@@ -435,3 +436,24 @@ mein …" → "Slack ki purani kahani mein …"). Codex's notes list only second
 correction: the migration guide now follows the level (live-change capture starts before the backfill).
 `dev/rewrite/scan.js` now exports `clipped()` and knows common verb endings ("hoga", "padega"), which were false
 positives.
+
+### Phase 3 — mission hints (2026-11-04)
+
+The Oct 25 audit had replaced every terminal mission's 3 hints with boilerplate ("Pehle observation: …", "Checklist
+ko kram se dekho. Aakhri proof: …", "Near-answer walkthrough; …"). Each hint costs XP (perfsim.js), so each now
+helps: (1) the first move and why, (2) the key idea for the step learners get stuck on with the command shape,
+(3) "Poora raasta — har command alag Enter se chalao:" plus the stage's `solution`, unchanged. Claude wrote three
+models (lifecycle, boundaries, timeouts) and the three interview terminal tasks (lifecycle, offset-pain, pool);
+Codex wrote the other 46. A coverage script checked that hint 3 equals the solution everywhere. `apply.js` gained
+a `{level, path, hints}` form. `validate.js` now skips the HTML-tag check for terminal hints, which perfsim prints
+with `textContent`, so placeholders such as `<ms>` show as written (checked in Chromium).
+
+**Open (Phase 4): mission text vs checks vs simulator.** While writing hints Codex replayed all 49 solutions and
+listed ~40 places where a mission's goal, task text or successText disagrees with its task checks, its final
+verify or the simulator's real numbers. Full list: `sdg-codex-xp/jobs/hints/NOTES-mission-discrepancies.md`.
+Three kinds: (a) wrong facts in successText (retries says 3 attempts for `--max 3`, which is 4; pool says
+2500 → 250 rps where the run gives 3320 → 332; latency's goal promises a broken SLO but the run gives p99 26 ms
+against 200 ms; numbers says 30× where the traces give ~9.4×; probabilistic says "half" for ~42%); (b) a task check
+looser than the final verify, so a learner can tick every task and still fail (fanout, estimation, cursor,
+conshash, boss-uber …); (c) the simulator not modelling what the text claims (TTL expiry, jitter timing,
+bulkhead isolation).

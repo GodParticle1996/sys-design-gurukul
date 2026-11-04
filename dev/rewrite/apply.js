@@ -5,6 +5,7 @@
      node dev/rewrite/apply.js patch.json [--dry]
 
    patch.json: [{ level, path, choices?, choiceExplanations?, explain?, q?, hint? }]
+               or [{ level, path, hints: [...] }] for a terminal mission's hint ladder (path = stages[n])
      a reason written as '=explain' is replaced by the (new or current) explanation, HTML included
      path   — object inside the level, as dev/rewrite/sheet.js prints it (stages[0].steps[2].ask, interview.questions[1] …)
    The answer index and the number of options never change (exercise fixtures use the original indexes).
@@ -104,7 +105,8 @@ for (const p of patches) {
   const level = levels.get(p.level);
   const obj = level && at(level, p.path);
   if (!obj) { problems.push(`${where}: object nahi mila`); continue; }
-  if (!Array.isArray(obj.choices)) { problems.push(`${where}: yahan MCQ nahi hai (choices nahi mile) — path dobara dekho`); continue; }
+  if (p.hints && !Array.isArray(obj.hints)) { problems.push(`${where}: yahan mission hints nahi mile — path dobara dekho`); continue; }
+  if (!p.hints && !Array.isArray(obj.choices)) { problems.push(`${where}: yahan MCQ nahi hai (choices nahi mile) — path dobara dekho`); continue; }
   /* '=explain' in a reason list means "the explanation itself", exact HTML included */
   if (p.choiceExplanations) p.choiceExplanations = p.choiceExplanations.map(r => r === '=explain' ? (p.explain != null ? p.explain : obj.explain) : r);
   const choices = p.choices || obj.choices;
@@ -138,6 +140,14 @@ if (problems.length) { problems.forEach(x => console.log('✗ ' + x)); process.e
 
 const touched = new Set();
 for (const { p, obj, where } of plan) {
+  if (p.hints) {
+    const found = [];
+    for (const [f, t] of src) findArray(t, 'hints', obj.hints).forEach(h => found.push({ file: f, ...h }));
+    if (found.length !== 1) { problems.push(`${where}: hints source mein ${found.length} baar mile`); continue; }
+    const { file, index, length, jsonKeys } = found[0], text = src.get(file);
+    src.set(file, text.slice(0, index) + arrayText('hints', p.hints, jsonKeys, lineIndent(text, index)) + text.slice(index + length));
+    touched.add(file); continue;
+  }
   const anchor = [];
   for (const [f, t] of src) findArray(t, 'choices', obj.choices).forEach(h => anchor.push({ file: f, ...h }));
   if (anchor.length === 0) {

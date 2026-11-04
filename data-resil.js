@@ -190,9 +190,9 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 150 && m.current(s, 'http', r => r.status === 504 && r.p99 < 600); },
       hints: [
-        "Pehle observation: Baseline dekho — p99 SLO ke andar. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab HTTP 504 bounded ho — p99 600ms se kam. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/orders?page=1&limit=50\nsim inject latency ledger 8000\nGET /api/v1/orders?page=1&limit=50\nsim add timeout ledger 150\nGET /api/v1/orders?page=1&limit=50",
+        'Pehle bina chhede ek GET bhejo aur p99 dekho — abhi SLO (200 ms) ke andar hai. Baad ka farq isi baseline se dikhega.',
+        'Ledger ko 8 second dheema karo (`sim inject latency ledger 8000`) aur GET dobara bhejo — p99 seedha 8 s ke paar. Ilaaj: `sim add timeout ledger <ms>`, ms apne SLO se kam. Phir GET bhejo aur 504 dekho.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/orders?page=1&limit=50\nsim inject latency ledger 8000\nGET /api/v1/orders?page=1&limit=50\nsim add timeout ledger 150\nGET /api/v1/orders?page=1&limit=50',
       ],
     },
     {
@@ -390,9 +390,9 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.deps.ledger?.retry?.jitter === 'full' && s.sys.deps.ledger.retry.max === 3 && s.sys.deps.ledger.timeoutMs === 500 && m.current(s, 'http', r => r.status === 504 && r.p99 > 1000); },
       hints: [
-        "Pehle observation: Downstream down karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab jitter ke saath lagao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nsim inject down ledger\nsim add timeout ledger 500\nsim add retry ledger --max 3 --backoff exp\nGET /api/v1/orders?page=1&limit=50\nsim add retry ledger --max 3 --backoff exp --jitter full\nGET /api/v1/orders?page=2&limit=50",
+        'Pehle ledger ko down karo, phir timeout lagao. Downstream ki lagataar failure par retry ka intezaar aur bojh samajhna hai.',
+        '`sim add retry ledger --max <retries> --backoff <mode>` ke baad GET bhejo; har retry timeout aur wait jodti hai. Phir `--jitter <mode>` lagao. Jitter sync retries phailaane ke liye hai; down ledger ka p99 ab bhi bada rahega.',
+        'Poora raasta — har command alag Enter se chalao:\nsim inject down ledger\nsim add timeout ledger 500\nsim add retry ledger --max 3 --backoff exp\nGET /api/v1/orders?page=1&limit=50\nsim add retry ledger --max 3 --backoff exp --jitter full\nGET /api/v1/orders?page=2&limit=50',
       ],
     },
     {
@@ -605,9 +605,9 @@ Breaker ke saath: 1 ms mein fail + fallback
       ],
       verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 500 && s.sys.deps.ledger?.breakerState === 'open' && !!s.sys.deps.ledger.fallback && m.current(s, 'http', r => r.status === 200 && r.p99 < 100); },
       hints: [
-        "Pehle observation: Downstream down + timeout — halat kharab karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Trip hone ke baad p99 gir jaana chahiye (fail fast). Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nsim inject down ledger\nsim add timeout ledger 500\nsim add breaker ledger --threshold 0.5 --window 20\nsim add fallback ledger 'last known balance'\nGET /api/v1/orders?page=1&limit=50 -n 1\nGET /api/v1/orders?page=2&limit=50\nGET /api/v1/orders?page=3&limit=50\nGET /api/v1/orders?page=4&limit=50\nGET /api/v1/orders?page=5&limit=50",
+        'Pehle ledger down karo aur timeout lagao. Har GET ab failure ka sample de sakti hai; breaker ko trip hone ke liye requests chahiye.',
+        '`sim add breaker ledger --threshold <fraction> --window <seconds>` aur `sim add fallback ledger \'<text>\'` lagao. Alag GET baar-baar bhejo; fallback ke 200 ke peeche downstream failure breaker mein gini jaati hai.',
+        'Poora raasta — har command alag Enter se chalao:\nsim inject down ledger\nsim add timeout ledger 500\nsim add breaker ledger --threshold 0.5 --window 20\nsim add fallback ledger \'last known balance\'\nGET /api/v1/orders?page=1&limit=50 -n 1\nGET /api/v1/orders?page=2&limit=50\nGET /api/v1/orders?page=3&limit=50\nGET /api/v1/orders?page=4&limit=50\nGET /api/v1/orders?page=5&limit=50',
       ],
     },
     {
@@ -853,9 +853,9 @@ recommendations poori tarah mar jaaye?
       ],
       verify: s => { const m = SD.mission; return s.sys.app.bulkheads?.ledger === 20 && s.sys.deps.ledger?.timeoutMs === 200 && m.current(s, 'http', r => r.status === 504 && r.p99 < 600); },
       hints: [
-        "Pehle observation: Downstream ko dheema karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Request bhej ke asar dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nsim inject latency ledger 5000\nsim add timeout ledger 200\nsim add bulkhead ledger --max 20\nGET /api/v1/orders?page=1&limit=50",
+        'Pehle ledger ki latency badhao. Timeout ek call ka intezaar baandhega; bulkhead dependency ko milne wala hissa baandhne ki setting hai.',
+        '`sim add timeout ledger <ms>` aur `sim add bulkhead ledger --max 20` lagao, phir GET bhejo. 504 timeout ka proof hai; bulkhead command ka jawab cap batata hai. Model parallel threads ki isolation naapta nahi.',
+        'Poora raasta — har command alag Enter se chalao:\nsim inject latency ledger 5000\nsim add timeout ledger 200\nsim add bulkhead ledger --max 20\nGET /api/v1/orders?page=1&limit=50',
       ],
     },
     {
@@ -1384,9 +1384,9 @@ TCP   → yeh already karta hai (receive window)</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.admission?.maxRps === 200 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated && r.queuedRps > 0); },
       hints: [
-        "Pehle observation: Capacity se zyada load daalo — sab mar jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Wahi load dobara — ab kuch to bach jaayenge. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 50000 --duration 5 --pattern detail\nsim add admission --max-rps 200 --queue 8\nload --rps 50000 --duration 5 --pattern detail",
+        'Pehle detail pattern ka `load` chalao aur capacity panel padho. Offered rate aur backend ki capacity ka farak admission ki zaroorat dikhayega.',
+        '`sim add admission --max-rps <safe-rate> --queue <seconds>` mein rate measured capacity se neeche rakho. Same `load --rps <rate> --duration <seconds> --pattern <pattern>` par admitted aur waiting-room traffic dekho.',
+        'Poora raasta — har command alag Enter se chalao:\nload --rps 50000 --duration 5 --pattern detail\nsim add admission --max-rps 200 --queue 8\nload --rps 50000 --duration 5 --pattern detail',
       ],
     },
     {
@@ -1578,9 +1578,9 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.precomputed === true && s.sys.pool.size === 400 && s.sys.api.admission?.maxRps === 150000 && m.current(s, 'load', r => r.rps === 120000 && !r.saturated); },
       hints: [
-        "Pehle observation: As-is 1.2 lakh rps daalo — system gir jaayega. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab dobara load test karo — survive karna chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 120000 --duration 4 --pattern detail\nsim precompute results\nsim scale pool 400\nsim add admission --max-rps 150000 --queue 8\nload --rps 120000 --duration 4 --pattern detail",
+        'Pehle detail pattern par result-day ka `load` chalao. Capacity panel ka service time batayega ki live rank calculation kitna kaam badha rahi hai.',
+        '`sim precompute results` read ka kaam ghataata hai. Phir `sim scale pool <connections>` aur `sim add admission --max-rps <safe-rate> --queue <seconds>`. Same load dobara chalao; admitted rate capacity se kam ho.',
+        'Poora raasta — har command alag Enter se chalao:\nload --rps 120000 --duration 4 --pattern detail\nsim precompute results\nsim scale pool 400\nsim add admission --max-rps 150000 --queue 8\nload --rps 120000 --duration 4 --pattern detail',
       ],
     },
     {
@@ -1813,9 +1813,9 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
       ],
       verify: s => { const m = SD.mission; return m.current(s, 'load') && m.current(s, 'metrics') && m.current(s, 'trace') && m.latest(s, 'slo')?.avail === 99.9; },
       hints: [
-        "Pehle observation: Load daalo taaki kuch dekhne laayak ho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Error budget nikalo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 400 --duration 6\nGET /health\nmetrics\ntrace GET /api/v1/orders\nslo --availability 99.9",
+        'Pehle `load` chalao taaki metrics aur trace ke paas traffic ka evidence ho. Khaali system ka green health check slow requests ka sabab nahi batayega.',
+        '`metrics` mein pool wait ko CPU se alag padho. `trace GET /api/v1/orders` request ka sabse bada wait dikhayega; `/health` sirf process dekhta hai. `slo --availability <percent>` allowed downtime ka budget deta hai.',
+        'Poora raasta — har command alag Enter se chalao:\nload --rps 400 --duration 6\nGET /health\nmetrics\ntrace GET /api/v1/orders\nslo --availability 99.9',
       ],
     },
     {
@@ -2239,9 +2239,9 @@ ek hi thread pool sab ke liye</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 150 && s.sys.deps.ledger.retry?.jitter === 'full' && !!s.sys.deps.ledger.breaker && !!s.sys.deps.ledger.fallback && s.sys.app.bulkheads?.ledger === 20 && m.current(s, 'http', r => r.status === 200 && r.p99 < 200); },
       hints: [
-        "Pehle observation: Incident recreate karo — downstream dheema. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Prove karo — p99 wapas SLO ke andar. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nsim inject latency ledger 8000\nsim add timeout ledger 150\nsim add retry ledger --max 2 --backoff exp --jitter full\nsim add breaker ledger --threshold 0.5 --window 20\nsim add fallback ledger 'last known status'\nsim add bulkhead ledger --max 20\nGET /api/v1/orders?page=1&limit=50\nGET /api/v1/orders?page=2&limit=50\nGET /api/v1/orders?page=3&limit=50\nGET /api/v1/orders?page=4&limit=50\nGET /api/v1/orders?page=5&limit=50",
+        'Pehle ledger ko dheema karo. Checkout bachane ke liye har guard ka alag kaam hai; sirf retries badhaane se intezaar aur badhega.',
+        'Timeout aur retry ke saath `sim add breaker ledger --threshold <fraction> --window <seconds>` lagao. Fallback ke baad alag GET bhejte raho; breaker open hone par fresh 200 ka p99 SLO se milao.',
+        'Poora raasta — har command alag Enter se chalao:\nsim inject latency ledger 8000\nsim add timeout ledger 150\nsim add retry ledger --max 2 --backoff exp --jitter full\nsim add breaker ledger --threshold 0.5 --window 20\nsim add fallback ledger \'last known status\'\nsim add bulkhead ledger --max 20\nGET /api/v1/orders?page=1&limit=50\nGET /api/v1/orders?page=2&limit=50\nGET /api/v1/orders?page=3&limit=50\nGET /api/v1/orders?page=4&limit=50\nGET /api/v1/orders?page=5&limit=50',
       ],
     },
     {

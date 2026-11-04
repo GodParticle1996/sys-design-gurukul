@@ -596,6 +596,9 @@ function structure() {
       // Dry-run source panes escape raw code. Java generics such as <Runnable> are source, not HTML.
       const source = p.match(/^stages\[(\d+)\]\.code\.text$/);
       if (source && ['dryrun', 'cards'].includes(level.stages[+source[1]].type)) return;
+      // Terminal hints are printed with textContent (perfsim.js print), so `<ms>` placeholders show as written.
+      const hint = p.match(/^stages\[(\d+)\]\.hints\[\d+\]$/);
+      if ((hint && level.stages[+hint[1]].type === 'terminal') || /\.terminal\.hints\[\d+\]$/.test(p)) return;
       const why = htmlProblem(str); if (why) { clean = false; fail(`${level.id} ${p}: ${why}`); }
     });
     if (clean) ok();

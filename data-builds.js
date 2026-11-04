@@ -269,9 +269,9 @@ READ (12,000/sec peak — yahan sab kuch hai)
       ],
       verify: s => { const m = SD.mission; return s.sys.api.cache?.jitterPct > 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
       hints: [
-        "Pehle observation: Traffic ka andaaza lagao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Us viral link ko phailao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 100000000 --rps 12000 --bytes 500\nid bench --type uuid4 --rows 1000000\nid bench --type snowflake --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20\ncache hotkey --key url:aX9k2Lq --rps 50000\ncache hotkey --key url:aX9k2Lq --rps 50000 --replicas 8",
+        'Pehle `estimate` se redirect traffic ka paimana nikalo. Read-heavy shortener mein code generation aur viral link ka bojh alag samajhna hai.',
+        '`id bench --type <scheme> --rows <count>` se random aur sortable inserts milao. Viral key par sirf cache nodes badhaana kaafi nahi: `cache hotkey --key <url-key> --rps <rate> --replicas <copies>` se copies test karo.',
+        'Poora raasta — har command alag Enter se chalao:\nestimate --users 100000000 --rps 12000 --bytes 500\nid bench --type uuid4 --rows 1000000\nid bench --type snowflake --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20\ncache hotkey --key url:aX9k2Lq --rps 50000\ncache hotkey --key url:aX9k2Lq --rps 50000 --replicas 8',
       ],
     },
     {
@@ -747,9 +747,9 @@ watermark 60s  →  simulator mein 0 chhoote, par har number 1 minute der se
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'stream', 'window')?.watermark === 30 && m.latest(s, 'stream', 'window')?.dropped === 0 && m.latest(s, 'stream', 'partitions')?.idle === 0 && m.latest(s, 'cache', 'hotkey')?.rps === 400000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
       hints: [
-        "Pehle observation: Bina watermark ke minute-window — late clicks kho jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Us ad ki key ko todo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nstream window --size 60 --events 1000000 --late 4\nstream window --size 60 --watermark 10 --events 1000000 --late 4\nstream window --size 60 --watermark 30 --events 1000000 --late 4\nstream partitions --partitions 12 --consumers 20\nstream partitions --partitions 12 --consumers 12\nbloom --items 10000000 --fp 0.01\ncache hotkey --key ad:sb2026 --rps 400000\ncache hotkey --key ad:sb2026 --rps 400000 --replicas 32",
+        'Pehle `stream window` bina watermark chalao aur missing clicks gino. Billing ke counts mein late click chhootna paison ka farak bana sakta hai.',
+        '`stream window --size <seconds> --watermark <wait> --events <count> --late <percent>` mein baaki flags same rakho, wait badhao. `bloom --items <count> --fp 0.01` memory ka estimate hai; positive par exact dedup chahiye.',
+        'Poora raasta — har command alag Enter se chalao:\nstream window --size 60 --events 1000000 --late 4\nstream window --size 60 --watermark 10 --events 1000000 --late 4\nstream window --size 60 --watermark 30 --events 1000000 --late 4\nstream partitions --partitions 12 --consumers 20\nstream partitions --partitions 12 --consumers 12\nbloom --items 10000000 --fp 0.01\ncache hotkey --key ad:sb2026 --rps 400000\ncache hotkey --key ad:sb2026 --rps 400000 --replicas 32',
       ],
     },
     {
@@ -1044,9 +1044,9 @@ booking      →  seedha, atomic, primary par</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.booking?.mode === 'reservation' && s.sys.booking.holds.A14 === 600 && s.sys.api.admission?.maxRps === 3000 && s.sys.api.cache?.ttlSec === 2 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated); },
       hints: [
-        "Pehle observation: Bina kisi protection ke ek seat par do log — double booking. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab load dobara — ab system khada rehna chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nbook seat A14 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold A14 --ttl 600\nbook seat A14 --concurrent 1\nload --rps 50000 --duration 8\nsim add admission --max-rps 3000 --queue 8\nsim add cache --ttl 2 --jitter 20\nload --rps 50000 --duration 8",
+        'Pehle ek seat par concurrent buyers bhejkar double booking dekho. Seat ki correctness aur on-sale traffic ka overload do alag problems hain.',
+        '`book reset` ke baad `sim set booking.mode reservation`, phir `book hold <seat> --ttl <seconds>`. Hold doosra buyer rokta hai. Load bachane ke liye `sim add admission --max-rps <safe-rate> --queue <seconds>` alag lagao.',
+        'Poora raasta — har command alag Enter se chalao:\nbook seat A14 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold A14 --ttl 600\nbook seat A14 --concurrent 1\nload --rps 50000 --duration 8\nsim add admission --max-rps 3000 --queue 8\nsim add cache --ttl 2 --jitter 20\nload --rps 50000 --duration 8',
       ],
     },
     {
@@ -1919,9 +1919,9 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
       ],
       verify: s => { const m = SD.mission; return m.index(s, 'drivers', ['geohash', 'updated_at']) && s.sys.ring?.vnodes === 150 && s.sys.booking?.mode === 'reservation' && s.sys.booking.holds['driver:8891'] === 15 && s.sys.deps.pricing?.timeoutMs === 200 && !!s.sys.deps.pricing.fallback && s.sys.api.admission?.maxRps === 8000 && s.sys.pool.size === 200 && m.current(s, 'load', r => r.rps === 25000 && !r.saturated); },
       hints: [
-        "Pehle observation: Peak ka andaaza lagao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: SLO budget check karo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 1000000 --rps 25000 --bytes 512\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nCREATE INDEX ix_geo ON drivers(geohash, updated_at)\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nring show\nring set vnodes 150\ncache hotkey --key cell:te7ud9 --rps 60000\ncache hotkey --key cell:te7ud9 --rps 60000 --replicas 16\nbook seat driver:8891 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold driver:8891 --ttl 15\nbook seat driver:8891 --concurrent 1\nload --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'\nsim add timeout pricing 200\nsim add fallback pricing \"last known surge multiplier\"\nsim add admission --max-rps 8000 --queue 5\nsim scale pool 200\nload --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'\nslo --availability 99.95",
+        'Pehle peak ka `estimate` nikalo aur bina geo index nearby GET bhejo. Kam drivers lautne par bhi bada scan nearby search ka kharch dikhayega.',
+        '`CREATE INDEX <name> ON drivers(geohash, <sort-column>)` ke baad same GET naapo. Matching mein `book reset`, phir `sim set booking.mode reservation` aur `book hold <driver> --ttl 15`; hot-cell copies double match nahi rokti.',
+        'Poora raasta — har command alag Enter se chalao:\nestimate --users 1000000 --rps 25000 --bytes 512\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nCREATE INDEX ix_geo ON drivers(geohash, updated_at)\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nring show\nring set vnodes 150\ncache hotkey --key cell:te7ud9 --rps 60000\ncache hotkey --key cell:te7ud9 --rps 60000 --replicas 16\nbook seat driver:8891 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold driver:8891 --ttl 15\nbook seat driver:8891 --concurrent 1\nload --rps 25000 --duration 8 --path \'/api/v1/drivers?geohash=te7ud9&limit=50\'\nsim add timeout pricing 200\nsim add fallback pricing "last known surge multiplier"\nsim add admission --max-rps 8000 --queue 5\nsim scale pool 200\nload --rps 25000 --duration 8 --path \'/api/v1/drivers?geohash=te7ud9&limit=50\'\nslo --availability 99.95',
       ],
     },
     {

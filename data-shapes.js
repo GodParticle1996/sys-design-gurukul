@@ -1274,9 +1274,9 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
       ],
       verify: s => { const m = SD.mission; return m.index(s, 'drivers', ['geohash', 'updated_at']) && m.latest(s, 'cache', 'hotkey')?.rps === 40000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
       hints: [
-        "Pehle observation: Table dekho — kitne drivers hain. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Us cell ko todo — load bant jaana chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nshow tables\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nCREATE INDEX ix_geo ON drivers(geohash, updated_at)\nGET /api/v1/drivers?geohash=te7ud9&limit=20\ncache hotkey --key cell:te7ud9 --rps 40000\ncache hotkey --key cell:te7ud9 --rps 40000 --replicas 8",
+        'Pehle `show tables` se drivers ka paimana dekho, phir ek cell ki GET bhejo. Returned drivers se zyada rows padhna missing access index ka sanket hai.',
+        '`CREATE INDEX <name> ON drivers(geohash, updated_at)` ke baad same cell ki GET dohrao. Hot cell ke liye `cache hotkey --key <cell-key> --rps 40000 --replicas <copies>`; copies read load baantti hain.',
+        'Poora raasta — har command alag Enter se chalao:\nshow tables\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nCREATE INDEX ix_geo ON drivers(geohash, updated_at)\nGET /api/v1/drivers?geohash=te7ud9&limit=20\ncache hotkey --key cell:te7ud9 --rps 40000\ncache hotkey --key cell:te7ud9 --rps 40000 --replicas 8',
       ],
     },
     {
@@ -2314,9 +2314,9 @@ ek shared lock</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.pool.size === 200 && m.current(s, 'load', r => r.rps === 5000 && !r.saturated); },
       hints: [
-        "Pehle observation: Aaj ke numbers estimate karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab 10x dobara — ab saturated nahi hona chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 12000000 --rps 500 --bytes 2048\nload --rps 500 --duration 8\nload --rps 5000 --duration 8\nmetrics\ntrace GET /api/v1/orders\nsim scale pool 200\nload --rps 5000 --duration 8",
+        'Pehle `estimate` se aaj ke traffic aur record size ka hisaab nikalo. Phir aaj ka load naapo; badhe load ke liye comparison ka baseline chahiye.',
+        '`load --rps 500 --duration <seconds>` ke baad `load --rps <10x-rate> --duration <seconds>`. `metrics` aur `trace GET /api/v1/orders` se pool wait jaancho; `sim scale pool <connections>` ke baad same load dohrao.',
+        'Poora raasta — har command alag Enter se chalao:\nestimate --users 12000000 --rps 500 --bytes 2048\nload --rps 500 --duration 8\nload --rps 5000 --duration 8\nmetrics\ntrace GET /api/v1/orders\nsim scale pool 200\nload --rps 5000 --duration 8',
       ],
     },
     {
@@ -2552,9 +2552,9 @@ ek shared lock</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.countTotal === false && s.sys.api.cache?.jitterPct > 0 && s.sys.deps.restaurant_svc?.timeoutMs === 300 && !!s.sys.deps.restaurant_svc.fallback && s.sys.pool.size === 300 && m.current(s, 'load', r => r.rps === 8000 && !r.saturated); },
       hints: [
-        "Pehle observation: Peak ka andaaza lagao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: SLO check karo — error budget bacha hai?. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 8000000 --rps 8000 --bytes 1024\nload --rps 8000 --duration 8\ntrace GET /api/v1/orders\nsim set api.countTotal false\ncache hotkey --key cell:te7ud9 --rps 40000\ncache hotkey --key cell:te7ud9 --rps 40000 --replicas 8\nsim add cache --ttl 60 --jitter 20\ncache coalesce --misses 5000 --on\nsim add timeout restaurant_svc 300\nsim add fallback restaurant_svc 'cached restaurant list'\nsim scale pool 300\nload --rps 8000 --duration 8\nslo --availability 99.9",
+        'Pehle peak ka `estimate` nikalo, phir naive system par `load` chalao. Har fix ko measured kharch se jodna hai; shuru mein pool badhaana wajah chhupa dega.',
+        '`sim set api.countTotal false` count ka kharch hataata hai. `sim add cache --ttl <seconds> --jitter <percent>` ke saath `cache coalesce --misses <count> --on` lagao; service time ghatne par pool badhaakar same peak naapo.',
+        'Poora raasta — har command alag Enter se chalao:\nestimate --users 8000000 --rps 8000 --bytes 1024\nload --rps 8000 --duration 8\ntrace GET /api/v1/orders\nsim set api.countTotal false\ncache hotkey --key cell:te7ud9 --rps 40000\ncache hotkey --key cell:te7ud9 --rps 40000 --replicas 8\nsim add cache --ttl 60 --jitter 20\ncache coalesce --misses 5000 --on\nsim add timeout restaurant_svc 300\nsim add fallback restaurant_svc \'cached restaurant list\'\nsim scale pool 300\nload --rps 8000 --duration 8\nslo --availability 99.9',
       ],
     },
     {

@@ -196,9 +196,9 @@ Content-defined (rolling hash se boundary chuno):
       ],
       verify: s => { const m = SD.mission; return s.sys.api.cache?.jitterPct > 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
       hints: [
-        "Pehle observation: Traffic aur storage ka andaaza lagao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ek badi file = bahut saare chunks — protocol ka farak dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 500000000 --rps 12000 --bytes 500\nbloom --items 100000000 --fp 0.01\nid bench --type ulid --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20\ncache hotkey --key file:qtr-report --rps 50000\ncache hotkey --key file:qtr-report --rps 50000 --replicas 8\nnet compare --assets 60",
+        'Pehle `estimate` se metadata traffic aur record size ka hisaab nikalo. File bytes direct storage par jaati hain; mission metadata service ka kharch naapta hai.',
+        '`bloom --items <count> --fp <fraction>` chunk membership ka memory estimate hai; positive par exact hash lookup chahiye. `id bench --type <scheme> --rows <count>` metadata key ka test hai, content hash ka badal nahi.',
+        'Poora raasta — har command alag Enter se chalao:\nestimate --users 500000000 --rps 12000 --bytes 500\nbloom --items 100000000 --fp 0.01\nid bench --type ulid --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20\ncache hotkey --key file:qtr-report --rps 50000\ncache hotkey --key file:qtr-report --rps 50000 --replicas 8\nnet compare --assets 60',
       ],
     },
     {
@@ -478,9 +478,9 @@ Warm connection:                                             request</pre>
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'stream', 'partitions')?.idle === 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false && m.latest(s, 'net', 'trace')?.warm === true; },
       hints: [
-        "Pehle observation: Crawl ka paimana nikalo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab warm connection — farak dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 10000000 --rps 3750 --bytes 2000000\nbloom --items 1000000000 --fp 0.01\nhll --items 1000000000\nstream partitions --partitions 6 --consumers 8\nstream partitions --partitions 12 --consumers 8\ncache hotkey --key domain:wikipedia.org --rps 50000\ncache hotkey --key domain:wikipedia.org --rps 50000 --replicas 8\nnet trace --rtt 40\nnet trace --rtt 40 --warm",
+        'Pehle `estimate` se crawl ka paimana nikalo. Bytes aur rps bandwidth ka hisaab dete hain; domain ki politeness alag seema hai.',
+        '`stream partitions --partitions <count> --consumers <count>` mein consumers ko kaam milna chahiye. `cache hotkey --key <domain> --rps <rate> --replicas <copies>` sirf load model hai; domain ki request hadd mat badhao.',
+        'Poora raasta — har command alag Enter se chalao:\nestimate --users 10000000 --rps 3750 --bytes 2000000\nbloom --items 1000000000 --fp 0.01\nhll --items 1000000000\nstream partitions --partitions 6 --consumers 8\nstream partitions --partitions 12 --consumers 8\ncache hotkey --key domain:wikipedia.org --rps 50000\ncache hotkey --key domain:wikipedia.org --rps 50000 --replicas 8\nnet trace --rtt 40\nnet trace --rtt 40 --warm',
       ],
     },
     {

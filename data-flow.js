@@ -193,9 +193,9 @@ help                                       ← saare commands</pre>
       ],
       verify: s => { const m = SD.mission; return m.current(s, 'trace', r => /pool/.test(r.worst)); },
       hints: [
-        "Pehle observation: Ek normal request bhejo aur uska cost panel dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: `trace` se dekho ki waqt kahan gaya. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/orders?page=1&limit=50\nGET /health\nload --rps 500 --duration 6\ntrace GET /api/v1/orders",
+        'Shuru mein kuch mat badlo. Ek normal GET bhejo aur cost panel padho — aage ka har number is pehle number se milana hai.',
+        '/health 200 de tab bhi dekho ki health check kya-kya NAHI chhoota (DB? cache?). Phir load daalo aur `trace GET <path>` se dekho ki waqt kis hisse mein gaya.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/orders?page=1&limit=50\nGET /health\nload --rps 500 --duration 6\ntrace GET /api/v1/orders',
       ],
     },
     {
@@ -344,9 +344,9 @@ help                                       ← saare commands</pre>
           ],
           verify: s => { const m = SD.mission; return m.current(s, 'trace', r => /pool/.test(r.worst)); },
           hints: [
-            "Pehle observation: Load daalo taaki problem dikhe. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-            "Checklist ko kram se dekho. Aakhri proof: Trace karke bottleneck dhoondo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-            "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 500 --duration 6\ntrace GET /api/v1/orders",
+            'Shaant system mein dheemapan dikhta hi nahi. Pehle `load` se traffic daalo, taaki problem sach mein ho rahi ho.',
+            'Machine ke numbers ghoorne ke bajaye ek request ka peecha karo: `trace GET /api/v1/orders`. Trace ka sabse lamba hissa hi bottleneck hai.',
+            'Poora raasta — har command alag Enter se chalao:\nload --rps 500 --duration 6\ntrace GET /api/v1/orders',
           ],
         },
       },
@@ -498,9 +498,9 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.maxLimit === 100 && s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 120 && m.current(s, 'http', r => r.status === 429 && r.blocked > 0); },
       hints: [
-        "Pehle observation: Dekho ki ?limit=1000 bina rok-tok chal jaata hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Burst bhejo aur 429 khaao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?limit=1000\nsim set api.maxLimit 100\nGET /api/v1/transactions?limit=1000\nsim add ratelimit --rps 100 --burst 120\nGET /api/v1/transactions -n 300",
+        'Pehle dikhao ki khatra asli hai: guard ke bina `?limit=1000` wali GET bhejo, aur dekho kitni rows aur kitna kharcha aaya.',
+        'Do alag guard hain. Page ka size: `sim set api.maxLimit 100`, phir wahi request 400 deni chahiye. Raftaar: `sim add ratelimit …` — raftaar ka guard burst bhejne par hi dikhta hai (`-n 300`).',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?limit=1000\nsim set api.maxLimit 100\nGET /api/v1/transactions?limit=1000\nsim add ratelimit --rps 100 --burst 120\nGET /api/v1/transactions -n 300',
       ],
     },
     {
@@ -782,9 +782,9 @@ P(koi ek slow) = 1 − 0.99⁵ =  4.9%   ← 1% se 4.9% ho gaya!
       ],
       verify: s => { const m = SD.mission; return m.current(s, 'load', r => r.rps === 400) && m.latest(s, 'slo')?.avail === 99.9; },
       hints: [
-        "Pehle observation: 400 rps ka load daalo aur p50 vs p99 ka farak dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: 99.9% availability ka error budget nikalo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 400 --duration 8\nslo --availability 99.9",
+        'Pehle `load` chalao aur har second ka p50 aur p99 saath padho. Normal requests tez hon tab bhi tail users ka intezaar chhupa sakti hai.',
+        '`load --rps 400 --duration <seconds>` mein p99 ko SLO se milao. Availability ka matlab allowed downtime hai: `slo --availability 99.9` se budget nikalo; p99 aur uptime alag vaade hain.',
+        'Poora raasta — har command alag Enter se chalao:\nload --rps 400 --duration 8\nslo --availability 99.9',
       ],
     },
   ],
@@ -916,9 +916,9 @@ pool 50, query 8 s    → 50 × 0.125 =  6 rps  💀</pre>
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'estimate')?.users === 1200000 && m.latest(s, 'estimate')?.rps === 28 && m.latest(s, 'slo')?.avail === 99.9; },
       hints: [
-        "Pehle observation: 12,00,000 users, 2 KB per record ka estimate nikalo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: 99.9% SLO ka error budget dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nestimate --users 1200000 --rps 28 --bytes 2048\nslo --availability 99.9",
+        'Pehle roz ki transactions gino: users guna har user ki daily requests. Daily total ko seconds mein baantne par average rps milega; peak alag chahiye.',
+        '`estimate --users 1200000 --rps <average> --bytes 2048` chalao. Average users ki ginti nahi, requests/sec hai; output mein peak aur replication ka kharch dekho. Phir `slo --availability 99.9`.',
+        'Poora raasta — har command alag Enter se chalao:\nestimate --users 1200000 --rps 28 --bytes 2048\nslo --availability 99.9',
       ],
     },
     {
@@ -1354,9 +1354,9 @@ Sab ek hi row par lock maang rahe hain.
       ],
       verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 200 && m.current(s, 'http', r => r.p99 < 800 && r.status === 504); },
       hints: [
-        "Pehle observation: Normal request bhejo — baseline p99 dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab failure bounded ho: HTTP 504 aur p99 800ms se kam. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/orders?page=1\nsim inject latency ledger 3000\nGET /api/v1/orders?page=1\nsim add timeout ledger 200\nGET /api/v1/orders?page=1",
+        'Pehle orders ki normal `GET` bhejo aur p99 likh lo. Ledger dheema karne ke baad p99 ka farak downstream ka kharch dikhayega.',
+        '`sim inject latency ledger 3000` ke baad GET dobara bhejo. `sim add timeout ledger <ms>` intezaar baandhta hai; fresh GET par 504 aur p99 ki hadd jaancho. Timeout downstream ko tez nahi banata.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/orders?page=1\nsim inject latency ledger 3000\nGET /api/v1/orders?page=1\nsim add timeout ledger 200\nGET /api/v1/orders?page=1',
       ],
     },
   ],
@@ -1991,9 +1991,9 @@ HTTP/3    QUIC (UDP) — har stream apne aap mein
       ],
       verify: s => { const m = SD.mission; return m.current(s, 'net', r => r.op === 'lb' && r.layer === 7); },
       hints: [
-        "Pehle observation: Ek COLD connection trace karo — data se pehle ka kharch dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Aur L7 kya kar sakta hai. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nnet trace\nnet trace --warm\nnet trace --protocol h3\nnet compare --assets 60\nnet lb l4\nnet lb l7",
+        'Pehle `net trace` chalao. Cold connection mein DNS, TCP aur TLS ka setup kharch dikhega; request ka kaam baad mein shuru hota hai.',
+        'Connection reuse ka farak `net trace --warm` se dekho. Protocol badalne ke liye `net trace --protocol <version>`; assets par `net compare --assets 60`. Routing ki seema `net lb <layer>` se padho.',
+        'Poora raasta — har command alag Enter se chalao:\nnet trace\nnet trace --warm\nnet trace --protocol h3\nnet compare --assets 60\nnet lb l4\nnet lb l7',
       ],
     },
     {
@@ -2227,9 +2227,9 @@ Ek modern NIC          1–10 Gbps</pre>
       ],
       verify: s => { const m = SD.mission; return m.current(s, 'load', r => r.rps === 500); },
       hints: [
-        "Pehle observation: Same datacenter (RTT 1ms) par ek cold connection. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Aur load chala ke dekho ki anumaan sahi tha ya nahi. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nnet trace --rtt 1\nnet trace --rtt 150\nnet trace --rtt 150 --protocol h3\nestimate --users 12000000 --rps 500 --bytes 2048\nload --rps 500 --duration 8",
+        'Pehle `net trace --rtt <ms>` se same-datacenter cold connection dekho. Phir sirf doori badalne par setup ka kharch saaf dikhega.',
+        'RTT bada ho toh handshake bachana zyada kaam aata hai: `net trace --rtt 150 --protocol h3`. `estimate --users <users> --rps <rate> --bytes <size>` ka hisaab `load --rps <rate> --duration <seconds>` se jaancho.',
+        'Poora raasta — har command alag Enter se chalao:\nnet trace --rtt 1\nnet trace --rtt 150\nnet trace --rtt 150 --protocol h3\nestimate --users 12000000 --rps 500 --bytes 2048\nload --rps 500 --duration 8',
       ],
     },
     {

@@ -314,9 +314,9 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
       ],
       verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['user_id']) && m.current(s, 'http', r => r.resource === 'transactions' && r.rowsExamined < 100000 && r.status === 200); },
       hints: [
-        "Pehle observation: Bina index ke plan dekho — Seq Scan milna chahiye. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Request bhej ke asli farak naapo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nCREATE INDEX ix_txn_user ON transactions(user_id)\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nGET /api/v1/transactions?user_id=5&limit=50",
+        'Pehle user filter wali query ka `EXPLAIN` padho. Index ke bina rows examined batayega ki chhota jawab nikaalne ke liye kitni table padhi gayi.',
+        '`CREATE INDEX <name> ON transactions(user_id)` ke baad same `EXPLAIN SELECT ... WHERE user_id = <user>` chalao. Phir `GET <path>?user_id=<user>&limit=<n>`; plan ke saath request ka cost bhi jaancho.',
+        'Poora raasta — har command alag Enter se chalao:\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nCREATE INDEX ix_txn_user ON transactions(user_id)\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nGET /api/v1/transactions?user_id=5&limit=50',
       ],
     },
     {
@@ -522,9 +522,9 @@ SELECT amount FROM transactions WHERE user_id = ? ORDER BY created_at
       ],
       verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['user_id', 'created_at']) && m.current(s, 'showIndexes', r => r.rows > 0); },
       hints: [
-        "Pehle observation: Composite index banao — (user_id, created_at). System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Index list dekho — Seq_in_index samjho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nCREATE INDEX ix_user_time ON transactions(user_id, created_at)\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nEXPLAIN SELECT * FROM transactions WHERE created_at > 2026\nshow indexes on transactions",
+        'Pehle `(user_id, created_at)` ka composite index banao. Column ka kram test karna hai; phone book mein pehla naam chhodne jaisa farak dekho.',
+        '`EXPLAIN SELECT ... WHERE user_id = <user>` ko sirf created_at wali query se milao. Simulator leading filter ke bina composite index nahi chunta. `show indexes on transactions` mein column order padho.',
+        'Poora raasta — har command alag Enter se chalao:\nCREATE INDEX ix_user_time ON transactions(user_id, created_at)\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nEXPLAIN SELECT * FROM transactions WHERE created_at > 2026\nshow indexes on transactions',
       ],
     },
     {
@@ -1128,9 +1128,9 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.db.longTxHolding === 45 && m.current(s, 'metrics', r => r.poolWaitHigh); },
       hints: [
-        "Pehle observation: Normal load daalo — sab theek dikhna chahiye. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Metrics dekho — CPU 10% par pool wait aasman par. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'\nsim inject long-tx --holds 45\nload --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'\ntrace GET /api/v1/orders\nmetrics",
+        'Pehle orders par normal `load` chalao aur capacity dekho. Lambi transaction inject karne ke baad same load se connection shortage alag pakad mein aayegi.',
+        '`sim inject long-tx --holds 45` ke baad `load --rps 400 --duration <seconds> --path \'<same-path>\'`. `trace GET /api/v1/orders` mein pool.acquire ka wait dekho; `metrics` se CPU aur pool wait milao.',
+        'Poora raasta — har command alag Enter se chalao:\nload --rps 400 --duration 5 --path \'/api/v1/orders?page=1&limit=50\'\nsim inject long-tx --holds 45\nload --rps 400 --duration 5 --path \'/api/v1/orders?page=1&limit=50\'\ntrace GET /api/v1/orders\nmetrics',
       ],
     },
     {
@@ -1290,9 +1290,9 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
           ],
           verify: s => { const m = SD.mission; return m.current(s, 'metrics', r => r.poolWaitHigh); },
           hints: [
-            "Pehle observation: Load daal ke problem paida karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-            "Checklist ko kram se dekho. Aakhri proof: Metrics se prove karo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-            "Near-answer walkthrough; har command alag Enter se chalao:\nload --rps 400 --duration 6\ntrace GET /api/v1/orders\nmetrics",
+            'Pehle `load` se traffic daalo — bina bhaar ke pool ki kami dikhti hi nahi.',
+            '`trace GET /api/v1/orders` batayega waqt kahan gaya. Phir `metrics` mein CPU aur pool wait alag padho: CPU khaali aur pool wait bada matlab connections kam pad rahe hain.',
+            'Poora raasta — har command alag Enter se chalao:\nload --rps 400 --duration 6\ntrace GET /api/v1/orders\nmetrics',
           ],
         },
       },
@@ -1427,9 +1427,9 @@ WRITE-BEHIND
       ],
       verify: s => { const m = SD.mission; return s.sys.api.cache?.ttlSec === 60 && s.sys.api.cache.jitterPct === 15 && m.current(s, 'load', r => r.rps === 500); },
       hints: [
-        "Pehle observation: Bina cache ke request ka cost dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Load daal ke capacity ka farak dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nsim add cache --ttl 60 --jitter 15\nGET /api/v1/transactions?page=1&limit=50\nload --rps 500 --duration 5",
+        'Pehle list ki `GET` bhejo aur MISS ka cost padho. Cache lagne ke baad same URL ka HIT DB ka kharch bachne ka seedha comparison dega.',
+        '`sim add cache --ttl 60 --jitter <percent>` se cache lagao, phir same GET dobara bhejo. TTL staleness ki hadd hai; jitter expiry phailaata hai. `load --rps <rate> --duration <seconds>` se capacity jaancho.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nsim add cache --ttl 60 --jitter 15\nGET /api/v1/transactions?page=1&limit=50\nload --rps 500 --duration 5',
       ],
     },
     {
@@ -1625,9 +1625,9 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.cache === null && m.current(s, 'load', r => r.rps === 500); },
       hints: [
-        "Pehle observation: Bina jitter ke cache lagao — warning padho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Cache ke bina system zinda rahega? — load daal ke dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nsim add cache --ttl 300\nsim add cache --ttl 300 --jitter 20\nsim set api.cache null\nload --rps 500 --duration 5",
+        'Pehle `sim add cache --ttl <seconds>` bina jitter chalao aur warning padho. Saath bhari keys ki saath expiry DB par achanak bojh bhej sakti hai.',
+        '`sim add cache --ttl <seconds> --jitter <percent>` expiry phailaata hai. Cache failure test ke liye `sim set api.cache null`, phir `load --rps <rate> --duration <seconds>`; cached load se jawab nahi milega.',
+        'Poora raasta — har command alag Enter se chalao:\nsim add cache --ttl 300\nsim add cache --ttl 300 --jitter 20\nsim set api.cache null\nload --rps 500 --duration 5',
       ],
     },
     {
@@ -2165,9 +2165,9 @@ arrays, ranges → bahut se special cases</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.countTotal === false && s.sys.api.cache?.jitterPct > 0 && m.index(s, 'transactions', ['user_id', 'created_at', 'id']) && m.current(s, 'load', r => r.rps === 500 && !r.saturated); },
       hints: [
-        "Pehle observation: Baseline: dashboard query kitni dheemi hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Load daal ke prove karo ki ab capacity theek hai. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?user_id=5&page=1&limit=50\nCREATE INDEX ix_dash ON transactions(user_id, created_at, id)\nsim set api.countTotal false\nsim add cache --ttl 60 --jitter 20\nload --rps 500 --duration 5 --path '/api/v1/transactions?user_id=5&page=1&limit=50'",
+        'Pehle user-filter wali dashboard GET bhejo aur examined vs returned rows padho. Access pattern ka baseline sahi composite index chunne mein madad karega.',
+        'Index mein pehle user filter, phir sort aur unique tie-breaker rakho: `CREATE INDEX <name> ON transactions(<columns>)`. Count hataakar jitter wala cache lagao; `load --path \'<same-path>\' --rps <rate>` se capacity jaancho.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?user_id=5&page=1&limit=50\nCREATE INDEX ix_dash ON transactions(user_id, created_at, id)\nsim set api.countTotal false\nsim add cache --ttl 60 --jitter 20\nload --rps 500 --duration 5 --path \'/api/v1/transactions?user_id=5&page=1&limit=50\'',
       ],
     },
     {
@@ -2365,9 +2365,9 @@ saath mein:       ~1,000 miss  →       1 DB query    ✅  (har app process mei
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'cache', 'coalesce')?.on === true && m.latest(s, 'cache', 'coalesce')?.dbQueries === 1; },
       hints: [
-        "Pehle observation: FIFO ke saath hit rate dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Single-flight on karo — 5,000 queries sirf 1 reh jaani chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\ncache sim --policy fifo --size 3 --keys 'a b a b a b c d e f a b'\ncache sim --policy lru --size 3 --keys 'a b a b a b c d e f a b'\ncache sim --policy lfu --size 3 --keys 'a b a b a b c d e f a b'\ncache hotkey --key match:live:score --rps 50000\ncache hotkey --key match:live:score --rps 50000 --replicas 8\ncache coalesce --misses 5000\ncache coalesce --misses 5000 --on",
+        'Pehle `cache sim` se FIFO ka hit rate nikalo. Policies compare karte waqt size aur keys ka kram same rakho, warna farak policy ka nahi hoga.',
+        '`cache sim --policy <policy> --size <slots> --keys \'<same-keys>\'` mein LFU baar-baar maangi keys bachaata hai. Hot key ke liye `cache hotkey --key <key> --rps 50000 --replicas <copies>`; same-key misses ko coalesce karo.',
+        'Poora raasta — har command alag Enter se chalao:\ncache sim --policy fifo --size 3 --keys \'a b a b a b c d e f a b\'\ncache sim --policy lru --size 3 --keys \'a b a b a b c d e f a b\'\ncache sim --policy lfu --size 3 --keys \'a b a b a b c d e f a b\'\ncache hotkey --key match:live:score --rps 50000\ncache hotkey --key match:live:score --rps 50000 --replicas 8\ncache coalesce --misses 5000\ncache coalesce --misses 5000 --on',
       ],
     },
     {
@@ -2647,9 +2647,9 @@ COLUMNAR (OLAP):    [id id id...] [name name...] [amount amount...]
       ],
       verify: s => { const m = SD.mission; return s.sys.db.engine === 'lsm' && m.current(s, 'bench', r => r.op === 'compact' && r.ran); },
       hints: [
-        "Pehle observation: B-tree par 1 lakh writes chalao — write amplification dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Compaction chalao — LSM ka chhupa hua bill dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nbench write --rows 100000\nbench read --rows 100000\nsim set db.engine lsm\nbench write --rows 100000\nbench read --rows 100000\nbench compact",
+        'Pehle B-tree par `bench write` aur `bench read` chalao. Same workload ka baseline chahiye; sirf write speed se engine chunna adhoora faisla hoga.',
+        '`sim set db.engine lsm` ke baad `bench write --rows 100000` aur `bench read --rows 100000` repeat karo. Model mein LSM writes tez, point reads dheeme hain; `bench compact` se taala hua kharch dekho.',
+        'Poora raasta — har command alag Enter se chalao:\nbench write --rows 100000\nbench read --rows 100000\nsim set db.engine lsm\nbench write --rows 100000\nbench read --rows 100000\nbench compact',
       ],
     },
     {
@@ -2911,9 +2911,9 @@ WHILE (rows bache):                            ← chhote batches
       ],
       verify: s => { const m = SD.mission; return s.sys.migration?.dualWrite === true && s.sys.migration.verified === true && s.sys.migration.cutover === true && s.sys.migration.drift === 0 && s.sys.migration.backfilled === s.sys.migration.total && s.sys.migration.batch <= 50000; },
       hints: [
-        "Pehle observation: Migration ki haalat dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Aur ab cutover — surakshit. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nmigrate status\nmigrate backfill --batch 5000\nmigrate verify\nmigrate rollback\nmigrate dual-write on\nmigrate backfill --batch 5000\nmigrate verify\nmigrate cutover",
+        'Pehle `migrate status` padho, phir jaan-boojhkar backfill pehle chalao. Verify ka drift batayega ki copy ke dauraan naye writes chhoot sakte hain.',
+        '`migrate rollback` ke baad `migrate dual-write on` pehle chahiye. `migrate backfill --batch <rows>` mein batch chhota rakho; `migrate verify` mein drift zero ho tab `migrate cutover` chalao.',
+        'Poora raasta — har command alag Enter se chalao:\nmigrate status\nmigrate backfill --batch 5000\nmigrate verify\nmigrate rollback\nmigrate dual-write on\nmigrate backfill --batch 5000\nmigrate verify\nmigrate cutover',
       ],
     },
     {
@@ -3194,9 +3194,9 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'id', 'bench')?.type === 'ulid'; },
       hints: [
-        "Pehle observation: Kuch UUIDv4 dekho — koi kram hai?. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: ULID bhi dekh lo — UUID jitna bada, par sortable. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nid gen uuid4 --n 5\nid gen snowflake --n 5\nid bench --type uuid4 --rows 1000000\nid bench --type snowflake --rows 1000000\nid bench --type ulid --rows 1000000",
+        'Pehle `id gen <type> --n <count>` se random aur sortable IDs dekho. ID ka kram B-tree mein nayi entry ki jagah badalta hai.',
+        '`id bench --type <scheme> --rows 1000000` mein har scheme par same rows rakho. UUIDv4 aur Snowflake ke page splits, time aur index size milao; phir ULID benchmark se sortable badi ID bhi jaancho.',
+        'Poora raasta — har command alag Enter se chalao:\nid gen uuid4 --n 5\nid gen snowflake --n 5\nid bench --type uuid4 --rows 1000000\nid bench --type snowflake --rows 1000000\nid bench --type ulid --rows 1000000',
       ],
     },
     {
@@ -3458,9 +3458,9 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'probabilistic', 'hll')?.items === 1000000; },
       hints: [
-        "Pehle observation: 10 lakh items ke liye 1% false-positive wala bloom filter banao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Aur dekho ki uski memory items ki sankhya se nahi badhti. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nbloom --items 1000000 --fp 0.01\nbloom --items 1000000 --bits 4000000 --hashes 3\nhll --items 100000000\nhll --items 1000000",
+        'Pehle `bloom --items <count> --fp <fraction>` se filter ka size nikalo. Exact set ke bytes se comparison approximation ki bachat dikhayega.',
+        '`bloom --items 1000000 --fp 0.01` ke baad same items par `--bits <bits> --hashes <count>` se kam memory do. False positives badhenge. `hll --items <count>` alag counts par same registers ki memory rakhta hai.',
+        'Poora raasta — har command alag Enter se chalao:\nbloom --items 1000000 --fp 0.01\nbloom --items 1000000 --bits 4000000 --hashes 3\nhll --items 100000000\nhll --items 1000000',
       ],
     },
     {
@@ -3720,9 +3720,9 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
       ],
       verify: s => { const m = SD.mission; return s.sys.ring?.vnodes === 150 && s.sys.ring.nodes.includes('node-5') && !s.sys.ring.nodes.includes('node-2') && m.current(s, 'ring', r => r.op === 'remove' && r.movedPct < 40); },
       hints: [
-        "Pehle observation: Ring ki haalat dekho — 4 nodes, 1 vnode each. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab ek node hatao — sirf uski keys bantni chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nring show\nring set vnodes 150\nring add node-5\nring remove node-2",
+        'Pehle `ring show` chalao aur node-wise keys dekho. Sirf ring bana dene se barabar load nahi milta; skew ka baseline pakdo.',
+        '`ring set vnodes 150` ke baad distribution dekho. `ring add <node>` mein moved keys ko hash % N se milao; `ring remove <node>` par ring sirf hataye node ki ownership dobara baantti hai.',
+        'Poora raasta — har command alag Enter se chalao:\nring show\nring set vnodes 150\nring add node-5\nring remove node-2',
       ],
     },
     {

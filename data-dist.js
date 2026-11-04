@@ -1195,9 +1195,9 @@ COMMIT;</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.idempotency === true && !!s.sys.seenKeys['msg-9001'] && m.current(s, 'http', r => r.idem === 'replay' && r.key === 'msg-9001'); },
       hints: [
-        "Pehle observation: Idempotency on karo. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Wahi message dobara aaya — duplicate NAHI banna chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nsim set api.idempotency true\nPOST /v1/payments -H 'Idempotency-Key: msg-9001'\nPOST /v1/payments -H 'Idempotency-Key: msg-9001'",
+        'Pehle consumer ki idempotency on karo. Message dobara aane par side effect rokna hai; delivery ko rokna mission ka maqsad nahi hai.',
+        '`POST /v1/payments -H \'Idempotency-Key: <message-id>\'` mein stable message ID do. Same command dobara bhejo; pehli baar naya result aur doosri baar replay chahiye. Nayi key duplicate ko naya kaam bana degi.',
+        'Poora raasta — har command alag Enter se chalao:\nsim set api.idempotency true\nPOST /v1/payments -H \'Idempotency-Key: msg-9001\'\nPOST /v1/payments -H \'Idempotency-Key: msg-9001\'',
       ],
     },
     {
@@ -1440,9 +1440,9 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
       ],
       verify: s => { const m = SD.mission; return m.index(s, 'cards', ['reminder_at']) && m.current(s, 'explain', r => r.table === 'cards' && r.indexUsed && r.rowsExamined < 5000); },
       hints: [
-        "Pehle observation: Polling wali query ka plan dekho — poori table scan. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Due reminders uthao — 5000 se kam rows chhuni chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nEXPLAIN SELECT * FROM cards WHERE due_date > 2026\nCREATE INDEX ix_reminder ON cards(reminder_at)\nEXPLAIN SELECT * FROM cards WHERE reminder_at < 2026 ORDER BY reminder_at LIMIT 1000",
+        'Pehle cards ki due_date query ka `EXPLAIN` dekho. Scan ka kharch samjho; reminder ka waqt pehle se store karke access pattern badalna hai.',
+        '`CREATE INDEX <name> ON cards(reminder_at)` ke baad `EXPLAIN SELECT ... WHERE reminder_at < <cutoff> ORDER BY reminder_at LIMIT <batch>` chalao. Due rows ka sorted range lo, poore cards set ki jaanch nahi.',
+        'Poora raasta — har command alag Enter se chalao:\nEXPLAIN SELECT * FROM cards WHERE due_date > 2026\nCREATE INDEX ix_reminder ON cards(reminder_at)\nEXPLAIN SELECT * FROM cards WHERE reminder_at < 2026 ORDER BY reminder_at LIMIT 1000',
       ],
     },
     {
@@ -1923,9 +1923,9 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.idempotency === true && !!s.sys.seenKeys['ord-8812'] && m.index(s, 'order_summary', ['user_city', 'status', 'created_at']) && m.current(s, 'explain', r => r.table === 'order_summary' && !!r.indexUsed); },
       hints: [
-        "Pehle observation: Order banao — idempotency key ke saath. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Read model query ka plan dekho — ek tez query honi chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nsim set api.idempotency true\nPOST /v1/orders -H 'Idempotency-Key: ord-8812'\nPOST /v1/orders -H 'Idempotency-Key: ord-8812'\nCREATE INDEX ix_summary ON order_summary(user_city, status, created_at)\nEXPLAIN SELECT * FROM order_summary WHERE user_city = Delhi AND status = pending",
+        'Pehle idempotency on karo aur order ki stable key chuno. Mobile retry par same logical order ka side effect dobara nahi hona chahiye.',
+        '`POST /v1/orders -H \'Idempotency-Key: <order-key>\'` repeat karo. Read model ke index mein equality filters pehle, sort baad: `CREATE INDEX <name> ON order_summary(<columns>)`. Phir same query ka EXPLAIN padho.',
+        'Poora raasta — har command alag Enter se chalao:\nsim set api.idempotency true\nPOST /v1/orders -H \'Idempotency-Key: ord-8812\'\nPOST /v1/orders -H \'Idempotency-Key: ord-8812\'\nCREATE INDEX ix_summary ON order_summary(user_city, status, created_at)\nEXPLAIN SELECT * FROM order_summary WHERE user_city = Delhi AND status = pending',
       ],
     },
   ],
@@ -2102,9 +2102,9 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.booking?.mode === 'optimistic' && !!s.sys.booking.seats.A1 && s.sys.booking.holds.B4 === 600 && m.current(s, 'book', r => r.blockedByHold && r.seat === 'B4'); },
       hints: [
-        "Pehle observation: Bina kisi lock ke ek seat par do log — double booking dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Dekho ki hold doosre khareedaar ko rok deta hai. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nbook seat A1 --concurrent 2\nbook reset\nsim set booking.mode pessimistic\nbook seat A1 --concurrent 2\nsim set booking.mode optimistic\nbook reset\nbook seat A1 --concurrent 2\nbook hold B4 --ttl 600\nbook seat B4 --concurrent 1",
+        'Pehle `book seat <seat> --concurrent <buyers>` se double booking banao. Same khaali seat ka test lock lagne ke baad farak saaf dikhayega.',
+        '`book reset` ke baad `sim set booking.mode <mode>` se pessimistic aur optimistic alag test karo. Bik chuki seat par test bekaar hoga. Reservation ke liye `book hold <seat> --ttl <seconds>`, phir same seat maango.',
+        'Poora raasta — har command alag Enter se chalao:\nbook seat A1 --concurrent 2\nbook reset\nsim set booking.mode pessimistic\nbook seat A1 --concurrent 2\nsim set booking.mode optimistic\nbook reset\nbook seat A1 --concurrent 2\nbook hold B4 --ttl 600\nbook seat B4 --concurrent 1',
       ],
     },
     {
@@ -2398,9 +2398,9 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'stream', 'partitions')?.idle === 0 && m.latest(s, 'stream', 'window')?.watermark === 30 && m.latest(s, 'stream', 'window')?.dropped === 0; },
       hints: [
-        "Pehle observation: Bina watermark ke ek window chalao — late events kho jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab consumers ko partitions ke barabar ya kam karo. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nstream window --size 60 --events 100000 --late 3\nstream window --size 60 --watermark 30 --events 100000 --late 3\nstream replay --from 0\nstream partitions --partitions 6 --consumers 10\nstream partitions --partitions 6 --consumers 6",
+        'Pehle `stream window` bina watermark chalao aur dropped events dekho. Time par window band karna late events ko count se baahar kar sakta hai.',
+        '`stream window --size <seconds> --watermark <wait> --events <count> --late <percent>` mein wait badhao. `stream partitions --partitions <count> --consumers <count>` mein consumers partitions se zyada hon toh idle rahenge.',
+        'Poora raasta — har command alag Enter se chalao:\nstream window --size 60 --events 100000 --late 3\nstream window --size 60 --watermark 30 --events 100000 --late 3\nstream replay --from 0\nstream partitions --partitions 6 --consumers 10\nstream partitions --partitions 6 --consumers 6',
       ],
     },
     {

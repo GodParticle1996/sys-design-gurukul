@@ -570,9 +570,9 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
       ],
       verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['created_at']) && m.current(s, 'explain', r => r.table === 'transactions' && r.offset === 24286350 && r.rowsExamined > 1000000); },
       hints: [
-        "Pehle observation: page=1 maango — kitni rows padhi gayi?. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: EXPLAIN se plan khud dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nCREATE INDEX ix_txn_created ON transactions(created_at)\nGET /api/v1/transactions?page=1&limit=50\nGET /api/v1/transactions?page=485728&limit=50\nEXPLAIN SELECT * FROM transactions ORDER BY created_at DESC LIMIT 50 OFFSET 24286350",
+        'Pehle transactions ka pehla page maango aur rows examined padho. Returned rows kam hon tab bhi scan aur sort poori table ka kharch bana sakte hain.',
+        '`CREATE INDEX <name> ON transactions(created_at)` ke baad pehla aur deep page maango. Index sorting bachata hai; OFFSET phir bhi entries ginta hai. `EXPLAIN SELECT ... LIMIT <n> OFFSET <offset>` se jaancho.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nCREATE INDEX ix_txn_created ON transactions(created_at)\nGET /api/v1/transactions?page=1&limit=50\nGET /api/v1/transactions?page=485728&limit=50\nEXPLAIN SELECT * FROM transactions ORDER BY created_at DESC LIMIT 50 OFFSET 24286350',
       ],
     },
     {
@@ -602,9 +602,9 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.countTotal === false && m.current(s, 'http', r => r.resource === 'transactions' && r.page === 1 && r.countTotal === false && r.status === 200); },
       hints: [
-        "Pehle observation: Dekho ki `total` field kitna mehenga hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab wahi request dobara — farak dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nsim set api.countTotal false\nGET /api/v1/transactions?page=1&limit=50",
+        'Pehle list ki `GET` bhejo aur cost panel mein `+ COUNT(*)` padho. Response ka total ek alag query hai; chhota page count ka kharch nahi rokta.',
+        '`sim set api.countTotal false` ke baad bilkul same GET bhejo. List aur total ka kaam alag hai; cost panel mein count ka kharch hatna chahiye. Page ya limit badalne se comparison ulajh jaayega.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nsim set api.countTotal false\nGET /api/v1/transactions?page=1&limit=50',
       ],
     },
     {
@@ -711,9 +711,9 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
           ],
           verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['created_at']) && m.current(s, 'http', r => r.page === 485728 && r.rowsExamined > 1000000); },
           hints: [
-            "Pehle observation: created_at par index banao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-            "Checklist ko kram se dekho. Aakhri proof: Deep page dikhao — index hote hue bhi dheema. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-            "Near-answer walkthrough; har command alag Enter se chalao:\nCREATE INDEX ix_c ON transactions(created_at)\nGET /api/v1/transactions?page=1&limit=50\nGET /api/v1/transactions?page=485728&limit=50",
+            'Pehle `created_at` par index banao — interviewer ko dikhana hai ki index ke baad bhi deep page dheema rehta hai.',
+            'Wahi endpoint do baar maango: `page=1` (tez) aur bahut gehri page, jaise `page=485728` (dheema). Rows examined milao — OFFSET pehle ki saari rows gin ke phenkta hai.',
+            'Poora raasta — har command alag Enter se chalao:\nCREATE INDEX ix_c ON transactions(created_at)\nGET /api/v1/transactions?page=1&limit=50\nGET /api/v1/transactions?page=485728&limit=50',
           ],
         },
       },
@@ -855,9 +855,9 @@ decode karne par:  { "t": "2026-04-11T09:22:04Z", "id": 8812304, "d": "desc" }</
       ],
       verify: s => { const m = SD.mission; return s.sys.api.pagination === 'cursor' && m.index(s, 'transactions', ['created_at', 'id']) && m.current(s, 'http', r => r.keyset && r.rowsExamined <= 100 && r.status === 200) && m.current(s, 'http', r => r.guard === 'noPage'); },
       hints: [
-        "Pehle observation: Pehle offset par page=485728 ka dard dekho. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Cursor ke andar kya hai, khud dekho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=485728&limit=50\nCREATE INDEX ix_txn_keyset ON transactions(created_at, id)\nsim set api.pagination cursor\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50\nGET /api/v1/transactions?page=485728&limit=50\ncursor decode eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0",
+        'Pehle deep offset ki `GET` bhejo aur rows examined dekho. Cursor lagane se pehle mehengi walk ka baseline chahiye.',
+        '`CREATE INDEX <name> ON transactions(created_at, id)` mein id tie-breaker hai. `sim set api.pagination cursor` ke baad `GET <path>?cursor=<token>&limit=<n>`; `cursor decode <token>` se boundary padho.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?page=485728&limit=50\nCREATE INDEX ix_txn_keyset ON transactions(created_at, id)\nsim set api.pagination cursor\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50\nGET /api/v1/transactions?page=485728&limit=50\ncursor decode eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0',
       ],
     },
     {
@@ -904,9 +904,9 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       ],
       verify: s => { const m = SD.mission; return s.sys.api.maxLimit === 100 && s.sys.api.maxPageDepth === 1000 && m.current(s, 'http', r => r.guard === 'maxDepth' && r.status === 400); },
       hints: [
-        "Pehle observation: Legacy offset API par deep page abhi bhi chal raha hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab deep page 400 se reject ho. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=50000&limit=500\nsim set api.maxPageDepth 1000\nsim set api.maxLimit 100\nGET /api/v1/transactions?page=50000&limit=50",
+        'Pehle legacy API ka deep page maango. Baseline dikhayega ki purane clients abhi kitni mehengi query chala sakte hain.',
+        '`sim set api.maxPageDepth 1000` aur `sim set api.maxLimit 100` alag hadd hain. Deep-page proof mein limit allowed rakho, warna maxLimit pehle 400 dega aur page-depth guard ka proof nahi milega.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?page=50000&limit=500\nsim set api.maxPageDepth 1000\nsim set api.maxLimit 100\nGET /api/v1/transactions?page=50000&limit=50',
       ],
     },
     {
@@ -1661,9 +1661,9 @@ client → POST /payments
       ],
       verify: s => { const m = SD.mission; return s.sys.api.idempotency === true && !!s.sys.seenKeys['order-8812'] && m.current(s, 'http', r => r.idem === 'replay' && r.key === 'order-8812'); },
       hints: [
-        "Pehle observation: Bina idempotency ke do baar POST karo — do charge ban jaayenge. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Wahi key dobara bhejo — replay milna chahiye, naya charge nahi. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nPOST /v1/payments -H 'Idempotency-Key: pay-1'\nPOST /v1/payments -H 'Idempotency-Key: pay-1'\nsim set api.idempotency true\nPOST /v1/payments -H 'Idempotency-Key: order-8812'\nPOST /v1/payments -H 'Idempotency-Key: order-8812'",
+        'Pehle same key ke saath payment POST dobara bhejo aur payment IDs milao. Header bhejna kaafi nahi; server ko dedupe bhi karna padega.',
+        '`POST /v1/payments -H \'Idempotency-Key: <key>\'` do baar bhejo. `sim set api.idempotency true` ke baad nayi logical payment ki key chuno, phir same key repeat karo; replay mein naya charge nahi banta.',
+        'Poora raasta — har command alag Enter se chalao:\nPOST /v1/payments -H \'Idempotency-Key: pay-1\'\nPOST /v1/payments -H \'Idempotency-Key: pay-1\'\nsim set api.idempotency true\nPOST /v1/payments -H \'Idempotency-Key: order-8812\'\nPOST /v1/payments -H \'Idempotency-Key: order-8812\'',
       ],
     },
     {
@@ -1875,9 +1875,9 @@ ratelimit-reset: 3</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 150 && m.current(s, 'http', r => r.status === 429 && r.blocked > 0); },
       hints: [
-        "Pehle observation: Bina limit ke burst bhejo — sab 200 milega. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Ab burst bhejo aur 429 khaao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions -n 200\nsim add ratelimit --rps 100 --burst 150\nGET /api/v1/transactions -n 300",
+        'Pehle `GET <path> -n <requests>` se bina guard ka burst bhejo. Baseline dikhayega ki ek client ki saari requests andar ja rahi hain.',
+        '`sim add ratelimit --rps 100 --burst 150` mein refill rate aur bucket ki capacity alag hain. `GET <path> -n <requests>` mein burst se zyada requests bhejo; 429 aur Retry-After dekho.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions -n 200\nsim add ratelimit --rps 100 --burst 150\nGET /api/v1/transactions -n 300',
       ],
     },
     {
@@ -2111,9 +2111,9 @@ POST /payments                      (koi idempotency key nahi)
       ],
       verify: s => { const m = SD.mission; return s.sys.api.countTotal === false && s.sys.api.pagination === 'cursor' && s.sys.api.maxLimit === 100 && s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 150 && m.index(s, 'transactions', ['created_at', 'id']) && m.current(s, 'http', r => r.guard === 'maxLimit') && m.current(s, 'http', r => r.guard === 'noPage') && m.current(s, 'http', r => r.status === 429 && r.blocked > 0); },
       hints: [
-        "Pehle observation: Deep offset ka dard dikhao. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Rate limit lagao. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?page=485728&limit=50\nCREATE INDEX ix_keyset ON transactions(created_at, id)\nsim set api.countTotal false\nsim set api.pagination cursor\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50\nsim set api.maxLimit 100\nsim add ratelimit --rps 100 --burst 150\nGET /api/v1/transactions?limit=1000\nGET /api/v1/transactions?page=485728&limit=50\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50 -n 300",
+        'Pehle transactions ka deep offset maango aur scan ka kharch dekho. Index, cursor aur guards lagane ke baad mehenga baseline dobara milna mushkil hoga.',
+        'Cursor ka sort aur unique tie-breaker index se match chahiye; `sim set api.countTotal false` count hataata hai. Guards ko alag GET se test karo; `GET <path> -n <requests>` se rate-limit ka proof lo.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?page=485728&limit=50\nCREATE INDEX ix_keyset ON transactions(created_at, id)\nsim set api.countTotal false\nsim set api.pagination cursor\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50\nsim set api.maxLimit 100\nsim add ratelimit --rps 100 --burst 150\nGET /api/v1/transactions?limit=1000\nGET /api/v1/transactions?page=485728&limit=50\nGET /api/v1/transactions?cursor=eyJ0IjoiMjAyNi0wNC0xMVQwOToyMjowNFoiLCJpZCI6ODgxMjMwNH0&limit=50 -n 300',
       ],
     },
   ],
@@ -2313,9 +2313,9 @@ GET  /v1/admin/users         ← token + role=admin</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.auth === 'header' && m.current(s, 'http', r => r.status === 403 && r.actedAs === '7' && r.claimed === '8'); },
       hints: [
-        "Pehle observation: Bina kisi auth ke kisi aur user ka data maango — dekho, mil jaata hai. System ka baseline samjho; seedha final setting lagane se debugging ka saboot miss hoga.",
-        "Checklist ko kram se dekho. Aakhri proof: Apne token se KISI AUR ka data maango — 403 aana chahiye. Fix ke baad live state aur nayi measurement dono chahiye; sirf command type karna kaafi nahi.",
-        "Near-answer walkthrough; har command alag Enter se chalao:\nGET /api/v1/transactions?user_id=8&limit=5\nsim set api.auth body\nGET /api/v1/transactions?user_id=8&limit=5\nsim set api.auth header\nGET /api/v1/transactions?limit=5\nGET /api/v1/transactions?limit=5 -H 'Authorization: Bearer expired'\nGET /api/v1/transactions?user_id=7&limit=5 -H 'Authorization: Bearer u7'\nGET /api/v1/transactions?user_id=8&limit=5 -H 'Authorization: Bearer u7'",
+        'Pehle URL mein kisi aur user ka `user_id` bhejo. Auth ke bina data milna dikhayega ki client ki likhi identity par bharosa kitna khatarnak hai.',
+        '`sim set api.auth header` ke baad `GET <path> -H \'Authorization: Bearer <token>\'`. Valid token identity deta hai; query ka user_id identity nahi badalta. Missing/expired token 401, doosre user ka data 403.',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?user_id=8&limit=5\nsim set api.auth body\nGET /api/v1/transactions?user_id=8&limit=5\nsim set api.auth header\nGET /api/v1/transactions?limit=5\nGET /api/v1/transactions?limit=5 -H \'Authorization: Bearer expired\'\nGET /api/v1/transactions?user_id=7&limit=5 -H \'Authorization: Bearer u7\'\nGET /api/v1/transactions?user_id=8&limit=5 -H \'Authorization: Bearer u7\'',
       ],
     },
     {
