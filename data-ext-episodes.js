@@ -96,7 +96,7 @@ SD.extendLevel('breaker', {
    ===================================================================== */
 SD.extendLevel('blast', {
   lesson: [
-    `<h3>🎲 Route 53 ke numbers (AWS $200B video)</h3>
+    `<h3>🎲 Route 53 ke numbers</h3>
      <p>Ek zeher wali request (poison) jo har worker ko crash kare jise woh chhuye — aur client retry use aage le jaaye:</p>
      <ul>
        <li><b>Koi sharding nahi</b> (8 workers sab ke): retry ne saare 8 maare → sab band.</li>

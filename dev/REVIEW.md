@@ -87,7 +87,8 @@ Carried forward:
 - **Phase 2:** `SD.makeInteractive` builds aria-labels by stripping tags but not decoding entities, so a screen
   reader hears `&lt;id&gt;` literally.
 - **Phase 3:** the four `fp-physics-*` levels share one placeholder hero diagram, and so do the four `ed-*` levels.
-- **Phase 3:** the `blast` lesson credits "(AWS $200B video)", but the app must stand alone.
+  *Done:* the `ed-*` heroes were made level-specific earlier; the `fp-physics-*` ones got their own caption and badges 2026-11-04.
+- **Phase 3:** the `blast` lesson credits "(AWS $200B video)", but the app must stand alone. *Done 2026-11-04.*
 - **Phase 3:** the audit's rewrite script left 1,181 misindented lines, and very long lines doubled
   (1,484 → 3,261). Those are the option and reason lines Phase 3 rewrites, so the formatting gets fixed then.
 

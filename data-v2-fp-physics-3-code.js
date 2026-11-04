@@ -5,8 +5,8 @@
 (function () {
 const HERO = [{"id": "app", "icon": "🍽️", "label": "KhanaKart", "x": 140, "y": 105}, {"id": "path", "icon": "🛣️", "label": "raasta", "x": 445, "y": 105}, {"id": "data", "icon": "🗃️", "label": "data", "x": 750, "y": 105}];
 const EDGES = [{"from": "app", "to": "path"}, {"from": "path", "to": "data"}];
-VISUALS["fp-physics-code"] = { t: 'Pehle wait, kaam aur data ka raasta samjho. Phir design chuno.',
-  html: SD.viz.svg(HERO, EDGES, {nodes:{app:{tone:'acc',badge:'sawaal pehle'},path:{tone:'slow',badge:'wait gino'},data:{tone:'ok',badge:'kaam gino'}}}, {w:890,h:215}) };
+VISUALS["fp-physics-code"] = { t: 'Code mein wait kahan hai? Calls ghataao ya wait overlap karo — jawab aur errors wahi rahein.',
+  html: SD.viz.svg(HERO, EDGES, {nodes:{app:{tone:'acc',badge:'loop ka wait'},path:{tone:'slow',badge:'batch ya parallel'},data:{tone:'ok',badge:'wahi jawab'}}}, {w:890,h:215}) };
 SD.registerLevels('fp-core', [
 {
   "id": "fp-physics-code",

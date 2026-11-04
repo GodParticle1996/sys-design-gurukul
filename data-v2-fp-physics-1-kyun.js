@@ -5,8 +5,8 @@
 (function () {
 const HERO = [{"id": "app", "icon": "🍽️", "label": "KhanaKart", "x": 140, "y": 105}, {"id": "path", "icon": "🛣️", "label": "raasta", "x": 445, "y": 105}, {"id": "data", "icon": "🗃️", "label": "data", "x": 750, "y": 105}];
 const EDGES = [{"from": "app", "to": "path"}, {"from": "path", "to": "data"}];
-VISUALS["fp-physics-kyun"] = { t: 'Pehle wait, kaam aur data ka raasta samjho. Phir design chuno.',
-  html: SD.viz.svg(HERO, EDGES, {nodes:{app:{tone:'acc',badge:'sawaal pehle'},path:{tone:'slow',badge:'wait gino'},data:{tone:'ok',badge:'kaam gino'}}}, {w:890,h:215}) };
+VISUALS["fp-physics-kyun"] = { t: 'Menu RAM mein hai, phir bhi checkout dheema kyun? Har item ke liye lagne wala chakkar gino.',
+  html: SD.viz.svg(HERO, EDGES, {nodes:{app:{tone:'acc',badge:'menu RAM mein'},path:{tone:'slow',badge:'har item ka chakkar'},data:{tone:'ok',badge:'jawab tez'}}}, {w:890,h:215}) };
 SD.registerLevels('fp-core', [
 {
   "id": "fp-physics-kyun",
