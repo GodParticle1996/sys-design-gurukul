@@ -697,7 +697,7 @@ SD.registerLevels('stories', [
      toota, apne hi dashboard se, baad mein.</p>
      <h3>🐕 dosd — detection wahin jahan packet giray</h3>
      <p>Har Cloudflare server par ek chhota daemon chalta hai: <b>dosd</b> (denial of
-     service daemon). Woh apne hi network card se guzarte packets ko sample karta hai,
+     service daemon). dosd apne hi network card se guzarte packets ko sample karta hai,
      unke characteristics se ek <b>statistical fingerprint</b> banata hai, aur us
      fingerprint se milte packets ke liye wahin drop rule laga deta hai.</p>
      <p>Dhyan do — koi central brain nahi poochha gaya. Central brain se poochhne ka
@@ -1118,9 +1118,9 @@ Pingora: ek multi-threaded process, EK shared connection pool
         {
           id: 'timing', label: 'CPU-level (Spectre jaisa) leak se bachav', icon: '🕰️',
           options: [
-            { id: 'noclock', label: "Timer rokna + process alag + detection, sab saath", score: 4, why: 'Restricted clocks ek mitigation hain. Remote timer/amplification attacks possible hain; detection, process isolation aur runtime/hardware defense layers bhi chahiye.' },
-            { id: 'process', label: "Sirf har tenant ka alag process, bas", score: 1, why: 'Sabse seedha jawab, par density khatam. Cloudflare alag process ko safety net ki tarah use karta hai — sirf un workers ke liye jo shaq paida karein.' },
-            { id: 'ignore', label: "Maan lo bachav sirf CPU company ka kaam hai", score: -3, why: 'Shared-process runtime chalane wale ke liye "CPU company sambhalegi" jawab nahi hai — tumhare hazaron tenants ek hi memory space share kar rahe hain.' },
+            { id: 'noclock', label: "Ghadi dheemi, shaq par alag process, aur nigrani", score: 4, why: 'Ghadi dheemi karna ek bachav hai, poora nahi: door se bhi timing attack ho sakta hai. Isliye shaq wale worker ko alag process, nigrani, aur runtime/hardware ki aur deewarein bhi chahiye.' },
+            { id: 'process', label: "Har tenant ka apna process, chahe density gir jaaye", score: 1, why: 'Sabse seedha jawab, par density khatam. Cloudflare alag process ko safety net ki tarah use karta hai — sirf un workers ke liye jo shaq paida karein.' },
+            { id: 'ignore', label: "CPU company ke patches lagao, runtime waisa hi rakho", score: -3, why: 'Shared-process runtime chalane wale ke liye "CPU company sambhalegi" jawab nahi hai — tumhare hazaron tenants ek hi memory space share kar rahe hain.' },
           ],
         },
         {
@@ -1134,7 +1134,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
         {
           id: 'state', label: 'Shared mutable state (chat room)', icon: '📍',
           options: [
-            { id: 'single', label: "Har room ka ek maalik, jo writes ka kram rakhe", score: 4, why: 'Durable object model. Ek hi copy hai toh conflict resolution, quorum aur consensus ki zaroorat hi nahi — ordering apne aap mil jaati hai.' },
+            { id: 'single', label: "Har room ka ek maalik, jo writes ka kram rakhe", score: 4, why: 'Durable object model. Har room ka ek maalik writes ka kram rakhta hai, toh regions ke beech conflict resolution ya consensus nahi chahiye. Storage andar se copies phir bhi rakhta hai, aur await ke beech doosri request aa sakti hai.' },
             { id: 'kv', label: "Har region mein copy, jo der se ek jaisi hogi", score: -3, why: 'Read-heavy data ke liye badhiya, par do log duniya ke do kono se ek hi counter badhayein toh regional copy galat jawab deti hai.' },
             { id: 'consensus', label: "Har room ke liye apna alag consensus group", score: 0, why: 'Sahi hai par mehenga: har write par quorum. Jab ek hi maalik se kaam ban raha ho toh consensus ka kharcha kyun dena.' },
           ],
@@ -1158,7 +1158,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
         { text: 'Customer ki firewall rules aur DNS records', bin: 'copy', explain: 'Quicksilver har server par poora dataset rakhta hai — read ke waqt koi network call nahi.' },
         { text: 'Naya DDoS fingerprint', bin: 'copy', explain: 'Ek jagah seekha pattern seconds mein har server par — isi liye free tier ek sensor network ban jaata hai.' },
         { text: 'Bank ki TLS private key', bin: 'one', explain: 'Keyless SSL: key customer ke HSM mein hi rehti hai; Cloudflare sirf ek crypto operation customer ke HSM tak bhejta hai.' },
-        { text: 'Ek chat room ka live state', bin: 'one', explain: 'Durable object: poori duniya mein ek instance, requests ek ke baad ek — na consensus, na conflict resolution.' },
+        { text: 'Ek chat room ka live state', bin: 'one', explain: 'Durable object: poori duniya mein ek instance, requests ka kram ek jagah tay — regions ke beech na consensus, na conflict resolution.' },
         { text: 'Worker ka code', bin: 'copy', explain: 'Publish karte hi poore fleet par — isolates itne halke hain ki poore fleet par bhejna mumkin hai.' },
         { text: 'Ek collaborative document ka counter', bin: 'one', explain: 'Eventually consistent KV yahan galat jawab dega — do log duniya ke do kono se ek hi value badha rahe hain.' },
       ],
@@ -1222,7 +1222,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
         ],
       },
       {
-        q: 'Interviewer: "Cold start kaise kam karoge?"',
+        q: 'Interviewer: "Ek naye user ki pehli request aa rahi hai. Cache mein jawab nahi hai, aur runtime pehle se garam nahi. Is pehli request ka cold start kaise chhupaoge?"',
         choices: [
           'Request se pehle mile signal (TLS SNI) par kaam shuru karo — cold start handshake mein chhupao',
           'Har request khatam hone ke baad runtime garam karo, taaki agli baar shuru tez ho jaaye',
@@ -1239,11 +1239,22 @@ Pingora: ek multi-threaded process, EK shared connection pool
         ],
       },
       {
-        q: 'Interviewer: "Hazaron users ek hi document edit kar rahe hain. Design?"',
-        choices: ["Document owner par serialized writes","Regional copies par blind overwrite","Every edit par global transaction","Client merge bina shared contract"],
+        q: 'Interviewer: "Hazaron users ek hi document edit kar rahe hain. Sabse kam coordination mein edits ka kram kaise bachaoge?"',
+        choices: [
+          'Har document ka ek owner object; saare edits owner object se ek kram mein guzrein',
+          'Har region ki apni copy rakho; jo edit baad mein pahunche, wahi pichhla likha mita de',
+          'Har edit par duniya bhar ke data centers mein ek saath poora transaction chalao',
+          'Har client apne hisaab se edits jod le; jodne ka koi saajha niyam tay na ho',
+        ],
         answer: 0,
-        explain: "Per-document authority operations coordinate kar sakti hai; durable state internally replicated ho sakti hai. Correct serialized mutations/storage transactions aur async interleaving rules chahiye. CRDT/OT explicit merge contract ke saath valid alternative hain.",
-       choiceExplanations: ["Per-document authority operations coordinate kar sakti hai; durable state internally replicated ho sakti hai. Correct serialized mutations/storage transactions aur async interleaving rules chahiye. CRDT/OT explicit merge contract ke saath valid alternative hain.","Blind last-write-wins concurrent edits kho sakta hai.","Per-document authority ke liye cross-region transaction har edit par zaroori nahi.","CRDT/OT merge valid alternatives hain, lekin explicit merge semantics chahiye."] },
+        explain: 'Ek document = ek owner object. Saare edits owner object par ek kram mein lagte hain, toh har edit par doosre regions se poochhna nahi padta. Owner ke andar bhi dhyaan rakho: storage andar se copies rakhta hai, aur await ke beech doosri request aa sakti hai. CRDT/OT bhi chalte hain, par edits jodne ka niyam saaf tay hona chahiye.',
+        choiceExplanations: [
+          'Ek document = ek owner object. Saare edits owner object par ek kram mein lagte hain, toh har edit par doosre regions se poochhna nahi padta. Owner ke andar bhi dhyaan rakho: storage andar se copies rakhta hai, aur await ke beech doosri request aa sakti hai. CRDT/OT bhi chalte hain, par edits jodne ka niyam saaf tay hona chahiye.',
+          'Baad wala edit pehle wale ko mita deta hai. Do log saath likhein toh ek ka kaam kho jaata hai.',
+          'Chalega, par har edit duniya bhar ka intezaar karega. Ek document ke liye ek owner kaafi hai.',
+          'Saajha niyam ke bina har client ka document alag ban jaata hai. CRDT/OT tabhi chalte hain jab jodne ka niyam tay ho.',
+        ],
+      },
     ],
   },
   success: [
@@ -1261,7 +1272,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
     { front: 'Spectre ka Cloudflare wala jawab?', back: 'Restricted clocks attack surface kam karti hain, complete defense nahi: Date.now() sirf I/O par badalta hai, na threads, na SharedArrayBuffer, remote clocks aur amplification ko bhi threat model mein rakho. Shaq ho toh worker ko apne process mein alag kar do.' },
     { front: 'Pingora ne nginx se kya theek kiya?', back: 'nginx ke har worker process ka apna connection pool tha — ek ka garam connection doosra use nahi kar sakta tha. Pingora: ek multi-threaded process, ek shared pool → 8 trillion req/din, ~70% kam CPU.' },
     { front: 'Keyless SSL ka core insight?', back: 'Private key sirf handshake ke EK crypto operation mein chahiye. Woh operation customer ke HSM par bhejo, baaki handshake edge par — key kabhi customer ka infra nahi chhodti.' },
-    { front: 'Durable object kya hai?', back: 'Code + uski private storage, poori duniya mein ek instance. Us id ki har request wahin jaati hai, ek ke baad ek — na consensus, na quorum, na conflict resolution.' },
+    { front: 'Durable object kya hai?', back: 'Code + us code ki apni storage, poori duniya mein ek hi instance. Us id ki har request usi instance par jaati hai, aur writes ka kram instance khud rakhta hai — regions ke beech vote (consensus) nahi chahiye. Par storage andar se copies rakhta hai, aur await ke beech doosri request aa sakti hai.' },
   ],
 },
 ]);

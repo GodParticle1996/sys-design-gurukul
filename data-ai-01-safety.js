@@ -108,7 +108,7 @@ SD.registerLevels('ai', [
      <table>
        <tr><th></th><th>🛂 Refusal filter</th><th>🔒 Containment</th></tr>
        <tr><td>Kya dekhta hai</td><td>Prompt ke shabd, kahani</td><td>Model kya <b>kar sakta</b> hai</td></tr>
-       <tr><td>Kahan hai</td><td>Model ke weights ke andar (fuzzy)</td><td>Model ke bahar: sandbox, firewall, limits</td></tr>
+       <tr><td>Kahan hai</td><td>Model ke weights ke andar (fuzzy)</td><td>Model ke bahar: sandbox, firewall (bahar sirf manzoor jagah — egress allowlist), files ka tay ghera (workspace jail), limits</td></tr>
         <tr><td>Test kar sakte ho?</td><td>Behavioral evals aur adversarial samples</td><td>Rule/config review, boundary tests aur bypass regressions; implementation bugs ab bhi possible</td></tr>
        <tr><td>Model update par</td><td>Behaviour badal jaata hai</td><td>Deewar wahi rehti hai</td></tr>
      </table>
@@ -160,17 +160,17 @@ SD.registerLevels('ai', [
           q: 'Breach ke beech defender AI se malware samjhane ko kehta hai aur model mana kar deta hai. Is "na" se sabse zyada kise nuksaan hua?',
           choices: [
             'Defender ko — defender ko samajhna tha; attacker ke paas malware pehle se likha hua hai',
-            'Attacker ko — model ke mana karne se attacker ka pehle se bana malware delete ho gaya',
-            'Kisi ko nahi — mana karne se host par chal raha malware bhi apne aap rok diya gaya',
-            'Model company ko — mana karne se pehle hi model ka jawab incident ko hal kar chuka tha',
+            'Attacker ko — mana karne se attacker ab model se naya malware nahi likhwa payega',
+            'Kisi ko nahi — defender kisi aur tool se wahi analysis turant le leta, koi farq nahi',
+            'Model company ko — naraz defender doosra model le lega, aur company ka grahak jaayega',
           ],
           answer: 0,
           explain: 'Video ka "asymmetry problem": attacker ka code pehle se likha hai, defender ko samajhna hai. "Na" ka bojh defender par gira.',
           choiceExplanations: [
             'Video ka "asymmetry problem": attacker ka code pehle se likha hai, defender ko samajhna hai. "Na" ka bojh defender par gira.',
-            'Mana karna attacker ke paas pade code ko mitata nahi.',
-            'Model ka jawab process ko nahi rokta — rokna containment ka kaam hai.',
-            'Model ne jawab diya hi nahi. Incident abhi khula hai.',
+            'Is breach mein attacker ka code pehle se likha tha. Attacker ko model ki zaroorat hi nahi thi.',
+            'Breach ke beech har minute keemti hai. Doosra raasta dhoondhne mein gaya waqt defender ka nuksaan hai.',
+            'Grahak jaana chhoti baat hai. Breach ke beech asli nuksaan defender ke system ka hai.',
           ],
         },
         {
@@ -261,7 +261,7 @@ SD.registerLevels('ai', [
     Jo doosri list mein hai, wahi tumhara asli risk hai.</p>`,
   cards: [
     { front: '"AI safety" ke do matlab?', back: 'Refusal filter (prompt ke shabd padh ke haan/na — airport security) aur containment (sandbox, network deewar, limits, monitor — cockpit ka band darwaaza).' },
-    { front: 'Filter security boundary kyun nahi?', back: 'Woh shabd padhta hai; kahani badlo toh jawab badal sakta hai. Jo control user ke sach bolne par nirbhar ho, woh control nahi request hai. Aur model update par behaviour badal jaata hai.' },
+    { front: 'Filter security boundary kyun nahi?', back: 'Filter shabd padhta hai; kahani badlo toh jawab badal sakta hai. Jo control user ke sach bolne par nirbhar ho, asal mein control nahi, request hai. Aur model update par behaviour badal jaata hai.' },
     { front: '"You can audit a wall, you can\'t audit a vibe"?', back: 'External rules inspect aur test ho sakte hain; bypasses/configuration flaws regressions mein cover karo. Behavioral evals model responses measure karti hain, runtime permissions ka substitute nahi.' },
     { front: 'Asymmetry problem (video)?', back: 'Breach ke beech defender ko malware samajhna hai; model "na" bolta hai. Attacker ke paas code pehle se hai — "na" ka bojh sirf defender par girta hai.' },
   ],

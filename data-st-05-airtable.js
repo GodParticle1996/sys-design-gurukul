@@ -775,7 +775,7 @@ N read threads      — queries parallel
       observe: {
         q: 'Dual run ne 5,000 operations mein 213 mismatch pakde (rounding + khaali cell). Agar seedha cutover kar dete toh?',
         choices: [
-          'Galat values asli customer data mein likhi jaati, aur un par bane formulas ko dhoondhna mushkil',
+          'Customers ko galat jawab dikhte, aur galat writes un par bane formulas tak bigaad sakte the',
           'Kuch nahi hota — 5,000 mein 213 bahut kam hain, aise mismatch ko andekha karna theek hai',
           'Har mismatch par service crash ho jaati, aur crash dekh ke galti turant pakad lete',
           'Sirf latency badhti — rounding aur khaali cell ka farq jawab ki speed par hi asar karta hai',

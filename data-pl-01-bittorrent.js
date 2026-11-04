@@ -478,7 +478,7 @@ titfortat BINA optimistic unchoke (koi free-rider nahi): 400 sec mein 0/200 poor
       {
         q: 'Interviewer: "Optimistic unchoke hata dein? Thoda bandwidth bachega."',
         choices: [
-          'Naye peers kabhi pehla piece nahi paayenge (lab: 400 sec mein 0/200)',
+          'Naye peers atak sakte hain — lab mein 400 sec tak 200 mein se 0 poore',
           'Hata do — sirf abhi ke sabse achhe peers ko hamesha do, baaki ki zaroorat nahi',
           'Hata do — bina pehle piece wale peers bhi badle mein de sakte hain',
           'Hata do — naye partner dhoondhna throughput nahi badhata, bandwidth khaata',
@@ -543,7 +543,7 @@ titfortat BINA optimistic unchoke (koi free-rider nahi): 400 sec mein 0/200 poor
       observe: {
         q: "Nodes 100× badhe (1,000 → 1 lakh), rounds sirf 4.0 → 5.3. Kyun?",
         choices: [
-          'Har round XOR distance ka ek bit theek karta hai — rounds log N se badhte hain',
+          'Har round aam taur par target ke aur paas le jaata hai — rounds log N se badhte hain',
           '100× nodes hone se har link bhi 100× tez ho gaya, isliye rounds kam bade',
           'Bade network mein har lookup jaadu se cache hit ho gaya, toh rounds badhe hi nahi',
           'Rounds packet loss mein bhi hamesha constant rehte hain — Kademlia ki guarantee',

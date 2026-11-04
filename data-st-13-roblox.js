@@ -507,7 +507,7 @@ SD.registerLevels('stories', [
        <li>Untrusted code → sandbox bhasha ki problem hai.</li>
        <li>Cloud default hai, kanoon nahi — sabse badi cost line kahan palatti hai, jaano.</li>
        <li>Chhota blast radius jaan-boojh ke (instances, cells) — aur sabke neeche ki <b>ek</b> saajhi cheez dhoondho.</li>
-       <li>Failure ka vaada tab tak bekaar jab tak test na ho — prod roz todo.</li>
+       <li>Failure ka vaada tab tak bekaar jab tak test na ho — prod mein bhi, par ijaazat ke saath, chhote daayre mein, aur rokne ka raasta tayyar rakh ke.</li>
      </ol>`,
   ],
   stages: [
@@ -551,16 +551,16 @@ SD.registerLevels('stories', [
       quiz: {
         q: 'Cells hone se cloud burst aasaan kyun hota hai?',
         choices: [
-          'Cell khud mein poora hai — cloud mein bas ek aur cell khada karo, matchmaker use bhi baaki jaisa maane',
+          'Cell khud mein poora hai — cloud mein ek aur cell khada karo, matchmaker naye cell ko baaki jaisa maane',
           'Cells hone se DC aur cloud ke beech ki latency zero ho jaati hai, toh cell kahin bhi chala do',
           'Cells ke saath cloud ki capacity muft mil jaati hai — burst ka alag se koi bill nahi aata',
           'Cells aane se saare shared control planes gayab — matchmaker tak kuch bhi saajha nahi bachta',
         ],
         answer: 0,
-        explain: 'Khud-mein-poori unit = kahin bhi chala do. Koi saajhi cheez nahi jo cloud aur DC ko jode.',
+        explain: 'Cell ka data plane khud mein poora ho toh wahi unit cloud mein bhi khadi ho sakti hai. Par matchmaker jaise saajhe hisse, capacity aur network phir bhi jaanchne padte hain.',
         choiceExplanations: [
-          'Khud-mein-poori unit = kahin bhi chala do. Koi saajhi cheez nahi jo cloud aur DC ko jode.',
-          'Latency doori se aati hai; cells use nahi mitaate.',
+          'Cell ka data plane khud mein poora ho toh wahi unit cloud mein bhi khadi ho sakti hai. Par matchmaker jaise saajhe hisse, capacity aur network phir bhi jaanchne padte hain.',
+          'Latency doori se aati hai; cells latency nahi mitaate.',
           'Cloud ka burst bhi paise ka hai.',
           'Matchmaker jaisa control plane phir bhi saajha hai.',
         ],

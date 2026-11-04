@@ -224,7 +224,7 @@ SD.registerLevels('stories', [
           id: 'store', label: 'Tenant data kahan', icon: '🗄️',
           options: [
             { id: 'perdb', label: "Har tenant ka apna logical database", score: 4, why: 'Jira ka raasta: isolation database boundary par, blast radius ek customer, migration aur residency tenant-by-tenant. Keemat: laakhon databases chalane ka operational bhaar.' },
-            { id: 'schema', label: "Shared DB mein har tenant ka alag schema", score: 2, why: 'Beech ka raasta — isolation logic se behtar hai, par connection aur resource pool phir bhi shared; residency ke liye alag database chahiye hi hoga.' },
+            { id: 'schema', label: "Shared DB mein har tenant ka alag schema", score: 2, why: 'Beech ka raasta — isolation logic se behtar hai, par connection aur resource pool phir bhi shared; residency ke liye har region ka apna shared DB chahiye, aur tenant ka region badalna ho toh schema ko poora uthana padta hai.' },
             { id: 'shared', label: "Ek shared table, har query mein tenant_id", score: -2, why: 'Sabse sasta aur sabse density wala, par isolation har query ke sahi likhe hone par tikti hai, aur "sirf Europe" wali shart poori karna bahut mushkil.' },
           ],
         },

@@ -494,7 +494,7 @@ WORKERS=8 EXTRAS=queue  420 charges/s | p50  30 ms | p99 142 ms   (14-core lapto
   homework: `<p>Apne sabse busy endpoint ke handler ke har kadam ko likho aur har ek ke saamne: "user ko jawab dene ke liye zaroori?"
     Jo zaroori nahi, unka time jodo — itna tum request path se hata sakte ho. Phir dekho tumhare process kitne cores use kar rahe hain.</p>`,
   cards: [
-    { front: 'GIL ka asar?', back: 'Ek process mein ek waqt ek thread Ruby — 16 cores par bhi ~1 core. (Node ka single thread wahi shakal.)' },
+    { front: 'GIL ka asar?', back: 'Ek process mein ek waqt ek thread Ruby — 16 cores par bhi ~1 core. (Node mein bhi ek event loop par CPU wala JavaScript ek-ek karke chalta hai; worker threads alag chal sakte hain.)' },
     { front: 'Stripe GIL ke saath kaise?', back: 'Bahut saare Ruby processes + load balancer; parallel/background kaam request path se bahar, non-Ruby systems par.' },
     { front: 'Lab 13 (charge API)?', back: '1 process sync: 46/s; extras queue: 73/s; 4 processes: 258/s; 8 processes: 420/s, p99 682 → 142 ms.' },
   ],

@@ -38,25 +38,30 @@ function strings(level) {
   return out;
 }
 
-const ids = process.argv.slice(2);
-const app = loadApp();
-if (ids.length) {
-  app.levels.filter(({ level }) => ids.includes(level.id)).forEach(({ level }) => {
-    const hits = strings(level).filter(([, s]) => clipped(s));
-    console.log(`\n== ${level.id}: ${hits.length}`);
-    hits.forEach(([p, s]) => console.log(`  ${p}: ${String(s).replace(/<[^>]+>/g, '').slice(0, 140)}`));
-  });
-} else {
-  const byTrack = new Map();
-  app.levels.forEach(({ track, level }) => {
-    const n = strings(level).filter(([, s]) => clipped(s)).length;
-    if (!byTrack.has(track.id)) byTrack.set(track.id, []);
-    byTrack.get(track.id).push([level.id, n]);
-  });
-  let total = 0;
-  for (const [t, ls] of byTrack) {
-    const sum = ls.reduce((a, [, n]) => a + n, 0); total += sum;
-    console.log(`${t.padEnd(14)} ${String(sum).padStart(5)}   ${ls.filter(([, n]) => n).map(([id, n]) => `${id}:${n}`).join(' ')}`);
+module.exports = { clipped };
+if (require.main === module) main();
+
+function main() {
+  const ids = process.argv.slice(2);
+  const app = loadApp();
+  if (ids.length) {
+    app.levels.filter(({ level }) => ids.includes(level.id)).forEach(({ level }) => {
+      const hits = strings(level).filter(([, s]) => clipped(s));
+      console.log(`\n== ${level.id}: ${hits.length}`);
+      hits.forEach(([p, s]) => console.log(`  ${p}: ${String(s).replace(/<[^>]+>/g, '').slice(0, 140)}`));
+    });
+  } else {
+    const byTrack = new Map();
+    app.levels.forEach(({ track, level }) => {
+      const n = strings(level).filter(([, s]) => clipped(s)).length;
+      if (!byTrack.has(track.id)) byTrack.set(track.id, []);
+      byTrack.get(track.id).push([level.id, n]);
+    });
+    let total = 0;
+    for (const [t, ls] of byTrack) {
+      const sum = ls.reduce((a, [, n]) => a + n, 0); total += sum;
+      console.log(`${t.padEnd(14)} ${String(sum).padStart(5)}   ${ls.filter(([, n]) => n).map(([id, n]) => `${id}:${n}`).join(' ')}`);
+    }
+    console.log(`${'total'.padEnd(14)} ${String(total).padStart(5)}`);
   }
-  console.log(`${'total'.padEnd(14)} ${String(total).padStart(5)}`);
 }

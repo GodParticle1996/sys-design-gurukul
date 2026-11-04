@@ -184,6 +184,7 @@ suite, then commits and merges. Briefs go in as files; reports come back as `COD
 | Phase 3 rewrite: hc-kyun … hc-kab (40 MCQs) | Codex (first writing job, ~20 min) | Claude: every option checked against `lib/health.js`, `lib/checker.js`, the README traces and the AWS/Kubernetes defaults | applied with light wording fixes; Codex also found 2 wrong step texts and a `slowmo-boot.js` bug, all fixed |
 | New Concurrency track (6 levels, Java lab 46) — the user asked Codex directly | Codex, ~37 min | Claude: shared-file diff, Java code, 24 + 42 checks rerun, browser pass at 390/1280 (0 broken) | merged as-is; language rewrite + real hints next (all 51 hints were one boilerplate line) |
 | Concurrency language pass: cc-start … cc-workers (51 MCQs, 51 new hints) | Claude | Codex: 16 findings (2 P1, 12 P2, 2 P3) | all 16 fixed (3 differently, see below); `apply.js` now also patches `ask(q, choices, reasons, hint)` calls |
+| Stories (from st-reddit-strangle), AI, Planet: 85 levels, 320 MCQs, 24 label sets | Claude | Codex: 43 findings (~30 P1) in ~10 min | all 43 checked and fixed in Claude's wording; see "Codex queue finished by Claude" |
 
 What Codex's review caught (all confirmed before fixing):
 
@@ -396,6 +397,17 @@ not clipped), a reason per option, the audit's fact caveats kept, stems with sta
 ("ko10000servers", "18: 30") reworded, and every lesson pronoun stand-in in these levels named outright.
 `quiz-quality` now reports 0 length flags across 1,279 MCQs, 43 incidents and 108 design slots.
 
-**Not yet cross-reviewed.** These 85 levels were written without a Codex review pass. When Codex's weekly limit
-resets, send it the review brief for Stories (from `st-reddit-strangle`), AI and Planet before treating them as
-final.
+**Cross-reviewed by Codex (2026-11-04).** Brief `sdg-codex-xp/jobs/codex-job-review-85.txt`; Codex covered all 85
+levels, 320 MCQs and 24 label sets in ~10 minutes and wrote one report per company group plus ready-to-apply fix
+files (`jobs/review85/`). 43 findings, about 30 of them P1. Claude checked every one against the level, the data
+file's source and `dev/audit-company-*.md`; all held. Most were audit caveats that a lesson card or flashcard had
+lost again ("na quorum" for Durable Objects, "message kabhi delete nahi hoga", "prod roz todo", gVisor overhead
+"sirf syscalls par", Snowflake's 60-second minimum, CRP updating "sirf us cell", tied requests "double kaam
+nahi", Nitro emergency SSH). Two were real maths or logic errors in Claude's reasons (more independent retries do
+raise the overall success chance; 0/200 counted peers that *finished*, not peers that never started), and one
+question (`st-cf-edge` interview 3) had been skipped entirely and still had the audit's clipped English.
+Claude applied the fixes in its own wording rather than Codex's (Codex's lesson phrases stay English-heavy, e.g.
+"owner par coordinated writes; async interleaving…"), and where Codex's stem rewrite nearly stated the answer it
+scoped the stem with a situation instead. Three questions also got new wrong options because every old one was
+impossible or started with "Sirf …" (`ai-safety-filter`, `prime-boundary-tax`, and the Cloudflare CPU-leak slot).
+Fix files: `sdg-codex-xp/jobs/claude/r85/`.

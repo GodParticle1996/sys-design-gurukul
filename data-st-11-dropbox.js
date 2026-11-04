@@ -204,7 +204,7 @@ SD.registerLevels('stories', [
   homework: `<p>Apne cloud bill ki top 3 lines lo. Har ek ke liye: load steady hai ya spiky? Kitna predictable? Agar koi line bahut badi aur
     steady hai, toh use cloud mein hi sasta kaise karoge (reserved capacity, tiering, egress kam)?</p>`,
   cards: [
-    { front: 'Cloud kya bechta hai?', back: 'Elasticity — aur uska margin har GB/CPU-ghante mein. Spiky/chhota → cloud sasta; bada + steady + khaas → tum bina use ki elasticity ka paisa dete ho.' },
+    { front: 'Cloud kya bechta hai?', back: 'Elasticity — aur elasticity ka margin har GB/CPU-ghante mein. Spiky/chhota → cloud sasta; bada + steady + khaas → tum bina use ki elasticity ka paisa dete ho.' },
     { front: 'Rent vs own break-even (lab 14)?', back: '10 PB: cloud $2.8M vs apna $41M; 500 PB: cloud $141M vs apna $90M. Fixed kharcha (team, DC, bijli) ko bada volume chahiye.' },
     { front: 'Dropbox ka asli sawaal?', back: '"Kya hum multi-year hyperscaler-grade team bana ke tika sakte hain?" Bachat sirf poora karne par; zyadatar ka jawab nahi.' },
   ],
@@ -406,7 +406,7 @@ random     → 127.5 tracks likhi per badlaav</pre>
        <li>Cloud elasticity ka paisa leta hai.</li>
        <li>Faisla per workload, aur dobara-dobara.</li>
        <li>Infra projects migration mein marte hain — transition ka budget rakho.</li>
-       <li>Apna stack aise optimizations kholta hai jo cloud nahi de sakta (SMR, apne EC parameters).</li>
+       <li>Apna stack un optimizations par poora control deta hai jinhe managed cloud tumhare haath mein nahi deta (SMR, apne EC parameters).</li>
      </ol>`,
   ],
   stages: [

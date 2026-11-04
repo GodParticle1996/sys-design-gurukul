@@ -128,7 +128,7 @@ SD.registerLevels('stories', [
      woh seconds mein khada ho sakta hai, query chala sakta hai, aur gayab ho sakta hai.</p>
      <h3>🧱 Teen layers</h3>
      <pre>Storage  — S3 / Azure Blob / GCS. Har table yahin, aur sirf yahin.
-Compute  — virtual warehouses: stateless machines, per-second kiraya.
+Compute  — virtual warehouses: stateless machines, per-second kiraya (har start/resume par kam se kam 60 second ka).
 Brain    — cloud services layer: metadata, query planning, transactions, security.</pre>
      <p>Aur turant sabne ek hi aitraz kiya: <b>"S3 slow hai, uske upar database kaise
      chalega?"</b> Uska jawab agle level mein hai — chaar tareeke, ek saath.</p>`,
@@ -335,7 +335,7 @@ SD.registerLevels('stories', [
     `<h3>⚙️ Virtual warehouse kya hai</h3>
      <p>Virtual warehouse stateless machines ka ek cluster hai jo tumhari queries chalata
      hai. T-shirt sizes (XS se 6XL), seconds mein khada hota hai, idle hone par
-     <b>auto-suspend</b>, query aate hi <b>auto-resume</b>, aur bill <b>per second</b>.</p>
+     <b>auto-suspend</b>, query aate hi <b>auto-resume</b>, aur bill <b>per second</b> (har start/resume par kam se kam 60 second).</p>
      <p>Yeh sab isliye mumkin hai kyunki warehouse ke paas kuch rakha hi nahi hai. Tum
      chalti hui query ke beech warehouse maar do — query jaayegi, <b>data ka ek byte bhi
      nahi</b>, kyunki data kabhi wahan tha hi nahi.</p>

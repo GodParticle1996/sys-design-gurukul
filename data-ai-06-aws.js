@@ -136,12 +136,12 @@ SD.registerLevels('ai', [
             'SSH band matlab emergency mein bhi koi raasta nahi — aur yahi scaling ka faayda hai',
           ],
           answer: 0,
-          explain: 'Video ka sabak: aise systems mat banao jinhe badhne ke liye insaan badhane padein. SSH ek emergency raasta rehta hai, aadat nahi.',
+          explain: 'Video ka sabak: aise systems mat banao jinhe badhne ke liye insaan badhane padein. Nitro par AWS engineers ka bhi interactive login nahi; roz ka kaam aur emergency, dono tay aur authenticated raaston se hote hain.',
           choiceExplanations: [
-            'Video ka sabak: aise systems mat banao jinhe badhne ke liye insaan badhane padein. SSH ek emergency raasta rehta hai, aadat nahi.',
+            'Video ka sabak: aise systems mat banao jinhe badhne ke liye insaan badhane padein. Nitro par AWS engineers ka bhi interactive login nahi; roz ka kaam aur emergency, dono tay aur authenticated raaston se hote hain.',
             'SSH ki speed rukawat nahi — insaan ka login rukawat hai.',
             'API ko bhi authentication chahiye.',
-            'Emergency ka raasta rakhte hain — band karna aadat ko hai.',
+            'Emergency ke liye bhi manzoor raaste rakhe jaate hain; bas interactive login nahi.',
           ],
         },
         {

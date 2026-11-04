@@ -316,7 +316,7 @@ SD.registerLevels('planet', [
     node replacement, failover drill). Har ek ke liye likho: kya pehle se pata hai, aur use "schedule" (pehle se
     sabko batao, make-before-break) kaise banayein.</p>`,
   cards: [
-    { front: 'Starlink ka 15-second epoch?', back: 'Measurements: latency 15-sec boundaries par sabke liye ek saath kadam leti hai → har 15 sec global replan; satellites, dishes, gateways ek saath palatte hain.' },
+    { front: 'Starlink ka 15-second epoch?', back: 'Measurements: latency 15-sec boundaries par sabke liye ek saath kadam leti hai → shayad har 15 sec poore network ka naya plan (naapi hui seemaon se anumaan, pakka saboot nahi).' },
     { front: 'Replan ke niyam?', back: '≥25° upar, power, beams, gateway visibility, desh ke licence, GEO exclusion zone (GEO belt ki line-of-sight se pehle transmit band).' },
     { front: 'Lab 19: reactive vs scheduled?', back: 'Reactive: 99%, har handover ~1 sec ruka, 21 search tries. Scheduled: 100%, 0 stall, p99 3 ms.' },
   ],

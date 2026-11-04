@@ -233,7 +233,7 @@ SD.registerLevels('planet', [
     'Cost function ek chunaav hai — eco routing, tolls',
   ],
   lesson: [
-    "<h3>🧱 Dhaancha shakal se, numbers aakhir mein</h3>\n     <p><b>CRP</b> (Customizable Route Planning) do cheezein alag karta hai:</p>\n     <ul>\n       <li><b>Topology</b> — kaunsi sadak kisse judi. Lagbhag kabhi nahi badalta → bhaari preprocessing <b>ek baar</b>.</li>\n       <li><b>Cost</b> — abhi ka travel time. Har kuch minute → <b>sasta</b> pass.</li>\n     </ul>\n     <p>Naksha ko kuch levels par <b>cells</b> mein baanto. Har cell ke liye har entry border se har exit border tak ki cost\n     pehle se nikaalo — cell ek <b>summary</b> ban jaata hai. Desh ke aar-paar raasta: apni gali se cell border → cell-to-cell\n     border crossings par kood → manzil ki gali. Cells alag machines par bhi ho sakte hain.</p>\n     <p>Traffic badla? <b>Sirf us cell</b> ke border costs dobara.</p>\n     <pre>lab 24 — manzil ke aas-paas jam (676 sadkein 12× dheemi):\njam se pehle ETA 15.31 min\npurane overlay se ETA 19.17 min   ← galat, shortcuts purane\nasli (Dijkstra, live) 20.25 min\nsirf wo cell dobara:   56 border nodes,    13 ms → ETA 20.25\npoora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga, jawab same)</pre>",
+    "<h3>🧱 Dhaancha shakal se, numbers aakhir mein</h3>\n     <p><b>CRP</b> (Customizable Route Planning) do cheezein alag karta hai:</p>\n     <ul>\n       <li><b>Topology</b> — kaunsi sadak kisse judi. Lagbhag kabhi nahi badalta → bhaari preprocessing <b>ek baar</b>.</li>\n       <li><b>Cost</b> — abhi ka travel time. Har kuch minute → <b>sasta</b> pass.</li>\n     </ul>\n     <p>Naksha ko kuch levels par <b>cells</b> mein baanto. Har cell ke liye har entry border se har exit border tak ki cost\n     pehle se nikaalo — cell ek <b>summary</b> ban jaata hai. Desh ke aar-paar raasta: apni gali se cell border → cell-to-cell\n     border crossings par kood → manzil ki gali. Cells alag machines par bhi ho sakte hain.</p>\n     <p>Traffic badla? <b>Sirf asar wale cells</b> ke border costs dobara (bade, kai-level index mein upar ke levels bhi).</p>\n     <pre>lab 24 — manzil ke aas-paas jam (676 sadkein 12× dheemi):\njam se pehle ETA 15.31 min\npurane overlay se ETA 19.17 min   ← galat, shortcuts purane\nasli (Dijkstra, live) 20.25 min\nsirf wo cell dobara:   56 border nodes,    13 ms → ETA 20.25\npoora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga, jawab same)</pre>",
     "<h3>⚖️ \"Sabse tez\" ek chunaav hai</h3>\n     <p>Wahi structure, alag cost function:</p>\n     <ul>\n       <li><b>Eco-friendly routing</b> — har edge ke liye ML andaaza: kitna fuel/energy (chadhaai, traffic, engine: petrol /\n       hybrid / EV).</li>\n       <li><b>Tolls avoid</b>, <b>highways avoid</b>, <b>kam turns</b> — sab alag cost functions, <b>same</b> cells par.</li>\n     </ul>\n     <p>Sabse tez ≠ sabse efficient → multi-objective. Maps eco raasta tab offer karta hai jab uska extra time lagbhag zero ho.</p>\n     <p class=\"tip\">🎯 <b>Jo dheere badalta hai use jo tezi se badalta hai us se alag karo.</b> Tab tezi wala hissa sasta ho\n     jaata hai — yahan 1.2 sec se 13 ms.</p>",
   ],
   stages: [
@@ -287,13 +287,13 @@ SD.registerLevels('planet', [
       {
         q: 'Interviewer: "Har 2 minute traffic update aata hai. Poora routing index dobara banta hai (20 min). Kya karein?"',
         choices: [
-          'Topology aur cost alag (CRP): cells ek baar; update par sirf asar wale cells ke border costs',
+          'Topology ek baar; traffic badle toh asar wale cells (aur zaroori upar ke levels) dobara',
           'Saare traffic updates 20 minute tak rok do — rebuild khatam hone par hi lagao',
           'Profile kiye bina servers badhao — zyada servers par 20 minute bhi kam ho jaayega',
           'Har query mein saara precompute chhod do — live Dijkstra hamesha taaza aur sahi',
         ],
         answer: 0,
-        explain: 'Lab: 94× sasta, jawab same.',
+        explain: 'Lab (ek level ka overlay): 94× sasta, jawab same. Asli kai-level index mein asar wale upar ke levels bhi refresh karne pad sakte hain — topology aur cost ka kaam alag rakho.',
         choiceExplanations: [
           'Lab: 94× sasta, jawab same.',
           '20 minute purana traffic galat ETA dega.',

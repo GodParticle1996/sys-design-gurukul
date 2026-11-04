@@ -111,7 +111,7 @@ SD.registerLevels('stories', [
     'Har data model ke andar ek chhupi maanyata hoti hai',
   ],
   lesson: [
-    `<h3>🗃️ Ek faisla: message kabhi delete nahi hoga</h3>
+    `<h3>🗃️ Ek faisla: saari purani history rakho</h3>
      <p>Zyadatar chat products messages ko <b>kshanik</b> maante hain — purane messages
      archive ho jaate hain ya chupchap hat jaate hain. Discord ne ulta chuna: tumne jo
      bhi bheja, har server aur har channel mein, <b>sab abhi bhi wahin hai</b>, turant
@@ -252,7 +252,7 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
       observe: {
         q: 'Hash partitioning ne load sabse achha baanta, phir bhi hash sahi jawab kyun nahi hai?',
         choices: [
-          'Har page ab 8 partitions se jud ke banta hai — sabse aam query ka kharcha 8 guna',
+          'Har page ke liye ab 8 partitions se messages laa ke jodne padte hain — aam query mehengi',
           'Hash se har message ki do copies ban gayi, isliye storage aur reads dono dugne',
           'Kai partitions mein bata data sahi kram mein laana namumkin hai, chahe kuch bhi karo',
           'Hash sahi jawab hi hai — load barabar bata hai, toh aur kuch dekhne ki zaroorat nahi',
@@ -350,9 +350,9 @@ SD.registerLevels('stories', [
   ],
   lesson: [
     `<h3>🔥 Ek channel ka bada din, poore cluster ka bura din</h3>
-     <p>Model kehta tha: ek channel ka sab kuch ek partition mein, aur woh partition ek
-     node par. Jab koi channel viral hota hai, uska poora bhaar <b>ek</b> node par aa
-     jaata hai jabki uske padosi lagbhag khaali baithe hain. Isi ka naam hot partition
+     <p>Model kehta tha: ek channel ka sab kuch ek partition mein, aur us partition ki copies kuch gine-chune
+     nodes par. Jab koi channel viral hota hai, channel ka poora bhaar <b>unhi gine-chune</b> nodes par aa
+     jaata hai, jabki baaki nodes lagbhag khaali baithe hain. Isi ka naam hot partition
      hai.</p>
      <p>Aur hot partition chupchap fail nahi hota:</p>
      <pre>node dheema  →  requests jama  →  timeouts  →  clients RETRY

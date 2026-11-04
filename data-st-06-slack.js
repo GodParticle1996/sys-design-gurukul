@@ -268,7 +268,7 @@ SD.registerLevels('stories', [
       quiz: {
         q: 'Flannel ko sirf cache kehna galat kyun hai?',
         choices: [
-          'Flannel stream ke raaste mein baith ke events mein client ka chahiya metadata pehle hi jod deta hai',
+          'Flannel stream ke raaste mein baith ke events mein client ka zaroori metadata pehle hi jod deta hai',
           'Flannel sirf expire hui keys ki value lautata hai, aur baaki sab database se seedha aata hai',
           'Flannel database ki pakki rows ki jagah le leta hai, toh asli storage Flannel hi ban jaata hai',
           'Flannel har client ko poore org ka snapshot bhejta hai, bas thoda jaldi aur compress karke',
@@ -424,8 +424,8 @@ SD.registerLevels('stories', [
      <h3>🧯 Aur agar beech mein crash ho jaaye?</h3>
      <p>Channel server un messages ka buffer rakhta hai jo usne le liye hain par abhi
      poori tarah deliver nahi kiye. Fan-out ke beech crash hua toh restart par woh adhoora
-     kaam <b>replay</b> hota hai. Server failure message ko <b>der</b> kar sakti hai,
-     <b>gayab</b> nahi.</p>`,
+     kaam <b>replay</b> hota hai. Buffer ki seema ke andar server failure message ko <b>der</b> karti hai,
+     <b>gayab</b> nahi. Buffer se purana kaam ho toh client ko history se catch up karna padta hai.</p>`,
     `<h3>🟢 Presence — sabse chhota data, sabse bada traffic</h3>
      <p>Naam ke aage hara dot. Chhoti si cheez, par din bhar badalti rehti hai: laptop
      khola — hara, band kiya — khaali. Poori company mein yeh hazaron logon ka
@@ -604,7 +604,7 @@ SD.registerLevels('stories', [
     { front: 'Store-then-send kyun?', back: 'Pehle durable write, phir delivery. Warna write fail hone par logon ki screen par aisa message reh jaata hai jo officially hua hi nahi.' },
     { front: 'Channel server ka kaam?', back: 'Live map rakhna ki kaunsa client kis channel par subscribe hai, aur message sirf un subscribers ko bhejna (pub/sub) — broadcast nahi.' },
     { front: 'Edge fan-out ka faayda?', back: 'Ek sheher ke 100 members ke liye lambi doori par ek hi copy jaati hai; final copies edge par banti hain jahan bandwidth sasti hai.' },
-    { front: 'Replay buffer?', back: 'Accept ho chuke par poori tarah deliver na hue messages ka buffer. Fan-out ke beech crash par restart adhoora kaam replay karta hai — message der se aata hai, kho-ta nahi.' },
+    { front: 'Replay buffer?', back: 'Accept ho chuke par poori tarah deliver na hue messages ka buffer. Fan-out ke beech crash par restart buffer ka adhoora kaam replay karta hai — message der se aata hai. Buffer se bahar ka kaam client history se catch up karta hai.' },
     { front: 'Presence ka ilaaj?', back: 'Sirf screen par dikhne walon ki presence subscribe karo aur scroll par subscriptions badlo — Slack ke clients tak pahunchne wale presence events ~5× kam ho gaye.' },
   ],
 },

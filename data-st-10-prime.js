@@ -162,20 +162,20 @@ SD.registerLevels('stories', [
     instructions: 'Do sawaal. 🎤',
     questions: [
       {
-        q: 'Interviewer: "Hamara ML pipeline har frame ko S3 se detectors tak bhejta hai. Bill aasman par."',
+        q: 'Interviewer: "Hamara ML pipeline har frame ko S3 ke raaste detectors tak bhejta hai. Profile kehta hai: bill ka sabse bada hissa frames ko ek service se doosri tak le jaana hai. Saare detectors chahiye. Kya karoge?"',
         choices: [
-          'Sabse garam raaste par boundary hatao — decode + detectors ek process, frames memory mein',
-          'Sirf storage vendor badlo — sasta storage lo, frames ka raasta waisa hi rehne do',
-          'Sirf frames ki encoding badlo — chhote frames se bill gir jaayega, design wahi rahe',
-          'Saare detectors hamesha ke liye hata do — detector nahi, toh bill bhi nahi',
+          'Decode aur saare detectors ek hi process mein; frames memory mein hi aage badhein',
+          'Storage vendor badlo — sasta storage lo, frames ka raasta waisa hi rehne do',
+          'Frames ko chhota encode karo — har trip sasti, aur design waisa hi rahe',
+          'Har detector ko alag serverless function banao, taaki har ek alag scale ho',
         ],
         answer: 0,
         explain: 'Prime Video case ek audio/video quality-monitoring subsystem ka redesign tha, poori streaming service ka nahi. Frame handoff aur orchestration ka kharcha profile karke dhoondha gaya; scale ke liye poori pipeline ki copies bani.',
         choiceExplanations: [
           'Prime Video case ek audio/video quality-monitoring subsystem ka redesign tha, poori streaming service ka nahi. Frame handoff aur orchestration ka kharcha profile karke dhoondha gaya; scale ke liye poori pipeline ki copies bani.',
           'Sasta storage bhi har frame ke 3 network trips ka kharcha rakhta hai.',
-          'Chhota frame bhi utni hi baar boundary paar karta hai.',
-          'Detectors hi toh kaam hain. Kaam hatana ilaaj nahi.',
+          'Chhote frames thoda bachate hain, par har frame phir bhi utni hi baar boundary paar karta hai — sabse bada kharcha bana rehta hai.',
+          'Prime Video ka purana design yahi tha: har step ke beech frame S3 se guzarta tha. Boundaries badhti hain, ghatti nahi.',
         ],
       },
       {

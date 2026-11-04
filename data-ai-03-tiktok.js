@@ -335,7 +335,7 @@ SD.registerLevels('ai', [
      se chalenge — real-time khatam. Isliye workers kuch second purane params par gradient nikaal lete
      hain, aur parameter servers strict ordering enforce nahi karte. ML ka nuksaan chhota; speed hi toh
      poora point hai.</p>
-     <p class="tip">🎯 Strict consistency tab sahi jab speed maayne na rakhe. Yahan speed hi product hai —
+     <p class="tip">🎯 Strict consistency kab chahiye, sahi-galat ka contract tay karta hai (payment, permission) — sirf speed nahi. Yahan speed hi product hai —
      toh jaan-boojh ke consistency chhodi. <b>Tay karo ki kaunsi consistency chhod rahe ho.</b></p>`,
   ],
   stages: [

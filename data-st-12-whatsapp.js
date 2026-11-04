@@ -88,7 +88,7 @@ SD.registerLevels('stories', [
         {
           q: 'Reductions ka faayda chat server mein?',
           choices: [
-            'Koi ek atka process core pakad ke baaki laakhon ko nahi rokta — ~2,000 reductions par baari badalti',
+            'Lamba Erlang kaam bhi beech mein baari chhodta hai, toh baaki laakhon processes ko samay milta hai',
             'Har process ki memory chhoti ho jaati hai, kyunki reductions purana data mita deti hain',
             'Network packets ka payload compress ho jaata hai, kyunki reductions bytes ghatati hain',
             'Har message ko apne aap encryption mil jaati hai, kyunki reductions keys badalti rehti hain',

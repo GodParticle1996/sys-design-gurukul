@@ -364,7 +364,7 @@ SD.registerLevels('planet', [
      <p>Pehle <b>query rewrite</b>: spelling, variants/synonyms ("speed up slow laptop" ≈ "make my computer faster"),
      Knowledge Graph se entity ("jaguar top speed" = janwar). Phir root → mixers → leaves (shards) → jawab wapas upar
      merge. Ek query ≈ <b>1,000 machines</b>.</p>`,
-    "<h3>🐌 1,000 ka intezaar = sabse dheeme ka intezaar</h3>\n     <p>Aam shard 5 ms, par kabhi GC pause, busy hardware, slow disk → 50 ms. 1,000 mein se ek bhi dheema = poori query\n     dheemi. \"The Tail at Scale\" (Dean & Barroso) ke ilaaj:</p>\n     <ul>\n       <li><b>Hedged</b> — jawab p95 tak nahi aaya toh dusre replica ko bhi bhejo, pehla jawab lo.</li>\n       <li><b>Tied</b> — dono replicas ko bhejo par unhe ek dusre ka pata ho; jo shuru kare woh doosre ko cancel kare → do\n       baar ka kharcha nahi.</li>\n     </ul>\n     <pre>lab 26 (ex2-fanout) — leaf ~4 ms, 1% requests +50.. 150 ms:\nshards  mode      p50     p99     leaf requests per query\n    1   single     4 ms    96 ms    1.0\n  100   single    93 ms   157 ms  100.0        ← 63% queries mein kam se kam ek straggler\n  100   hedged    14 ms    78 ms  103.5 (3% extra)\n  100   double     9 ms    66 ms  200.0 (100% extra)</pre>\n     <h3>🏎️ Aur tez kaise</h3>\n     <ul>\n       <li>Serving index <b>RAM + flash</b> mein (disk seek budget kha jaata hai).</li>\n       <li><b>Tiering</b> — popular high-quality pages ka chhota tier sabse tez storage mein; long tail sasta, sirf zaroorat par.</li>\n       <li>Poora stack duniya bhar mein <b>replicate</b> (~8.5 arab searches/din): paas, throughput, survival.</li>\n       <li>Measured repeated queries ke liye bounded <b>result cache</b>; identity, permissions, personalization aur freshness key/policy mein include karo. Historical query-share percentage current workload ki guarantee nahi.</li>\n     </ul>",
+    "<h3>🐌 1,000 ka intezaar = sabse dheeme ka intezaar</h3>\n     <p>Aam shard 5 ms, par kabhi GC pause, busy hardware, slow disk → 50 ms. 1,000 mein se ek bhi dheema = poori query\n     dheemi. \"The Tail at Scale\" (Dean & Barroso) ke ilaaj:</p>\n     <ul>\n       <li><b>Hedged</b> — jawab p95 tak nahi aaya toh dusre replica ko bhi bhejo, pehla jawab lo.</li>\n       <li><b>Tied</b> — dono replicas ko bhejo, par dono replicas ko ek dusre ka pata ho; jo replica pehle shuru kare, doosre ko cancel kare → do\n       baar ka kharcha zyadatar bachta hai (dono ek saath shuru ho jaayein, aisi race phir bhi mumkin).</li>\n     </ul>\n     <pre>lab 26 (ex2-fanout) — leaf ~4 ms, 1% requests +50.. 150 ms:\nshards  mode      p50     p99     leaf requests per query\n    1   single     4 ms    96 ms    1.0\n  100   single    93 ms   157 ms  100.0        ← 63% queries mein kam se kam ek straggler\n  100   hedged    14 ms    78 ms  103.5 (3% extra)\n  100   double     9 ms    66 ms  200.0 (100% extra)</pre>\n     <h3>🏎️ Aur tez kaise</h3>\n     <ul>\n       <li>Serving index <b>RAM + flash</b> mein (disk seek budget kha jaata hai).</li>\n       <li><b>Tiering</b> — popular high-quality pages ka chhota tier sabse tez storage mein; long tail sasta, sirf zaroorat par.</li>\n       <li>Poora stack duniya bhar mein <b>replicate</b> (~8.5 arab searches/din): paas, throughput, survival.</li>\n       <li>Measured repeated queries ke liye bounded <b>result cache</b>; identity, permissions, personalization aur freshness key/policy mein include karo. Historical query-share percentage current workload ki guarantee nahi.</li>\n     </ul>",
   ],
   stages: [
     {
@@ -487,7 +487,7 @@ SD.registerLevels('planet', [
   cards: [
     { front: 'Google document se shard kyun?', back: 'Har shard ek complete chhota index, apne pages khud score kare — parallelism + ranking. Keemat: har query har shard par (~1,000 machines).' },
     { front: 'Tail at scale (lab)?', back: '1% stragglers: 1 shard par median 4 ms; 100 shards par median 93 ms (63% queries mein straggler). Hedged: 14 ms, sirf 3% extra.' },
-    { front: 'Hedged vs tied?', back: 'Hedged: p95 ke baad dusre replica ko bhi, pehla jawab lo. Tied: dono ko bhejo, jo shuru kare woh doosre ko cancel — double kaam nahi.' },
+    { front: 'Hedged vs tied?', back: 'Hedged: p95 ke baad dusre replica ko bhi, pehla jawab lo. Tied: dono ko bhejo, jo pehle shuru kare doosre ko cancel kare — double kaam kam (race mein dono shuru ho sakte hain).' },
   ],
 },
 
@@ -512,8 +512,8 @@ SD.registerLevels('planet', [
      RankBrain (2015, pehla ML signal), neural matching, BERT (2019 — query ko bhasha ki tarah: "change a tire" ↔ "replacing a
      flat"). Retrieval lagbhag solved engineering hai; ranking SEO ke saath <b>kabhi na khatam hone wali jung</b>.</p>
      <h3>🤖 AI Overviews — RAG planet scale par</h3>
-     <p>LLM akela aaj ki baat nahi jaanta aur gadh leta hai. Isliye AI Overviews / AI Mode pehle <b>poora search stack</b>
-     chalate hain (crawl, index, fan-out, retrieve, rank), phir citations ke saath summary likhte hain = <b>grounding</b>.
+     <p>LLM akela aaj ki baat nahi jaanta aur gadh leta hai. Isliye AI Overviews jaise features search ke nateejon se <b>saboot</b>
+     uthate hain, phir citations ke saath summary likhte hain = <b>grounding</b>. (Saboot bhi galat ho sakta hai, aur Google ka andar ka exact pipeline public nahi.)
      Retrieval ab <b>aur</b> zaroori ho gaya.</p>
      <h3>📋 Paanch sabak</h3>
      <ol>

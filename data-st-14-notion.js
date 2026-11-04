@@ -95,7 +95,7 @@ SD.registerLevels('stories', [
      <ul>
        <li><b>Permissions</b> — inherited, ancestors ki taraf walk (agla level).</li>
        <li><b>Search</b> — index se pehle tree ko recursively flatten.</li>
-       <li><b>E2E encryption</b> lagbhag namumkin — backend ko rishte traverse karne padte hain.</li>
+       <li><b>E2E encryption</b> mushkil — backend rishte traverse karta hai aur search banata hai; encrypted data par search aur traversal client ko karna padega.</li>
        <li><b>Migration</b> — 200 arab rows ek dhaanche mein = hamesha ka vaada.</li>
        <li><b>Onboarding</b> — indirection, sochne ka bojh.</li>
      </ul>
