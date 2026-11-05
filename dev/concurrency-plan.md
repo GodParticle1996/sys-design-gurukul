@@ -13,15 +13,16 @@ Track ID `concurrency`, always open/free order. Recommended path:
 | Level | Concepts | Investigation |
 | --- | --- | --- |
 | `cc-start` | 1 concurrency; 2 concurrency vs parallelism; 3 processes vs threads; 4 lifecycle | One-core timeline; real JVM monitor/timed-wait states and separate-process field |
-| `cc-race` | 5 race; 6 mutex; 9 coarse/fine; 10 reentrant; 14 atomic; 19 immutability | Forced lost update; whole critical section; atomic increment; hold counts; independent keys and immutable snapshot |
+| `cc-race` | 5 race; 6 mutex; 14 atomic | Forced lost update; whole critical section; unlock in finally; atomic increment |
+| `cc-locks` | 9 coarse/fine; 10 reentrant; 19 immutability | Independent-key tryLock; hold counts; immutable snapshot and its publication |
 | `cc-queue` | 8 condition variable; 16 producer–consumer; 17 blocking/nonblocking; 18 backpressure | Capacity-2 FIFO; blocked producer; predicate recheck after signal; outer waiter bound |
 | `cc-pool` | 7 semaphore, plus ownership/cleanup | Logical connection leases; two permits; timeout, failure and duplicate close |
 | `cc-stuck` | 11 deadlock; 12 livelock; 13 starvation | Real detected deadlock and ordered repair; labelled finite progress models |
 | `cc-workers` | 15 thread pool; 20 concurrent idempotency, plus backpressure | Two workers/two waiting slots; fifth rejection; check-then-act race and local per-key claim |
 
 Each level has one diagram/state walkthrough, one short code/decision stage, one runnable lab stage,
-two interview scenarios, flashcards and its own completion decision guide. Total: six levels, 18 teaching
-stages plus six interviews, 51 MCQs and 23 flashcards. Lab 46 has a warm-up and the five requested builds.
+two interview scenarios, flashcards and its own completion decision guide. Total: seven levels (cc-race was split into cc-race + cc-locks on 2026-11-05), 21 teaching
+stages plus seven interviews, 56 MCQs and 24 flashcards. Lab 46 has a warm-up and the five requested builds.
 
 Corrected distinctions from the supplied short definitions:
 

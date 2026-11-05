@@ -22,6 +22,8 @@ const old = boot(JSON.stringify({ xp: 85, completed: ['pool', 'pool', 'retired-l
 check(old.SD.state.schemaVersion === 2 && old.SD.state.xp === 85, 'v1 migrates without losing XP');
 check(old.SD.state.completed.length === 2 && old.SD.state.stars.pool === 3, 'unique completions and stars survive');
 check(old.SD.state.dojo.good.box === 2 && old.SD.state.streak.best === 6, 'nested old records survive');
+const split = boot(JSON.stringify({ xp: 10, completed: ['cc-race'], stars: { 'cc-race': 2 } })).SD.state;
+check(split.completed.includes('cc-locks') && split.stars['cc-locks'] === 2, 'a finished split level also completes its new half');
 old.SD.saveState();
 check(boot(old.values[old.SD.STORE_KEY]).SD.state.xp === 85, 'save/reload round trip');
 for (const raw of ['{', 'null', '[]', '7', '"string"']) {

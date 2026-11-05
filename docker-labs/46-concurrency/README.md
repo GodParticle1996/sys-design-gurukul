@@ -52,8 +52,8 @@ aur lock release hota hai, isliye agla take/offer chal sakta hai.
 | 6 | Mutex | `cc-race`, `RaceLab`: whole read–add–write critical section |
 | 7 | Semaphore | `cc-pool`, `PoolLab`: two permits, timeout, conservation tests |
 | 8 | Condition variable | `cc-queue`, `QueueLab`: await releases/reacquires lock; signal does not reserve a slot |
-| 9 | Coarse vs fine-grained locking | `cc-race`, `RaceLab`: independent key tryLock availability, not throughput |
-| 10 | Reentrant lock | `cc-race`, `RaceLab`: same-owner holds 2 → 1 → 0 |
+| 9 | Coarse vs fine-grained locking | `cc-locks`, `RaceLab`: independent key tryLock availability, not throughput |
+| 10 | Reentrant lock | `cc-locks`, `RaceLab`: same-owner holds 2 → 1 → 0 |
 | 11 | Deadlock | `cc-stuck`, `DeadlockLab`: real ownable-synchronizer wait cycle and same-order repair |
 | 12 | Livelock | `cc-stuck`: labelled four-round symmetric-reaction MODEL, no useful completion |
 | 13 | Starvation | `cc-stuck`: labelled priority-selection MODEL; finite wait is not proof of infinite starvation |
@@ -62,7 +62,7 @@ aur lock release hota hai, isliye agla take/offer chal sakta hai.
 | 16 | Producer–consumer | `cc-queue`, `QueueLab`: capacity 2 FIFO with waiting producer |
 | 17 | Blocking vs non-blocking | `cc-queue`: wait vs immediate capacity result; short lock is not formal lock-free progress |
 | 18 | Backpressure | `cc-queue` / `cc-workers`: bounded source wait/rejection feedback; outer waiters still need limits |
-| 19 | Immutability | `cc-race`, `RaceLab`: string-list snapshot vs mutable/final reference and nested values |
+| 19 | Immutability | `cc-locks`, `RaceLab`: string-list snapshot vs mutable/final reference and nested values |
 | 20 | Idempotency under concurrency | `cc-workers`, `WorkersLab`: atomic local claim, same payload/result, explicit crash/multi-pod/provider boundary |
 
 ## Naape hue results aur boundary

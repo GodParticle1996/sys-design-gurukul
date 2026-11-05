@@ -7,6 +7,7 @@
   const CODE = {};
   const OUTPUT = {};
   CODE.race = {"title": "RaceLab.java", "file": "docker-labs/46-concurrency/src/RaceLab.java", "from": 30, "text": "    void incrementLocked() {\n        lock.lock();\n        try {\n            value = value + 1;\n        } finally {\n            lock.unlock();\n        }\n    }"};
+  CODE.locks = {"title": "RaceLab.java", "file": "docker-labs/46-concurrency/src/RaceLab.java", "from": 72, "text": "    // A controlled lock-availability experiment, not a throughput benchmark.\n    static boolean otherKeyCanEnter(boolean coarse) throws InterruptedException {\n        ReentrantLock keyA = new ReentrantLock();\n        ReentrantLock keyB = coarse ? keyA : new ReentrantLock();\n        AtomicInteger entered = new AtomicInteger();\n        keyA.lock();\n        try {\n            Thread b = new Thread(() -> {\n                if (keyB.tryLock()) {\n                    try { entered.incrementAndGet(); }\n                    finally { keyB.unlock(); }\n                }\n            });\n            b.start(); LabSupport.join(b);\n        } finally {\n            keyA.unlock();\n        }\n        return entered.get() == 1;\n    }"};
   CODE.queue = {"title": "QueueLab.java", "file": "docker-labs/46-concurrency/src/QueueLab.java", "from": 20, "text": "        void put(T item) throws InterruptedException {\n            Objects.requireNonNull(item);\n            lock.lockInterruptibly();\n            try {\n                while (items.size() == capacity) {\n                    waits++;\n                    notFull.await();\n                }\n                items.addLast(item);\n                notEmpty.signal();\n            } finally {\n                lock.unlock();\n            }\n        }\n\n        T take() throws InterruptedException {\n            lock.lockInterruptibly();\n            try {\n                while (items.isEmpty()) notEmpty.await();\n                T item = items.removeFirst();\n                notFull.signal();\n                return item;\n            } finally {\n                lock.unlock();\n            }\n        }"};
   CODE.pool = {"title": "PoolLab.java", "file": "docker-labs/46-concurrency/src/PoolLab.java", "from": 15, "text": "        Lease borrow(long timeoutMillis) throws InterruptedException {\n            if (timeoutMillis < 0) throw new IllegalArgumentException(\"negative timeout\");\n            if (!permits.tryAcquire(timeoutMillis, TimeUnit.MILLISECONDS)) return null;\n            Integer id = free.poll();\n            if (id == null) {\n                permits.release();\n                throw new IllegalStateException(\"Permit without a free connection\");\n            }\n            return new Lease(id, this);\n        }"};
   CODE.deadlock = {"title": "DeadlockLab.java", "file": "docker-labs/46-concurrency/src/DeadlockLab.java", "from": 32, "text": "    private static Thread worker(ReentrantLock first, ReentrantLock second, CountDownLatch ready, String name) {\n        Thread t = new Thread(() -> {\n            try {\n                first.lockInterruptibly();\n                try {\n                    ready.countDown();\n                    LabSupport.await(ready);\n                    second.lockInterruptibly();\n                    try { /* Opposite order deliberately prevents reaching this point. */ }\n                    finally { second.unlock(); }\n                } finally { first.unlock(); }\n            } catch (InterruptedException expected) {\n                Thread.currentThread().interrupt();\n            }\n        }, name);\n        t.setDaemon(true);\n        return t;\n    }"};
@@ -189,7 +190,7 @@
 
     {
       id: 'cc-race', icon: '🔢', group: '🔢 2 · Shared state', title: 'Concurrency 2 · Do increments, nateeja ek', badge: 'Counter Rakshak',
-      objectives: ['Race condition ko forced interleaving se reproduce karo', 'Mutex, atomic increment aur reentrant lock ka scope samjho', 'Coarse/fine locks aur immutable snapshot ka tradeoff dekho'],
+      objectives: ['Race condition ko forced interleaving se reproduce karo', 'Poore read–add–write ko mutex se bachao', 'Atomic increment ka scope samjho: ek counter, do counters nahi'],
       lesson: ['<h3>Dono cashiers ne 0 padha</h3><p>Do cashiers ek counter par ek-ek order jodte hain. Dono 0 padhkar 1 likhein toh do orders ke baad bhi count 1 rahega. Pehle lost update banao; phir poore read–add–write ko bachao.</p>'],
       stages: [
         walk('Lost update ko ek-ek step mein todo', ['Thread A', 'Shared count', 'Thread B'], [['a', 'A ka local read'], ['count', 'Shared count'], ['b', 'B ka local read']], [
@@ -235,48 +236,23 @@
               ],
               "Atomic ka vaada kitni cheezon par hai: ek counter par, ya do counters par milkar?") },
         ], 'Race same-pal chalne ka naam nahi. Correctness ke liye operation ka scope aur sab writers ka coordination dekho.'),
-        cards('Taala kitna bada? Aur kya badalna hi zaroori hai?', [
-          { title: '1. Coarse ya fine?', say: '<b>Coarse-grained locking</b>: kai keys ke liye ek bada lock. <b>Fine-grained locking</b>: alag keys ya chhote regions ke locks. Lab mein A ka lock held hai; B ke alag key ka tryLock coarse par fail, fine par pass hota hai. Throughput ka benchmark nahi.',
-            ask: ask("Do accounts ke transfer mein har account ka alag (chhota) lock lagaya. Kya design poora ho gaya?",
+        cards('Code mein taala: lock se finally tak', [
+          { title: '1. lock() se finally tak', say: 'Code mein <code>lock.lock()</code> ke baad poora <code>value = value + 1</code> <code>try</code> ke andar hai. <code>finally</code> mein <code>unlock()</code> hai, toh beech mein exception aaye tab bhi lock chhoot jaata hai.',
+            ask: ask("Kisi ne unlock() ko finally se nikaal ke try ke aakhir mein rakh diya. value + 1 ke beech exception aaya. Ab kya hoga?",
               [
-                "Transfer mein dono accounts saath badalte hain, toh dono ke locks saath chahiye",
-                "Alag locks wale dono accounts ka milkar balance apne aap sahi rahega",
-                "Do chhote locks lene se dono accounts ek hi pal mein ek saath lock ho jaate hain",
+                "Lock pakda hi reh jaayega; baaki threads is lock par hamesha ruke rahenge",
+                "Exception aate hi Java khud lock chhod deta hai, toh koi farq nahi padega",
+                "Sirf value galat hogi; agla thread lock ko apne aap tod ke andar aa jaayega",
               ],
               [
-                "Chhote (fine) locks alag accounts ke kaam ko saath chalne dete hain. Par transfer do accounts ek saath badalta hai — dono ke locks chahiye. Ek baat aage ke liye: do locks lene ka kram har jagah ek hi rakho. Kram ulta ho toh do threads ek doosre ka lock maangte hue phans sakte hain — Stuck wala level yahi dikhata hai.",
-                "Paisa ek account se nikla aur doosre mein gaya — dono badlaav ek saath bachane padenge.",
-                "Do locks do alag kadam mein milte hain. Beech mein doosra thread aa sakta hai.",
+                "Code unlock() tak pahuncha hi nahi. ReentrantLock apne aap nahi khulta — owner thread ko khud unlock karna padta hai. Isliye unlock hamesha finally mein.",
+                "ReentrantLock exception par apne aap nahi khulta. synchronized block alag hai: block se bahar nikalte hi monitor chhoot jaata hai.",
+                "Doosra thread kisi aur ka lock tod nahi sakta. Owner unlock na kare toh lock band rehta hai.",
               ],
-              "Transfer mein kitne accounts ek saath badalte hain? Ek account ka lock doosre account ko bachata hai?") },
-          { title: '2. Same thread phir lock le', say: '<b>Reentrant lock</b> same owner thread ko dobara lock lene deta hai. Hold count 2 par ek unlock ke baad count 1 rahega. Doosra thread tab tak owner nahi banta.',
-            ask: ask("Ek thread ne wahi lock do baar liya (reentrant), aur ek baar chhoda. Kya doosra thread ab andar aa sakta hai?",
-              [
-                "Ek hold abhi baaki hai; doosre unlock tak lock pehle thread ka hai",
-                "Pehla unlock hi lock ka poora malik-record mita deta hai, ginti nahi",
-                "Reentrant ka matlab doosre thread ko bhi andar aane ki chhoot hai",
-              ],
-              [
-                "Reentrant lock wahi thread dobara le sakta hai, aur har baar ginti badhti hai. Count 2 → ek unlock → count 1. Lock tab khulta hai jab count 0 ho. Har lock ke saath ek unlock.",
-                "Ek unlock ek hi ginti ghatata hai. 2 se 1 hua, 0 nahi.",
-                "Reentrant sirf lock ke maalik thread ke liye hai. Doosre thread ke liye lock band hi rehta hai.",
-              ],
-              "Hold count 2 tha. Ek unlock ke baad count kitna bacha?") },
-          { title: '3. Immutable snapshot', say: 'Java mein <code>final</code> field ka matlab: field ek baar set ho gayi, toh field ko kisi doosre object par nahi badal sakte. <b>Immutability</b> mein object banne ke baad value mutate nahi hoti. Lab <code>List.copyOf</code> se strings ki snapshot leta hai. Source list baad mein badle toh snapshot nahi badalti. Mutable nested objects ki deep copy is API ka promise nahi.',
-            ask: ask("final field mein ek mutable list rakhi. Kya poori list ab immutable ho gayi?",
-              [
-                "Final sirf reference pakka karta hai; list ke items ab bhi badal sakte hain",
-                "Final reference ke saath list aur andar ka har object bhi jam jaata hai",
-                "Final field hote hi list par saare concurrent updates apne aap ruk jaate hain",
-              ],
-              [
-                "final ka matlab: field kisi doosri list ko point nahi karegi. List ke andar add/remove phir bhi chalta hai. Na badalne wali snapshot chahiye toh List.copyOf jaisi immutable copy banao (lab mein List.copyOf); nested objects ki deep copy List.copyOf ka vaada nahi.",
-                "final andar ke objects ko nahi jamata. Deep freeze nahi hota.",
-                "List ke add/remove final reference se band nahi hote.",
-              ],
-              "Card mein final ka matlab dobara padho: final kya pakka karta hai — kaunsi list, ya list ke andar ka saamaan?") },
-          { title: '4. Immutable se kya nahi milta?', say: 'Immutable snapshots sharing ko aasaan banati hain. Nayi snapshot publish karna, do updates ka conflict aur external payment ki deduplication alag rules maangte hain. Atomic operation ko non-preemptible CPU code bhi mat samjho: guarantee observers ko update ke scope ki hai.' },
-        ], 'Single counter: atomic increment ya poora mutex section. Multi-field rule: common boundary. Independent keys: finer locks ka measured tradeoff.', CODE.race),
+              "Exception ke baad code ki kaunsi line chalti hai, aur kaunsi skip hoti hai?") },
+          { title: '2. Atomic increment', say: 'Atomic version mein lock dikhta hi nahi: <code>count.incrementAndGet()</code> padhna, jodna aur likhna ek hi atomic kadam mein karta hai. Ek counter ke liye atomic increment sabse seedha raasta hai.' },
+          { title: '3. volatile kaafi kyun nahi?', say: 'Lab ki <code>value</code> field <code>volatile</code> hai, phir bhi broken run mein count 1 aaya. <code>volatile</code> har read aur write ko doosre threads ko dikhata hai; read–add–write ko ek kadam nahi banata. Poora kadam lock ya atomic increment hi bachate hain.' },
+        ], 'Taala poore read–add–write par lagao aur finally mein kholo. Ek counter ke liye atomic increment kaafi hai.', CODE.race),
         lab('ex1-race', 'Lab 1 · race banao aur repair karo', ask("Lab mein broken = 1, mutex = 2, atomic = 2 mila. Lab ne kya saabit kiya?",
           [
             "Lost update dobara bana, aur dono ilaaj ne is counter ke dono jod bachaye",
@@ -303,6 +279,101 @@
             "await ke baad koi apne aap taaza stock nahi deta — har request apna purana padha hua stock rakhti hai.",
           ],
           "Race ke liye kai CPU threads zaroori hain, ya bas padhne aur likhne ke beech kisi aur ka ghus aana?"),
+        ask("\"Production mein orders ka count kabhi-kabhi ek kam aata hai. Local test 1,000 baar chalaya, bug kabhi nahi dikha. Bug ko pakka kaise dikhaoge?\"",
+          [
+            "Read aur write ke beech barrier lagao, taaki dono threads pehle padhein, phir likhein",
+            "Test ko 1 lakh baar chalao — itni baar mein race kabhi na kabhi zaroor dikh jaayegi",
+            "Production ke logs mein count ghatne ka pal dhoondho — test mein race dikh nahi sakti",
+          ],
+          [
+            "Lab yahi karta hai: barrier dono threads ko read ke baad rokta hai, phir likhne deta hai. Bura kram har baar banta hai — bug luck par nahi tikta. Ilaaj ke baad wahi test 2 dikhaye.",
+            "Zyada baar chalane se mauka badhta hai, guarantee nahi. Timing machine aur load ke saath badalti hai.",
+            "Logs se pal mil sakta hai, par fix pakka karne ke liye dobara banne wala test chahiye — barrier se race test mein banti hai.",
+          ],
+          "Lab ne lost update har baar kaise banaya — luck se ya kisi rok se?"),
+      ]),
+      success: ['Lost update ko bina timing luck reproduce kar sakte ho', 'Mutex aur atomic increment ka scope bata sakte ho'],
+      homework: 'RaceLab.java mein ek naya fixed method khud banao. Broken baseline rakho. Sirf write par lock lagaakar pehle failure dekho; phir read–add–write guard karo.',
+      cards: [{ front: 'Atomic increment kya bachata hai?', back: 'Us counter ka one-step update; do counters ka joint business rule nahi.' }, { front: 'unlock() kahan likho?', back: 'finally mein, taaki exception aaye tab bhi lock chhoote.' }],
+    },
+    {
+      id: 'cc-locks', icon: '🔐', group: '🔐 3 · Taale ka size', title: 'Concurrency 3 · Ek taala ya kai?', badge: 'Taala Paarkhi',
+      objectives: ['Coarse aur fine locks ka tradeoff dekho', 'Reentrant lock ki hold count samjho', 'Immutable snapshot se kya milta hai aur kya nahi, bata pao'],
+      lesson: ['<h3>Ek register, do cashiers</h3><p>Dukaan mein ek hi register par saare accounts ka hisaab hai. Asha account X likh rahi hai, toh Kabir ko account Y ke liye bhi rukna padta hai. Alag registers dene se Kabir aage badhta hai — par do accounts ka transfer ab dono registers maangta hai.</p>'],
+      stages: [
+        walk('Ek taala ya do? Ek-ek step mein dekho', ['Thread A · key X', 'Taala', 'Thread B · key Y'], [['a', 'A ka haal'], ['lock', 'Taale ka haal'], ['b', 'B ka haal']], [
+          { title: '1. Ek bada taala', say: '<b>Coarse-grained locking</b>: kai keys ke liye ek hi bada lock. A ne key X ke liye lock le liya. B ko key Y chahiye, par lock wahi hai.', vars: { a: 'X ka kaam, lock held', lock: 'Ek lock: X aur Y dono', b: 'Y ke liye wait' },
+            ask: ask("A ne bada lock pakda hai (sirf key X ke liye). B ko alag key Y chahiye aur B tryLock karta hai. Kya hoga?",
+              [
+                "tryLock false — lock ek hi hai, toh Y ka kaam bhi X ke liye rukega",
+                "tryLock true — B ki key alag hai, toh bada lock B ko jaane dega",
+                "B ka tryLock tab tak rukega jab tak A apna kaam khatam na kare",
+              ],
+              [
+                "Lab: coarse=false. Ek bada lock key nahi dekhta — lock pakda hai toh sab ruke. tryLock rukta nahi, turant false deta hai.",
+                "Bada lock keys nahi dekhta. Lock ek hi hai, aur lock A ke paas hai.",
+                "Plain tryLock() rukta nahi — lock free na ho toh turant false lautata hai. Rukna lock() ka kaam hai.",
+              ],
+              "Lock kitne hain — ek, ya har key ka alag?") },
+          { title: '2. Har key ka alag taala', say: '<b>Fine-grained locking</b>: har key ya chhote hisse ka alag lock. A key X ka lock rakhta hai; B ka key Y wala tryLock pass hota hai. Lab: coarse=false, fine=true. Lab sirf lock milna dekhta hai, throughput nahi naapta.', vars: { lock: 'X ka lock · Y ka lock', b: 'Y ka kaam chal pada' },
+            ask: ask("Do accounts ke transfer mein har account ka alag (chhota) lock lagaya. Kya design poora ho gaya?",
+              [
+                "Transfer mein dono accounts saath badalte hain, toh dono ke locks saath chahiye",
+                "Alag locks wale dono accounts ka milkar balance apne aap sahi rahega",
+                "Do chhote locks lene se dono accounts ek hi pal mein ek saath lock ho jaate hain",
+              ],
+              [
+                "Chhote (fine) locks alag accounts ke kaam ko saath chalne dete hain. Par transfer do accounts ek saath badalta hai — dono ke locks chahiye. Ek baat aage ke liye: do locks lene ka kram har jagah ek hi rakho. Kram ulta ho toh do threads ek doosre ka lock maangte hue phans sakte hain — Stuck wala level yahi dikhata hai.",
+                "Paisa ek account se nikla aur doosre mein gaya — dono badlaav ek saath bachane padenge.",
+                "Do locks do alag kadam mein milte hain. Beech mein doosra thread aa sakta hai.",
+              ],
+              "Transfer mein kitne accounts ek saath badalte hain? Ek account ka lock doosre account ko bachata hai?") },
+          { title: '3. Same thread phir lock le', say: '<b>Reentrant lock</b> same owner thread ko dobara lock lene deta hai. Hold count 2 par ek unlock ke baad count 1 rahega. Doosra thread tab tak owner nahi banta.', vars: { a: 'Lock 2 baar · holds 2', lock: 'Owner A · count 2', b: 'Wait' },
+            ask: ask("Ek thread ne wahi lock do baar liya (reentrant), aur ek baar chhoda. Kya doosra thread ab andar aa sakta hai?",
+              [
+                "Ek hold abhi baaki hai; doosre unlock tak lock pehle thread ka hai",
+                "Pehla unlock hi lock ka poora malik-record mita deta hai, ginti nahi",
+                "Reentrant ka matlab doosre thread ko bhi andar aane ki chhoot hai",
+              ],
+              [
+                "Reentrant lock wahi thread dobara le sakta hai, aur har baar ginti badhti hai. Count 2 → ek unlock → count 1. Lock tab khulta hai jab count 0 ho. Har lock ke saath ek unlock.",
+                "Ek unlock ek hi ginti ghatata hai. 2 se 1 hua, 0 nahi.",
+                "Reentrant sirf lock ke maalik thread ke liye hai. Doosre thread ke liye lock band hi rehta hai.",
+              ],
+              "Hold count 2 tha. Ek unlock ke baad count kitna bacha?") },
+          { title: '4. Ginti 0 par hi lock khulta hai', say: 'A ek unlock karta hai: count 1. Lock ab bhi A ka hai. Doosre unlock par count 0 — ab B lock le sakta hai. Lab: holds=2 -> 1 -> 0.', vars: { a: 'Do unlock ke baad free', lock: 'Count 0', b: 'Ab lock mil sakta hai' } },
+        ], 'Bada lock simple hai par unrelated kaam rokta hai. Chhote locks overlap dete hain; kai keys ek saath badlein toh locks ek tay kram mein lo.'),
+        cards('Kya badalna hi zaroori hai?', [
+          { title: '1. Immutable snapshot', say: 'Java mein <code>final</code> field ka matlab: field ek baar set ho gayi, toh field ko kisi doosre object par nahi badal sakte. <b>Immutability</b> mein object banne ke baad value mutate nahi hoti. Lab <code>List.copyOf</code> se strings ki snapshot leta hai. Source list baad mein badle toh snapshot nahi badalti. Mutable nested objects ki deep copy is API ka promise nahi.',
+            ask: ask("final field mein ek mutable list rakhi. Kya poori list ab immutable ho gayi?",
+              [
+                "Final sirf reference pakka karta hai; list ke items ab bhi badal sakte hain",
+                "Final reference ke saath list aur andar ka har object bhi jam jaata hai",
+                "Final field hote hi list par saare concurrent updates apne aap ruk jaate hain",
+              ],
+              [
+                "final ka matlab: field kisi doosri list ko point nahi karegi. List ke andar add/remove phir bhi chalta hai. Na badalne wali snapshot chahiye toh List.copyOf jaisi immutable copy banao (lab mein List.copyOf); nested objects ki deep copy List.copyOf ka vaada nahi.",
+                "final andar ke objects ko nahi jamata. Deep freeze nahi hota.",
+                "List ke add/remove final reference se band nahi hote.",
+              ],
+              "Card mein final ka matlab dobara padho: final kya pakka karta hai — kaunsi list, ya list ke andar ka saamaan?") },
+          { title: '2. Immutable se kya nahi milta?', say: 'Immutable snapshots sharing ko aasaan banati hain. Nayi snapshot publish karna, do updates ka conflict aur external payment ki deduplication alag rules maangte hain. Atomic operation ko non-preemptible CPU code bhi mat samjho: guarantee observers ko update ke scope ki hai.' },
+          { title: '3. Nayi snapshot kaise pahunche?', say: 'Nayi snapshot banake ek shared reference badlo, jaise <code>AtomicReference</code> ya <code>volatile</code> field. Reader ko ya puri purani snapshot milti hai ya puri nayi — aadhi badli list nahi. Do writers ek saath badlein toh <code>compareAndSet</code> jaisa niyam chahiye.' },
+        ], 'Na badalne wali snapshot padhne ke liye lock nahi chahiye. Nayi snapshot publish karna aur do updates ka conflict alag niyam maangte hain.', CODE.locks),
+        lab('ex1-race', 'Lab 1 · taale ka size aur snapshot', ask("Lab mein reentrant: holds=2 -> 1 -> 0, other key enters: coarse=false fine=true, snapshot unchanged=true mila. Lab ne kya saabit kiya?",
+          [
+            "Alag key ka lock milna, hold count ka ghatna aur snapshot ka na badalna — raftaar nahi",
+            "Fine locks coarse se tez hain — B ka kaam pehle khatam hua, toh speed ka saboot mila",
+            "Snapshot ke andar ke objects bhi jam gaye — deep copy ka saboot bhi isi run mein mila",
+          ],
+          [
+            "Lab ne teen haan/na dekhe: B ko alag key ka lock mila ya nahi, hold count kaise ghata, aur snapshot badla ya nahi. Waqt nahi naapa.",
+            "Lab mein koi timing nahi. tryLock ka true sirf itna batata hai ki lock free tha.",
+            "Lab ki list mein sirf strings hain. List.copyOf nested objects ki deep copy ka vaada nahi karta.",
+          ],
+          "Output ki har line haan/na hai, ya koi line waqt bhi dikhati hai?")),
+      ],
+      interview: interview([
         ask("\"Ek global lock ki wajah se alag-alag customers ki profile updates ek doosre ka intezaar kar rahi hain. Agla sahi kadam?\"",
           [
             "Intezaar naapo, phir har profile ka alag lock socho; do-profile kaam ka niyam aur kram rakho",
@@ -312,16 +383,28 @@
           [
             "Chhote locks alag customers ko saath chalne dete hain — par pehle naapo ki intezaar sach mein lock ka hai. Do profiles saath badalne wale update ko dono locks ek tay kram mein chahiye. Chhote locks ki keemat: zyada complexity.",
             "Statements ke beech doosra thread ghus ke saath wala update tod sakta hai.",
-            "final reference badalti fields ko thread-safe nahi banata (sawaal 6).",
+            "final reference badalti fields ko thread-safe nahi banata (final wala sawaal).",
           ],
           "Kya alag customers ek hi data badal rahe hain? Aur do profiles ek saath badalne wale update ka kya?"),
+        ask("\"Har request app ki config padhti hai; admin din mein ek-do baar config badalta hai. Har read par lock lagana mehenga pad raha hai. Kya karoge?\"",
+          [
+            "Config ki immutable snapshot rakho; badlaav par nayi snapshot banake ek baar mein swap karo",
+            "Har request ke liye config ki apni copy banao, aur admin har copy ko alag se update kare",
+            "Lock hata do aur config ki list ko final kar do — final list ko koi badal hi nahi sakta",
+          ],
+          [
+            "Readers ko bina lock ek pakki snapshot milti hai. Admin nayi snapshot banake ek atomic reference se swap karta hai — aadhi badli config kisi reader ko nahi dikhti. Do admins ek saath badlein toh conflict ka niyam alag chahiye.",
+            "Har request ki copy alag se update karna na mumkin hai na sasta. Ek shared snapshot kaafi hai.",
+            "final sirf reference pakka karta hai; list ke andar add/remove phir bhi chalta hai.",
+          ],
+          "Na badalne wala data padhne ke liye lock chahiye kya?"),
       ]),
-      success: ['Lost update ko bina timing luck reproduce kar sakte ho', 'Atomicity, lock scope aur immutability ki boundary bata sakte ho'],
-      homework: 'RaceLab.java mein ek naya fixed method khud banao. Broken baseline rakho. Sirf write par lock lagaakar pehle failure dekho; phir read–add–write guard karo.',
-      cards: [{ front: 'Atomic increment kya bachata hai?', back: 'Us counter ka one-step update; do counters ka joint business rule nahi.' }, { front: 'Coarse ya fine?', back: 'Bada lock simple par unrelated work rok sakta hai. Fine locks independent work allow karte hain; ordering aur invariants mushkil ho sakte hain.' }, { front: 'Reentrant ka owner?', back: 'Same thread dobara acquire kar sakta hai. Har acquire ka matching unlock chahiye.' }, { front: 'Immutable ka matlab final reference?', back: 'Nahi. Object aur nested values ki mutability alag dekho; safe publication bhi matter karti hai.' }],
+      success: ['Ek bade aur kai chhote locks ka tradeoff bata sakte ho', 'Reentrant hold count aur immutable snapshot ki hadd samjha sakte ho'],
+      homework: 'RaceLab.otherKeyCanEnter mein fine lock ko coarse jaisa banao (keyB = keyA) aur fine=false dekho. Phir ek transfer method likho jo do keys ke locks hamesha ek tay kram mein le.',
+      cards: [{ front: 'Coarse ya fine?', back: 'Bada lock simple par unrelated work rok sakta hai. Fine locks independent work allow karte hain; ordering aur invariants mushkil ho sakte hain.' }, { front: 'Reentrant ka owner?', back: 'Same thread dobara acquire kar sakta hai. Har acquire ka matching unlock chahiye.' }, { front: 'Immutable ka matlab final reference?', back: 'Nahi. Object aur nested values ki mutability alag dekho; safe publication bhi matter karti hai.' }],
     },
     {
-      id: 'cc-queue', icon: '📦', group: '📦 3 · Kaam ki line', title: 'Concurrency 3 · Queue bhari, producer kahan?', badge: 'Queue Sambhalak',
+      id: 'cc-queue', icon: '📦', group: '📦 4 · Kaam ki line', title: 'Concurrency 4 · Queue bhari, producer kahan?', badge: 'Queue Sambhalak',
       objectives: ['Producer–consumer buffer khud banao', 'Condition variable ke saath predicate dobara check karo', 'Capacity wait, nonwaiting API aur backpressure ka farak dekho'],
       lesson: ['<h3>Do shelf slots, teesra parcel</h3><p>Producer parcel banata hai. Consumer parcel uthata hai. Beech ki shelf queue hai. Shelf ki do jagah bhar gayi toh teesra parcel kahan jaayega? Pehle policy chuno; phir code likho.</p>'],
       stages: [
@@ -443,7 +526,7 @@
       cards: [{ front: 'Signal ka matlab condition true?', back: 'Nahi. Same lock dobara lekar predicate while mein check karo.' }, { front: 'Queue bounded toh process memory bounded?', back: 'Nahi. Pending producers, request handlers aur payloads ki alag limits chahiye.' }, { front: 'Offer false ka matlab?', back: 'Is buffer mein item accept nahi hua. Caller overload policy handle kare.' }, { front: 'Nonwaiting aur lock-free?', back: 'Capacity/data ka wait nahi aur formal progress guarantee alag claims hain.' }],
     },
     {
-      id: 'cc-pool', icon: '🔌', group: '🔌 4 · Limited resources', title: 'Concurrency 4 · Do connections, teesra caller', badge: 'Permit Paalak',
+      id: 'cc-pool', icon: '🔌', group: '🔌 5 · Limited resources', title: 'Concurrency 5 · Do connections, teesra caller', badge: 'Permit Paalak',
       objectives: ['Semaphore se capacity 2 enforce karo', 'Permit aur actual connection alag track karo', 'Failure, timeout aur duplicate close par capacity conserve karo'],
       lesson: ['<h3>Do chabiyan, teen customers</h3><p>Do rooms hain aur do chabiyan hain. Teesra customer wait kare ya deadline par laut jaaye. Sirf chabiyon ki ginti room ko assign nahi karti; room ka ID aur return bhi track karna hoga.</p><p>Lab logical connection IDs use karta hai. Java synchronization asli hai; database connection nahi khulta.</p>'],
       stages: [
@@ -564,7 +647,7 @@
       cards: [{ front: 'Semaphore kya ginta hai?', back: 'Permits. Connection IDs, health aur ownership ka alag design chahiye.' }, { front: 'Extra release safe?', back: 'Generic Java semaphore upper resource limit enforce nahi karta. Lease ka once-only return guard rakho.' }, { front: 'Fair semaphore aur CPU fairness?', back: 'Acquisition ordering scheduler ko turant CPU dene ki guarantee nahi.' }, { front: 'Local cap global cap?', back: 'Nahi. Har process ka cap fleet ke total resource budget mein add hota hai.' }],
     },
     {
-      id: 'cc-stuck', icon: '🔒', group: '🔒 5 · Useful progress', title: 'Concurrency 5 · Dono zinda, kaam kyun band?', badge: 'Progress Pehredaar',
+      id: 'cc-stuck', icon: '🔒', group: '🔒 6 · Useful progress', title: 'Concurrency 6 · Dono zinda, kaam kyun band?', badge: 'Progress Pehredaar',
       objectives: ['Jaan-boojhkar deadlock banao aur detect karo', 'Deadlock, livelock aur starvation ko progress se alag karo', 'Lock order, bounded retry aur fairness ka sahi scope chuno'],
       lesson: ['<h3>Stock ki chabi aur wallet ki chabi</h3><p>Asha stock ka taala pakadkar wallet ka wait karti hai. Kabir wallet ka taala pakadkar stock ka wait karta hai. Dono ka process zinda hai, par koi order poora nahi hota.</p><p>Lab apne Java threads ki wait cycle detect karke interruptible cleanup karta hai. Asli production deadlock apne aap recover hone ka promise nahi.</p>'],
       stages: [
@@ -698,7 +781,7 @@
       cards: [{ front: 'Deadlock?', back: 'Tasks held resources ke wait cycle mein hain; normal release path nahi pahunchta.' }, { front: 'Livelock?', back: 'Tasks react kar rahe hain, par useful work finish nahi hota.' }, { front: 'Starvation?', back: 'Doosre tasks progress karte hain, ek task ko service baar-baar nahi milti.' }, { front: 'Fairness se deadlock cure?', back: 'Nahi. Wait order aur resource dependency cycle alag design questions hain.' }],
     },
     {
-      id: 'cc-workers', icon: '🏭', group: '🏭 6 · Kaam admit aur dedupe karo', title: 'Concurrency 6 · Do workers, do waiting slots', badge: 'Worker Nirmata',
+      id: 'cc-workers', icon: '🏭', group: '🏭 7 · Kaam admit aur dedupe karo', title: 'Concurrency 7 · Do workers, do waiting slots', badge: 'Worker Nirmata',
       objectives: ['Thread pool ki worker aur queue limits alag set karo', 'Full executor ka rejection caller tak pahunchao', 'Concurrent duplicate key par local effect ek baar karo'],
       lesson: ['<h3>Do cooks, par wait-list kitni?</h3><p>Har order par naya cook rakhna zaroori nahi. Do cooks reuse kar sakte hain. Par waiting orders ki list bina hadd badhegi toh sirf cook count limit karna kaafi nahi.</p><p>Phir ek aur bug: same payment request do workers ko mil gayi. Pool limit duplicate effect ko nahi rokta.</p>'],
       stages: [
@@ -849,6 +932,12 @@
       3: { n0: ['ok', 'Same mutex'], n1: ['acc', 'Whole increment'], n2: ['slow', 'Pehle owner ka wait'] },
       4: { n1: ['ok', 'Fixed count 2'], n2: ['ok', 'Doosra update poora'] },
     },
+    'cc-locks': {
+      0: { n0: ['busy', 'X ka lock held'], n1: ['slow', 'Ek lock: X + Y'], n2: ['slow', 'Y ka wait'] },
+      1: { n1: ['ok', 'X aur Y ke alag locks'], n2: ['ok', 'Y ka tryLock pass'] },
+      2: { n0: ['busy', 'Holds 2'], n1: ['acc', 'Owner A · count 2'], n2: ['slow', 'Wait'] },
+      3: { n1: ['ok', 'Count 0 · free'], n2: ['ok', 'Ab lock mil sakta hai'] },
+    },
     'cc-queue': {
       0: { n0: ['busy', 'Intake chalta raha'], n1: ['bad', 'Unbounded: 5 items'], n2: ['idle', 'Shuru nahi'] },
       1: { n0: ['slow', 'C ka put pending'], n1: ['slow', 'A, B · full 2/2'], n2: ['acc', 'A utha sakta hai'] },
@@ -933,11 +1022,30 @@
     avoid: 'Do independent atomic fields ko ek transaction mat maano.',
     mistake: 'Purani read ke baad sirf final write par lock lagaana.',
     compare: [
-      { choice: 'Ek bada lock lo', when: 'Joint niyam ko common boundary chahiye', tradeoff: 'Design aasan hai; unrelated kaam bhi ruk sakta hai' },
-      { choice: 'Alag keys ke locks lo', when: 'Independent keys par wait measured ho', tradeoff: 'Overlap milega; multi-key ka order tay karo' },
+      { choice: 'Mutex lo', when: 'Kai lines ya kai fields ek saath bachani hon', tradeoff: 'Poora section ek owner ka; unlock finally mein rakho' },
+      { choice: 'Atomic increment lo', when: 'Sirf ek counter badhana ho', tradeoff: 'Lock nahi chahiye; do counters ka joint niyam nahi bachata' },
     ],
     followup: 'Stock aur balance ko alag atomic updates mile. Joint rule phir bhi kaise toot sakta hai?',
   }, ['locks', 'atomic']);
+  guide('cc-locks', {
+    title: 'Ek register ya kai: Kabir kab tak ruke?',
+    misaal: 'Ek hi register par saare accounts hain. Asha account X likh rahi hai, Kabir account Y ke liye ruka hai. Alag registers mein Kabir aage badhta hai; transfer ko dono registers ek tay kram mein chahiye.',
+    asli: 'Lock utna bada rakho jitna niyam maange. Bada aasaan hai; chhote overlap dete hain, par kram maangte hain.',
+    points: [
+      '<b>Coarse lock:</b> ek lock kai keys bachata hai, isliye unrelated kaam bhi rukta hai.',
+      '<b>Fine locks:</b> har key ka alag lock; multi-key kaam mein locks ka kram tay karo.',
+      '<b>Reentrant:</b> same owner dobara le sakta hai; count 0 par hi lock khulta hai.',
+      '<b>Immutable snapshot:</b> na badalne wala data bina lock padho; nayi snapshot publish karna alag kaam hai.',
+    ],
+    use: 'Ek global lock par alag keys ka intezaar naapa gaya ho.',
+    avoid: 'final reference ko poori list ki immutability mat maano.',
+    mistake: 'Fine locks lagaye, par do-key transfer mein locks alag-alag kram mein liye.',
+    compare: [
+      { choice: 'Ek bada lock lo', when: 'Joint niyam ko common boundary chahiye', tradeoff: 'Design aasan hai; unrelated kaam bhi ruk sakta hai' },
+      { choice: 'Alag keys ke locks lo', when: 'Independent keys par wait measured ho', tradeoff: 'Overlap milega; multi-key ka order tay karo' },
+    ],
+    followup: 'Transfer mein ek thread X phir Y lock leta hai, doosra Y phir X. Kya ho sakta hai?',
+  }, ['locks']);
   guide('cc-queue', {
     title: 'Shelf mein do jagah: teesra parcel kahan?',
     misaal: 'Shelf par A aur B hain. Producer C rakhna chahta hai, par jagah nahi. A nikalta hai tab C aa sakta hai; wait ka signal milna C ki reserved jagah nahi hai.',

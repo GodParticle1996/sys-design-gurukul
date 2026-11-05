@@ -82,6 +82,7 @@ SD.defaultState = function () {
   };
 };
 
+SD.LEVEL_SPLITS = { 'cc-race': ['cc-locks'] };  // 2026-11-05: cc-race → cc-race + cc-locks
 SD.normalizeState = function (s) {
   const out = SD.defaultState();
   if (!s || typeof s !== 'object' || Array.isArray(s)) return out;
@@ -92,6 +93,14 @@ SD.normalizeState = function (s) {
     Object.entries(s.stars).forEach(([id, n]) => {
       if (!['__proto__', 'constructor', 'prototype'].includes(id) && Number.isInteger(n) && n >= 1 && n <= 3) out.stars[id] = n;
     });
+  // A split level keeps the old id; finishing the old level also counts for the new half, with the same stars.
+  Object.entries(SD.LEVEL_SPLITS).forEach(([from, added]) => {
+    if (!out.completed.includes(from)) return;
+    added.forEach(id => {
+      if (!out.completed.includes(id)) out.completed.push(id);
+      if (out.stars[from] && !out.stars[id]) out.stars[id] = out.stars[from];
+    });
+  });
   if (s.dojo && typeof s.dojo === 'object' && !Array.isArray(s.dojo))
     Object.entries(s.dojo).forEach(([id, c]) => {
       if (['__proto__', 'constructor', 'prototype'].includes(id) || !c || typeof c !== 'object') return;
