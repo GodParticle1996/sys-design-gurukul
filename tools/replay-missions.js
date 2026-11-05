@@ -13,7 +13,11 @@ function run(options = {}) {
   function send(t, command, label) {
     commands++;
     let output = [];
-    try { output = t.run(command); } catch (e) { failures.push(`${label}: uncaught ${e.message} for ${JSON.stringify(command)}`); }
+    try {
+      const before = t.out.children.length;
+      // The headless DOM stores innerHTML separately from textContent for sys lines.
+      output = t.run(command).map((line, i) => ({ ...line, text: line.text || t.out.children[before + i].innerHTML }));
+    } catch (e) { failures.push(`${label}: uncaught ${e.message} for ${JSON.stringify(command)}`); }
     check(!output.some(x => /^simulator error:/.test(x.text)), `${label}: internal simulator error for ${JSON.stringify(command)}`);
     if (label !== 'engine/live-state-gate' && t.sim?.stage?.verify && t.sim.stage.tasks.every(task => task.check(t.sim))) {
       check(t.sim.stage.verify(t.sim), `${label}: every task ticks but final verify fails after ${command}`);
@@ -54,10 +58,17 @@ function run(options = {}) {
     const original = JSON.stringify(stage.sys);
     const t = app.terminal(stage);
     check(!stage.success(t.sim), `${id}: fresh mission already succeeds`);
+    const solutionOutput = [];
     stage.solution.forEach((command, i) => {
-      send(t, command, id);
+      solutionOutput.push(...send(t, command, id));
       check(t.sim.done === (i === stage.solution.length - 1), `${id}: win must occur only at final step (${i + 1}/${stage.solution.length}, done=${t.sim.done})`);
     });
+    if (m.level.id === 'breaker') {
+      const opened = solutionOutput.filter(x => x.text.startsWith('🔌 ledger: ⚡ CIRCUIT OPEN'));
+      check(opened.length === 1, `${id}: solution must print exactly one OPEN transition`);
+      check(opened[0]?.text.includes('pichhle 20s mein 4 mein se 4 calls fail (hadd 50%). Agle 30s') &&
+        opened[0].text.includes('fallback jawab dega.'), `${id}: OPEN message lost real window counts, settings or fallback`);
+    }
     check(t.won === 1, `${id}: completion callback must run exactly once`);
     stage.tasks.forEach((task, index) => check(!!task.check(t.sim), `${id}: checklist task ${index + 1} false at win`));
     check(stage.verify(t.sim), `${id}: final live-state verification false`);
@@ -98,6 +109,40 @@ function run(options = {}) {
     stage.solution.forEach(command => send(bad, command, id + '/garbage-recovery'));
     check(bad.sim.done, `${id}: cannot recover from rejected inputs using reset`);
   });
+
+  if (!options.only || options.only === 'breaker' || options.only === 'breaker/stage/0') {
+    const sys = app.SD.defaultSys();
+    const t = app.terminal({ sys, tasks: [], success: () => false });
+    const label = 'engine/breaker-messages';
+    const request = 'GET /api/v1/transactions?limit=5';
+    const transitions = output => output.filter(x => /^🔌 ledger: (?:⚡ CIRCUIT OPEN|\d+s ka cooldown poora|test request)/.test(x.text)).map(x => x.text);
+    ['sim add breaker ledger --threshold 0.75 --window 7 --half-open 11', 'sim add timeout ledger 200', request,
+      'sim inject error ledger 1', request, request].forEach(c => send(t, c, label));
+    const opened = transitions(send(t, request, label));
+    check(opened.length === 1 && opened[0].includes('pichhle 7s mein 4 mein se 3 calls fail (hadd 75%). Agle 11s'),
+      'Breaker OPEN message ignored custom settings or mixed success/failure counts');
+    check(!opened.some(text => /fallback/.test(text)) && t.sim.last.status === 504,
+      'Breaker without fallback promised a fallback response');
+    check(transitions(send(t, request, label)).length === 0, 'Short-circuit request repeated the OPEN transition');
+    send(t, 'sim advance 9', label);
+    const beforePreview = JSON.stringify(t.sim.sys);
+    const preview = app.SD.depCost(t.sim.sys, 'ledger', { nowSec: t.sim.timeSec + 1 });
+    check(preview.transitions.length === 0 && JSON.stringify(t.sim.sys) === beforePreview,
+      'Read-only dependency cost emitted a transition or changed breaker state');
+    const reopened = transitions(send(t, request, label));
+    check(reopened.length === 2 && /11s ka cooldown poora.*HALF-OPEN/.test(reopened[0]) &&
+      /test request bhi fail.*wapas OPEN.*Agle 11s/.test(reopened[1]),
+      'Failed trial must print HALF-OPEN then reopen exactly once at the cooldown boundary');
+    check(transitions(send(t, request, label)).length === 0, 'Reopened circuit repeated a transition before the next cooldown');
+    send(t, 'sim inject error ledger 0', label);
+    send(t, 'sim advance 9', label);
+    const recovered = transitions(send(t, request, label));
+    check(recovered.length === 2 && /HALF-OPEN/.test(recovered[0]) && /test request pass.*circuit CLOSED/.test(recovered[1]) &&
+      t.sim.sys.deps.ledger.breakerState === 'closed' && t.sim.last.status === 200,
+      'Healthy dependency must print HALF-OPEN then CLOSED exactly once after cooldown');
+    check(transitions(send(t, request, label)).length === 0, 'Healthy closed circuit repeated a transition');
+    check([...opened, ...reopened, ...recovered].every(text => !standin.test(text)), 'Breaker transition prose contains a pronoun stand-in');
+  }
 
   // Change one named value and prove that the corresponding checklist rejects it.
   const strictCases = [

@@ -234,10 +234,20 @@ SD.depCost = function (sys, name, opts) {
   if (!d) return { ms: 0, ok: true, note: null };
   const o = opts || {};
   const breaker = d.breaker;
+  // A single trial can enter HALF-OPEN and then CLOSED/OPEN; keep both events in order.
+  const transitions = [];
+  function reportTransition(transition) {
+    const outcomes = (d.outcomes || []).filter(x => x.at > o.nowSec - breaker.windowSec);
+    transitions.push({ transition, failures: outcomes.filter(x => x.failed).length, calls: outcomes.length,
+      threshold: breaker.threshold, windowSec: breaker.windowSec, cooldownSec: breaker.halfOpenAfter });
+  }
 
-  if (breaker && d.breakerState === 'open' && o.recordOutcome && o.nowSec >= d.openUntilSec) d.breakerState = 'half-open';
+  if (breaker && d.breakerState === 'open' && o.recordOutcome && o.nowSec >= d.openUntilSec) {
+    d.breakerState = 'half-open';
+    reportTransition('half-open');
+  }
   if (breaker && d.breakerState === 'open') {
-    return { ms: 1, ok: !!d.fallback, note: 'circuit OPEN — fail fast (1ms)' + (d.fallback ? ', fallback bheja' : ''), shortCircuit: true };
+    return { ms: 1, ok: !!d.fallback, note: 'circuit OPEN — fail fast (1ms)' + (d.fallback ? ', fallback bheja' : ''), shortCircuit: true, transitions };
   }
   let latency = d.down ? (d.timeoutMs || 30000) : d.p99;
   let ok = !d.down && d.errorRate < 0.5;
@@ -264,12 +274,16 @@ SD.depCost = function (sys, name, opts) {
     const failureRate = d.outcomes.filter(x => x.failed).length / d.outcomes.length;
     if (d.breakerState === 'half-open') {
       d.breakerState = failed ? 'open' : 'closed';
+      reportTransition(failed ? 'reopen' : 'closed');
       if (!failed) d.outcomes = [];
-    } else if (d.outcomes.length >= (breaker.minCalls || 4) && failureRate >= breaker.threshold) d.breakerState = 'open';
+    } else if (d.outcomes.length >= (breaker.minCalls || 4) && failureRate >= breaker.threshold) {
+      d.breakerState = 'open';
+      reportTransition('open');
+    }
     if (d.breakerState === 'open') d.openUntilSec = o.nowSec + breaker.halfOpenAfter;
   }
   if (!ok && d.fallback) { ok = true; note = (note ? note + '; ' : '') + 'fallback: ' + d.fallback; }
-  return { ms: Math.round(total), ok, failed, note, attempts };
+  return { ms: Math.round(total), ok, failed, note, attempts, transitions };
 };
 
 // A miss batch shares one DB call per key only when single-flight is enabled.
@@ -812,7 +826,14 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       dependencyOK = dependencyOK && dc.ok;
       depMs += dc.ms;
       if (dc.note) depNotes.push(`${dn}: ${dc.note}`);
-
+      (dc.transitions || []).forEach(event => {
+        const cooldown = `Agle ${event.cooldownSec}s tak calls 1ms mein fail hongi` +
+          (d.fallback ? '; fallback jawab dega.' : '.');
+        if (event.transition === 'open') print('sys', `🔌 ${dn}: ⚡ CIRCUIT OPEN — pichhle ${event.windowSec}s mein ${event.calls} mein se ${event.failures} calls fail (hadd ${+(event.threshold * 100).toFixed(2)}%). ${cooldown}`);
+        else if (event.transition === 'half-open') print('sys', `🔌 ${dn}: ${event.cooldownSec}s ka cooldown poora — circuit HALF-OPEN; ek test request downstream bhej rahe hain.`);
+        else if (event.transition === 'reopen') print('sys', `🔌 ${dn}: test request bhi fail — circuit wapas OPEN. ${cooldown}`);
+        else if (event.transition === 'closed') print('sys', `🔌 ${dn}: test request pass — circuit CLOSED, calls downstream jaayengi.`);
+      });
     });
     totalMs += depMs;
     const p99 = Math.round(totalMs * 1.35);
