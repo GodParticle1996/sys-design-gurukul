@@ -747,7 +747,7 @@ SD.registerLevels('stories', [
     'Main "drift rokna" aur "drift sasta pakadna" ka farq samajhta hoon',
   ],
   homework: `<p>Apne system ki har derived copy likho (search index, cache, read replica,
-    materialized view, analytics table). Har ek ke saamne likho: "agar yeh chupchap galat
+    materialized view, analytics table). Har endpoint ke saamne likho: "agar endpoint chupchap galat
     ho jaaye toh kitni der mein pata chalega?" Jiske saamne "pata nahi" ho, wahan pehle
     ek reconciliation check likho.</p>`,
   cards: [

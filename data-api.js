@@ -119,7 +119,7 @@ SD.registerLevels('api', [
   lesson: [
     `<h3>📖 Ek hi niyam se 80% design ho jaata hai</h3>
      <p><b>URL batati hai "kya", method batata hai "kya karna hai".</b>
-     Bas itna. Isse jo nikalta hai:</p>
+     Bas itna. Is ek niyam se jo nikalta hai:</p>
      <pre>❌ POST /getUser?id=5           ✅ GET    /users/5
 ❌ POST /createNewOrder         ✅ POST   /orders
 ❌ GET  /deleteUser/5           ✅ DELETE /users/5
@@ -132,7 +132,7 @@ SD.registerLevels('api', [
      <table>
        <tr><th>Niyam</th><th>Kyun</th></tr>
        <tr><td><b>Plural nouns</b> — /orders</td><td>collection aur item ek jaise dikhein: /orders aur /orders/812</td></tr>
-       <tr><td><b>Nesting max 2 level</b></td><td>/users/5/orders ✅ · /users/5/orders/9/items/3/tax ❌ — uske baad flat + query params behtar hai</td></tr>
+       <tr><td><b>Nesting max 2 level</b></td><td>/users/5/orders ✅ · /users/5/orders/9/items/3/tax ❌ — do level ke baad flat + query params behtar hai</td></tr>
        <tr><td><b>kebab-case paths</b></td><td>/shipping-addresses — URLs case-sensitive hain, underscore link mein underline ke neeche chhup jaata hai</td></tr>
        <tr><td><b>Consistency &gt; perfection</b></td><td>snake_case ya camelCase — jo bhi chuno, poori API mein ek hi</td></tr>
      </table>`,
@@ -143,10 +143,10 @@ SD.registerLevels('api', [
 2. State ko field maano →  PATCH /orders/812 {"status":"cancelled"}
 3. Action ko resource   →  POST /refunds {"order_id": 812}   (refund ki apni zindagi hai)</pre>
      <p>Kaunsa chuno? <b>Poochho ki us action ka apna wajood hai ya nahi.</b>
-     Refund ka apna id, apna status, apni history hoti hai — woh resource
-     hai. "Cancel" bas ek state transition hai — woh action endpoint hai.</p>
+     Refund ka apna id, apna status, apni history hoti hai — refund ek resource
+     hai. "Cancel" bas ek state transition hai — cancel ek action endpoint hai.</p>
      <p class="tip">🎯 REST purist mat bano. <code>POST /orders/812/cancel</code>
-     har developer turant samajh jaayega. Uske liye ek "cancellation resource"
+     har developer turant samajh jaayega. Cancel ke liye ek "cancellation resource"
      banana <i>theoretically</i> saaf hai aur <i>practically</i> pareshaani.</p>`,
   ],
   stages: [
@@ -159,12 +159,12 @@ SD.registerLevels('api', [
         { id: 'bad', label: '❌ Bura' },
       ],
       items: [
-        { text: 'GET /users/5/orders', bin: 'good', explain: 'Noun, plural, 2-level nesting. Client ise dekh ke baaki endpoints guess kar sakta hai.' },
-        { text: 'POST /getUserOrders', bin: 'bad', explain: 'Do galtiyan: verb URL mein, aur read ke liye POST. POST se yeh na cacheable rahi na safe.' },
+        { text: 'GET /users/5/orders', bin: 'good', explain: 'Noun, plural, 2-level nesting. Client is URL ko dekh ke baaki endpoints guess kar sakta hai.' },
+        { text: 'POST /getUserOrders', bin: 'bad', explain: 'Do galtiyan: verb URL mein, aur read ke liye POST. POST se read na cacheable rahi na safe.' },
         { text: 'DELETE /orders/812', bin: 'good', explain: 'Method hi kaam bata raha hai. URL sirf resource batati hai.' },
         { text: 'GET /orders/delete/812', bin: 'bad', explain: 'GET se state badalna 💀. Browser prefetch, crawler ya CDN tumhara data mita sakte hain.' },
         { text: 'POST /orders/812/cancel', bin: 'good', explain: 'State transition ke liye action endpoint bilkul theek hai. Har developer turant samajh jaayega.' },
-        { text: 'GET /api/v1/getAllOrdersForUserById?userId=5', bin: 'bad', explain: 'Verb + redundant "ById" + jo cheez path mein honi chahiye woh query param mein. Yeh RPC hai, REST nahi.' },
+        { text: 'GET /api/v1/getAllOrdersForUserById?userId=5', bin: 'bad', explain: 'Verb + redundant "ById" + path wali cheez query param mein. Ye URL RPC hai, REST nahi.' },
         { text: 'PATCH /users/5', bin: 'good', explain: 'Partial update ke liye PATCH sahi hai. PUT poora resource replace karta hai.' },
         { text: 'GET /users/5/orders/9/items/3/refunds/1', bin: 'bad', explain: '5 level nesting. Yahan tak aate-aate URL yaad rakhna namumkin hai. Flat karo: /refunds/1 ya /refunds?item_id=3.' },
       ],
@@ -175,9 +175,9 @@ SD.registerLevels('api', [
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'naming',
       questions: [
-        { q: 'Nesting kitne level tak theek hai?', target: 'nest', explain: '2 level tak. Uske baad URL yaad rakhna mushkil ho jaata hai — flat resource + query param behtar hai.' },
-        { q: 'Collection ka naam plural ya singular?', target: 'plural', explain: 'Plural — /orders. Isse /orders (collection) aur /orders/812 (item) ka rishta saaf dikhta hai.' },
-        { q: '"Order cancel karo" — jo CRUD mein fit nahi hota, uske liye?', target: 'action', explain: 'Action endpoint: POST /orders/812/cancel. Sab kuch resource banana theoretically saaf hai aur practically pareshaani.' },
+        { q: 'Nesting kitne level tak theek hai?', target: 'nest', explain: '2 level tak. Do level ke baad URL yaad rakhna mushkil ho jaata hai — flat resource + query param behtar hai.' },
+        { q: 'Collection ka naam plural ya singular?', target: 'plural', explain: 'Plural — /orders. Plural naam se /orders (collection) aur /orders/812 (item) ka rishta saaf dikhta hai.' },
+        { q: '"Order cancel karo" — CRUD mein fit na hone wale kaam ke liye?', target: 'action', explain: 'Action endpoint: POST /orders/812/cancel. Sab kuch resource banana theoretically saaf hai aur practically pareshaani.' },
       ],
     },
     {
@@ -270,8 +270,8 @@ SD.registerLevels('api', [
   homework: `Apni API ke 10 endpoints list karo. Har ek ke saamne likho: URL mein koi verb hai?
     nesting 2 se zyada? plural/singular consistent? Jitne "haan" hain, utne future support tickets.`,
   cards: [
-    { front: 'Naming ka ek niyam?', back: '<b>URL batati hai "kya" (noun), method batata hai "kya karna hai" (verb).</b> Isse 80% design apne aap ho jaata hai.' },
-    { front: 'Nesting ki limit?', back: '<b>2 level.</b> /users/5/orders ✅. Uske aage flat resource + query param — warna URL yaad rakhna namumkin.' },
+    { front: 'Naming ka ek niyam?', back: '<b>URL batati hai "kya" (noun), method batata hai "kya karna hai" (verb).</b> Is niyam se 80% design apne aap ho jaata hai.' },
+    { front: 'Nesting ki limit?', back: '<b>2 level.</b> /users/5/orders ✅. Do level ke aage flat resource + query param — warna URL yaad rakhna namumkin.' },
     { front: 'CRUD mein fit na hone wale action?', back: '<code>POST /orders/812/cancel</code>. Agar us action ka apna wajood hai (id, status, history) toh use resource banao: <code>POST /refunds</code>.' },
     { front: 'GET safe kyun hona chahiye?', back: 'Crawlers, prefetch aur CDN GET ko safe maankar chalate hain. <code>GET /delete?id=</code> ne asli databases saaf kiye hain.' },
   ],
@@ -287,7 +287,7 @@ SD.registerLevels('api', [
   badge: 'Verb Vidwan',
   objectives: [
     '<b>Safe</b> vs <b>idempotent</b> — do alag cheezein',
-    'Har method ki guarantee — aur retry par uska matlab',
+    'Har method ki guarantee — aur retry par guarantee ka matlab',
     'Status codes jo client ko batate hain ki <b>ab kya karna hai</b>',
     '401 vs 403, 429 vs 503, 400 vs 422',
   ],
@@ -303,7 +303,7 @@ SD.registerLevels('api', [
        <tr><td>PATCH</td><td>❌</td><td>⚠️ depends</td><td>"amount = 5" safe · "amount + 1" nahi</td></tr>
        <tr><td>POST</td><td>❌</td><td>❌</td><td><b>khatarnak</b> — isi liye Idempotency-Key</td></tr>
      </table>
-     <p>Yeh sirf theory nahi hai — <b>poori duniya isi par bharosa karti
+     <p>Method ki guarantee sirf theory nahi hai — <b>poori duniya isi guarantee par bharosa karti
      hai</b>. Load balancers GET ko dobara bhej dete hain. Mobile SDKs
      network error par PUT retry karte hain. Agar tumne GET ko unsafe bana
      diya, toh tum ek aise vaade ko tod rahe ho jo tumhare code ke bahar
@@ -325,7 +325,7 @@ SD.registerLevels('api', [
        <tr><td><b>503</b></td><td>main bhara hoon</td><td>backoff ke saath retry karo ✅</td></tr>
      </table>
      <p class="tip">🎯 <b>Sabse mehengi galti:</b> overload par 500 bhejna.
-     Achhe clients 500 par retry <i>nahi</i> karte (kyunki woh bug lagta hai)
+     Achhe clients 500 par retry <i>nahi</i> karte (kyunki 500 bug lagta hai)
      — jabki yahan retry hi sahi tha. 503 + Retry-After bhejo.</p>`,
   ],
   stages: [
@@ -335,7 +335,7 @@ SD.registerLevels('api', [
       instructions: 'Har situation ko sahi code se milao.',
       pairs: [
         { left: '🔑 Token expire ho gaya', right: '401 Unauthorized', explain: '"Tum kaun ho pata nahi." Client ko token refresh karna chahiye. 403 bhejoge toh client login flow trigger hi nahi karega.' },
-        { left: '🚫 User logged in hai par admin nahi', right: '403 Forbidden', explain: '"Pata hai tum kaun ho, par ijaazat nahi." Client ko yahan retry NAHI karna chahiye — yeh permanent hai.' },
+        { left: '🚫 User logged in hai par admin nahi', right: '403 Forbidden', explain: '"Pata hai tum kaun ho, par ijaazat nahi." Client ko 403 par retry NAHI karna chahiye — 403 permanent hai.' },
         { left: '📝 Email field mein "abc" bheja', right: '422 Unprocessable Entity', explain: 'Request parse ho gayi, structure theek hai, par VALUE galat hai. 400 tab jab request hi parse na ho.' },
         { left: '🌊 Server pe load bahut hai', right: '503 + Retry-After', explain: '"Main bhara hoon." Retry-After ke saath. 500 bhejna sabse badi galti — client retry hi nahi karega.' },
         { left: '⏳ Report ban rahi hai, 5 min lagenge', right: '202 Accepted + Location', explain: 'Kaam hua nahi hai, sirf maan liya gaya. Location header status URL deta hai.' },
@@ -355,7 +355,7 @@ SD.registerLevels('api', [
         { text: 'PUT /users/5 {"name":"Ravi"}', bin: 'safe', explain: 'Poora replace — 5 baar bhejo, natija wahi. Yahi PUT ki guarantee hai.' },
         { text: 'DELETE /orders/812', bin: 'safe', explain: 'Doosri baar 404 ya 204 milega, par order ek hi baar delete hua. Idempotent.' },
         { text: 'POST /payments {"amount":4999}', bin: 'unsafe', explain: '💀 Doosra charge. Isi ek line ke liye Idempotency-Key ka poora concept bana hai.' },
-        { text: 'PATCH /counters/1 {"views": 500}', bin: 'safe', explain: 'Absolute value set kar raha hai — idempotent. Yeh PATCH ka safe roop hai.' },
+        { text: 'PATCH /counters/1 {"views": 500}', bin: 'safe', explain: 'Absolute value set kar raha hai — idempotent. Absolute value wala PATCH safe roop hai.' },
         { text: 'PATCH /counters/1 {"views": "+1"}', bin: 'unsafe', explain: 'Relative change — har retry ek aur badha dega. Isliye PATCH par "depends" likha jaata hai.' },
         { text: 'POST /orders {"idempotency_key":"abc-1"}', bin: 'safe', explain: 'POST par bhi key ho toh retry safe ho jaata hai. Yahi key ka poora maqsad hai.' },
       ],
@@ -367,7 +367,7 @@ SD.registerLevels('api', [
       visual: 'verbs',
       questions: [
         { q: 'Overload par kaunsa group sahi hai?', target: 'c500', explain: '503 Service Unavailable + Retry-After. Us group mein 500/502/503/504 hain — aur overload ke liye 503 hi sahi hai, 500 nahi.' },
-        { q: 'Async kaam shuru hua — kaunsa group?', target: 'c200', explain: '202 Accepted. Woh 2xx group mein hai: 200 OK, 201 Created, 202 Accepted, 204 No Content.' },
+        { q: 'Async kaam shuru hua — kaunsa group?', target: 'c200', explain: '202 Accepted. 202 2xx group mein hai: 200 OK, 201 Created, 202 Accepted, 204 No Content.' },
         { q: 'Rate limit paar — kaunsa group?', target: 'c409', explain: '429 Too Many Requests, jo 409/422/429 group mein hai.' },
       ],
     },
@@ -417,7 +417,7 @@ SD.registerLevels('api', [
     instructions: '"Safe" aur "idempotent" sahi bolna yahan bada farak laata hai. 🎤',
     questions: [
       {
-        q: '"POST idempotent kyun nahi hai, aur ise idempotent kaise banaoge?"',
+        q: '"POST idempotent kyun nahi hai, aur POST ko idempotent kaise banaoge?"',
         choices: [
           'POST "naya banao" hai; client Idempotency-Key bheje, server key dekh ke purana jawab de',
           'Body same ho toh POST apne aap idempotent hai — same body ka matlab same request',
@@ -487,11 +487,11 @@ SD.registerLevels('api', [
   lesson: [
     `<h3>📖 "Ek user page 485728 maang raha hai"</h3>
      <p>Transaction history API. Ek user ne page 4,85,728 maanga.
-     Database par yeh chala:</p>
+     Database par ye query chali:</p>
      <pre>SELECT * FROM transactions
 ORDER BY created_at DESC
 LIMIT 50 OFFSET 24286350;</pre>
-     <p>Ab yeh soch lo ki database ko karna kya pada:</p>
+     <p>Ab socho ki database ko karna kya pada:</p>
      <pre>2,42,86,400 rows padhi
 2,42,86,350 rows PHENKI
         50 rows di</pre>
@@ -505,31 +505,31 @@ LIMIT 50 OFFSET 24286350;</pre>
        <tr><td>10,000</td><td>4,99,950</td><td>5 lakh</td><td>380 ms 😬</td></tr>
        <tr><td>4,85,728</td><td>2,42,86,350</td><td>2.4 crore</td><td>7 s 💀</td></tr>
      </table>
-     <p class="tip">🎯 Yahan asli galti kahan hui? <b>API ne user ko yeh
-     sawaal poochhne DIYA.</b> Ek query jo 2.4 crore rows chhuti hai, woh
+     <p class="tip">🎯 Yahan asli galti kahan hui? <b>API ne user ko itna mehenga
+     sawaal poochhne DIYA.</b> 2.4 crore rows chhoone wali query
      production mein ek public endpoint ke peeche nahi honi chahiye thi.</p>`,
     `<h3>🔬 "Bhai index laga do na"</h3>
-     <p>Yeh sabse aam jawab hai. Chalo lagate hain:</p>
+     <p>"Index laga do" sabse aam jawab hai. Chalo lagate hain:</p>
      <pre>CREATE INDEX ix_txn_created ON transactions(created_at);</pre>
      <p>Aur ab dekho kya hua:</p>
      <pre>page 1        : 12.8 s → 4 ms      ✅ zabardast!
 page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
      <p><b>Index ne sorting bachaayi — skipping nahi.</b></p>
-     <p>Yeh farak samajhna is poore level ka dil hai. Index ek sorted
-     structure hai. Woh database ko batata hai ki rows <b>kis kram mein</b>
+     <p>Ye farak samajhna is poore level ka dil hai. Index ek sorted
+     structure hai. Index database ko batata hai ki rows <b>kis kram mein</b>
      hain. Par <code>OFFSET 24286350</code> ka matlab hai <i>"24,286,350
      entries ke baad wali le aao"</i> — aur "ke baad wali" jaanne ka ek hi
      tareeka hai: <b>ginte hue chalo</b>.</p>
      <p>B-tree ek array nahi hai jahan tum index se seedha jump kar sako.
-     Woh ek tree hai. "24 million-vaan element" nikalne ke liye use
+     B-tree ek tree hai. "24 million-vaan element" nikalne ke liye use
      24 million entries chalni hi padengi — bas tez chalega.</p>
      <p>Aur ek aur cheez chhupi hui hai:</p>
      <pre>{ "data": [...50 items...], "page": 485728, "total": 24286450 }
                                               ↑
-             yeh field har request par ek COUNT(*) chalati hai
+             total field har request par ek COUNT(*) chalati hai
              = 2.7 aur second</pre>
-     <p>Woh chhota sa <code>total</code> jo UI mein "1-50 of 24,286,450"
-     dikhata hai — woh <b>poori filtered table gin-ta hai</b>, har baar.</p>`,
+     <p>UI mein "1-50 of 24,286,450" dikhane wala chhota sa <code>total</code>
+     — <b>poori filtered table gin-ta hai</b>, har baar.</p>`,
     `<h3>💣 Aur bhi bura: nuksaan sirf tumhara nahi hai</h3>
      <p>Ek deep-page query sirf apne aap ko dheema nahi karti:</p>
      <table>
@@ -537,11 +537,11 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
        <tr><td><b>Buffer pool trash</b></td><td>2.4 crore rows cache mein bharti hain aur baaki sabka data nikaal deti hain — ab <b>saari</b> queries dheemi</td></tr>
        <tr><td><b>Replica lag</b></td><td>lambi read replica ko peeche kar deti hai → read-after-write tootna shuru</td></tr>
        <tr><td><b>Connection hostage</b></td><td>7 second tak ek pool connection blocked — capacity 6 rps par aa jaati hai</td></tr>
-       <tr><td><b>Tail latency</b></td><td>tumhare p99 mein yeh dikhega, par asal mein saare users ka anubhav kharab hua</td></tr>
+       <tr><td><b>Tail latency</b></td><td>tumhare p99 mein ek gehra page dikhega, par asal mein saare users ka anubhav kharab hua</td></tr>
        <tr><td><b>Rows gum ho jaati hain</b></td><td>page 2 dekhte waqt naya row aa gaya? sab shift ho gaya — ek row tum <b>kabhi</b> nahi dekhoge</td></tr>
      </table>
      <p>Aakhri wala aksar log bhool jaate hain: <b>offset pagination sirf
-     dheemi nahi, GALAT bhi hai</b> jab data badal raha ho. Woh position par
+     dheemi nahi, GALAT bhi hai</b> jab data badal raha ho. Offset pagination position par
      kaam karti hai, identity par nahi.</p>`,
   ],
   stages: [
@@ -606,7 +606,7 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
       visual: 'offset-pain',
       questions: [
         { q: 'Index lagane ke baad bhi deep page slow kyun rehta hai?', target: 'why', explain: 'Index SKIP nahi kar sakta, sirf tez WALK karta hai. OFFSET ka matlab hi "ginte hue aage badho" hai — aur ginne ke liye har entry chhuni padti hai.' },
-        { q: 'Kaunsi cheez har request par ek poora COUNT(*) chalati hai?', target: 'count', explain: 'Response ka "total" field. Woh poore filtered set ko ginta hai — LIMIT use nahi rokta.' },
+        { q: 'Kaunsi cheez har request par ek poora COUNT(*) chalati hai?', target: 'count', explain: 'Response ka "total" field. total field poore filtered set ko ginta hai — LIMIT ginti ko nahi rokta.' },
         { q: 'Data badalne par offset pagination kya galti karti hai?', target: 'shift', explain: 'Rows shift ho jaati hain. Naya row aane par page 2 ka pehla row page 1 par chala jaata hai — aur ek row tum kabhi nahi dekhte. Offset POSITION par kaam karta hai, identity par nahi.' },
       ],
     },
@@ -670,7 +670,7 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
   ],
   interview: {
     title: 'Interview Round — Deep Pagination',
-    instructions: 'Yeh backend interview ka sabse aam performance sawaal hai. 🎤',
+    instructions: 'Deep pagination backend interview ka sabse aam performance sawaal hai. 🎤',
     questions: [
       {
         q: '"Ek user transaction history API par page 4,85,728 maang raha hai aur DB gir raha hai. Kya karoge?"',
@@ -743,7 +743,7 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
     { front: 'Index deep offset ko kyun nahi bachata?', back: 'Index <b>sorting</b> deta hai, <b>skipping</b> nahi. B-tree ek tree hai, array nahi — "24 million-vaan element" par jump nahi kar sakte, ginte hue chalna padta hai.' },
     { front: '"total" field ki keemat?', back: 'Ek poora <code>COUNT(*)</code> har request par — 24M rows par ~2.7 s. LIMIT use nahi rokta. Ilaaj: <code>has_more</code>, approximate count, ya alag endpoint.' },
     { front: 'Deep page ka system-wide nuksaan?', back: '<b>Buffer pool trash</b> (saari queries dheemi) · <b>replica lag</b> · <b>connection 7s bandhak</b> (capacity 6 rps) · <b>tail latency</b>. Sirf ek user ka masla nahi.' },
-    { front: 'Offset "galat" kaise hai?', back: 'Woh <b>position</b> par kaam karta hai, identity par nahi. Data badle toh rows shift hoti hain — ek row kabhi nahi dikhegi, ek do baar dikh sakti hai.' },
+    { front: 'Offset "galat" kaise hai?', back: 'Offset <b>position</b> par kaam karta hai, identity par nahi. Data badle toh rows shift hoti hain — ek row kabhi nahi dikhegi, ek do baar dikh sakti hai.' },
   ],
 },
 
@@ -766,7 +766,7 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
      <p>Offset poochhta hai: <i>"2,42,86,350 rows ke BAAD wali 50 do"</i> —
      aur database ko ginna padta hai.</p>
      <p>Cursor poochhta hai: <i>"IS point ke baad wali 50 do"</i> — aur
-     database seedha wahan pahunch jaata hai.</p>
+     database seedha us point par pahunch jaata hai.</p>
      <pre>-- OFFSET: ginte hue chalo
 SELECT * FROM transactions
 ORDER BY created_at DESC
@@ -798,14 +798,14 @@ decode karne par:  { "t": "2026-04-11T09:22:04Z", "id": 8812304, "d": "desc" }</
      <p><b>Opaque rakhne ke teen faayde:</b></p>
      <p>1. <b>Kal query strategy badal sakte ho</b> — sort column badlo,
      partition key add karo, clients ko pata bhi nahi chalega.</p>
-     <p>2. <b>User anap-shanap cursor nahi bana sakta</b> — woh "page
+     <p>2. <b>User anap-shanap cursor nahi bana sakta</b> — cursor "page
      4,85,728" par jump karke mehengi query trigger nahi kar sakta.</p>
      <p>3. <b>Sort direction aur filter state</b> bhi cursor mein
      ja sakte hain, taaki server verify kar sake ki client ne beech mein
      filter nahi badla.</p>
      <p class="tip">🎯 Opaque ka matlab "encrypted" nahi hai — base64 ek
      security feature nahi hai. Matlab hai: <b>contract mein likha hai ki
-     client isse parse nahi karega.</b> Agar chinta hai toh sign kar do.</p>`,
+     client cursor ko parse nahi karega.</b> Agar chinta hai toh sign kar do.</p>`,
     `<h3>⚖️ Cursor ki keemat — imaandaari se</h3>
      <p>Cursor har jagah sahi jawab nahi hai. Teen asli nuksaan:</p>
      <table>
@@ -862,8 +862,8 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       tokens: ['created_at', '<', 'id', 'user_id', '>', 'amount', 'status', '='],
       blanks: [
         { answer: 'created_at', explain: 'Sort column. Tuple comparison ka pehla member hamesha sort column hota hai.' },
-        { answer: '<', explain: 'DESC order mein "iske baad wale" ka matlab hai "isse chhote". ASC hota toh <code>&gt;</code> lagta. Yahan ulta likhna sabse aam bug hai.' },
-        { answer: 'id', explain: 'Tie-breaker. Do transactions ka timestamp bilkul same ho sakta hai — bina iske ek row skip ho jaayegi ya do baar aa jaayegi.' },
+        { answer: '<', explain: 'DESC order mein "cursor ke baad wale" ka matlab hai "cursor se chhote". ASC hota toh <code>&gt;</code> lagta. Yahan ulta likhna sabse aam bug hai.' },
+        { answer: 'id', explain: 'Tie-breaker. Do transactions ka timestamp bilkul same ho sakta hai — bina id ke tie-breaker ke ek row skip ho jaayegi ya do baar aa jaayegi.' },
         { answer: 'user_id', explain: "<b>Index ka pehla column filter hona chahiye</b>, phir sort column, phir tie-breaker. User-scoped access mein leading user_id often useful hai;planner/cardinality/version matter karte hain. PostgreSQL 18 skip scan kuch missing-leading-filter cases bhi use kar sakta hai." },
       ],
     },
@@ -894,7 +894,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'cursor',
       questions: [
-        { q: 'Same timestamp wale rows gum na hon — iske liye kya chahiye?', target: 'tuple', explain: 'Tuple comparison with tie-breaker: (created_at, id) < (?, ?). Bina id ke, same timestamp wale rows skip ya duplicate ho sakte hain.' },
+        { q: 'Same timestamp wale rows gum na hon — rows bachane ke liye kya chahiye?', target: 'tuple', explain: 'Tuple comparison with tie-breaker: (created_at, id) < (?, ?). Bina id ke, same timestamp wale rows skip ya duplicate ho sakte hain.' },
         { q: 'Cursor client se chhupa (opaque) kyun rakhte hain?', target: 'opaque', explain: "Opaque representation internal strategy ko client contract se decouple karti hai. Expensive/tampered cursors ko server-side signature, scope, expiry aur query bounds se control karo; opacity alone security nahi." },
         { q: 'Index ka kram kya hona chahiye?', target: 'idx', explain: '(filter columns, sort column, tie-breaker) — bilkul isi kram mein. Warna DB phir bhi sort karega aur cursor ka poora faayda chala jaayega.' },
       ],
@@ -959,7 +959,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
   ],
   interview: {
     title: 'Interview Round — Cursor Pagination',
-    instructions: 'Yahan tumhe design aur uske tradeoffs dono defend karne honge. 🎤',
+    instructions: 'Yahan tumhe design aur design ke tradeoffs dono defend karne honge. 🎤',
     questions: [
       {
         q: '"Cursor pagination design karo transaction history ke liye."',
@@ -1006,7 +1006,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
   homework: `Apni sabse badi list API par <code>?page=</code> ki depth ka metric lagao
     (histogram: page 1-10, 10-100, 100-1000, 1000+). Ek hafte baad dekho:
     kya sach mein koi page 1000 se aage jaata hai? Zyadatar teams ke liye jawab
-    "sirf ek buggy script" hota hai — aur woh ek line ka fix hai.`,
+    "sirf ek buggy script" hota hai — aur buggy script ek line ka fix hai.`,
   cards: [
     { front: 'Keyset query?', back: '<code>WHERE (created_at, id) &lt; (?, ?) ORDER BY created_at DESC, id DESC LIMIT 50</code>. Ek seek + 50 rows — <b>page 1 aur page 485728 ka cost same</b>.' },
     { front: 'Tie-breaker id kyun?', back: 'Do rows ka sort value same ho sakta hai. Bina unique tie-breaker ke page boundary par rows <b>skip ya duplicate</b> ho jaati hain. Tie-breaker ordering ko TOTAL banata hai.' },
@@ -1039,26 +1039,26 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
      <p>"Client ko flexibility do, har column par filter allow karo":</p>
      <pre>15 filterable columns → 2¹⁵ = 32,768 possible combinations</pre>
      <p>Tum 32,768 indexes nahi bana sakte. Matlab koi na koi client ek din
-     aisi combination bhejega jo <b>full table scan</b> karti hai. Aur woh
+     aisi combination bhejega jo <b>full table scan</b> karti hai. Aur full scan ka
      din production incident ka din hoga.</p>
      <p><b>Bounded query surface ka matlab:</b></p>
      <table>
        <tr><th>Niyam</th><th>Kyun</th></tr>
-       <tr><td><b>Filters ki allow-list</b></td><td>sirf woh columns jinke liye index hai</td></tr>
+       <tr><td><b>Filters ki allow-list</b></td><td>sirf index wale columns</td></tr>
        <tr><td><b>Sort ki allow-list</b></td><td><code>?sort=notes</code> par full scan + filesort</td></tr>
-       <tr><td><b>Ek filter zaroori</b></td><td><code>/transactions</code> bina <code>user_id</code> ke = 400. Multi-tenant data mein yeh sona hai — har query apne aap bounded ho jaati hai</td></tr>
+       <tr><td><b>Ek filter zaroori</b></td><td><code>/transactions</code> bina <code>user_id</code> ke = 400. Multi-tenant data mein zaroori filter sona hai — har query apne aap bounded ho jaati hai</td></tr>
        <tr><td><b>default limit + max limit</b></td><td>default 20, max 100. Dono chahiye — default na ho toh kuch clients sab maang lenge</td></tr>
      </table>
      <p class="tip">🎯 <b>Har query param ek vaada hai</b> ki tum use sasta
-     serve kar sakte ho. Jo vaada nibha na sako, woh param mat do —
+     serve kar sakte ho. Na nibhne wala vaada param ke roop mein mat do —
      baad mein hataana bahut mushkil hai.</p>`,
     `<h3>🔬 Sparse fieldsets — chhota faayda, bada faayda</h3>
      <pre>GET /transactions?fields=id,amount,created_at</pre>
      <p>Pehla faayda saaf hai: kam bytes network par.</p>
      <p>Doosra faayda bada hai: agar <code>(user_id, created_at, id, amount)</code>
-     par index hai, toh yeh query <b>index se hi poori ho jaati hai</b> —
-     table ko chhuna hi nahi padta. Ise <b>covering index</b> kehte hain,
-     aur woh 2-3x tez hota hai kyunki random row lookups bach jaate hain.</p>
+     par index hai, toh query <b>index se hi poori ho jaati hai</b> —
+     table ko chhuna hi nahi padta. Aise index ko <b>covering index</b> kehte hain,
+     aur covering index 2-3x tez hota hai kyunki random row lookups bach jaate hain.</p>
      <p>Teesra faayda sabse chhupa hua hai: <code>SELECT *</code> tumhe
      schema se <b>baandh</b> deta hai. Ek din koi <code>notes TEXT</code>
      column add karega aur tumhari list API ka payload 40x ho jaayega —
@@ -1072,13 +1072,13 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
 ❌ ?filter=amount>100 AND status='x'      SQL-in-querystring
 ❌ ?q={"$or":[{"a":1},{"b":2}]}            MongoDB injection ka nyota
 ❌ ?sort=random()                          poori table sort</pre>
-     <p>Aakhri do sirf khatarnak nahi hain — woh <b>unbounded</b> hain.
-     Tum kabhi guarantee nahi kar sakte ki woh sasti hongi.</p>`,
+     <p>Aakhri do sirf khatarnak nahi hain — dono <b>unbounded</b> hain.
+     Tum kabhi guarantee nahi kar sakte ki aisi queries sasti hongi.</p>`,
   ],
   stages: [
     {
       type: 'bins',
-      title: 'Yeh query param dena chahiye?',
+      title: 'Kya ye query param dena chahiye?',
       instructions: 'Har param ko sahi bin mein daalo.',
       bins: [
         { id: 'yes', label: '✅ De do' },
@@ -1086,11 +1086,11 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       ],
       items: [
         { text: '?status=pending — indexed enum column', bin: 'yes', explain: 'Index hai, cardinality theek hai, bounded hai. Perfect filter.' },
-        { text: '?filter=amount>100 AND status=\'x\'', bin: 'no', explain: 'SQL-in-querystring. Tum kabhi guarantee nahi kar sakte ki yeh sasti hogi — aur injection ka darwaza bhi khula hai.' },
+        { text: '?filter=amount>100 AND status=\'x\'', bin: 'no', explain: 'SQL-in-querystring. Tum kabhi guarantee nahi kar sakte ki aisi query sasti hogi — aur injection ka darwaza bhi khula hai.' },
         { text: '?fields=id,amount,status', bin: 'yes', explain: 'Sparse fieldset — kam bytes, aur covering index ka rasta khulta hai. Saath hi schema changes se bhi bachata hai.' },
         { text: '?sort=notes — lamba TEXT column, koi index nahi', bin: 'no', explain: 'Full scan + filesort. Sort par bhi allow-list honi chahiye: sirf indexed columns.' },
         { text: '?created_after=2026-01-01', bin: 'yes', explain: 'Range filter — composite index ka aakhri column ban sakta hai. Bounded aur indexable.' },
-        { text: '?q={"$where":"this.amount>100"}', bin: 'no', explain: 'Yeh code execution hai, filter nahi. Mongo ke $where jaise operators ko API surface par kabhi expose mat karo.' },
+        { text: '?q={"$where":"this.amount>100"}', bin: 'no', explain: '$where code execution hai, filter nahi. Mongo ke $where jaise operators ko API surface par kabhi expose mat karo.' },
         { text: '?limit=50 (default 20, max 100)', bin: 'yes', explain: 'Default AUR max dono hain — yahi sahi tareeka hai. Sirf max se kaam nahi chalta.' },
         { text: '?limit=1000000', bin: 'no', explain: 'Unbounded. Ek request se poora DB memory mein aa jaayega. maxLimit lagao.' },
       ],
@@ -1101,9 +1101,9 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'filtering',
       questions: [
-        { q: 'Multi-tenant data mein sabse taakatwar guard kaunsa hai?', target: 'require', explain: 'Ek filter ZAROORI banana — jaise user_id ya tenant_id. Isse har query apne aap bounded ho jaati hai, aur koi bhi accidentally poori table nahi chhu sakta.' },
+        { q: 'Multi-tenant data mein sabse taakatwar guard kaunsa hai?', target: 'require', explain: 'Ek filter ZAROORI banana — jaise user_id ya tenant_id. Zaroori filter se har query apne aap bounded ho jaati hai, aur koi bhi accidentally poori table nahi chhu sakta.' },
         { q: '15 filterable columns ka asli problem kya hai?', target: 'anyfilter', explain: '32,768 combinations — tum har ek ke liye index nahi bana sakte. Koi na koi client aisi combination bhejega jo full scan karti hai.' },
-        { q: 'Filters ko kaise baandhte hain?', target: 'allow', explain: 'Allow-list — sirf woh filters jinke liye index maujood hai. Deny-list kabhi kaam nahi karti kyunki naye columns apne aap allowed ho jaate hain.' },
+        { q: 'Filters ko kaise baandhte hain?', target: 'allow', explain: 'Allow-list — sirf index wale filters. Deny-list kabhi kaam nahi karti kyunki naye columns apne aap allowed ho jaate hain.' },
       ],
     },
     {
@@ -1149,7 +1149,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
   ],
   interview: {
     title: 'Interview Round — Query Design',
-    instructions: 'Yeh sawaal aksar "flexibility" ke jaal mein le jaata hai. 🎤',
+    instructions: 'Filter ka sawaal aksar "flexibility" ke jaal mein le jaata hai. 🎤',
     questions: [
       {
         q: '"Client bolta hai use har field par filter karna hai. Kya karoge?"',
@@ -1177,12 +1177,12 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
     'Ek zaroori filter se query ko bounded bana sakte ho',
   ],
   homework: `Apni list API ke saare query params ginno. Har ek ke saamne likho:
-    "iske liye index hai?" Jitne "nahi" hain, utni queries ek din full scan karengi.`,
+    "is filter ke liye index hai?" Jitne "nahi" hain, utni queries ek din full scan karengi.`,
   cards: [
     { front: 'Har column par filter — problem?', back: 'n columns = <b>2ⁿ combinations</b>. 15 columns = 32,768. Har ek ke liye index namumkin hai — kuch combinations hamesha full scan karengi.' },
     { front: 'Bounded query surface ke 4 niyam?', back: '<b>1.</b> Filters ki allow-list <b>2.</b> Sort ki allow-list <b>3.</b> Ek filter zaroori (tenant_id) <b>4.</b> default limit + max limit.' },
     { front: 'Sparse fieldsets ka bada faayda?', back: '<b>Covering index</b> — saare maange gaye columns index mein hon toh table chhuna hi nahi padta. 2-3x tez. (Bytes bachana chhota faayda hai.)' },
-    { front: 'Query param ka usool?', back: 'Har param ek <b>vaada</b> hai ki tum use sasta serve kar sakte ho. Jo vaada nibha na sako, woh param mat do — baad mein hataana bahut mushkil hai.' },
+    { front: 'Query param ka usool?', back: 'Har param ek <b>vaada</b> hai ki tum use sasta serve kar sakte ho. Na nibhne wala vaada param ke roop mein mat do — baad mein hataana bahut mushkil hai.' },
   ],
 },
 
@@ -1205,7 +1205,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
      <p>Web app deploy karo — sab users turant naya code chala rahe hain.
      API deploy karo — <b>clients wahi purana code chala rahe hain</b>,
      aur shayad saalon tak chalaenge. Ek mobile app version jo 2 saal purana
-     hai, woh abhi bhi tumhari API call kar raha hai.</p>
+     hai, abhi bhi tumhari API call kar raha hai.</p>
      <p>Isliye API mein "bas theek kar dete hain" nahi hota.</p>
      <table>
        <tr><th>✅ Safe (additive)</th><th>❌ Breaking</th></tr>
@@ -1218,11 +1218,11 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
      <p>Do cheezein log aksar bhool jaate hain:</p>
      <p><b>1. Enum mein nayi value add karna breaking ho sakta hai.</b>
      Agar client ka code <code>switch(status)</code> karta hai aur
-     <code>default: throw</code> hai, toh nayi value uska crash hai.
+     <code>default: throw</code> hai, toh nayi value client ka crash hai.
      Isliye din 1 se document karo: "unknown values ko gracefully handle karo".</p>
      <p><b>2. Default behaviour badalna sabse chhupa hua breaking change hai.</b>
      Agar <code>?limit</code> ka default 20 se 50 kar do, toh kisi ka
-     pagination loop toot sakta hai — aur uska code bilkul waisa hi hai.</p>`,
+     pagination loop toot sakta hai — aur client ka code bilkul waisa hi hai.</p>`,
     `<h3>🔬 URL vs header — aur teesra raasta</h3>
      <table>
        <tr><th></th><th>URL <code>/v1/</code></th><th>Header</th></tr>
@@ -1235,9 +1235,9 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
      <p>Practical salah: <b>URL versioning</b> chuno agar public API hai
      (debuggability jeet jaati hai), <b>header</b> agar internal hai aur
      tumhare paas achhi tooling hai. Par sabse zaroori:</p>
-     <p class="tip">🎯 <b>Sabse achha version woh hai jo tum kabhi banao hi
+     <p class="tip">🎯 <b>Sabse achha version — jo tum kabhi banao hi
      nahi.</b> v2 banana ek din ka kaam hai; v1 ko <b>hamesha</b> chalate
-     rehna saalon ka boj hai. Har change se pehle poochho: "ise additive
+     rehna saalon ka boj hai. Har change se pehle poochho: "kya change additive
      bana sakte hain?"</p>
      <h3>📉 Deprecation kaise karein</h3>
      <pre>1. Naya tareeka do, purana chalta rahe
@@ -1262,8 +1262,8 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
         { text: '"total_amount" ko "amount" rename kiya', bin: 'break', explain: 'Purane clients ko field milega hi nahi. Sahi tareeka: dono bhejo, purane ko deprecate karo, phir mahino baad hatao.' },
         { text: 'amount ko "4999" (string) se 4999 (number) kiya', bin: 'break', explain: 'Type change breaking hai chahe value same lage. Strict parsers (Swift, Kotlin, TypeScript) turant crash karenge.' },
         { text: 'Naya optional query param ?include=refunds add kiya', bin: 'safe', explain: 'Default purana behaviour hai, isliye koi purana client affected nahi.' },
-        { text: 'limit ka default 20 se 50 kiya', bin: 'break', explain: 'Sabse chhupa hua breaking change. Kisi ka pagination loop, kisi ka rate limit budget toot sakta hai — aur unka code bilkul waisa hi hai.' },
-        { text: 'status enum mein nayi value "on_hold" add ki', bin: 'break', explain: 'Chaunkane wala par sach: agar client switch/default:throw karta hai toh yeh crash hai. Isliye din 1 se document karo ki unknown values handle karni hain.' },
+        { text: 'limit ka default 20 se 50 kiya', bin: 'break', explain: 'Sabse chhupa hua breaking change. Kisi ka pagination loop, kisi ka rate limit budget toot sakta hai — aur clients ka code bilkul waisa hi hai.' },
+        { text: 'status enum mein nayi value "on_hold" add ki', bin: 'break', explain: 'Chaunkane wala par sach: agar client switch/default:throw karta hai toh nayi enum value crash hai. Isliye din 1 se document karo ki unknown values handle karni hain.' },
         { text: 'Error message ka text theek kiya (code wahi)', bin: 'safe', explain: 'Message insaan ke liye hai, code machine ke liye. Isliye clients ko HAMESHA code par switch karna chahiye, message par kabhi nahi.' },
         { text: 'Optional field "email" ko required banaya', bin: 'break', explain: 'Purane requests ab 400 honge. Naye required fields sirf naye endpoints par aa sakte hain.' },
       ],
@@ -1273,11 +1273,11 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
       title: 'Deprecation ka sahi kram',
       instructions: 'Ek purana field hataane ke kadam sahi order mein.',
       steps: [
-        { text: 'Naya field add karo — purana bhi bhejte raho', explain: 'Expand phase. Ab dono maujood hain, koi client nahi toota. Yeh bilkul database ke expand-contract migration jaisa hai.' },
+        { text: 'Naya field add karo — purana bhi bhejte raho', explain: 'Expand phase. Ab dono maujood hain, koi client nahi toota. Expand phase bilkul database ke expand-contract migration jaisa hai.' },
         { text: 'Docs update karo + Deprecation/Sunset headers bhejo', explain: 'Machine-readable signal. Achhe clients monitoring laga sakte hain. Sunset date se log ko plan karne ka waqt milta hai.' },
-        { text: 'Usage metrics lagao — kaun purana field use kar raha hai', explain: 'Bina data ke tum kabhi confident nahi honge. Yeh kadam skip karne se log saalon tak "shayad koi use kar raha hoga" mein atke rehte hain.' },
+        { text: 'Usage metrics lagao — kaun purana field use kar raha hai', explain: 'Bina data ke tum kabhi confident nahi honge. Usage naapne ka kadam skip karne se log saalon tak "shayad koi use kar raha hoga" mein atke rehte hain.' },
         { text: 'Bache hue clients se seedha baat karo', explain: 'Email, dashboard warning, ya account manager. Announcement blog post kaafi nahi hota — koi nahi padhta.' },
-        { text: 'Brownout — roz 5 minute ke liye field hatao', explain: 'Chalak technique: jo clients abhi bhi depend karte hain unhe controlled window mein error dikhega. Woh turant pata chal jaate hain — bina permanent damage ke.' },
+        { text: 'Brownout — roz 5 minute ke liye field hatao', explain: 'Chalak technique: abhi bhi depend karne wale clients ko controlled window mein error dikhega. Aise clients turant pata chal jaate hain — bina permanent damage ke.' },
         { text: 'Traffic ~0 hone par field hata do', explain: 'Contract phase. Ab safe hai kyunki tumhare paas DATA hai, umeed nahi.' },
       ],
     },
@@ -1402,7 +1402,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
      <p>Jo aksar milta hai:</p>
      <pre>200 OK
 { "error": "something went wrong" }</pre>
-     <p>Yeh teenon sawaalon mein fail hai. Aur status 200 hone se
+     <p>Ye jawab teenon sawaalon mein fail hai. Aur status 200 hone se
      har HTTP client, har retry library, har monitoring tool ko lagega ki
      sab theek hai.</p>
      <p>RFC 9457 (problem details) ka shape:</p>
@@ -1420,16 +1420,16 @@ Content-Type: application/problem+json
     { "field": "amount", "code": "min", "min": 1 }
   ]
 }</pre>
-     <p><b>Sabse zaroori field <code>type</code> hai.</b> Client usi par
+     <p><b>Sabse zaroori field <code>type</code> hai.</b> Client <code>type</code> par
      switch karega. Message kabhi bhi badal sakta hai (translation, wording),
-     par code <b>kabhi nahi</b> — woh contract ka hissa hai.</p>`,
+     par code <b>kabhi nahi</b> — code contract ka hissa hai.</p>`,
     `<h3>🔬 Do galtiyan jo mehengi padti hain</h3>
      <p><b>1. Internal details leak karna</b></p>
      <pre>❌ 500 { "error": "ERROR: duplicate key value violates unique
         constraint \\"users_email_key\\" DETAIL: Key (email)=(a@b.com)
         already exists. at OrderService.java:142" }</pre>
      <p>Isme tumne bata diya: DB kaunsa hai, table ka naam, constraint ka
-     naam, aur ki woh email registered hai (user enumeration). Sahi jawab:</p>
+     naam, aur ki email registered hai (user enumeration). Sahi jawab:</p>
      <pre>✅ 409 { "type": "/errors/email-taken", "title": "Email pehle se registered hai",
         "status": 409, "trace_id": "abc123" }</pre>
      <p>Poora stack trace <b>logs</b> mein jaayega, response mein nahi.
@@ -1443,7 +1443,7 @@ Content-Type: application/problem+json
                 {"field":"phone",...} ] }   → ek hi baar mein sab</pre>
      <p class="tip">🎯 <code>trace_id</code> ek field hai jo ghanton bachata
      hai. User screenshot bhejta hai → tum us id se seedha logs mein
-     jaate ho. Iske bina support ticket ek jasoosi novel ban jaata hai.</p>`,
+     jaate ho. trace_id ke bina support ticket ek jasoosi novel ban jaata hai.</p>`,
   ],
   stages: [
     {
@@ -1466,14 +1466,14 @@ Content-Type: application/{1}+json
       tokens: ['422', 'problem', 'trace_id', 'field', '400', 'json', 'request_id', 'name'],
       blanks: [
         { answer: '422', explain: 'Request parse ho gayi aur structure theek tha — sirf business rule fail hua. 400 tab jab request hi malformed ho.' },
-        { answer: 'problem', explain: '<code>application/problem+json</code> — RFC 9457 ka media type. Isse clients ko pata chalta hai ki error ka shape standard hai.' },
-        { answer: 'trace_id', explain: 'Support ticket se seedha logs tak. Yeh ek field debugging mein ghante bachata hai.' },
+        { answer: 'problem', explain: '<code>application/problem+json</code> — RFC 9457 ka media type. Is media type se clients ko pata chalta hai ki error ka shape standard hai.' },
+        { answer: 'trace_id', explain: 'Support ticket se seedha logs tak. trace_id ek field hai jo debugging mein ghante bachata hai.' },
         { answer: 'field', explain: 'Kaunsa field galat tha — taaki UI usi input ke neeche error dikha sake, poore form par nahi.' },
       ],
     },
     {
       type: 'bins',
-      title: 'Yeh error response theek hai?',
+      title: 'Kya error response theek hai?',
       instructions: 'Har response ko sahi bin mein daalo.',
       bins: [
         { id: 'good', label: '✅ Theek' },
@@ -1481,12 +1481,12 @@ Content-Type: application/{1}+json
       ],
       items: [
         { text: '200 { "error": "not found" }', bin: 'bad', explain: 'Status jhooth bol raha hai. Har HTTP client, retry library aur monitoring tool ko lagega sab theek hai. 404 bhejo.' },
-        { text: '409 { "type": "/errors/email-taken", "trace_id": "abc" }', bin: 'good', explain: 'Sahi status, stable machine code, aur trace_id. Client ise handle kar sakta hai.' },
-        { text: '500 { "error": "duplicate key violates users_email_key at Service.java:142" }', bin: 'bad', explain: 'Do problem: galat status (yeh 409 hai, 500 nahi) aur internal details leak — DB schema, file path, aur user enumeration.' },
+        { text: '409 { "type": "/errors/email-taken", "trace_id": "abc" }', bin: 'good', explain: 'Sahi status, stable machine code, aur trace_id. Client is error ko handle kar sakta hai.' },
+        { text: '500 { "error": "duplicate key violates users_email_key at Service.java:142" }', bin: 'bad', explain: 'Do problem: galat status (email pehle se hona 409 hai, 500 nahi) aur internal details leak — DB schema, file path, aur user enumeration.' },
         { text: '422 { "errors": [ 3 field errors ek saath ] }', bin: 'good', explain: 'Saare validation errors ek baar mein. User ek hi baar mein sab theek kar sakta hai — teen round trips nahi.' },
-        { text: '429 (koi Retry-After header nahi)', bin: 'bad', explain: 'Client ko pata hi nahi kab dobara try kare — woh turant maarega. Retry-After ke bina rate limit ka aadha maqsad khatam.' },
+        { text: '429 (koi Retry-After header nahi)', bin: 'bad', explain: 'Client ko pata hi nahi kab dobara try kare — client turant maarega. Retry-After ke bina rate limit ka aadha maqsad khatam.' },
         { text: '503 + Retry-After: 30 + trace_id', bin: 'good', explain: 'Overload ka sahi jawab. Client jaanta hai ki retry karna hai aur kab.' },
-        { text: '400 "Internal Server Error occurred"', bin: 'bad', explain: 'Status aur message ek doosre ka virodh kar rahe hain. Client ko samajh hi nahi aayega ki uski galti hai ya server ki.' },
+        { text: '400 "Internal Server Error occurred"', bin: 'bad', explain: 'Status aur message ek doosre ka virodh kar rahe hain. Client ko samajh hi nahi aayega ki galti client ki hai ya server ki.' },
       ],
     },
     {
@@ -1496,8 +1496,8 @@ Content-Type: application/{1}+json
       visual: 'errors',
       questions: [
         { q: 'Client kis field par switch karega?', target: 'code', explain: 'Stable machine code (type/code). Message kabhi bhi badal sakta hai — translation, wording — par code contract ka hissa hai.' },
-        { q: 'Support ticket se logs tak pahunchne ke liye?', target: 'trace', explain: 'trace_id. User screenshot bhejta hai, tum seedha us id se logs mein jaate ho. Iske bina har ticket ek jasoosi kaam hai.' },
-        { q: 'Form par sahi input ke neeche error dikhane ke liye?', target: 'field', explain: 'Field name. Iske bina UI ko poore form par ek generic error dikhana padta hai.' },
+        { q: 'Support ticket se logs tak pahunchne ke liye?', target: 'trace', explain: 'trace_id. User screenshot bhejta hai, tum seedha us id se logs mein jaate ho. trace_id ke bina har ticket ek jasoosi kaam hai.' },
+        { q: 'Form par sahi input ke neeche error dikhane ke liye?', target: 'field', explain: 'Field name. Field name ke bina UI ko poore form par ek generic error dikhana padta hai.' },
       ],
     },
   ],
@@ -1580,9 +1580,9 @@ Content-Type: application/{1}+json
 client sochta hai: "shayad gaya hi nahi tha"
 client → POST /payments (₹4,999)
                               DOOSRA charge 💀</pre>
-     <p>Yahan client ne kuch galat nahi kiya. <b>Woh jaan hi nahi sakta</b>
+     <p>Yahan client ne kuch galat nahi kiya. <b>Client jaan hi nahi sakta</b>
      ki request pahunchi nahi thi ya jawab kho gaya — dono bilkul ek jaise
-     dikhte hain. Aur agar woh retry na kare, toh asli failures par payment
+     dikhte hain. Aur agar client retry na kare, toh asli failures par payment
      kabhi nahi hoga.</p>
      <p>Isliye retry <b>zaroori</b> hai, aur duplicate protection bhi.</p>
      <pre>client → POST /payments
@@ -1601,11 +1601,11 @@ client → POST /payments
      <p><b>2. UNIQUE constraint par store karo, app check par nahi.</b></p>
      <pre>❌ SELECT key... if not found → INSERT     (race condition!)
 ✅ INSERT ... ON CONFLICT DO NOTHING       (atomic)</pre>
-     <p>Do requests ek saath aa sakti hain (woh toh puri baat hi hai).
+     <p>Do requests ek saath aa sakti hain (retry ki puri baat hi yahi hai).
      App-level check dono ko "nahi mili" bolega. Sirf DB constraint
      guarantee de sakta hai.</p>
      <p><b>3. Same key + ALAG body = 409 Conflict.</b> Agar client ne wahi
-     key alag amount ke saath bheji, toh yeh uska bug hai. Chup-chaap purana
+     key alag amount ke saath bheji, toh bug client ka hai. Chup-chaap purana
      jawab lauta dena ek chhupa hua bug ban jaata hai — user ko lagega ₹100
      ka payment hua jabki ₹4,999 wala jawab mila.</p>
      <p><b>4. TTL documented retry/recovery window se choose karo.</b> Hamesha rakhne se table
@@ -1656,7 +1656,7 @@ client → POST /payments
       items: [
         { text: 'POST /payments — paisa katta hai', bin: 'need', explain: 'Classic case. Duplicate = asli paisa. Yahan key optional nahi, laazmi hai.' },
         { text: 'GET /orders/812', bin: 'no', explain: 'GET pehle se safe aur idempotent hai. Jitni baar chaaho bhejo.' },
-        { text: 'POST /orders — inventory reserve karta hai', bin: 'need', explain: 'Duplicate order = do baar stock block. Paise jitna hi bura, aur aksar log ise miss kar jaate hain.' },
+        { text: 'POST /orders — inventory reserve karta hai', bin: 'need', explain: 'Duplicate order = do baar stock block. Paise jitna hi bura, aur aksar log duplicate order ko miss kar jaate hain.' },
         { text: 'PUT /users/5 {"name":"Ravi"}', bin: 'no', explain: 'PUT poora replace hai — pehle se idempotent. Naam 5 baar set karo, wahi natija.' },
         { text: 'POST /notifications/send', bin: 'need', explain: 'Duplicate = user ko 5 baar wahi push. Chhota lagta hai par uninstall ki wajah banta hai.' },
         { text: 'DELETE /orders/812', bin: 'no', explain: 'Dobara delete karne par 404 ya 204 milega — order ek hi baar delete hua. Idempotent.' },
@@ -1672,7 +1672,7 @@ client → POST /payments
       questions: [
         { q: 'Key kaun banata hai?', target: 'who', explain: 'Client. Server banayega toh har retry par nayi key ban jaayegi aur poora maqsad khatam ho jaayega. Client "Pay" dabne par ek UUID banata hai aur retry mein wahi bhejta hai.' },
         { q: 'Key store karne ka sahi tareeka?', target: 'store', explain: 'DB unique constraint par — INSERT ... ON CONFLICT. App-level "pehle check karo phir insert" ek race condition hai, aur concurrency hi toh poora problem hai.' },
-        { q: 'Same key par ALAG body aa jaaye toh?', target: 'conflict', explain: '409 Conflict. Chup-chaap purana jawab lautana chhupa hua bug hai — client ko lagega uska naya request safal hua.' },
+        { q: 'Same key par ALAG body aa jaaye toh?', target: 'conflict', explain: '409 Conflict. Chup-chaap purana jawab lautana chhupa hua bug hai — client ko lagega client ka naya request safal hua.' },
       ],
     },
     {
@@ -1762,15 +1762,15 @@ client → POST /payments
     'Jaante ho ki key client banata hai aur DB constraint se store hoti hai',
     'Bata sakte ho kahan key chahiye aur kahan nahi',
   ],
-  homework: `Apni API ke saare POST endpoints list karo. Har ek ke saamne likho: "agar yeh
+  homework: `Apni API ke saare POST endpoints list karo. Har endpoint ke saamne likho: "agar endpoint
     do baar chal gaya toh kya hoga?" Jinke jawab mein paisa, inventory ya notification hai,
-    unhe idempotency key chahiye — aaj.`,
+    un endpoints ko idempotency key chahiye — aaj.`,
   cards: [
-    { front: 'Client retry kyun karta hai?', back: 'Woh <b>jaan hi nahi sakta</b> ki request pahunchi nahi ya jawab kho gaya — dono ek jaise dikhte hain. Isliye retry zaroori hai, aur duplicate protection bhi.' },
-    { front: 'Key kaun banata hai?', back: '<b>Client.</b> Server banayega toh retry par nayi key ban jaayegi. Key ko retry ke paar zinda rehna hai — yeh sirf client jaanta hai.' },
+    { front: 'Client retry kyun karta hai?', back: 'Client <b>jaan hi nahi sakta</b> ki request pahunchi nahi ya jawab kho gaya — dono ek jaise dikhte hain. Isliye retry zaroori hai, aur duplicate protection bhi.' },
+    { front: 'Key kaun banata hai?', back: '<b>Client.</b> Server banayega toh retry par nayi key ban jaayegi. Key ko retry ke paar zinda rehna hai — retry ka pata sirf client ko hai.' },
     { front: 'Key kaise store karein?', back: '<b>DB unique constraint</b> — <code>INSERT ... ON CONFLICT</code>. App-level check race condition hai, aur concurrency hi asli scenario hai. <b>Response bhi store karo</b>, sirf key nahi.' },
-    { front: 'Same key, alag body?', back: '<b>409 Conflict.</b> Chup-chaap purana jawab lautana chhupa hua bug hai — client sochega uska naya request safal hua.' },
-    { front: 'Key ka TTL?', back: "<b>Supported retry/recovery window ko cover karo.</b>24 hours ya 7 days examples hain, universal rule nahi. Hamesha rakhne se table aur uska unique index anant badhenge." },
+    { front: 'Same key, alag body?', back: '<b>409 Conflict.</b> Chup-chaap purana jawab lautana chhupa hua bug hai — client sochega client ka naya request safal hua.' },
+    { front: 'Key ka TTL?', back: "<b>Supported retry/recovery window ko cover karo.</b>24 hours ya 7 days examples hain, universal rule nahi. Hamesha rakhne se table aur table ka unique index anant badhenge." },
   ],
 },
 
@@ -1795,11 +1795,11 @@ refill rate             = 100 tokens/second
 har request             = 1 token
 
 bucket khaali? → 429 + Retry-After</pre>
-     <p>Iska sabse achha gun: <b>burst allowed hai</b>. App khulte hi 200
+     <p>Token bucket ka sabse achha gun: <b>burst allowed hai</b>. App khulte hi 200
      requests aa gayi? Bilkul theek — asli users aise hi behave karte hain
      (ek screen par 30 API calls). Par lagataar 100/sec se zyada nahi
      chalega, kyunki refill rate wahi hai.</p>
-     <p><b>Fixed window ka jaal:</b> "per minute 6000" ka matlab yeh nahi
+     <p><b>Fixed window ka jaal:</b> "per minute 6000" ka matlab ye nahi
      ki traffic barabar bantega:</p>
      <pre>10:00:59 → 6000 requests   (window 1 khatam)
 10:01:00 → 6000 requests   (window 2 shuru)
@@ -1825,9 +1825,9 @@ retry-after: 3
 ratelimit-limit: 100
 ratelimit-remaining: 0
 ratelimit-reset: 3</pre>
-     <p>Iske bina client turant dobara maarega — aur tumne rate limit lagayi
+     <p>Retry-After ke bina client turant dobara maarega — aur tumne rate limit lagayi
      hi isliye thi ki na maare. Achhe clients <code>ratelimit-remaining</code>
-     dekh ke <b>pehle hi</b> dheeme ho jaate hain — yeh 429 se bhi behtar hai.</p>
+     dekh ke <b>pehle hi</b> dheeme ho jaate hain — pehle dheema hona 429 se bhi behtar hai.</p>
      <p class="tip">🎯 Distributed setup mein counter <b>shared</b> hona
      chahiye (Redis), warna 10 instances par limit 10x ho jaayegi. Aur
      Redis down ho toh? <b>Fail open</b> (allow) — rate limiter ki kharabi
@@ -1863,8 +1863,8 @@ ratelimit-reset: 3</pre>
         { left: '📊 POST /reports 8 second leta hai', right: 'Weighted limiting — 50 tokens', explain: 'Saari requests barabar nahi. Mehenge endpoints zyada tokens lein, warna 100 report calls tumhe gira dengi.' },
         { left: '⏰ "Per minute 6000" limit', right: 'Border par 12,000 aa sakte hain — sliding window ya token bucket lo', explain: 'Fixed window ka classic jaal: 10:00:59 par 6000 aur 10:01:00 par 6000.' },
         { left: '🔴 Redis (counter store) down ho gaya', right: 'Risk ke hisaab se degraded quota ya fail-closed', explain: 'Fail-open availability preserve kar sakta hai,par abuse/payment/cost-sensitive routes ko bounded local policy ya fail-closed chahiye. Default product risk se choose/test karo.' },
-        { left: '📱 App khulte hi 30 API calls', right: 'Token bucket with burst — yeh normal hai', explain: 'Asli users burst mein aate hain. Strict per-second limit legitimate traffic ko todegi.' },
-        { left: '🤖 Client 429 ke baad turant dobara maar raha hai', right: 'Retry-After header bhejo', explain: 'Iske bina client ko pata hi nahi kab try kare. Yeh ek header retry storm rokta hai.' },
+        { left: '📱 App khulte hi 30 API calls', right: 'Token bucket with burst — burst normal hai', explain: 'Asli users burst mein aate hain. Strict per-second limit legitimate traffic ko todegi.' },
+        { left: '🤖 Client 429 ke baad turant dobara maar raha hai', right: 'Retry-After header bhejo', explain: 'Retry-After ke bina client ko pata hi nahi kab try kare. Retry-After ek header hai jo retry storm rokta hai.' },
       ],
     },
     {
@@ -1875,7 +1875,7 @@ ratelimit-reset: 3</pre>
       questions: [
         { q: 'Authenticated API par limit kis par lagegi?', target: 'key', explain: 'API key / user id par. IP par limit asli users (office, NAT) ko rokti hai aur attackers (500 IPs) ko nahi rokti.' },
         { q: 'GET /users/5 aur POST /reports ko ek jaisa treat karne mein problem?', target: 'cost', explain: 'Weighted limiting chahiye. Warna koi 100 mehengi requests bhej ke system gira dega — aur technically limit "respect" ki hogi.' },
-        { q: 'Burst allow karne wala mechanism kaunsa hai?', target: 'bucket', explain: 'Token bucket. Bucket bhara hua ho toh burst nikal jaata hai; uske baad refill rate hi limit hai. Asli users burst mein hi aate hain.' },
+        { q: 'Burst allow karne wala mechanism kaunsa hai?', target: 'bucket', explain: 'Token bucket. Bucket bhara hua ho toh burst nikal jaata hai; burst ke baad refill rate hi limit hai. Asli users burst mein hi aate hain.' },
       ],
     },
   ],
@@ -1932,7 +1932,7 @@ ratelimit-reset: 3</pre>
     { front: 'Token bucket?', back: 'burst capacity + refill rate. <b>Burst allow karta hai</b> — asli users aise hi aate hain (app khulte hi 30 calls). Bucket khaali = 429.' },
     { front: 'Fixed window ka jaal?', back: '"Per minute 6000" par <b>border ke aar-paar 12,000</b> aa sakte hain (10:00:59 + 10:01:00). Sliding window ya token bucket lo.' },
     { front: 'Limit kis par?', back: '<b>API key / user id</b> par. IP par limit ek office ke 500 logon ko rokti hai, aur 500 IP wale attacker ko nahi rokti. IP sirf anonymous endpoints par.' },
-    { front: '429 ke saath kya?', back: '<code>Retry-After</code> (laazmi) + <code>ratelimit-limit/remaining/reset</code>. Iske bina client turant dobara maarega — jo poora maqsad hi tod deta hai.' },
+    { front: '429 ke saath kya?', back: '<code>Retry-After</code> (laazmi) + <code>ratelimit-limit/remaining/reset</code>. Retry-After ke bina client turant dobara maarega — jo poora maqsad hi tod deta hai.' },
     { front: 'Rate limiter ka store down ho toh?', back: 'Risk-based failure policy:bounded local limit,explicit fail-open ya fail-closed. Security/financial abuse-sensitive endpoints ko unavailable quota store par unlimited access mat do.' },
   ],
 },
@@ -1988,7 +1988,7 @@ POST /payments                      (koi idempotency key nahi)
             { id: 'cursor', label: "GET ?cursor=&limit= — opaque cursor se agla page", score: 3,
               why: 'Keyset pagination. Har page ka cost same — ek seek + 50 rows. Opaque cursor se tum baad mein query strategy badal sakte ho.' },
             { id: 'both', label: "Dono saath — purane page par gehraai ki hadd", score: 2,
-              why: 'Migration ke DAURAN sahi hai — purane clients chalte rahenge aur nuksaan bounded hai. Par yeh manzil nahi, raasta hai.' },
+              why: 'Migration ke DAURAN sahi hai — purane clients chalte rahenge aur nuksaan bounded hai. Par gehraai ki hadd manzil nahi, raasta hai.' },
           ],
         },
         {
@@ -1996,11 +1996,11 @@ POST /payments                      (koi idempotency key nahi)
           note: 'UI ko "1-50 of 24,286,450" dikhana hai',
           options: [
             { id: 'exact', label: "Har response mein taaza exact COUNT(*)", score: -3,
-              why: 'Har request par ek poora COUNT(*) — 24M rows par ~2.7 s. LIMIT ise nahi rokta. Yeh akela hi SLO tod dega.' },
+              why: 'Har request par ek poora COUNT(*) — 24M rows par ~2.7 s. LIMIT COUNT(*) ko nahi rokta. Akela COUNT(*) hi SLO tod dega.' },
             { id: 'hasmore', label: "Sirf has_more + next cursor, total nahi", score: 3,
               why: 'Twitter, Slack, Gmail — koi exact total nahi dikhata. Sabse sasta aur 95% cases mein kaafi.' },
             { id: 'approx', label: "Cache se lagbhag total (\"about 24M\")", score: 2,
-              why: 'Agar product ko sach mein number chahiye toh yeh sahi samjhauta hai. "About 24 million" aur "24,286,450" mein user ko koi farak nahi.' },
+              why: 'Agar product ko sach mein number chahiye toh lagbhag total sahi samjhauta hai. "About 24 million" aur "24,286,450" mein user ko koi farak nahi.' },
           ],
         },
         {
@@ -2012,7 +2012,7 @@ POST /payments                      (koi idempotency key nahi)
             { id: 'idem', label: "POST + stable Idempotency-Key header", score: 3,
               why: 'Sahi. Server key ko unique constraint ke saath response ke SAATH store kare, aur dobara aane par wahi response lauta de.' },
             { id: 'dedupe', label: "Body ka hash hi operation ki pehchaan", score: -1,
-              why: 'Toota hua: do alag users theek same amount bhej sakte hain — woh do jaayaz payments hain, duplicate nahi. Key client ko banani hi hogi.' },
+              why: 'Toota hua: do alag users theek same amount bhej sakte hain — dono jaayaz payments hain, duplicate nahi. Key client ko banani hi hogi.' },
           ],
         },
         {
@@ -2022,7 +2022,7 @@ POST /payments                      (koi idempotency key nahi)
             { id: 'biglimit', label: "Ek bada sync response, saari rows ek saath", score: -3,
               why: 'Ek request poori memory kha jaayegi, ek connection ghanton block karegi, aur timeout par partner poora retry karega.' },
             { id: 'job', label: "Async export job — status URL + download", score: 3,
-              why: 'Bade exports sync API par hone hi nahi chahiye. Job banao, background mein file banao, download link do. Yeh sync API ko poori tarah bacha leta hai.' },
+              why: 'Bade exports sync API par hone hi nahi chahiye. Job banao, background mein file banao, download link do. Async export sync API ko poori tarah bacha leta hai.' },
             { id: 'cursorbulk', label: "Transaction cursor API, partner loop mein chalaye", score: 1,
               why: 'Chal jaayega aur bounded bhi hai — par 2.4 crore rows ke liye 4.8 lakh requests. Rate limit ke saath ghanton lagenge. Export job behtar hai.' },
           ],
@@ -2032,7 +2032,7 @@ POST /payments                      (koi idempotency key nahi)
           note: 'Client ko pata chalna chahiye ab kya karna hai',
           options: [
             { id: 'always200', label: "200 OK, aur body mein error likh do", score: -3,
-              why: 'Status jhooth bol raha hai. Har HTTP client, retry library aur monitoring tool ko lagega sab theek hai. Yeh silent failures banata hai.' },
+              why: 'Status jhooth bol raha hai. Har HTTP client, retry library aur monitoring tool ko lagega sab theek hai. 200 ke saath error silent failures banata hai.' },
             { id: 'problem', label: "Sahi status + problem+json details", score: 3,
               why: 'Client stable `type` par switch kar sakta hai, UI field-level error dikha sakta hai, aur support trace_id se seedha logs mein ja sakta hai.' },
             { id: 'code', label: "Sahi status + apna stable error code", score: 1,
@@ -2055,7 +2055,7 @@ POST /payments                      (koi idempotency key nahi)
       verdicts: {
         great: 'Har decision production-grade hai. Design bounded queries aur safe retry intent ki direction mein hai;real capacity,crash recovery aur external payment idempotency test karna baaki hai.',
         ok: 'Design theek hai, par ek-do jagah tumne apne aap ko future incident de diya hai. Neeche tradeoffs dekho.',
-        bad: 'Yeh API pehle bade partner sync par gir jaayegi. Har option ka "why" padho — asli seekh wahi hai.',
+        bad: 'Aisi API pehle bade partner sync par gir jaayegi. Har option ka "why" padho — asli seekh wahi hai.',
       },
     },
     {
@@ -2134,7 +2134,7 @@ POST /payments                      (koi idempotency key nahi)
   ],
   homework: `Apni sabse purani API ka ek endpoint chuno aur is track ki checklist se review karo:
     naming · verb/status · pagination · filters · versioning · errors · idempotency · rate limit.
-    Har "❌" ke saamne likho ki woh kis din production incident banega.`,
+    Har "❌" ke saamne likho ki kami kis din production incident banegi.`,
   cards: [
     { front: 'Achhi API — ek line mein?', back: 'Jiska naam <b>guess</b> kiya ja sake, jiski cost <b>bounded</b> ho, jiske errors <b>actionable</b> hon, aur jise <b>surakshit retry</b> kiya ja sake.' },
     { front: 'Bulk export kaise dein?', back: '<b>Async export job</b> — 202 + status URL + file link. Sync list API interactive browsing ke liye hai; 2.4 crore rows ka transfer ek batch job hai.' },
@@ -2170,7 +2170,7 @@ SD.registerLevelsAfter('api', 'versioning', [
 {
   id: 'auth',
   icon: '🔐',
-  title: 'Auth — Tum Kaun Ho, Yeh Client Nahi Batata',
+  title: 'Auth — Tum Kaun Ho, Client Nahi Batata',
   badge: 'Identity Rakshak',
   objectives: [
     'Identity <b>header</b> se aati hai — body ya query se <b>kabhi nahi</b>',
@@ -2184,25 +2184,25 @@ SD.registerLevelsAfter('api', 'versioning', [
      body, headers — sab. Client jo chaahe likh sakta hai.</p>
      <p>Toh phir header se identity lena "surakshit" kaise hua? Kyunki hum
      <code>Authorization</code> header ke andar jo hai use <b>verify</b> karte hain —
-     uspar server ka signature (JWT) hai, ya woh ek session id hai jo server ke paas
+     header par server ka signature (JWT) hai, ya header mein server ke paas
      store hai. Hum header par bharosa nahi karte, hum <b>signature</b> par karte hain.</p>
-     <p>Iska ulta yeh galti hai, jo aaj bhi sabse common API vulnerability hai:</p>
+     <p>Ulti galti aaj bhi sabse common API vulnerability hai:</p>
      <pre>GET /api/v1/transactions?user_id=7      ← "main user 7 hoon"
 GET /api/v1/transactions?user_id=8      ← "...ab main user 8 hoon" 😈</pre>
      <p>Server ne bas <b>maan liya</b>. Isko <b>IDOR</b> kehte hain — Insecure Direct
-     Object Reference. Yeh koi fancy hack nahi hai; yeh URL mein ek number badalna hai.
-     Aur yeh OWASP API Security ki list mein <b>#1</b> par hai.</p>
+     Object Reference. IDOR koi fancy hack nahi hai; bas URL mein ek number badalna hai.
+     Aur IDOR OWASP API Security ki list mein <b>#1</b> par hai.</p>
      <h3>🔀 Do alag sawaal</h3>
      <table>
        <tr><th></th><th>AuthN — Authentication</th><th>AuthZ — Authorization</th></tr>
-       <tr><td>Sawaal</td><td>"Tum kaun ho?"</td><td>"Tumhe iski ijaazat hai?"</td></tr>
+       <tr><td>Sawaal</td><td>"Tum kaun ho?"</td><td>"Tumhe is kaam ki ijaazat hai?"</td></tr>
        <tr><td>Fail par</td><td><b>401</b> Unauthorized</td><td><b>403</b> Forbidden</td></tr>
        <tr><td>Client kya kare</td><td>Login bhejo / token refresh karo</td><td>Login se kuch nahi hoga — error dikhao</td></tr>
        <tr><td>Kahan hota hai</td><td>Gateway / edge par (ek baar)</td><td>Service ke andar (har resource par)</td></tr>
      </table>
-     <p>Yeh sirf naam ka farak nahi hai. Agar tum AuthZ fail par 401 bhej doge, toh
+     <p>AuthN aur AuthZ sirf naam ka farak nahi hai. Agar tum AuthZ fail par 401 bhej doge, toh
      mobile app user ko <b>bar-bar login screen</b> dikhaayega — jabki login se problem
-     hal hi nahi hone wali. Yeh ek asli, aam bug hai.</p>`,
+     hal hi nahi hone wali. Galat 401 ek asli, aam bug hai.</p>`,
     `<h3>🔬 JWT vs Server Session</h3>
      <table>
        <tr><th></th><th>JWT (self-contained)</th><th>Server session</th></tr>
@@ -2213,7 +2213,7 @@ GET /api/v1/transactions?user_id=8      ← "...ab main user 8 hoon" 😈</pre>
        <tr><td>Data purana ho jaana</td><td>❌ role token ke andar chhap gaya hai</td><td>✅ hamesha taaza</td></tr>
      </table>
      <p>Practical raasta jo dono ka faayda leta hai:</p>
-     <pre>access token   JWT, umar 5–15 minute      ← har request iske saath
+     <pre>access token   JWT, umar 5–15 minute      ← har request access token ke saath
 refresh token  opaque, server ke paas,     ← sirf naya access token lene ke liye
                umar 30 din, REVOKE ho sakta hai</pre>
      <p>Given 15-minute access token aur no immediate revocation check, refresh credential revoke karne ke baad existing access expiry tak valid reh sakta hai. Sensitive products ko deny list, token version ya introspection se shorter revoke window chahiye. 5–15 minute aur 30-day refresh duration examples hain; theft risk, rotation aur client recovery se policy choose karo.</p>
@@ -2228,7 +2228,7 @@ GET  /v1/products            ← public catalog
 (kuch nahi likha = protected)
 GET  /v1/transactions        ← token chahiye
 GET  /v1/admin/users         ← token + role=admin</pre>
-     <p class="tip">🎯 Aur GraphQL mein yeh <b>field</b> tak jaata hai: ek hi
+     <p class="tip">🎯 Aur GraphQL mein authorization <b>field</b> tak jaata hai: ek hi
      <code>User</code> type mein <code>name</code> sabko dikh sakta hai par
      <code>email</code> sirf khud ko. Isiliye GraphQL mein authorization
      <b>resolver</b> par hoti hai, endpoint par nahi — kyunki endpoint toh ek hi hai.</p>`,
@@ -2245,11 +2245,11 @@ GET  /v1/admin/users         ← token + role=admin</pre>
       ],
       items: [
         { text: 'Authorization header bheja hi nahi', bin: 'c401', explain: 'Server ko pata hi nahi tum kaun ho. 401 + <code>WWW-Authenticate</code> header. Client ko login bhejna chahiye.' },
-        { text: 'Token ka signature galat hai (chhed-chaad ki gayi)', bin: 'c401', explain: 'Identity establish hi nahi hui. 401. Aur ise <b>log karo</b> — signature fail hona attack ka signal hai, normal expiry nahi.' },
-        { text: 'Token 20 minute pehle expire ho gaya', bin: 'c401', explain: '401 — par client ko chahiye ki woh chupchaap refresh token se naya le aur request dobara bheje. User ko login screen dikhana galat UX hai.' },
+        { text: 'Token ka signature galat hai (chhed-chaad ki gayi)', bin: 'c401', explain: 'Identity establish hi nahi hui. 401. Aur galat signature ko <b>log karo</b> — signature fail hona attack ka signal hai, normal expiry nahi.' },
+        { text: 'Token 20 minute pehle expire ho gaya', bin: 'c401', explain: '401 — par client ko chahiye ki client chupchaap refresh token se naya le aur request dobara bheje. User ko login screen dikhana galat UX hai.' },
         { text: 'Valid user hai, par doosre user ka order maang raha hai', bin: 'c403', explain: 'Identity clear hai, ijaazat nahi. 403. Login se kuch nahi badlega — isliye 401 bhejna client ko infinite login loop mein daal dega.' },
         { text: 'Normal user /v1/admin/users maang raha hai', bin: 'c403', explain: '403 — role kam hai. (Kuch teams yahan jaan-boojh ke 404 bhejti hain taaki admin routes ka pata hi na chale — dono soch sahi hai, par TEAM mein ek hi chuno.)' },
-        { text: 'Private repo maanga jiska existence hi leak nahi karna', bin: 'c404', explain: 'GitHub yahi karta hai. 403 kehna bhi ek leak hai: "yeh cheez maujood toh hai". Jab <b>existence</b> hi secret ho, 404 bhejo.' },
+        { text: 'Private repo maanga jiska existence hi leak nahi karna', bin: 'c404', explain: 'GitHub yahi karta hai. 403 kehna bhi ek leak hai: "ye cheez maujood toh hai". Jab <b>existence</b> hi secret ho, 404 bhejo.' },
         { text: 'Token sahi hai, resource sach mein delete ho chuka hai', bin: 'c404', explain: 'Seedha 404 — yahan koi auth sawaal hai hi nahi.' },
       ],
     },
@@ -2294,7 +2294,7 @@ GET  /v1/admin/users         ← token + role=admin</pre>
       questions: [
         { q: 'Identity kis cheez se nikalni chahiye?', target: 'token', explain: 'Sirf verified token se. Query param, body field, ya koi bhi <code>X-User-Id</code> jo client bhej sakta hai — sab jhooth bol sakte hain.' },
         { q: 'Kaunsa hissa client jhooth bol ke bhar sakta hai?', target: 'spoof', explain: 'Query aur body — dono poori tarah client ke kaabu mein hain. Yahan se identity lena hi IDOR ki jad hai.' },
-        { q: 'Ownership check kahan hona chahiye?', target: 'own', explain: 'Service ke andar, <b>har resource par</b>. Gateway sirf "token valid hai" bata sakta hai; "yeh order <b>iska</b> hai" sirf woh service jaanti hai jiske paas data hai.' },
+        { q: 'Ownership check kahan hona chahiye?', target: 'own', explain: 'Service ke andar, <b>har resource par</b>. Gateway sirf "token valid hai" bata sakta hai; "order <b>is user</b> ka hai" sirf data wali service jaanti hai.' },
         { q: 'Access token ki umar chhoti kyun rakhte hain?', target: 'short', explain: "Pure signature/expiry-only validation revoked user ko expiry tak allow kar sakti hai. Short access lifetime exposure bound karti hai; immediate revocation ko stateful policy chahiye. Refresh credentials ko protected storage, rotation aur revocation chahiye." },
       ],
     },
@@ -2337,7 +2337,7 @@ GET  /v1/admin/users         ← token + role=admin</pre>
           ],
         },
         {
-          q: 'Naya endpoint bana aur auth lagana bhool gaye. Isse bachne ka sabse pakka tareeka?',
+          q: 'Naya endpoint bana aur auth lagana bhool gaye. Bhoole hue auth se bachne ka sabse pakka tareeka?',
           choices: [
             'Framework mein default DENY — public endpoint ko alag se public mark karna pade',
             'Endpoint ke naam mein "public" likho — naam se sab ko pata rahega kaunsa khula',
@@ -2359,11 +2359,11 @@ GET  /v1/admin/users         ← token + role=admin</pre>
       type: 'match',
       title: 'Kaunsa auth mechanism kahan',
       pairs: [
-        { left: 'Public REST API, third-party developers', right: 'API key + rate limit per key', explain: 'Key se tum <b>caller</b> pehchante ho (user nahi), aur usi par quota aur billing lagti hai. Key rotate karne layak honi chahiye.' },
+        { left: 'Public REST API, third-party developers', right: 'API key + rate limit per key', explain: 'Key se tum <b>caller</b> pehchante ho (user nahi), aur caller par hi quota aur billing lagti hai. Key rotate karne layak honi chahiye.' },
         { left: 'Browser SPA, apna hi backend', right: 'HttpOnly + Secure + SameSite cookie session', explain: 'JS use padh hi nahi sakta, isliye XSS token chura nahi sakta. Server session hone se logout turant asar karta hai. localStorage mein JWT rakhna sabse aam galti hai.' },
         { left: 'Mobile app', right: 'Chhoti umar ka access token + revocable refresh token', explain: "Mobile client par access token short-lived aur refresh credential protected storage mein rakho. Immediate access revocation automatic nahi; deny list/introspection/version policy add kar sakte ho. Cookie vs bearer choice client/runtime threat model se decide karo." },
         { left: 'Service → service (internal)', right: 'mTLS ya short-lived service token', explain: 'Yahan "user" hai hi nahi. Har service ka apna identity certificate ho. Aur asli user ki identity alag se propagate karo — warna downstream ownership check nahi kar sakti.' },
-        { left: 'GraphQL — ek user ka email sirf usi ko dikhe', right: 'Resolver-level (field-level) authorization', explain: 'GraphQL mein endpoint ek hi hai (<code>/graphql</code>), isliye endpoint par authz kaafi nahi. Har field ka apna resolver hai — check wahin lagta hai.' },
+        { left: 'GraphQL — ek user ka email sirf us user ko dikhe', right: 'Resolver-level (field-level) authorization', explain: 'GraphQL mein endpoint ek hi hai (<code>/graphql</code>), isliye endpoint par authz kaafi nahi. Har field ka apna resolver hai — check wahin lagta hai.' },
       ],
     },
   ],
@@ -2410,14 +2410,14 @@ GET  /v1/admin/users         ← token + role=admin</pre>
   success: [
     'Identity sirf verified token se nikaal sakte ho',
     'IDOR pehchaan sakte ho aur query-scoping se rok sakte ho',
-    '401 aur 403 ka farak jaante ho — aur client par uska asar',
+    '401 aur 403 ka farak jaante ho — aur client par dono ka asar',
     'JWT vs session ka tradeoff aur refresh-token wala practical raasta bata sakte ho',
   ],
   homework: `Apni API ke 5 endpoints lo. Har ek ke saamne likho: (1) public hai ya protected,
     (2) identity kahan se aati hai, (3) ownership check kis line par hota hai.
     Jahan (3) khaali reh jaaye — wahi tumhara agla bug hai.`,
   cards: [
-    { front: 'Identity kahan se lein?', back: 'Sirf <b>verified token</b> se (Authorization header). Query/body/koi bhi client-set header <b>jhooth bol sakta hai</b> — wahan se identity lena hi IDOR hai.' },
+    { front: 'Identity kahan se lein?', back: 'Sirf <b>verified token</b> se (Authorization header). Query/body/koi bhi client-set header <b>jhooth bol sakta hai</b> — client ki di hui jagah se identity lena hi IDOR hai.' },
     { front: '401 vs 403?', back: '<b>401</b> = "tum kaun ho, pata nahi" → client login/refresh bheje. <b>403</b> = "pata hai, ijaazat nahi" → login se kuch nahi hoga. Galat code = infinite login loop.' },
     { front: 'JWT ka sabse bada tradeoff?', back: "JWT locally validate ho sakta hai, par immediate user/token revocation ko deny list, introspection ya token-version state chahiye. Short-lived access + rotated revocable refresh credentials common design hai; lifetime policy risk se choose karo." },
     { front: 'Ownership check kahan?', back: 'Service ke andar, har resource par — aur behtar, <b>query mein</b>: <code>WHERE id=? AND user_id=?</code>. Gateway sirf authN karta hai, authZ nahi.' },
