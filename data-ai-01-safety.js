@@ -479,7 +479,7 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
     {
       type: 'replay',
       title: 'Replay — breach ke beech AI ne mana kar diya (video ke mutabik)',
-      instructions: 'Timeline chalao. Jahan sawaal aaye wahan rukega.',
+      instructions: 'Timeline chalao. Sawaal aate hi replay rukega.',
       incident: 'Hugging Face attack, July 2026 — video ke mutabik',
       goal: 'Dekho incident ke waqt kaunse faisle pehle se tay hone chahiye the.',
       speedMs: 1800,

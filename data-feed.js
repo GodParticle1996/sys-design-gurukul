@@ -38,7 +38,7 @@ SD.registerLevels('feed', [
   lesson: [
     `<h3>📰 Feed se: Cloudflare ka apna postmortem, 18 November 2025</h3>
      <p>18 November 2025 ko Cloudflare ka core network gir gaya. Cloudflare ne khud
-     jo postmortem likha, uska pehla vaakya yaad rakhne layak hai:
+     jo postmortem likha, postmortem ka pehla vaakya yaad rakhne layak hai:
      <b>outage kisi attack se nahi hua</b>. Outage ek <b>database permission change</b> se hua.</p>
      <h3>🔗 Zanjeer — har kadi apne aap mein bilkul safe thi</h3>
      <pre>1. ClickHouse mein ek PERMISSION change hua (security behtar karne ke liye)
@@ -63,7 +63,7 @@ SD.registerLevels('feed', [
      files ko <b>usi tarah</b> validate karo jaise user ke bheje hue input ko
      karte ho. Team ne user input par to hamesha bounds-check lagaya tha, par
      apne hi generate kiye config par nahi.</p>
-     <p>Har team yahi galti karti hai. Tumhara code sochta hai: "yeh file toh
+     <p>Har team yahi galti karti hai. Tumhara code sochta hai: "ye file toh
      humne hi banayi hai, isme galat kya ho sakta hai." Jawab: <b>bahut kuch</b>.
      Feature file ko banane wali query aur file ko padhne wala proxy do alag
      services hain, do alag teams ki hain, aur beech mein koi contract test nahi tha.</p>`,
@@ -79,13 +79,13 @@ SD.registerLevels('feed', [
 14:30  sahi feature file wapas daali gayi — core traffic chal pada
 17:06  sab systems normal</pre>
      <p>Us flickering ne team ko <b>galat raaste</b> par bhej diya. Ek service
-     jo apne aap theek ho jaaye aur phir apne aap gir jaaye — woh bilkul ek
+     jo apne aap theek ho jaaye aur phir apne aap gir jaaye — bilkul ek
      bade DDoS attack jaisi dikhti hai. Cloudflare ke engineers ne shuru mein
      attack hi socha, aur us shak par kaafi waqt gaya.</p>
      <p class="tip">🎯 Yahan se ek niyam nikalta hai: <b>intermittent failure ko
      attack maan lena bahut aasan hai</b>. Jab koi cheez apne aap theek ho jaaye,
      sabse pehle poochho — "pichhle 30 minute mein kya-kya <b>deploy</b> hua,
-     chahe woh code na ho?" Config, permission, feature flag, DB migration —
+     chahe badlaav code na ho?" Config, permission, feature flag, DB migration —
      sab deploy hain.</p>
      <h3>🔒 Aur ek chhoti si cheez: unwrap()</h3>
      <p>Rust mein <code>unwrap()</code> ka matlab hai "mujhe pura yakeen hai ki
@@ -103,7 +103,7 @@ SD.registerLevels('feed', [
     {
       type: 'replay',
       title: 'Replay — 18 November 2025',
-      instructions: "Timeline chalao. Jahan sawaal aaye, wahan replay rukega. Timeline source-based hai; chart percentages aur intermediate feature counts illustrative teaching values hain.",
+      instructions: "Timeline chalao. Sawaal aate hi replay rukega. Timeline source-based hai; chart percentages aur intermediate feature counts illustrative teaching values hain.",
       incident: 'Cloudflare — 18 Nov 2025',
       goal: 'Poori timeline dekho aur teen faisle ke mod par sahi call lo.',
       speedMs: 2000,
@@ -149,7 +149,7 @@ SD.registerLevels('feed', [
                  wrongHints: [
                    'Attack ka shak team ne bhi kiya — aur usi shak par kaafi waqt gaya. Attack itna theek 5-minute period nahi rakhta.',
                    'Autoscaler chal raha tha par saaf tha; instances healthy the, process panic kar raha tha.',
-                   'Ek kharab node hota toh sirf uske requests girte, poora network nahi.',
+                   'Ek kharab node hota toh sirf us node ke requests girte, poora network nahi.',
                  ] , choiceExplanations: [
                    'Har 5 minute ka cycle periodic jobs, config refresh ya scaling ki jaanch ka clue hai. Cloudflare mein alag query results se acchi aur kharab files ban rahi thi. Cycle akele wajah pakki nahi karta.',
                    'Attack bhi jaancho, par cycle internal job se bhi aa sakta hai.',
@@ -194,7 +194,7 @@ SD.registerLevels('feed', [
       brief: `Ek Bot Management feature pipeline. ClickHouse se query chalti hai,
         har 5 minute par ek feature file banti hai, aur duniya bhar ke proxies
         us file ko padhte hain.`,
-      goal: 'Teen galtiyan pakdo. Har box par click karne se uska faisla khulta hai — sahi box bhi kuch sikhata hai.',
+      goal: 'Teen galtiyan pakdo. Har box par click karne se box ka faisla khulta hai — sahi box bhi kuch sikhata hai.',
       nodes: [
         { id: 'ch', label: '🗃️ ClickHouse', sub: 'features ka source data', row: 0 },
         { id: 'query', label: '🔎 Generator query', sub: 'SELECT ... FROM system.columns — koi database filter nahi', row: 0 },
@@ -216,7 +216,7 @@ SD.registerLevels('feed', [
       lesson: `🎯 Teenon galtiyan ek hi line par hain: <b>banane wala</b> (query),
         <b>artifact</b> (file), aur <b>padhne wala</b> (proxy). Beech mein kahin bhi
         ek bound-check hota toh outage ruk jaata. Jab do teams ek file ke zariye
-        baat karti hain, woh file ek <b>API</b> hai — aur har API par validation
+        baat karti hain, file ek <b>API</b> hai — aur har API par validation
         chahiye.`,
     },
     {
@@ -284,20 +284,20 @@ SD.registerLevels('feed', [
     'Flapping failure ko generator ke period se jod sakte ho',
   ],
   homework: `Apne system mein ek aisi config ya data file dhoondo jo koi doosri
-    team ya koi job generate karti hai. Do sawaal poochho: (1) uska size ya row
+    team ya koi job generate karti hai. Do sawaal poochho: (1) file ka size ya row
     count achanak double ho jaaye toh tumhara code kya karega? (2) kya tumhare
     paas "aakhri acchi copy" par rehne ka raasta hai? Agar dono ke jawab nahi
     hain, tumhare paas Cloudflare wali zanjeer maujood hai.`,
   cards: [
     { front: 'Cloudflare 18 Nov 2025 — trigger kya tha?', back: "Ek <b>ClickHouse permission change</b>. Feature-file query mein database filter nahi tha, isliye extra metadata rows aayi aur generated file 200-feature limit paar kar gayi, aur FL2 proxy ka <code>unwrap()</code> <b>panic</b> kar gaya." },
     { front: 'Config-as-input ka niyam?', back: 'Apne banaye config ko <b>user input</b> ki tarah validate karo: schema, row bounds, size. Aur naya config galat ho toh <b>aakhri acche config</b> par raho — panic mat karo.' },
-    { front: 'Limit ka asli sawaal kya hai?', back: 'Number nahi — <b>failure mode</b>. 200 ho ya 2000, sawaal yeh hai ki limit tootne par <b>panic</b> hota hai ya <b>degrade</b>. Panic = outage. Degrade = alert.' },
-    { front: 'Service har 5 minute par gir aur uth rahi hai — pehla shak?', back: 'Koi cheez <b>periodically generate</b> ho rahi hai aur uske do version hain. Failure ka period kisi cron/refresh interval se mile toh seedha usi <b>generator</b> ko dekho — attack mat maano.' },
+    { front: 'Limit ka asli sawaal kya hai?', back: 'Number nahi — <b>failure mode</b>. 200 ho ya 2000, sawaal ye hai ki limit tootne par <b>panic</b> hota hai ya <b>degrade</b>. Panic = outage. Degrade = alert.' },
+    { front: 'Service har 5 minute par gir aur uth rahi hai — pehla shak?', back: 'Koi cheez <b>periodically generate</b> ho rahi hai aur generate hone wali cheez ke do version hain. Failure ka period kisi cron/refresh interval se mile toh seedha usi <b>generator</b> ko dekho — attack mat maano.' },
     { front: '"Kya deploy hua?" mein kya-kya ginte ho?', back: 'Sirf code nahi — <b>config, permission, feature flag, DB migration, index, IAM policy</b>. Cloudflare ka trigger code deploy tha hi nahi.' },
   ],
   interview: {
     title: 'Interview Round — Config pipeline',
-    instructions: 'Yeh sawaal ab har senior round mein aata hai. 🎤',
+    instructions: 'Config pipeline ka sawaal ab har senior round mein aata hai. 🎤',
     questions: [
       {
         q: '"Ek internal config file duniya bhar ke servers padhte hain. Tum kaise design karoge?"',
@@ -355,7 +355,7 @@ SD.registerLevels('feed', [
     'Catastrophic backtracking — ek regex CPU 100% kaise karta hai',
     'Kyun WAF rule "code deploy" nahi maana gaya, aur wahi galti thi',
     'Staged rollout ka asli ganit: blast radius vs deploy speed',
-    'Kill switch ka matlab — aur uska khud par nirbhar na hona',
+    'Kill switch ka matlab — aur kill switch ka khud par nirbhar na hona',
   ],
   lesson: [
     `<h3>📰 Feed se: Cloudflare ka apna postmortem, 2 July 2019</h3>
@@ -363,7 +363,7 @@ SD.registerLevels('feed', [
      Wajah ek WAF rule tha — theek se kahein toh us rule ke andar ka ek
      <b>regular expression</b>.</p>
      <pre>.*(?:.*=.*)</pre>
-     <p>Yeh chhota sa hissa poore outage ki jad hai. Do <code>.*</code> ek hi
+     <p>Regex ka ye chhota sa hissa poore outage ki jad hai. Do <code>.*</code> ek hi
      text ke liye aapas mein lad rahe hain. Regex engine backtracking karta hai:
      pehla <code>.*</code> jitna le sakta hai leta hai, phir peeche hatta hai,
      phir doosra <code>.*</code> koshish karta hai, phir peeche hatta hai —
@@ -374,7 +374,7 @@ SD.registerLevels('feed', [
        <tr><td><code>x=xxxxxxxxxxxxxxxxxxxx</code> (20 x)</td><td><b>555</b></td></tr>
        <tr><td>thoda aur lamba</td><td>lakhon — CPU khatam</td></tr>
      </table>
-     <p class="tip">🎯 Ise <b>catastrophic backtracking</b> kehte hain, aur yeh
+     <p class="tip">🎯 Is bimaari ko <b>catastrophic backtracking</b> kehte hain, aur ye
      ek asli attack class bhi hai — ReDoS. Bachne ka pakka tareeka: aisa regex
      engine use karo jo <b>linear time</b> guarantee kare (RE2, Rust ka regex
      crate). Cloudflare ne outage ke baad wahi kiya.</p>`,
@@ -393,13 +393,13 @@ SD.registerLevels('feed', [
 14:09  traffic normal
 14:52  WAF wapas chalu (test ke baad)</pre>
      <p>Detection sirf <b>3 minute</b> mein ho gayi. Fix apply karne mein
-     <b>25 minute</b> lage. Yeh farak hamesha yaad rakho — zyadatar outage
+     <b>25 minute</b> lage. Ye farak hamesha yaad rakho — zyadatar outage
      "pata nahi chala" se nahi, "pata chal gaya par band karne ka button
      dhoondhne mein waqt laga" se lambe hote hain.</p>
-     <h3>🔌 Kill switch, aur uska apna jaal</h3>
+     <h3>🔌 Kill switch, aur kill switch ka apna jaal</h3>
      <p>Cloudflare ke postmortem mein ek aur baat hai jo aksar chhoot jaati hai:
      us din team ko apne hi internal tools tak pahunchne mein dikkat hui, kyunki
-     woh tools bhi Cloudflare ke peeche the. Jab tumhara emergency button usi
+     internal tools bhi Cloudflare ke peeche the. Jab tumhara emergency button usi
      system par chalta hai jo gira hua hai, tumhare paas emergency button hai hi nahi.</p>
      <p class="tip">🎯 Do niyam yahan se: (1) har tez raaste (WAF, feature flag,
      config push) ke paas apna <b>global kill switch</b> ho. (2) Us kill switch ka
@@ -432,7 +432,7 @@ SD.registerLevels('feed', [
                  wrongHints: [
                    'DDoS itna ekdum aur itna saman har jagah nahi hota — aur DDoS mein traffic badhta hai, CPU-per-request nahi.',
                    'Upstream failure mein traffic gir jaata, CPU bhi gir jaata. Yahan CPU chad gaya — matlab kaam zyada ho raha hai.',
-                   'Memory leak dheere aata hai aur machine-dar-machine aata hai. Yeh ek second mein har jagah hua.',
+                   'Memory leak dheere aata hai aur machine-dar-machine aata hai. Outage ek second mein har jagah hua.',
                  ] , choiceExplanations: [
                    'Ek saath CPU badhna global config, deploy ya traffic ki jaanch ka clue hai. Attack ya shared client behavior bhi kai regions par ek saath asar kar sakta hai; waqt milna akele cause ka saboot nahi hai.',
                    'Deploy ek shak hai. Traffic ya doosri shared dependency bhi wajah ho sakti hai.',
@@ -441,7 +441,7 @@ SD.registerLevels('feed', [
                  ],
                } },
         { t: '13:45', event: 'Pehla PagerDuty alert. <b>Detection: 3 minute.</b>', metrics: { cpu: 99, served: 4 }, tone: 'bad' },
-        { t: '14:00', event: 'WAF ko culprit pehchana gaya. Team ko apne hi internal tools tak pahunchne mein dikkat aa rahi hai — woh tools bhi Cloudflare ke peeche hain.', metrics: { cpu: 99, served: 5 }, tone: 'bad',
+        { t: '14:00', event: 'WAF ko culprit pehchana gaya. Team ko apne hi internal tools tak pahunchne mein dikkat aa rahi hai — internal tools bhi Cloudflare ke peeche hain.', metrics: { cpu: 99, served: 5 }, tone: 'bad',
           ask: { q: 'Cloudflare 2019 mein WAF ka kharab raasta pehchaan liya. Ab asar kaise ghataoge?',
                  choices: [
                    'Kharab WAF raasta roko; security risk dekh kar tested switch chalao',
@@ -451,7 +451,7 @@ SD.registerLevels('feed', [
                  ], answer: 0,
                  explain: 'Is incident mein kharab WAF execution band karne se traffic lauta. Mitigation chunte waqt security aur availability dono ka risk dekho. Emergency switch ka raasta kharab service se alag aur pehle se tested hona chahiye.',
                  wrongHints: [
-                   'Sahi soch, par dheemi. Us waqt kaunsa rule kharab hai yeh nishchit nahi tha — poora WAF band karna ek hi kadam mein pakka tha.',
+                   'Sahi soch, par dheemi. Us waqt kaunsa rule kharab hai, nishchit nahi tha — poora WAF band karna ek hi kadam mein pakka tha.',
                    'Naya deploy karna usi tez raaste ka istemaal hai jo abhi outage kar chuka hai. Girte hue system par naya code mat bhejo.',
                    'CPU har datacenter par 100% tha — shift karne ke liye koi khaali datacenter tha hi nahi.',
                  ] , choiceExplanations: [
@@ -472,7 +472,7 @@ SD.registerLevels('feed', [
                  ], answer: 0,
                  explain: '13:42 deploy se 13:45 alert tak 3 minute lage. WAF 14:07 par band hua: alert ke baad 22 minute aur. Tested recovery aur alag access path der ghata sakte hain; kill switch ki bhi apni seema hoti hai.',
                  wrongHints: [
-                   'Detection pehle hi 3 minute thi. 27 mein se sirf 3 wahan the — bachat 2 minute ki hogi, 22 ki nahi.',
+                   'Detection pehle hi 3 minute thi. 27 mein se sirf 3 minute detection mein the — bachat 2 minute ki hogi, 22 ki nahi.',
                    'RE2 bilkul sahi fix hai aur Cloudflare ne kiya — par RE2 sirf regex-shakl ke bug rokta hai. Kill switch har shakl par chalta hai.',
                    'Log kam nahi the. Faisla aur pahunch (access) ki der thi, haath ki nahi.',
                  ] , choiceExplanations: [
@@ -538,10 +538,10 @@ SD.registerLevels('feed', [
       lesson: `🎯 Yahan asli seekh <b>ek shart</b> hai: <code>bake time ≥ alert time</code>.
         Agar tumhara bake time tumhare alert se chhota hai, tumhara staged rollout
         sirf dikhawa hai — kharab change bake khatam hone se pehle pakda hi nahi
-        jaayega, aur phir woh global chala jaayega. Aur is shart ka doosra pehlu
-        yeh hai: <b>tez alert ka faayda seedha safety mein badalta hai</b>, kyunki
+        jaayega, aur phir kharab change global chala jaayega. Aur is shart ka doosra pehlu
+        ye hai: <b>tez alert ka faayda seedha safety mein badalta hai</b>, kyunki
         tez alert chhota bake time allow karta hai, aur chhota bake time hi
-        security team ko woh teji deta hai jiske liye WAF banaya gaya tha.`,
+        security team ko wahi teji deta hai jiske liye WAF banaya gaya tha.`,
       quiz: {
         q: 'Team kehti hai: 5% canary, phir global. Rollout ki safety jaanchne ke liye kya poochhoge?',
         choices: [
@@ -629,7 +629,7 @@ SD.registerLevels('feed', [
     tak rukta hai. Agar doosra number pehle se chhota hai, tumhara staged rollout
     kaagaz par hai. Teesra sawaal: aaj raat 3 baje tumhara sabse tez raasta
     (feature flag ya config push) band karna ho, toh kitne click lagenge aur
-    kya woh click girne wale system se guzarta hai?`,
+    kya click girne wale system se guzarta hai?`,
   cards: [
     { front: 'Catastrophic backtracking kya hai?', back: 'Nested quantifiers (<code>.*(?:.*=.*)</code>) mein regex engine ke kadam <b>exponentially</b> badhte hain — <code>x=x</code> par 23 kadam, 20 x par 555, thoda aur lamba par lakhon. Ilaaj: <b>linear-time engine</b> (RE2 / Rust regex).' },
     { front: 'Cloudflare 2019 — detect vs mitigate?', back: 'Detect <b>3 minute</b> (13:42 deploy → 13:45 alert). Mitigate <b>25 minute</b> (→ 14:07 WAF global off). Sabak: paisa monitoring mein nahi, <b>kill switch</b> mein lagao.' },
@@ -693,7 +693,7 @@ SD.registerLevels('feed', [
   lesson: [
     `<h3>📰 Feed se: GitHub ka apna postmortem, 21 October 2018</h3>
      <p>21 October 2018 ko raat 22:52 UTC par GitHub ke US East Coast network hub
-     aur unke primary datacenter ke beech ka link <b>43 second</b> ke liye toota.
+     aur GitHub ke primary datacenter ke beech ka link <b>43 second</b> ke liye toota.
      Routine optical equipment maintenance ke dauraan toota. Link 43 second baad
      wapas aa gaya.</p>
      <p>GitHub agle <b>24 ghante 11 minute</b> tak degraded raha.</p>
@@ -708,15 +708,15 @@ SD.registerLevels('feed', [
    ...aur ab dono taraf aise writes hain jo doosri taraf hain hi nahi.
    East Coast ke ek busy cluster mein lagbhag 954 writes aise the
    jo West Coast tak kabhi pahunche hi nahi.</pre>
-     <p class="tip">🎯 Yeh <b>split brain</b> hai. Failover khud "galat" nahi
-     tha — Orchestrator ne bilkul wahi kiya jo uske liye likha gaya tha. Dikkat
-     yeh thi ki 43 second itne chhote the ki purana primary <b>mara hi nahi</b>,
+     <p class="tip">🎯 Is haalat ko <b>split brain</b> kehte hain. Failover khud "galat" nahi
+     tha — Orchestrator ne bilkul wahi kiya jo Orchestrator ke liye likha gaya tha. Dikkat
+     ye thi ki 43 second itne chhote the ki purana primary <b>mara hi nahi</b>,
      bas kat gaya tha — aur us dauraan usne writes le liye.</p>`,
     `<h3>⚖️ Ab asli faisla: kya serve karein?</h3>
      <p>GitHub ke paas do raaste the:</p>
      <table>
        <tr><th>Raasta</th><th>Milta kya hai</th><th>Keemat</th></tr>
-       <tr><td>Jaldi failback karo</td><td>Sewa turant normal</td><td>East Coast ke woh 954 writes <b>gum</b> ho jaate — kisi ka issue, comment, ya push chala jaata</td></tr>
+       <tr><td>Jaldi failback karo</td><td>Sewa turant normal</td><td>East Coast ke 954 writes <b>gum</b> ho jaate — kisi ka issue, comment, ya push chala jaata</td></tr>
        <tr><td>Consistency pehle</td><td>Ek bhi user ka data nahi khota</td><td><b>24 ghante</b> degraded sewa</td></tr>
      </table>
      <p>GitHub ne doosra raasta chuna, aur apne postmortem mein saaf likha:
@@ -726,12 +726,12 @@ SD.registerLevels('feed', [
      (<b>50 lakh se zyada</b> events queue mein bhar gaye) aur GitHub Pages ke
      builds rok diye gaye (<b>80,000</b> queue mein). Kyunki adhoore data par
      webhook bhejna matlab galat sachai ko duniya bhar mein push karna —
-     aur woh wapas nahi liya ja sakta.</p>
+     aur bheja hua webhook wapas nahi liya ja sakta.</p>
      <h3>🐢 24 ghante gaye kahan?</h3>
      <p>Code likhne mein nahi. GitHub ne likha ki zyadatar waqt
      <b>"decompress, checksum, prepare, and load large backup files"</b> mein
      gaya. Backups remote cloud storage mein the, aur data <b>terabytes</b> mein tha.</p>
-     <p class="tip">🎯 Yeh sabse zyada nazarandaaz kiya jaane wala number hai.
+     <p class="tip">🎯 Restore ka samay sabse zyada nazarandaaz kiya jaane wala number hai.
      Sab log RPO (kitna data kho sakta hai) poochhte hain. Bahut kam log RTO ka
      asli number naapte hain: <b>tumhara sabse bada database backup se wapas aane
      mein kitne ghante lega — network, decompress aur load milaakar?</b> Jis din
@@ -743,7 +743,7 @@ SD.registerLevels('feed', [
       title: 'Replay — 21-22 October 2018',
       instructions: 'Timeline chalao. Do faisle ke mod par tumhein call leni hai.',
       incident: 'GitHub — 21 Oct 2018',
-      goal: 'Dekho ki 43 second ka partition 24 ghante kaise bana, aur wahan kaunsa faisla jaan-boojh kar liya gaya tha.',
+      goal: 'Dekho ki 43 second ka partition 24 ghante kaise bana, aur beech mein kaunsa faisla jaan-boojh kar liya gaya tha.',
       speedMs: 1900,
       metrics: [
         { id: 'consist', label: 'Data consistency ka bharosa', unit: '%', max: 100, dir: 'higher' },
@@ -765,7 +765,7 @@ SD.registerLevels('feed', [
                  wrongHints: [
                    'Purana primary promote karne se West Coast ke naye writes gum ho jaayenge — tumne ek data loss ko doosre data loss se badal diya.',
                    'Dono ko chalne dena reconcile ka kaam har second bada karta hai. Split brain mein "baad mein dekh lenge" sabse mehenga jumla hai.',
-                   'Last-write-wins values ke liye hai. Ek issue comment "purana" hone se galat nahi ho jaata — woh ek event hai, ek value nahi.',
+                   'Last-write-wins values ke liye hai. Ek issue comment "purana" hone se galat nahi ho jaata — comment ek event hai, ek value nahi.',
                  ] , choiceExplanations: [
                    'Unsafe writers ko rok kar dono histories bachao. Phir business events ka milaan karo. Timestamp ya branch ka size sahi history nahi chunta; webhooks jaise bahar ke effects bhi ho chuke ho sakte hain.',
                    'Purane primary ke paas doosri taraf accepted writes nahi bhi ho sakte hain.',
@@ -900,10 +900,10 @@ SD.registerLevels('feed', [
     'RTO ko restore drill se naapte ho, anumaan se nahi',
   ],
   homework: `Do sawaal apni team se poochho. (1) Agar hamara primary 43 second ke
-    liye network se kat jaaye par zinda rahe, kya woh us dauraan writes le sakta
+    liye network se kat jaaye par zinda rahe, kya primary us dauraan writes le sakta
     hai? Agar haan, tumhare paas GitHub wali sthiti maujood hai. (2) Hamare sabse
     bade database ko backup se poora wapas laane mein kitne ghante lagenge —
-    aur kya kisi ne woh drill kabhi chalaya hai?`,
+    aur kya kisi ne restore ki drill kabhi chalayi hai?`,
   cards: [
     { front: 'GitHub Oct 2018 — trigger?', back: '<b>43 second</b> ka network partition (routine optical maintenance). Orchestrator ne West Coast par failover kar diya; link wapas aane par dono taraf aise writes the jo doosri taraf nahi the — ek cluster mein lagbhag <b>954</b> orphan writes.' },
     { front: 'Split brain ka dil kya hai?', back: 'Purana primary <b>mara nahi</b> tha — sirf <b>kat</b> gaya tha, aur zinda tha, isliye writes leta raha. Sabse khatarnaak failure "down" nahi, <b>"cut off but alive"</b> hoti hai.' },
@@ -913,7 +913,7 @@ SD.registerLevels('feed', [
   ],
   interview: {
     title: 'Interview Round — Failover design',
-    instructions: 'Yeh sawaal seedha "senior ya nahi" tay karta hai. 🎤',
+    instructions: 'Failover ka sawaal seedha "senior ya nahi" tay karta hai. 🎤',
     questions: [
       {
         q: 'Network partition par database promote karne se pehle kaunsi shart jaanchoge?',
@@ -968,14 +968,14 @@ SD.registerLevels('feed', [
   badge: 'Fleet Ganitagya',
   objectives: [
     'O(N²) fleet topology — har server har doosre server ko jaanta hai',
-    'Woh limit jo kisi dashboard par nahi thi: OS ka thread count',
+    'Kisi dashboard par na dikhne wali limit: OS ka thread count',
     'Recovery dheere kyun karni padi — aur teji nuksaan kyun karti',
     'Cell-based architecture: blast radius ko design se chhota karna',
   ],
   lesson: [
     `<h3>📰 Feed se: AWS ka apna postmortem, 25 November 2020</h3>
      <p>Thanksgiving se ek din pehle AWS us-east-1 mein Kinesis gir gaya, aur
-     uske saath Cognito, CloudWatch, Lambda, EventBridge, ECS aur EKS bhi
+     Kinesis ke saath Cognito, CloudWatch, Lambda, EventBridge, ECS aur EKS bhi
      prabhavit hue. Poori recovery mein <b>20 ghante</b> lage.</p>
      <p>Trigger kya tha? <b>Kinesis ke front-end fleet mein capacity badhayi gayi thi.</b>
      Zyada capacity. Wahi outage ban gayi.</p>
@@ -988,7 +988,7 @@ SD.registerLevels('feed', [
 Fleet ka kul thread count  →  N × N  =  O(N²)
 
 N badhao 10%  →  har server par threads 10% badhe
-                 aur woh badhotri POORE fleet par ek saath hui</pre>
+                 aur badhotri POORE fleet par ek saath hui</pre>
      <p class="tip">🎯 Yahi sabse dhokebaaz hissa hai: capacity add karna har
      server par threads badha deta hai — sirf naye servers par nahi, <b>saare</b>
      servers par. Isliye poora fleet <b>ek saath</b> OS ki maximum thread limit
@@ -1006,16 +1006,16 @@ N badhao 10%  →  har server par threads 10% badhe
      laaye. 20 ghante ka bada hissa wahin gaya.</p>
      <h3>🧊 Fix: cell-based architecture</h3>
      <p>AWS ke remediation mein sabse zaroori cheez thread limit badhana nahi thi
-     (woh bhi kiya gaya). Sabse zaroori cheez thi <b>cellularization</b> —
+     (limit bhi badhayi gayi). Sabse zaroori cheez thi <b>cellularization</b> —
      fleet ko chhote-chhote swatantra cells mein todna.</p>
      <table>
        <tr><th></th><th>Ek bada fleet</th><th>Kai chhote cells</th></tr>
-       <tr><td>Thread ganit</td><td>N × N — N badhne par har server par asar</td><td>har cell mein sirf uske apne servers</td></tr>
+       <tr><td>Thread ganit</td><td>N × N — N badhne par har server par asar</td><td>har cell mein sirf cell ke apne servers</td></tr>
        <tr><td>Blast radius</td><td><b>100%</b></td><td><b>1 / cell count</b></td></tr>
        <tr><td>Capacity add karna</td><td>poore fleet ka ganit badalta hai</td><td>naya <b>cell</b> jodo — purane cells chhoote hi nahi</td></tr>
      </table>
      <p class="tip">🎯 Cell-based architecture ka asli faayda scale nahi hai —
-     <b>blast radius</b> hai. Aur uske saath ek aur faayda muft milta hai:
+     <b>blast radius</b> hai. Aur blast radius ke saath ek aur faayda muft milta hai:
      capacity badhane ka matlab "naya cell banao" ho jaata hai, aur naya cell
      banane se purane cells ka ganit badalta hi nahi.</p>`,
   ],
@@ -1065,7 +1065,7 @@ N badhao 10%  →  har server par threads 10% badhe
                  explain: 'Bootstrap aur request serving shared resources lete hain. Dono par ek saath zyada kaam recovery ko phir gira sakta hai. AWS ne kuch sau servers prati ghanta laaye; raftaar health aur headroom dekh kar chuno.',
                  wrongHints: [
                    'Cold cache wale servers ek saath chalu karna thundering herd banata hai — recovery ulta lamba ho jaata hai.',
-                   'Thread limit badhana zaroori tha, par usse cache-banane vs serve-karne ka contention khatam nahi hota.',
+                   'Thread limit badhana zaroori tha, par limit badhane se cache-banane vs serve-karne ka contention khatam nahi hota.',
                    'Fleet chhota karna capacity kam kar deta hai — aur load toh utna hi hai jitna tha.',
                  ] , choiceExplanations: [
                    'Bootstrap aur request serving shared resources lete hain. Dono par ek saath zyada kaam recovery ko phir gira sakta hai. AWS ne kuch sau servers prati ghanta laaye; raftaar health aur headroom dekh kar chuno.',
@@ -1080,7 +1080,7 @@ N badhao 10%  →  har server par threads 10% badhe
       lesson: `💡 Do baatein. <b>1.</b> "Har node har node ko jaanta hai" wala koi
         bhi design O(N²) hai — usme capacity add karna ek <b>global</b> change hai,
         aur wahi Kinesis ko le dooba. <b>2.</b> Recovery ki raftaar bhi ek design
-        faisla hai: thak chuke system ko ek saath sab kuch dene se woh dobara
+        faisla hai: thak chuke system ko ek saath sab kuch dene se system dobara
         girta hai. Dheeri, controlled recovery aksar sabse tez recovery hoti hai.`,
     },
     {
@@ -1113,7 +1113,7 @@ N badhao 10%  →  har server par threads 10% badhe
             'Memory ki drishti se 74 MB kuch bhi nahi hai — ek 64 GB machine par 0.1%',
             'Isiliye MEMORY monitoring ne kuch nahi bataya. Limit memory ki thi hi nahi — limit OS ke THREAD COUNT ki thi',
           ],
-          lesson: '🎯 Yeh sabse zaroori sabak hai. Memory graph bilkul saaf tha, CPU graph bhi saaf tha — aur phir bhi fleet mar gaya. <b>Har limit ek dashboard par nahi hoti.</b> File descriptors, thread count, PIDs, inodes, ephemeral ports, connection table — in sab par alert hona chahiye, sirf CPU aur memory par nahi.',
+          lesson: '🎯 Asli limit dhoondhna sabse zaroori sabak hai. Memory graph bilkul saaf tha, CPU graph bhi saaf tha — aur phir bhi fleet mar gaya. <b>Har limit ek dashboard par nahi hoti.</b> File descriptors, thread count, PIDs, inodes, ephemeral ports, connection table — in sab par alert hona chahiye, sirf CPU aur memory par nahi.',
         },
         {
           q: 'Recovery ke dauraan front-end servers sirf <b>400 prati ghanta</b> ki raftaar se wapas laaye ja sakte the. 9,200 servers wapas laane mein kitne ghante lagenge?',
@@ -1124,9 +1124,9 @@ N badhao 10%  →  har server par threads 10% badhe
             '9,200 ÷ 400 = 23 ghante',
             'AWS ka asli outage lagbhag 20 ghante chala — 9,200 aur 400 misaal ke numbers hain, par anumaan usi paimane ka hai',
             'Ab ulta sawaal poochho: recovery ko 2 ghante karna ho toh raftaar 4,600/ghanta chahiye',
-            'Par woh raftaar cache-banane aur serve-karne ke beech contention paida karti hai — yaani recovery ULTA lamba ho jaata',
+            'Par itni raftaar cache-banane aur serve-karne ke beech contention paida karti hai — yaani recovery ULTA lamba ho jaata',
           ],
-          lesson: '🎯 Yahan se ek number nikalta hai jo lagbhag koi team nahi jaanti: <b>tumhara fleet cold start se poora wapas aane mein kitna waqt lega</b>. Us number ko naapo. Agar woh number ghanton mein hai, toh tumhara asli RTO woh hai — chahe tumhara code kitni bhi jaldi deploy ho jaaye.',
+          lesson: '🎯 Yahan se ek number nikalta hai jo lagbhag koi team nahi jaanti: <b>tumhara fleet cold start se poora wapas aane mein kitna waqt lega</b>. Us number ko naapo. Agar cold start ka number ghanton mein hai, toh tumhara asli RTO wahi number hai — chahe tumhara code kitni bhi jaldi deploy ho jaaye.',
         },
       ],
     },
@@ -1189,20 +1189,20 @@ N badhao 10%  →  har server par threads 10% badhe
     },
   ],
   success: [
-    'O(N²) topology pehchan sakte ho aur uska capacity-add ka khatra bata sakte ho',
+    'O(N²) topology pehchan sakte ho aur capacity jodne ka khatra bata sakte ho',
     'CPU/memory ke alawa OS-level limits par alert lagana jaante ho',
     'Recovery ki raftaar ko ek design faisla maante ho',
     'Cell-based architecture ka asli faayda (blast radius) bol sakte ho',
   ],
   homework: `Apne sabse bade fleet mein ek sawaal poochho: kya koi bhi node baaki
     saare nodes ka kuch (connection, thread, membership entry) rakhta hai? Agar
-    haan, toh ek chart banao — nodes 2x karne par woh cheez kitni badhti hai.
+    haan, toh ek chart banao — nodes 2x karne par wahi cheez kitni badhti hai.
     Doosra kaam: apne servers par <code>ulimit -n</code> aur thread count par
     alert lagao, limit ke <b>70%</b> par.`,
   cards: [
     { front: 'AWS Kinesis Nov 2020 — trigger?', back: '<b>Capacity add karna.</b> Har front-end server har doosre server ke liye ek OS thread banata hai, isliye fleet badhne par threads <b>har</b> server par badhe aur poora fleet ek saath OS ki max thread limit paar kar gaya.' },
     { front: 'O(N²) topology ka khatra?', back: '"Har node har node ko jaanta hai" (gossip, full mesh, per-peer threads, poori membership table) mein <b>capacity add karna ek GLOBAL change hai</b>. Servers 10% badhe = kul threads ~21% badhe, har server par ~10%.' },
-    { front: 'Kaunse alerts lagbhag har team bhool jaati hai?', back: 'OS-level counters: <b>thread count, file descriptors, PIDs, ephemeral ports, connection table</b>. Yeh CPU ya memory badhaye bina khatam ho jaate hain. Alert limit ke <b>70%</b> par lagao.' },
+    { front: 'Kaunse alerts lagbhag har team bhool jaati hai?', back: 'OS-level counters: <b>thread count, file descriptors, PIDs, ephemeral ports, connection table</b>. Ye resources CPU ya memory badhaye bina khatam ho jaate hain. Alert limit ke <b>70%</b> par lagao.' },
     { front: 'Recovery ki raftaar kaisi honi chahiye?', back: '<b>Throttled.</b> AWS ne servers kuch sau prati ghanta ki raftaar se laaye — kyunki har server chalu hote hi cache banane aur requests serve karne, dono ke liye ladta hai. Ek saath sab chalu karna recovery ULTA lamba karta hai.' },
     { front: 'Cell-based architecture ka asli faayda?', back: '<b>Blast radius</b> — ek cell girne par 1/N users prabhavit. Bonus: capacity badhana "naya cell" ban jaata hai, isliye purane cells ka ganit chhoota hi nahi.' },
   ],
@@ -1254,7 +1254,7 @@ N badhao 10%  →  har server par threads 10% badhe
   title: 'Postmortem — 73 ghante ka death spiral',
   badge: 'Spiral Todne Wala',
   objectives: [
-    'Death spiral: woh outage jo bahar ka load hatane par bhi nahi rukti',
+    'Death spiral: aisi outage jo bahar ka load hatane par bhi nahi rukti',
     'Observability ka apne monitored system par nirbhar hona',
     'Do bug ek saath — contention aur BoltDB ka freelist',
     'Spiral todne ka ek hi tareeka: internal churn ko kaato',
@@ -1273,12 +1273,12 @@ N badhao 10%  →  har server par threads 10% badhe
      <p>Streaming mein purane long-polling se <b>kam</b> concurrency control
      elements (Go channels) the. Bahut zyada read <b>aur</b> write ek saath aane
      par ek hi channel par bhaari contention ho gaya. Aur dual-socket NUMA
-     servers (128-core) par woh contention aur badh gaya.</p>
+     servers (128-core) par contention aur badh gaya.</p>
      <h3>🗄️ Doosra bug: BoltDB ka freelist</h3>
      <p>Consul apne Raft write-ahead log ke liye BoltDB use karta hai. Roblox ke
      workload par ek pathological bug khula: purane log entries delete hone par
      bhi BoltDB ki disk par jagah <b>kabhi kam nahi hoti</b>. Free pages ka
-     freelist <b>7.8 MB</b> ka ho gaya — aur woh poora freelist <b>har 16 KB
+     freelist <b>7.8 MB</b> ka ho gaya — aur poora freelist <b>har 16 KB
      ke log append par dobara likha jaata tha</b>.</p>
      <pre>Database file: 4.2 GB   ·   asli data: 489 MB   ·   bekaar: 3.8 GB
 Normal KV write latency: 300 ms se kam
@@ -1287,7 +1287,7 @@ Outage ke dauraan:      2 second
 2 second ki latency  →  TCP buffers bhar gaye
                      →  leader election fail hone lagi</pre>`,
     `<h3>🌀 Death spiral — outage jo apne aap chalti rahi</h3>
-     <p>Yeh sabse zaroori hissa hai. Roblox ne bahar ka <b>saara</b> player load
+     <p>Death spiral sabse zaroori hissa hai. Roblox ne bahar ka <b>saara</b> player load
      hata diya — aur cluster phir bhi theek nahi hua.</p>
      <pre>1. Streaming contention se Consul dheema hua
 2. Dheema Consul se service discovery atki
@@ -1295,7 +1295,7 @@ Outage ke dauraan:      2 second
 4. Nomad (scheduling) aur Vault (secrets) — dono Consul par nirbhar — thap
 5. Internal services ne Consul ko aur zyada discovery requests bhejin
 6. Us extra load ne contention aur badha di  →  kadam 1 par wapas</pre>
-     <p class="tip">🎯 Death spiral ki pehchaan yeh hai: <b>bahar ka load hatane
+     <p class="tip">🎯 Death spiral ki pehchaan: <b>bahar ka load hatane
      se kuch nahi hota</b>. Kyunki spiral ko chalane wala load bahar se nahi,
      <b>andar</b> se aa raha hai — services ka apna retry aur re-discovery churn.
      Isliye spiral todne ka tareeka bhi alag hai: internal churn kaato (backoff,
@@ -1308,7 +1308,7 @@ Outage ke dauraan:      2 second
      <b>2 second se 300 ms</b> par aa gayi.</p>
      <p>Roblox ke apne remediation ki pehli line yahi hai: telemetry aur Consul
      ke beech ki <b>circular dependency hatao</b> — monitoring system usi cheez
-     par nirbhar nahi hona chahiye jise woh monitor karta hai.</p>`,
+     par nirbhar nahi hona chahiye jise monitoring dekhti hai.</p>`,
   ],
   stages: [
     {
@@ -1338,7 +1338,7 @@ Outage ke dauraan:      2 second
                  wrongHints: [
                    'Dashboard dheema hona nateeja hai, wajah nahi — aur intezaar karne se 46 ghante lag gaye.',
                    'Data kho jaana bura hai, par asli dikkat "abhi kya ho raha hai" na dikh paana thi.',
-                   'Alert noise ek alag problem hai. Yahan alerts the hi nahi kyunki unka raasta bhi Consul se hokar jaata tha.',
+                   'Alert noise ek alag problem hai. Yahan alerts the hi nahi kyunki alerts ka raasta bhi Consul se hokar jaata tha.',
                  ] , choiceExplanations: [
                    'Monitoring bhi Consul par tiki thi. Consul unhealthy hua toh live telemetry ka raasta bhi kamzor hua. Circular dependency ne diagnosis mushkil kiya; 46 ghante ki poori der ko ek hi wajah se nahi jodna chahiye.',
                    'Purane metrics context dete hain; current targets aur live readings ka raasta nahi banaate.',
@@ -1358,7 +1358,7 @@ Outage ke dauraan:      2 second
                  ], answer: 0,
                  explain: 'Bahar ka load rokne ke baad bhi internal clients ka retry aur discovery churn chal sakta hai. Request sources aur locks/queues dekh kar feedback loop jaancho. Outage ka bane rehna akela death spiral ya corruption prove nahi karta.',
                  wrongHints: [
-                   'Hardware badla gaya tha (128-core servers) aur usse haalat ULTA kharab hui — NUMA par contention aur badh gayi.',
+                   'Hardware badla gaya tha (128-core servers) aur naye hardware se haalat ULTA kharab hui — NUMA par contention aur badh gayi.',
                    'Snapshot theek tha. Reset ke baad thoda sudhaar bhi dikha — par internal churn wapas aate hi cluster gira.',
                    'iptables ne bahar ka traffic sach mein rok diya tha. Load andar se aa raha tha.',
                  ] , choiceExplanations: [
@@ -1368,7 +1368,7 @@ Outage ke dauraan:      2 second
                    'Health checks, retries aur control loops ingress ke bina bhi requests bhejte hain.',
                  ],
                } },
-        { t: '30 Oct 12:00', event: '<b>Root cause mila:</b> ek din pehle chalu kiya gaya Consul streaming feature. Aur uske neeche BoltDB ka freelist bug — 4.2 GB file mein sirf 489 MB asli data.', metrics: { kv: 1800, players: 10, vis: 35 }, tone: 'warn',
+        { t: '30 Oct 12:00', event: '<b>Root cause mila:</b> ek din pehle chalu kiya gaya Consul streaming feature. Aur streaming feature ke neeche BoltDB ka freelist bug — 4.2 GB file mein sirf 489 MB asli data.', metrics: { kv: 1800, players: 10, vis: 35 }, tone: 'warn',
           ask: { q: 'Streaming par contention ka evidence mila hai. Pehli mitigation kaise chunoge?',
                  choices: [
                    'Streaming rollback ka risk jaancho; safe ho toh feature pehle band karo',
@@ -1380,7 +1380,7 @@ Outage ke dauraan:      2 second
                  wrongHints: [
                    'BoltDB asli underlying bug tha, par usko badalna ek software upgrade hai. Girte hue cluster par upgrade karna naya khatra hai.',
                    'Ek saath do badlav karne par pata hi nahi chalega kis-se sudhaar aaya — aur ek bigad gaya toh dono wapas lene padenge.',
-                   'Hardware pehle hi badla ja chuka tha aur usse haalat kharab hui thi.',
+                   'Hardware pehle hi badla ja chuka tha aur naye hardware se haalat kharab hui thi.',
                  ] , choiceExplanations: [
                    'Streaming path par evidence tha aur feature disable karna storage upgrade se chhota badlav tha. Roblox ne streaming band ki, KV writes ka p50 300 ms hua. Slow leaders ko alag sambhala gaya; BoltDB ki poori wajah incident ke baad mili.',
                    'Live storage upgrade naya risk la sakta hai; evidenced reversible mitigation pehle asar ghata sakti hai.',
@@ -1395,9 +1395,9 @@ Outage ke dauraan:      2 second
       lesson: `💡 Teen sabak. <b>1.</b> Death spiral ki pehchaan: bahar ka load
         hatane se kuch nahi hota, kyunki spiral ka indhan internal churn hai —
         ilaaj internal churn kaatna hai. <b>2.</b> Monitoring kabhi bhi us system
-        par nirbhar nahi honi chahiye jise woh monitor karta hai; Roblox ko root
+        par nirbhar nahi honi chahiye jise monitoring dekhti hai; Roblox ko root
         cause 46 ghante mein mila kyunki dekhne ka raasta bhi gira hua tha.
-        <b>3.</b> Outage ke dauraan woh badlav chuno jo <b>ek flag</b> ho aur
+        <b>3.</b> Outage ke dauraan aisa badlav chuno jo <b>ek flag</b> ho aur
         <b>turant palat</b> sake — streaming band karna, BoltDB badalna nahi.`,
     },
     {
@@ -1423,7 +1423,7 @@ Outage ke dauraan:      2 second
       ],
       fine: {
         nomad: 'Nomad ka Consul par nirbhar hona ek jaayaz design hai — scheduler ko service discovery chahiye hi. Galti Nomad mein nahi, us <b>ek</b> Consul cluster mein thi jispar baaki sab bhi tika tha.',
-        vault: 'Vault ka Consul ko storage backend banana ek aam aur supported pattern hai. Yahan bhi galti Vault ki nahi — galti yeh thi ki wahi Consul cluster discovery, KV aur health checks bhi chala raha tha.',
+        vault: 'Vault ka Consul ko storage backend banana ek aam aur supported pattern hai. Yahan bhi galti Vault ki nahi — galti ye thi ki wahi Consul cluster discovery, KV aur health checks bhi chala raha tha.',
       },
       lesson: `🎯 Chaaron galtiyan alag-alag layer par hain: <b>ek shared cluster</b>
         (blast radius), <b>storage engine ka bug</b> (BoltDB freelist),
@@ -1603,11 +1603,11 @@ Outage ke dauraan:      2 second
   success: [
     'Death spiral ko internal-load test se pehchan sakte ho',
     'Observability ki circular dependency dhoondh aur todh sakte ho',
-    'Contention ka ilaaj hardware nahi hai — yeh bata sakte ho',
+    'Contention ka ilaaj hardware nahi hai — kyun, bata sakte ho',
     'Outage ke dauraan sabse sasta, sabse tez palatne wala badlav chunte ho',
   ],
   homework: `Do drill chalao. (1) Apne monitoring stack ka raasta kagaz par likho —
-    kya woh kisi bhi aise system se hokar jaata hai jise woh monitor karta hai?
+    kya raasta kisi bhi aise system se hokar jaata hai jise monitoring dekhti hai?
     (2) Apne top 5 internal clients ka retry config dekho: kya har ek par
     exponential backoff aur jitter hai? Jispar nahi hai, wahi tumhare spiral ka
     indhan hai.`,
@@ -1615,12 +1615,12 @@ Outage ke dauraan:      2 second
     { front: 'Death spiral ki pehchaan?', back: 'Bahar ka <b>saara</b> load hatane par bhi system theek nahi hota — spiral ka indhan <b>internal</b> retry aur re-discovery churn hai. Test chalaya ja sakta hai: traffic roko aur dekho.' },
     { front: 'Roblox 2021 — asli trigger?', back: 'Ek din pehle chalu kiya gaya <b>Consul streaming</b> flag (kam Go channels → bhaari contention), plus <b>BoltDB freelist</b> bug (7.8 MB freelist har 16 KB append par dobara likha jaata tha; 4.2 GB file mein 489 MB data).' },
     { front: 'Contention ka ilaaj bade servers hain?', back: '<b>Nahi.</b> Roblox ne 128-core servers laaye aur haalat ULTA kharab hui — dual-socket NUMA par ek hi channel ki contention aur badh gayi. Contention ka ilaaj <b>concurrency structure badalna</b> hai.' },
-    { front: 'Observability ka pehla niyam?', back: 'Monitoring us system par <b>nirbhar na ho</b> jise woh monitor karti hai. Roblox ko root cause milne mein 46 ghante lage kyunki Consul ke andar dekhne ka raasta bhi Consul se hokar jaata tha.' },
-    { front: 'Outage ke dauraan kaunsa badlav pehle?', back: 'Woh jo <b>chhota</b> ho, <b>turant palat</b> sake, aur <b>naya khatra</b> na laaye. Roblox ne streaming flag band kiya (2s → 300ms); BoltDB ka fix Q1 2022 tak rakha.' },
+    { front: 'Observability ka pehla niyam?', back: 'Monitoring us system par <b>nirbhar na ho</b> jise monitoring dekhti hai. Roblox ko root cause milne mein 46 ghante lage kyunki Consul ke andar dekhne ka raasta bhi Consul se hokar jaata tha.' },
+    { front: 'Outage ke dauraan kaunsa badlav pehle?', back: 'Jo badlav <b>chhota</b> ho, <b>turant palat</b> sake, aur <b>naya khatra</b> na laaye. Roblox ne streaming flag band kiya (2s → 300ms); BoltDB ka fix Q1 2022 tak rakha.' },
   ],
   interview: {
     title: 'Interview Round — Cascading failure',
-    instructions: 'Yeh sawaal principal-level rounds ka favourite hai. 🎤',
+    instructions: 'Cascading failure ka sawaal principal-level rounds ka favourite hai. 🎤',
     questions: [
       {
         q: '"Tumhara cluster gir gaya hai aur bahar ka saara traffic rokne par bhi theek nahi ho raha. Kya chal raha hai?"',
@@ -1675,7 +1675,7 @@ SD.registerLevels('feed', [
   badge: 'Napkin Nawab',
   objectives: [
     'Roz ke volume se QPS nikalna — do second mein',
-    'Woh chaar latency paimane jo dil se yaad hone chahiye',
+    'Chaar latency paimane jo dil se yaad hone chahiye',
     'Physics ki seema: cross-region RTT ko koi optimize nahi kar sakta',
     'Little\'s Law se concurrency aur server count nikalna',
   ],
@@ -1688,7 +1688,7 @@ SD.registerLevels('feed', [
        <tr><th>Nateeja</th><th>Design par asar</th></tr>
        <tr><td>40 writes/sec</td><td>Ek Postgres. Write path par sochna hi galti hai.</td></tr>
        <tr><td>4,000 writes/sec</td><td>Ab schema, index aur batching par sochna padega.</td></tr>
-       <tr><td>400,000 writes/sec</td><td>Ab yeh ek stream hai, database nahi. Kafka + LSM.</td></tr>
+       <tr><td>400,000 writes/sec</td><td>Ab ye ek stream hai, database nahi. Kafka + LSM.</td></tr>
      </table>
      <p>In teenon ke beech ka farak <b>100x</b> ka hai. Isliye tumhara andaaza
      2x galat ho toh koi farak nahi padta — 100x galat ho toh tumne galat system
@@ -1700,10 +1700,10 @@ SD.registerLevels('feed', [
 Isliye:  10 lakh (1M) events/din   →  lagbhag 12 /sec
          1 crore (10M) events/din  →  lagbhag 120 /sec
          100 crore (1B) events/din →  lagbhag 12,000 /sec</pre>
-     <p class="tip">🎯 Sirf yeh ek line — <b>"1 din lagbhag 100,000 second"</b> —
+     <p class="tip">🎯 Sirf ek line — <b>"1 din lagbhag 100,000 second"</b> —
      tumhein interview mein aadha estimation muft mein de deti hai. Roz ka volume
      lakh se divide karo, bas.</p>`,
-    `<h3>🌍 Woh seema jo koi optimize nahi kar sakta</h3>
+    `<h3>🌍 Ek seema jo koi optimize nahi kar sakta</h3>
      <p>Fiber mein roshni lagbhag <b>200,000 km/sec</b> chalti hai (vacuum se
      dheemi, kyunki glass ka refractive index). Isliye do sheher ke beech ka
      minimum round trip <b>physics</b> se tay hota hai:</p>
@@ -1713,9 +1713,9 @@ Mumbai ↔ Chennai      ~1,000 km   →   ~10 ms
 Mumbai ↔ Singapore    ~4,000 km   →   ~40 ms
 Mumbai ↔ Virginia    ~13,000 km   →   ~130 ms
 London ↔ Sydney      ~17,000 km   →   ~170 ms</pre>
-     <p>Asli RTT hamesha isse zyada hota hai (routers, switches, non-direct fiber
+     <p>Asli RTT hamesha in numbers se zyada hota hai (routers, switches, non-direct fiber
      path), par <b>kam kabhi nahi</b> ho sakta. Jab koi kahe "cross-region call ko
-     optimize kar dunga", jawab yeh hai: <b>speed of light par tumhara koi zor nahi</b>.
+     optimize kar dunga", jawab: <b>speed of light par tumhara koi zor nahi</b>.
      Sirf ek hi ilaaj hai — <b>call hi mat karo</b> (cache karo, replicate karo,
      ya us data ko paas le aao).</p>
      <h3>🔢 Little's Law — teen number, ek formula</h3>
@@ -1727,7 +1727,7 @@ W  =  har request ka time (seconds)</pre>
      <p>Yahi formula tumhein pool size, thread count aur server count deta hai.
      50,000 rps aur 40 ms per request ka matlab hai <b>2,000 requests ek saath
      andar</b>. Agar tumhara pool 200 ka hai, toh 1,800 requests <b>queue mein
-     khade</b> hain — aur wahi woh sthiti hai jahan CPU 10% dikhta hai aur
+     khade</b> hain — aur isi sthiti mein CPU 10% dikhta hai aur
      timeouts aate rehte hain.</p>`,
   ],
   stages: [
@@ -1747,7 +1747,7 @@ W  =  har request ka time (seconds)</pre>
             'Shortcut: 1 din ko 100,000 second maano → 500M ÷ 100k = 5,000 — kaafi paas',
             'Peak aksar average ka 2-3x hota hai → lagbhag 12,000-17,000 uploads/sec peak',
           ],
-          lesson: '🎯 Yaad rakhne wali ek line: <b>1 din lagbhag 100,000 second</b>. Roz ka volume 1 lakh se divide karo aur QPS mil gaya. Interview mein calculator nahi hota, yeh shortcut hota hai.',
+          lesson: '🎯 Yaad rakhne wali ek line: <b>1 din lagbhag 100,000 second</b>. Roz ka volume 1 lakh se divide karo aur QPS mil gaya. Interview mein calculator nahi hota, ye shortcut hota hai.',
         },
         {
           q: 'Har photo <b>2 MB</b> ki hai. Roz kitna naya storage chahiye?',
@@ -1760,7 +1760,7 @@ W  =  har request ka time (seconds)</pre>
             'Saal bhar mein: 365 PB. Paanch saal: lagbhag 1.8 EB',
             'Replication 3x ke saath: roz 3 PB',
           ],
-          lesson: '🎯 Yeh number turant ek design faisla deta hai: 1 PB roz ka matlab hai photos <b>kabhi</b> database mein nahi ja sakti. Blob storage (S3/GCS) + database mein sirf <b>metadata</b>. Aur replication 3x hamesha yaad rakho — storage ka andaaza usse guna hota hai.',
+          lesson: '🎯 1 PB roz ka number turant ek design faisla deta hai: 1 PB roz ka matlab hai photos <b>kabhi</b> database mein nahi ja sakti. Blob storage (S3/GCS) + database mein sirf <b>metadata</b>. Aur replication 3x hamesha yaad rakho — storage ka andaaza replication se guna hota hai.',
         },
         {
           q: 'Read:write ratio <b>100:1</b> hai aur peak average ka <b>3x</b>. Peak par photos serve karne ke liye kitni bandwidth chahiye?',
@@ -1774,7 +1774,7 @@ W  =  har request ka time (seconds)</pre>
             '1,736,100 × 2 MB = 3,472,200 MB/sec = lagbhag 3,472 GB/sec',
             'Bits mein: 3,472 GB/s × 8 = lagbhag 27.8 Tbps',
           ],
-          lesson: '🎯 27.8 Tbps koi origin server nahi de sakta — aur yahi is calculation ka poora maqsad hai. Yeh number kehta hai: <b>CDN optional nahi hai, CDN hi architecture hai</b>. Origin sirf cache miss dekhta hai. Ek number ne poora design tay kar diya.',
+          lesson: '🎯 27.8 Tbps koi origin server nahi de sakta — aur yahi is calculation ka poora maqsad hai. Egress ka number kehta hai: <b>CDN optional nahi hai, CDN hi architecture hai</b>. Origin sirf cache miss dekhta hai. Ek number ne poora design tay kar diya.',
         },
         {
           q: 'Mumbai se Virginia ki doori lagbhag <b>13,000 km</b> hai. Fiber mein roshni <b>200,000 km/sec</b> chalti hai. Minimum round trip time kitna hai?',
@@ -1785,10 +1785,10 @@ W  =  har request ka time (seconds)</pre>
           steps: [
             'Ek taraf ka waqt = 13,000 ÷ 200,000 = 0.065 sec = 65 ms',
             'Round trip = 65 × 2 = 130 ms',
-            'Asli RTT hamesha isse ZYADA hota hai (routers, switches, ghumavdar fiber) — lagbhag 180-220 ms',
-            'Par 130 ms se KAM kabhi nahi ho sakta — yeh physics hai',
+            'Asli RTT hamesha 130 ms se ZYADA hota hai (routers, switches, ghumavdar fiber) — lagbhag 180-220 ms',
+            'Par 130 ms se KAM kabhi nahi ho sakta — light ki speed physics hai',
           ],
-          lesson: '🎯 Jab koi kahe "main cross-region call optimize kar dunga", jawab yeh hai: <b>speed of light par tumhara zor nahi hai</b>. Sirf teen ilaaj hain — call hi mat karo (cache), data paas le aao (replicate), ya call ko async kar do. Chautha koi raasta nahi hai.',
+          lesson: '🎯 Jab koi kahe "main cross-region call optimize kar dunga", jawab: <b>speed of light par tumhara zor nahi hai</b>. Sirf teen ilaaj hain — call hi mat karo (cache), data paas le aao (replicate), ya call ko async kar do. Chautha koi raasta nahi hai.',
         },
         {
           q: 'Ek page load Mumbai se Virginia par <b>3 sequential</b> API calls karta hai. Sirf network ki wajah se minimum page latency kitni hogi?',
@@ -1815,14 +1815,14 @@ W  =  har request ka time (seconds)</pre>
             'Agar tumhara connection pool 200 ka hai → 1,800 requests QUEUE mein khadi hain',
             'Queue mein khadi request CPU nahi jalati — isliye CPU 10% dikhega aur timeouts aate rahenge',
           ],
-          lesson: '🎯 Little\'s Law ek hi formula se pool size, thread count aur server count deta hai. Aur uska sabse mehenga sabak yeh hai: <b>CPU 10% par timeout</b> ka matlab lagbhag hamesha queueing hai, capacity nahi. Woh queue kahan hai — pool, thread, ya socket backlog — wahi asli sawaal hai.',
+          lesson: '🎯 Little\'s Law ek hi formula se pool size, thread count aur server count deta hai. Aur is formula ka sabse mehenga sabak: <b>CPU 10% par timeout</b> ka matlab lagbhag hamesha queueing hai, capacity nahi. Queue kahan hai — pool, thread, ya socket backlog — wahi asli sawaal hai.',
         },
       ],
     },
     {
       type: 'bins',
       title: 'Latency ke chaar paimane',
-      instructions: 'Har cheez ko uske paimane mein daalo. Yaad exact number nahi, PAIMANA rakhna hai.',
+      instructions: 'Har cheez ko cheez ke paimane mein daalo. Yaad exact number nahi, PAIMANA rakhna hai.',
       bins: [
         { id: 'sub', label: '⚡ 1 ms se kam' },
         { id: 'single', label: '🏃 1-10 ms' },
@@ -1926,9 +1926,9 @@ W  =  har request ka time (seconds)</pre>
     'Little\'s Law se concurrency, pool size aur server count nikaal sakte ho',
   ],
   homework: `Apni sabse busy service ke liye teen number likho: (1) roz kitne
-    requests, (2) uska QPS (roz ÷ 100,000), (3) L = lambda x W se concurrency.
+    requests, (2) service ka QPS (roz ÷ 100,000), (3) L = lambda x W se concurrency.
     Ab teesre number ko apne connection pool ke size se milao. Agar concurrency
-    pool se badi hai, tumhare paas ek chhupi hui queue hai — aur ek din woh
+    pool se badi hai, tumhare paas ek chhupi hui queue hai — aur ek din chhupi queue
     "CPU 10% par timeout" bankar saamne aayegi.`,
   cards: [
     { front: 'Roz ka volume se QPS ka shortcut?', back: '<b>1 din lagbhag 100,000 second.</b> Roz ka volume 1 lakh se divide karo. 1M/din ≈ 12/sec · 10M/din ≈ 120/sec · 1B/din ≈ 12,000/sec.' },
@@ -2011,9 +2011,9 @@ Match →  jinke vectors sabse paas hain (cosine ya dot product)</pre>
        <tr><td><b>IVF</b></td><td>vectors ko clusters mein baanto, sirf paas ke clusters dekho</td><td>memory kam chahiye, index build tez chahiye</td></tr>
        <tr><td><b>HNSW</b></td><td>ek layered graph — upar lambi chhalaang, neeche chhote kadam</td><td>sabse aam chunav: sabse achhi recall-vs-latency</td></tr>
      </table>
-     <p class="tip">🎯 HNSW ko samajhne ka sabse aasan tareeka: woh ek
+     <p class="tip">🎯 HNSW ko samajhne ka sabse aasan tareeka: HNSW ek
      <b>skip list</b> hai jo graph ban gaya. Sabse upar wali layer mein bahut kam
-     points hain aur unke beech lambe links — isliye search wahan se "zoom in"
+     points hain aur points ke beech lambe links — isliye search upar se "zoom in"
      karti hai. Har neeche wali layer mein points zyada aur links chhote.
      Aakhri layer par tumhara jawab hai.</p>`,
     `<h3>🎛️ Teen knob jo sab kuch tay karte hain</h3>
@@ -2029,18 +2029,18 @@ Match →  jinke vectors sabse paas hain (cosine ya dot product)</pre>
      hisaab se tune karo.</p>
      <h3>🗜️ Quantization — memory ka asli hal</h3>
      <p>10 crore vectors × 768 dimensions × 4 bytes (float32) = <b>307 GB</b>,
-     sirf vectors ke liye. Graph ka overhead alag. Yeh RAM mein rakhna mehenga hai.</p>
+     sirf vectors ke liye. Graph ka overhead alag. 307 GB RAM mein rakhna mehenga hai.</p>
      <pre>float32   768 × 4 = 3,072 bytes/vector    →  307 GB   ·  recall baseline
 int8      768 × 1 =   768 bytes/vector    →   77 GB   ·  recall change workload par benchmark karo
 binary    768 ÷ 8 =    96 bytes/vector    →   10 GB   ·  recall bahut kam</pre>
-     <p class="tip">🎯 Binary quantization akela istemaal nahi hota — usse
+     <p class="tip">🎯 Binary quantization akela istemaal nahi hota — binary quantization se
      <b>rerank</b> ke saath jodte hain: binary se 1000 candidates tez nikalo,
      phir un 1000 ko float32 se dobara score karo. Raw binary vector payload 32x smaller hai; graph, metadata aur retained float vectors extra RAM lete hain. Candidate recall final quality bound karti hai; rerank missing candidate recover nahi karta.</p>
      <h3>🐌 RAG ka asli bottleneck</h3>
      <p>Log samajhte hain ki RAG mein waqt LLM leta hai. Naapo toh alag tasveer
      milti hai: <b>embedding</b> (10-30 ms) + <b>vector search</b> (5-50 ms) +
      <b>rerank</b> (50-200 ms) + <b>LLM first token</b> (200-800 ms). Rerank aksar
-     search se <b>zyada</b> mehenga hota hai, aur usi par sabse kam dhyan jaata hai.</p>`,
+     search se <b>zyada</b> mehenga hota hai, aur rerank par sabse kam dhyan jaata hai.</p>`,
   ],
   stages: [
     {
@@ -2055,7 +2055,7 @@ binary    768 ÷ 8 =    96 bytes/vector    →   10 GB   ·  recall bahut kam</p
         { id: 'M', label: 'M — har node ke neighbours', min: 4, max: 64, step: 4, value: 8, unit: '',
           note: 'Bada M recall badhata hai par graph ka memory overhead seedha badhta hai.' },
         { id: 'ef', label: 'efSearch — search ke waqt candidates', min: 10, max: 500, step: 10, value: 10, unit: '',
-          note: 'Har query ka kharcha. Recall aur latency dono isse seedhe jude hain.' },
+          note: 'Har query ka kharcha. Recall aur latency dono ef_search se seedhe jude hain.' },
         { id: 'q', label: 'Quantization (0 = float32, 1 = int8, 2 = binary)', min: 0, max: 2, step: 1, value: 0, unit: '',
           note: 'float32 = 3072 bytes/vector · int8 = 768 · binary = 96.' },
       ],
@@ -2086,7 +2086,7 @@ binary    768 ÷ 8 =    96 bytes/vector    →   10 GB   ·  recall bahut kam</p
         return { ok: false, text: bad.join(' &nbsp;·&nbsp; ') };
       },
       check: k => { const m = vecModel(k); return m.recall >= 95 && m.lat <= 10 && m.gb <= 120; },
-      lesson: `🎯 Teen knob, par woh teen alag cheezein control karte hain — aur
+      lesson: `🎯 Teen knob, par teeno alag cheezein control karte hain — aur
         yahi is lab ka poora sabak hai. <b>efSearch</b> recall aur latency ka
         tradeoff hai (har query par). <b>M</b> recall aur memory ka tradeoff hai.
         <b>Quantization</b> akela aisa knob hai jo <b>RAM ko sach mein</b> ghataata
@@ -2115,7 +2115,7 @@ binary    768 ÷ 8 =    96 bytes/vector    →   10 GB   ·  recall bahut kam</p
     {
       type: 'match',
       title: 'Vector search ki shabdavali',
-      instructions: 'Har shabd ko uske asli matlab se milao.',
+      instructions: 'Har shabd ko shabd ke asli matlab se milao.',
       pairs: [
         { left: 'Recall@10', right: 'Top-10 jawabon mein se kitne SACH mein sabse paas wale the — ANN ka asli quality metric', explain: 'Latency ke bina recall bekaar hai aur recall ke bina latency jhoothi hai. Vector system ki har baat in dono ke jode mein hoti hai.' },
         { left: 'efSearch', right: 'Search ke waqt kitne candidates dekhe jaate hain — har query ka kharcha, latency par seedha asar', explain: 'Production mein tum efSearch hi badalte ho. Latency budget toote toh sabse pehle efSearch dekho.' },
@@ -2202,8 +2202,8 @@ binary    768 ÷ 8 =    96 bytes/vector    →   10 GB   ·  recall bahut kam</p
     },
   ],
   success: [
-    'ANN aur exact search ka farak aur unka break-even bata sakte ho',
-    'HNSW ke teen knob aur unke alag-alag tradeoffs jaante ho',
+    'ANN aur exact search ka farak aur dono ka break-even bata sakte ho',
+    'HNSW ke teen knob aur har knob ka alag tradeoff jaante ho',
     'Quantization + rerank wala do-charan aakaar samjha sakte ho',
     'RAG pipeline ko kadam-dar-kadam naapte ho, anumaan nahi lagate',
   ],
@@ -2216,12 +2216,12 @@ binary    768 ÷ 8 =    96 bytes/vector    →   10 GB   ·  recall bahut kam</p
     { front: 'M vs efConstruction vs efSearch?', back: '<b>M</b> = neighbours per node (recall ↑, <b>memory ↑↑</b>) · <b>efConstruction</b> = build-time candidates (<b>ek baar</b> ka kharcha) · <b>efSearch</b> = search-time candidates (<b>har query</b> ka kharcha, latency ↑).' },
     { front: 'RAM budget toot raha hai — kaunsa knob?', back: '<b>Quantization.</b> float32 3072 B → int8 768 B (4x) → binary 96 B (32x) per 768-dim vector. M ghatana sirf graph overhead (M×8 B) chhoota hai; efSearch ka RAM par asar hai hi nahi.' },
     { front: 'Binary quantization akela kyun nahi?', back: "Recall bahut girti hai. Isliye <b>do charan</b>: binary se bahut saare candidates tez nikalo → un candidates ko float32/cross-encoder se <b>rerank</b> karo. Raw payload 32x smaller; total memory and candidate recall measure karo. Rerank missing candidate restore nahi karta." },
-    { front: 'Vector search ka blind spot?', back: '<b>Exact tokens</b> — model number, SKU, error code, naam. Vectors <b>matlab</b> pakadte hain, isliye "iPhone 15" aur "iPhone 14" unke liye lagbhag ek hain. Ilaaj: <b>hybrid search</b> (vector + BM25).' },
+    { front: 'Vector search ka blind spot?', back: '<b>Exact tokens</b> — model number, SKU, error code, naam. Vectors <b>matlab</b> pakadte hain, isliye "iPhone 15" aur "iPhone 14" vectors ke liye lagbhag ek hain. Ilaaj: <b>hybrid search</b> (vector + BM25).' },
     { front: 'RAG ka chhupa hua bottleneck?', back: '<b>Rerank</b> — aksar 50-200 ms, jo vector search (5-50 ms) se zyada hai. Har kadam alag naapo: embedding, search, rerank, LLM first token.' },
   ],
   interview: {
     title: 'Interview Round — Vector search',
-    instructions: 'Yeh sawaal ab lagbhag har AI product team ke round mein hai. 🎤',
+    instructions: 'Vector search ka sawaal ab lagbhag har AI product team ke round mein hai. 🎤',
     questions: [
       {
         q: '10 crore vectors aur p99 target 50 ms hai. Design kaise shuru karoge?',
@@ -2336,7 +2336,7 @@ Mumbai gira  →  sirf Mumbai wale rows ruke, Virginia chalta raha</pre>
      maange (jaise "saare countries ka total") ab ek cross-region fan-out hai.</p>
      <h3>🧭 Faisle ka sahi kram</h3>
      <pre>1. Kya data user-wise BAANTA ja sakta hai?     → haan: regional-by-row
-2. Kya woh data har jagah ek jaisa chahiye?    → global table with explicit freshness/write-quorum contract
+2. Kya data har jagah ek jaisa chahiye?    → global table with explicit freshness/write-quorum contract
 3. Kya writes ko strong + multi-region chahiye? → quorum, PAR ek continent mein
 4. Kya stale read chalega?                     → local replica se padho, sabse tez</pre>
      <p>Zyadatar teams kadam 3 se shuru karti hain, aur wahi sabse mehenga kadam hai.</p>`,
@@ -2397,7 +2397,7 @@ Mumbai gira  →  sirf Mumbai wale rows ruke, Virginia chalta raha</pre>
         given labassumptions ke andarhome-region writeslocal aurstrong hain;home-region outageaffectedrows stopkarti hai.Production mein survivalgoal/quorum/globalconstraints secoordination differkarti hai.
         <b>Cross-region quorum</b> bhi jeet sakta hai, par sirf tab jab regions
         <b>ek hi continent</b> par hon — duniya bhar ka quorum har write par
-        130 ms hai. Aur <b>ek global primary</b> kabhi nahi jeetta: woh region
+        130 ms hai. Aur <b>ek global primary</b> kabhi nahi jeetta: primary wala region
         girte hi saare writes band kar deta hai.`,
       quiz: {
         q: 'Duniya bhar se same data par strong writes 20 ms mein chahiye. Kya tradeoff samjhaaoge?',
@@ -2420,7 +2420,7 @@ Mumbai gira  →  sirf Mumbai wale rows ruke, Virginia chalta raha</pre>
     {
       type: 'bins',
       title: 'Kaunsa data kis strategy mein?',
-      instructions: 'Har tarah ke data ko uski sahi multi-region strategy mein daalo.',
+      instructions: 'Har tarah ke data ko data ki sahi multi-region strategy mein daalo.',
       bins: [
         { id: 'regional', label: '📍 Regional-by-row (home region)' },
         { id: 'global', label: '🌐 Global table (har jagah replica)' },
@@ -2521,7 +2521,7 @@ Mumbai gira  →  sirf Mumbai wale rows ruke, Virginia chalta raha</pre>
   ],
   homework: `Apne database ki sabse badi table lo aur ek sawaal poochho: kya har
     row ka koi <b>ek maalik</b> hai (ek user, ek tenant, ek room)? Agar haan, toh
-    tumhare paas regional-by-row ka raasta khula hai. Ab doosri list banao — woh
+    tumhare paas regional-by-row ka raasta khula hai. Ab doosri list banao —
     tables jinka koi ek maalik nahi (config, catalog, rates). Wahi tumhari
     "global tables" hain, aur wahi multi-region ka asli kaam hai.`,
   cards: [
@@ -2588,12 +2588,12 @@ Mumbai gira  →  sirf Mumbai wale rows ruke, Virginia chalta raha</pre>
     `<h3>🎚️ "5% canary" apne aap mein kuch nahi kehta</h3>
      <p>Har team kehti hai "hamara rollout staged hai — 5% canary, phir global".
      Par 5% ek <b>percentage</b> hai, aur canary ka kaam <b>statistics</b> hai.
-     Asli sawaal yeh hai: <b>us 5% par kitne requests aayenge, aur kya utne
+     Asli sawaal: <b>us 5% par kitne requests aayenge, aur kya utne
      requests mein tumhara regression dikhega?</b></p>
      <pre>Baseline error rate: 0.1%
 Naya code error rate: 0.12%   (yaani 0.02 percentage-point ka badhav)
 
-Kya 500 requests mein yeh farak dikhega?   Nahi — shor mein doob jaayega.
+Kya 500 requests mein 0.02 point ka farak dikhega?   Nahi — shor mein doob jaayega.
 Kya 4 lakh requests mein dikhega?           Haan.</pre>
      <p>Yaani tumhara canary tab tak bekaar hai jab tak usne <b>utne samples</b>
      na dekh liye hon jitne us farak ko shor se alag karne ke liye chahiye.</p>
@@ -2605,7 +2605,7 @@ p     =  baseline rate (jaise 0.001 = 0.1% errors)
 delta =  jitna farak pakadna hai (fraction mein)</pre>
      <p>0.1% baseline par 0.02 percentage-point ka farak pakadne ke liye:
      <code>16 × 0.001 × 0.999 ÷ (0.0002)² ≈ 4,00,000</code> samples chahiye.
-     20,000 rps ke 5% canary par woh <b>1,000 rps</b> hai, yaani lagbhag
+     20,000 rps ke 5% canary par traffic <b>1,000 rps</b> hai, yaani lagbhag
      <b>400 second</b> — saat minute.</p>
      <p class="tip">🎯 Yahan se ek asuvidhajanak sach nikalta hai:
      <b>chhota regression pakadne ke liye ya toh canary bada karo ya bake time
@@ -2625,9 +2625,9 @@ delta =  jitna farak pakadna hai (fraction mein)</pre>
      <p>Cloudflare ke 2019 outage mein detection <b>3 minute</b> mein ho gayi thi
      aur mitigation mein <b>25 minute</b> lage. Agar rollback automatic hota —
      "error rate baseline se 3 sigma upar gaya toh canary khud band ho jaaye" —
-     toh woh 27-minute outage lagbhag 5-minute ka hota.</p>
+     toh 27-minute ka outage lagbhag 5-minute ka hota.</p>
      <p class="tip">🎯 Automatic rollback ka sabse bada faayda raat 3 baje dikhta
-     hai. Us waqt insaan ko jagana, usko context dena, aur usse sahi button
+     hai. Us waqt insaan ko jagana, insaan ko context dena, aur insaan se sahi button
      dabwana — teenon mein minutes lagte hain. Machine ko sirf ek shart chahiye.</p>`,
   ],
   stages: [
@@ -2798,7 +2798,7 @@ delta =  jitna farak pakadna hai (fraction mein)</pre>
   homework: `Apni service ka rps aur error rate lo. Ab ganit chalao: tumhare
     canary par, tumhare bake time mein, kitne samples aate hain? Aur us sample
     count par kitna chhota regression dikh sakta hai? Zyadatar teams ke liye
-    jawab chaunkane wala hota hai — unka canary sirf bade, saaf failures pakadta
+    jawab chaunkane wala hota hai — teams ka canary sirf bade, saaf failures pakadta
     hai, aur wahi failures waise bhi test mein pakde jaate.`,
   cards: [
     { front: 'Canary ka asli sawaal?', back: '<b>Kitne samples</b> — percentage nahi. samples = rps × canary% × minute. Chhota regression pakadne ke liye samples chahiye, aur samples sirf <b>zyada traffic</b> ya <b>zyada waqt</b> se aate hain. Teesra raasta nahi.' },
@@ -2857,13 +2857,13 @@ delta =  jitna farak pakadna hai (fraction mein)</pre>
   objectives: [
     'Cost per request nikalna — aur usko ek design metric maanna',
     'Cloud bill ke teen chhupe hue rakshas: egress, NAT, cross-AZ',
-    'LLM feature ka per-call kharcha aur uska scale par asar',
+    'LLM feature ka per-call kharcha aur scale par kharche ka asar',
     'Unit economics: scale par cost per request girna chahiye, badhna nahi',
   ],
   lesson: [
     `<h3>💸 Ek number jo har architecture behes khatam kar deta hai</h3>
-     <p>"Yeh design behtar hai" ek raay hai. "Yeh design per million requests
-     $21 ka hai aur woh $84 ka" ek <b>tathya</b> hai. Cost per request
+     <p>"Ye design behtar hai" ek raay hai. "Design A per million requests
+     $21 ka hai aur design B $84 ka" ek <b>tathya</b> hai. Cost per request
      architecture ko raay se nikaal kar ganit mein le aata hai.</p>
      <pre>Cost per request  =  mahine ka bill  ÷  mahine ke requests
 
@@ -2878,7 +2878,7 @@ Udaharan:  $258,000/mahina  ÷  1,200 crore requests
      <table>
        <tr><th>Rakshas</th><th>Kaise chhupta hai</th><th>Ilaaj</th></tr>
        <tr><td><b>Egress</b> (data bahar bhejna)</td><td>compute ke bill mein nahi dikhta, alag line item hai — aur cloud se BAHAR jaane par sabse mehenga</td><td>CDN (origin se egress lagbhag khatam), compression, aur data ko wahin rakho jahan compute hai</td></tr>
-       <tr><td><b>NAT Gateway</b></td><td>har GB par charge — aur private subnet ki har outbound call usi se jaati hai</td><td>VPC endpoints (S3, DynamoDB) — woh NAT ko bypass karte hain</td></tr>
+       <tr><td><b>NAT Gateway</b></td><td>har GB par charge — aur private subnet ki har outbound call NAT se jaati hai</td><td>VPC endpoints (S3, DynamoDB) — woh NAT ko bypass karte hain</td></tr>
        <tr><td><b>Cross-AZ traffic</b></td><td>DONO taraf charge hota hai, aur microservices ke beech ki chatter aksar random AZ mein jaati hai</td><td>zone-aware routing — jahan tak ho sake usi AZ mein rakho</td></tr>
      </table>
      <p class="tip">🎯 Teenon rakshason mein ek baat samaan hai: teenon
@@ -2897,8 +2897,8 @@ per call  =  (2,000 ÷ 1M × $3) + (500 ÷ 1M × $15)
 10 lakh calls roz  →  $13,500 roz  →  lagbhag $4 lakh mahina</pre>
      <p>Do baatein turant dikhti hain. <b>Ek:</b> output tokens input se
      <b>5x mehenge</b> hain, isliye "chhota jawab do" ek asli cost optimization
-     hai. <b>Do:</b> yeh lagbhag hamesha compute se bada kharcha hota hai —
-     ek LLM feature ka bill uske servers ke bill se kai guna hota hai.</p>
+     hai. <b>Do:</b> LLM tokens lagbhag hamesha compute se bada kharcha hote hain —
+     ek LLM feature ka bill feature ke servers ke bill se kai guna hota hai.</p>
      <h3>📉 Unit economics — asli test</h3>
      <p>Sirf bill dekhna galat hai; bill toh badhega hi agar product badh raha
      hai. Asli sawaal hai: <b>kya cost per request scale par gir raha hai?</b></p>
@@ -2907,7 +2907,7 @@ Chinta:     users 2x  →  bill 2x     →  cost/request wahi     ⚠️
 Khatra:     users 2x  →  bill 3x     →  cost/request BADHA    🚨</pre>
      <p>Teesri line ka matlab hai ki tumhare architecture mein kahin
      <b>super-linear</b> kaam hai — N+1 queries, fan-out, cross-AZ chatter, ya
-     O(N²) topology. Woh bill se pehle <b>design</b> ki problem hai.</p>`,
+     O(N²) topology. Ye bill se pehle <b>design</b> ki problem hai.</p>`,
   ],
   stages: [
     {
@@ -2927,7 +2927,7 @@ Khatra:     users 2x  →  bill 3x     →  cost/request BADHA    🚨</pre>
             'Per million = $0.0000215 × 1,000,000 = $21.50',
             'Ab har design faisla is number se naapa ja sakta hai',
           ],
-          lesson: '🎯 Yeh ek number har architecture behes khatam kar deta hai. "Yeh design behtar hai" ek raay hai; "$21.50 vs $84 per million" ek <b>tathya</b> hai. Har team ko yeh number pata hona chahiye, aur zyadatar teams ko nahi hota.',
+          lesson: '🎯 Cost per request ka ek number har architecture behes khatam kar deta hai. "Ye design behtar hai" ek raay hai; "$21.50 vs $84 per million" ek <b>tathya</b> hai. Har team ko cost per request pata hona chahiye, aur zyadatar teams ko nahi hota.',
         },
         {
           q: 'Har request lagbhag <b>200 ms CPU</b> leti hai. vCPU-hour ka daam <b>$0.04</b> hai. <b>100 crore (1 billion)</b> requests ka compute kharcha kitna hai?',
@@ -2940,7 +2940,7 @@ Khatra:     users 2x  →  bill 3x     →  cost/request BADHA    🚨</pre>
             '55,556 × $0.04 = lagbhag $2,222',
             "Given CPU time/price mein per million compute $2.22; actual largest bill item workload par depend hai",
           ],
-          lesson: "🎯 Yeh number lagbhag hamesha logon ko chaunkata hai. 100 crore requests ka <b>compute</b> sirf $2,222 hai — poore mahine ke 1,200 crore requests ka lagbhag $26,700. Bill $258,000 ka hai. Baaki ~$231,000 kahan gaya? Storage, database, egress, NAT, cross-AZ, managed services — <b>compute bill ka chhota hissa hai; sabse bada kharcha line items mein dhoondo</b>.",
+          lesson: "🎯 LLM ka bill lagbhag hamesha logon ko chaunkata hai. 100 crore requests ka <b>compute</b> sirf $2,222 hai — poore mahine ke 1,200 crore requests ka lagbhag $26,700. Bill $258,000 ka hai. Baaki ~$231,000 kahan gaya? Storage, database, egress, NAT, cross-AZ, managed services — <b>compute bill ka chhota hissa hai; sabse bada kharcha line items mein dhoondo</b>.",
         },
         {
           q: 'Tum <b>1 PB (10 lakh GB)</b> data mahine mein internet par bhejte ho. Egress ka daam <b>$0.05/GB</b> hai. Mahine ka egress bill kitna hai?',
@@ -2953,7 +2953,7 @@ Khatra:     users 2x  →  bill 3x     →  cost/request BADHA    🚨</pre>
             'CDN se 90% offload karo → origin egress 100,000 GB → $5,000',
             'CDN ka apna bill hai (aksar $0.01-0.02/GB), par kul kharcha phir bhi lagbhag aadha ya kam',
           ],
-          lesson: '🎯 Egress bill ka woh hissa hai jo kisi CPU graph par nahi dikhta. Aur yeh <b>architecture</b> se aata hai, istemaal se nahi — instance chhota karne se egress kam nahi hota. CDN ka asli case aksar latency nahi, <b>bill</b> hota hai.',
+          lesson: '🎯 Egress bill ka aisa hissa hai jo kisi CPU graph par nahi dikhta. Aur egress <b>architecture</b> se aata hai, istemaal se nahi — instance chhota karne se egress kam nahi hota. CDN ka asli case aksar latency nahi, <b>bill</b> hota hai.',
         },
         {
           q: 'Ek LLM feature: har call mein <b>2,000 input</b> + <b>500 output</b> tokens. Input $3/million tokens, output $15/million. Roz <b>10 lakh</b> calls par roz ka kharcha kitna hai?',
@@ -2973,11 +2973,11 @@ Khatra:     users 2x  →  bill 3x     →  cost/request BADHA    🚨</pre>
     {
       type: 'archdiff',
       title: 'Bill ke rakshas dhoondho',
-      instructions: 'Yeh architecture chalti hai aur tez bhi hai — par bill bahut zyada aata hai. Char cost galtiyan pakdo.',
+      instructions: 'Architecture chalti hai aur tez bhi hai — par bill bahut zyada aata hai. Char cost galtiyan pakdo.',
       brief: `Ek video-sharing app jo theek chal rahi hai. Latency achhi hai,
         uptime achha hai. Par cost per request pichhle saal mein <b>teen guna</b>
         ho gaya hai, jabki users sirf <b>dogune</b> hue.`,
-      goal: 'Char cost galtiyan pakdo. Har box par click karke uska bill dekho.',
+      goal: 'Char cost galtiyan pakdo. Har box par click karke box ka bill dekho.',
       nodes: [
         { id: 'origin', label: '🎬 Origin servers', sub: 'saara video seedha yahin se serve hota hai — koi CDN nahi', row: 0 },
         { id: 's3', label: '🪣 S3 (blob storage)', sub: 'videos aur thumbnails yahan padte hain', row: 0 },
@@ -2993,8 +2993,8 @@ Khatra:     users 2x  →  bill 3x     →  cost/request BADHA    🚨</pre>
         { id: 'logs', why: 'Production mein DEBUG level par har request ka poora body bhejna — managed logging services per-GB ingest charge karti hain, aur logging ka line item aksar database se bada ho jaata hai. INFO par jao, bodies sample karo, aur raw logs saste object storage mein rakho.' },
       ],
       fine: {
-        s3: 'S3 par blobs rakhna bilkul sahi hai — videos database mein kabhi nahi jaani chahiye. S3 ka storage rate sasta hai; asli kharcha <b>usse bahar</b> nikalne (egress) mein hai, aur uska ilaaj CDN hai, S3 hataana nahi.',
-        rds: 'Multi-AZ + read replica ek jaayaz kharcha hai — woh availability aur read scaling khareedta hai. Yeh "bill" hai, "bekaar bill" nahi. Cost optimization ka matlab availability bechna nahi hota.',
+        s3: 'S3 par blobs rakhna bilkul sahi hai — videos database mein kabhi nahi jaani chahiye. S3 ka storage rate sasta hai; asli kharcha <b>S3 se bahar</b> nikalne (egress) mein hai, aur egress ka ilaaj CDN hai, S3 hataana nahi.',
+        rds: 'Multi-AZ + read replica ek jaayaz kharcha hai — ye kharcha availability aur read scaling khareedta hai. Ye "bill" hai, "bekaar bill" nahi. Cost optimization ka matlab availability bechna nahi hota.',
       },
       lesson: `🎯 Chaaron galtiyan <b>per-GB</b> charges hain — egress, NAT,
         cross-AZ, log ingest. Aur chaaron <b>architecture</b> se aati hain,
@@ -3079,7 +3079,7 @@ Khatra:     users 2x  →  bill 3x     →  cost/request BADHA    🚨</pre>
     },
   ],
   success: [
-    'Cost per request nikaal sakte ho aur design faisle usse naap sakte ho',
+    'Cost per request nikaal sakte ho aur design faisle cost per request se naap sakte ho',
     'Egress, NAT aur cross-AZ ko architecture ka kharcha maante ho',
     'LLM feature ka per-call ganit kar sakte ho',
     'Cost per request ke badhne ko ek design signal padh sakte ho',
@@ -3190,7 +3190,7 @@ SD.registerLevels('feed', [
        <tr><td>AWS Kinesis 2020</td><td>capacity add karna</td><td>O(N²) thread topology</td><td>thread count par koi alert nahi</td></tr>
        <tr><td>Roblox 2021</td><td>streaming flag</td><td>internal retry churn</td><td>monitoring khud Consul par</td></tr>
      </table>
-     <p class="tip">🎯 Yeh teen column har outage mein hote hain, aur teenon ka
+     <p class="tip">🎯 Ye teen column har outage mein hote hain, aur teenon ka
      ilaaj alag hai. <b>Trigger</b> rokna lagbhag namumkin hai — chhote badlav
      hamesha hote rahenge. <b>Amplifier</b> hi asli design ka kaam hai: bounds,
      staging, fencing, backoff. Aur <b>blind spot</b> monitoring ka kaam hai.</p>
@@ -3213,16 +3213,16 @@ SD.registerLevels('feed', [
 2. TIMELINE  har kadam ka waqt — deploy, alert, diagnosis, mitigation
 3. ZANJEER   trigger → amplifier → blast radius, har kadi ka apna karan
 4. DO NUMBER time to detect  aur  time to mitigate, alag-alag
-5. AB KYA    har fix ke saamne likho: yeh kaunsi KADI todta hai</pre>
+5. AB KYA    har fix ke saamne likho: fix kaunsi KADI todta hai</pre>
      <p>Paanchwa point sabse zyada chhoota jaata hai. "Aur alerts lagayenge" ek
      action item nahi hai. "Feature file ke row count par bound lagayenge taaki
-     kharab file ban hi na sake" — <b>yeh</b> action item hai, kyunki woh ek
+     kharab file ban hi na sake" — <b>ye</b> action item hai, kyunki bound ek
      naam wali kadi todta hai.</p>
      <p class="tip">🎯 Aur ek aakhri baat: <b>time to detect</b> aur <b>time to
      mitigate</b> hamesha alag likho. Cloudflare 2019 mein detect 3 minute tha
      aur mitigate 25 — us farak ne bata diya ki paisa monitoring mein nahi,
      kill switch mein lagana tha. Agar tum dono ko ek number ("27 minute") mein
-     mila doge, woh seekh gayab ho jaayegi.</p>`,
+     mila doge, seekh gayab ho jaayegi.</p>`,
   ],
   stages: [
     {
@@ -3252,19 +3252,19 @@ SD.registerLevels('feed', [
       ],
       fine: {
         lb: 'Health check par node hataana bilkul sahi hai. Ek chetavni zaroor yaad rakho: agar <b>saare</b> nodes fail ho jayein toh sab hataane se poori service marti hai — isliye acche load balancers "panic mode" rakhte hain (Slack ne January 2021 mein wahi chalaya tha). Par design khud sahi hai.',
-        cdn: 'CDN yahan bilkul sahi jagah par hai — woh latency bhi behtar karta hai aur origin ka egress bill bhi lagbhag khatam kar deta hai. Yeh un kam cheezon mein se hai jo performance aur cost dono jeet-ti hain.',
+        cdn: 'CDN yahan bilkul sahi jagah par hai — CDN latency bhi behtar karta hai aur origin ka egress bill bhi lagbhag khatam kar deta hai. CDN un kam cheezon mein se hai jo performance aur cost dono jeet-ti hain.',
       },
       lesson: `🎯 Paanchon galtiyan alag layer par hain par ek hi sawaal ka jawab
-        na dene se aati hain: <b>"jab yeh cheez galat nikle, tab kya hoga?"</b>
+        na dene se aati hain: <b>"jab cheez galat nikle, tab kya hoga?"</b>
         Flag galat nikla — kitni der mein pata chalega aur kaise band hoga?
-        Config file galat bani — kya woh proxies tak pahunchegi? Primary kat gaya
-        par zinda hai — kya woh phir bhi likh sakta hai? Discovery dheemi hui —
+        Config file galat bani — kya galat file proxies tak pahunchegi? Primary kat gaya
+        par zinda hai — kya primary phir bhi likh sakta hai? Discovery dheemi hui —
         clients kya karenge? Discovery gira — kya main dekh paunga?`,
     },
     {
       type: 'replay',
       title: 'Boss part 2 — anjaan outage',
-      instructions: 'Yeh kisi public postmortem se nahi hai. Sirf tumhare sawaal hain.',
+      instructions: 'Ye replay kisi public postmortem se nahi hai. Sirf tumhare sawaal hain.',
       incident: 'Tumhara platform — aaj raat',
       goal: 'Bina kisi diye hue jawab ke, sirf sahi sawaalon se outage todo.',
       speedMs: 2200,
@@ -3284,8 +3284,8 @@ SD.registerLevels('feed', [
                  ], answer: 0,
                  explain: 'Code, config, permission, flags, migration aur capacity changes ka timeline impact se milao. Endpoint aur request traces se mechanism jaancho. Healthy CPU/memory pools, locks, network ya malformed config ko cause se nahi hataate.',
                  wrongHints: [
-                   'Achha sawaal hai par woh lakshan batata hai, wajah nahi. Aur "kaunsa endpoint" ka jawab aksar "sab" hota hai.',
-                   'Database dekhna zaroori hai — par pehle yeh jaan lo ki kya badla, warna tum har graph ek-ek karke dekhoge.',
+                   'Achha sawaal hai par sawaal lakshan batata hai, wajah nahi. Aur "kaunsa endpoint" ka jawab aksar "sab" hota hai.',
+                   'Database dekhna zaroori hai — par pehle jaan lo ki kya badla, warna tum har graph ek-ek karke dekhoge.',
                    'Attack ka anumaan lagbhag hamesha der karwaata hai. Pehle apne badlav dekho, phir bahar dekho.',
                  ] , choiceExplanations: [
                    'Code, config, permission, flags, migration aur capacity changes ka timeline impact se milao. Endpoint aur request traces se mechanism jaancho. Healthy CPU/memory pools, locks, network ya malformed config ko cause se nahi hataate.',
@@ -3306,7 +3306,7 @@ SD.registerLevels('feed', [
                  ], answer: 0,
                  explain: 'Periodic errors scheduled jobs, refresh, traffic ya scaling/routing oscillation ki jaanch ka clue hain. Timestamps aur file versions milao. Pattern akele ek generator ya attacker ka proof nahi hai.',
                  wrongHints: [
-                   'Attack itna theek 10-minute period nahi rakhta. Yeh shak Cloudflare ki team ko bhi mehenga pada tha.',
+                   'Attack itna theek 10-minute period nahi rakhta. Attack ka shak Cloudflare ki team ko bhi mehenga pada tha.',
                    'Autoscaler chal raha hai par instances healthy hain — failure request handle karte waqt ho rahi hai.',
                    'Ek kharab node hota toh error rate 21% par sthir rehta, aa-ja nahi raha hota.',
                  ] , choiceExplanations: [
@@ -3316,7 +3316,7 @@ SD.registerLevels('feed', [
                    'Cron clients, bursts aur coordinated refresh bhi periodic traffic bana sakte hain.',
                  ],
                } },
-        { t: '22:25', event: 'Pricing config pipeline mili — har 10 minute par ek file banti hai, aur uski query analytics warehouse se columns padhti hai. 21:40 ke permission change ke baad rows <b>doguni</b> ho gayi hain.', metrics: { err: 21, ok: 79 }, tone: 'bad',
+        { t: '22:25', event: 'Pricing config pipeline mili — har 10 minute par ek file banti hai, aur file ki query analytics warehouse se columns padhti hai. 21:40 ke permission change ke baad rows <b>doguni</b> ho gayi hain.', metrics: { err: 21, ok: 79 }, tone: 'bad',
           ask: { q: 'Wajah mil gayi. Ab pehla kadam — permission change wapas lena ya kuch aur?',
                  choices: [
                    'Bad generation roko; verified acchi file par safe pin ka risk jaancho',
@@ -3347,7 +3347,7 @@ SD.registerLevels('feed', [
                  explain: 'Action causal chain ka behavior badle: invalid file reject ho, known-good fallback policy ho aur verification test ho. Owner aur completion criteria likho. Alerts aur coordination useful hain jab actionable mechanism aur response saaf ho.',
                  wrongHints: [
                    'Alert ne yahan kaam kiya hi tha — 21:55 par baja. Problem detection ki nahi thi.',
-                   'Communication behtar karna accha hai, par yeh design fix nahi hai — aur agli baar badlav kisi teesri team se aayega.',
+                   'Communication behtar karna accha hai, par communication design fix nahi hai — aur agli baar badlav kisi teesri team se aayega.',
                    'Team ne theek diagnose kiya. Training ka masla nahi tha.',
                  ] , choiceExplanations: [
                    'Action causal chain ka behavior badle: invalid file reject ho, known-good fallback policy ho aur verification test ho. Owner aur completion criteria likho. Alerts aur coordination useful hain jab actionable mechanism aur response saaf ho.',
@@ -3463,11 +3463,11 @@ SD.registerLevels('feed', [
   ],
   homework: `Apni team ka aakhri postmortem kholo aur usko teen column mein
     likho — trigger, amplifier, blind spot. Phir har action item ke saamne likho
-    ki woh kaunsi kadi todta hai. Jis action item ke saamne kuch nahi likh paoge,
-    woh ek iraada hai, fix nahi — aur woh agli baar bhi nahi bachayega.`,
+    ki action item kaunsi kadi todta hai. Jis action item ke saamne kuch nahi likh paoge, aisa item
+    ek iraada hai, fix nahi — aur agli baar bhi nahi bachayega.`,
   cards: [
-    { front: 'Har outage ke teen hisse?', back: '<b>Trigger</b> (chhota, aksar sahi kaam) → <b>amplifier</b> (design ki kadi jo usse bada karti hai) → <b>blind spot</b> (jiski wajah se diagnosis atki). Design ka kaam <b>amplifier</b> hai — trigger rokna namumkin hai.' },
-    { front: 'Anjaan outage ke chaar sawaal?', back: '1. Pichhle 30 min mein kya <b>deploy</b> hua (code + config + permission + flag + migration + capacity)? 2. Failure ka koi <b>period</b> hai? 3. Bahar ka load hatane par theek hota hai? 4. Kya main is system ko iske <b>bina</b> dekh sakta hoon?' },
+    { front: 'Har outage ke teen hisse?', back: '<b>Trigger</b> (chhota, aksar sahi kaam) → <b>amplifier</b> (design ki kadi jo trigger ko bada karti hai) → <b>blind spot</b> (jiski wajah se diagnosis atki). Design ka kaam <b>amplifier</b> hai — trigger rokna namumkin hai.' },
+    { front: 'Anjaan outage ke chaar sawaal?', back: '1. Pichhle 30 min mein kya <b>deploy</b> hua (code + config + permission + flag + migration + capacity)? 2. Failure ka koi <b>period</b> hai? 3. Bahar ka load hatane par theek hota hai? 4. Kya main is system ko system ke <b>bina</b> dekh sakta hoon?' },
     { front: 'Mitigation ka kadam kaise chunte ho?', back: 'Teen kasautiyan: <b>chhota</b> ho, <b>turant palat</b> sake, aur <b>naya khatra</b> na laaye. Isiliye flag band karna &gt; naya code deploy karna &gt; upgrade karna.' },
     { front: 'Achha action item kaisa hota hai?', back: 'Ek <b>naam wali kadi</b> todta hai — "row-count bound lagao taaki kharab file ban hi na sake". Bura action item ek <b>iraada</b> hai — "aur alerts lagayenge", "zyada dhyan denge".' },
     { front: 'Track ka sabse dohraya gaya sabak?', back: 'Emergency ka raasta girne wale system se <b>alag</b> ho. Cloudflare 2019 (apne tools), Roblox 2021 (telemetry Consul par — 46 ghante andhera), Slack 2021 (dashboards saturated network par) — teenon.' },

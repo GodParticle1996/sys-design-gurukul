@@ -152,7 +152,7 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
      <p>Ek ~40 KB <b>config file</b> (rules, code nahi) har Windows Falcon machine tak pahunchi; 78 minute baad (05:27 UTC) wapas li gayi.
      Tab tak <b>85 lakh</b> machines blue screen — aur reboot par phir crash. Hazaron flights cancel, Delta 5 din tootta raha, operations
      taale, banks jame, 911 lines band, Sky News andhera, haath se likhe boarding pass. Fortune 500 ka nuksaan ~$5.4B.</p>
-     <p>Paradox: 85 lakh = Microsoft ke mutabik Windows machines ka &lt;1%. Par <b>woh 1% jis par duniya chalti hai</b> — airline gates,
+     <p>Paradox: 85 lakh = Microsoft ke mutabik Windows machines ka &lt;1%. Par <b>wahi 1% jis par duniya chalti hai</b> — airline gates,
      hospitals, banks, trading, kiosks, departure boards, POS. Fortune 500 ka lagbhag ek chauthai.</p>
      <h3>🛡️ EDR kernel mein kyun?</h3>
      <p>EDR (endpoint detection & response) processes, files, network, IPC dekhta hai aur hamle ko beech mein rokta hai. Use sab dekhna hai,
@@ -180,7 +180,7 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
     {
       type: 'replay',
       title: 'Replay — 19 July 2024',
-      instructions: 'Timeline chalao. Jahan sawaal aaye wahan rukega.',
+      instructions: 'Timeline chalao. Sawaal aate hi replay rukega.',
       incident: 'CrowdStrike Falcon channel file 291',
       goal: 'Dekho ek chhota data badlaav kaise ek saath 85 lakh machines tak pahuncha, aur kahan-kahan roka ja sakta tha.',
       speedMs: 1800,
@@ -222,7 +222,7 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
                    'Incident ke record mein routing attack cause nahi; interpreter ka out-of-bounds read tha.',
                  ],
                } },
-        { t: '05:27', event: 'Content wapas liya (78 minute). Par jo machines crash ho chuki thin, woh reboot par phir crash.', metrics: { down: 85 }, tone: 'bad' },
+        { t: '05:27', event: 'Content wapas liya (78 minute). Par crash ho chuki machines reboot par phir crash.', metrics: { down: 85 }, tone: 'bad' },
         { t: 'Din–hafte', event: 'Safe mode, BitLocker keys, haath se file delete. Delta ~5 din. Mac aur Linux par zero crashes.', metrics: { down: 40 }, tone: 'warn' },
       ],
     },
@@ -343,8 +343,8 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
        <tr><td>Gate</td><td>Poora QA, dogfood, gradual rollout</td><td>Ek automated "content validator" (cloud)</td></tr>
        <tr><td>Kitne tak</td><td>Customers N-1/N-2 chun sakte</td><td><b>Poora fleet, turant</b> (N-1/N-2 walon ko bhi)</td></tr>
      </table>
-     <p class="tip">🎯 <b>Asli blast radius = deployment radius.</b> Jo cheez 1 ghante se kam mein 100% fleet tak pahunchti hai, woh tumhara sabse bada
-     single point of failure hai — chahe woh "sirf config" ho.</p>
+     <p class="tip">🎯 <b>Asli blast radius = deployment radius.</b> 1 ghante se kam mein 100% fleet tak pahunchne wali cheez tumhara sabse bada
+     single point of failure hai — chahe "sirf config" ho.</p>
      <h3>🔧 Baad ke fixes</h3>
      <ul>
        <li>Interpreter mein bounds checks; validator field counts check kare; tests asli values se (wildcards nahi).</li>
@@ -460,11 +460,11 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     'Main lab se global vs rings vs contract validator dikha sakta hoon',
     'Main surakshit content pipeline ka kram bata sakta hoon',
   ],
-  homework: `<p>Apni team ki woh saari cheezein list karo jo 1 ghante se kam mein poore fleet tak pahunchti hain. Har ek ke saamne: canary hai?
+  homework: `<p>Apni team ki saari cheezein list karo jo 1 ghante se kam mein poore fleet tak pahunchti hain. Har ek ke saamne: canary hai?
     health gate hai? rollback bina tootti machine ki madad ke? Yahi tumhari asli SPOF list hai.</p>`,
   cards: [
     { front: 'CrowdStrike ki do lanes?', back: 'Slow: sensor releases (QA, dogfood, gradual, N-1/N-2). Fast: channel files — ek validator gate ke baad poora fleet turant.' },
-    { front: '"Deployment radius = blast radius"?', back: 'Jo cheez <1 ghante mein 100% fleet tak jaati hai woh sabse bada SPOF hai, chahe "sirf config" ho.' },
+    { front: '"Deployment radius = blast radius"?', back: '<1 ghante mein 100% fleet tak jaane wali cheez sabse bada SPOF hai, chahe "sirf config" ho.' },
     { front: 'Lab 17: global vs rings vs contract?', back: 'Global: 500/500 boot loop, 92 manual. Rings: 5 canary gire, HALTED. Contract validator: publish REJECTED, 0 crash.' },
   ],
 },
@@ -485,11 +485,11 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
   ],
   lesson: [
     `<h3>🔁 Boot loop</h3>
-     <p>Falcon ek <b>boot-start</b> driver hai — jaldi load hota hai taaki malware use hara na sake. Boot par woh disk par pada zehreela 291
+     <p>Falcon ek <b>boot-start</b> driver hai — jaldi load hota hai taaki malware use hara na sake. Boot par driver disk par pada zehreela 291
      padhta hai → network aane se <b>pehle</b> crash. Fix cloud par "80 ms door" tha — par machine tak kabhi pahuncha hi nahi.</p>
      <p>Boot deterministic nahi — kabhi network jeet jaata → Microsoft: <b>"15 baar tak reboot karo"</b>. Warna: Safe Mode / recovery →
      <code>C-00000291*.sys</code> delete → reboot. ~30 sec per machine × 85 lakh. Remote tools ko chalta hua OS chahiye → <b>insaan
-     keyboard par</b>. Jo machines us 78 minute mein band thin, woh bach gayi.</p>
+     keyboard par</b>. Us 78 minute mein band machines bach gayi.</p>
      <pre>lab 17 (fix t=3s, har reboot par 10% chance network pehle):
   t=4s  up=214 bootloop=286
   t=5s  up=340 bootloop=160
@@ -544,7 +544,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
           text: 'Zaroori machines 3 ghante mein wapas, baaki shaam tak.',
           summary: `<b>Seekh:</b> Recovery ka raasta us failure ke peeche band nahi hona chahiye jisse recover kar rahe ho.
             <br><br>• <b>Triage</b> — patient safety wali machines pehle.
-            <br>• <b>Chaabi ki chaabi</b> — keys dene wala system pehle, uski key offline.
+            <br>• <b>Chaabi ki chaabi</b> — keys dene wala system pehle, system ki apni key offline.
             <br>• <b>Drill</b> — "no network, no agents, no remote hands" wala din pehle se practice karo.`,
         },
       },
@@ -559,7 +559,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
           unit: 'ghante', given: ['8,500,000 machines', '30 sec each'],
           answer: 70833, tol: 0.3,
           steps: ['8.5e6 × 30 = 2.55e8 sec', '/ 3,600 ≈ 70,800 insaan-ghante — bina BitLocker key dhoondhne ke'],
-          lesson: 'Aur yeh sabse achha case hai. Keys, seedhiyan, door ki jagahein — asli mein kai guna.',
+          lesson: 'Aur 70,800 insaan-ghante sabse achha case hai. Keys, seedhiyan, door ki jagahein — asli mein kai guna.',
         },
       ],
     },
@@ -609,8 +609,8 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     'Main recovery ke raaste ko failure se alag rakhne ka plan bana sakta hoon',
     'Main manual recovery ka paimana nikaal sakta hoon',
   ],
-  homework: `<p>Apna incident runbook kholo. Har kadam ke saamne likho: yeh kaunse system par nirbhar hai (VPN, SSO, wiki, monitoring, CI, keys)?
-    Agar woh bhi gira hai toh plan B kya hai? Kam se kam ek kadam aisa milega jiska plan B nahi hai.</p>`,
+  homework: `<p>Apna incident runbook kholo. Har kadam ke saamne likho: kadam kaunse system par nirbhar hai (VPN, SSO, wiki, monitoring, CI, keys)?
+    Agar wahi system bhi gira hai toh plan B kya hai? Kam se kam ek kadam aisa milega jiska plan B nahi hai.</p>`,
   cards: [
     { front: 'Boot loop kyun?', back: 'Boot-start driver network se pehle disk ka zehreela 291 padhta → crash. Fix cloud par, pahunch nahi paata. "15 baar reboot" ya safe mode + file delete.' },
     { front: 'BitLocker problem?', back: 'Safe mode ko 48-digit recovery key; keys AD servers mein — jo khud blue screen. Recovery ka raasta failure ke peeche band.' },
@@ -645,7 +645,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
   t=2s  up=500 | agent restarts 4773
   t=8s  up=500 | agent restarts 7163     ← ek bhi machine nahi giri</pre>`,
     `<h3>📐 Test vs prove</h3>
-     <p>Tests sirf maujooda inputs ka sample hain — CrowdStrike ke tests wildcards par pass the. Jahan failure afford nahi, wahan content ko
+     <p>Tests sirf maujooda inputs ka sample hain — CrowdStrike ke tests wildcards par pass the. Failure afford na ho toh content ko
      test mat karo — <b>prove</b> karo: interpreter ke aage ek verifier jo har rule ko sensor ki asli seemaon se sabit kare.</p>
      <h3>📋 Paanch takeaways</h3>
      <ol>
@@ -754,7 +754,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     'Main CrowdStrike ke paanch takeaways apne system par laga sakta hoon',
   ],
   homework: `<p>Apne servers par chalne wale saare "privileged" agents list karo (EDR, monitoring, log shipper, MDM, service mesh). Har ek: kernel
-    mein ya user space? auto-update hota hai? kis ring mein? Sabse khatarnak ek chuno aur uska crash domain chhota karne ka tareeka likho.</p>`,
+    mein ya user space? auto-update hota hai? kis ring mein? Sabse khatarnak ek chuno aur us agent ka crash domain chhota karne ka tareeka likho.</p>`,
   cards: [
     { front: 'Mac par zero crashes kyun?', back: '2019 se Endpoint Security framework — agent user space mein; crash = process mara, machine nahi. Lab 17 user mode: 7,163 restarts, 0 machines down.' },
     { front: 'eBPF verifier?', back: 'Kernel program load se pehle sabit karta hai: no out-of-bounds, no infinite loop, no paraya memory. Test nahi, prove.' },
@@ -782,7 +782,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
      product gayab (dashboards, APIs, alerting). ~40,000 servers. Zyadatar ke liye 13 ghante, baaki ~ek din. Pragmatic Engineer: ~$5M revenue.
      Cloud outage nahi, kharab deploy nahi — Linux software ka ~2 saal purana ek badlaav, 40,000 machines par taiyaar.</p>
      <h3>🗺️ Multi-region kya bachata hai</h3>
-     <p>Multi-region ka tark: failures <b>alag-alag</b> hoti hain — AZ → region → cloud. Woh sab failures <b>geographic</b> hain. Yeh wali aayi
+     <p>Multi-region ka tark: failures <b>alag-alag</b> hoti hain — AZ → region → cloud. Ye sab failures <b>geographic</b> hain. Datadog wali failure aayi
      <b>software supply chain</b> se — jiska region se koi lena-dena nahi. Har machine: same Ubuntu, same update source, same auto-update job,
      same ghadi (UTC).</p>
      <h3>⏰ Unattended upgrades</h3>
@@ -901,8 +901,8 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     'Main synchronized auto-update ka khatra bata sakta hoon',
     'Main lab se prod jaisi canary ka faayda dikha sakta hoon',
   ],
-  homework: `<p>Apne infrastructure ka "doosra diagram" banao: har region ke upar ki woh cheezein jo sab jagah ek jaisi hain (OS version, base image,
-    package mirror, auto-update schedule, CI, registry, CA, DNS provider). Har ek ke saamne: kya yeh sab jagah ek saath badal sakti hai?</p>`,
+  homework: `<p>Apne infrastructure ka "doosra diagram" banao: har region ke upar ki cheezein jo sab jagah ek jaisi hain (OS version, base image,
+    package mirror, auto-update schedule, CI, registry, CA, DNS provider). Har cheez ke saamne: kya cheez sab jagah ek saath badal sakti hai?</p>`,
   cards: [
     { front: 'Datadog 8 March 2023?', back: '06:00–07:00 UTC, 5 regions, 3 clouds, ~40,000 servers ek ghante ke andar dark. Trigger: systemd patch (unattended-upgrades) → networkd reapply.' },
     { front: 'Multi-region ≠ multi-fault-domain?', back: 'Regions geographic failures se bachate hain. Same OS/updater/ghadi har jagah = software supply chain failure sab regions mein ek saath.' },
@@ -927,21 +927,21 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
   lesson: [
     `<h3>🧭 Routing table aur rules</h3>
      <p><code>ip route</code> = routing table (manzil → agla hop). Linux mein <b>kai</b> tables hain. <code>ip rule</code> = <b>policy routing</b>
-     rules ki list: source address / <b>fwmark</b> / incoming interface match ho → yeh table use karo. Pehla match jeet-ta hai. VPNs,
+     rules ki list: source address / <b>fwmark</b> / incoming interface match ho → ye table use karo. Pehla match jeet-ta hai. VPNs,
      multi-homed machines — jo bhi khaas traffic ko khaas raaste bhejta hai.</p>
      <p>Rules ki list <b>saajhi</b> hai aur <b>koi maalik nahi</b>: koi bhi privileged program kisi aur ka rule mita sakta hai — na error, na
      warning, na lock; kernel yaad bhi nahi rakhta ki rule kisne banaya.</p>
      <h3>🐝 Cilium aur 🧹 networkd</h3>
      <p>Kubernetes mein har pod ka apna IP. Datadog <b>Cilium</b> use karta tha: pod traffic par fwmark lagata hai + rule "marked → Cilium ki
      table" (jise har pod ka pata hai). Rules gayab → marked traffic main table mein → packet mara → node dark, control plane se bhi katt gaya.</p>
-     <p>Dec 2020 systemd release: networkd jab apne interface ki config reapply karta hai, woh <b>har us rule ko mita deta hai jo usne nahi
-     banaya</b> ("stale junk"). systemd ki nazar se theek (use lagta hai network uska hai). Switch <code>ManageForeignRoutingPolicyRules</code>
+     <p>Dec 2020 systemd release: networkd jab apne interface ki config reapply karta hai, networkd <b>har us rule ko mita deta hai jo networkd ne nahi
+     banaya</b> ("stale junk"). systemd ki nazar se theek (systemd ko lagta hai network systemd ka hai). Switch <code>ManageForeignRoutingPolicyRules</code>
      ~5 mahine baad aaya — <b>default ON</b> — aur purane versions mein backport bhi hua.</p>`,
     `<h3>⏳ 27 mahine kyun chhupa?</h3>
      <p>Normal <b>boot</b> order: networkd jaldi shuru → safai → Cilium abhi shuru hi nahi → kuch paraya nahi → phir Cilium rules daalta hai →
      sab theek. Fresh machine + naya systemd + reboot + tests = <b>pass</b>.</p>
      <p>Maut wala order: hafton se chalti machine (Cilium rules pehle se) par networkd <b>reapply</b> — thik wahi jo <b>in-place package
-     upgrade</b> karta hai (service live restart, reboot nahi). Iska test = hafton purani machine + ek service ka in-place restart + pod-to-pod
+     upgrade</b> karta hai (service live restart, reboot nahi). Is bug ka test = hafton purani machine + ek service ka in-place restart + pod-to-pod
      check = "extra steps wala production incident".</p>
      <pre>lab 23 (ex1-rules):
 reboot-test: networkd pehle, cilium baad → 100/100 ✅ "test pass"
@@ -949,7 +949,7 @@ in-place:    cilium rules pehle se → patch → networkd reapply → 1 rule saa
 PROTO=cilium (rules par apna naam)   → reapply ne 0 saaf kiye → 100/100
 MANAGE_FOREIGN=0 (setting)           → 0 saaf → 100/100</pre>
      <p>Shallow fix: setting (der se aaya, default on). Asli fix (Cilium): rules par <b>protocol tag</b> — networkd pehchaan ke chhod de =
-     <b>ownership ek convention ban gayi</b>. Deep fix (shayad hi bana): saajhe resource ka <b>ek maalik</b> ya arbitration layer — warna yeh
+     <b>ownership ek convention ban gayi</b>. Deep fix (shayad hi bana): saajhe resource ka <b>ek maalik</b> ya arbitration layer — warna ye
      bugs ki ek <b>category</b> hai, ek-ek karke patch hoti rahegi.</p>`,
   ],
   stages: [
@@ -1097,7 +1097,7 @@ MANAGE_FOREIGN=0 (setting)           → 0 saaf → 100/100</pre>
   ],
   lesson: [
     `<h3>🙈 Andhe</h3>
-     <p>Datadog apna infra samajhne ke liye jo tool use karta hai — woh <b>Datadog</b> hai. Band. Cloud consoles, raw SSH, kamzor war-room chat.</p>
+     <p>Datadog apna infra samajhne ke liye jo tool use karta hai — tool <b>Datadog</b> hi hai. Band. Cloud consoles, raw SSH, kamzor war-room chat.</p>
      <h3>🔒 Taala dono taraf</h3>
      <p>Toote nodes Kubernetes control plane tak nahi pahunch sakte; control plane nodes tak nahi → <b>self-healing automation galat taraf</b> →
      haath se, machine-dar-machine. Wajah ~11:36 par pakki hui (~6 ghante).</p>
@@ -1115,7 +1115,7 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
      <h3>🧭 Recovery ka niyam</h3>
      <p><b>Recovery kabhi us cheez par mat banao jo gir sakti hai</b> → alag observability raasta jo monitored system ke saath kuch share na kare:
      out-of-band access (cloud console, alag raaste se SSH), alag stack/provider par chhota status dashboard. Runbook test: har kadam par poochho
-     "kya yeh kuch aisa maanta hai jo abhi band hai?" ("burning cluster par dashboard kholo" = runbook nahi, ek dua hai).</p>`,
+     "kya kadam kisi aisi cheez par tika hai jo abhi band hai?" ("burning cluster par dashboard kholo" = runbook nahi, ek dua hai).</p>`,
   ],
   stages: [
     {
@@ -1206,12 +1206,12 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
     'Main thundering herd ka ilaaj lab se dikha sakta hoon',
     'Main runbook ko "band cheezon" ke liye test kar sakta hoon',
   ],
-  homework: `<p>Apne system ke liye "sab kuch ek saath gira" wala runbook likho (5 kadam). Har kadam: kaunsa tool, kahan chalta hai, kya woh bhi gira
+  homework: `<p>Apne system ke liye "sab kuch ek saath gira" wala runbook likho (5 kadam). Har kadam: kaunsa tool, kahan chalta hai, kya tool bhi gira
     hoga? Aur clients ke reconnect par backoff/jitter hai ya nahi — code mein dekho.</p>`,
   cards: [
     { front: 'Datadog recovery ki dikkatein?', back: 'Andhe (Datadog hi tool tha); nodes ↔ control plane dono taraf band (self-healing galat taraf); kram: control planes → workers → services; thundering herd.' },
     { front: 'Lab 23: 5,000 nodes wapas?', back: 'Herd: 30.2 s, 35,548 bekaar koshishein. Backoff: 6.6 s. Waves: 7.5 s, 0 bekaar.' },
-    { front: 'Recovery ka niyam?', back: 'Recovery kabhi us cheez par mat banao jo gir sakti hai — alag observability + out-of-band access; runbook ke har kadam par "kya yeh band cheez maanta hai?"' },
+    { front: 'Recovery ka niyam?', back: 'Recovery kabhi us cheez par mat banao jo gir sakti hai — alag observability + out-of-band access; runbook ke har kadam par "kya kadam band cheez maanta hai?"' },
   ],
 },
 
@@ -1236,7 +1236,7 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
      <h3>🔍 Blast radius review — do baar</h3>
      <ol>
        <li><b>Geographic pass</b> — zones, regions, failover. Sab karte hain.</li>
-       <li><b>Stack pass</b> — har fleet-jaisi cheez ke liye: <b>kahan se aati hai? kaunsa event ise badalta hai? kya sab jagah ek saath
+       <li><b>Stack pass</b> — har fleet-jaisi cheez ke liye: <b>kahan se aati hai? kaunsa event is cheez ko badalta hai? kya sab jagah ek saath
        badalti hai?</b> OS, package mirror, base image, CI pipeline, image registry, certificate authority, DNS provider.</li>
      </ol>
      <p>Auto-updater = same source, same schedule, same ghadi, 40,000 machines — aur <b>kisi diagram par nahi</b>.</p>`,
@@ -1251,13 +1251,13 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
        <li>Do+ systems ek resource share karein bina maalik = fault line.</li>
        <li>Recovery kabhi us cheez par mat banao jo gir sakti hai.</li>
      </ol>
-     <p class="tip">🎯 <b>Doosra diagram banao</b>: dependency graph jisme sabse upar woh single cheezein hon jo har region ko khilati hain.</p>`,
+     <p class="tip">🎯 <b>Doosra diagram banao</b>: dependency graph jisme sabse upar har region ko khilane wali single cheezein hon.</p>`,
   ],
   stages: [
     {
       type: 'archdiff',
       title: 'Doosra diagram — chaar saajhe kone',
-      instructions: 'Yeh company "5 regions, 2 clouds, fully redundant" kehti hai. Chaar cheezein saare regions ko ek saath gira sakti hain — pakdo.',
+      instructions: 'Company khud ko "5 regions, 2 clouds, fully redundant" kehti hai. Chaar cheezein saare regions ko ek saath gira sakti hain — pakdo.',
       brief: `Har region ka apna Kubernetes cluster, apna DB replica, apna load balancer. Failover drills har quarter. Leadership ko
         lagta hai koi single point of failure nahi.`,
       goal: 'Chaar aisi cheezein pakdo jo region ke UPAR hain aur sab jagah ek saath badal sakti hain.',
@@ -1368,7 +1368,7 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
     'Main Datadog ke paanch takeaways apne system par laga sakta hoon',
   ],
   homework: `<p>Apne system ka "doosra diagram" poora karo (pehla level ka homework). Ab usme se sabse khatarnak ek cheez chuno aur likho: use waves
-    mein kaise badloge, uska canary kaisa hoga (prod jaisa!), aur agar woh sab jagah gire toh recovery ka raasta kya hai jo us par nirbhar na ho.</p>`,
+    mein kaise badloge, cheez ka canary kaisa hoga (prod jaisa!), aur agar cheez sab jagah gire toh recovery ka raasta kya hai jo us cheez par nirbhar na ho.</p>`,
   cards: [
     { front: 'Two-pass blast radius review?', back: '1) Geographic: zones, regions, failover. 2) Stack: har fleet-jaisi cheez — kahan se aati hai, kaunsa event badalta hai, kya sab jagah ek saath?' },
     { front: 'Auto-update dilemma?', back: 'Band = breach risk; synchronized = outage risk. Jawab: staged waves, pehle prod jaisi purani machines par.' },

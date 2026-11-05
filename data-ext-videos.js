@@ -91,7 +91,7 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
     {
       type: 'replay',
       title: 'Replay — raat 3 baje ka cron',
-      instructions: 'Timeline chalao. Jahan sawaal aaye wahan rukega.',
+      instructions: 'Timeline chalao. Sawaal aate hi replay rukega.',
       incident: 'Cron machine down — ek aam SaaS ki raat',
       goal: 'Dekho single scheduler kaise chupchaap marta hai, aur "do scheduler" wala jaldbaazi ka ilaaj kya karta hai.',
       speedMs: 1800,
