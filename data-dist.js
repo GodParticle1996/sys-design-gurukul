@@ -13,28 +13,28 @@ const T_SCHED = [
   { text: 'Ab scheduled-event wali query ka plan dekho',
     check: s => { const i = s.records.findIndex(r => r.kind === 'index' && r.op === 'create');
       return i > -1 && s.records.slice(i).some(r => r.kind === 'explain' && r.indexUsed); } },
-  { text: 'Due reminders uthao — 5000 se kam rows chhuni chahiye',
-    check: s => s.records.some(r => r.kind === 'explain' && r.indexUsed && r.rowsExamined < 5000) },
+  { text: 'Fresh cards EXPLAIN mein reminder_at index use ho; rows<5000',
+    check: s => s.records.some(r => r.kind === 'explain' && r.indexUsed && r.rowsExamined < 5000 && r.table === 'cards' && r.revision === s.revision && SD.mission.index(s, 'cards', ['reminder_at'])) },
 ];
 
 const T_ONCE = [
   { text: 'Idempotency on karo',
     check: s => s.records.some(r => r.kind === 'sim' && /idempotency/.test(r.path || '') && r.value === true) },
-  { text: 'Ek message process karo (dedupe key ke saath)',
-    check: s => s.records.some(r => r.kind === 'http' && r.idem === 'new') },
-  { text: 'Wahi message dobara aaya — duplicate NAHI banna chahiye',
-    check: s => s.records.some(r => r.kind === 'http' && r.idem === 'replay') },
+  { text: 'msg-9001 key se payments POST karo',
+    check: s => s.records.some(r => r.kind === 'http' && r.idem === 'new' && r.key === 'msg-9001') },
+  { text: 'msg-9001 dobara bhejo — live idempotency on ho aur replay mile',
+    check: s => s.records.some(r => r.kind === 'http' && r.idem === 'replay' && r.key === 'msg-9001' && s.sys.api.idempotency === true && !!s.sys.seenKeys['msg-9001'] && r.revision === s.revision) },
 ];
 
 const T_BOSS_DIST = [
-  { text: 'Order banao — idempotency key ke saath',
-    check: s => s.records.some(r => r.kind === 'sim' && /idempotency/.test(r.path || '') && r.value === true) },
-  { text: 'Client ne retry kiya — duplicate order nahi banna chahiye',
-    check: s => s.records.some(r => r.kind === 'http' && r.idem === 'replay') },
-  { text: 'Read model ke liye index banao (cross-service query)',
-    check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols.length >= 2) },
-  { text: 'Read model query ka plan dekho — ek tez query honi chahiye',
-    check: s => s.records.some(r => r.kind === 'explain' && r.indexUsed) },
+  { text: "Idempotency on karo; ord-8812 key se /v 1/orders POST karo",
+    check: s => s.records.some(r => r.kind === 'http' && r.idem === 'new' && r.resource === 'orders' && r.key === 'ord-8812' && s.sys.api.idempotency === true) },
+  { text: 'ord-8812 key se orders POST retry karo — duplicate order na bane',
+    check: s => s.records.some(r => r.kind === 'http' && r.idem === 'replay' && r.resource === 'orders' && r.key === 'ord-8812') },
+  { text: "order_summary par (user_city, status, created_at) index banao",
+    check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.table === 'order_summary' && r.cols[0] === 'user_city' && r.cols[1] === 'status' && r.cols[2] === 'created_at' && SD.mission.index(s, 'order_summary', ['user_city','status','created_at'])) },
+  { text: 'Fresh order_summary query ka plan dekho — live index use ho',
+    check: s => s.records.some(r => r.kind === 'explain' && r.table === 'order_summary' && r.indexUsed && r.revision === s.revision) },
 ];
 
 SD.registerLevels('dist', [
@@ -1178,11 +1178,11 @@ COMMIT;</pre>
     {
       type: 'terminal',
       title: '♻️ Duplicate ko bekaar banao',
-      goal: 'Ek message consumer hai jo payments process karta hai. Idempotency on karo aur prove karo ki wahi message dobara aane par duplicate nahi banta.',
+      goal: 'In-memory payment replay mein msg-9001 dobara bhejo. Simulator response reuse dikhata hai; durable UNIQUE constraint ya atomic side-effect transaction prove nahi karta.',
       sys: SD.sys.payments(),
       tasks: T_ONCE,
       success: SD.allTasks(T_ONCE),
-      successText: `Yahi <b>effectively-once</b> hai: delivery at-least-once rahi
+      successText: `In-memory replay effectively-once ka basic example hai; durable UNIQUE constraint aur atomic transaction ka proof alag chahiye. Delivery at-least-once rahi
         (message dobara aaya), par <b>processing idempotent</b> thi, isliye asar ek hi baar hua.
         <br><br>Teen cheezein zaroori hain:
         <br>• Message mein ek <b>unique id</b> ho (producer deta hai)
@@ -1427,12 +1427,7 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
       sys: SD.sys.reminders(),
       tasks: T_SCHED,
       success: SD.allTasks(T_SCHED),
-      successText: `<b>2 crore rows scan → ek index seek.</b>
-        <br><br>Aur dhyaan do ki yeh <b>bilkul wahi</b> insight hai jo pagination level mein tha:
-        <br>• Deep offset: "2.4 crore rows skip mat karo — jahan chhoda tha wahin se lo"
-        <br>• Scheduling: "2 crore cards scan mat karo — jo due hain unhe seedha uthao"
-        <br><br>Dono mein galti <b>data ke size</b> mein nahi, <b>access pattern</b> mein thi.
-        Technology (delayed queue, sorted set, timer wheel) uske baad ki baat hai.`,
+      successText: "cards ke reminder_at index ne full-table polling ke badle due reminders ka bounded scan diya. Access pattern pehle chuno; timer wheel, sorted set ya delayed queue implementation baad mein compare karo.",
       solution: [
         "EXPLAIN SELECT * FROM cards WHERE due_date > 2026",
         "CREATE INDEX ix_reminder ON cards(reminder_at)",
@@ -1905,7 +1900,7 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
       success: SD.allTasks(T_BOSS_DIST),
       successText: `🎉 <b>Poora app khatam.</b>
         <br><br>Tumne abhi do sabse zaroori cheezein saath mein kar li:
-        <br>• <b>Idempotency</b> — mobile retry par double charge nahi
+        <br>• <b>Idempotency</b> — mobile retry par duplicate order nahi
         <br>• <b>Read model + composite index</b> — cross-service query ek 5 ms query
         <br><br>Aur poore app ka nichod chaar line mein:
         <br><b>1.</b> Har request ka raasta jaano — aur jaano kaunsa hop <b>queue</b> banata hai
@@ -1999,12 +1994,12 @@ const T_CONT = [
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /booking\.mode/.test(r.path) && r.value === 'pessimistic') },
   { text: 'Ab wahi do log — sirf ek jeetna chahiye',
     check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.mode === 'pessimistic' && r.sold === 1 && r.rejected >= 1) },
-  { text: 'Ab optimistic try karo',
-    check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.mode === 'optimistic' && r.sold === 1) },
-  { text: 'Aur reservation: seat par TTL ke saath hold lagao',
-    check: s => s.records.some(r => r.kind === 'book' && r.op === 'hold' && r.ok === true && r.ttl > 0) },
-  { text: 'Dekho ki hold doosre khareedaar ko rok deta hai',
-    check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.blockedByHold === true) },
+  { text: 'A1 par optimistic mode try karo; ek sale ho',
+    check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.mode === 'optimistic' && r.seat === 'A1' && r.sold === 1) },
+  { text: 'Optimistic mode mein B4 par 600s reservation hold lagao',
+    check: s => s.records.some(r => r.kind === 'book' && r.op === 'hold' && r.ok === true && r.seat === 'B4' && r.ttl === 600) },
+  { text: 'Fresh B4 purchase hold se ruke; A1 sold aur optimistic mode rahe',
+    check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.blockedByHold === true && r.seat === 'B4' && r.revision === s.revision && s.sys.booking?.mode === 'optimistic' && !!s.sys.booking.seats.A1 && SD.mission.hold(s, 'B4', 600)) },
 ];
 
 SD.registerLevelsAfter('dist', 'locks', [
@@ -2100,7 +2095,7 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
         "book hold B4 --ttl 600",
         "book seat B4 --concurrent 1",
       ],
-      verify: s => { const m = SD.mission; return s.sys.booking?.mode === 'optimistic' && !!s.sys.booking.seats.A1 && s.sys.booking.holds.B4 === 600 && m.current(s, 'book', r => r.blockedByHold && r.seat === 'B4'); },
+      verify: s => { const m = SD.mission; return s.sys.booking?.mode === 'optimistic' && !!s.sys.booking.seats.A1 && m.hold(s, 'B4', 600) && m.current(s, 'book', r => r.blockedByHold && r.seat === 'B4'); },
       hints: [
         'Pehle `book seat <seat> --concurrent <buyers>` se double booking banao. Same khaali seat ka test lock lagne ke baad farak saaf dikhayega.',
         '`book reset` ke baad `sim set booking.mode <mode>` se pessimistic aur optimistic alag test karo. Bik chuki seat par test bekaar hoga. Reservation ke liye `book hold <seat> --ttl <seconds>`, phir same seat maango.',
@@ -2294,14 +2289,14 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
 const T_STREAM = [
   { text: 'Bina watermark ke ek window chalao — late events kho jaayenge',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'window' && !r.watermark && r.dropped > 0) },
-  { text: 'Ab watermark ke saath — kuch late events pakde jaane chahiye',
-    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'window' && r.watermark > 0 && r.caught > 0) },
-  { text: 'Log se replay karo — queue yeh kar hi nahi sakti',
+  { text: "--watermark 30 (30s grace) lagao; late events catch hon aur drops zero rahein",
+    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'window' && r.watermark === 30 && r.caught > 0 && r.dropped === 0 && r === SD.mission.latest(s, 'stream', 'window')) },
+  { text: 'Log offset se replay karo',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'replay' && r.ok === true) },
   { text: 'Partitions se zyada consumers lagao — kuch khaali baithenge',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle > 0) },
   { text: 'Ab consumers ko partitions ke barabar ya kam karo',
-    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle === 0) },
+    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle === 0 && r === SD.mission.latest(s, 'stream', 'partitions')) },
 ];
 
 SD.registerLevelsAfter('dist', 'exactlyonce', [
@@ -2380,15 +2375,15 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
     {
       type: 'terminal',
       title: 'Mission — Windows, replay, partitions',
-      goal: `Late events ka nuksaan naapo, watermark se bachao,
+      goal: `Late events ka nuksaan naapo. --watermark flag yahan grace interval hai; full event-time watermark engine nahi. 30s grace se drops zero karo,
              phir replay aur partition parallelism dekho.`,
       sys: SD.sys.orders(),
       tasks: T_STREAM,
       success: SD.allTasks(T_STREAM),
-      successText: `Teen cheezein jo queue de hi nahi sakti:
+      successText: `Log model ke teen features:
         <b>replay</b> (offset peeche), <b>kai independent consumers</b> (har group ka apna offset),
         aur <b>ordering</b> (partition ke andar). Aur ek tradeoff jo tumhe
-        khud tay karna hoga: <b>watermark = completeness vs latency</b>.`,
+        khud tay karna hoga: <b>grace interval = completeness vs latency</b>.`,
       solution: [
         "stream window --size 60 --events 100000 --late 3",
         "stream window --size 60 --watermark 30 --events 100000 --late 3",

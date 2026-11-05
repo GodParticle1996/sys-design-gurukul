@@ -14,62 +14,61 @@
 
 /* ---------------------------------------------------------------- L1 */
 const T_LIFECYCLE = [
-  { text: 'Ek normal request bhejo aur uska cost panel dekho',
+  { text: "Normal GET bhejo aur GET ka cost panel dekho",
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200) },
-  { text: '/health maango — dekho woh kya-kya CHHUTA hai',
+  { text: "/health maango — health endpoint DB aur dependency ko chhoota nahi",
     check: s => s.records.some(r => r.kind === 'health') },
   { text: '500 rps ka load daalo',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 500) },
-  { text: '`trace` se dekho ki waqt kahan gaya',
-    check: s => s.records.some(r => r.kind === 'trace') },
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 500) },
+  { text: 'Fresh trace mein pool.acquire() bottleneck dekho',
+    check: s => s.records.some(r => r.kind === 'trace' && /pool/.test(r.worst) && r.revision === s.revision) },
 ];
 
 const T_IV_DIAGNOSE = [
   { text: 'Load daalo taaki problem dikhe', check: s => s.records.some(r => r.kind === 'load') },
-  { text: 'Trace karke bottleneck dhoondo', check: s => s.records.some(r => r.kind === 'trace' && /pool/.test(r.worst)) },
+  { text: 'Fresh trace karke pool.acquire() bottleneck dhoondo', check: s => s.records.some(r => r.kind === 'trace' && /pool/.test(r.worst) && r.revision === s.revision) },
 ];
 
 const T_TAIL = [
   { text: '400 rps ka load daalo aur p50 vs p99 ka farak dekho',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 300) },
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 400 && r.revision === s.revision) },
   { text: '99.9% availability ka error budget nikalo',
-    check: s => s.records.some(r => r.kind === 'slo') },
+    check: s => s.records.some(r => r.kind === 'slo' && r.avail === 99.9 && r === SD.mission.latest(s, 'slo')) },
 ];
 
 const T_FANOUT = [
   { text: 'Normal request bhejo — baseline p99 dekho',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 < 500) },
   { text: 'Downstream ko 3 second dheema karo',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'latency' && r.value >= 2000) },
-  { text: 'Dekho ki uski latency seedha tumhare p99 mein judi',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'latency' && r.target === 'ledger' && r.value === 3000) },
+  { text: 'Ledger ki latency API ke p99 mein judi: GET par 200 aur p99 > 2000ms',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 > 2000) },
-  { text: 'Timeout laga ke damage baandho',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout') },
+  { text: 'Ledger timeout 150ms par lagao (200ms SLO se kam)',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.target === 'ledger' && r.ms === 150) },
   { text: 'Ab failure bounded ho: HTTP 504 aur p99 800ms se kam',
-    check: s => { const i = s.records.findIndex(r => r.kind === 'sim' && r.what === 'timeout');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'http' && r.status === 504 && r.p99 < 800); } },
+    check: s => s.sys.deps.ledger?.timeoutMs === 150 && SD.mission.current(s, 'http', r => r.status === 504 && r.p99 < 800) },
 ];
 
 const T_GUARDS = [
   { text: 'Dekho ki ?limit=1000 bina rok-tok chal jaata hai',
-    check: s => s.records.some(r => r.kind === 'http' && r.limit >= 500 && r.status === 200) },
+    check: s => s.records.some(r => r.kind === 'http' && r.limit === 1000 && r.status === 200) },
   { text: 'maxLimit 100 par set karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /maxLimit/.test(r.path) && r.value === 100) },
-  { text: 'Ab wahi request 400 se reject honi chahiye',
+  { text: 'maxLimit=100 ke saath limit=1000 request 400 se reject karo',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 400 && r.guard === 'maxLimit') },
-  { text: 'Rate limit lagao (100 rps)',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'ratelimit') },
+  { text: 'Rate limit 100 rps, burst 120 lagao',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'ratelimit' && r.cfg.rps === 100 && r.cfg.burst === 120 && s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 120) },
   { text: 'Burst bhejo aur 429 khaao',
-    check: s => s.records.some(r => r.kind === 'http' && r.status === 429) },
+    check: s => s.records.some(r => r.kind === 'http' && r.status === 429 && r.blocked > 0 && r.revision === s.revision && s.sys.api.maxLimit === 100) },
 ];
 
 const T_ESTIMATE = [
-  { text: '12,00,000 users, 2 KB per record ka estimate nikalo',
-    check: s => s.records.some(r => r.kind === 'estimate' && r.users >= 1000000) },
-  { text: 'Peak rps nikalo (average nahi!)',
-    check: s => s.records.some(r => r.kind === 'estimate' && r.peak > r.rps) },
+  { text: '12,00,000 users, 2048 bytes per record; average 27.78 ko round karke 28 rps do',
+    check: s => s.records.some(r => r.kind === 'estimate' && r.users === 1200000 && r.rps === 28 && r.bytesPer === 2048 && r === SD.mission.latest(s, 'estimate')) },
+  { text: "3x peak 84 rps nikalo (average 28 rps)",
+    check: s => s.records.some(r => r.kind === 'estimate' && r.peak === 84 && r.rps === 28 && r === SD.mission.latest(s, 'estimate')) },
   { text: '99.9% SLO ka error budget dekho',
-    check: s => s.records.some(r => r.kind === 'slo') },
+    check: s => s.records.some(r => r.kind === 'slo' && r.avail === 99.9 && r === SD.mission.latest(s, 'slo')) },
 ];
 
 SD.registerLevels('flow', [
@@ -176,15 +175,11 @@ help                                       ← saare commands</pre>
     {
       type: 'terminal',
       title: '🔍 Pehla mission — system ko chhu ke dekho',
-      goal: 'Ek nayi service mili hai. Uska naksha banao: ek request bhejo, health check dekho, load daalo, aur trace karke pata karo ki waqt kahan jaata hai.',
+      goal: "Orders service ka naksha banao: GET, health check,500-rps load aur pool.acquire() trace dekho.",
       sys: SD.sys.orders({ db: { longTxHolding: 42 } }),
       tasks: T_LIFECYCLE,
       success: SD.allTasks(T_LIFECYCLE),
-      successText: `Tumne abhi woh dekha jo bahut se senior engineers pehli baar production incident mein dekhte hain:
-        <b>CPU kam, health green, aur phir bhi sab kuch dheema.</b>
-        <br><br>Jawab <code>trace</code> mein tha — <code>pool.acquire()</code> mein
-        sabse zyada waqt gaya. Request kaam nahi kar rahi thi, woh <b>connection ka
-        intezaar</b> kar rahi thi. Yeh poore Resilience track ki neev hai.`,
+      successText: "CPU kam aur health green hone par bhi request pool connection ka intezaar kar sakti hai. Fresh trace ne pool.acquire() ko bottleneck dikhaya. Health endpoint DB ya downstream availability prove nahi karta.",
       solution: [
         "GET /api/v1/orders?page=1&limit=50",
         "GET /health",
@@ -333,7 +328,7 @@ help                                       ← saare commands</pre>
       },
       {
         terminal: {
-          goal: 'Interviewer: "Yeh raha ek service jo dheemi chal rahi hai. 2 minute hain — mujhe batao problem kahan hai."',
+          goal: "Interviewer: orders service dheemi hai. Load aur fresh trace se pool.acquire() bottleneck prove karo.",
           sys: SD.sys.orders({ db: { longTxHolding: 45 } }),
           tasks: T_IV_DIAGNOSE,
           success: SD.allTasks(T_IV_DIAGNOSE),
@@ -484,11 +479,7 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
       sys: SD.sys.txn(),
       tasks: T_GUARDS,
       success: SD.allTasks(T_GUARDS),
-      successText: `Do guards, do alag khatre. <code>maxLimit</code> ne <b>ek request</b> ko
-        bahut bada hone se roka. <code>rate limit</code> ne <b>bahut saari requests</b> ko roka.
-        Dono chahiye — ek ke bina doosra adhoora hai.
-        <br><br>Aur dhyaan do ki dono <b>gateway</b> par hain: ab yeh requests service tak
-        pahunchti hi nahi, isliye na thread lagta hai na connection.`,
+      successText: "maxLimit=100 ek request ka size baandhta hai.100-rps limiter, burst 120 traffic ka rate baandhta hai. Fresh 400 aur 429 responses ne dono guards dikhaye.",
       solution: [
         "GET /api/v1/transactions?limit=1000",
         "sim set api.maxLimit 100",
@@ -769,10 +760,10 @@ P(koi ek slow) = 1 − 0.99⁵ =  4.9%   ← 1% se 4.9% ho gaya!
       type: 'terminal',
       title: '📊 Tail ko pakdo',
       goal: 'Ek endpoint ka p99 SLO tod raha hai. Load daal ke dekho ki p50 aur p99 mein kitna farak hai, phir SLO ka error budget nikalo.',
-      sys: SD.sys.orders({ db: { longTxHolding: 40 } }),
+      sys: SD.sys.orders({ db: { longTxHolding: 45 } }),
       tasks: T_TAIL,
       success: SD.allTasks(T_TAIL),
-      successText: `Dekha? <b>p50 theek lag raha tha, p99 aag laga raha tha.</b> Agar tum sirf
+      successText: `Dekha? <b>p50 aur p99 dono badhe; p99 ne 200ms SLO toda.</b> Agar tum sirf
         average dekhte toh kabhi pata hi nahi chalta.
         <br><br>Aur error budget ne ek aur baat batayi: 99.9% ka matlab mahine mein sirf
         <b>43 minute</b> ki chhoot. Ek hi kharab deploy pura mahine ka budget kha sakta hai.`,
@@ -906,10 +897,7 @@ pool 50, query 8 s    → 50 × 0.125 =  6 rps  💀</pre>
       sys: SD.sys.txn(),
       tasks: T_ESTIMATE,
       success: SD.allTasks(T_ESTIMATE),
-      successText: `Ab tumhare paas <b>numbers</b> hain, feelings nahi. Interview mein yeh do line —
-        "average ~28 rps, peak ~84 rps, saal bhar mein 5.3 TB with replication" —
-        "hum scale kar lenge" se hazaar guna behtar hai.
-        <br><br>Aur error budget ne bata diya ki 99.9% kitna sakht hai: <b>mahine mein 43 minute</b>.`,
+      successText: "Average 28 rps,3x peak 84 rps aur 365 din ka replicated storage display 4.9 TB hai.99.9% availability par 30 din ka allowed downtime 43.2 minutes hai. Simulator storage display 1024-based units use karta hai.",
       solution: [
         "estimate --users 1200000 --rps 28 --bytes 2048",
         "slo --availability 99.9",
@@ -1336,27 +1324,23 @@ Sab ek hi row par lock maang rahe hain.
     {
       type: 'terminal',
       title: '🌿 Fan-out ka asar dekho',
-      goal: 'Ek service ek downstream par depend karti hai. Dekho ki uski latency tumhare p99 mein seedha judti hai — phir timeout laga ke damage baandho.',
+      goal: "Orders GET ka baseline naapo. Ledger ko 3000ms dheema karo, phir 150ms timeout se failure ka intezaar baandho.",
       sys: SD.sys.orders(),
       tasks: T_FANOUT,
       success: SD.allTasks(T_FANOUT),
-      successText: `Timeout ne latency ko <b>theek nahi kiya</b> — usne use <b>bounded</b> kiya.
-        Yeh farak zaroori hai: ab tumhara p99 downstream ki marzi par nahi, tumhare
-        faisle par tika hai.
-        <br><br>Niyam: har remote call par timeout, aur woh timeout tumhare apne SLO se
-        <b>kam</b> hona chahiye. Warna tum apna vaada uske haath mein de rahe ho.`,
+      successText: "Ledger abhi bhi dheema hai.150ms timeout ne call ka intezaar baandha; fresh GET ne bounded 504 dikhaya. Remote-call timeout API ke 200ms SLO se kam rakho; app aur DB ka kharch bhi budget mein aata hai.",
       solution: [
         "GET /api/v1/orders?page=1",
         "sim inject latency ledger 3000",
         "GET /api/v1/orders?page=1",
-        "sim add timeout ledger 200",
+        "sim add timeout ledger 150",
         "GET /api/v1/orders?page=1",
       ],
-      verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 200 && m.current(s, 'http', r => r.p99 < 800 && r.status === 504); },
+      verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 150 && m.current(s, 'http', r => r.p99 < 800 && r.status === 504); },
       hints: [
         'Pehle orders ki normal `GET` bhejo aur p99 likh lo. Ledger dheema karne ke baad p99 ka farak downstream ka kharch dikhayega.',
         '`sim inject latency ledger 3000` ke baad GET dobara bhejo. `sim add timeout ledger <ms>` intezaar baandhta hai; fresh GET par 504 aur p99 ki hadd jaancho. Timeout downstream ko tez nahi banata.',
-        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/orders?page=1\nsim inject latency ledger 3000\nGET /api/v1/orders?page=1\nsim add timeout ledger 200\nGET /api/v1/orders?page=1',
+        'Poora raasta — har command alag Enter se chalao:\nGET /api/v1/orders?page=1\nsim inject latency ledger 3000\nGET /api/v1/orders?page=1\nsim add timeout ledger 150\nGET /api/v1/orders?page=1',
       ],
     },
   ],
@@ -1877,7 +1861,7 @@ const T_NET = [
   { text: 'HTTP/3 par cold trace — TCP handshake hai hi nahi',
     check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.protocol === 'h3' && r.tcp === 0) },
   { text: '60 assets par teenon protocols compare karo',
-    check: s => s.records.some(r => r.kind === 'net' && r.op === 'compare' && r.h1 > r.h2 && r.h2 > r.h3) },
+    check: s => s.records.some(r => r.kind === 'net' && r.op === 'compare' && r.assets === 60 && r.h1 > r.h2 && r.h2 > r.h3) },
   { text: 'L4 load balancer kya kar sakta hai',
     check: s => s.records.some(r => r.kind === 'net' && r.op === 'lb' && r.layer === 4) },
   { text: 'Aur L7 kya kar sakta hai',
@@ -1886,15 +1870,15 @@ const T_NET = [
 
 const T_NUMBERS = [
   { text: 'Same datacenter (RTT 1ms) par ek cold connection',
-    check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.rtt <= 2) },
+    check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.rtt === 1 && r.protocol === 'h1' && !r.warm) },
   { text: 'Ab wahi cheez cross-continent (RTT 150ms) par',
-    check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.rtt >= 120 && r.protocol === 'h1' && !r.warm) },
+    check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.rtt === 150 && r.protocol === 'h1' && !r.warm) },
   { text: 'Cross-continent par HTTP/3 — ek RTT bachana yahan kitna bada hai',
-    check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.rtt >= 120 && r.protocol === 'h3') },
-  { text: 'Ab in numbers se capacity nikalo',
-    check: s => s.records.some(r => r.kind === 'estimate') },
-  { text: 'Aur load chala ke dekho ki anumaan sahi tha ya nahi',
-    check: s => s.records.some(r => r.kind === 'load') },
+    check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.rtt === 150 && r.protocol === 'h3') },
+  { text: '12,000,000 users, 500 rps, 2048 bytes ka storage aur peak estimate nikalo',
+    check: s => s.records.some(r => r.kind === 'estimate' && r.users === 12000000 && r.rps === 500 && r.bytesPer === 2048) },
+  { text: '500 rps ka fresh load chalao; load sirf server cost naapta hai, net trace ka RTT load mein nahi judta',
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 500 && r.revision === s.revision) },
 ];
 
 SD.registerLevelsAfter('flow', 'lifecycle', [
@@ -2210,14 +2194,13 @@ Ek modern NIC          1–10 Gbps</pre>
       type: 'terminal',
       title: 'Mission — Numbers se faisle tak',
       goal: `Ek hi design, do jagah: same datacenter aur cross-continent.
-             Phir un numbers se capacity nikalo aur use <b>naap</b> ke check karo.`,
+             Phir storage aur peak traffic ka estimate nikalo. Alag load run se server capacity naapo.`,
       sys: SD.sys.orders(),
       tasks: T_NUMBERS,
       success: SD.allTasks(T_NUMBERS),
-      successText: `Wahi design, wahi code — sirf <b>doori</b> badli, aur latency 30x ho gayi.
-        Yeh number koi tuning theek nahi kar sakti; ise sirf <b>architecture</b>
-        theek karta hai (data user ke paas rakho, hops kam karo).
-        Aur aakhir mein: anumaan lagao, phir <b>naapo</b>.`,
+      successText: `Cold HTTP/1.1 trace 53ms se 500ms hua: lagbhag <b>9.4x</b>.
+        Data user ke paas rakhne se RTT ghatega. Estimate storage aur peak traffic ka hai.
+        Load server capacity naapta hai; network RTT load ke service time mein nahi judta.`,
       solution: [
         "net trace --rtt 1",
         "net trace --rtt 150",

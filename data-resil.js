@@ -8,104 +8,95 @@
 const T_TIMEOUT = [
   { text: 'Baseline dekho — p99 SLO ke andar',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 < 300) },
-  { text: 'Downstream ko 8 second dheema karo',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'latency' && r.value >= 5000) },
-  { text: 'Dekho ki uski latency seedha tumhare p99 mein judi',
+  { text: 'Ledger ko 8000ms dheema karo',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'latency' && r.target === 'ledger' && r.value === 8000) },
+  { text: 'Ledger ka kharch API ke p99 mein dekho',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 > 5000) },
-  { text: 'Timeout lagao — apne SLO se KAM',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.ms <= 200) },
+  { text: 'Ledger timeout 150ms lagao — 200ms SLO se kam',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.target === 'ledger' && r.ms === 150) },
   { text: 'Ab HTTP 504 bounded ho — p99 600ms se kam',
-    check: s => { const i = s.records.findIndex(r => r.kind === 'sim' && r.what === 'timeout');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'http' && r.status === 504 && r.p99 < 600); } },
+    check: s => { return s.sys.deps.ledger?.timeoutMs === 150 && SD.mission.current(s, 'http', r => r.status === 504 && r.p99 < 600); } },
 ];
 
 const T_RETRY = [
   { text: 'Downstream down karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'down') },
-  { text: 'Timeout lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout') },
+  { text: 'Ledger timeout 500ms lagao',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.target === 'ledger' && r.ms === 500) },
   { text: 'Bina jitter ke retry lagao — warning padho',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'retry' && (!r.cfg.jitter || r.cfg.jitter === 'none')) },
   { text: 'Dekho ki retry ne p99 BADHA diya',
     check: s => { const i = s.records.findIndex(r => r.kind === 'sim' && r.what === 'retry');
       const fixed = s.records.findIndex(r => r.kind === 'sim' && r.what === 'retry' && r.cfg.jitter === 'full');
       return i > -1 && s.records.slice(i, fixed < 0 ? undefined : fixed).some(r => r.kind === 'http' && r.status === 504 && r.p99 > 1000); } },
-  { text: 'Ab jitter ke saath lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'retry' && r.cfg.jitter && r.cfg.jitter !== 'none') },
+  { text: 'Ledger retry max=3, backoff=exp, jitter=full lagao; fresh 504 par p99 >1000ms dekho',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'retry' && r.cfg.jitter === 'full' && r.cfg.max === 3 && r.cfg.backoff === 'exp' && s.sys.deps.ledger?.retry?.jitter === 'full' && s.sys.deps.ledger.retry.max === 3 && s.sys.deps.ledger.timeoutMs === 500 && SD.mission.current(s, 'http', x => x.status === 504 && x.p99 > 1000)) },
 ];
 
 const T_BREAKER = [
-  { text: 'Downstream down + timeout — halat kharab karo',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'down') },
-  { text: 'Circuit breaker lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'breaker') },
+  { text: 'Ledger down karo aur timeout=500ms lagao',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'down' && r.target === 'ledger') && s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.target === 'ledger' && r.ms === 500) && s.sys.deps.ledger?.timeoutMs === 500 },
+  { text: 'Ledger breaker threshold=0.5, window=20s lagao (minimum 4 calls)',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'breaker' && r.target === 'ledger' && r.cfg.threshold === 0.5 && r.cfg.windowSec === 20 && s.sys.deps.ledger?.breaker?.threshold === 0.5 && s.sys.deps.ledger.breaker.windowSec === 20) },
   { text: 'Fallback bhi do — warna breaker sirf tez failure hai',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'fallback') },
   { text: 'Requests bhejo aur breaker ko trip hote DEKHO',
     check: s => s.records.filter(r => r.kind === 'http' && r.method === 'GET').length >= 5 },
   { text: 'Trip hone ke baad p99 gir jaana chahiye (fail fast)',
-    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 < 100) },
+    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 < 100 && r.revision === s.revision && s.sys.deps.ledger?.breakerState === 'open' && !!s.sys.deps.ledger.fallback) },
 ];
 
 const T_BULKHEAD = [
-  { text: 'Downstream ko dheema karo', check: s => s.records.some(r => r.kind === 'sim' && r.what === 'latency') },
-  { text: 'Timeout lagao', check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout') },
-  { text: 'Us dependency ke liye bulkhead lagao', check: s => s.records.some(r => r.kind === 'sim' && r.what === 'bulkhead') },
-  { text: 'Request bhejo: timeout par HTTP 504, bulkhead cap live state mein 20', check: s => s.records.some(r => r.kind === 'http' && r.status === 504) && s.sys.app.bulkheads?.ledger === 20 },
+  { text: 'Ledger ko 5000ms dheema karo', check: s => s.records.some(r => r.kind === 'sim' && r.what === 'latency' && r.target === 'ledger' && r.value === 5000) },
+  { text: 'Ledger timeout 200ms lagao', check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.target === 'ledger' && r.ms === 200) },
+  { text: 'Bulkhead se pehle mixed load 500 rps: healthy search capacity zero dekho', check: s => s.records.some(r => r.kind === 'load' && r.pattern === 'mixed' && r.rps === 500 && r.healthyServedRps === 0) },
+  { text: 'Ledger bulkhead cap=20 lagao aur sim status mein cap dekho', check: s => s.sys.app.bulkheads?.ledger === 20 && SD.mission.current(s, 'status', r => r.bulkheads.ledger === 20) },
+  { text: "Fresh mixed load 500 rps: ledger max 20, healthy search 500 rps aur p99<200ms", check: s => SD.mission.current(s, 'load', r => r.pattern === 'mixed' && r.rps === 500 && r.badPoolUsed === 20 && r.healthyServedRps === 500 && r.healthyP99 < 200) },
+  { text: 'Orders GET par fresh bounded HTTP504 aur p99<600ms; ledger timeout=200ms ho', check: s => s.sys.deps.ledger?.timeoutMs === 200 && SD.mission.current(s, 'http', r => r.status === 504 && r.p99 < 600) },
 ];
 
 const T_SHED = [
-  { text: 'Capacity se zyada load daalo — sab mar jaayenge',
-    check: s => s.records.some(r => r.kind === 'load' && r.saturated) },
-  { text: 'Admission control lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'admission') },
-  { text: 'Wahi load dobara — ab kuch to bach jaayenge',
-    check: s => { const i = s.records.findIndex(r => r.kind === 'sim' && r.what === 'admission');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && !r.saturated && r.queuedRps > 0); } },
+  { text: '50000 rps detail load: backend saturation dekho', check: s => s.records.some(r => r.kind === 'load' && r.rps === 50000 && r.saturated) },
+  { text: 'Admission max-rps=200, queue=8s lagao', check: s => s.sys.api.admission?.maxRps === 200 && s.sys.api.admission.queueSec === 8 },
+  { text: "Fresh 50000 rps load: admitted 200, backend unsaturated, bounded queue aur rejected requests dekho", check: s => SD.mission.current(s, 'load', r => r.rps === 50000 && r.admittedRps === 200 && !r.saturated && r.queuedRps > 0 && r.rejectedRequests > 0 && r.maxQueueWaitSec <= 8) },
 ];
 
 const T_FLASH = [
-  { text: 'As-is 1.2 lakh rps daalo — system gir jaayega',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 100000 && r.saturated) },
-  { text: 'Results precompute karo (rank calculation pehle hi kar lo)',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'precompute') },
-  { text: 'Pre-scale karo — autoscaling ka intezaar mat karo',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'scale') },
-  { text: 'Admission control (waiting room) lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'admission') },
-  { text: 'Ab dobara load test karo — survive karna chahiye',
-    check: s => { const i = s.records.findIndex(r => r.kind === 'sim' && r.op === 'precompute');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps >= 100000 && !r.saturated); } },
+  { text: 'As-is 120000 rps detail load: saturation dekho', check: s => s.records.some(r => r.kind === 'load' && r.rps === 120000 && r.saturated) },
+  { text: 'Results precompute karo', check: s => s.sys.api.precomputed === true && s.records.some(r => r.kind === 'sim' && r.op === 'precompute') },
+  { text: "Pool 400 par pre-scale karo", check: s => s.sys.pool.size === 400 && s.records.some(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 400) },
+  { text: "Admission 100000 rps, queue 1s lagao", check: s => s.sys.api.admission?.maxRps === 100000 && s.sys.api.admission.queueSec === 1 },
+  { text: "Fresh 120000 rps, 12s load: backend unsaturated, admission rejection>0", check: s => SD.mission.current(s, 'load', r => r.rps === 120000 && r.duration === 12 && !r.saturated && r.rejectedRequests > 0 && r.queuedRps > 0) },
 ];
 
 const T_OBS = [
   { text: 'Load daalo taaki kuch dekhne laayak ho',
-    check: s => s.records.some(r => r.kind === 'load') },
-  { text: '/health maango — dekho woh kya CHHUTA hai',
+    check: s => s.records.some(r => r.kind === 'load' && r.revision === s.revision) },
+  { text: '/health maango — dekho health check kya chhoota hai',
     check: s => s.records.some(r => r.kind === 'health') },
   { text: 'Metrics dekho — utilization vs saturation',
-    check: s => s.records.some(r => r.kind === 'metrics') },
+    check: s => s.records.some(r => r.kind === 'metrics' && r.revision === s.revision) },
   { text: 'Trace se ek request ka safar dekho',
-    check: s => s.records.some(r => r.kind === 'trace') },
-  { text: 'Error budget nikalo',
-    check: s => s.records.some(r => r.kind === 'slo') },
+    check: s => s.records.some(r => r.kind === 'trace' && r.revision === s.revision) },
+  { text: '99.9% error budget: observed consumption, remaining aur burn rate dekho',
+    check: s => s.records.some(r => r.kind === 'slo' && r.avail === 99.9 && r.observedSec > 0 && Number.isFinite(r.remainingMin) && Number.isFinite(r.burnRate) && r === SD.mission.latest(s, 'slo')) },
 ];
 
 const T_BOSS_RESIL = [
   { text: 'Incident recreate karo — downstream dheema',
     check: s => s.records.some(r => r.kind === 'sim' && (r.what === 'latency' || r.what === 'down')) },
-  { text: 'Timeout lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout') },
-  { text: 'Jitter wala retry lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'retry' && r.cfg.jitter && r.cfg.jitter !== 'none') },
+  { text: "Ledger timeout 150ms lagao",
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.target === 'ledger' && r.ms === 150 && s.sys.deps.ledger?.timeoutMs === 150) },
+  { text: 'Ledger retry jitter=full lagao',
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'retry' && r.cfg.jitter === 'full' && s.sys.deps.ledger?.retry?.jitter === 'full') },
   { text: 'Circuit breaker lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'breaker') },
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'breaker' && !!s.sys.deps.ledger?.breaker) },
   { text: 'Fallback do',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'fallback') },
-  { text: 'Bulkhead lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'bulkhead') },
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'fallback' && !!s.sys.deps.ledger?.fallback) },
+  { text: "Ledger bulkhead 20 lagao",
+    check: s => s.records.some(r => r.kind === 'sim' && r.what === 'bulkhead' && r.target === 'ledger' && r.max === 20 && s.sys.app.bulkheads?.ledger === 20) },
   { text: 'Prove karo — p99 wapas SLO ke andar',
-    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 < 200) },
+    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 < 200 && r.revision === s.revision) },
 ];
 
 SD.registerLevels('resil', [
@@ -172,15 +163,11 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
     {
       type: 'terminal',
       title: '⏱️ Timeout se p99 baandho',
-      goal: 'Ek downstream service dheemi ho jaayegi. Dekho ki uski latency seedha tumhare p99 mein judti hai — phir timeout laga ke damage baandho.',
+      goal: "Ledger latency 8000ms karo aur orders GET ka p99 dekho.150ms timeout lagao, phir fresh GET par bounded 504 prove karo.",
       sys: SD.sys.orders(),
       tasks: T_TIMEOUT,
       success: SD.allTasks(T_TIMEOUT),
-      successText: `Dhyaan do: timeout ne latency <b>theek nahi ki</b> — usne use <b>bounded</b> kiya.
-        <br><br>Yeh farak zaroori hai. Downstream abhi bhi dheema hai. Par ab tumhara p99
-        uski marzi par nahi, <b>tumhare faisle</b> par tika hai.
-        <br><br>Niyam: har remote call par timeout — <b>default</b>, opt-in nahi — aur woh
-        timeout tumhare apne SLO se <b>kam</b> hona chahiye.`,
+      successText: "Timeout ne ledger ko tez nahi kiya.150ms par remote-call wait kata aur API ne bounded 504 diya. API ke 200ms SLO mein app, DB aur downstream sabka kharch aata hai.",
       solution: [
         "GET /api/v1/orders?page=1&limit=50",
         "sim inject latency ledger 8000",
@@ -372,14 +359,7 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
       sys: SD.sys.orders(),
       tasks: T_RETRY,
       success: SD.allTasks(T_RETRY),
-      successText: `Yeh sabse zaroori seekh hai: <b>retry ne p99 theek nahi kiya — usne
-        badha diya.</b> 3 attempts × timeout + backoff waits = kai second.
-        <br><br>Retry tab kaam karta hai jab failure <b>transient</b> ho (ek blip). Jab
-        downstream sach mein down hai, retry sirf:
-        <br>• tumhara p99 badhata hai
-        <br>• downstream par load multiply karta hai
-        <br>• aur tumhare threads lambe samay tak bandhak rakhta hai
-        <br><br>Isi khaali jagah ko bharne ke liye <b>circuit breaker</b> banta hai — agla level.`,
+      successText: "max 3 ka matlab original call plus 3 retries:4 attempts.500ms timeout aur exponential waits ke saath none jitter cost 2700ms hai; full jitter ka deterministic average 2350ms hai. Retry failing dependency par work badhata hai; bounded retries aur breaker alag guards hain.",
       solution: [
         "sim inject down ledger",
         "sim add timeout ledger 500",
@@ -586,12 +566,7 @@ Breaker ke saath: 1 ms mein fail + fallback
       sys: SD.sys.orders(),
       tasks: T_BREAKER,
       success: SD.allTasks(T_BREAKER),
-      successText: `Dekha kya hua? Chaar failures ke baad breaker <b>khud</b> khul gaya —
-        aur p99 seedha gir gaya, kyunki ab calls 1 ms mein fail hoti hain.
-        <br><br>Yaad rakho:
-        <br>• Breaker ka pehla maqsad <b>tumhe</b> bachana hai — tumhare threads uske intezaar mein nahi mar rahe
-        <br>• <b>Fallback ke bina</b> breaker sirf "tez failure" hai
-        <br>• <b>Minimum calls</b> zaroori hai — 2 mein se 1 fail 50% hai par woh data nahi hai`,
+      successText: "20s window mein minimum 4 calls ke baad failure ratio threshold 0.5 tak pahuncha; circuit open hua. Agli request ne 1ms short-circuit aur fallback use kiya. Cooldown clock ke baad half-open test recovery jaanchta hai.",
       solution: [
         "sim inject down ledger",
         "sim add timeout ledger 500",
@@ -603,7 +578,7 @@ Breaker ke saath: 1 ms mein fail + fallback
         "GET /api/v1/orders?page=4&limit=50",
         "GET /api/v1/orders?page=5&limit=50",
       ],
-      verify: s => { const m = SD.mission; return s.sys.deps.ledger?.timeoutMs === 500 && s.sys.deps.ledger?.breakerState === 'open' && !!s.sys.deps.ledger.fallback && m.current(s, 'http', r => r.status === 200 && r.p99 < 100); },
+      verify: s => { const m = SD.mission; return s.sys.deps.ledger?.breaker?.threshold === 0.5 && s.sys.deps.ledger.breaker.windowSec === 20 && s.sys.deps.ledger?.timeoutMs === 500 && s.sys.deps.ledger?.breakerState === 'open' && !!s.sys.deps.ledger.fallback && m.current(s, 'http', r => r.status === 200 && r.p99 < 100); },
       hints: [
         'Pehle ledger down karo aur timeout lagao. Har GET ab failure ka sample de sakti hai; breaker ko trip hone ke liye requests chahiye.',
         '`sim add breaker ledger --threshold <fraction> --window <seconds>` aur `sim add fallback ledger \'<text>\'` lagao. Alag GET baar-baar bhejo; fallback ke 200 ke peeche downstream failure breaker mein gini jaati hai.',
@@ -837,25 +812,25 @@ recommendations poori tarah mar jaaye?
     {
       type: 'terminal',
       title: '🚢 Bulkhead lagao',
-      goal: 'Ek optional dependency dheemi hai. Uske liye bulkhead lagao taaki woh baaki service ke threads na khaaye.',
-      sys: SD.sys.orders(),
+      goal: "Slow ledger par 200ms timeout aur 20-slot bulkhead lagao. Mixed 500-rps workload mein healthy search ki bachi capacity pehle/baad compare karo.",
+      sys: SD.sys.orders({ deps: { ledger: { calledBy: 'orders' }, search: { p50: 5, p99: 10, errorRate: 0, calledBy: 'search' } } }),
       tasks: T_BULKHEAD,
       success: SD.allTasks(T_BULKHEAD),
-      successText: `Live config mein ledger ka bulkhead cap <b>20</b> hai; timeout par request <b>504</b> deti hai. Yeh simulator parallel worker isolation ko load-test nahi karta; production mein alag pool aur healthy-route latency ka concurrent test chahiye.
-        <br><br>Yeh timeout se alag cheez hai: timeout <b>ek call</b> ka intezaar baandhta hai,
-        bulkhead us dependency ka <b>hissa</b> baandhta hai. Dono chahiye —
-        timeout ke bina 20 threads bhi 30 second latak sakte hain.`,
+      successText: "Bina cap ledger ne 50 slots liye aur healthy search capacity zero hui. Cap20 ke baad search ke 30 slots bache aur 500 rps serve hue. Orders 504 timeout evidence hai; mixed-load panel pool isolation evidence hai. Model deterministic fluid concurrency use karta hai.",
       solution: [
         "sim inject latency ledger 5000",
         "sim add timeout ledger 200",
+        "load --rps 500 --duration 5 --pattern mixed",
         "sim add bulkhead ledger --max 20",
-        "GET /api/v1/orders?page=1&limit=50",
+        "sim status",
+        "load --rps 500 --duration 5 --pattern mixed",
+        "GET /api/v1/orders?page=1&limit=50"
       ],
       verify: s => { const m = SD.mission; return s.sys.app.bulkheads?.ledger === 20 && s.sys.deps.ledger?.timeoutMs === 200 && m.current(s, 'http', r => r.status === 504 && r.p99 < 600); },
       hints: [
-        'Pehle ledger ki latency badhao. Timeout ek call ka intezaar baandhega; bulkhead dependency ko milne wala hissa baandhne ki setting hai.',
-        '`sim add timeout ledger <ms>` aur `sim add bulkhead ledger --max 20` lagao, phir GET bhejo. 504 timeout ka proof hai; bulkhead command ka jawab cap batata hai. Model parallel threads ki isolation naapta nahi.',
-        'Poora raasta — har command alag Enter se chalao:\nsim inject latency ledger 5000\nsim add timeout ledger 200\nsim add bulkhead ledger --max 20\nGET /api/v1/orders?page=1&limit=50',
+        "Ledger dheema karo aur200ms timeout lagao. Bulkhead se pehle500-rps mixed load mein healthy search pool ki capacity dekho.",
+        "Ledger cap20 lagao; sim status mein cap padho. Mixed load dobara chalao: ledger20 slots se aage nahi jaaye aur search500 rps serve kare. Orders GET ka504 alag timeout evidence hai.",
+        "Poora raasta — har command alag Enter se chalao:\nsim inject latency ledger 5000\nsim add timeout ledger 200\nload --rps 500 --duration 5 --pattern mixed\nsim add bulkhead ledger --max 20\nsim status\nload --rps 500 --duration 5 --pattern mixed\nGET /api/v1/orders?page=1&limit=50",
       ],
     },
     {
@@ -1367,22 +1342,17 @@ TCP   → yeh already karta hai (receive window)</pre>
     {
       type: 'terminal',
       title: '🌊 Shed karke kuch ko bachao',
-      goal: '50,000 rps par capacity panel padho: is model mein lagbhag 278 rps capacity hai. Admission 200 rps par rakho, phir wahi load dobara chalao. Admitted load capacity ke neeche, saturation false aur baaki waiting-room traffic dikhna chahiye.',
+      goal: '50,000 rps par capacity panel padho: is model mein lagbhag 278 rps capacity hai. Admission 200 rps par rakho, phir wahi load dobara chalao. Admitted load capacity ke neeche ho. Waiting queue bounded ho aur overflow reject ho.',
       sys: SD.sys.results(),
       tasks: T_SHED,
       success: SD.allTasks(T_SHED),
-      successText: `Admission control ne kuch nahi "theek" kiya — usne <b>faisla</b> kiya.
-        <br><br>Pehle: sab andar aaye, queue badhi, sab mare — <b>0% safal</b>.
-        <br>Ab: kuch andar, poori speed se serve — <b>kuch % safal</b>.
-        <br><br>Aur ek chhupa hua faayda: waiting room <b>retries bhi rokta hai</b>.
-        503 dekh ke log refresh dabate hain (12 lakh requests 30 lakh ban jaati hain);
-        "Aapka result load ho raha hai" dekh ke woh ruk jaate hain.`,
+      successText: "50000 offered rps mein sirf 200 rps backend mein admit hua.8s queue bounded rahi; overflow aur aged entries reject hoti hain. Backend saturation band hua. Waiting room ka client retry behavior real clients ke saath alag test hoga.",
       solution: [
         "load --rps 50000 --duration 5 --pattern detail",
         "sim add admission --max-rps 200 --queue 8",
         "load --rps 50000 --duration 5 --pattern detail",
       ],
-      verify: s => { const m = SD.mission; return s.sys.api.admission?.maxRps === 200 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated && r.queuedRps > 0); },
+      verify: s => { const m = SD.mission; return s.sys.api.admission?.maxRps === 200 && s.sys.api.admission.queueSec === 8 && m.current(s, 'load', r => r.rps === 50000 && r.admittedRps === 200 && !r.saturated && r.queuedRps > 0 && r.rejectedRequests > 0); },
       hints: [
         'Pehle detail pattern ka `load` chalao aur capacity panel padho. Offered rate aur backend ki capacity ka farak admission ki zaroorat dikhayega.',
         '`sim add admission --max-rps <safe-rate> --queue <seconds>` mein rate measured capacity se neeche rakho. Same `load --rps <rate> --duration <seconds> --pattern <pattern>` par admitted aur waiting-room traffic dekho.',
@@ -1560,27 +1530,19 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
       sys: SD.sys.results(),
       tasks: T_FLASH,
       success: SD.allTasks(T_FLASH),
-      successText: `Teen kadam, teen alag problem:
-        <br><br><b>1. Precompute</b> — service time 180 ms se 2 ms.
-        Little's Law se capacity seedha 90x badh gayi. <b>Yeh sabse bada single faayda tha.</b>
-        <br><b>2. Pre-scale</b> — autoscaling traffic ke BAAD react karta hai
-        (~2-3 minute), aur flash crowd 60 second ka hai. Pehle se scale karo.
-        <br><b>3. Admission control</b> — backend ko bachaya, aur retry amplification
-        (12 lakh → 30 lakh) hone hi nahi diya.
-        <br><br>Aur read path ab embarrassingly simple hai: ek key lookup, immutable data,
-        jitna chaaho replicate karo.`,
+      successText: "Precompute ne rank read ka service time lagbhag 180ms se 2ms kiya. Pool 400 ki capacity 200000 rps hui.120000 offered rps par admission 100000 aur 1s queue ne actual requests reject ki; backend unsaturated raha. Run client retry suppression prove nahi karta.",
       solution: [
         "load --rps 120000 --duration 4 --pattern detail",
         "sim precompute results",
         "sim scale pool 400",
-        "sim add admission --max-rps 150000 --queue 8",
-        "load --rps 120000 --duration 4 --pattern detail",
+        "sim add admission --max-rps 100000 --queue 1",
+        "load --rps 120000 --duration 12 --pattern detail"
       ],
-      verify: s => { const m = SD.mission; return s.sys.api.precomputed === true && s.sys.pool.size === 400 && s.sys.api.admission?.maxRps === 150000 && m.current(s, 'load', r => r.rps === 120000 && !r.saturated); },
+      verify: s => { const m = SD.mission; return s.sys.api.precomputed === true && s.sys.pool.size === 400 && s.sys.api.admission?.maxRps === 100000 && s.sys.api.admission.queueSec === 1 && m.current(s, 'load', r => r.rps === 120000 && r.duration === 12 && !r.saturated && r.queuedRps > 0 && r.rejectedRequests > 0); },
       hints: [
-        'Pehle detail pattern par result-day ka `load` chalao. Capacity panel ka service time batayega ki live rank calculation kitna kaam badha rahi hai.',
-        '`sim precompute results` read ka kaam ghataata hai. Phir `sim scale pool <connections>` aur `sim add admission --max-rps <safe-rate> --queue <seconds>`. Same load dobara chalao; admitted rate capacity se kam ho.',
-        'Poora raasta — har command alag Enter se chalao:\nload --rps 120000 --duration 4 --pattern detail\nsim precompute results\nsim scale pool 400\nsim add admission --max-rps 150000 --queue 8\nload --rps 120000 --duration 4 --pattern detail',
+        "Detail workload par120000-rps baseline se rank calculation ka kharch dekho. Precompute read path ko2ms karta hai.",
+        "Pool400 aur admission100000 rps,queue1s lagao. Final120000-rps load12s chalao; backend unsaturated rahe aur admission rejection>0 dikhe. Run client retry behavior prove nahi karta.",
+        "Poora raasta — har command alag Enter se chalao:\nload --rps 120000 --duration 4 --pattern detail\nsim precompute results\nsim scale pool 400\nsim add admission --max-rps 100000 --queue 1\nload --rps 120000 --duration 12 --pattern detail",
       ],
     },
     {
@@ -1796,14 +1758,7 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
       sys: SD.sys.orders({ db: { longTxHolding: 44 } }),
       tasks: T_OBS,
       success: SD.allTasks(T_OBS),
-      successText: `Chaar signals, chaar alag sawaal:
-        <br><br>• <b>/health</b> → "process zinda hai" — <b>aur kuch nahi</b>. Usne pool chhua hi nahi.
-        <br>• <b>metrics</b> → CPU 10% (utilization theek) par pool wait aasman par (saturation 🔥)
-        <br>• <b>trace</b> → waqt <b>kahan</b> gaya — <code>pool.acquire()</code>
-        <br>• <b>slo</b> → kitna budget bacha hai, aur kya yeh page karne laayak hai
-        <br><br>Yaad rakho: <b>utilization</b> batata hai "kitna use ho raha hai",
-        <b>saturation</b> batata hai "kitna intezaar ho raha hai" — aur outage hamesha
-        doosre se aata hai.`,
+      successText: "Health process liveness batata hai. Metrics saturation ka wait dikhati hain; trace pool.acquire() bottleneck dikhata hai. SLO panel observed load ka consumed/remaining failed-request-equivalent budget aur burn rate dikhata hai. Unobserved 30-day window unknown hai.",
       solution: [
         "load --rps 400 --duration 6",
         "GET /health",
@@ -2216,14 +2171,7 @@ ek hi thread pool sab ke liye</pre>
       sys: SD.sys.orders(),
       tasks: T_BOSS_RESIL,
       success: SD.allTasks(T_BOSS_RESIL),
-      successText: `Chhe guards, chhe alag khatre:
-        <br><br><b>Timeout</b> — ek call ka intezaar baandha (aur SLO se kam rakha)
-        <br><b>Jitter</b> — retry storm ka synchronization toda
-        <br><b>Breaker</b> — failing dependency par koshish karna hi band kiya
-        <br><b>Fallback</b> — user ko kuch toh diya
-        <br><b>Bulkhead</b> — blast radius baandha
-        <br><br>Ek line mein poora track: <b>har remote call ek din fail hogi. Sawaal yeh hai —
-        tab tumhara system kya karega?</b>`,
+      successText: "Paanch guards:150ms timeout, full-jitter retries, breaker, fallback aur 20-slot ledger bulkhead. Fresh GET par 200ms SLO ke andar response mila. Har guard alag failure cost baandhta hai.",
       solution: [
         "sim inject latency ledger 8000",
         "sim add timeout ledger 150",
