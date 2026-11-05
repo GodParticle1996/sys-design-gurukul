@@ -13,7 +13,7 @@ const T_SCHED = [
   { text: 'Ab scheduled-event wali query ka plan dekho',
     check: s => { const i = s.records.findIndex(r => r.kind === 'index' && r.op === 'create');
       return i > -1 && s.records.slice(i).some(r => r.kind === 'explain' && r.indexUsed); } },
-  { text: 'Fresh cards EXPLAIN mein reminder_at index use ho; rows<5000',
+  { text: 'cards ka EXPLAIN dobara chalao — reminder_at index lage aur 5,000 se kam rows padhi jaayein',
     check: s => s.records.some(r => r.kind === 'explain' && r.indexUsed && r.rowsExamined < 5000 && r.table === 'cards' && r.revision === s.revision && SD.mission.index(s, 'cards', ['reminder_at'])) },
 ];
 
@@ -22,18 +22,18 @@ const T_ONCE = [
     check: s => s.records.some(r => r.kind === 'sim' && /idempotency/.test(r.path || '') && r.value === true) },
   { text: 'msg-9001 key se payments POST karo',
     check: s => s.records.some(r => r.kind === 'http' && r.idem === 'new' && r.key === 'msg-9001') },
-  { text: 'msg-9001 dobara bhejo — live idempotency on ho aur replay mile',
+  { text: 'msg-9001 dobara bhejo — idempotency chalu rahe aur pehla jawab hi dobara mile',
     check: s => s.records.some(r => r.kind === 'http' && r.idem === 'replay' && r.key === 'msg-9001' && s.sys.api.idempotency === true && !!s.sys.seenKeys['msg-9001'] && r.revision === s.revision) },
 ];
 
 const T_BOSS_DIST = [
-  { text: "Idempotency on karo; ord-8812 key se /v 1/orders POST karo",
+  { text: "Idempotency chalu karo; ord-8812 key ke saath /v1/orders par POST karo",
     check: s => s.records.some(r => r.kind === 'http' && r.idem === 'new' && r.resource === 'orders' && r.key === 'ord-8812' && s.sys.api.idempotency === true) },
-  { text: 'ord-8812 key se orders POST retry karo — duplicate order na bane',
+  { text: 'ord-8812 key ke saath wahi POST dobara bhejo — doosra order na bane',
     check: s => s.records.some(r => r.kind === 'http' && r.idem === 'replay' && r.resource === 'orders' && r.key === 'ord-8812') },
   { text: "order_summary par (user_city, status, created_at) index banao",
     check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.table === 'order_summary' && r.cols[0] === 'user_city' && r.cols[1] === 'status' && r.cols[2] === 'created_at' && SD.mission.index(s, 'order_summary', ['user_city','status','created_at'])) },
-  { text: 'Fresh order_summary query ka plan dekho — live index use ho',
+  { text: 'order_summary query ka plan dobara dekho — naya index lage',
     check: s => s.records.some(r => r.kind === 'explain' && r.table === 'order_summary' && r.indexUsed && r.revision === s.revision) },
 ];
 
@@ -1178,7 +1178,7 @@ COMMIT;</pre>
     {
       type: 'terminal',
       title: '♻️ Duplicate ko bekaar banao',
-      goal: 'In-memory payment replay mein msg-9001 dobara bhejo. Simulator response reuse dikhata hai; durable UNIQUE constraint ya atomic side-effect transaction prove nahi karta.',
+      goal: 'msg-9001 wala payment dobara bhejo. Simulator pehla jawab dobara deta hai — par ye memory mein hai. Database ka UNIQUE constraint ya ek transaction mein kaam + record ka saboot ye nahi deta.',
       sys: SD.sys.payments(),
       tasks: T_ONCE,
       success: SD.allTasks(T_ONCE),
@@ -1427,7 +1427,7 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
       sys: SD.sys.reminders(),
       tasks: T_SCHED,
       success: SD.allTasks(T_SCHED),
-      successText: "cards ke reminder_at index ne full-table polling ke badle due reminders ka bounded scan diya. Access pattern pehle chuno; timer wheel, sorted set ya delayed queue implementation baad mein compare karo.",
+      successText: "reminder_at index ki wajah se poori table baar-baar padhne ke bajaye sirf due reminders padhe gaye. Pehle tay karo ki data kaise padha jaayega; timer wheel, sorted set ya delayed queue ki tulna baad mein.",
       solution: [
         "EXPLAIN SELECT * FROM cards WHERE due_date > 2026",
         "CREATE INDEX ix_reminder ON cards(reminder_at)",
@@ -1994,11 +1994,11 @@ const T_CONT = [
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /booking\.mode/.test(r.path) && r.value === 'pessimistic') },
   { text: 'Ab wahi do log — sirf ek jeetna chahiye',
     check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.mode === 'pessimistic' && r.sold === 1 && r.rejected >= 1) },
-  { text: 'A1 par optimistic mode try karo; ek sale ho',
+  { text: 'A1 par optimistic mode aazmao — sirf ek sale ho',
     check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.mode === 'optimistic' && r.seat === 'A1' && r.sold === 1) },
-  { text: 'Optimistic mode mein B4 par 600s reservation hold lagao',
+  { text: 'Optimistic mode mein hi B4 par 600s ka hold lagao',
     check: s => s.records.some(r => r.kind === 'book' && r.op === 'hold' && r.ok === true && r.seat === 'B4' && r.ttl === 600) },
-  { text: 'Fresh B4 purchase hold se ruke; A1 sold aur optimistic mode rahe',
+  { text: 'B4 khareedne ki koshish karo — hold use rok de; A1 bika hua rahe aur mode optimistic hi rahe',
     check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.blockedByHold === true && r.seat === 'B4' && r.revision === s.revision && s.sys.booking?.mode === 'optimistic' && !!s.sys.booking.seats.A1 && SD.mission.hold(s, 'B4', 600)) },
 ];
 
@@ -2289,7 +2289,7 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
 const T_STREAM = [
   { text: 'Bina watermark ke ek window chalao — late events kho jaayenge',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'window' && !r.watermark && r.dropped > 0) },
-  { text: "--watermark 30 (30s grace) lagao; late events catch hon aur drops zero rahein",
+  { text: "--watermark 30 lagao (30s ki chhoot) — der se aaye events pakde jaayein aur ek bhi na gire",
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'window' && r.watermark === 30 && r.caught > 0 && r.dropped === 0 && r === SD.mission.latest(s, 'stream', 'window')) },
   { text: 'Log offset se replay karo',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'replay' && r.ok === true) },

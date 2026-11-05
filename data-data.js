@@ -12,7 +12,7 @@ const T_BTREE = [
     check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols.includes('user_id')) },
   { text: 'Ab plan dobara dekho — index lagna chahiye',
     check: s => s.records.some(r => r.kind === 'explain' && r.indexUsed) },
-  { text: 'Live user_id index ke saath fresh transactions GET: rows<100000',
+  { text: 'user_id index ke saath transactions dobara maango — 1,00,000 se kam rows padhi jaayein',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.resource === 'transactions' && r.rowsExamined < 100000 && r.revision === s.revision && SD.mission.index(s, 'transactions', ['user_id'])) },
 ];
 
@@ -24,12 +24,12 @@ const T_COMPOSITE = [
     check: s => s.records.some(r => r.kind === 'explain' && r.indexUsed && /user_id/.test(r.sql)) },
   { text: 'Ab SIRF created_at par filter karo — left-most prefix toota',
     check: s => s.records.some(r => r.kind === 'explain' && !r.indexUsed && !/user_id/.test(r.sql) && /created_at/.test(r.sql)) },
-  { text: "Live (user_id, created_at) index ki fresh list dekho; Seq_in_index samjho",
+  { text: "(user_id, created_at) index ki list dobara dekho — Seq_in_index column ka kram batata hai",
     check: s => s.records.some(r => r.kind === 'showIndexes' && r.rows > 0 && r.revision === s.revision && SD.mission.index(s, 'transactions', ['user_id','created_at'])) },
 ];
 
 const T_POOL = [
-  { text: '400 rps ka normal load daalo — sab theek dikhna chahiye',
+  { text: '400 rps ka normal load chalao — sab theek dikhna chahiye',
     check: s => s.records.some(r => r.kind === 'load' && r.rps === 400 && !r.poolStarved) },
   { text: 'Ek lambi transaction 45 connections pakad leti hai',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'long-tx' && r.holds === 45) },
@@ -44,37 +44,37 @@ const T_POOL = [
 const T_CACHE = [
   { text: 'Bina cache ke request ka cost dekho',
     check: s => s.records.some(r => r.kind === 'http' && r.cache === 'MISS' && !r.cacheEnabled) },
-  { text: 'Bina cache 500 rps baseline load: saturation dekho',
+  { text: 'Pehle bina cache 500 rps ka load chalao — system bhar jaata hai',
     check: s => s.records.some(r => r.kind === 'load' && r.rps === 500 && r.saturated && !r.cacheSteps) },
-  { text: 'Cache lagao — TTL 60s, jitter 15%, hit-rate 1 (warm workload)',
+  { text: 'Cache lagao — TTL 60s, jitter 15%, hit-rate 1 (maan lo cache poora garam hai)',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'cache' && r.cfg.ttlSec === 60 && r.cfg.jitterPct === 15 && r.cfg.hitRate === 1) },
-  { text: 'Cache lagne ke baad same GET se cold MISS fill karo',
+  { text: 'Cache lagne ke baad wahi GET bhejo — pehli baar MISS, aur cache bhar jaata hai',
     check: s => s.records.some(r => r.kind === 'http' && r.cache === 'MISS' && r.dbQueries > 0 && s.records.some(c => c.kind === 'sim' && c.what === 'cache' && s.records.indexOf(c) < s.records.indexOf(r))) },
   { text: 'Ab dobara maango — HIT milna chahiye',
     check: s => s.records.some(r => r.kind === 'http' && r.cache === 'HIT') },
-  { text: 'Fresh 500 rps load: saturation band ho aur errors zero',
+  { text: '500 rps ka load dobara chalao — system na bhare, errors zero',
     check: s => s.records.some(r => r.kind === 'load' && r.rps === 500 && !r.saturated && r.errPct === 0 && r.revision === s.revision && s.sys.api.cache?.ttlSec === 60 && s.sys.api.cache.jitterPct === 15 && s.sys.api.cache.hitRate === 1) },
 ];
 
 const T_STAMPEDE = [
-  { text: 'TTL 10s, jitter 0, hit-rate 1 cache: 500 rps par 12s load; expiry spike dekho',
+  { text: 'Cache TTL 10s, jitter 0, hit-rate 1: 500 rps par 12s ka load — expiry par DB par jhatka dekho',
     check: s => s.records.some(r => r.kind === 'load' && r.rps === 500 && r.cacheConfig?.ttlSec === 10 && r.cacheConfig.jitterPct === 0 && r.expiryMisses === 100 && r.cacheSteps.some(x => x.expiredKeys === 100)) },
-  { text: 'TTL 10s, jitter 20%, hit-rate 1: 500 rps par 12s load; expiry spike chhota ho',
+  { text: 'Ab jitter 20% karke wahi 12s load — jhatka chhota ho',
     check: s => { const loads = s.records.filter(r => r.kind === 'load' && r.expiryMisses > 0); return loads.length >= 2 && loads[1].cacheConfig?.ttlSec === 10 && loads[1].cacheConfig.jitterPct === 20 && loads[1].cacheSteps.every(x => x.expiredKeys < 100) && loads[1].maxP99 < loads[0].maxP99; } },
-  { text: 'api.cache null karo; fresh 500 rps load se cache-down capacity dekho',
+  { text: 'api.cache null karo (cache gir gaya) — 500 rps ka load dobara chalao aur DB ki asli capacity dekho',
     check: s => s.sys.api.cache === null && SD.mission.current(s, 'load', r => r.rps === 500) },
 ];
 
 const T_BOSS_DATA = [
   { text: 'Baseline: dashboard query kitni dheemi hai',
     check: s => s.records.some(r => r.kind === 'http' && r.rowsExamined > 1000000) },
-  { text: "transactions par(user_id, created_at, id) composite index banao",
+  { text: "transactions par (user_id, created_at, id) composite index banao",
     check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'user_id' && r.cols[1] === 'created_at' && r.cols[2] === 'id' && SD.mission.index(s, 'transactions', ['user_id','created_at','id'])) },
   { text: 'COUNT(*) hatao',
     check: s => s.records.some(r => r.kind === 'sim' && /countTotal/.test(r.path || '') && r.value === false && s.sys.api.countTotal === false) },
   { text: 'Cache lagao — jitter ke saath',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'cache' && r.cfg.jitterPct > 0) },
-  { text: "Fresh 500 rps load: unsaturated ho; cache jitter>0 rahe",
+  { text: "500 rps ka load dobara chalao — system na bhare, aur cache ka jitter 0 se zyada rahe",
     check: s => s.records.some(r => r.kind === 'load' && r.rps === 500 && !r.saturated && r.revision === s.revision && s.sys.api.cache?.jitterPct > 0) },
 ];
 
@@ -509,11 +509,11 @@ SELECT amount FROM transactions WHERE user_id = ? ORDER BY created_at
     {
       type: 'terminal',
       title: '🗂️ Left-most prefix khud todo',
-      goal: 'Composite index banao. Simulator leading column ke bina index choose nahi karta. Real planner broad index scan ya skip scan bhi chun sakta hai; real DB par EXPLAIN ANALYZE dekho.',
+      goal: 'Composite index banao. Is simulator mein pehle column ke bina index nahi chuna jaata. Asli database poore index ka scan ya skip scan bhi chun sakta hai — asli DB par EXPLAIN ANALYZE se dekho.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_COMPOSITE,
       success: SD.allTasks(T_COMPOSITE),
-      successText: `Simulator ne created_at-only filter par full scan chuna. Model sirf left-most prefix access dikhata hai. Real planner skip scan, broad index scan, selectivity aur statistics bhi dekhta hai. Equality, sort aur range ke hisaab se column order chuno; real DB par plan naapo.`,
+      successText: `Sirf created_at ke filter par simulator ne poori table padhi. Ye model sirf baayein se shuru hone wale columns ka faayda dikhata hai. Asli database skip scan, poore index ka scan aur data ke aankde bhi dekhta hai. Column ka kram is hisaab se chuno: pehle barabari (=) wale, phir sort, phir range — aur asli DB par plan naapo.`,
       solution: [
         "CREATE INDEX ix_user_time ON transactions(user_id, created_at)",
         "EXPLAIN SELECT * FROM transactions WHERE user_id = 5",
@@ -1107,11 +1107,11 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
     {
       type: 'terminal',
       title: '🏊 Poora incident khud jiyo',
-      goal: 'Ek service normal load par theek chal rahi hai. Ek lambi transaction 45 connections pakad legi. Dikhao ki CPU 10% par bhi pool wait badhta hai — aur prove karo ki wajah pool hai, query nahi.',
+      goal: 'Ek service normal load par theek chal rahi hai. Ek lambi transaction 45 connections pakad legi. Dikhao ki CPU 10% par bhi pool ka intezaar badhta hai — aur saabit karo ki wajah pool hai, query nahi.',
       sys: SD.sys.orders(),
       tasks: T_POOL,
       success: SD.allTasks(T_POOL),
-      successText: `Effective pool 50 se 5 hua. Capacity <b>3320 se 332 rps</b> hui. 400 rps par maximum pool wait <b>1024ms</b> hua; 10000ms acquire timeout tak nahi pahuncha, isliye errors zero rahe. Trace mein pool.acquire() bottleneck hai. CPU 10% capacity ka poora signal nahi hai.`,
+      successText: `Kaam ke connections 50 se 5 reh gaye. Capacity <b>3320 se 332 rps</b> ho gayi. 400 rps par pool ka sabse lamba intezaar <b>1024ms</b> tha — 10000ms ke timeout tak nahi pahuncha, isliye errors zero rahe. Trace mein atkaav pool.acquire() par hai. CPU ka 10% hona capacity ki poori kahani nahi batata.`,
       solution: [
         "load --rps 400 --duration 5 --path '/api/v1/orders?page=1&limit=50'",
         "sim inject long-tx --holds 45",
@@ -1271,7 +1271,7 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
       },
       {
         terminal: {
-          goal: "Interviewer: load, trace aur metrics se pool wait bottleneck prove karo. CPU utilization akela saturation nahi batata.",
+          goal: "Interviewer: load, trace aur metrics se saabit karo ki atkaav pool ke intezaar mein hai. Akela CPU nahi batata ki system bhar gaya.",
           sys: SD.sys.orders({ db: { longTxHolding: 46 } }),
           tasks: T_IV_POOL,
           success: SD.allTasks(T_IV_POOL),
@@ -1403,11 +1403,11 @@ WRITE-BEHIND
     {
       type: 'terminal',
       title: '🧠 Cache lagao aur capacity ka farak dekho',
-      goal: "Dheemi list query ka GET aur 500-rps baseline naapo. TTL60s, jitter 15%, hit-rate 1 warm cache ke baad same load par recovery prove karo.",
+      goal: "Dheemi list query ka GET aur 500 rps ka load pehle naapo. Phir cache lagao (TTL 60s, jitter 15%, hit-rate 1) aur wahi load dobara chala ke dikhao ki system sambhal gaya.",
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_CACHE,
       success: SD.allTasks(T_CACHE),
-      successText: "Cold cache fill ke baad same URL HIT hua. Explicit warm hit-rate 1 workload mein 500-rps load backend saturation aur errors ke bina chala. Real hit rate alag measure karna hoga; TTL expiry aur cache-down load bhi capacity plan ka hissa hain.",
+      successText: "Pehli request ne cache bhara, doosri HIT hui. Hit-rate 1 maan ke 500 rps ka load bina bhare aur bina errors ke chala. Asli hit rate alag se naapna hoga. TTL expire hona aur cache ka gir jaana bhi capacity plan ka hissa hain.",
       solution: [
         "GET /api/v1/transactions?page=1&limit=50",
         "load --rps 500 --duration 5",
@@ -1418,8 +1418,8 @@ WRITE-BEHIND
       ],
       verify: s => { const m = SD.mission; return s.sys.api.cache?.ttlSec === 60 && s.sys.api.cache.jitterPct === 15 && s.sys.api.cache.hitRate === 1 && m.current(s, 'load', r => r.rps === 500 && !r.saturated && r.errPct === 0); },
       hints: [
-        "Pehle list GET aur 500-rps baseline load naapo. Cache install ke baad pehla GET cold fill karega; agla same GET HIT dega.",
-        "TTL60s,jitter15%,hit-rate1 ka explicit warm workload lagao. Same URL do baar maango, phir500-rps load dobara chalao. Backend saturation aur errors zero hone chahiye.",
+        "Pehle list GET aur 500 rps ka load bina cache naapo. Cache lagne ke baad pehla GET cache bharega (MISS); wahi GET dobara HIT dega.",
+        "`sim add cache --ttl <s> --jitter <pct> --hit-rate <0-1>` lagao. Wahi URL do baar maango, phir `load --rps <rate> --duration <s>` dobara chalao — system na bhare aur errors zero rahein.",
         "Poora raasta — har command alag Enter se chalao:\nGET /api/v1/transactions?page=1&limit=50\nload --rps 500 --duration 5\nsim add cache --ttl 60 --jitter 15 --hit-rate 1\nGET /api/v1/transactions?page=1&limit=50\nGET /api/v1/transactions?page=1&limit=50\nload --rps 500 --duration 5",
       ],
     },
@@ -1597,11 +1597,11 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
     {
       type: 'terminal',
       title: '🌩️ Jitter ka farak dekho',
-      goal: 'Bina jitter aur 20% jitter ke saath TTL expiry load naapo. Phir cache band karke 500 rps ki DB capacity dekho.',
+      goal: 'TTL expire hone par load naapo: pehle bina jitter, phir 20% jitter ke saath. Phir cache band karke dekho ki 500 rps par DB kitna sambhalta hai.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_STAMPEDE,
       success: SD.allTasks(T_STAMPEDE),
-      successText: `TTL expiry par bina jitter saari 100 key cohorts ek saath miss hui. Deterministic ±20% jitter ne expiry alag seconds mein baanti aur peak ghataaya. Jitter ek hot key ka herd nahi rokta; single-flight chahiye. Cache-down load ne DB capacity ki hadd bhi dikhaayi.`,
+      successText: `Bina jitter saari 100 keys ek hi pal expire hui aur ek saath MISS hui. ±20% jitter ne expiry alag-alag seconds mein baant di, aur jhatka chhota hua. Par ek hi garam key ki bheed jitter nahi rokta — garam key ke liye single-flight chahiye. Cache band hone par DB ki hadd bhi dikh gayi.`,
       solution: [
         "sim add cache --ttl 10 --hit-rate 1",
         "load --rps 500 --duration 12",
@@ -1612,8 +1612,8 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
       ],
       verify: s => { const m = SD.mission; return s.sys.api.cache === null && m.current(s, 'load', r => r.rps === 500); },
       hints: [
-        "TTL10s cache ke saath12s load chalao. Bina jitter100 key cohorts ek saath expire hongi; expiry spike output mein dikhega.",
-        "Jitter20% wale cache par same 12s run compare karo. Jitter different keys ki expiry phailaata hai; ek hot key ko single-flight chahiye. Cache null karke500-rps failure test bhi karo.",
+        "10s TTL wale cache ke saath 12s ka load chalao. Bina jitter saari keys ek saath expire hongi, aur output mein DB par jhatka dikhega.",
+        "`sim add cache --ttl <s> --jitter <pct> --hit-rate 1` ke saath wahi 12s load dobara chalao. Jitter alag-alag keys ki expiry phailaata hai; ek garam key ke liye single-flight chahiye. Aakhir mein `sim set api.cache null` karke cache girne par load dekho.",
         "Poora raasta — har command alag Enter se chalao:\nsim add cache --ttl 10 --hit-rate 1\nload --rps 500 --duration 12\nsim add cache --ttl 10 --jitter 20 --hit-rate 1\nload --rps 500 --duration 12\nsim set api.cache null\nload --rps 500 --duration 5",
       ],
     },
@@ -2135,7 +2135,7 @@ arrays, ranges → bahut se special cases</pre>
       sys: SD.sys.txn({ api: { countTotal: true } }),
       tasks: T_BOSS_DATA,
       success: SD.allTasks(T_BOSS_DATA),
-      successText: "Dashboard fix ka kram: baseline scan naapo; transactions(user_id, created_at, id) index banao; countTotal=false karo; jitter cache lagao; fresh 500-rps load se recovery prove karo. Cache-down path ki DB capacity alag test karni hogi.",
+      successText: "Dashboard theek karne ka kram: pehle scan naapo, transactions (user_id, created_at, id) index banao, countTotal=false karo, jitter wala cache lagao, aur 500 rps ka load dobara chala ke dikhao ki system sambhal gaya. Cache gir jaaye toh DB kitna sambhalega, alag se jaanchna hoga.",
       solution: [
         "GET /api/v1/transactions?user_id=5&page=1&limit=50",
         "CREATE INDEX ix_dash ON transactions(user_id, created_at, id)",
@@ -2249,15 +2249,15 @@ const T_EVICT = [
     } },
   { text: 'Ek hot key par 50,000 rps daalo — ek node jal jaayega',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true && r.rps === 50000) },
-  { text: 'match:live:score ki copies banao — load bant jaana chahiye',
+  { text: 'match:live:score ki copies banao — load copies mein bant jaaye',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1) },
   { text: 'Ek key par 5,000 ek-saath miss — bina coalescing ke',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'coalesce' && r.on === false && r.misses === 5000) },
   { text: 'Single-flight on karo — 5,000 queries sirf 1 reh jaani chahiye',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'coalesce' && r.on === true && r.misses === 5000 && r.dbQueries === 1 && s.sys.api.cache?.singleFlight === true && r === SD.mission.latest(s, 'cache', 'coalesce')) },
-  { text: 'Single-flight off par 5000 rps flash load: DB queries gino',
+  { text: 'Single-flight band rakh ke 5000 rps ka flash load chalao — DB queries gino',
     check: s => s.records.some(r => r.kind === 'load' && r.rps === 5000 && r.pattern === 'flash' && r.dbQueries > 5) },
-  { text: 'Single-flight on par fresh 5000 rps flash load: DB queries ghatein aur saturation band ho',
+  { text: 'Single-flight chalu karke wahi flash load dobara — DB queries ghatein aur system na bhare',
     check: s => s.sys.api.cache?.singleFlight === true && SD.mission.current(s, 'load', r => r.rps === 5000 && r.pattern === 'flash' && !r.saturated && r.dbQueries <= 5) },
 ];
 
@@ -2351,8 +2351,8 @@ saath mein:       ~1,000 miss  →       1 DB query    ✅  (har app process mei
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'cache', 'coalesce')?.on === true && m.latest(s, 'cache', 'coalesce')?.dbQueries === 1 && s.sys.api.cache?.singleFlight === true && m.current(s, 'load', r => r.rps === 5000 && r.pattern === 'flash' && !r.saturated); },
       hints: [
-        "FIFO,LRU,LFU compare karte waqt size aur key sequence same rakho. Hot-key replication aur same-key coalescing alag problems sambhaalte hain.",
-        "5000 same-key misses par coalescing off/on compare karo. Dono settings ke baad 5000-rps flash load chalao; DB query count ghatega. Single-flight setting actual cache/load path mein persist hoti hai.",
+        "FIFO, LRU aur LFU compare karte waqt cache size aur keys ka kram same rakho. Garam key ki copies aur ek key ki requests ko jodna (coalescing) — do alag dikkatein sambhaalte hain.",
+        "`cache coalesce --misses <n> --on <true|false>` se ek hi key ke misses par coalescing band aur chalu compare karo. Har setting ke baad `load --rps <rate> --duration <s> --pattern flash` chalao — chalu hone par DB queries ghatengi.",
         "Poora raasta — har command alag Enter se chalao:\ncache sim --policy fifo --size 3 --keys 'a b a b a b c d e f a b'\ncache sim --policy lru --size 3 --keys 'a b a b a b c d e f a b'\ncache sim --policy lfu --size 3 --keys 'a b a b a b c d e f a b'\ncache hotkey --key match:live:score --rps 50000\ncache hotkey --key match:live:score --rps 50000 --replicas 8\ncache coalesce --misses 5000\nload --rps 5000 --duration 5 --pattern flash\ncache coalesce --misses 5000 --on\nload --rps 5000 --duration 5 --pattern flash",
       ],
     },
@@ -2613,11 +2613,11 @@ COLUMNAR (OLAP):    [id id id...] [name name...] [amount amount...]
     {
       type: 'terminal',
       title: 'Mission — Dono engines ko chal ke dekho',
-      goal: "Same write/read workloads B-tree aur LSM par compare karo. Compaction ka deferred work bhi naapo.",
+      goal: "Wahi likhne aur padhne ka kaam B-tree aur LSM par chala ke tulna karo. LSM ka baad mein hone wala compaction ka kaam bhi naapo.",
       sys: SD.sys.txn({ db: { engine: 'postgres' }, api: { countTotal: false } }),
       tasks: T_ENGINE,
       success: SD.allTasks(T_ENGINE),
-      successText: "LSM model ne writes ka kuch kaam compaction tak taala. Read aur write costs alag hain; engine choose karte waqt workload, amplification aur compaction budget saath dekho.",
+      successText: "LSM ne likhne ka kuch kaam compaction tak taal diya. Padhne aur likhne ka kharch alag hai — engine chunte waqt apna workload, likhne ka atirikt kaam (amplification) aur compaction ka bojh saath dekho.",
       solution: [
         "bench write --rows 100000",
         "bench read --rows 100000",
@@ -2800,7 +2800,7 @@ const T_DBMIGRATE = [
     check: s => s.records.some(r => r.kind === 'migrate' && r.op === 'rollback') },
   { text: 'Ab SAHI kram: pehle dual-write on',
     check: s => s.records.some(r => r.kind === 'migrate' && r.op === 'dual-write' && r.dualWrite === true) },
-  { text: 'Phir chhote batch mein backfill (50k ya kam; bade batch mein replica lag)',
+  { text: 'Phir chhote batch mein backfill karo (50,000 ya kam — bade batch se replica peeche reh jaati hai)',
     check: s => s.records.some(r => r.kind === 'migrate' && r.op === 'backfill' && r.dualWrite === true && r.lockRisk === false) },
   { text: 'Ab verify — drift zero hona chahiye',
     check: s => s.records.some(r => r.kind === 'migrate' && r.op === 'verify' && r.verified === true) },
@@ -2876,7 +2876,7 @@ WHILE (rows bache):                            ← chhote batches
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_DBMIGRATE,
       success: SD.allTasks(T_DBMIGRATE),
-      successText: "Bina dual-write backfill ne 41,204-row drift dikhaya. Rollback ke baad dual-write→backfill→verify→cutover ne drift zero kiya. Batch 50000 ya kam rakho; source-of-truth aur rollback boundary explicit honi chahiye.",
+      successText: "Bina dual-write ke backfill mein 41,204 rows ka farak aa gaya. Rollback ke baad dual-write → backfill → verify → cutover ke kram ne farak zero kar diya. Batch 50,000 ya kam rakho, aur saaf likho ki sach kaunsi table hai aur rollback kahan tak ho sakta hai.",
       solution: [
         "migrate status",
         "migrate backfill --batch 5000",
@@ -3075,11 +3075,11 @@ WHILE (rows bache):                            ← chhote batches
    L3.5 — Unique IDs at scale   (ByteByteGo / Hello Interview ka classic)
    ===================================================================== */
 const T_IDS = [
-  { text: "Kuch UUIDv 4 dekho — koi kram hai?",
+  { text: "Kuch UUIDv4 dekho — koi kram hai?",
     check: s => s.records.some(r => r.kind === 'id' && r.op === 'gen' && r.type === 'uuid4') },
-  { text: "Snowflake IDs generate karo — increasing order dekho",
+  { text: "Snowflake IDs banao — badhta hua kram dekho",
     check: s => s.records.some(r => r.kind === 'id' && r.op === 'gen' && r.type === 'snowflake') },
-  { text: "UUIDv 4 primary key par 10 lakh inserts",
+  { text: "UUIDv4 primary key par 10 lakh inserts",
     check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.type === 'uuid4' && r.rows === 1000000) },
   { text: 'Snowflake par bhi 10 lakh inserts',
     check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.type === 'snowflake' && r.rows === 1000000) },
@@ -3089,7 +3089,7 @@ const T_IDS = [
       const k = s.records.filter(r => r.kind === 'id' && r.op === 'bench' && r.sortable === true).pop();
       return !!(u && k && k.rows === u.rows && k.rows === 1000000 && k.splits < u.splits / 10 && k.ms < u.ms);
     } },
-  { text: 'ULID par bhi 10 lakh inserts; aakhri benchmark ULID ho',
+  { text: 'ULID par bhi 10 lakh inserts — aakhri benchmark ULID ka ho',
     check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.type === 'ulid' && r.rows === 1000000 && r === SD.mission.latest(s, 'id', 'bench')) },
 ];
 
@@ -3159,7 +3159,7 @@ public_id     UUID / short code              ← API aur URL mein yahi jaata hai
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_IDS,
       success: SD.allTasks(T_IDS),
-      successText: "Same 1M-row workload par random UUID4 inserts ne sorted Snowflake/ULID inserts se zyada page splits aur write cost dikhayi. Benchmark B-tree locality ka model hai; content hashes, collision checks aur global clock safety ka proof nahi.",
+      successText: "Wahi 10 lakh inserts: random UUIDv4 ne kram wale Snowflake/ULID se zyada page splits aur likhne ka kharch dikhaya. Ye benchmark sirf B-tree mein paas-paas likhne ka faayda dikhata hai — content hash, takraav ki jaanch ya ghadiyon ki sahi-sahi ginti ka saboot nahi.",
       solution: [
         "id gen uuid4 --n 5",
         "id gen snowflake --n 5",
@@ -3420,7 +3420,7 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_PROB,
       success: SD.allTasks(T_PROB),
-      successText: "Bloom filter membership prefilter hai; positive result exact membership prove nahi karta. HLL cardinality estimate deta hai. Approximation ki memory saving ke saath false positives aur estimation error ka daam bhi chuno.",
+      successText: "Bloom filter sirf pehli chhanni hai: \"shayad hai\" ka matlab pakka hai nahi. HLL alag cheezon ki ginti ka andaaza deta hai. Andaaze se memory bachti hai, par galat \"haan\" aur ginti ki galti ki keemat bhi soch ke chuno.",
       solution: [
         "bloom --items 1000000 --fp 0.01",
         "bloom --items 1000000 --bits 4000000 --hashes 3",
@@ -3595,7 +3595,7 @@ const T_RING = [
     check: s => s.records.some(r => r.kind === 'ring' && r.op === 'add' && s.sys.ring?.nodes.includes('node-5')) },
   { text: 'Aur dekho ki hash % N mein kitni move hoti (bahut zyada)',
     check: s => s.records.some(r => r.kind === 'ring' && r.op === 'add' && r.modPct > r.movedPct * 2) },
-  { text: 'Ab node-2 hatao — sirf node-2 ki keys bantein',
+  { text: 'Ab node-2 hatao — sirf node-2 ki keys baaki nodes mein bantein',
     check: s => s.records.some(r => r.kind === 'ring' && r.op === 'remove' && r.movedPct < 40 && !s.sys.ring?.nodes.includes('node-2') && r.revision === s.revision) },
 ];
 
@@ -3678,7 +3678,7 @@ Envoy / gRPC            "ring hash" load balancing policy</pre>`,
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_RING,
       success: SD.allTasks(T_RING),
-      successText: "Simulator mein vnodes ne skew 1.89x se 1.01x kiya. Node addition par ring ne lagbhag 17.5% keys move ki; modulo comparison lagbhag 80% tha. Real cluster distribution aur node-loss load alag measure karo.",
+      successText: "Simulator mein vnodes ne asantulan 1.89x se 1.01x kar diya. Node jodne par ring ne lagbhag 17.5% keys hilaayi; modulo wale tareeke mein lagbhag 80% hilti. Asli cluster mein bantwaara aur node girne ka bojh alag se naapo.",
       solution: [
         "ring show",
         "ring set vnodes 150",

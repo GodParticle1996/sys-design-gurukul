@@ -13,9 +13,9 @@ const T_OFFSET = [
   { text: 'Ab page=1 tez hona chahiye (rows examined 1000 se kam)',
     check: s => { const i = s.records.findIndex(r => r.kind === 'index' && r.op === 'create');
       return i > -1 && s.records.slice(i).some(r => r.kind === 'http' && r.page === 1 && r.rowsExamined < 1000); } },
-  { text: 'Ab page=485728, limit=50 maango — index hone ke BAAWAJOOD',
+  { text: 'Ab page=485728, limit=50 maango — index hone ke BAAWAJOOD dheema',
     check: s => s.records.some(r => r.kind === 'http' && r.page === 485728 && r.limit === 50 && r.rowsExamined > 1000000) },
-  { text: 'EXPLAIN transactions ORDER BY created_at DESC LIMIT 50 OFFSET 24286350; live index ke saath plan dekho',
+  { text: 'EXPLAIN transactions ORDER BY created_at DESC LIMIT 50 OFFSET 24286350 chalao — index laga hai, phir bhi plan dekho',
     check: s => s.records.some(r => r.kind === 'explain' && r.table === 'transactions' && r.offset === 24286350 && r.rowsExamined > 1000000 && r.revision === s.revision && SD.mission.index(s, 'transactions', ['created_at'])) },
 ];
 
@@ -24,7 +24,7 @@ const T_COUNT = [
     check: s => s.records.some(r => r.kind === 'http' && r.countTotal === true) },
   { text: 'countTotal band karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /countTotal/.test(r.path) && r.value === false) },
-  { text: 'Fresh transactions page=1 request dobara; countTotal=false ka farak dekho',
+  { text: 'transactions page=1 dobara maango — countTotal=false ka farak dekho',
     check: s => { return s.sys.api.countTotal === false && SD.mission.current(s, 'http', r => r.resource === 'transactions' && r.page === 1 && r.status === 200 && r.countTotal === false); } },
 ];
 
@@ -35,9 +35,9 @@ const T_CURSOR = [
     check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'created_at' && r.cols[1] === 'id' && SD.mission.index(s, 'transactions', ['created_at', 'id'])) },
   { text: 'API ko cursor pagination par shift karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /pagination/.test(r.path) && r.value === 'cursor') },
-  { text: 'Cursor se maango — 100 ya kam rows examined honi chahiye',
+  { text: 'Cursor se maango — 100 ya kam rows padhni padein',
     check: s => s.records.some(r => r.kind === 'http' && s.sys.api.pagination === 'cursor' && r.revision === s.revision && r.keyset && r.rowsExamined <= 100 && r.status === 200) },
-  { text: 'Ab ?page= bhejo — API page parameter ko reject kare',
+  { text: 'Ab ?page= bhejo — API page wali request mana kare',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 400 && r.guard === 'noPage' && r.revision === s.revision) },
   { text: 'Cursor ke andar kya hai, khud dekho',
     check: s => s.records.some(r => r.kind === 'cursor' && r.op === 'decode') },
@@ -55,13 +55,13 @@ const T_MIGRATE = [
 ];
 
 const T_IDEM = [
-  { text: 'Idempotency off: pay-1 key se payments par do POST bhejo — do charge',
+  { text: 'Idempotency band: pay-1 key ke saath payments par do POST bhejo — do baar charge',
     check: s => s.records.filter(r => r.kind === 'http' && r.method === 'POST' && r.status === 201 && r.idem === 'ignored' && r.key === 'pay-1').length >= 2 },
   { text: 'Idempotency on karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /idempotency/.test(r.path) && r.value === true) },
-  { text: 'Idempotency on: order-8812 key se payments POST karo',
+  { text: 'Idempotency chalu: order-8812 key ke saath payments POST karo',
     check: s => s.records.some(r => r.kind === 'http' && r.idem === 'new' && r.key === 'order-8812') },
-  { text: 'order-8812 key dobara bhejo — live idempotency on ho, replay mile',
+  { text: 'order-8812 key dobara bhejo — idempotency chalu rahe, aur pehla jawab hi dobara mile',
     check: s => s.records.some(r => r.kind === 'http' && r.idem === 'replay' && r.key === 'order-8812' && s.sys.api.idempotency === true && !!s.sys.seenKeys['order-8812'] && r.revision === s.revision) },
 ];
 
@@ -70,12 +70,12 @@ const T_PROVE = [
     check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'created_at') },
   { text: 'Shallow page dikhao — tez',
     check: s => s.records.some(r => r.kind === 'http' && r.page === 1 && r.rowsExamined < 1000) },
-  { text: 'page=485728 dikhao — live created_at index ke saath bhi dheema',
+  { text: 'page=485728 dikhao — created_at index laga hai, phir bhi dheema',
     check: s => s.records.some(r => r.kind === 'http' && r.page === 485728 && r.revision === s.revision && SD.mission.index(s, 'transactions', ['created_at']) && r.rowsExamined > 1000000) },
 ];
 
 const T_RL = [
-  { text: 'Bina limiter 200-request burst bhejo — aggregate result 200, rejection nahi',
+  { text: 'Bina limiter 200 requests ka burst bhejo — saari 200 andar, koi mana nahi',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && !r.rateLimited && r.repeat >= 200) },
   { text: 'Token bucket lagao (100 rps, burst 150)',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'ratelimit' && r.cfg.rps === 100 && r.cfg.burst === 150 && s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 150) },
@@ -86,17 +86,17 @@ const T_RL = [
 const T_BOSS_API = [
   { text: 'Deep offset ka dard dikhao',
     check: s => s.records.some(r => r.kind === 'http' && !r.keyset && r.rowsExamined > 1000000) },
-  { text: 'Keyset index (created_at, id) banao',
+  { text: 'Cursor ke liye (created_at, id) index banao',
     check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'created_at' && r.cols[1] === 'id' && SD.mission.index(s, 'transactions', ['created_at', 'id'])) },
   { text: 'total ka chhupa hua COUNT(*) hatao',
     check: s => s.records.some(r => r.kind === 'sim' && /countTotal/.test(r.path || '') && r.value === false && s.sys.api.countTotal === false) },
   { text: 'Cursor pagination on karo',
     check: s => s.records.some(r => r.kind === 'sim' && /pagination/.test(r.path || '') && r.value === 'cursor' && s.sys.api.pagination === 'cursor') },
-  { text: 'Cursor se maango — 100 ya kam rows',
+  { text: 'Cursor se maango — 100 ya kam rows padhni padein',
     check: s => s.records.some(r => r.kind === 'http' && r.keyset && r.rowsExamined <= 100) },
-  { text: 'maxLimit=100 set karo; fresh limit=1000 GET par maxLimit 400 prove karo',
+  { text: 'maxLimit=100 set karo, phir limit=1000 wala GET bhejo — 400 se mana ho',
     check: s => s.records.some(r => r.kind === 'sim' && /maxLimit/.test(r.path || '') && r.value === 100 && s.sys.api.maxLimit === 100 && SD.mission.current(s, 'http', x => x.guard === 'maxLimit')) },
-  { text: '100 rps, burst 150 limiter lagao; fresh page GET par noPage 400 aur burst par blocked 429 prove karo',
+  { text: '100 rps, burst 150 ka limiter lagao; phir page wala GET (400 aaye) aur ek burst (429 aaye) bhejo',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'ratelimit' && r.cfg.rps === 100 && r.cfg.burst === 150 && s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 150 && SD.mission.current(s, 'http', x => x.guard === 'noPage') && SD.mission.current(s, 'http', x => x.status === 429 && x.blocked > 0)) },
 ];
 
@@ -552,7 +552,7 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_OFFSET,
       success: SD.allTasks(T_OFFSET),
-      successText: "Supplied GETs: bina index page 1 lagbhag 12.8s; created_at index ke saath page 1 lagbhag 8ms; page 485728 lagbhag 6.8s. Index ne sorting bachaayi, OFFSET walk nahi. Shallow aur deep pages ka kharch alag naapo.",
+      successText: "Bina index page 1 ko lagbhag 12.8s lage; created_at index ke saath page 1 ko lagbhag 8ms. Par page 485728 ko phir bhi lagbhag 6.8s. Index ne sort ka kaam bachaya, OFFSET tak chalna nahi. Pehle aur gehre pages ka kharch alag-alag naapo.",
       solution: [
         "GET /api/v1/transactions?page=1&limit=50",
         "CREATE INDEX ix_txn_created ON transactions(created_at)",
@@ -570,7 +570,7 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
     {
       type: 'terminal',
       title: '🧮 "total" field ki keemat',
-      goal: "UI ka total=24,286,450 har request par COUNT(*) karata hai. transactions page 1 par count ka kharch naapo, countTotal false karo aur fresh GET compare karo.",
+      goal: "UI ka total=24,286,450 har request par COUNT(*) chalwata hai. transactions page 1 par count ka kharch naapo, countTotal false karo, aur naye GET se tulna karo.",
       sys: SD.sys.txn({
         api: { countTotal: true },
         db: { tables: { transactions: { indexes: [
@@ -691,11 +691,11 @@ page 4,85,728 : 12.8 s → 6.8 s    😐 …itna hi?</pre>
       },
       {
         terminal: {
-          goal: "Interviewer: created_at index ke baad page 1 aur page 485728 ka measured farak dikhao.",
+          goal: "Interviewer: created_at index ke baad page 1 aur page 485728 ka naapa hua farak dikhao.",
           sys: SD.sys.txn({ api: { countTotal: false } }),
           tasks: T_PROVE,
           success: SD.allTasks(T_PROVE),
-          successText: "Index ne shallow page sasta kiya; deep OFFSET abhi bhi lakhon entries chhoota hai. Live request ka cost panel explanation ka saboot hai.",
+          successText: "Index ne pehla page sasta kiya; gehra OFFSET ab bhi lakhon entries par chalta hai. Request ka cost panel hi tumhari baat ka saboot hai.",
           solution: [
             "CREATE INDEX ix_c ON transactions(created_at)",
             "GET /api/v1/transactions?page=1&limit=50",
@@ -830,7 +830,7 @@ decode karne par:  { "t": "2026-04-11T09:22:04Z", "id": 8812304, "d": "desc" }</
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_CURSOR,
       success: SD.allTasks(T_CURSOR),
-      successText: "Supplied cursor request ne 50 rows padhi. Matching(created_at, id) index seek aur bounded page size se deep OFFSET walk bacha. API page parameter ko 400 deti hai. Opaque cursor ke contents inspect karke query contract samjho.",
+      successText: "Cursor wali request ne sirf 50 rows padhi. (created_at, id) index seedha sahi jagah pahunchta hai, aur page ka size bandha hai — gehre OFFSET tak chalna bacha. API page wali request ko 400 deti hai. Cursor ke andar kya hai, decode karke dekho.",
       solution: [
         "GET /api/v1/transactions?page=485728&limit=50",
         "CREATE INDEX ix_txn_keyset ON transactions(created_at, id)",
@@ -870,11 +870,11 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
     {
       type: 'terminal',
       title: '🚚 Legacy API ko bachao',
-      goal: "Legacy offset API ke 4000 clients ko migrate karne mein waqt lagega. maxPageDepth=1000 aur maxLimit=100 se expensive requests abhi baandho.",
+      goal: "Purani offset API ke 4000 clients ko badalne mein waqt lagega. Tab tak maxPageDepth=1000 aur maxLimit=100 se mehengi requests abhi baandho.",
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_MIGRATE,
       success: SD.allTasks(T_MIGRATE),
-      successText: "maxPageDepth=1000 ne deep pages reject kiye; maxLimit=100 ne request size baandha. Fresh 400 rejection ne live guard prove kiya. Next step: client usage measure karo aur large exports ke liye async API plan karo.",
+      successText: "maxPageDepth=1000 ne gehre pages mana kiye; maxLimit=100 ne request ka size baandha. Naye 400 ne dikhaya ki rok sach mein lagi hai. Agla kadam: clients kya maangte hain naapo, aur bade exports ke liye async API socho.",
       solution: [
         "GET /api/v1/transactions?page=50000&limit=500",
         "sim set api.maxPageDepth 1000",
@@ -1841,7 +1841,7 @@ ratelimit-reset: 3</pre>
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_RL,
       success: SD.allTasks(T_RL),
-      successText: "Aggregate burst response mein allowed aur blocked requests alag dikhe.429 ke saath Retry-After aur rate-limit headers mile. Client ko refill ke baad retry karna chahiye; backend capacity ka load test alag hai.",
+      successText: "Burst ke jawab mein andar aayi aur mana hui requests alag-alag dikhi. 429 ke saath Retry-After aur rate-limit headers mile. Client ko token bharne ke baad hi dobara bhejna chahiye. Backend ki asli capacity ka load test alag kaam hai.",
       solution: [
         "GET /api/v1/transactions -n 200",
         "sim add ratelimit --rps 100 --burst 150",
@@ -2065,7 +2065,7 @@ POST /payments                      (koi idempotency key nahi)
       sys: SD.sys.txn({ api: { countTotal: true } }),
       tasks: T_BOSS_API,
       success: SD.allTasks(T_BOSS_API),
-      successText: "Cursor aur matching index ne row work baandha. countTotal=false ne extra count hataaya. maxLimit=100, page rejection aur 100-rps limiter ne expensive requests roki. Fresh rejection probes live configuration ka saboot hain.",
+      successText: "Cursor aur sahi index ne rows ka kaam baandha. countTotal=false ne faltu count hataaya. maxLimit=100, page wali request par mana, aur 100 rps ke limiter ne mehengi requests roki. Naye 400 aur 429 jawab saboot hain ki rok sach mein lagi hai.",
       solution: [
         "GET /api/v1/transactions?page=485728&limit=50",
         "CREATE INDEX ix_keyset ON transactions(created_at, id)",
@@ -2158,11 +2158,11 @@ const T_AUTH = [
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /api\.auth/.test(r.path) && r.value === 'header') },
   { text: 'Bina token request bhejo — 401 aana chahiye',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 401 && r.denied === 'no-token') },
-  { text: 'Literal expired token bhejo — 401; simulator revocation model nahi karta',
+  { text: 'Expire ho chuka token bhejo — 401 aaye (simulator token cancel karna nahi dikhata)',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 401 && r.denied === 'expired') },
   { text: 'Apne token se apna data maango — 200',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.auth === 'header' && r.actedAs) },
-  { text: "u 7 token se user_id=8 maango — fresh 403 aana chahiye",
+  { text: "u7 ke token se user_id=8 maango — 403 aana chahiye",
     check: s => s.records.some(r => r.kind === 'http' && r.status === 403 && r.denied === 'idor' && r.actedAs === '7' && r.claimed === '8' && r.revision === s.revision) },
 ];
 

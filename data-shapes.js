@@ -23,7 +23,7 @@ const T_GEO = [
     } },
   { text: 'Ab hot cell: airport par surge — ek cell par 40,000 rps',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.key === 'cell:te7ud9' && r.rps === 40000 && r.hot === true) },
-  { text: "cell:te 7ud 9 read-key ki copies banao — spatial split nahi; 40000 rps load baanto",
+  { text: "cell:te7ud9 key ki copies banao aur 40,000 rps ka load baanto (cell ko naqshe par todna nahi, sirf copies)",
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.key === 'cell:te7ud9' && r.rps === 40000 && r.hot === false && r.replicas > 1 && r.rps === 40000 && r === SD.mission.latest(s, 'cache', 'hotkey')) },
 ];
 const T_REVIEW = [
@@ -37,7 +37,7 @@ const T_REVIEW = [
     check: s => s.records.some(r => r.kind === 'metrics') },
   { text: 'Ek trace lo — waqt kahan ja raha hai',
     check: s => s.records.some(r => r.kind === 'trace') },
-  { text: "Is exercise mein pool 200 par scale karo",
+  { text: "Pool 200 kar do",
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 200 && s.sys.pool.size === 200) },
   { text: 'Ab 10x dobara — ab saturated nahi hona chahiye',
     check: s => {
@@ -54,26 +54,26 @@ const T_BOSS_SHAPES = [
     check: s => s.records.some(r => r.kind === 'trace') },
   { text: 'Sabse bada kharch: har request par COUNT(*) — countTotal false karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /countTotal/.test(r.path) && r.value === false && s.sys.api.countTotal === false) },
-  { text: "Alag read-hotspot experiment: cell:te 7ud 9 par 40000 rps; 8000-rps API load se alag",
+  { text: "Alag prayog: cell:te7ud9 par 40,000 rps ki padhai (8000 rps ke API load se alag)",
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.key === 'cell:te7ud9' && r.rps === 40000 && r.hot === true) },
-  { text: "cell:te 7ud 9 read-key ki copies banao; spatial split simulate nahi hota",
+  { text: "cell:te7ud9 key ki copies banao (simulator cell ko naqshe par nahi todta, sirf copies)",
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.key === 'cell:te7ud9' && r.rps === 40000 && r.hot === false && r.replicas > 1) },
   { text: 'Read path ko cache do — TTL par jitter ke saath',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'cache' && r.cfg && r.cfg.jitterPct > 0 && s.sys.api.cache?.jitterPct > 0) },
   { text: 'Ek key ke ek-saath miss ko single-flight se samet lo',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'coalesce' && r.on === true && r.dbQueries === 1) },
-  { text: "restaurant_svc timeout 300ms lagao",
+  { text: "restaurant_svc par 300ms ka timeout lagao",
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'timeout' && r.target === 'restaurant_svc' && r.ms === 300 && s.sys.deps.restaurant_svc?.timeoutMs === 300) },
   { text: 'Aur ek fallback — taaki downstream girne par bhi jawab mile',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'fallback' && r.target === 'restaurant_svc' && !!s.sys.deps.restaurant_svc?.fallback) },
-  { text: "Service time ghatane ke baad pool 300 par scale karo",
+  { text: "Har request ka samay ghatane ke baad pool 300 kar do",
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 300 && s.sys.pool.size === 300) },
   { text: 'Ab 8,000 rps dobara — ab system khada rehna chahiye',
     check: s => {
       const i = s.records.findIndex(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 300 && s.sys.pool.size === 300);
       return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps === 8000 && r.saturated === false && r.revision === s.revision);
     } },
-  { text: '99.9% SLO: observed consumed/remaining budget aur burn rate padho',
+  { text: '99.9% SLO ka budget padho: kitna kharch hua, kitna bacha, kis raftaar se jal raha hai',
     check: s => s.records.some(r => r.kind === 'slo' && r.avail === 99.9 && r.observedSec > 0 && Number.isFinite(r.remainingMin) && r === SD.mission.latest(s, 'slo')) },
 ];
 
@@ -2299,7 +2299,7 @@ ek shared lock</pre>
       sys: SD.sys.orders(),
       tasks: T_REVIEW,
       success: SD.allTasks(T_REVIEW),
-      successText: "500-rps baseline aur 5000-rps incident ne capacity boundary dikhayi. Metrics aur trace se pool bottleneck mila. Pool 200 ke baad fresh 5000-rps load unsaturated raha. Real DB par extra connections ki keemat bhi naapo.",
+      successText: "500 rps ke normal din aur 5000 rps ke incident ne capacity ki hadd dikhayi. Metrics aur trace ne atkaav pool mein dikhaya. Pool 200 ke baad 5000 rps ka load bina bhare chala. Asli DB par zyada connections ki keemat bhi naapo.",
       solution: [
         "estimate --users 12000000 --rps 500 --bytes 2048",
         "load --rps 500 --duration 8",
@@ -2499,7 +2499,7 @@ ek shared lock</pre>
     {
       type: 'terminal',
       title: 'BOSS Mission — 8 PM ka peak',
-      goal: "Food-delivery API par 8000 rps peak naapo. Alag 40000-rps read-hotspot experiment mein cell-key copies dekho. COUNT, cache, timeout, fallback aur pool changes ka measured asar jaancho.",
+      goal: "Food-delivery API par 8000 rps ka peak naapo. Alag prayog mein ek cell par 40,000 rps ki padhai copies se baanto. Phir COUNT, cache, timeout, fallback aur pool — har badlaav ka naapa hua asar jaancho.",
       sys: {
         name: 'delivery-api',
         slo: { p99Ms: 300, availability: 99.9 },
@@ -2523,7 +2523,7 @@ ek shared lock</pre>
       },
       tasks: T_BOSS_SHAPES,
       success: SD.allTasks(T_BOSS_SHAPES),
-      successText: "API load aur read-key hotspot alag measurements hain. countTotal=false, jitter cache, single-flight, restaurant timeout/fallback aur pool 300 ke baad fresh 8000-rps load chala. SLO panel observed load ka budget dikhata hai; read-key copies spatial splitting ka proof nahi hain.",
+      successText: "API ka load aur ek cell ki garam key alag-alag naap hain. countTotal=false, jitter wala cache, single-flight, restaurant ka timeout/fallback aur pool 300 ke baad 8000 rps ka load chala. SLO panel naape gaye load ka budget dikhata hai. Key ki copies cell ko naqshe par todne ka saboot nahi.",
       solution: [
         "estimate --users 8000000 --rps 8000 --bytes 1024",
         "load --rps 8000 --duration 8",

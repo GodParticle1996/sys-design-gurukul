@@ -14,19 +14,19 @@
 
 /* ---------------------------------------------------------------- L1 */
 const T_LIFECYCLE = [
-  { text: "Normal GET bhejo aur GET ka cost panel dekho",
+  { text: "Ek normal GET bhejo aur cost panel padho",
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200) },
-  { text: "/health maango — health endpoint DB aur dependency ko chhoota nahi",
+  { text: "/health maango — dekho ki health check DB aur dependency tak jaata hi nahi",
     check: s => s.records.some(r => r.kind === 'health') },
   { text: '500 rps ka load daalo',
     check: s => s.records.some(r => r.kind === 'load' && r.rps === 500) },
-  { text: 'Fresh trace mein pool.acquire() bottleneck dekho',
+  { text: 'Naya trace chalao: atka hua kadam pool.acquire() nikle',
     check: s => s.records.some(r => r.kind === 'trace' && /pool/.test(r.worst) && r.revision === s.revision) },
 ];
 
 const T_IV_DIAGNOSE = [
   { text: 'Load daalo taaki problem dikhe', check: s => s.records.some(r => r.kind === 'load') },
-  { text: 'Fresh trace karke pool.acquire() bottleneck dhoondo', check: s => s.records.some(r => r.kind === 'trace' && /pool/.test(r.worst) && r.revision === s.revision) },
+  { text: 'Naya trace chalao aur atka hua kadam (pool.acquire()) dhoondo', check: s => s.records.some(r => r.kind === 'trace' && /pool/.test(r.worst) && r.revision === s.revision) },
 ];
 
 const T_TAIL = [
@@ -41,9 +41,9 @@ const T_FANOUT = [
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 < 500) },
   { text: 'Downstream ko 3 second dheema karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'latency' && r.target === 'ledger' && r.value === 3000) },
-  { text: 'Ledger ki latency API ke p99 mein judi: GET par 200 aur p99 > 2000ms',
+  { text: 'GET bhejo: jawab 200 aaye, par p99 2000ms se upar — ledger ki der API mein jud gayi',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.p99 > 2000) },
-  { text: 'Ledger timeout 150ms par lagao (200ms SLO se kam)',
+  { text: 'Ledger par 150ms ka timeout lagao (200ms SLO se kam)',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'timeout' && r.target === 'ledger' && r.ms === 150) },
   { text: 'Ab failure bounded ho: HTTP 504 aur p99 800ms se kam',
     check: s => s.sys.deps.ledger?.timeoutMs === 150 && SD.mission.current(s, 'http', r => r.status === 504 && r.p99 < 800) },
@@ -54,18 +54,18 @@ const T_GUARDS = [
     check: s => s.records.some(r => r.kind === 'http' && r.limit === 1000 && r.status === 200) },
   { text: 'maxLimit 100 par set karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /maxLimit/.test(r.path) && r.value === 100) },
-  { text: 'maxLimit=100 ke saath limit=1000 request 400 se reject karo',
+  { text: 'maxLimit=100 ke baad limit=1000 wali request bhejo — 400 se mana ho',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 400 && r.guard === 'maxLimit') },
-  { text: 'Rate limit 100 rps, burst 120 lagao',
+  { text: 'Rate limit lagao: 100 rps, burst 120',
     check: s => s.records.some(r => r.kind === 'sim' && r.what === 'ratelimit' && r.cfg.rps === 100 && r.cfg.burst === 120 && s.sys.api.rateLimit?.rps === 100 && s.sys.api.rateLimit?.burst === 120) },
   { text: 'Burst bhejo aur 429 khaao',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 429 && r.blocked > 0 && r.revision === s.revision && s.sys.api.maxLimit === 100) },
 ];
 
 const T_ESTIMATE = [
-  { text: '12,00,000 users, 2048 bytes per record; average 27.78 ko round karke 28 rps do',
+  { text: '12,00,000 users, har record 2048 bytes; average 27.78 rps ko 28 rps maan ke estimate do',
     check: s => s.records.some(r => r.kind === 'estimate' && r.users === 1200000 && r.rps === 28 && r.bytesPer === 2048 && r === SD.mission.latest(s, 'estimate')) },
-  { text: "3x peak 84 rps nikalo (average 28 rps)",
+  { text: "Peak nikalo: average 28 rps ka 3 guna = 84 rps",
     check: s => s.records.some(r => r.kind === 'estimate' && r.peak === 84 && r.rps === 28 && r === SD.mission.latest(s, 'estimate')) },
   { text: '99.9% SLO ka error budget dekho',
     check: s => s.records.some(r => r.kind === 'slo' && r.avail === 99.9 && r === SD.mission.latest(s, 'slo')) },
@@ -175,11 +175,11 @@ help                                       ← saare commands</pre>
     {
       type: 'terminal',
       title: '🔍 Pehla mission — system ko chhu ke dekho',
-      goal: "Orders service ka naksha banao: GET, health check,500-rps load aur pool.acquire() trace dekho.",
+      goal: "Orders service ka naksha banao: ek GET, health check, 500 rps ka load, aur trace mein pool.acquire() par atkaav.",
       sys: SD.sys.orders({ db: { longTxHolding: 42 } }),
       tasks: T_LIFECYCLE,
       success: SD.allTasks(T_LIFECYCLE),
-      successText: "CPU kam aur health green hone par bhi request pool connection ka intezaar kar sakti hai. Fresh trace ne pool.acquire() ko bottleneck dikhaya. Health endpoint DB ya downstream availability prove nahi karta.",
+      successText: "CPU kam hai, health green hai — phir bhi request pool ke connection ka intezaar kar sakti hai. Naye trace ne dikhaya ki atkaav pool.acquire() par hai. Health check ka green hona DB ya downstream ke theek hone ka saboot nahi.",
       solution: [
         "GET /api/v1/orders?page=1&limit=50",
         "GET /health",
@@ -328,7 +328,7 @@ help                                       ← saare commands</pre>
       },
       {
         terminal: {
-          goal: "Interviewer: orders service dheemi hai. Load aur fresh trace se pool.acquire() bottleneck prove karo.",
+          goal: "Interviewer: orders service dheemi hai. Load chalao, phir naye trace se dikhao ki atkaav pool.acquire() par hai.",
           sys: SD.sys.orders({ db: { longTxHolding: 45 } }),
           tasks: T_IV_DIAGNOSE,
           success: SD.allTasks(T_IV_DIAGNOSE),
@@ -479,7 +479,7 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
       sys: SD.sys.txn(),
       tasks: T_GUARDS,
       success: SD.allTasks(T_GUARDS),
-      successText: "maxLimit=100 ek request ka size baandhta hai.100-rps limiter, burst 120 traffic ka rate baandhta hai. Fresh 400 aur 429 responses ne dono guards dikhaye.",
+      successText: "maxLimit=100 ek request ka size baandhta hai. 100 rps (burst 120) ka limiter traffic ki raftaar baandhta hai. Naye 400 aur 429 jawabon ne dono rok kaam karti dikhayi.",
       solution: [
         "GET /api/v1/transactions?limit=1000",
         "sim set api.maxLimit 100",
@@ -897,7 +897,7 @@ pool 50, query 8 s    → 50 × 0.125 =  6 rps  💀</pre>
       sys: SD.sys.txn(),
       tasks: T_ESTIMATE,
       success: SD.allTasks(T_ESTIMATE),
-      successText: "Average 28 rps,3x peak 84 rps aur 365 din ka replicated storage display 4.9 TB hai.99.9% availability par 30 din ka allowed downtime 43.2 minutes hai. Simulator storage display 1024-based units use karta hai.",
+      successText: "Average 28 rps, peak (3 guna) 84 rps, aur 365 din ka replicated storage 4.9 TB. 99.9% availability par 30 din mein 43.2 minute ki chhoot hai. Simulator storage 1024 wali units mein dikhata hai.",
       solution: [
         "estimate --users 1200000 --rps 28 --bytes 2048",
         "slo --availability 99.9",
@@ -1324,11 +1324,11 @@ Sab ek hi row par lock maang rahe hain.
     {
       type: 'terminal',
       title: '🌿 Fan-out ka asar dekho',
-      goal: "Orders GET ka baseline naapo. Ledger ko 3000ms dheema karo, phir 150ms timeout se failure ka intezaar baandho.",
+      goal: "Pehle orders GET ka normal samay naapo. Phir ledger ko 3000ms dheema karo, aur 150ms ke timeout se intezaar ki hadd baandho.",
       sys: SD.sys.orders(),
       tasks: T_FANOUT,
       success: SD.allTasks(T_FANOUT),
-      successText: "Ledger abhi bhi dheema hai.150ms timeout ne call ka intezaar baandha; fresh GET ne bounded 504 dikhaya. Remote-call timeout API ke 200ms SLO se kam rakho; app aur DB ka kharch bhi budget mein aata hai.",
+      successText: "Ledger ab bhi dheema hai. 150ms ke timeout ne intezaar ki hadd baandhi: naye GET ne jaldi 504 diya, latka nahi. Remote call ka timeout API ke 200ms SLO se kam rakho, kyunki app aur DB ka samay bhi isi 200ms mein aata hai.",
       solution: [
         "GET /api/v1/orders?page=1",
         "sim inject latency ledger 3000",
@@ -1875,9 +1875,9 @@ const T_NUMBERS = [
     check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.rtt === 150 && r.protocol === 'h1' && !r.warm) },
   { text: 'Cross-continent par HTTP/3 — ek RTT bachana yahan kitna bada hai',
     check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.rtt === 150 && r.protocol === 'h3') },
-  { text: '12,000,000 users, 500 rps, 2048 bytes ka storage aur peak estimate nikalo',
+  { text: '1,20,00,000 users, 500 rps, har record 2048 bytes: storage aur peak ka estimate nikalo',
     check: s => s.records.some(r => r.kind === 'estimate' && r.users === 12000000 && r.rps === 500 && r.bytesPer === 2048) },
-  { text: '500 rps ka fresh load chalao; load sirf server cost naapta hai, net trace ka RTT load mein nahi judta',
+  { text: '500 rps ka naya load chalao — load sirf server ka kharch naapta hai, network ka RTT load mein nahi judta',
     check: s => s.records.some(r => r.kind === 'load' && r.rps === 500 && r.revision === s.revision) },
 ];
 
