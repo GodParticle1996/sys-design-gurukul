@@ -457,3 +457,6 @@ against 200 ms; numbers says 30× where the traces give ~9.4×; probabilistic sa
 looser than the final verify, so a learner can tick every task and still fail (fanout, estimation, cursor,
 conshash, boss-uber …); (c) the simulator not modelling what the text claims (TTL expiry, jitter timing,
 bulkhead isolation).
+
+**User decision (2026-11-04): fix all three kinds, including the simulator** (make it really model what the
+lessons claim), and **keep commits local** for now. Codex implements in its worktree; Claude reviews and merges.
