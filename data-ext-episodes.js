@@ -47,12 +47,12 @@ SD.extendLevel('shedding', {
        <tr><td>Background</td><td>Webhooks, exports</td><td>Pehle</td></tr>
        <tr><td>Batch</td><td>Analytics, crawlers</td><td>Turant</td></tr>
      </table>
-     <p>Trip-service design example: internal analytics pehle shed ho sakta hai; yeh Uber ki current internal policy ka claim nahi. Aur <b>priority starvation</b> se bachne ke liye <b>age boosting</b> — jo 1
-     minute se line mein hai, uski priority badhao.</p>`,
+     <p>Trip-service design example: internal analytics pehle shed ho sakta hai; ye example Uber ki current internal policy ka claim nahi. Aur <b>priority starvation</b> se bachne ke liye <b>age boosting</b> — jo 1
+     minute se line mein hai, us request ki priority badhao.</p>`,
   ],
   cards: [
     { front: 'Shedding ki graduated ladder?', back: '50% warn → 75% low-priority shed → 90% naye writes reject; hysteresis se (90% par on, 80% par off) flapping nahi.' },
-    { front: 'Priority starvation ka ilaaj?', back: 'Age boosting — jo request 1 min se zyada line mein hai, uski priority badhao.' },
+    { front: 'Priority starvation ka ilaaj?', back: 'Age boosting — jo request 1 min se zyada line mein hai, us request ki priority badhao.' },
   ],
 });
 
@@ -62,10 +62,10 @@ SD.extendLevel('shedding', {
 SD.extendLevel('breaker', {
   lesson: [
     `<h3>🐌 Mara hua nahi — dheema: sabse khatarnak dependency</h3>
-     <p>Downstream errors nahi deta, bas har request par <b>30 second</b> leta hai. Tumhare 50 threads ek-ek karke usi ke intezaar mein
+     <p>Downstream errors nahi deta, bas har request par <b>30 second</b> leta hai. Tumhare 50 threads ek-ek karke usi dependency ke intezaar mein
      atakte hain → 50 requests ke baad <b>poori service</b> band, jabki tumhara apna code bilkul theek hai.</p>
      <p>Breaker: lagataar 5 failures (timeouts bhi) → OPEN (turant fail) → 30 sec cooldown → ek test request → CLOSE ya OPEN. Yaad rakho:
-     breaker <b>tumhe</b> bachata hai — tumhare threads, tumhari memory — downstream ko nahi (woh bonus hai).</p>`,
+     breaker <b>tumhe</b> bachata hai — tumhare threads, tumhari memory — downstream ko nahi (downstream ka bachna bonus hai).</p>`,
   ],
   interview: [
     {
@@ -87,7 +87,7 @@ SD.extendLevel('breaker', {
     },
   ],
   cards: [
-    { front: 'Dead-but-slow dependency?', back: 'Errors nahi, bas 30 s per request → tumhare threads uske intezaar mein → pool bhara → poori service band. Ilaaj: timeout + breaker (timeouts gine) + bulkhead.' },
+    { front: 'Dead-but-slow dependency?', back: 'Errors nahi, bas 30 s per request → tumhare threads dependency ke intezaar mein → pool bhara → poori service band. Ilaaj: timeout + breaker (timeouts gine) + bulkhead.' },
   ],
 });
 
@@ -97,7 +97,7 @@ SD.extendLevel('breaker', {
 SD.extendLevel('blast', {
   lesson: [
     `<h3>🎲 Route 53 ke numbers</h3>
-     <p>Ek zeher wali request (poison) jo har worker ko crash kare jise woh chhuye — aur client retry use aage le jaaye:</p>
+     <p>Ek zeher wali request (poison) jo chhooe gaye har worker ko crash kare — aur client retry poison request ko aage le jaaye:</p>
      <ul>
        <li><b>Koi sharding nahi</b> (8 workers sab ke): retry ne saare 8 maare → sab band.</li>
        <li><b>Plain sharding</b> (4 × 2): us shard ke saare customers band (~1/4).</li>
@@ -494,7 +494,7 @@ SD.registerLevelsAfter('resil', 'shedding', [
        <li><b>Error rate</b> = bahut der se (pool khatam, timeouts, 503s).</li>
      </ul>`,
     `<h3>🧱 Bounded queue — "unbounded queue ek jhooth hai"</h3>
-     <p>Bhar gayi toh chaar raaste — aur yeh <b>product</b> ka faisla hai (kiska kaam giraya jaaye), incident ke beech random nahi:</p>
+     <p>Bhar gayi toh chaar raaste — aur raasta chunna <b>product</b> ka faisla hai (kiska kaam giraya jaaye), incident ke beech random nahi:</p>
      <pre>lab 15 (ex1) — producer 10,000/s, consumer 2,000/s, cap 20,000:
 unbounded   t=30s queue 2,36,000 · 252 MB (~8 MB/s badhta)   sabse purana 24 s
 block       producer ki raftaar 2,638/s                       (asli backpressure)
@@ -510,7 +510,7 @@ PROPAGATE=1  A ne  9,374 bheje → 2,979 poore (3.1 tries/success)    C ne 0 thu
      <p><b>Pull</b> apne aap backpressure hai (consumer kehta hai "50 do"; Kafka <code>poll()</code>). Kafka mein <code>max.poll.interval.ms</code>
      (default 5 min) se dheema batch → group se bahar → poora group rebalance. Ilaaj: processing line bhari ho toh <code>consumer.pause(partitions)</code>
      (heartbeat chalte rahein), khaali ho toh resume. LinkedIn (roz 7 trillion+ messages): pause/resume + lag monitoring.</p>
-     <p class="tip">🎯 Har woh cheez jo kaam leti hai, jawab de: <b>"jab main na sambhal paun tab kya?"</b> Jawab nahi = slow-motion crash.</p>
+     <p class="tip">🎯 Kaam lene wali har cheez jawab de: <b>"jab main na sambhal paun tab kya?"</b> Jawab nahi = slow-motion crash.</p>
      <p class="tip">👉 Yahi topic problem se code tak, slow motion mein: <b>🛡️ Playlist · 1 Resilience → 🌊 Backpressure</b> (paanch levels).</p>`,
   ],
   stages: [
@@ -623,7 +623,7 @@ PROPAGATE=1  A ne  9,374 bheje → 2,979 poore (3.1 tries/success)    C ne 0 thu
     'Main lab se propagation ka faayda dikha sakta hoon',
   ],
   homework: `<p>Apne system ki har queue/buffer (Kafka topic, in-memory channel, thread pool, HTTP client pool) list karo. Har ek: bounded hai? Bhar
-    gayi toh kya hota hai (block/drop/error)? Kiska kaam girega — kya yeh faisla likha hua hai?</p>`,
+    gayi toh kya hota hai (block/drop/error)? Kiska kaam girega — kya ye faisla likha hua hai?</p>`,
   cards: [
     { front: 'Backpressure ke chaar layers?', back: 'Problem (producer > consumer), detection (growth rate, tail, utilization), response (absorb/drop/propagate), propagation (429 + Retry-After source tak).' },
     { front: 'Bounded queue ki 4 policies?', back: 'Block (batch), drop-new (retry-safe), drop-oldest (taazgi), error (caller tay kare). Product ka faisla, pehle se.' },
@@ -834,7 +834,7 @@ sab replicated, LB ek            lb mara   → 25.0%</pre>
 restore sirf snapshot:           10,000 (subah ke 500 gaye)
 restore snapshot + log (bad query se thik pehle): 10,500 ✅</pre>`,
     `<h3>⏪ Point-in-time restore</h3>
-     <p>Snapshot (raat ka base backup) + uske baad ka har write ka log (Postgres WAL archive / MySQL binlog) → kisi bhi pal tak wapas:
+     <p>Snapshot (raat ka base backup) + snapshot ke baad ka har write ka log (Postgres WAL archive / MySQL binlog) → kisi bhi pal tak wapas:
      <code>recovery_target_time = '10:41:59'</code>. Asli Postgres par yahi — primary + streaming standby + WAL archive, DROP TABLE standby tak ms
      mein pahunchta hai aur PITR use wapas laata hai — 🐘 SQL Gurukul ke <b>Read Replicas</b> aur <b>Backup &amp; Replication</b> levels mein (lab 08).</p>
      <p class="tip">🎯 <b>Backup tab tak backup nahi jab tak restore test na kiya ho.</b> Aur backup replication ke raaste se alag rakho (alag

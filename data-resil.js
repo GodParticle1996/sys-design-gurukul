@@ -116,18 +116,18 @@ SD.registerLevels('resil', [
   lesson: [
     `<h3>📖 Down se zyada khatarnak: DHEEMA</h3>
      <p>Agar downstream <b>down</b> hai toh connection turant refuse hota hai —
-     tum turant fail ho ke aage badh jaate ho. Par agar woh <b>dheema</b> hai:</p>
+     tum turant fail ho ke aage badh jaate ho. Par agar downstream <b>dheema</b> hai:</p>
      <pre>t0  downstream 30 s lene laga
 t1  har request 30 s latki — thread + connection blocked
 t2  thread pool khatam — ab SAARE endpoints down
 t3  tumhare callers bhi latak gaye — cascade 💥</pre>
-     <p>Ek dependency ne poore system ko le dooba, aur woh <b>down bhi nahi
+     <p>Ek dependency ne poore system ko le dooba, aur dependency <b>down bhi nahi
      thi</b>. Yahi wajah hai ki timeout ek <b>optional tuning</b> nahi —
-     woh ek <b>correctness</b> ki cheez hai.</p>
+     timeout ek <b>correctness</b> ki cheez hai.</p>
      <h3>⏱️ Teen alag timeouts</h3>
      <table>
        <tr><th>Timeout</th><th>Kya naapta hai</th><th>Typical</th></tr>
-       <tr><td>connect</td><td>TCP handshake — "woh zinda hai?"</td><td>1-3 s</td></tr>
+       <tr><td>connect</td><td>TCP handshake — "server zinda hai?"</td><td>1-3 s</td></tr>
        <tr><td>read/socket</td><td>bytes ke <b>beech</b> ka gap</td><td>5-30 s</td></tr>
        <tr><td><b>total/request</b></td><td>poori call — <b>yahi asli hai</b></td><td>SLO se kam</td></tr>
      </table>
@@ -147,7 +147,7 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
   └─ service C        40 ms
                      ─────
      total budget    180 ms   (20 ms headroom)</pre>
-     <p><b>Deadline propagation</b> isse behtar hai: har call ko fixed
+     <p><b>Deadline propagation</b> fixed budget se behtar hai: har call ko fixed
      timeout dene ki jagah, <b>bacha hua</b> budget bhejo:</p>
      <pre>request aayi, deadline = now + 200 ms
   → A ko call: timeout = deadline - now = 195 ms
@@ -156,7 +156,7 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
   → agar deadline nikal gaya: call karo hi mat, turant fail karo</pre>
      <p class="tip">🎯 Aakhri line sabse zaroori hai: agar deadline pehle hi
      nikal chuka hai, toh downstream ko call karna <b>barbaadi</b> hai —
-     client toh ja chuka hai. gRPC yeh built-in karta hai; HTTP mein tumhe
+     client toh ja chuka hai. gRPC deadline propagation built-in karta hai; HTTP mein tumhe
      khud karna padta hai.</p>`,
   ],
   stages: [
@@ -190,7 +190,7 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
       questions: [
         { q: 'Kaunsa timeout asli guarantee deta hai?', target: 'total', explain: 'Total/request timeout. Connect timeout se sirf handshake bandhta hai; read timeout se bytes ka gap. Agar server har 4s mein 1 byte bheje toh read timeout kabhi trigger nahi hoga.' },
         { q: '3 services call kar rahe ho — har ek ko 200ms timeout dena kyun galat hai?', target: 'budget', explain: 'Tum 600ms tak latak sakte ho aur SLO 200ms hai. Budget baanto — ya behtar, deadline propagate karo: har call ko BACHA HUA budget do.' },
-        { q: 'Timeout ka pehla niyam kya hai?', target: 'rule', explain: 'Har remote call par timeout — DEFAULT, opt-in nahi. Aur woh apne SLO se kam. Warna tum apna vaada doosre ke haath mein de rahe ho.' },
+        { q: 'Timeout ka pehla niyam kya hai?', target: 'rule', explain: 'Har remote call par timeout — DEFAULT, opt-in nahi. Aur timeout apne SLO se kam. Warna tum apna vaada doosre ke haath mein de rahe ho.' },
       ],
     },
     {
@@ -236,7 +236,7 @@ t3  tumhare callers bhi latak gaye — cascade 💥</pre>
   ],
   interview: {
     title: 'Interview Round — Timeouts',
-    instructions: 'Yeh sawaal lagbhag har resilience discussion mein aata hai. 🎤',
+    instructions: 'Timeout ka sawaal lagbhag har resilience discussion mein aata hai. 🎤',
     questions: [
       {
         q: '"Timeout kitna rakhoge?"',
@@ -310,7 +310,7 @@ t1  sab clients retry karte hain      → load ×2
 t2  aur zyada errors                  → load ×3
 t3  service poori tarah gir gayi      💀</pre>
      <p>Sabse dukhad baat: service <b>apne aap theek ho jaati</b> — par
-     retries ne use theek hone ka mauka hi nahi diya. Yeh production ka
+     retries ne use theek hone ka mauka hi nahi diya. Retry storm production ka
      sabse aam self-inflicted outage hai.</p>
      <h3>🎯 Backoff kaafi nahi hai</h3>
      <p>"Exponential backoff laga diya" sunne mein safe lagta hai. Par socho:
@@ -319,7 +319,7 @@ t3  service poori tarah gir gayi      💀</pre>
 sab ne 2 s wait kiya → sab ne EK SAATH maara
 sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
      <p>Backoff ne bharam diya ki load kam hoga. Asal mein storm sirf
-     <b>synchronize</b> ho gaya — ab woh spikes mein aata hai.</p>
+     <b>synchronize</b> ho gaya — ab storm spikes mein aata hai.</p>
      <pre>✅ Full jitter:
    sleep = random(0, min(cap, base × 2^attempt))</pre>
      <p>Ab har client alag time par retry karega aur load <b>phail</b> jaayega.
@@ -346,9 +346,9 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
      <p class="tip">🎯 Retry <b>ek</b> layer par rakho — aksar sabse upar
      wali (jo user ke sabse kareeb hai aur jaanti hai ki request abhi
      matter karti hai ya nahi). Beech ki layers mein retry band karo.
-     Yeh ek audit hai jo har team ko karna chahiye aur lagbhag koi nahi karta.</p>
+     Retry layers ki ginti ek audit hai jo har team ko karna chahiye aur lagbhag koi nahi karta.</p>
      <p>Aur ek aur guard: <b>retry budget</b>. "Kul requests ka 10% se zyada
-     retries nahi" — isse ek dependency ka failure poore system ka load
+     retries nahi" — retry budget se ek dependency ka failure poore system ka load
      multiply nahi kar sakta.</p>`,
   ],
   stages: [
@@ -385,13 +385,13 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
       ],
       items: [
         { text: '503 Service Unavailable', bin: 'yes', explain: 'Server bhara hua hai — transient. Backoff + jitter ke saath retry sahi hai.' },
-        { text: '400 Bad Request', bin: 'no', explain: 'Request hi galat hai. Dobara bhejne se woh sahi nahi ho jaayegi — sirf load hai.' },
+        { text: '400 Bad Request', bin: 'no', explain: 'Request hi galat hai. Dobara bhejne se galat request sahi nahi ho jaayegi — sirf load hai.' },
         { text: 'Network timeout / connection reset', bin: 'yes', explain: 'Classic transient failure. Par dhyaan: agar operation non-idempotent hai toh Idempotency-Key chahiye.' },
-        { text: '403 Forbidden', bin: 'no', explain: 'Permission ka masla — retry se permission nahi mil jaayegi. Yeh permanent hai.' },
+        { text: '403 Forbidden', bin: 'no', explain: 'Permission ka masla — retry se permission nahi mil jaayegi. 403 permanent hai.' },
         { text: '429 Too Many Requests', bin: 'yes', explain: 'Retry karo — par <b>Retry-After ke hisaab se</b>, apne backoff se nahi. Server ne bata diya hai ki kab aana hai.' },
         { text: '422 Unprocessable Entity', bin: 'no', explain: 'Validation fail hui. Data theek kiye bina retry bekaar hai.' },
         { text: '504 Gateway Timeout', bin: 'yes', explain: 'Upstream timeout — transient ho sakta hai. Par dhyaan rakho: request shayad SAFAL ho chuki ho, isliye idempotency zaroori hai.' },
-        { text: '404 Not Found', bin: 'no', explain: 'Resource hai hi nahi. (Exception: agar tumne abhi banaya hai toh replica lag ho sakta hai — par woh alag design problem hai.)' },
+        { text: '404 Not Found', bin: 'no', explain: 'Resource hai hi nahi. (Exception: agar tumne abhi banaya hai toh replica lag ho sakta hai — par replica lag alag design problem hai.)' },
       ],
     },
     {
@@ -494,13 +494,13 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
   ],
   homework: `Apne stack mein retry ka <b>audit</b> karo: HTTP client library? service mesh?
     gateway? mobile SDK? Ginti karo ki ek user action kitni asli requests ban sakti hai.
-    Zyadatar teams ke liye jawab unke andaze se 3-9x zyada hota hai.`,
+    Zyadatar teams ke liye jawab teams ke andaze se 3-9x zyada hota hai.`,
   cards: [
-    { front: 'Retry storm?', back: 'Errors → sab retry → load ×2 → aur errors → load ×3 → service gir gayi. Woh <b>apne aap theek</b> ho jaati — retries ne mauka hi nahi diya.' },
+    { front: 'Retry storm?', back: 'Errors → sab retry → load ×2 → aur errors → load ×3 → service gir gayi. Service <b>apne aap theek</b> ho jaati — retries ne mauka hi nahi diya.' },
     { front: 'Backoff kaafi kyun nahi?', back: 'Sab clients ne <b>ek saath</b> failure dekha → sab ek saath wait → sab ek saath maare. Backoff ne storm ko <b>synchronize</b> kiya. <b>Jitter</b> chahiye: <code>random(0, min(cap, base × 2^n))</code>.' },
     { front: 'Kya retry MAT karo?', back: '<b>400</b> (galat request) · <b>401/403</b> (permission) · <b>404</b> · <b>422</b> (validation). Inpar retry sirf load hai, koi umeed nahi.' },
     { front: 'Layers ka guna?', back: 'SDK 3 × gateway 3 × client 3 = <b>27 requests</b> ek user action ke liye. Retry <b>ek</b> layer par rakho — aksar sabse upar wali.' },
-    { front: 'Downstream sach mein down — retry?', back: 'Nahi. Retry sirf <b>transient</b> failures ke liye hai. Down par woh p99 badhata hai, load multiply karta hai, threads bandhak rakhta hai. Wahan <b>breaker</b> chahiye.' },
+    { front: 'Downstream sach mein down — retry?', back: 'Nahi. Retry sirf <b>transient</b> failures ke liye hai. Down par retry p99 badhata hai, load multiply karta hai, threads bandhak rakhta hai. Down dependency ke liye <b>breaker</b> chahiye.' },
   ],
 },
 
@@ -518,7 +518,7 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
   ],
   lesson: [
     `<h3>📖 Ek switch jo apne aap girta hai</h3>
-     <p>Ghar ka MCB yaad hai? Short circuit hone par woh gir jaata hai —
+     <p>Ghar ka MCB yaad hai? Short circuit hone par MCB gir jaata hai —
      taaki poori wiring na jale. Software breaker bilkul wahi hai.</p>
      <pre>CLOSED     → requests jaati hain, failures gine jaate hain
    ↓ (window mein 50% fail)
@@ -527,7 +527,7 @@ OPEN       → 30 s tak koi request NAHI jaayegi — 1 ms mein fail
 HALF-OPEN  → ek TEST request bhejo
    ↓ pass → CLOSED        ↓ fail → OPEN (phir 30 s)</pre>
      <h3>🎯 Breaker KISKO bachata hai?</h3>
-     <p>Sabse aam jawab hai "downstream ko" — aur woh <b>adhoora</b> hai.
+     <p>Sabse aam jawab hai "downstream ko" — aur ye jawab <b>adhoora</b> hai.
      Breaker ka pehla maqsad <b>tumhe</b> bachana hai:</p>
      <pre>Bina breaker: har request 500 ms timeout tak latakti hai
               → 200 threads sab intezaar mein
@@ -537,7 +537,7 @@ Breaker ke saath: 1 ms mein fail + fallback
               → threads free
               → baaki sab endpoints CHAL RAHE HAIN ✅</pre>
      <p>Downstream ko bhi faayda hota hai (use saans lene ka mauka milta
-     hai) — par woh <b>doosra</b> faayda hai.</p>`,
+     hai) — par downstream ka faayda <b>doosra</b> faayda hai.</p>`,
     `<h3>🔬 Fallback ke bina breaker adhoora hai</h3>
      <p>Breaker khul gaya. Ab kya? Agar jawab "user ko error" hai, toh tumne
      sirf failure ko <b>tez</b> kiya hai — theek nahi kiya.</p>
@@ -548,12 +548,12 @@ Breaker ke saath: 1 ms mein fail + fallback
   • saaf error jo user ko batata hai kya kar sakta hai</pre>
      <p>Aur yaad rakho: jo cheez <b>paisa</b> ya <b>surakshi</b> se judi hai
      (balance, stock, permissions) uspar stale fallback <b>mat</b> do —
-     wahan imaandaar error behtar hai.</p>
+     un cheezon par imaandaar error behtar hai.</p>
      <h3>⚙️ Tuning ke chaar sawaal</h3>
      <table>
        <tr><th>Setting</th><th>Jaal</th></tr>
        <tr><td>Threshold (50%)</td><td>bahut kam → chhoti dikkat par khul jaayega; bahut zyada → kabhi nahi khulega</td></tr>
-       <tr><td><b>Minimum calls</b></td><td>2 mein se 1 fail = 50% — par woh data nahi hai. <b>Min 20 calls</b> rakho warna breaker random noise par trip karega</td></tr>
+       <tr><td><b>Minimum calls</b></td><td>2 mein se 1 fail = 50% — par 2 calls data nahi hain. <b>Min 20 calls</b> rakho warna breaker random noise par trip karega</td></tr>
        <tr><td>Per-dependency</td><td>ek global breaker sab kuch band kar dega. Har downstream ka apna breaker</td></tr>
        <tr><td>Half-open ke test</td><td>sirf 1-2 requests jaane do — warna half-open khud ek mini-storm ban jaayega</td></tr>
      </table>`,
@@ -591,11 +591,11 @@ Breaker ke saath: 1 ms mein fail + fallback
       instructions: 'Ek downstream failure ka poora safar sahi kram mein.',
       steps: [
         { text: 'CLOSED — sab normal, requests ja rahi hain', explain: 'Breaker background mein failures gin raha hai. Koi overhead nahi.' },
-        { text: 'Failures window mein threshold paar karti hain', explain: 'Aur minimum-calls bhi poora hona chahiye — 2 mein se 1 fail 50% hai par woh statistically kuch nahi hai.' },
+        { text: 'Failures window mein threshold paar karti hain', explain: 'Aur minimum-calls bhi poora hona chahiye — 2 mein se 1 fail 50% hai par 2 calls statistically kuch nahi hain.' },
         { text: 'OPEN — ab koi request downstream nahi jaayegi', explain: 'Har call 1 ms mein fail hoti hai. Threads free hain, tumhara service zinda hai. Fallback yahan chalta hai.' },
-        { text: 'Ek nirdharit samay (30 s) intezaar', explain: 'Downstream ko saans lene ka mauka. Iske bina tum use theek hone hi nahi doge.' },
+        { text: 'Ek nirdharit samay (30 s) intezaar', explain: 'Downstream ko saans lene ka mauka. Intezaar ke bina tum downstream ko theek hone hi nahi doge.' },
         { text: 'HALF-OPEN — ek test request', explain: 'Sirf 1-2 requests. Zyada bhejoge toh half-open khud ek mini-storm ban jaayega.' },
-        { text: 'Test pass → CLOSED · fail → wapas OPEN', explain: 'Fail hone par timer phir se shuru. Isse breaker automatically recovery detect kar leta hai — koi manual intervention nahi.' },
+        { text: 'Test pass → CLOSED · fail → wapas OPEN', explain: 'Fail hone par timer phir se shuru. Test request se breaker automatically recovery detect kar leta hai — koi manual intervention nahi.' },
       ],
     },
     {
@@ -606,7 +606,7 @@ Breaker ke saath: 1 ms mein fail + fallback
       questions: [
         { q: 'Breaker ka PEHLA maqsad kisko bachana hai?', target: 'you', explain: 'Tumhe. Tumhare threads downstream ke intezaar mein mar nahi rahe — 30s wait ki jagah 1ms. Downstream ko faayda doosra hai.' },
         { q: 'Kaunsi state mein calls 1 ms mein fail hoti hain?', target: 'open', explain: 'OPEN. Koi request downstream nahi jaati — turant fail + fallback. Yahi tumhare resources bachata hai.' },
-        { q: 'Recovery detect karne wali state?', target: 'half', explain: 'HALF-OPEN — ek test request. Pass ho toh CLOSED, fail ho toh wapas OPEN. Isse recovery apne aap detect ho jaati hai.' },
+        { q: 'Recovery detect karne wali state?', target: 'half', explain: 'HALF-OPEN — ek test request. Pass ho toh CLOSED, fail ho toh wapas OPEN. Test request se recovery apne aap detect ho jaati hai.' },
       ],
     },
     {
@@ -718,10 +718,10 @@ Breaker ke saath: 1 ms mein fail + fallback
     unpar socho ki us feature ke bina page kaisa dikhega.`,
   cards: [
     { front: 'Breaker ki 3 states?', back: '<b>CLOSED</b> (normal, failures gin raha hai) → <b>OPEN</b> (1ms mein fail, 30s tak koi call nahi) → <b>HALF-OPEN</b> (ek test request) → CLOSED ya OPEN.' },
-    { front: 'Breaker kisko bachata hai?', back: '<b>TUMHE.</b> Tumhare threads uske intezaar mein nahi marte, isliye BAAKI endpoints zinda rehte hain. Downstream ko faayda ek achha side effect hai.' },
+    { front: 'Breaker kisko bachata hai?', back: '<b>TUMHE.</b> Tumhare threads bimaar dependency ke intezaar mein nahi marte, isliye BAAKI endpoints zinda rehte hain. Downstream ko faayda ek achha side effect hai.' },
     { front: 'Fallback ke bina breaker?', back: 'Sirf <b>tez failure</b>. Threads bach gaye (bada faayda), par user ko abhi bhi error hai. Breaker <i>tumhe</i> bachata hai, fallback <i>user</i> ko.' },
-    { front: 'Minimum calls kyun?', back: '2 mein se 1 fail = 50% — par woh <b>data nahi hai</b>. Bina minimum ke breaker random noise par trip karta rahega. Min ~20 calls rakho.' },
-    { front: 'Retry vs Breaker?', back: 'Alag timescale. <b>Retry</b> = ek request ("shayad blip tha"). <b>Breaker</b> = ek dependency ("yeh abhi kaam nahi kar rahi"). Breaker khulne par retries apne aap ruk jaati hain.' },
+    { front: 'Minimum calls kyun?', back: '2 mein se 1 fail = 50% — par 2 calls <b>data nahi hain</b>. Bina minimum ke breaker random noise par trip karta rahega. Min ~20 calls rakho.' },
+    { front: 'Retry vs Breaker?', back: 'Alag timescale. <b>Retry</b> = ek request ("shayad blip tha"). <b>Breaker</b> = ek dependency ("dependency abhi kaam nahi kar rahi"). Breaker khulne par retries apne aap ruk jaati hain.' },
   ],
 },
 
@@ -739,13 +739,13 @@ Breaker ke saath: 1 ms mein fail + fallback
   ],
   lesson: [
     `<h3>📖 Jahaz ka compartment</h3>
-     <p>Titanic mein bulkheads the — par woh upar tak nahi jaate the, isliye
+     <p>Titanic mein bulkheads the — par bulkheads upar tak nahi jaate the, isliye
      paani ek se doosre mein bahta gaya. Software mein bilkul wahi hota hai:</p>
      <pre>200 threads ka EK pool:
-  /checkout · /search · /recommendations — sab isi se lete hain
+  /checkout · /search · /recommendations — sab isi pool se lete hain
 
 recommendations 30 s dheemi hui
-  → uski requests threads pakde baithi hain
+  → recommendations ki requests threads pakde baithi hain
   → 200 threads khatam
   → CHECKOUT bhi down 💀</pre>
      <p>Ek <b>optional</b> feature ne <b>paise wale</b> flow ko maar diya.
@@ -756,7 +756,7 @@ recommendations 30 s dheemi hui
   recommendations →  20 threads
 
 recommendations poori tarah mar jaaye?
-  → uske 20 threads bharenge
+  → recommendations ke 20 threads bharenge
   → baaki 180 bilkul safe ✅</pre>`,
     `<h3>🔬 Bulkhead kahan-kahan</h3>
      <table>
@@ -769,12 +769,12 @@ recommendations poori tarah mar jaaye?
      </table>
      <p>Aakhri wala SaaS mein bahut zaroori hai: ek enterprise customer ka
      bulk import poore platform ko dheema kar sakta hai. Per-tenant limits
-     aur pools isse rokte hain.</p>
+     aur pools ek tenant ka asar rokte hain.</p>
      <h3>⚖️ Keemat imaandaari se</h3>
      <p>Alag pools ka matlab hai <b>kam sharing</b>: checkout ke 120 threads
-     khaali baithe hain jabki search ko unki zaroorat thi. Tum thodi si
+     khaali baithe hain jabki search ko threads ki zaroorat thi. Tum thodi si
      <b>efficiency</b> bech ke <b>isolation</b> khareed rahe ho.</p>
-     <p class="tip">🎯 Aur woh sauda lagbhag hamesha sahi hai — kyunki
+     <p class="tip">🎯 Aur efficiency dekar isolation lena lagbhag hamesha sahi sauda hai — kyunki
      efficiency ka nuksaan <b>lagataar aur chhota</b> hai, jabki isolation
      ka faayda <b>kabhi-kabhi aur bahut bada</b>. Ek outage ki keemat
      mahino ki thodi si extra capacity se zyada hoti hai.</p>`,
@@ -792,7 +792,7 @@ recommendations poori tarah mar jaaye?
       items: [
         { text: 'Recommendations dheemi hui aur checkout bhi ruk gaya', bin: 'thread', explain: 'Per-dependency thread pool. Recommendations ke 20 threads bhar jaayein toh checkout ke 120 safe rahenge.' },
         { text: 'Marketing campaign ke 50 lakh messages ke peeche "payment failed" atka', bin: 'queue', explain: 'Head-of-line blocking. Bulk aur transactional ke alag queues + alag consumers.' },
-        { text: 'Ek enterprise customer ka bulk import poora platform dheema kar raha hai', bin: 'tenant', explain: 'Per-tenant limits aur pools. SaaS mein yeh zaroori hai — warna ek bada customer sab ka experience kharab karta hai.' },
+        { text: 'Ek enterprise customer ka bulk import poora platform dheema kar raha hai', bin: 'tenant', explain: 'Per-tenant limits aur pools. SaaS mein per-tenant limits zaroori hain — warna ek bada customer sab ka experience kharab karta hai.' },
         { text: 'Analytics query prod primary ke saare connections kha gayi', bin: 'thread', explain: 'Alag connection pool (aur sach mein alag replica). Analytics ko kabhi bhi transactional traffic ke saath pool share nahi karna chahiye.' },
         { text: 'Bulk export API interactive users ko dheema kar raha hai', bin: 'queue', explain: 'Bulk kaam async job queue mein bhejo — sync API se poori tarah alag lane.' },
         { text: 'Ek tenant ka webhook endpoint down hai, saare webhooks ruk gaye', bin: 'tenant', explain: 'Per-tenant delivery queues. Ek tenant ka slow endpoint doosre tenants ki delivery ko block nahi karna chahiye.' },
@@ -805,8 +805,8 @@ recommendations poori tarah mar jaaye?
       visual: 'bulkhead',
       questions: [
         { q: 'Asli problem kaunsa design hai?', target: 'shared', explain: 'Ek shared thread pool. Recommendations ki requests threads pakde baithi hain aur checkout ko kuch nahi milta.' },
-        { q: 'Optional feature ko kitna hissa milna chahiye?', target: 'optional', explain: 'Sabse chhota pool. Woh poori tarah mar jaaye toh bhi baaki safe rahein — yahi bulkhead ka poora point hai.' },
-        { q: 'Bulkhead ki keemat kya hai?', target: 'cost', explain: 'Kam sharing = thodi kam efficiency. Checkout ke threads khaali baith sakte hain jabki search ko chahiye the. Par woh sauda lagbhag hamesha sahi hai.' },
+        { q: 'Optional feature ko kitna hissa milna chahiye?', target: 'optional', explain: 'Sabse chhota pool. Optional feature poori tarah mar jaaye toh bhi baaki safe rahein — yahi bulkhead ka poora point hai.' },
+        { q: 'Bulkhead ki keemat kya hai?', target: 'cost', explain: 'Kam sharing = thodi kam efficiency. Checkout ke threads khaali baith sakte hain jabki search ko chahiye the. Par efficiency dekar isolation lena lagbhag hamesha sahi sauda hai.' },
       ],
     },
     {
@@ -876,7 +876,7 @@ recommendations poori tarah mar jaaye?
   ],
   interview: {
     title: 'Interview Round — Bulkhead',
-    instructions: 'Yeh sawaal "blast radius" ke roop mein aata hai. 🎤',
+    instructions: 'Bulkhead ka sawaal "blast radius" ke roop mein aata hai. 🎤',
     questions: [
       {
         q: '"Ek optional feature ki dependency dheemi ho gayi aur poora service down ho gaya. Design mein kya galat tha?"',
@@ -934,20 +934,20 @@ recommendations poori tarah mar jaaye?
           → phir redeliver… (infinite)
           → consumer offset AGE badhta hi nahi
           → peeche 2 lakh messages jam 💀</pre>
-     <p>Ise <b>poison message</b> kehte hain. Aur dhyaan do ki system ne kuch
+     <p>Aise message ko <b>poison message</b> kehte hain. Aur dhyaan do ki system ne kuch
      "galat" nahi kiya — usne bilkul waisa hi kiya jaisa at-least-once
-     delivery kehti hai. Bug yeh hai ki tumne use kabhi <b>chhodne</b> ka
+     delivery kehti hai. Bug ye hai ki tumne message ko kabhi <b>chhodne</b> ka
      rasta nahi diya.</p>
      <pre>✅ DLQ ke saath:
   fail → retry 1 (backoff) → retry 2 → retry 3
        → DLQ mein daal do
        → consumer AAGE badh gaya ✅
        → baaki 2 lakh messages chal gaye</pre>
-     <p>DLQ ka matlab hai: <i>"yeh message main abhi nahi kar sakta —
-     ise alag rakh do, koi insaan dekhega."</i></p>`,
+     <p>DLQ ka matlab hai: <i>"is message ko main abhi nahi kar sakta —
+     message ko alag rakh do, koi insaan dekhega."</i></p>`,
     `<h3>🔬 DLQ ke chaar niyam</h3>
      <p><b>1. DLQ par ALERT laazmi hai.</b> Ek DLQ jise koi dekhta hi nahi,
-     woh <b>ek jagah hai jahan data chup-chaap marta hai</b>.
+     aisi DLQ <b>ek jagah hai jahan data chup-chaap marta hai</b>.
      <code>dlq.depth &gt; 0</code> par alert lagao — aur usme runbook ho.</p>
      <p><b>2. DLQ message mein poora context ho.</b></p>
      <pre>{ "original_message": {...},
@@ -956,9 +956,9 @@ recommendations poori tarah mar jaaye?
   "retry_count": 3,
   "first_failed_at": "...", "consumer": "billing-worker-3" }</pre>
      <p>Sirf message daal doge toh 3 hafte baad koi nahi bata payega ki
-     woh wahan gaya kyun tha.</p>
+     message DLQ mein gaya kyun tha.</p>
      <p><b>3. Replay ka tool hona chahiye.</b> Bug theek karne ke baad DLQ se
-     messages wapas main queue mein daalne ka rasta — warna woh data hamesha
+     messages wapas main queue mein daalne ka rasta — warna DLQ ka data hamesha
      wahin pada rahega.</p>
      <p><b>4. Consumer IDEMPOTENT hona chahiye.</b> Replay ka matlab hai
      dobara processing. Agar consumer idempotent nahi hai toh replay
@@ -992,7 +992,7 @@ recommendations poori tarah mar jaaye?
         },
         why: {
           sitrep: '✅ Message 4471 DLQ mein gaya. Consumer aage badha — queue depth 2.1 lakh se girna shuru.',
-          text: 'Ab root cause: yeh 4 ghante tak kaise chala?',
+          text: 'Ab root cause: retry loop 4 ghante tak kaise chala?',
           choices: [
             { t: "Retry ki hadd nahi thi, aur atki queue par alert nahi", good: true, next: 'fix', explain: 'Do galtiyan: koi max-retries/DLQ nahi, aur koi alert nahi. Alert hota toh 4 ghante ki jagah 4 minute mein pata chalta.' },
             { t: "Sirf producer ki galti thi; consumer bilkul theek tha", good: false, explain: 'Kharab payload ne incident shuru kiya, par asli wajah nahi tha. Kharab messages kabhi na kabhi aayenge — consumer ko kharab messages sambhalne ka raasta chahiye.' },
@@ -1012,7 +1012,7 @@ recommendations poori tarah mar jaaye?
           text: 'Queue saaf. Notifications wapas chal rahe hain.',
           summary: `<b>Seekh:</b> Ek poison message ka matlab ek outage nahi hona chahiye.
             <br><br><b>Pattern:</b> <code>N retries (backoff ke saath) → DLQ → alert</code>
-            <br><br><b>Aur DLQ ke saath yeh sab chahiye:</b>
+            <br><br><b>Aur DLQ ke saath ye sab chahiye:</b>
             <br>• <b>Alert</b> — <code>dlq.depth &gt; 0</code>. Bina alert ke DLQ ek jagah hai jahan data chup-chaap marta hai.
             <br>• <b>Context</b> — original message + error + stack + retry count.
             <br>• <b>Replay tool</b> — bug theek hone ke baad wapas daalne ka rasta.
@@ -1026,7 +1026,7 @@ recommendations poori tarah mar jaaye?
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'dlq',
       questions: [
-        { q: 'DLQ ke saath sabse zaroori cheez kya hai?', target: 'alert', explain: 'Alert. Ek DLQ jise koi dekhta hi nahi, woh ek jagah hai jahan data chup-chaap marta hai. dlq.depth > 0 par alert lagao.' },
+        { q: 'DLQ ke saath sabse zaroori cheez kya hai?', target: 'alert', explain: 'Alert. Bina dekhe wali DLQ ek jagah hai jahan data chup-chaap marta hai. dlq.depth > 0 par alert lagao.' },
         { q: 'Bug theek hone ke baad DLQ ke messages ka kya?', target: 'replay', explain: 'Replay tool se wapas main queue mein. Aur consumer idempotent hona chahiye — warna replay duplicate side-effects banayega.' },
       ],
     },
@@ -1104,11 +1104,11 @@ recommendations poori tarah mar jaaye?
     Abhi usmein kitne messages pade hain? Zyadatar teams ke liye teesre sawaal ka jawab
     "pata nahi" hota hai — aur usme aksar mahino ka gum hua data hota hai.`,
   cards: [
-    { front: 'Poison message?', back: 'Aisa message jo har baar crash karta hai. Bina DLQ ke: infinite retry → consumer offset atka → <b>uske peeche ki poori queue ruk gayi</b>.' },
+    { front: 'Poison message?', back: 'Aisa message jo har baar crash karta hai. Bina DLQ ke: infinite retry → consumer offset atka → <b>poison message ke peeche ki poori queue ruk gayi</b>.' },
     { front: 'DLQ ka pattern?', back: '<code>N retries (backoff) → DLQ → alert</code>. Consumer aage badh jaata hai, baaki messages chal jaate hain.' },
     { front: 'DLQ ke 4 niyam?', back: '<b>1.</b> Alert (<code>dlq.depth &gt; 0</code>) <b>2.</b> Poora context (message + error + stack + retry count) <b>3.</b> Replay tool <b>4.</b> Consumer idempotent.' },
     { front: 'DLQ ka chhupa hua jaal?', back: 'Downstream down hai → saare <b>theek</b> messages DLQ mein chale jaate hain. DLQ <b>permanent</b> failures ke liye hai; transient par lamba backoff ya breaker.' },
-    { front: 'Alert ke bina DLQ?', back: 'Ek jagah jahan <b>data chup-chaap marta hai</b>. Aur woh purge se bhi bura hai, kyunki tumhe lagta hai ki data safe hai.' },
+    { front: 'Alert ke bina DLQ?', back: 'Ek jagah jahan <b>data chup-chaap marta hai</b>. Aur bina alert ki DLQ purge se bhi buri hai, kyunki tumhe lagta hai ki data safe hai.' },
   ],
 },
 
@@ -1133,7 +1133,7 @@ recommendations poori tarah mar jaaye?
      <p>Sahi tareeka: har feature ko pehle se tier mein baant do.</p>
      <table>
        <tr><th>Tier</th><th>Matlab</th><th>Fail hone par</th></tr>
-       <tr><td><b>CORE</b></td><td>iske bina page bekaar hai</td><td>error dikhao — chhupao mat</td></tr>
+       <tr><td><b>CORE</b></td><td>core ke bina page bekaar hai</td><td>error dikhao — chhupao mat</td></tr>
        <tr><td><b>IMPORTANT</b></td><td>hona chahiye, par zaroori nahi</td><td>stale cache · degraded version</td></tr>
        <tr><td><b>OPTIONAL</b></td><td>achha lagta hai</td><td>chhupa do — khaali jagah bhi nahi</td></tr>
      </table>
@@ -1141,9 +1141,9 @@ recommendations poori tarah mar jaaye?
   CORE       → product info, price, "Buy" button
   IMPORTANT  → reviews (2 ghante purane chalega)
   OPTIONAL   → "aapke liye" recommendations</pre>
-     <p class="tip">🎯 <b>Yeh faisla incident ke beech mein mat karo.</b>
+     <p class="tip">🎯 <b>Tier ka faisla incident ke beech mein mat karo.</b>
      3 baje raat ko "kya zaroori hai" decide karna sabse bura waqt hai.
-     Aur tier sirf ek document nahi hona chahiye — woh <b>code mein</b>
+     Aur tier sirf ek document nahi hona chahiye — tier <b>code mein</b>
      dikhna chahiye (timeout, bulkhead, fallback).</p>`,
     `<h3>🔬 Fallback ke vikalp — aur kab NAHI</h3>
      <pre>1. Stale cache        "reviews (2 ghante purane)"
@@ -1165,8 +1165,8 @@ recommendations poori tarah mar jaaye?
      faisle lega jo galat data par hain. Hamesha batao:</p>
      <pre>"Live stock abhi update nahi ho raha — 2 ghante purana data"
 "Kuch features abhi uplabdh nahi hain"</pre>
-     <p>Yeh sirf UX ki baat nahi hai. Ek user jo jaanta hai ki data purana
-     hai, woh <b>refresh</b> karega — aur ek jo nahi jaanta, woh <b>support
+     <p>Purane data ka label sirf UX ki baat nahi hai. Ek user jo jaanta hai ki data purana
+     hai, <b>refresh</b> karega — aur jo user nahi jaanta, <b>support
      ticket</b> banayega.</p>`,
   ],
   stages: [
@@ -1180,12 +1180,12 @@ recommendations poori tarah mar jaaye?
         { id: 'opt', label: '🟢 OPTIONAL' },
       ],
       items: [
-        { text: 'Product ka naam, photo aur price', bin: 'core', explain: 'Iske bina page ka koi matlab nahi. Yeh fail ho toh imaandaar error dikhao — chhupao mat.' },
-        { text: '"Buy" button aur cart', bin: 'core', explain: 'Yahi revenue path hai. Ise sabse zyada threads, sabse achhi isolation aur sabse tight monitoring milni chahiye.' },
+        { text: 'Product ka naam, photo aur price', bin: 'core', explain: 'Naam, photo aur price ke bina page ka koi matlab nahi. Core fail ho toh imaandaar error dikhao — chhupao mat.' },
+        { text: '"Buy" button aur cart', bin: 'core', explain: 'Yahi revenue path hai. Revenue path ko sabse zyada threads, sabse achhi isolation aur sabse tight monitoring milni chahiye.' },
         { text: 'Customer reviews', bin: 'imp', explain: 'Purchase decision mein madad karte hain, par 2 ghante purane chalenge. Stale cache perfect fallback hai.' },
         { text: '"Aapke liye" recommendations', bin: 'opt', explain: 'Fail ho toh poora section chhupa do — khaali jagah bhi mat chhodo. User ko pata bhi nahi chalega.' },
         { text: 'Live stock count', bin: 'imp', explain: 'Important hai par uspar stale fallback KHATARNAK hai. Better: "availability check nahi kar paa rahe" — jhooth mat bolo.' },
-        { text: '"Isse milte-julte products"', bin: 'opt', explain: 'Nice to have. Iski wajah se page kabhi nahi girna chahiye.' },
+        { text: '"Milte-julte products"', bin: 'opt', explain: 'Nice to have. Recommendations ki wajah se page kabhi nahi girna chahiye.' },
         { text: 'Recently viewed items', bin: 'opt', explain: 'Convenience feature. Chhupa do aur aage badho.' },
         { text: 'Delivery date estimate', bin: 'imp', explain: 'Purchase decision affect karta hai. Fallback: "3-5 din" jaisa generic range, exact date ke bajaye.' },
       ],
@@ -1273,12 +1273,12 @@ recommendations poori tarah mar jaaye?
   ],
   homework: `Apne sabse zaroori page ke saare data sources list karo. Har ek ke saamne
     CORE/IMPORTANT/OPTIONAL likho. Ab code mein dekho: kya optional wale ka apna
-    timeout aur fallback hai? Ya woh core ke saath hi latka hua hai?`,
+    timeout aur fallback hai? Ya optional feature core ke saath hi latka hua hai?`,
   cards: [
-    { front: 'Feature tiers?', back: '<b>CORE</b> (iske bina page bekaar — error dikhao) · <b>IMPORTANT</b> (stale cache/degraded) · <b>OPTIONAL</b> (chhupa do, khaali jagah bhi nahi).' },
-    { front: 'Fallback kab NAHI dena?', back: 'Jab cheez <b>paisa · stock · permissions</b> se judi ho. ₹0 balance ya "in stock" maan lena user ko galat faisle par le jaata hai. Wahan imaandaar error behtar hai.' },
-    { front: 'Stale data dikhate waqt?', back: '<b>Batao ki woh purana hai.</b> "2 ghante purana". Jaanta hua user refresh karta hai; na jaanne wala support ticket banata hai.' },
-    { front: 'Tiers kab tay karein?', back: '<b>Pehle se</b> — incident ke beech mein nahi. Aur woh <b>code mein</b> dikhne chahiye (timeout, bulkhead, fallback), sirf doc mein nahi.' },
+    { front: 'Feature tiers?', back: '<b>CORE</b> (core ke bina page bekaar — error dikhao) · <b>IMPORTANT</b> (stale cache/degraded) · <b>OPTIONAL</b> (chhupa do, khaali jagah bhi nahi).' },
+    { front: 'Fallback kab NAHI dena?', back: 'Jab cheez <b>paisa · stock · permissions</b> se judi ho. ₹0 balance ya "in stock" maan lena user ko galat faisle par le jaata hai. In cheezon par imaandaar error behtar hai.' },
+    { front: 'Stale data dikhate waqt?', back: '<b>Batao ki data purana hai.</b> "2 ghante purana". Jaanta hua user refresh karta hai; na jaanne wala support ticket banata hai.' },
+    { front: 'Tiers kab tay karein?', back: '<b>Pehle se</b> — incident ke beech mein nahi. Aur tiers <b>code mein</b> dikhne chahiye (timeout, bulkhead, fallback), sirf doc mein nahi.' },
   ],
 },
 
@@ -1306,7 +1306,7 @@ recommendations poori tarah mar jaaye?
    2,000 andar (poori speed se serve ✅)
    8,000 → 503 + Retry-After (turant, sasta)
    → 20% users khush</pre>
-     <p>20% &gt; 0%. Yeh ganit saaf hai, par instinct ulta hota hai —
+     <p>20% &gt; 0%. Ganit saaf hai, par instinct ulta hota hai —
      "requests reject karna" bura lagta hai. Asal mein <b>jaldi reject karna
      ek feature hai</b>: dheere fail hona sabse mehenga failure mode hai,
      kyunki usme tum resources bhi kharch karte ho aur user bhi nahi milta.</p>`,
@@ -1317,25 +1317,25 @@ browse / search     → phir
 analytics / logs    → sabse pehle girao</pre>
      <p><b>2. Bounded queue.</b> Queue bhari? Turant reject. Unbounded queue
      ka matlab hai "failure baad mein, aur bada".</p>
-     <p><b>3. Deadline-aware dropping.</b> Yeh sabse under-used hai:</p>
+     <p><b>3. Deadline-aware dropping.</b> Sabse under-used tareeka:</p>
      <pre>Request 8 s se queue mein hai
 Client ka timeout 5 s tha
-→ woh ja chuka hai. Ab is request par kaam karna BARBAADI hai.
+→ client ja chuka hai. Ab is request par kaam karna BARBAADI hai.
 → Phenk do aur agli lo.</pre>
-     <p>Overload mein yeh bahut capacity bacha deta hai — kyunki tum sirf
-     woh kaam kar rahe ho jiska koi intezaar kar raha hai.</p>
+     <p>Overload mein deadline-aware dropping bahut capacity bacha deta hai — kyunki tum sirf
+     un kaamon par lagte ho jinka koi intezaar kar raha hai.</p>
      <p><b>4. Admission control / waiting room.</b> Fixed number andar,
      baaki ko "loading…" dikhao. 8 second ka intezaar sabko 503 se behtar
-     hai — aur woh <b>retries bhi rokta</b> hai.</p>
+     hai — aur waiting room <b>retries bhi rokta</b> hai.</p>
      <h3>🌊 Backpressure — signal upstream jaana chahiye</h3>
      <p>Sirf reject karna aadha kaam hai. <b>Backpressure</b> ka matlab hai
-     ki "main bhara hoon" ka signal <b>upstream tak</b> pahunche taaki woh
+     ki "main bhara hoon" ka signal <b>upstream tak</b> pahunche taaki upstream
      bhejna hi kam kar de:</p>
      <pre>HTTP  → 503 + Retry-After (client backoff kare)
 Queue → consumer dheere pull kare (producer ko pata chale)
 gRPC  → flow control windows
-TCP   → yeh already karta hai (receive window)</pre>
-     <p class="tip">🎯 Sabse achha backpressure woh hai jo <b>producer ko
+TCP   → already karta hai (receive window)</pre>
+     <p class="tip">🎯 Sabse achha backpressure — jo <b>producer ko
      rokta</b> hai, na ki jo consumer par kachra jama karta hai.</p>`,
   ],
   stages: [
@@ -1365,11 +1365,11 @@ TCP   → yeh already karta hai (receive window)</pre>
       instructions: 'Har halat ko sahi technique se jodo.',
       pairs: [
         { left: '📊 Capacity 2,000 rps, aa rahi 10,000', right: 'Load shedding — 2,000 andar, baaki 503 + Retry-After', explain: 'Sabko andar aane dene se 0% safal hote hain. Shed karke 20% safal hote hain.' },
-        { left: '⏳ Request 8 s se queue mein, client timeout 5 s tha', right: 'Deadline-aware dropping — phenk do', explain: 'Client ja chuka hai. Us request par kaam karna barbaadi hai. Overload mein yeh bahut capacity bachata hai.' },
-        { left: '🎫 12 lakh log ek saath aa rahe hain (predictable)', right: 'Admission control / waiting room', explain: '8 second ka intezaar sabko 503 se behtar hai — aur woh retries bhi rokta hai.' },
+        { left: '⏳ Request 8 s se queue mein, client timeout 5 s tha', right: 'Deadline-aware dropping — phenk do', explain: 'Client ja chuka hai. Us request par kaam karna barbaadi hai. Overload mein dropping bahut capacity bachata hai.' },
+        { left: '🎫 12 lakh log ek saath aa rahe hain (predictable)', right: 'Admission control / waiting room', explain: '8 second ka intezaar sabko 503 se behtar hai — aur waiting room retries bhi rokta hai.' },
         { left: '💳 Checkout aur analytics dono queue mein', right: 'Priority shedding — analytics pehle girao', explain: 'Sab requests barabar nahi. Revenue path aakhri tak bachao.' },
-        { left: '📮 Producer consumer se tez hai', right: 'Bounded queue + backpressure producer tak', explain: 'Unbounded queue = "failure baad mein, aur bada". Signal producer tak jaana chahiye taaki woh dheere bheje.' },
-        { left: '🔌 Downstream ne 429 bheja', right: 'Outbound rate limiter — apni speed kam karo', explain: 'Yeh backpressure ka respect karna hai. Retry loop lagana ulta kaam karega.' },
+        { left: '📮 Producer consumer se tez hai', right: 'Bounded queue + backpressure producer tak', explain: 'Unbounded queue = "failure baad mein, aur bada". Signal producer tak jaana chahiye taaki producer dheere bheje.' },
+        { left: '🔌 Downstream ne 429 bheja', right: 'Outbound rate limiter — apni speed kam karo', explain: 'Apni speed kam karna backpressure ka respect karna hai. Retry loop lagana ulta kaam karega.' },
       ],
     },
     {
@@ -1379,8 +1379,8 @@ TCP   → yeh already karta hai (receive window)</pre>
       visual: 'shedding',
       questions: [
         { q: 'Sab requests barabar nahi — kaunsi technique?', target: 'priority', explain: 'Priority shedding. Checkout > browse > analytics. Revenue path aakhri tak bachao.' },
-        { q: 'Client ja chuka hai par request abhi bhi queue mein hai — kya karein?', target: 'deadline', explain: 'Deadline-aware dropping — phenk do. Uspar kaam karna barbaadi hai, aur overload mein yeh bahut capacity bachata hai.' },
-        { q: '12 lakh log ek saath — sabko 503 se behtar kya hai?', target: 'admission', explain: 'Admission control / waiting room. 8 second ka "loading…" sabko 503 se behtar hai, aur woh retries bhi rokta hai.' },
+        { q: 'Client ja chuka hai par request abhi bhi queue mein hai — kya karein?', target: 'deadline', explain: 'Deadline-aware dropping — phenk do. Us request par kaam karna barbaadi hai, aur overload mein dropping bahut capacity bachata hai.' },
+        { q: '12 lakh log ek saath — sabko 503 se behtar kya hai?', target: 'admission', explain: 'Admission control / waiting room. 8 second ka "loading…" sabko 503 se behtar hai, aur waiting room retries bhi rokta hai.' },
       ],
     },
     {
@@ -1459,7 +1459,7 @@ TCP   → yeh already karta hai (receive window)</pre>
   cards: [
     { front: 'Sabko andar aane dene ka nateeja?', back: 'Queue badhi → p99 30s → clients timeout → retry → load ×2 → <b>0% safal</b>. Shed karo toh 20% safal. <b>Jaldi reject karna ek feature hai.</b>' },
     { front: 'Shedding ki 4 techniques?', back: '<b>1.</b> Priority (analytics pehle girao) <b>2.</b> Bounded queue <b>3.</b> Deadline-aware dropping <b>4.</b> Admission control / waiting room.' },
-    { front: 'Deadline-aware dropping?', back: 'Request 8s se queue mein, client timeout 5s tha → <b>woh ja chuka hai</b>. Uspar kaam karna barbaadi hai. Overload mein bahut capacity bachata hai.' },
+    { front: 'Deadline-aware dropping?', back: 'Request 8s se queue mein, client timeout 5s tha → <b>client ja chuka hai</b>. Uspar kaam karna barbaadi hai. Overload mein bahut capacity bachata hai.' },
     { front: 'Backpressure vs Shedding?', back: '<b>Shedding</b> = reject karna (defensive, sirf tumhe bachata hai). <b>Backpressure</b> = "bhara hoon" ka signal upstream bhejna (cooperative, poore system ko bachata hai).' },
   ],
 },
@@ -1480,15 +1480,15 @@ TCP   → yeh already karta hai (receive window)</pre>
   ],
   lesson: [
     `<h3>📖 Board result, 5 baje, 12 lakh students</h3>
-     <p>Sabse pehle pehchaano ki yeh kaunsa problem hai. Yeh "hume scale
-     karna hai" wala problem <b>nahi</b> hai. Yeh ek <b>predictable flash
-     crowd</b> hai — aur usme tumhara sabse bada faayda yeh hai ki tumhe
+     <p>Sabse pehle pehchaano ki problem kaunsa hai. Problem "hume scale
+     karna hai" wala problem <b>nahi</b> hai. Problem ek <b>predictable flash
+     crowd</b> hai — aur flash crowd mein tumhara sabse bada faayda ye hai ki tumhe
      <b>hafton pehle pata hai</b>.</p>
      <pre>12,00,000 users, lagbhag ek hi minute mein
 → ~1,20,000 rps peak (aur pehle 10 second sabse bure)</pre>
      <h3>1️⃣ 5 baje se pehle jitna kaam ho sake, kar lo</h3>
      <p>Result <b>pehle se pata hai</b>. Toh rank, eligibility, percentile —
-     yeh sab request aane ke baad calculate karne ki koi wajah nahi:</p>
+     sab kuch request aane ke baad calculate karne ki koi wajah nahi:</p>
      <pre>4:59:59 tak har result MATERIALIZED hona chahiye:
    roll_number → poora result object (ek blob)</pre>
      <p>Ab read path ek <b>key lookup</b> hai. Koi JOIN nahi, koi computation
@@ -1507,19 +1507,19 @@ TCP   → yeh already karta hai (receive window)</pre>
      <pre>1,50,000 andar
 baaki → waiting room: "Aapka result load ho raha hai…"</pre>
      <p><b>8 second ka intezaar sabko 503 se behtar hai.</b> Aur ek chhupa
-     hua faayda: yeh <b>retries rokta</b> hai. 503 dekh ke log refresh
+     hua faayda: waiting room <b>retries rokta</b> hai. 503 dekh ke log refresh
      dabate hain (aur apps apne aap retry karte hain) — 12 lakh requests
      chup-chaap 30 lakh ban jaati hain. Waiting room us amplification ko
      hone hi nahi deta.</p>
      <h3>4️⃣ Read path bilkul simple rakho</h3>
-     <p>Yeh data <b>read-heavy</b> aur <b>immutable</b> hai — publish hone
+     <p>Result ka data <b>read-heavy</b> aur <b>immutable</b> hai — publish hone
      ke baad result kabhi badalta nahi.</p>
      <pre>• Partitioned key-value store (ya pre-generated objects)
 • Partition: hash(roll_number) — traffic barabar bikhrega
 • Immutable hai → jitna chaaho REPLICATE karo, conflict ho hi nahi sakta
 • CDN par bhi daal sakte ho (result public hai)</pre>
      <p class="tip">🎯 Aur aakhri kadam: <b>asli traffic shape par load test
-     karo</b>. Average rps par test karna bekaar hai — sawaal yeh hai ki
+     karo</b>. Average rps par test karna bekaar hai — sawaal ye hai ki
      <b>pehle 10 second</b> jhel paoge ya nahi.</p>`,
   ],
   stages: [
@@ -1551,12 +1551,12 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
       instructions: 'Event se pehle kya-kya karoge — sahi order mein.',
       steps: [
         { text: 'Traffic ka hisaab lagao — 12 lakh users, kitne second mein?', explain: 'Pehle number nikalo. 12 lakh / 60 second = 20,000 rps average, par pehle 10 second mein 5x bhi ho sakta hai. Bina number ke baaki sab andaza hai.' },
-        { text: 'Sab kuch precompute karo — result materialize kar do', explain: 'Sabse bada single faayda. Service time 180 ms se 2 ms = capacity 90x. Yeh baaki sab optimizations se zyada asar karta hai.' },
+        { text: 'Sab kuch precompute karo — result materialize kar do', explain: 'Sabse bada single faayda. Service time 180 ms se 2 ms = capacity 90x. Precompute baaki sab optimizations se zyada asar karta hai.' },
         { text: 'Read path simplify karo — partitioned KV, immutable objects', explain: 'Ek key lookup. Immutable hai isliye aggressive replication safe hai — conflict ho hi nahi sakta.' },
-        { text: 'Pre-scale karo — app, DB, pools, LB, consumers', explain: 'Autoscaling 2-3 minute leti hai; flash crowd 60 second ka hai. Woh der se pahunchegi.' },
-        { text: 'Admission control / waiting room lagao', explain: 'Pre-scale ke baad bhi unlimited requests andar mat aane do. Aur yeh retry amplification bhi rokta hai.' },
-        { text: 'ASLI traffic shape par load test karo', explain: 'Average par test karna bekaar hai. Sawaal yeh hai: "pehle 10 second jhel paoge?" Isi test se pata chalta hai ki koi kadam chhoot toh nahi gaya.' },
-        { text: 'Runbook + monitoring taiyaar rakho, team on-call', explain: 'Kuch na kuch toh hoga hi. Farak sirf yeh hai ki tum tayyar ho ya discover kar rahe ho.' },
+        { text: 'Pre-scale karo — app, DB, pools, LB, consumers', explain: 'Autoscaling 2-3 minute leti hai; flash crowd 60 second ka hai. Autoscaling der se pahunchegi.' },
+        { text: 'Admission control / waiting room lagao', explain: 'Pre-scale ke baad bhi unlimited requests andar mat aane do. Aur waiting room retry amplification bhi rokta hai.' },
+        { text: 'ASLI traffic shape par load test karo', explain: 'Average par test karna bekaar hai. Sawaal ye hai: "pehle 10 second jhel paoge?" Isi test se pata chalta hai ki koi kadam chhoot toh nahi gaya.' },
+        { text: 'Runbook + monitoring taiyaar rakho, team on-call', explain: 'Kuch na kuch toh hoga hi. Farak sirf itna hai ki tum tayyar ho ya discover kar rahe ho.' },
       ],
     },
     {
@@ -1566,9 +1566,9 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
       visual: 'flashcrowd',
       questions: [
         { q: 'Sabse bada single faayda kaunsa kadam deta hai?', target: 'pre', explain: 'Precompute. Result pehle se pata hai — rank/eligibility request ke baad calculate karne ki koi wajah nahi. Service time 180ms se 2ms = capacity 90x.' },
-        { q: 'Autoscaling par bharosa kyun nahi kar sakte?', target: 'scale', explain: 'Woh traffic dekhne ke BAAD react karta hai — scrape + decision + boot + warm-up = 2-3 minute. Flash crowd 60 second ka hai.' },
-        { q: '12 lakh requests 30 lakh kaise ban jaati hain?', target: 'amp', explain: 'Retry amplification — 503 dekh ke log refresh dabate hain aur apps apne aap retry karte hain. Waiting room isse rokta hai.' },
-        { q: 'Result immutable hai — isse kya faayda?', target: 'repl', explain: 'Jitna chaaho replicate karo, conflict ho hi nahi sakta. Publish hone ke baad result kabhi badalta nahi.' },
+        { q: 'Autoscaling par bharosa kyun nahi kar sakte?', target: 'scale', explain: 'Autoscaling traffic dekhne ke BAAD react karta hai — scrape + decision + boot + warm-up = 2-3 minute. Flash crowd 60 second ka hai.' },
+        { q: '12 lakh requests 30 lakh kaise ban jaati hain?', target: 'amp', explain: 'Retry amplification — 503 dekh ke log refresh dabate hain aur apps apne aap retry karte hain. Waiting room retry amplification ko rokta hai.' },
+        { q: 'Result immutable hai — immutable hone ka kya faayda?', target: 'repl', explain: 'Jitna chaaho replicate karo, conflict ho hi nahi sakta. Publish hone ke baad result kabhi badalta nahi.' },
       ],
     },
     {
@@ -1631,7 +1631,7 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
   ],
   interview: {
     title: 'Interview Round — Flash Crowd',
-    instructions: 'Yeh Principal-level ka classic sawaal hai. 🎤',
+    instructions: 'Flash crowd Principal-level ka classic sawaal hai. 🎤',
     questions: [
       {
         q: '"Board result 5 baje publish hoga, 12 lakh students dekhenge. Design karo."',
@@ -1676,13 +1676,13 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
     'Retry amplification aur waiting room ka rishta jaante ho',
   ],
   homework: `Apne product mein koi predictable spike dhoondo — sale, payday, month-end report,
-    exam result. Uske liye ek chhota plan likho: kya precompute ho sakta hai?
+    exam result. Spike ke liye ek chhota plan likho: kya precompute ho sakta hai?
     kitna pre-scale chahiye? admission control kahan lagega?`,
   cards: [
     { front: 'Predictable flash crowd?', back: 'Normal scaling <b>nahi</b> — ek planning problem. Tumhe hafton pehle pata hai, isliye precompute, pre-scale aur load test <b>pehle</b> ho sakte hain.' },
     { front: 'Sabse bada lever?', back: '<b>Precompute.</b> Jawab pehle se materialize karo (roll_no → object). Service time 180ms → 2ms = <b>capacity 90x</b>.' },
-    { front: 'Autoscaling kyun kaafi nahi?', back: 'Woh traffic ke <b>BAAD</b> react karti hai: scrape + decision + boot + warm-up = 2-3 minute. Flash crowd 60 second ka hai.' },
-    { front: 'Retry amplification?', back: '503 dekh ke log refresh dabate hain (aur apps retry karte hain) → <b>12 lakh requests 30 lakh</b>. Waiting room isse hone hi nahi deta.' },
+    { front: 'Autoscaling kyun kaafi nahi?', back: 'Autoscaling traffic ke <b>BAAD</b> react karti hai: scrape + decision + boot + warm-up = 2-3 minute. Flash crowd 60 second ka hai.' },
+    { front: 'Retry amplification?', back: '503 dekh ke log refresh dabate hain (aur apps retry karte hain) → <b>12 lakh requests 30 lakh</b>. Waiting room amplification ko hone hi nahi deta.' },
     { front: 'Immutable data ka faayda?', back: 'Publish ke baad result kabhi nahi badalta → <b>jitna chaaho replicate karo</b>, conflict ho hi nahi sakta. CDN par bhi daal sakte ho.' },
   ],
 },
@@ -1735,8 +1735,8 @@ baaki → waiting room: "Aapka result load ho raha hai…"</pre>
      <pre>LIVENESS   "process zinda hai?"     → fail = RESTART karo
 READINESS  "traffic le sakta hoon?" → fail = LB se HATAO</pre>
      <p>Dono ek hi endpoint banana sabse aam galti hai. Socho: ek dependency
-     dheemi ho gayi. Agar liveness usse check karta hai toh Kubernetes
-     <b>healthy pods restart karta rahega</b> — aur restart se woh dependency
+     dheemi ho gayi. Agar liveness dependency ko check karta hai toh Kubernetes
+     <b>healthy pods restart karta rahega</b> — aur restart se dheemi dependency
      theek nahi hogi, bas capacity aur kam ho jaayegi.</p>
      <pre>Liveness  → sasta. Sirf "main chal raha hoon".
 Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain?"</pre>
@@ -1747,8 +1747,8 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
 ✅ "p99 > 500ms (10 min)"                 → user ko dard ho raha hai
 ✅ "queue ka oldest message > 5 min"      → kaam ruk gaya hai</pre>
      <p class="tip">🎯 Har alert ke saath ek <b>runbook</b> ho. Aur jis alert
-     par koi kuch nahi karta, use <b>hata do</b> — woh sirf noise nahi hai,
-     woh baaki alerts ko bhi bekaar bana raha hai (alert fatigue).</p>`,
+     par koi kuch nahi karta, us alert ko <b>hata do</b> — bekaar alert sirf noise nahi hai,
+     baaki alerts ko bhi bekaar bana raha hai (alert fatigue).</p>`,
   ],
   stages: [
     {
@@ -1783,14 +1783,14 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
         { id: 'no', label: '❌ Alert mat banao' },
       ],
       items: [
-        { text: 'Checkout ka error rate 5 min se > 1%', bin: 'page', explain: 'User ko dard ho raha hai aur paisa ruk raha hai. Yeh classic symptom-based page hai.' },
+        { text: 'Checkout ka error rate 5 min se > 1%', bin: 'page', explain: 'User ko dard ho raha hai aur paisa ruk raha hai. Checkout errors classic symptom-based page hain.' },
         { text: 'CPU > 80%', bin: 'no', explain: 'Toh kya? Shayad sab theek hai — CPU high hona efficient bhi ho sakta hai. Cause par alert mat karo, symptom par karo.' },
-        { text: 'Disk 85% bhar gaya', bin: 'ticket', explain: 'Kaam karna hai par abhi nahi. Yeh predictable hai — subah dekho. (95% par page karo.)' },
-        { text: 'Queue ka oldest message > 5 minute purana', bin: 'page', explain: 'Kaam ruk gaya hai. Yeh "queue depth" se behtar metric hai — depth badi ho par messages tez ja rahe hon toh theek hai.' },
+        { text: 'Disk 85% bhar gaya', bin: 'ticket', explain: 'Kaam karna hai par abhi nahi. Disk ka bharna predictable hai — subah dekho. (95% par page karo.)' },
+        { text: 'Queue ka oldest message > 5 minute purana', bin: 'page', explain: 'Kaam ruk gaya hai. Oldest message ki umar "queue depth" se behtar metric hai — depth badi ho par messages tez ja rahe hon toh theek hai.' },
         { text: 'DLQ mein message aa gaya', bin: 'ticket', explain: 'Dekhna zaroori hai (warna data chup-chaap marta hai) par aksar raat ko uthne laayak nahi. Volume badhe toh page karo.' },
         { text: 'p99 latency 10 min se SLO se upar', bin: 'page', explain: 'Users ko dard ho raha hai aur error budget jal raha hai. Symptom-based, actionable.' },
-        { text: 'Ek pod restart hua', bin: 'no', explain: 'Yeh normal hai — orchestrator ka kaam hi yehi hai. Alert tab jab restart rate abnormal ho (crash loop).' },
-        { text: 'Error budget 10x speed se jal raha hai', bin: 'page', explain: 'Burn-rate alert — sabse achha alert type. Woh asar ko time se jodta hai: chhota spike jise budget jhel sakta hai woh kisi ko nahi jagayega.' },
+        { text: 'Ek pod restart hua', bin: 'no', explain: 'Ek pod ka restart normal hai — orchestrator ka kaam hi restart karna hai. Alert tab jab restart rate abnormal ho (crash loop).' },
+        { text: 'Error budget 10x speed se jal raha hai', bin: 'page', explain: 'Burn-rate alert — sabse achha alert type. Burn-rate asar ko time se jodta hai: budget ke jhelne layak chhota spike kisi ko nahi jagayega.' },
       ],
     },
     {
@@ -1892,9 +1892,9 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
     'Liveness aur readiness alag design kar sakte ho',
     'Symptom-based alerts likh sakte ho',
   ],
-  homework: `Apne alerts ki list nikalo. Har ek ke saamne likho: yeh symptom hai ya cause?
-    Iska runbook hai? Pichhle 3 mahine mein kitni baar ise dekh ke kuch KIYA gaya?
-    Jinke jawab "cause / nahi / kabhi nahi" hain — unhe hata do.`,
+  homework: `Apne alerts ki list nikalo. Har alert ke saamne likho: alert symptom hai ya cause?
+    Alert ka runbook hai? Pichhle 3 mahine mein kitni baar alert dekh ke kuch KIYA gaya?
+    Jin alerts ke jawab "cause / nahi / kabhi nahi" hain — un alerts ko hata do.`,
   cards: [
     { front: 'RED aur USE?', back: '<b>RED</b> (services): Rate, Errors, Duration. <b>USE</b> (resources): Utilization, <b>Saturation</b> 🔥, Errors. Saturation aksar dashboards par hota hi nahi — aur outage wahi se aata hai.' },
     { front: 'Metrics vs Traces vs Logs?', back: '<b>Metrics</b> = "kya kuch galat hai?" · <b>Traces</b> = "waqt KAHAN gaya?" · <b>Logs</b> = "us ek request mein KYA hua?" — teenon ko <code>trace_id</code> se jodo.' },
@@ -1912,7 +1912,7 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
   badge: 'Budget Banker',
   objectives: [
     'SLI → SLO → SLA ka farak',
-    'Nines ka asli matlab (aur unki keemat)',
+    'Nines ka asli matlab (aur har nine ki keemat)',
     'Error budget — "product vs reliability" ko number banana',
     'SLO kis cheez par set karo',
   ],
@@ -1939,18 +1939,18 @@ SLA  customer se contract + PAISA
      "99.5% ya paise wapas"   ← SLO se hamesha DHEELA</pre>
      <p>SLA ko SLO se dheela rakhna zaroori hai: tumhara internal alarm
      customer ke refund se <b>pehle</b> bajna chahiye.</p>`,
-    `<h3>🔬 Error budget — asli kaam yeh hai</h3>
+    `<h3>🔬 Error budget — asli kaam</h3>
      <pre>SLO 99.9% = mahine mein 43 minute ka budget
 
 Budget bacha hai?   → deploy karo, risk lo, tez chalo 🚀
 Budget khatam?      → feature freeze, sirf reliability kaam</pre>
-     <p>Yahi error budget ki asli taakat hai: woh <b>"product vs
+     <p>Yahi error budget ki asli taakat hai: budget <b>"product vs
      reliability" wali anant behes ko ek number mein badal deta hai</b>.</p>
-     <p>Ab yeh behes nahi hoti:</p>
-     <pre>Product: "yeh feature ship karna hai"
+     <p>Ab aisi behes nahi hoti:</p>
+     <pre>Product: "naya feature ship karna hai"
 SRE:     "system stable nahi hai"
          (dono apni feeling se lad rahe hain)</pre>
-     <p>Ab yeh hota hai:</p>
+     <p>Ab aisa hota hai:</p>
      <pre>"Budget mein 38 minute bache hain — ship karo."
 "Budget khatam ho gaya — is hafte reliability."</pre>
      <h3>🎯 SLO kis par set karo</h3>
@@ -1963,7 +1963,7 @@ SRE:     "system stable nahi hai"
 ❌ "server uptime"       — server up ho par requests fail ho rahi hon?</pre>
      <p class="tip">🎯 Aur SLO <b>100% nahi</b> hona chahiye. 100% ka matlab
      hai zero risk, zero deploys, zero progress. Budget ka <b>istemal</b>
-     karna chahiye — jo team apna poora budget bacha ke rakhti hai, woh
+     karna chahiye — apna poora budget bacha ke rakhne wali team
      bahut dheere chal rahi hai.</p>`,
   ],
   stages: [
@@ -1983,10 +1983,10 @@ Agar SLO 99.99% hota:
   poora budget    = {3} minutes  (ek hi incident se zyada!)`,
       tokens: ['43,200', '43.2', '23.2', '4.32', '30', '1,440', '99.9'],
       blanks: [
-        { answer: '43,200', explain: '30 × 24 × 60 = 43,200 minutes. Yeh base number hai jisse sab kuch nikalta hai.' },
-        { answer: '43.2', explain: '0.1% × 43,200 = 43.2 minutes. Yeh "teen nines" ka poora mahina bhar ka budget hai — ek lambi lunch se kam.' },
+        { answer: '43,200', explain: '30 × 24 × 60 = 43,200 minutes. 43,200 base number hai jisse sab kuch nikalta hai.' },
+        { answer: '43.2', explain: '0.1% × 43,200 = 43.2 minutes. 43.2 minute "teen nines" ka poora mahina bhar ka budget hai — ek lambi lunch se kam.' },
         { answer: '23.2', explain: '43.2 − 20 = 23.2 minutes bache. Ek 20-minute incident ne aadhe se zyada budget kha liya.' },
-        { answer: '4.32', explain: '0.01% × 43,200 = 4.32 minutes. Woh 20-minute incident poore mahine ka budget <b>4 guna</b> paar kar jaata. Isiliye har extra 9 ki keemat 10x hai.' },
+        { answer: '4.32', explain: '0.01% × 43,200 = 4.32 minutes. 20-minute ka incident poore mahine ka budget <b>4 guna</b> paar kar jaata. Isiliye har extra 9 ki keemat 10x hai.' },
       ],
     },
     {
@@ -1998,12 +1998,12 @@ Agar SLO 99.99% hota:
         { id: 'bad', label: '❌ Bura SLO' },
       ],
       items: [
-        { text: '"99.9% checkout requests 500ms mein safal"', bin: 'good', explain: 'User-facing, measurable, aur latency + success dono cover karta hai. Yeh ek achhe SLO ka model hai.' },
-        { text: '"CPU utilization 70% se kam"', bin: 'bad', explain: 'Yeh ek internal metric hai — user ko iski koi parwah nahi. CPU 90% ho par sab requests tez ho rahi hon toh sab theek hai.' },
+        { text: '"99.9% checkout requests 500ms mein safal"', bin: 'good', explain: 'User-facing, measurable, aur latency + success dono cover karta hai. Ye SLO ek achhe SLO ka model hai.' },
+        { text: '"CPU utilization 70% se kam"', bin: 'bad', explain: 'CPU ek internal metric hai — user ko CPU ki koi parwah nahi. CPU 90% ho par sab requests tez ho rahi hon toh sab theek hai.' },
         { text: '"100% uptime"', bin: 'bad', explain: 'Namumkin, aur budget zero — matlab koi deploy, koi risk, koi progress nahi. SLO ka poora point hi khatam.' },
         { text: '"99.95% notifications 30 second mein deliver"', bin: 'good', explain: 'User-visible outcome, saaf time bound. Async systems ke liye "deliver hua ya nahi" se behtar hai.' },
         { text: '"Server uptime 99.9%"', bin: 'bad', explain: 'Server up ho sakta hai aur saari requests fail ho sakti hain (pool exhaustion yaad hai?). Requests ko naapo, process ko nahi.' },
-        { text: '"99% search results 1 second mein"', bin: 'good', explain: 'Search ke liye 99% theek hai — yeh checkout jitna critical nahi. Alag features ke alag SLO bilkul sahi hai.' },
+        { text: '"99% search results 1 second mein"', bin: 'good', explain: 'Search ke liye 99% theek hai — search checkout jitna critical nahi. Alag features ke alag SLO bilkul sahi hai.' },
       ],
     },
     {
@@ -2077,7 +2077,7 @@ Agar SLO 99.99% hota:
   ],
   interview: {
     title: 'Interview Round — SLO',
-    instructions: 'Senior roles mein yeh sawaal lagbhag pakka hai. 🎤',
+    instructions: 'Senior roles mein SLO ka sawaal lagbhag pakka hai. 🎤',
     questions: [
       {
         q: '"Naye service ke liye SLO kaise set karoge?"',
@@ -2116,7 +2116,7 @@ Agar SLO 99.99% hota:
     ],
   },
   success: [
-    'Nines aur unki keemat bata sakte ho',
+    'Nines aur har nine ki keemat bata sakte ho',
     'SLI, SLO, SLA mein farak kar sakte ho',
     'Error budget se faisle le sakte ho',
     'User-facing SLO likh sakte ho',
@@ -2151,7 +2151,7 @@ CPU 12% · memory 40% · /health 200 OK
 payment provider p99 = 8 s (DOWN nahi — DHEEMA)
 SDK 3 retries, bina jitter
 ek hi thread pool sab ke liye</pre>
-     <p>Yahan ek nahi, <b>paanch</b> problems ek saath hain — aur woh ek
+     <p>Yahan ek nahi, <b>paanch</b> problems ek saath hain — aur paanchon ek
      doosre ko badha rahe hain. Har guard ka apna alag kaam hai:</p>
      <table>
        <tr><th>Guard</th><th>Kya baandhta hai</th></tr>
@@ -2233,16 +2233,16 @@ ek hi thread pool sab ke liye</pre>
         end: {
           end: true,
           text: 'Incident band. Checkout chal raha hai, orders queue mein safe hain.',
-          summary: `<b>Kram yaad rakho:</b> bleeding roko → diagnose karo → theek karo → dobara na ho iska intezaam.
+          summary: `<b>Kram yaad rakho:</b> bleeding roko → diagnose karo → theek karo → dobara na ho, is baat ka intezaam.
             <br><br><b>Chhe guards, chhe alag kaam:</b>
             <br>• <b>Timeout</b> — ek call ka intezaar baandhta hai
             <br>• <b>Jitter</b> — retry storm ka synchronization todta hai
             <br>• <b>Breaker</b> — failing dependency par koshish karna band karta hai
             <br>• <b>Fallback</b> — user ka anubhav bachata hai
             <br>• <b>Bulkhead</b> — blast radius baandhta hai
-            <br>• <b>Shed</b> — overload mein kitna kaam lena hai woh tay karta hai
+            <br>• <b>Shed</b> — overload mein kitna kaam lena hai, tay karta hai
             <br><br><b>Aur ek line mein poora track:</b> har remote call ek din fail hogi.
-            Sawaal yeh hai — <b>tab tumhara system kya karega?</b>`,
+            Sawaal ye hai — <b>tab tumhara system kya karega?</b>`,
         },
       },
     },
@@ -2252,7 +2252,7 @@ ek hi thread pool sab ke liye</pre>
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'boss-resil',
       questions: [
-        { q: 'Kaunsa guard BLAST RADIUS baandhta hai?', target: 'bulkhead', explain: 'Bulkhead. Timeout ek call ka intezaar baandhta hai; bulkhead us dependency ka HISSA baandhta hai taaki woh baaki service ke threads na khaaye.' },
+        { q: 'Kaunsa guard BLAST RADIUS baandhta hai?', target: 'bulkhead', explain: 'Bulkhead. Timeout ek call ka intezaar baandhta hai; bulkhead us dependency ka HISSA baandhta hai taaki dependency baaki service ke threads na khaaye.' },
         { q: 'Retry storm ka SYNCHRONIZATION kaun todta hai?', target: 'jitter', explain: 'Jitter. Backoff ne storm ko kam nahi kiya tha — sirf synchronize kiya tha. Jitter clients ko alag-alag time par bhejta hai.' },
         { q: 'Failing dependency par KOSHISH karna kaun band karta hai?', target: 'breaker', explain: 'Circuit breaker. Jab failures transient nahi rahe, retry karna bekaar hai — breaker calls rok ke tumhare threads bachata hai.' },
         { q: 'User ka ANUBHAV kaun bachata hai?', target: 'fallback', explain: 'Fallback. Breaker tumhe bachata hai (threads), fallback user ko (kuch toh milta hai). Bina fallback ke breaker sirf tez failure hai.' },
@@ -2305,14 +2305,14 @@ ek hi thread pool sab ke liye</pre>
     'Retry amplification pehchaan sakte ho',
     'Mitigate-pehle-samjho-baad-mein ka kram jaante ho',
   ],
-  homework: `Apni service ki ek dependency chuno aur uske liye poora playbook likho:
+  homework: `Apni service ki ek dependency chuno aur dependency ke liye poora playbook likho:
     timeout kitna? retry policy kya? breaker threshold? fallback kya hai? bulkhead size?
     Phir team ke saath ek game day karo — us dependency ko staging mein dheema karke dekho.`,
   cards: [
     { front: 'Chhe guards, chhe kaam?', back: '<b>Timeout</b> intezaar · <b>Jitter</b> synchronization · <b>Breaker</b> koshish · <b>Fallback</b> anubhav · <b>Bulkhead</b> blast radius · <b>Shed</b> kitna kaam.' },
-    { front: 'Incident ka pehla kadam?', back: '<b>Bleeding roko</b> — mitigate pehle, root cause baad mein. Har minute users ko dard de raha hai. (Aur mitigation ke doraan jo dekha woh aksar root cause ka clue hota hai.)' },
+    { front: 'Incident ka pehla kadam?', back: '<b>Bleeding roko</b> — mitigate pehle, root cause baad mein. Har minute users ko dard de raha hai. (Aur mitigation ke doraan dikhi baatein aksar root cause ka clue hoti hain.)' },
     { front: 'Traffic 4x, errors ke SAATH badha — kya hai?', back: '<b>Retry amplification.</b> Signature: traffic tab badha jab errors shuru hue, pehle nahi. Ilaaj: jitter, kam attempts, retry budget.' },
-    { front: 'Resilience track ek line mein?', back: 'Har remote call <b>ek din fail hogi</b>. Sawaal yeh hai — <b>tab tumhara system kya karega?</b>' },
+    { front: 'Resilience track ek line mein?', back: 'Har remote call <b>ek din fail hogi</b>. Sawaal ye hai — <b>tab tumhara system kya karega?</b>' },
   ],
 },
 ]);

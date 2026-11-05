@@ -629,9 +629,9 @@ SD.registerLevelsAfter('resil', 'shedding', [
   badge: 'Cell Chitrakar',
   objectives: [
     'Blast radius ko ek design number banana, ek umeed nahi',
-    'Cell-based architecture: kyun, aur uski asli keemat',
+    'Cell-based architecture: kyun, aur cells ki asli keemat',
     'Shuffle sharding — kam cells mein bahut chhota blast radius',
-    'Cell fail hone par uska load kahan jaayega — spare ya shed',
+    'Cell fail hone par cell ka load kahan jaayega — spare ya shed',
   ],
   lesson: [
     `<h3>🧊 "Kitne users girenge?" — ek design number</h3>
@@ -645,13 +645,13 @@ SD.registerLevelsAfter('resil', 'shedding', [
                     aur baaki 90% ko pata bhi nahi chalta</pre>
      <p>Cell ek <b>poori swatantra copy</b> hai — apna load balancer, apni
      compute, apna database, apna cache. Cells aapas mein baat nahi karte.
-     Yahi "baat nahi karte" wali baat unki poori taakat hai.</p>
+     Yahi "baat nahi karte" wali baat cells ki poori taakat hai.</p>
      <h3>💰 Cells ki asli keemat</h3>
      <table>
        <tr><th>Kya milta hai</th><th>Kya dena padta hai</th></tr>
        <tr><td>Blast radius 1/N</td><td>N control planes, N deploy targets, N monitoring dashboards</td></tr>
        <tr><td>Capacity add karna local ho jaata hai (naya cell)</td><td>Har cell mein alag se spare capacity</td></tr>
-       <tr><td>Deploy bhi cell-dar-cell ho sakta hai</td><td>Routing layer chahiye: "yeh customer kaunse cell mein hai?"</td></tr>
+       <tr><td>Deploy bhi cell-dar-cell ho sakta hai</td><td>Routing layer chahiye: "ye customer kaunse cell mein hai?"</td></tr>
        <tr><td>Ek cell ka data doosre cell tak nahi rista</td><td>Cross-cell query ab ek fan-out hai</td></tr>
      </table>
      <p class="tip">🎯 Cells <b>zyada</b> operational kaam hain, kam nahi — aur
@@ -659,21 +659,21 @@ SD.registerLevelsAfter('resil', 'shedding', [
      ka daayra. Isliye cells us system par lagao jiska <b>girna sabse mehenga</b>
      hai, har system par nahi.</p>`,
     `<h3>🎲 Shuffle sharding — full overlap aur partial exposure</h3>
-     <p>8 cells aur uniform random two-cell assignments lo. Ek poison tenant apne <b>dono assigned cells</b> ko unhealthy bana deta hai. Doosra tenant tab poori tarah unavailable hai jab uska <b>exact same pair</b> ho; partial-overlap tenant surviving cell use kar sakta hai, agar retries aur headroom tested hon.</p>
+     <p>8 cells aur uniform random two-cell assignments lo. Ek poison tenant apne <b>dono assigned cells</b> ko unhealthy bana deta hai. Doosra tenant tab poori tarah unavailable hai jab doosre tenant ka <b>exact same pair</b> ho; partial-overlap tenant surviving cell use kar sakta hai, agar retries aur headroom tested hon.</p>
      <pre>C(8,2) = 28 distinct pairs
 Exact same pair share = 1/28 = 3.6%
 Ek named cell se assigned tenants = 2/8 = 25%
 Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
      <p class="tip">🎯 <b>3.6% exact-pair full loss</b> single-cell blast radius nahi. Two-cell poison scenario mein partial degradation aur shared dependency failure alag metrics hain. Uniform assignment mathematical assumption hai; actual placement skew, retry success aur survivor capacity measure karo.</p>
      <h3>🪣 Aur ek sawaal jo hamesha chhoot jaata hai</h3>
-     <p>Ek cell gira. Uske users ka traffic <b>kahan jaayega?</b> Do hi jawab hain:</p>
+     <p>Ek cell gira. Gire cell ke users ka traffic <b>kahan jaayega?</b> Do hi jawab hain:</p>
      <pre>1. SPARE se absorb karo  →  har cell mein 100/(N-1) % extra capacity chahiye
-                             8 cells par woh lagbhag 14% extra hai
+                             8 cells par extra capacity lagbhag 14% hai
 
 2. SHED kar do            →  un users ko saaf 503 + Retry-After
                              (baaki cells surakshit rehte hain)</pre>
      <p>Teesra jawab — "dekh lenge" — asal mein pehla wala hai, bas bina plan ke.
-     Aur bina spare ke woh traffic baaki cells ko bhi le dooba deta hai, yaani
+     Aur bina spare ke gire cell ka traffic baaki cells ko bhi le doobta hai, yaani
      cells ka poora faayda hi khatam.</p>`,
   ],
   stages: [
@@ -690,7 +690,7 @@ Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
         { id: 'shuffle', label: 'Shuffle sharding (0 = ek customer ek cell, 1 = ek customer do cells)', min: 0, max: 1, step: 1, value: 0, unit: '',
           note: 'Do cells par customer tabhi poori tarah girta hai jab DONO kharab hon.' },
         { id: 'spare', label: 'Har cell mein spare capacity', min: 0, max: 50, step: 5, value: 0, unit: '%',
-          note: 'Ek cell gira toh uska load baaki cells par jaayega — usko absorb karne ke liye.' },
+          note: 'Ek cell gira toh gire cell ka load baaki cells par jaayega — load absorb karne ke liye spare chahiye.' },
       ],
       readouts: k => {
         const m = cellModel(k);
@@ -743,7 +743,7 @@ Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
     {
       type: 'archdiff',
       title: 'Blast radius ke leak',
-      instructions: 'Yeh "cell-based" architecture kehlaata hai — par ismein char cheezein blast radius ko wapas 100% bana deti hain. Chaaron pakdo.',
+      instructions: 'Design "cell-based" architecture kehlaata hai — par design mein char cheezein blast radius ko wapas 100% bana deti hain. Chaaron pakdo.',
       brief: `Ek team ne apni service ko 8 cells mein baant diya. Har cell ka apna
         load balancer, compute aur database hai. Phir bhi pichhle do incidents
         mein <b>saare</b> customers gire.`,
@@ -757,19 +757,19 @@ Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
         { id: 'obs', label: '📊 Per-cell dashboards', sub: 'har cell ke apne metrics aur alerts', row: 2 },
       ],
       flaws: [
-        { id: 'router', why: 'Global router khud ek <b>single point of failure</b> hai — woh gira toh saare 8 cells zinda hote hue bhi kisi kaam ke nahi. Router ko sabse simple, sabse sthir cheez rakho (DNS ya static mapping), aur uska apna failure mode <b>fail-static</b> ho: naya mapping na mil paaye toh purana chalta rahe.' },
-        { id: 'cfg', why: 'Ek hi config service se saare cells live padh rahe hain — yaani ek kharab config ek saath 8 cells par. Yeh <b>Cloudflare 2025</b> wali kadi hai, bas cells ke andar. Config bhi <b>cell-dar-cell</b> jaani chahiye, aur har cell ke paas aakhri acchi copy honi chahiye.' },
+        { id: 'router', why: 'Global router khud ek <b>single point of failure</b> hai — router gira toh saare 8 cells zinda hote hue bhi kisi kaam ke nahi. Router ko sabse simple, sabse sthir cheez rakho (DNS ya static mapping), aur router ka apna failure mode <b>fail-static</b> ho: naya mapping na mil paaye toh purana chalta rahe.' },
+        { id: 'cfg', why: 'Ek hi config service se saare cells live padh rahe hain — yaani ek kharab config ek saath 8 cells par. Shared config <b>Cloudflare 2025</b> wali kadi hai, bas cells ke andar. Config bhi <b>cell-dar-cell</b> jaani chahiye, aur har cell ke paas aakhri acchi copy honi chahiye.' },
         { id: 'deploy', why: 'Ek saath saare cells par deploy karne se cells ka poora maqsad khatam ho jaata hai. Deploy <b>cell-dar-cell</b> hona chahiye, beech mein bake ke saath — pehla cell, phir do, phir baaki. Cells ka sabse bada rozana faayda yahi hai: har release ka blast radius 1/N.' },
         { id: 'auth', why: 'Har cell har request par shared auth service par ja raha hai — yaani auth service gira toh saare cells gire. Ya toh auth ko har cell ke andar rakho (apni replica ke saath), ya token ko <b>self-verifiable</b> banao (signed JWT), taaki cell ko har request par bahar jaana hi na pade.' },
       ],
       fine: {
-        cells: 'Cells ka dhaancha bilkul sahi hai — har cell ka apna LB, compute aur database hona hi asli isolation deta hai. Galti cells mein nahi, un <b>shared cheezon</b> mein hai jo unke beech ki deewar mein chhed karti hain.',
-        obs: 'Per-cell dashboards aur alerts bilkul sahi hain, aur cells ke saath yeh zaroori bhi hain — warna ek cell ka degradation poore fleet ke average mein chhup jaayega. Yeh un kam cheezon mein se hai jo cells ke saath <b>behtar</b> ho jaati hain.',
+        cells: 'Cells ka dhaancha bilkul sahi hai — har cell ka apna LB, compute aur database hona hi asli isolation deta hai. Galti cells mein nahi, un <b>shared cheezon</b> mein hai jo cells ke beech ki deewar mein chhed karti hain.',
+        obs: 'Per-cell dashboards aur alerts bilkul sahi hain, aur cells ke saath per-cell alerts zaroori bhi hain — warna ek cell ka degradation poore fleet ke average mein chhup jaayega. Per-cell monitoring un kam cheezon mein se hai jo cells ke saath <b>behtar</b> ho jaati hain.',
       },
       lesson: `🎯 Cells banane ke baad asli kaam <b>shared cheezein dhoondhna</b>
-        hai. Ek hi sawaal poochho har component par: "kya yeh cell ke ANDAR hai,
+        hai. Ek hi sawaal poochho har component par: "kya component cell ke ANDAR hai,
         ya cells ke BEECH mein?" Jo beech mein hai, wahi blast radius wapas 100%
-        kar deta hai — aur woh aksar woh cheezein hoti hain jo "sirf config hai"
+        kar deta hai — aur beech wali cheezein aksar "sirf config hai" wali hoti hain
         ya "sirf auth hai" kehkar chhod di jaati hain.`,
     },
     {
@@ -862,12 +862,12 @@ Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
     { front: 'Cell-based architecture ka faayda?', back: 'Sirf <b>blast radius</b> — ek failure 1/N customers ko chhooti hai, aur har <b>release</b> ka blast radius bhi 1/N ho jaata hai. Cells zyada operational kaam hain, kam nahi; tez ya saste bhi nahi.' },
     { front: 'Shuffle sharding kya hai?', back: 'Uniform two-cell assignment mein exact pair overlap <b>1/C(8,2)=3.6%</b>. Poison tenant dono assigned cells ko unhealthy kare toh identical pair full lose karti hai. Single-cell loss par 2/8=25% tenants exposed hain; alternate capacity/retries determine degradation.' },
     { front: 'Single-cell exposure aur exact pair overlap?', back: 'Uniform one-cell assignment ka share <b>1/N</b>; pair assignment mein named cell exposure <b>2/N</b>, exact pair overlap <b>1/C(N,2)</b>. Alag fault scenarios ko same blast-radius number mat bolo.' },
-    { front: 'Cell gira — uska load kahan?', back: 'Do hi imaandar jawab: <b>spare</b> (8 cells par ~14% extra per cell) ya <b>shed</b> (saaf 503 + Retry-After). "Dekh lenge" ka matlab hai baaki cells bhi girenge.' },
+    { front: 'Cell gira — cell ka load kahan?', back: 'Do hi imaandar jawab: <b>spare</b> (8 cells par ~14% extra per cell) ya <b>shed</b> (saaf 503 + Retry-After). "Dekh lenge" ka matlab hai baaki cells bhi girenge.' },
     { front: 'Cells ke baad sabse zaroori kaam?', back: '<b>Shared cheezein dhoondhna</b> — config store, auth service, global router, deploy pipeline. Har component par ek sawaal: "cell ke ANDAR hai ya cells ke BEECH mein?"' },
   ],
   interview: {
     title: 'Interview Round — Blast radius',
-    instructions: 'Reliability rounds mein yeh sawaal seedha aata hai. 🎤',
+    instructions: 'Reliability rounds mein blast radius ka sawaal seedha aata hai. 🎤',
     questions: [
       {
         q: '"Ek kharab deploy tumhare kitne customers ko chhoo sakta hai?"',

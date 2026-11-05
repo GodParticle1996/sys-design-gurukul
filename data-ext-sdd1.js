@@ -45,7 +45,7 @@ decorrelated jitter         →   1, 2.1 s    (sabse kam calls: 782)</pre>
      </ol>
      <table>
        <tr><th>❌ Aam galatfehmi</th><th>✅ Sach</th></tr>
-       <tr><td>"1 s, 2 s, 3 s — exponential backoff"</td><td>Woh <b>linear</b> hai. Exponential = 1, 2, 4, 8 s</td></tr>
+       <tr><td>"1 s, 2 s, 3 s — exponential backoff"</td><td>1, 2, 3 <b>linear</b> hai. Exponential = 1, 2, 4, 8 s</td></tr>
        <tr><td>"600 ms base: 1,200 ms, phir 1,400 ms"</td><td>600 × 2¹ = 1,200 · 600 × 2² = <b>2,400</b> · 600 × 2³ = 4,800 ms</td></tr>
        <tr><td>"Retry-After 503 aur 420 par"</td><td><b>429</b> (Too Many Requests) aur 503. 420 Twitter ka purana mazaak tha</td></tr>
      </table>
@@ -312,7 +312,7 @@ SD.extendLevel('bulkhead', {
   lesson: [
     `<h3>🔊 Padosi ka shor — asli naap (lab 39)</h3>
      <p><b>Misaal:</b> ek hi ATM ke saamne line. Ek dukaandaar apne 50 cards leke aaya aur sab ek ke baad ek chala raha hai. Baaki log bas
-     ₹500 nikaalne aaye the — par sab uske peeche. Galti kisi ki nahi, bas line ek hi thi.</p>
+     ₹500 nikaalne aaye the — par sab dukaandaar ke peeche. Galti kisi ki nahi, bas line ek hi thi.</p>
      <p>Shared service: 4 workers = 200 req/s. Tenant A t=2–7s par 400 req/s; B aur C shaant (30 req/s har ek):</p>
      <pre>niyam                         B+C p50   p99       error      A: safal / 429 / 503
 ek line (FIFO)                  93 ms   1031 ms    233/578      1376 /    0 / 790
@@ -323,7 +323,7 @@ fair queuing (baari-baari)      24 ms     41 ms      0/580      1046 /    0 / 11
        <li><b>Quota (throttling):</b> B, C bach gaye — par A ke 1,453 requests 429 se laute jabki machine mein jagah thi.</li>
        <li><b>Fair queuing:</b> har tenant ki apni line, workers baari-baari → B, C ka p99 41 ms <b>aur</b> A ko quota se zyada (1,046).</li>
        <li><b>Autoscale kaafi?</b> Naye workers t=10.1 s par aaye — tab tak ki <b>trigger window</b> mein B, C ki 354/472 fail (75%).
-         Fair queuing ke saath: 0. Isolation pehle, autoscale uske upar.</li>
+         Fair queuing ke saath: 0. Isolation pehle, autoscale isolation ke upar.</li>
        <li><b>Cleanup cron din mein chal gaya</b> (100 ms ke chunks): users ki line mein → user p50 ~20 → 141 ms · low priority → 42 ms
          (chalta chunk rok nahi sakte) · low priority + <b>max 1 worker</b> → 22 ms (batch ka bulkhead) · off-peak → kam log prabhavit.</li>
      </ol>
@@ -381,7 +381,7 @@ fair queuing (baari-baari)      24 ms     41 ms      0/580      1046 /    0 / 11
           'Fair queue baari baant-ti hai, hardware nahi banati.',
         ],
       },
-      lesson: 'Tenants ko alag lines (fair queuing) ya quotas; batch job ko concurrency cap; autoscale uske upar — uske badle nahi.',
+      lesson: 'Tenants ko alag lines (fair queuing) ya quotas; batch job ko concurrency cap; autoscale in rokon ke upar — in rokon ke badle nahi.',
     },
     {
       type: 'bins',
@@ -394,9 +394,9 @@ fair queuing (baari-baari)      24 ms     41 ms      0/580      1046 /    0 / 11
       ],
       items: [
         { text: 'Ek tenant kabhi-kabhi burst karta hai; baaki ko tez jawab chahiye, par machine khaali ho toh burst wale ko bhi do', bin: 'fair', explain: 'Fair queuing khaali capacity burst wale ko deta hai, par shaant tenants ki line alag rehti hai (lab: B+C p99 41 ms, A ko 1,046).' },
-        { text: 'Free plan wale tenants contract se 100 req/s tak hi le sakte hain', bin: 'quota', explain: 'Yeh business ka niyam hai — quota (token bucket) + 429 + Retry-After.' },
+        { text: 'Free plan wale tenants contract se 100 req/s tak hi le sakte hain', bin: 'quota', explain: 'Contract ki hadd business ka niyam hai — quota (token bucket) + 429 + Retry-After.' },
         { text: 'Raat ka fraud-cleanup job galti se din mein chal gaya', bin: 'cap', explain: 'Low priority + max 1 worker → users ko pata bhi nahi chala (lab: 22 ms), job dheema chala.' },
-        { text: 'Ek bada customer ne API se 10 lakh records ek saath maang liye, baaki customers dheeme ho gaye', bin: 'fair', explain: 'Us customer ki requests uski apni line mein — dheema sirf wahi hoga.' },
+        { text: 'Ek bada customer ne API se 10 lakh records ek saath maang liye, baaki customers dheeme ho gaye', bin: 'fair', explain: 'Us customer ki requests customer ki apni line mein — dheema sirf wahi customer hoga.' },
         { text: 'Report export har tenant ek din mein sirf 5 baar chala sakta hai', bin: 'quota', explain: 'Mehnga operation, gini hui ijaazat — quota.' },
         { text: 'Search index rebuild peak hours mein bhi chalana zaroori hai', bin: 'cap', explain: 'Rebuild ko gine chune workers do (bulkhead) — users ka hissa surakshit.' },
       ],
@@ -434,9 +434,9 @@ frame mein ek baar, naye 20      47 fps · click 6 ms   · 11 ms purana, ~81% ch
          <code>resume()</code> — ya seedha <code>pipeline(reader, writer)</code>. Raftaar wahi (sabse dheemi kadi ki), bas RAM nahi bharti.</li>
        <li><b>Buffer:</b> hamesha hadd ke saath. "Har message turant" wale page mein kuch toot-ta nahi dikhta — bas line bina hadd badhti hai.</li>
        <li><b>Drop:</b> jab data chhodna manzoor ho (chat, telemetry samples) — sabse sasta ilaaj. Koi insaan 5,000 messages/s padh bhi nahi sakta.</li>
-       <li><b>Ignore:</b> tabhi jab producer ki raftaar pata ho aur buffer ki hadd saabit ho. Warna yeh "unbounded queue" ka doosra naam hai.</li>
+       <li><b>Ignore:</b> tabhi jab producer ki raftaar pata ho aur buffer ki hadd saabit ho. Warna ignore "unbounded queue" ka doosra naam hai.</li>
      </ol>
-     <p class="tip">🎯 <b>Asli baat:</b> backpressure kaam dheema nahi karta — kaam ki raftaar hamesha sabse dheemi kadi ki thi. Backpressure bas yeh
+     <p class="tip">🎯 <b>Asli baat:</b> backpressure kaam dheema nahi karta — kaam ki raftaar hamesha sabse dheemi kadi ki thi. Backpressure bas itna
      tay karta hai ki farak <b>kahan</b> jama ho: producer ke ruk-ne mein, hadd wali line mein, ya phenke gaye data mein.</p>
      <p class="tip">👉 Yahi topic problem se code tak, slow motion mein: <b>🛡️ Playlist · 1 Resilience → 🌊 Backpressure</b> (paanch levels).</p>`,
   ],
@@ -519,10 +519,10 @@ multi-site active-active  poora region, aadha traffic             1.5 s       36
        <li><b>RPO kisse?</b> Aakhri snapshot se ab tak (50 orders) — ya replication ka lag (2–5). Async mein zero ka bharosa nahi.</li>
        <li><b>Warm standby ki chhupi keemat:</b> chhota app → scale-up ke 3 s tak aadhe orders fail.</li>
        <li><b>Replication ≠ backup ≠ versioning:</b> galat DELETE replication se region B tak bhi pahunchta hai (lab 32). S3 versioning purana
-         version rakhti hai; backup account compromise se nahi bachata — woh security ka alag kaam hai.</li>
+         version rakhti hai; backup account compromise se nahi bachata — compromise se bachna security ka alag kaam hai.</li>
      </ol>
      <p class="tip">🎯 <b>Asli baat:</b> pehle business se RTO/RPO likhwao, phir sabse sasti strategy chuno jo usme fit ho — aur use saal mein
-     do baar sach mein chala ke dekho (game day). Jo failover kabhi chala nahi, woh chalega bhi nahi.</p>
+     do baar sach mein chala ke dekho (game day). Kabhi na chala failover zaroorat par chalega bhi nahi.</p>
      <p class="tip">👉 Yahi topic problem se code tak, slow motion mein: <b>🛡️ Playlist · 1 Resilience → 🌋 Disaster Recovery</b> (paanch levels).</p>`,
   ],
   stages: [
@@ -721,7 +721,7 @@ SD.registerLevelsAfter('resil', 'slo', [
   title: 'Chaos Engineering — Jaan-Boojh Kar Todo',
   badge: 'Chaos Chela',
   objectives: [
-    'Chaos Monkey kya hai, aur yeh <b>production</b> mein kyun chalaya jaata hai',
+    'Chaos Monkey kya hai, aur Chaos Monkey <b>production</b> mein kyun chalaya jaata hai',
     'Chaos experiment ka dhaancha: steady state → hypothesis → inject → observe → abort',
     'Blast radius chhota rakhna, game day, aur "band karo" button',
     'Lab: har redundancy ki kami (health check, retry) monkey kaise pakadta hai',
@@ -763,7 +763,7 @@ SD.registerLevelsAfter('resil', 'slo', [
        <tr><td>Game day</td><td>team milkar ek failure chalati hai aur runbook jaanchti hai</td></tr>
      </table>
      <p class="tip">🎯 <b>Asli baat:</b> resilience ka har pattern (health check, retry, breaker, bulkhead, failover) sirf tab tak "hai" jab tak koi
-     use chala ke na dekhe. Chaos engineering usi ka regular imtihaan hai — chhote daayre mein, abort button ke saath.</p>
+     use chala ke na dekhe. Chaos engineering bachav ka regular imtihaan hai — chhote daayre mein, abort button ke saath.</p>
      <p class="tip">👉 Yahi topic problem se code tak, slow motion mein: <b>🛡️ Playlist · 1 Resilience → 🐒 Chaos Engineering</b> (chaar levels).</p>`,
   ],
   stages: [
@@ -814,7 +814,7 @@ SD.registerLevelsAfter('resil', 'slo', [
         { text: 'Blast radius chuno: staging / ek cell / 1% traffic, aur abort button taiyaar', explain: 'Error budget batata hai kitna risk manzoor hai.' },
         { text: 'Failure inject karo (instance band, latency, dependency band)', explain: 'Asli duniya jaisi galti — sabse aam wali se shuru.' },
         { text: 'Steady state dekho — tooti toh turant abort', explain: 'Experiment kabhi incident nahi banna chahiye.' },
-        { text: 'Kami likho, theek karo, experiment dobara chalao (phir dheere-dheere automate)', explain: 'Jo kami mili woh ab regression test hai.' },
+        { text: 'Kami likho, theek karo, experiment dobara chalao (phir dheere-dheere automate)', explain: 'Mili hui kami ab regression test hai.' },
       ],
     },
     {
