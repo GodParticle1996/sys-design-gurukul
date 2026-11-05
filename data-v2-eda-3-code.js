@@ -19,7 +19,7 @@ SD.registerLevels('sdd-eda', [
     "Node EventEmitter lagane se kya milta hai aur kya baaki rehta hai?"
   ],
   "lesson": [
-    "<h3>💻 Teen chhoti files, wahi lab ka code</h3><p>Order ka flow, broker ki line, aur apni app ki wiring. Code ki chamakti line ko state ke saath padho. Yeh asli files ke tukde hain.</p><p>Ek sawaal saath rakho: is line ke baad kya sach mein poora hua?</p>"
+    "<h3>💻 Teen chhoti files, wahi lab ka code</h3><p>Order ka flow, broker ki line, aur apni app ki wiring. Code ki chamakti line ko state ke saath padho. Ye code asli files ke tukde hain.</p><p>Ek sawaal saath rakho: is line ke baad kya sach mein poora hua?</p>"
   ],
   "stages": [
     {
@@ -224,7 +224,7 @@ SD.registerLevels('sdd-eda', [
           }
         }
       ],
-      "lesson": "🎯 <b>Asli baat:</b> alag arrays alag progress deti hain. Read kaam nahi mitaata. Ack sahi subscription ki entry hataata hai. Disk ke bina yeh yaad restart par nahi bachegi."
+      "lesson": "🎯 <b>Asli baat:</b> alag arrays alag progress deti hain. Read kaam nahi mitaata. Ack sahi subscription ki entry hataata hai. Disk ke bina ID ki yaad restart par nahi bachegi."
     },
     {
       "type": "dryrun",
@@ -250,7 +250,7 @@ SD.registerLevels('sdd-eda', [
         {
           "title": "3. API accepted, par notify pending?",
           "line": "11-12",
-          "say": "<pre>API: accepted\nnotify pending: 1</pre>Yeh mini run ka exact output hai. Consumer ka kaam abhi nahi chala.",
+          "say": "<pre>API: accepted\nnotify pending: 1</pre>Upar mini run ka exact output hai. Consumer ka kaam abhi nahi chala.",
           "ask": {
             "q": "Notify pending 1 hai aur API \"accepted\" kehti hai. Kya API galat bol rahi hai?",
             "choices": [
@@ -279,7 +279,7 @@ SD.registerLevels('sdd-eda', [
     {
       "type": "cards",
       "title": "🧰 Node EventEmitter: event ka naam, par kaunsa wait?",
-      "goal": "Yahan Node ka built-in EventEmitter sach mein chalaaya hai. Official source: <a href=\"https://nodejs.org/api/events.html#asynchronous-vs-synchronous\" target=\"_blank\" rel=\"noopener\">Node Events documentation</a>. Yeh alag process wala message broker nahi hai.",
+      "goal": "Yahan Node ka built-in EventEmitter sach mein chalaaya hai. Official source: <a href=\"https://nodejs.org/api/events.html#asynchronous-vs-synchronous\" target=\"_blank\" rel=\"noopener\">Node Events documentation</a>. Lab ki queue alag process wala message broker nahi hai.",
       "steps": [
         {
           "title": "1. Normal listener kab chalta hai?",
@@ -357,7 +357,7 @@ SD.registerLevels('sdd-eda', [
   "cards": [
     {
       "front": "Publish mein cap check pehle kyun?",
-      "back": "Koi line full ho toh copies daalne se pehle reject. Yeh lab ka in-process niyam hai, distributed transaction nahi."
+      "back": "Koi line full ho toh copies daalne se pehle reject. Ye lab ka in-process niyam hai, distributed transaction nahi."
     },
     {
       "front": "Save + publish atomic hain?",

@@ -169,7 +169,7 @@ SD.registerLevels('fp-core', [
     {
       "type": "cards",
       "title": "🔌 Apne app mein wire kaise karein?",
-      "goal": "tools/mini.js ki actual lines. Five keys aur process-local Map; yeh HTTP timing test nahi. tools/compare.js same helpers ko HTTP functions deta hai.",
+      "goal": "tools/mini.js ki actual lines. Five keys aur process-local Map; ye lab HTTP timing test nahi. tools/compare.js same helpers ko HTTP functions deta hai.",
       "steps": [
         {
           "title": "1. Helper aur data source alag kyun?",

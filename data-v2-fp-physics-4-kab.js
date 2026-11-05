@@ -88,7 +88,7 @@ SD.registerLevels('fp-core', [
           "explain": "Per-call cap fleet-wide budget nahi. Admission, total concurrency aur useful completions gino."
         }
       ],
-      "lesson": "🎯 <b>Asli baat:</b> Jo kharcha dominant hai, pehla experiment usi par karo. Har bottleneck ka ilaaj more servers nahi."
+      "lesson": "🎯 <b>Asli baat:</b> Pehla experiment sabse bade (dominant) kharche par karo. Har bottleneck ka ilaaj more servers nahi."
     },
     {
       "type": "cards",
@@ -190,7 +190,7 @@ SD.registerLevels('fp-core', [
         {
           "text": "Isi lab folder mein transfer, scale aur aakhri cost lines.",
           "cmd": "node tools/math.js",
-          "expect": "HISAAB: decimal bytes; fixed wait 40 ms; ideal link; no overhead/queue\n1000 B @ 100 Mbps: 40.080 ms\n1000 B @ 1000 Mbps: 40.008 ms\n1000000 B @ 100 Mbps: 120.000 ms\n1000000 B @ 1000 Mbps: 48.000 ms\nHISAAB: maana 3 GHz; 1 cycle ko 1 human second; 365-day year\n1 cycle = 0.333 ns\n100 ns = 300 human seconds\n150 ms = 14.27 human years\nYEH scenario inputs hain; hardware timings measure nahi kiye.\nHISAAB: kalpanik cost units/GiB: origin=1, cache=20; AWS price NAHI\norigin 100 GiB + sabka cache: 2100 units\norigin 100 GiB + hot 5 GiB cache: 200 units"
+          "expect": "HISAAB: decimal bytes; fixed wait 40 ms; ideal link; no overhead/queue\n1000 B @ 100 Mbps: 40.080 ms\n1000 B @ 1000 Mbps: 40.008 ms\n1000000 B @ 100 Mbps: 120.000 ms\n1000000 B @ 1000 Mbps: 48.000 ms\nHISAAB: maana 3 GHz; 1 cycle ko 1 human second; 365-day year\n1 cycle = 0.333 ns\n100 ns = 300 human seconds\n150 ms = 14.27 human years\nYe numbers scenario inputs hain; hardware timings measure nahi kiye.\nHISAAB: kalpanik cost units/GiB: origin=1, cache=20; AWS price NAHI\norigin 100 GiB + sabka cache: 2100 units\norigin 100 GiB + hot 5 GiB cache: 200 units"
         }
       ],
       "observe": {
@@ -249,7 +249,7 @@ SD.registerLevels('fp-core', [
           "say": "User ko kaunsa result kab chahiye? Data kahan hai? Kitne requests/bytes/work items? Waqt kahan laga? Safe completion capacity kitni? Extra copies ka cost aur freshness promise kya? Phir architecture ke boxes banao."
         }
       ],
-      "lesson": "🎯 <b>Asli baat:</b> Pehle workload, path aur guarantee. Phir measured experiment; uske baad product ya pattern chuno."
+      "lesson": "🎯 <b>Asli baat:</b> Pehle workload, path aur guarantee. Phir measured experiment; experiment ke baad product ya pattern chuno."
     }
   ],
   "interview": {

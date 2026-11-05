@@ -522,7 +522,7 @@ SD.registerLevels('fp-core', [
     {
       "type": "cards",
       "title": "🧮 Peak 3 tha. Average 1.75 kaise?",
-      "goal": "tools/queue.js ki exact finite-window accounting. General averages ka rule <a href=\"https://live.ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/40abf69fd6895d82e1e249f68e3eedbd_xa38Q2_pnlQ.pdf\" target=\"_blank\" rel=\"noopener\">MIT OCW</a> se; yeh lab schedule model hai.",
+      "goal": "tools/queue.js ki exact finite-window accounting. General averages ka rule <a href=\"https://live.ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/40abf69fd6895d82e1e249f68e3eedbd_xa38Q2_pnlQ.pdf\" target=\"_blank\" rel=\"noopener\">MIT OCW</a> se; ye sirf lab ka schedule model hai.",
       "steps": [
         {
           "title": "1. Har order ne system mein kitna waqt diya?",
@@ -570,7 +570,7 @@ SD.registerLevels('fp-core', [
         {
           "text": "App root se units aur transfer-time hisaab.",
           "cmd": "cd docker-labs/45-software-physics && node tools/math.js",
-          "expect": "HISAAB: decimal bytes; fixed wait 40 ms; ideal link; no overhead/queue\n1000 B @ 100 Mbps: 40.080 ms\n1000 B @ 1000 Mbps: 40.008 ms\n1000000 B @ 100 Mbps: 120.000 ms\n1000000 B @ 1000 Mbps: 48.000 ms\nHISAAB: maana 3 GHz; 1 cycle ko 1 human second; 365-day year\n1 cycle = 0.333 ns\n100 ns = 300 human seconds\n150 ms = 14.27 human years\nYEH scenario inputs hain; hardware timings measure nahi kiye.\nHISAAB: kalpanik cost units/GiB: origin=1, cache=20; AWS price NAHI\norigin 100 GiB + sabka cache: 2100 units\norigin 100 GiB + hot 5 GiB cache: 200 units"
+          "expect": "HISAAB: decimal bytes; fixed wait 40 ms; ideal link; no overhead/queue\n1000 B @ 100 Mbps: 40.080 ms\n1000 B @ 1000 Mbps: 40.008 ms\n1000000 B @ 100 Mbps: 120.000 ms\n1000000 B @ 1000 Mbps: 48.000 ms\nHISAAB: maana 3 GHz; 1 cycle ko 1 human second; 365-day year\n1 cycle = 0.333 ns\n100 ns = 300 human seconds\n150 ms = 14.27 human years\nYe numbers scenario inputs hain; hardware timings measure nahi kiye.\nHISAAB: kalpanik cost units/GiB: origin=1, cache=20; AWS price NAHI\norigin 100 GiB + sabka cache: 2100 units\norigin 100 GiB + hot 5 GiB cache: 200 units"
         },
         {
           "text": "Isi lab folder se queue ki poori accounting.",

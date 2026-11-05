@@ -24,7 +24,7 @@ SD.registerLevels('sdd-eda', [
     {
       "type": "bins",
       "title": "⚖️ Kahan khabar, kahan turant jawab?",
-      "instructions": "Har situation mein business ko jo promise chahiye, uske hisaab se pehla raasta chuno.",
+      "instructions": "Har situation mein business ke promise ke hisaab se pehla raasta chuno.",
       "bins": [
         {
           "id": "event",
@@ -81,7 +81,7 @@ SD.registerLevels('sdd-eda', [
           "explain": "Kitchen accepted ka promise kitchen ke actual jawab ke baad. Tab tak order pending dikh sakta hai."
         }
       ],
-      "lesson": "🎯 <b>Asli baat:</b> jiska pakka result abhi chahiye, uska wait kahin na kahin rahega. Alag background reaction ko order ke response se alag kar sakte ho."
+      "lesson": "🎯 <b>Asli baat:</b> pakka result abhi chahiye toh wait kahin na kahin rahega. Alag background reaction ko order ke response se alag kar sakte ho."
     },
     {
       "type": "cards",
@@ -228,7 +228,7 @@ SD.registerLevels('sdd-eda', [
     },
     {
       "front": "Stock/payment ka promise?",
-      "back": "Jo result abhi confirmed kehna hai, uska authoritative result lo. Pending promise ho toh UI mein pending hi dikhao."
+      "back": "Abhi confirmed kehna hai toh authoritative result lo. Pending promise ho toh UI mein pending hi dikhao."
     }
   ]
 }

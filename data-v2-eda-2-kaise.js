@@ -525,7 +525,7 @@ SD.registerLevels('sdd-eda', [
     {
       "type": "cards",
       "title": "📚 Ek queue ya har kaam ki apni queue?",
-      "goal": "Yeh RabbitMQ ki official documentation se hai; is lab mein RabbitMQ chalaya nahi gaya. Apne lab ka fanout code alag hai. Sources: <a href=\"https://www.rabbitmq.com/tutorials/tutorial-three-javascript\" target=\"_blank\" rel=\"noopener\">Publish/Subscribe</a> · <a href=\"https://www.rabbitmq.com/tutorials/tutorial-two-javascript\" target=\"_blank\" rel=\"noopener\">Work Queues</a>.",
+      "goal": "Ye baat RabbitMQ ki official documentation se hai; is lab mein RabbitMQ chalaya nahi gaya. Apne lab ka fanout code alag hai. Sources: <a href=\"https://www.rabbitmq.com/tutorials/tutorial-three-javascript\" target=\"_blank\" rel=\"noopener\">Publish/Subscribe</a> · <a href=\"https://www.rabbitmq.com/tutorials/tutorial-two-javascript\" target=\"_blank\" rel=\"noopener\">Work Queues</a>.",
       "steps": [
         {
           "title": "1. Ek task do workers mein baantna ho?",

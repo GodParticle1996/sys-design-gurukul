@@ -26,7 +26,7 @@ SD.registerLevels('fp-core', [
     {
       "type": "dryrun",
       "title": "🐢 Ek-ek price maangne ka safar",
-      "goal": "tools/slowmo.js ka repeatable MODEL. Chaar keys; har request par tay 40 ms. Yeh WAN ya Redis benchmark nahi.",
+      "goal": "tools/slowmo.js ka repeatable MODEL. Chaar keys; har request par tay 40 ms. Ye run WAN ya Redis benchmark nahi.",
       "nodes": [
         {
           "id": "app",
@@ -398,7 +398,7 @@ SD.registerLevels('fp-core', [
     {
       "type": "dryrun",
       "title": "📦 Ek batch ka safar",
-      "goal": "tools/slowmo.js ka repeatable MODEL. Chaar keys; har request par tay 40 ms. Yeh WAN ya Redis benchmark nahi.",
+      "goal": "tools/slowmo.js ka repeatable MODEL. Chaar keys; har request par tay 40 ms. Ye run WAN ya Redis benchmark nahi.",
       "nodes": [
         {
           "id": "app",

@@ -24,7 +24,7 @@ SD.registerLevels('sdd-eda', [
     {
       "type": "dryrun",
       "title": "🧾 Pehle seedhe calls: notification ne order ko kyun roka?",
-      "goal": "Sawaal: notification band ho toh kya order bhi fail dikhna chahiye? Yeh tools/slowmo.js ka fixed-clock run hai. 100 ms kitchen aur 1000 ms failed notify lab ke tay delays hain.",
+      "goal": "Sawaal: notification band ho toh kya order bhi fail dikhna chahiye? Ye trace tools/slowmo.js ka fixed-clock run hai. 100 ms kitchen aur 1000 ms failed notify lab ke tay delays hain.",
       "nodes": [
         {
           "id": "app",
@@ -325,7 +325,7 @@ SD.registerLevels('sdd-eda', [
           "say": "<b>Event</b> = ho chuki baat ki khabar: <code>OrderPlaced</code>. Order lene wala <b>producer</b>. Khabar rakhne aur baantne wala <b>broker</b>. Apna kaam lene wala <b>consumer</b>. Aise events par alag kaam chalane ka andaaz: <b>Event-Driven Architecture</b>."
         }
       ],
-      "lesson": "🎯 <b>Asli baat:</b> Pehle business ka promise tay karo: order accepted hua, ya kitchen aur message ka kaam bhi poora hua? Naam badalne se yeh farak nahi mitta."
+      "lesson": "🎯 <b>Asli baat:</b> Pehle business ka promise tay karo: order accepted hua, ya kitchen aur message ka kaam bhi poora hua? Naam badalne se ye farak nahi mitta."
     },
     {
       "type": "docker",
