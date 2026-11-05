@@ -262,7 +262,7 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Sab ek line mein</td><td>7 mein se 3 ❌</td><td>12 mein se 12 ✅ (4.02 s)</td><td>9.50 s — usme 1.50 s bekaar</td></tr>
               <tr><td>Har tenant: 2 / second</td><td><b>7 mein se 0 ❌</b></td><td>12 mein se <b>2</b> ✅, 10 mana</td><td><b>4.50 s</b></td></tr>
             </table></div>
-            Bholu Dhaba bach gaya. Bholu Dhaba bach gaya, ye asli sudhaar hai.<br><br>Par Annapurna ka kaam poora nahi hua, jabki khidkiyan aadhe se zyada samay khaali baithi rahi.`,
+            Bholu Dhaba bach gaya. Bholu Dhaba bach gaya — asli sudhaar.<br><br>Par Annapurna ka kaam poora nahi hua, jabki khidkiyan aadhe se zyada samay khaali baithi rahi.`,
           nodes: { a: { tone: 'slow', badge: '12 mein se 2 ✅ · 10 mana' }, b: { tone: 'ok', badge: '7 mein se 7 ✅' }, api: { tone: 'idle', badge: '15 s mein 4.50 s kaam' } },
           vars: { b: ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok'], a: '12 mein se 2 ✅ · 10 mana', idle: '4.50 s (15 s mein se)' },
         },

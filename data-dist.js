@@ -1178,7 +1178,7 @@ COMMIT;</pre>
     {
       type: 'terminal',
       title: '♻️ Duplicate ko bekaar banao',
-      goal: 'msg-9001 wala payment dobara bhejo. Simulator pehla jawab dobara deta hai — par ye memory mein hai. Database ka UNIQUE constraint ya ek transaction mein kaam + record ka saboot ye nahi deta.',
+      goal: 'msg-9001 wala payment dobara bhejo. Simulator pehla jawab dobara deta hai — par pehla jawab sirf memory mein hai. Database ka UNIQUE constraint ya ek transaction mein kaam + record ka saboot simulator nahi deta.',
       sys: SD.sys.payments(),
       tasks: T_ONCE,
       success: SD.allTasks(T_ONCE),

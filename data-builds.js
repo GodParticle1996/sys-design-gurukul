@@ -41,7 +41,7 @@ const T_ADCLICK = [
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle > 0) },
   { text: 'Ab partitions aur consumers ka milaan theek karo',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle === 0 && r === SD.mission.latest(s, 'stream', 'partitions')) },
-  { text: '1 crore items, 1% galti: Bloom filter (pehli chhanni) ka size naapo — billing ki pakki dedup ye nahi deta',
+  { text: '1 crore items, 1% galti: Bloom filter (pehli chhanni) ka size naapo — billing ki pakki dedup Bloom filter nahi deta',
     check: s => s.records.some(r => r.kind === 'probabilistic' && r.op === 'bloom' && r.items === 10000000 && r.bits === 95850584 && r.fpRate <= 1.01) },
   { text: "Alag hisaab: ad:sb2026 key par 4,00,000 rps ki padhai (stream partition ka model nahi)",
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true) },

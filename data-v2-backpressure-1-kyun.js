@@ -322,7 +322,7 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Dugni memory (40)</td><td>10.0 s par crash</td><td>42</td><td>Kisi ko nahi</td></tr>
               <tr><td>Line ki hadd 8, bhari ho toh chupchaap girao</td><td><b>zinda</b></td><td>16</td><td>Kisi ko nahi</td></tr>
             </table></div>
-            Hadd ne dispatch-service ko bacha liya. Crash ruk gaya, ye asli sudhaar hai.<br><br>Par 16 customers ke liye kuch nahi badla: paisa kata, "confirm" dikha, rider nahi aayega. Aur ab toh koi crash bhi nahi jo kisi ko jagaye.`,
+            Hadd ne dispatch-service ko bacha liya. Crash ruk gaya — asli sudhaar.<br><br>Par 16 customers ke liye kuch nahi badla: paisa kata, "confirm" dikha, rider nahi aayega. Aur ab toh koi crash bhi nahi jo kisi ko jagaye.`,
           nodes: { os: { tone: 'slow', badge: '16 jhoothe "confirm"' }, ds: { tone: 'ok', badge: 'zinda' }, rd: { tone: 'ok', badge: '' } },
         },
         {

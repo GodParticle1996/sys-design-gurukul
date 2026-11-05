@@ -816,7 +816,7 @@ recommendations poori tarah mar jaaye?
       sys: SD.sys.orders({ deps: { ledger: { calledBy: 'orders' }, search: { p50: 5, p99: 10, errorRate: 0, calledBy: 'search' } } }),
       tasks: T_BULKHEAD,
       success: SD.allTasks(T_BULKHEAD),
-      successText: "Bina hadd ledger ne saare 50 slots le liye aur search ke liye kuch nahi bacha. 20 ki hadd ke baad search ko 30 slots mile aur poore 500 rps chale. Orders ka 504 timeout ka saboot hai; mixed-load panel pool alag rehne ka saboot hai. Ye ek seedha hisaab wala model hai, asli threads nahi.",
+      successText: "Bina hadd ledger ne saare 50 slots le liye aur search ke liye kuch nahi bacha. 20 ki hadd ke baad search ko 30 slots mile aur poore 500 rps chale. Orders ka 504 timeout ka saboot hai; mixed-load panel pool alag rehne ka saboot hai. Simulator ka bulkhead ek seedha hisaab hai, asli threads nahi.",
       solution: [
         "sim inject latency ledger 5000",
         "sim add timeout ledger 200",
