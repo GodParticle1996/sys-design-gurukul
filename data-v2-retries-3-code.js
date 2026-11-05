@@ -33,13 +33,13 @@ SD.registerLevels('sdd-resil', [
     'Apni <code>fetch</code> ko retry ke laayak kaise banate hain — <code>fetch</code> toh 503 par error phenkta hi nahi?',
   ],
   lesson: [
-    `<h3>💻 Teen line ka retry, aur uska bill</h3>
+    `<h3>💻 Teen line ka retry, aur retry ka bill</h3>
      <p>Retry likhna teen line ka kaam lagta hai:</p>
      <pre>while (true) {
   if (await call()) break;      // fail? turant dobara
 }</pre>
      <p>Yahi teen line pichhle levels ka "turant retry" thi. Slow motion mein inka bill: <b>132 calls, 5 crash, 6 mein se 0 order</b>.</p>
-     <p>Sahi retry mein chaar faisle hote hain: <b>kis failure par</b> dobara bhejna hai, <b>kitni baar</b>, <b>kitna rukna</b> hai, aur <b>server ne kuch bataya</b> toh uska kya.</p>
+     <p>Sahi retry mein chaar faisle hote hain: <b>kis failure par</b> dobara bhejna hai, <b>kitni baar</b>, <b>kitna rukna</b> hai, aur <b>server ne kuch bataya</b> toh server ki baat ka kya.</p>
      <p>Is level mein do file padhoge. Dono asli file hain, copy nahi. Lab yahi do file chalata hai:</p>
      <pre>docker-labs/37-retries/lib/retry.js      ← chaaron faisle (26 line)
 docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banana (15 line)</pre>
@@ -126,7 +126,7 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
         {
           clock: 'koshish 1 → 2 · 1.30 s → 1.45 s',
           line: [26, 27, 18],
-          say: `Line 26: <code>onWait</code> ko khabar (lab isi se "151 ms ruk ke phir" chhapta hai).<br>
+          say: `Line 26: <code>onWait</code> ko khabar (lab onWait se hi "151 ms ruk ke phir" chhapta hai).<br>
             Line 27: <code>sleep(151)</code>.<br>
             Line 18: loop ka agla chakkar, <code>n</code> = 1.`,
           vars: { n: '1', r: '—', worth: '—' },
@@ -152,7 +152,7 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
           clock: 'agar payment-service wapas na aati',
           line: [19, 20, 21, 22],
           say: `Ab ek doosra raasta. Maan lo payment-service band hi rehti. Paanchvi koshish: <code>n</code> = 4, call phir fail.<br><br>
-            Line 20: ok nahi. Line 21: <code>worthRetrying</code> true hai, isliye yeh line nahi rokti. Ab line 22.`,
+            Line 20: ok nahi. Line 21: <code>worthRetrying</code> true hai, isliye line 21 nahi rokti. Ab line 22.`,
           vars: { n: '4', r: '{ ok: false, status: 0 }', worth: 'true', out: '—' },
           ask: {
             q: '<code>n</code> = 4 hai aur <code>attempts</code> = 5. Line 22 kya karegi?',
@@ -190,7 +190,7 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
     {
       type: 'dryrun',
       title: '🧩 Apni fetch ko retry ke laayak banana — tools/mini.js',
-      goal: '<code>retry()</code> ko ek aisa function chahiye jo saaf bataye: kaam hua ya nahi, status kya tha, server ne kab aane ko kaha. <code>fetch</code> akela yeh nahi batata. Dekho kaise banate hain.',
+      goal: '<code>retry()</code> ko ek aisa function chahiye jo saaf bataye: kaam hua ya nahi, status kya tha, server ne kab aane ko kaha. <code>fetch</code> akela teeno baatein nahi batata. Dekho kaise banate hain.',
       code: {
         title: 'docker-labs/37-retries/tools/mini.js',
         file: 'docker-labs/37-retries/tools/mini.js',
@@ -253,18 +253,18 @@ docker-labs/37-retries/tools/mini.js     ← apni fetch ko retry ke laayak banan
         {
           clock: 'chaar faisle = chaar settings',
           line: [16, 17, 18, 19, 20],
-          say: `Line 16: <code>retry(placeOrder, { … })</code>. <code>placeOrder</code> ek call hai; <code>retry</code> usse dimaag se dobara bhejta hai.<br><br>
+          say: `Line 16: <code>retry(placeOrder, { … })</code>. <code>placeOrder</code> ek call hai; <code>retry</code> placeOrder ko soch-samajh ke dobara bhejta hai.<br><br>
             <b>Line 17, <code>attempts: 5</code>:</b> kitni baar. Paanchvi fail par user ko error.<br>
             <b>Line 18, <code>base: 300</code>:</b> pehli hadd.<br>
             <b>Line 19, <code>cap: 2400</code>:</b> hadd ki chhat.<br>
             <b>Line 20, <code>wait: 'full'</code>:</b> hadd ke andar random.<br><br>
-            "Kis failure par" yahan nahi likha: woh retry.js ki line 14 mein pehle se hai.`,
+            "Kis failure par" yahan nahi likha: niyam retry.js ki line 14 mein pehle se hai.`,
           vars: { res: '—', after: '—', ret: '—' },
         },
         {
           clock: 'sirf demo ke liye',
           line: [21, 22],
-          say: `Line 21: <code>random: seeded(10)</code> sirf is demo ke liye hai. Yeh aisa random hai jo har run mein wahi sankhyaein deta hai — taaki tumhara output dry run se mile. Apne code mein yeh line mat likho; tab <code>Math.random</code> chalega.<br><br>
+          say: `Line 21: <code>random: seeded(10)</code> sirf is demo ke liye hai. Seeded random har run mein wahi sankhyaein deta hai — taaki tumhara output dry run se mile. Apne code mein seeded wali line mat likho; tab <code>Math.random</code> chalega.<br><br>
             Line 22: har intezaar se pehle ek line chhapti hai.`,
         },
         {

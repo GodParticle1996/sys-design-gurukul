@@ -39,9 +39,9 @@ SD.registerLevels('sdd-resil', [
     'Load balancer ke apne health check ki default settings kya kehti hain?',
   ],
   lesson: [
-    `<h3>📦 Asli project mein yeh code tum nahi likhte. Settings tum likhte ho.</h3>
+    `<h3>📦 Asli project mein checker ka code tum nahi likhte. Settings tum likhte ho.</h3>
      <p>Checker ka niyam (<code>lib/checker.js</code>) asli duniya mein Kubernetes ya load balancer ke andar hota hai. App ka hissa (<code>lib/health.js</code>) aksar ek library deti hai.</p>
-     <p>Tumhara kaam: <b>settings</b>. Aur settings mein sabse zyada chot wahan lagti hai jahan tumne kuch likha hi nahi — kyunki tab <b>default</b> lagu hota hai.</p>
+     <p>Tumhara kaam: <b>settings</b>. Aur settings mein sabse zyada chot un settings se lagti hai jo tumne likhi hi nahi — kyunki tab <b>default</b> lagu hota hai.</p>
      <pre>asli library ka asli run (@godaddy/terminus, default settings):
 6.50 s   🛑 SIGTERM — band hone ka signal
 6.50 s   app band                          ← usi pal. Koi rukna nahi.</pre>
@@ -53,7 +53,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'dryrun',
       title: '☸️ Kubernetes mein wahi teen sawaal — k8s/orders.yaml',
-      goal: 'Yeh file lab ke folder mein hai. <b>Is machine par Kubernetes nahi hai, isliye yeh file chala ke nahi dekhi gayi</b>; settings ke naam aur defaults Kubernetes ki documentation se hain. Har click par ek hissa chamkega.',
+      goal: 'Deployment ki YAML file lab ke folder mein hai. <b>Is machine par Kubernetes nahi hai, isliye YAML file chala ke nahi dekhi gayi</b>; settings ke naam aur defaults Kubernetes ki documentation se hain. Har click par ek hissa chamkega.',
       code: {
         title: 'docker-labs/43-health-checks/k8s/orders.yaml',
         file: 'docker-labs/43-health-checks/k8s/orders.yaml',
@@ -79,13 +79,13 @@ SD.registerLevels('sdd-resil', [
         {
           clock: 'zinda ho?',
           line: '85-88',
-          say: '<b>Line 86:</b> raasta <code>/livez</code> — wahi jo DB se nahi poochhta.<br><b>Line 87:</b> <code>periodSeconds: 10</code> = har 10 second par poochho.<br><b>Line 88:</b> <code>failureThreshold: 3</code> = lagataar 3 fail par restart.<br><br>Yeh wahi do number hain jo <code>lib/checker.js</code> ki line 40 mein the: fasla aur hadd.',
+          say: '<b>Line 86:</b> raasta <code>/livez</code> — wahi jo DB se nahi poochhta.<br><b>Line 87:</b> <code>periodSeconds: 10</code> = har 10 second par poochho.<br><b>Line 88:</b> <code>failureThreshold: 3</code> = lagataar 3 fail par restart.<br><br>Line 87–88 ke do number wahi hain jo <code>lib/checker.js</code> ki line 40 mein the: fasla aur hadd.',
           vars: { q: '"zinda ho?"', k8s: 'livenessProbe', num: '10 s × 3 = ~30 s', fail: 'container restart' },
         },
         {
           clock: 'traffic bhejein?',
           line: '89-92',
-          say: '<b>Line 90:</b> raasta <code>/readyz</code>.<br><b>Line 91–92:</b> har 5 second par, lagataar 2 fail par traffic band.<br><br><code>/readyz</code> ke andar kya check hota hai, yeh YAML mein nahi dikhta. Yeh faisla app ke code mein hai (level 3).',
+          say: '<b>Line 90:</b> raasta <code>/readyz</code>.<br><b>Line 91–92:</b> har 5 second par, lagataar 2 fail par traffic band.<br><br><code>/readyz</code> ke andar kya check hota hai, YAML mein nahi dikhta. Check ka faisla app ke code mein hai (level 3).',
           vars: { q: '"traffic bhejein?"', k8s: 'readinessProbe', num: '5 s × 2 = ~10 s', fail: 'pod ko traffic band (pod chalta rehta hai)' },
         },
         {
@@ -146,7 +146,7 @@ SD.registerLevels('sdd-resil', [
         {
           clock: 'band hone se pehle',
           line: [93, 94, 95],
-          say: `<b>Line 94–95, <code>preStop</code>:</b> band karne se pehle container ke andar <code>sleep 5</code> chalao. Kubernetes pehle yeh chalata hai, uske baad app ko SIGTERM bhejta hai.<br><br>
+          say: `<b>Line 94–95, <code>preStop</code>:</b> band karne se pehle container ke andar <code>sleep 5</code> chalao. Kubernetes pehle <code>sleep 5</code> chalata hai, phir app ko SIGTERM bhejta hai.<br><br>
             <code>sleep 5</code> kyun? Kubernetes ki documentation: pod ko traffic ki list se hatana aur pod ko band karna <b>ek saath shuru</b> hote hain. Khabar ko har load balancer tak pahunchne mein waqt lagta hai — level 2 ka teesra slow motion yahi tha.`,
           vars: { q: 'band hona', k8s: 'preStop', num: '5 s ruko, phir SIGTERM', fail: '—' },
         },
@@ -157,7 +157,7 @@ SD.registerLevels('sdd-resil', [
           vars: { q: 'band hona', k8s: 'grace period', num: '30 s tak chhoot', fail: 'chhoot khatam → zabardasti band' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> Kubernetes mein teeno sawaal ke naam <code>startupProbe</code>, <code>livenessProbe</code>, <code>readinessProbe</code> hain, aur har ek ke do number hain: fasla aur hadd. Jo number nahi likha, uska default lagu hota hai — isliye defaults yaad rakho: 10 s · 1 s · 3.',
+      lesson: '🎯 <b>Asli baat:</b> Kubernetes mein teeno sawaal ke naam <code>startupProbe</code>, <code>livenessProbe</code>, <code>readinessProbe</code> hain, aur har ek ke do number hain: fasla aur hadd. Na likhe number ka default lagu hota hai — isliye defaults yaad rakho: 10 s · 1 s · 3.',
     },
 
     /* ---------------- 2. asli library ---------------- */
@@ -187,7 +187,7 @@ SD.registerLevels('sdd-resil', [
         {
           clock: 'yaad khud rakho',
           line: [14, 15, 16, 29],
-          say: 'Terminus tumhara function <b>har sawaal par</b> chalata hai. Yaad rakhne ka kaam library nahi karti.<br><br>Isliye line 14–16: ek variable (<code>dbSeen</code>) aur ek ghadi, jo har 1 second par DB se poochhti hai. Line 29 sirf yeh variable padhti hai.<br><br>Agar line 29 mein seedha DB query likh do, toh wahi bill aayega jo lab ne naapa: 18.5 queries/second, bina kisi user ke.',
+          say: 'Terminus tumhara function <b>har sawaal par</b> chalata hai. Yaad rakhne ka kaam library nahi karti.<br><br>Isliye line 14–16: ek variable (<code>dbSeen</code>) aur ek ghadi, jo har 1 second par DB se poochhti hai. Line 29 sirf ek variable padhti hai.<br><br>Agar line 29 mein seedha DB query likh do, toh wahi bill aayega jo lab ne naapa: 18.5 queries/second, bina kisi user ke.',
           vars: { readyz: 'dbSeen padhta hai' },
         },
         {
@@ -235,13 +235,13 @@ SD.registerLevels('sdd-resil', [
 7.75 s   503      503       200
 8.25 s   503      503       200
 8.50 s                              app band</pre>
-            2 second tak /home jawab deti rahi, phir app band. Yeh wahi kram hai jo level 2 mein 0 fail laaya tha.`,
+            2 second tak /home jawab deti rahi, phir app band. Level 2 mein bhi isi kram ne 0 fail diye the.`,
           vars: { who: '@godaddy/terminus (2 s rukna)', livez: '503', readyz: '503', home: '200 — 8.50 s tak' },
         },
         {
           clock: 'default ka jaal',
           line: [32, 33],
-          say: 'Ab line 33 ko dekho: <code>beforeShutdown</code>. Yeh setting <b>tumne</b> likhi hai. Library ka default: koi rukna nahi.',
+          say: 'Ab line 33 ko dekho: <code>beforeShutdown</code>. Ye setting <b>tumne</b> likhi hai. Library ka default: koi rukna nahi.',
           vars: { who: '@godaddy/terminus (default settings)', livez: '?', readyz: '?', home: '?' },
           ask: {
             q: 'Team ne Terminus laga li, par <code>beforeShutdown</code> nahi likha. 6.50 s par SIGTERM aaya. Kya hoga?',
@@ -284,7 +284,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'cards',
       title: '🚦 Load balancer ka apna health check',
-      goal: 'Chaar chhote cards. Yeh cards AWS aur Envoy ki <b>official documentation</b> se hain; is lab mein yeh chalaye nahi gaye. Jahan hisaab hai, wahan hisaab documentation ki default settings se nikala gaya hai.',
+      goal: 'Chaar chhote cards. Ye cards AWS aur Envoy ki <b>official documentation</b> se hain; is lab mein AWS aur Envoy chalaye nahi gaye. Har hisaab documentation ki default settings se nikala gaya hai.',
       steps: [
         {
           title: '1. Ek pod, do poochhne wale',
@@ -336,12 +336,12 @@ SD.registerLevels('sdd-resil', [
             <ol>
               <li><b>Liveness kya check karta hai?</b> DB ya doosri service ka naam dikhe, toh level 1 dobara padho.</li>
               <li><b>Readiness mein kaunsi shared cheez hai?</b> Us cheez ke girne par kitne pods ek saath bahar honge?</li>
-              <li><b>Fasla × hadd kitna hai?</b> Jo likha nahi, uska default kya hai?</li>
+              <li><b>Fasla × hadd kitna hai?</b> Na likhi setting ka default kya hai?</li>
               <li><b>SIGTERM par app kya karta hai?</b> Kitni der jawab deta rehta hai — aur load balancer ko khabar pahunchne mein kitni der lagti hai?</li>
             </ol>`,
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> har poochhne wale ke teen number hote hain: <b>fasla</b>, <b>bahar jaane ki hadd</b>, <b>wapas aane ki hadd</b>. Aur ek niyam: saare ek saath "nahi" kahein toh kya? Yeh chaaron apne setup mein dhoondo.',
+      lesson: '🎯 <b>Asli baat:</b> har poochhne wale ke teen number hote hain: <b>fasla</b>, <b>bahar jaane ki hadd</b>, <b>wapas aane ki hadd</b>. Aur ek niyam: saare ek saath "nahi" kahein toh kya? Chaaron sawaal apne setup mein dhoondo.',
     },
 
     /* ---------------- 4. bonus: asli library chalao ---------------- */
@@ -351,7 +351,7 @@ SD.registerLevels('sdd-resil', [
       project: '43-health-checks',
       exercise: 'ex0-slowmo',
       goal: 'Wahi timeline, asli library ke saath. Pehle 2 second ke rukne ke saath, phir library ki default settings ke saath.',
-      why: 'Lab mein koi npm dependency nahi hai; yeh ek hi tool hai jise library chahiye. <code>npm install</code> isi folder mein chalao (Docker image mein yeh library nahi hai). Neeche ka output terminus 4.12.1 aur Node 24 par aaya tha.',
+      why: 'Lab mein koi npm dependency nahi hai; sirf terminus wale tool ko library chahiye. <code>npm install</code> isi folder mein chalao (Docker image mein terminus library nahi hai). Neeche ka output terminus 4.12.1 aur Node 24 par aaya tha.',
       steps: [
         { text: 'Library lagao (ek baar, isi folder mein).', cmd: 'cd docker-labs/43-health-checks && npm install @godaddy/terminus' },
         { text: 'Band hone se pehle 2 s rukne ke saath. 6.75 s wali line mein /livez dekho.', cmd: 'node tools/terminus.js', expect: "app :5229 · @godaddy/terminus · beforeShutdown: 2 s\n\n    samay   /livez   /readyz   /home      kya hua\n   0.25 s   200      200       200\n   0.75 s   200      200       200\n   1.25 s   200      200       200\n   1.50 s                                  💥 DB band\n   1.75 s   200      200       200\n   2.25 s   200      503       200\n   2.75 s   200      503       200\n   3.25 s   200      503       200\n   3.75 s   200      503       200\n   4.25 s   200      503       200\n   4.50 s                                  ✅ DB wapas\n   4.75 s   200      503       200\n   5.25 s   200      200       200\n   5.75 s   200      200       200\n   6.25 s   200      200       200\n   6.50 s                                  🛑 SIGTERM — band hone ka signal\n   6.75 s   503      503       200\n   7.25 s   503      503       200\n   7.75 s   503      503       200\n   8.25 s   503      503       200\n   8.50 s                                  app band" },
@@ -418,7 +418,7 @@ SD.registerLevels('sdd-resil', [
     ],
   },
   success: [
-    'Kubernetes ke teeno probes aur unke default number (10 s · 1 s · 3) bata sakte ho',
+    'Kubernetes ke teeno probes aur teeno ke default number (10 s · 1 s · 3) bata sakte ho',
     'Bata sakte ho ki asli library kahan alag chali: band hote waqt dono raaston par 503, yaad khud rakhni, default mein koi rukna nahi',
     'Load balancer ke teen number aur fail open ka niyam apne setup mein dhoondh sakte ho',
   ],

@@ -84,7 +84,7 @@ SD.registerLevels('sdd-resil', [
         {
           clock: 'anyOne',
           line: [15, 16],
-          say: 'Line 16: <code>random()</code> 0 aur 1 ke beech ek sankhya deta hai. Is sankhya ko 3 se guna karo, dashamlav hata do: 0, 1 ya 2.<br><br>Yeh function bhi <code>loads</code> nahi leta. Aur yeh kuch yaad bhi nahi rakhta — sabse sasta tareeka.',
+          say: 'Line 16: <code>random()</code> 0 aur 1 ke beech ek sankhya deta hai. Is sankhya ko 3 se guna karo, dashamlav hata do: 0, 1 ya 2.<br><br>Random wala function bhi <code>loads</code> nahi leta. Aur random kuch yaad bhi nahi rakhta — sabse sasta tareeka.',
           vars: { fn: 'anyOne(3, random)', in: 'random() × 3, dashamlav hata ke', ret: 'S1, S2 ya S3 — barabar mauka' },
         },
         {
@@ -118,13 +118,13 @@ SD.registerLevels('sdd-resil', [
           clock: 'leastLoaded · barabari',
           line: [27, 28],
           say: `Ab maan lo teeno servers khaali dikh rahe hain: <code>loads = [0, 0, 0]</code>. Tab <code>tied</code> = [0, 1, 2], aur line 28 teeno mein se koi ek chunti hai — sikke se.<br><br>
-            Yeh chhoti si baat kyun? Lab ke chhote program ne dono tarah 1,000 requests bheji:
+            Itni chhoti baat kyun? Lab ke chhote program ne dono tarah 1,000 requests bheji:
             <div class="dr-scroll"><table>
               <tr><th>Barabari mein</th><th>S1 / S2 / S3 ko mili</th></tr>
               <tr><td>Sikka (line 28)</td><td>318 / 352 / 330</td></tr>
               <tr><td>Hamesha pehla server</td><td><b>1000 / 0 / 0</b></td></tr>
             </table></div>
-            "Hamesha pehla" likhna sabse aasaan hai — aur yeh khud ek jhund hai. Barabari todne ka tareeka bhi ek faisla hai. (NGINX ki documentation ke mutabiq <code>least_conn</code> barabari ko baari-baari se todta hai.)`,
+            "Hamesha pehla" likhna sabse aasaan hai — aur "hamesha pehla" khud ek jhund hai. Barabari todne ka tareeka bhi ek faisla hai. (NGINX ki documentation ke mutabiq <code>least_conn</code> barabari ko baari-baari se todta hai.)`,
           vars: { loads: '[ 0, 0, 0 ] — teeno khaali', in: 'tied = [0, 1, 2] → sikka', ret: 'S1, S2 ya S3' },
         },
         {
@@ -164,7 +164,7 @@ SD.registerLevels('sdd-resil', [
         {
           clock: 'jaankari kahan se aati hai?',
           line: [21, 33],
-          say: `Ab sabse zaroori baat. In functions ko <b>nahi pata</b> ki <code>loads</code> taaza hai ya purana. Yeh faisla function bulane wale ka hai. Lab ke load balancer (<code>services/lb.js</code>) mein yeh do calls hain (yahan chhote karke dikhaye hain):
+          say: `Ab sabse zaroori baat. In functions ko <b>nahi pata</b> ki <code>loads</code> taaza hai ya purana. <code>loads</code> ko taaza rakhna function bulane wale ka kaam hai. Lab ke load balancer (<code>services/lb.js</code>) mein do calls hain (yahan chhote karke dikhaye hain):
             <pre>return leastLoaded(inflight, Math.random);   // load balancer ki APNI ginti — hamesha taaza
 return leastLoaded(reported, Math.random);   // servers ka bheja haal — 0.5 s tak purana</pre>
             Function wahi. Sirf pehla argument alag. Lab mein sabse lambi line: <b>0</b> banaam <b>92–106</b>.`,
@@ -187,11 +187,11 @@ finally { inflight[i]--; }                       // jawab aaya (ya fail hua) →
     {
       type: 'cards',
       title: '🗺️ Wahi chaar tareeke — NGINX aur Envoy mein',
-      goal: 'Chaar chhote cards. Yeh cards NGINX aur Envoy ki <b>official documentation</b> se hain; is lab mein yeh dono chalaye nahi gaye. Settings ke naam wahin se hain; server ke address sirf misaal hain.',
+      goal: 'Chaar chhote cards. Ye cards NGINX aur Envoy ki <b>official documentation</b> se hain; is lab mein NGINX aur Envoy chalaye nahi gaye. Settings ke naam wahin se hain; server ke address sirf misaal hain.',
       steps: [
         {
           title: '1. NGINX: kuch na likho toh?',
-          say: `NGINX mein servers ka group <code>upstream</code> ke andar likha jaata hai, aur chunne ka tareeka usi ke andar ek line mein:
+          say: `NGINX mein servers ka group <code>upstream</code> ke andar likha jaata hai, aur chunne ka tareeka <code>upstream</code> ke andar ek line mein:
             <pre>upstream menu_service {
     random two least_conn;     # do sikke, phir un do mein se kam connections wala
     server 10.0.0.11;
@@ -200,7 +200,7 @@ finally { inflight[i]--; }                       // jawab aaya (ya fail hua) →
 }</pre>
             <div class="dr-scroll"><table>
               <tr><th>NGINX mein likho</th><th>Tareeka</th></tr>
-              <tr><td>(kuch nahi)</td><td>baari-baari — documentation ise "weighted round-robin" kehti hai</td></tr>
+              <tr><td>(kuch nahi)</td><td>baari-baari — documentation is tareeke ko "weighted round-robin" kehti hai</td></tr>
               <tr><td><code>least_conn;</code></td><td>sabse kam chalte connections wala</td></tr>
               <tr><td><code>random;</code></td><td>koi bhi ek</td></tr>
               <tr><td><code>random two least_conn;</code></td><td>do mein se behtar</td></tr>
@@ -227,23 +227,23 @@ finally { inflight[i]--; }                       // jawab aaya (ya fail hua) →
         {
           title: '2. Envoy: "do mein se behtar" pehle se laga hai',
           say: `Envoy ek aur load balancer hai, jo aksar services ke beech lagta hai.<br><br>
-            Envoy ke "least request" tareeke ke baare mein documentation kehti hai: jab sab servers ka wazan barabar ho, toh Envoy <b>N random servers</b> chunta hai — <b>default 2</b> — aur in N mein se us server ko leta hai jis par sabse kam chalti requests hain. Documentation ise <b>P2C</b> (power of two choices) kehti hai.<br><br>
+            Envoy ke "least request" tareeke ke baare mein documentation kehti hai: jab sab servers ka wazan barabar ho, toh Envoy <b>N random servers</b> chunta hai — <b>default 2</b> — aur in N mein se us server ko leta hai jis par sabse kam chalti requests hain. Documentation is tareeke ko <b>P2C</b> (power of two choices) kehti hai.<br><br>
             Wahi documentation do baatein aur kehti hai:
             <ul>
-              <li>yeh tareeka saare servers ko dekhne ke "lagbhag barabar achha" hai;</li>
-              <li>aur yeh <b>herding se bachta hai</b>.</li>
+              <li>P2C saare servers ko dekhne ke "lagbhag barabar achha" hai;</li>
+              <li>aur P2C <b>herding se bachta hai</b>.</li>
             </ul>
             Yaani jo is topic mein naapa gaya, wahi Envoy ke design ki wajah hai.`,
         },
         {
           title: '3. Jab random bilkul nahi chahiye',
           say: `Kabhi-kabhi ek hi grahak ko <b>hamesha usi server</b> par jaana hota hai — jaise jab server ne us grahak ka kuch apni memory mein rakha ho.<br><br>
-            NGINX mein iske liye alag tareeke hain:
+            NGINX mein "har baar wahi server" ke liye alag tareeke hain:
             <ul>
               <li><code>ip_hash;</code> — ek hi IP ki requests hamesha ek hi server par.</li>
               <li><code>hash key consistent;</code> — tumhari chuni hui cheez (jaise user ka id) se server tay hota hai; server judne ya hatne par kam se kam grahak idhar-udhar hote hain.</li>
             </ul>
-            Yeh random ka ulta hai: <b>har baar wahi jawab</b>. Yahan jhund ka khatra alag hai: agar ek grahak bahut bhaari ho, toh us grahak ka server akela dabta hai.`,
+            ip_hash aur hash random ka ulta hain: <b>har baar wahi jawab</b>. Yahan jhund ka khatra alag hai: agar ek grahak bahut bhaari ho, toh us grahak ka server akela dabta hai.`,
         },
         {
           title: '4. Ek nazar mein',
@@ -291,7 +291,7 @@ finally { inflight[i]--; }                       // jawab aaya (ya fail hua) →
           'Dono runs mein 300 requests/second, 8 second tak. Aane wali requests barabar thi.',
         ],
       },
-      lesson: 'Tareeka chunne se pehle poochho: is tareeke ko load ki jaankari kahan se milegi, aur yeh jaankari kitni purani hogi?',
+      lesson: 'Tareeka chunne se pehle poochho: is tareeke ko load ki jaankari kahan se milegi, aur load ki jaankari kitni purani hogi?',
     },
   ],
   interview: {

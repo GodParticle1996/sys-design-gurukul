@@ -34,7 +34,7 @@ SD.registerLevels('fp-core', [
           "say": "<code>for</code> ke andar <code>await get(key)</code> hai. Is key ka reply aayega tabhi next iteration chalega.",
           "line": "6-12",
           "ask": {
-            "q": "Agle independent lookup ko yeh code kab shuru karta hai?",
+            "q": "Agle independent lookup ko upar wala code kab shuru karta hai?",
             "choices": [
               "Pichhle lookup ka reply aane ke baad hi agla shuru hota hai",
               "Function shuru hote hi saare lookups ek saath chal padte hain",
@@ -107,7 +107,7 @@ SD.registerLevels('fp-core', [
         },
         {
           "title": "2. Agla index do workers ko same mil jayega?",
-          "say": "Har worker <code>next++</code> se index leta hai. Index lena <code>await</code> se pehle synchronous hota hai. Is single JavaScript event loop mein doosra worker baad mein next index lega. Yeh distributed lock nahi hai.",
+          "say": "Har worker <code>next++</code> se index leta hai. Index lena <code>await</code> se pehle synchronous hota hai. Is single JavaScript event loop mein doosra worker baad mein next index lega. next++ distributed lock nahi hai.",
           "line": "6-9"
         },
         {
@@ -212,7 +212,7 @@ SD.registerLevels('fp-core', [
       "steps": [
         {
           "title": "1. Har command ke reply ka wait zaroori?",
-          "say": "Documentation ke mutabiq Redis pipelining mein kai commands bhej sakte ho bina har command ke reply ka wait kiye. Isse repeated request/reply waits aur socket I/O overhead ghatt sakte hain."
+          "say": "Documentation ke mutabiq Redis pipelining mein kai commands bhej sakte ho bina har command ke reply ka wait kiye. Pipelining se baar-baar ke request/reply waits aur socket I/O overhead ghatt sakte hain."
         },
         {
           "title": "2. Pipeline ko unlimited kyun na karein?",

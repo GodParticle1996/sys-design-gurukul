@@ -29,7 +29,7 @@ SD.registerLevels('sdd-resil', [
   id: 'dr-lib',
   icon: '☁️',
   group: '🌋 Disaster Recovery',
-  title: 'Disaster Recovery 4 · Setup — AWS mein yeh chaar tareeke',
+  title: 'Disaster Recovery 4 · Setup — AWS mein chaar tareeke',
   badge: 'Cloud Sipahi',
   objectives: [
     'Lab ke chaar mode (B mein kuch nahi · DB · DB + chhota app · poora region) ko AWS ki documentation kya naam deti hai?',
@@ -39,7 +39,7 @@ SD.registerLevels('sdd-resil', [
   ],
   lesson: [
     `<h3>☁️ Lab ka router 1.50 s mein jaan leta tha. Route 53 ke defaults kya kehte hain?</h3>
-     <p><b>Yeh poora level AWS ki official documentation se hai. Is lab mein AWS chalaya nahi gaya.</b> Jo number lab ke apne run se hain, un par "lab" likha hai.</p>
+     <p><b>Poora level AWS ki official documentation se hai. Is lab mein AWS chalaya nahi gaya.</b> Jo number lab ke apne run se hain, un par "lab" likha hai.</p>
      <p>Level 1 se 3 mein tumne region B ke chaar tareeke dekhe, aur router ka "lagataar 3 fail" wala niyam. AWS ki documentation inhi cheezon ko naam aur default settings deti hai. Default = jo setting tumne likhi nahi, par jo phir bhi lagu hoti hai.</p>
      <ul>
        <li><b>Lab ka router:</b> 0.5 s × 3 = 1.50 s (lab, slow motion mein naapa).</li>
@@ -52,7 +52,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'cards',
       title: '☁️ AWS ke chaar naam — jo tumne lab mein dekha',
-      goal: '<b>Yeh AWS ki official documentation se hai; is lab mein AWS chalaya nahi gaya.</b> Chaar chhote cards. Jo number lab ke hain, un par "lab" likha hai. Source: <a href="https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html" target="_blank" rel="noopener">AWS DR whitepaper</a>.',
+      goal: '<b>Cards AWS ki official documentation se hain; is lab mein AWS chalaya nahi gaya.</b> Chaar chhote cards. Jo number lab ke hain, un par "lab" likha hai. Source: <a href="https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html" target="_blank" rel="noopener">AWS DR whitepaper</a>.',
       steps: [
         {
           title: '1. Lab ke chaar mode ko AWS mein kya kehte hain?',
@@ -72,7 +72,7 @@ SD.registerLevels('sdd-resil', [
             <ul>
               <li>Recovery Region mein infrastructure, configuration aur app code dobara deploy karna padta hai.</li>
               <li>Failover par backup se data restore karna padta hai.</li>
-              <li>Backup kitni baar liya, usse tay hota hai ki kitna naya data wapas mil sakega.</li>
+              <li>Backup kitni baar liya, isi ginti se tay hota hai ki kitna naya data wapas mil sakega.</li>
             </ul>
             Lab ke slow motion mein backup har 3 s par tha. #7–#9 snapshot mein nahi the: 3 orders kho gaye.`,
         },
@@ -123,7 +123,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'cards',
       title: '🧭 Route 53: health check, hisaab aur TTL',
-      goal: '<b>Yeh AWS ki official documentation se hai; is lab mein AWS chalaya nahi gaya.</b> Teen cards. Hisaab naapa hua number nahi hai. Sources: <a href="https://docs.aws.amazon.com/Route53/latest/APIReference/API_HealthCheckConfig.html" target="_blank" rel="noopener">health check defaults</a> · <a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-determining-health-of-endpoints.html" target="_blank" rel="noopener">kai checkers ka faisla</a> · <a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-failover.html" target="_blank" rel="noopener">TTL</a>.',
+      goal: '<b>Cards AWS ki official documentation se hain; is lab mein AWS chalaya nahi gaya.</b> Teen cards. Hisaab naapa hua number nahi hai. Sources: <a href="https://docs.aws.amazon.com/Route53/latest/APIReference/API_HealthCheckConfig.html" target="_blank" rel="noopener">health check defaults</a> · <a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-determining-health-of-endpoints.html" target="_blank" rel="noopener">kai checkers ka faisla</a> · <a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-failover.html" target="_blank" rel="noopener">TTL</a>.',
       steps: [
         {
           title: '1. RTO ki ginti mein pata chalna bhi aata hai?',
@@ -150,7 +150,7 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Route 53, defaults</td><td>30 s × 3</td><td>lagbhag 90 s (<b>hisaab</b>)</td></tr>
               <tr><td>Route 53, Fast (10 s), threshold 3</td><td>10 s × 3</td><td>lagbhag 30 s (<b>hisaab</b>)</td></tr>
             </table></div>
-            <b>Yeh sirf fasla × hadd ka hisaab hai.</b> Actual detection ka samay ya upper limit nahi. Route 53 kai jagahon ke checkers ke results jodta hai. Check kis pal fail hua aur response mein kitni der lagi, woh bhi farak daalte hain. Lab ka ek router yeh poori vyavastha nahi chalata.`,
+            <b>Number sirf fasla × hadd ka hisaab hai.</b> Actual detection ka samay ya upper limit nahi. Route 53 kai jagahon ke checkers ke results jodta hai. Check kis pal fail hua aur response mein kitni der lagi, dono bhi farak daalte hain. Lab ka ek router Route 53 ki poori vyavastha nahi chalata.`,
           ask: {
             q: 'Route 53 defaults ke liye 30 s ko 3 se guna kiya. Nikle hue 90 s ko kis tarah samjhoge?',
             choices: [
@@ -174,7 +174,7 @@ SD.registerLevels('sdd-resil', [
           title: '3. Failover ke baad bhi grahak purane pate par: TTL',
           say: `Level 2 mein dekha: B tayyar ho tab bhi grahak purane pate par reh sakta hai. Documentation ke mutabiq lamba TTL ho toh DNS resolver purana jawab zyada der cache mein rakhta hai. Naya IP der se asar karta hai.<br><br>
             Lab ke model mein yaad grahak ke paas thi; documentation recursive resolvers ke cache ki baat karti hai. Dono jagah sawaal ek hi hai: purana pata kitni der yaad rakha jaata hai.<br><br>
-            Lab ka model (asli DNS nahi): TTL 6 s → 27 orders fail; TTL 1 s → 8 orders. Sabse der se lauta grahak: jawab badalne ke 5.50 s baad, ya 0.50 s baad. Model mein grahak TTL ko theek utna hi maante hain. Asli resolver ya app TTL se zyada der yaad rakhte hain ya nahi, yeh humne nahi dekha.`,
+            Lab ka model (asli DNS nahi): TTL 6 s → 27 orders fail; TTL 1 s → 8 orders. Sabse der se lauta grahak: jawab badalne ke 5.50 s baad, ya 0.50 s baad. Model mein grahak TTL ko theek utna hi maante hain. Asli resolver ya app TTL se zyada der yaad rakhte hain ya nahi, lab ne nahi dekha.`,
           ask: {
             q: 'Health check se jude failover record ke TTL par Route 53 documentation ka mashwara kya hai?',
             choices: [
@@ -202,7 +202,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'cards',
       title: '🗄️ S3 aur Aurora: copy, delete aur backup',
-      goal: '<b>Yeh AWS ki official documentation se hai; is lab mein AWS chalaya nahi gaya.</b> Chaar cards. Sources: <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html" target="_blank" rel="noopener">S3 delete rules</a> · <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html" target="_blank" rel="noopener">versioning</a> · <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-disaster-recovery.html" target="_blank" rel="noopener">Aurora failover</a>.',
+      goal: '<b>Cards AWS ki official documentation se hain; is lab mein AWS chalaya nahi gaya.</b> Chaar cards. Sources: <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html" target="_blank" rel="noopener">S3 delete rules</a> · <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html" target="_blank" rel="noopener">versioning</a> · <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-disaster-recovery.html" target="_blank" rel="noopener">Aurora failover</a>.',
       steps: [
         {
           title: '1. Replication akela backup kyun nahi?',
@@ -217,7 +217,7 @@ SD.registerLevels('sdd-resil', [
             <div class="dr-scroll"><table>
               <tr><th>Replication configuration</th><th>Delete marker</th></tr>
               <tr><td>Latest version (rule mein <code>Filter</code> element diya hai)</td><td>Default mein <b>replicate nahi</b> hota. Non-tag-based rules mein delete marker replication jod sakte ho.</td></tr>
-              <tr><td><code>Filter</code> element nahi diya (S3 ise V1 maanta hai)</td><td>User ke action se bane markers <b>replicate hote hain</b>. Lifecycle action se bane markers nahi.</td></tr>
+              <tr><td><code>Filter</code> element nahi diya (S3 aise rule ko V1 maanta hai)</td><td>User ke action se bane markers <b>replicate hote hain</b>. Lifecycle action se bane markers nahi.</td></tr>
             </table></div>
             Do aur vaakya, alag-alag:
             <ul>
@@ -255,9 +255,9 @@ SD.registerLevels('sdd-resil', [
             <ul>
               <li>RTO minutes ke paimaane par ho sakta hai.</li>
               <li>Unplanned failover mein RPO aam taur par seconds mein, zero se zyada hota hai.</li>
-              <li>Kitna data gaya, yeh failure ke waqt Regions ke beech replication lag par nirbhar hai.</li>
+              <li>Kitna data gaya, failure ke waqt Regions ke beech replication lag par nirbhar hai.</li>
             </ul>
-            Planned <b>switchover</b> alag hai: pehle secondary ko sync karte hain, isliye RPO 0. Unplanned failover ko woh guarantee mat do.<br><br>
+            Planned <b>switchover</b> alag hai: pehle secondary ko sync karte hain, isliye RPO 0. Unplanned failover ko zero data loss ki guarantee mat do.<br><br>
             Lab mein replication lag ka kaam <code>waiting</code> list karti thi: failure ke pal par jitne order waiting mein, utne gaye. Copy har 300 ms par bhi 5 orders gaye (lab, asli raftaar, teen run).`,
           ask: {
             q: 'Aurora Global Database ke unplanned failover mein khoye data ka andaaza kis cheez se lagta hai?',

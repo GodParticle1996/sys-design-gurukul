@@ -46,7 +46,7 @@ SD.registerLevels('sdd-resil', [
   lesson: [
     `<h3>🍲 Shanivaar raat 8 baje, Bholu Dhaba</h3>
      <p>Bholu Dhaba ek chhota restaurant hai. KhanaKart ke orders ek tablet par aate hain. Bholu "Accept" dabata hai, tablet KhanaKart ke <b>partner-api</b> ko batata hai, aur order pakka.</p>
-     <p>Aaj raat tablet baar-baar yeh dikha raha hai:</p>
+     <p>Aaj raat tablet baar-baar ek hi error dikha raha hai:</p>
      <pre>⚠️ Order accept nahi ho paya. Dobara try karein.</pre>
      <p>Bholu ka Wi-Fi theek hai. KhanaKart ka status page hara hai. Bholu ne aaj kuch alag nahi kiya.</p>
      <p>Usi waqt, shehar ke doosre kone mein, <b>Annapurna Foods</b> (400 outlets wala chain) ke IT wale ne ek script chalayi: naye daam saare outlets ke menu mein daal do. Annapurna aur Bholu Dhaba ek doosre ko jaante bhi nahi.</p>
@@ -59,7 +59,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'dryrun',
       title: '🔍 Slow motion — sab ek hi line mein',
-      goal: 'Har click = ek ghatna. Jo badla, woh peele rang mein chamkega. Line mein <b>A</b> = Annapurna ka kaam, <b>B</b> = Bholu Dhaba ka. Dekho ki B ka kaam kiske peeche khada hota hai.',
+      goal: 'Har click = ek ghatna. Badli hui cheez peele rang mein chamkegi. Line mein <b>A</b> = Annapurna ka kaam, <b>B</b> = Bholu Dhaba ka. Dekho ki B ka kaam kiske peeche khada hota hai.',
       nodes: NODES, edges: EDGES, viz: VIZ,
       vars: [
         { id: 'win', label: 'partner-api ki 2 khidkiyan' },
@@ -70,7 +70,7 @@ SD.registerLevels('sdd-resil', [
       steps: [
         {
           clock: 'shuruaat',
-          say: 'partner-api ke paas <b>2 khidkiyan</b> hain. Ek request par ek khidki <b>0.5 second</b> lagati hai. Yaani partner-api 4 requests/second kar sakta hai.<br><br>Bholu Dhaba har second ek "order accept" bhejta hai. Bholu Dhaba ka tablet jawab ka <b>1.5 second</b> intezaar karta hai; uske baad error dikha deta hai.',
+          say: 'partner-api ke paas <b>2 khidkiyan</b> hain. Ek request par ek khidki <b>0.5 second</b> lagati hai. Yaani partner-api 4 requests/second kar sakta hai.<br><br>Bholu Dhaba har second ek "order accept" bhejta hai. Bholu Dhaba ka tablet jawab ka <b>1.5 second</b> intezaar karta hai; 1.5 second ke baad error dikha deta hai.',
           nodes: { a: { tone: 'idle', badge: 'abhi shaant' }, b: { tone: 'ok', badge: 'har second 1 request' }, api: { tone: 'ok', badge: '2 khidkiyan · 0.5 s har request' } },
           vars: { win: ['free', 'free'], line: 'khaali', b: '—', a: 'abhi shuru nahi' },
         },
@@ -176,7 +176,7 @@ SD.registerLevels('sdd-resil', [
           vars: { win: 'lab: 4 khidkiyan, 200 requests/second', line: 'lab: hadd 200, bhari', b: 'lab: 578 mein se 233 fail', a: 'lab: 1,376 hui' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> ek line sabko barabar nahi rakhti. Jo zyada bhejta hai, line usi ki ho jaati hai — aur shaant tenant ka kaam kisi aur ke kaam ke peeche khada rehta hai.<br>Shaant tenant ko yeh "kabhi chalta hai, kabhi nahi" jaisa dikhta hai. Is samasya ka naam: <b>noisy neighbour</b> (shor karne wala padosi).',
+      lesson: '🎯 <b>Asli baat:</b> ek line sabko barabar nahi rakhti. Line zyada bhejne wale ki ho jaati hai — aur shaant tenant ka kaam kisi aur ke kaam ke peeche khada rehta hai.<br>Shaant tenant ko apna API "kabhi chalta hai, kabhi nahi" jaisa dikhta hai. Is samasya ka naam: <b>noisy neighbour</b> (shor karne wala padosi).',
     },
 
     /* ---------------- 2. pehla ilaaj: har tenant ki hadd ---------------- */
@@ -262,7 +262,7 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Sab ek line mein</td><td>7 mein se 3 ❌</td><td>12 mein se 12 ✅ (4.02 s)</td><td>9.50 s — usme 1.50 s bekaar</td></tr>
               <tr><td>Har tenant: 2 / second</td><td><b>7 mein se 0 ❌</b></td><td>12 mein se <b>2</b> ✅, 10 mana</td><td><b>4.50 s</b></td></tr>
             </table></div>
-            Bholu Dhaba bach gaya. Yeh asli sudhaar hai.<br><br>Par Annapurna ka kaam poora nahi hua, jabki khidkiyan aadhe se zyada samay khaali baithi rahi.`,
+            Bholu Dhaba bach gaya. Bholu Dhaba bach gaya, ye asli sudhaar hai.<br><br>Par Annapurna ka kaam poora nahi hua, jabki khidkiyan aadhe se zyada samay khaali baithi rahi.`,
           nodes: { a: { tone: 'slow', badge: '12 mein se 2 ✅ · 10 mana' }, b: { tone: 'ok', badge: '7 mein se 7 ✅' }, api: { tone: 'idle', badge: '15 s mein 4.50 s kaam' } },
           vars: { b: ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok'], a: '12 mein se 2 ✅ · 10 mana', idle: '4.50 s (15 s mein se)' },
         },
@@ -284,7 +284,7 @@ SD.registerLevels('sdd-resil', [
     /* ---------------- 3. idea: railway ki khidki ---------------- */
     {
       type: 'cards',
-      title: '🚉 Yeh tum dekh chuke ho — reservation ki khidki',
+      title: '🚉 Tum dekh chuke ho — reservation ki khidki',
       goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Naam sabse aakhir mein aayenge.',
       steps: [
         {
@@ -336,14 +336,14 @@ SD.registerLevels('sdd-resil', [
     /* ---------------- 4. naam pakke karo ---------------- */
     {
       type: 'match',
-      title: 'Jo ho raha hai, uska naam',
-      instructions: 'Baayein taraf jo ho raha hai, daayein taraf uska naam.',
+      title: 'Jo ho raha hai, us cheez ka naam',
+      instructions: 'Baayein taraf jo ho raha hai, daayein taraf us cheez ka naam.',
       pairs: [
         { left: 'Annapurna aur Bholu Dhaba dono ek hi partner-api use karte hain', right: 'Multi-tenant', explain: 'Ek system, kai grahak. Sasta padta hai — aur isi wajah se padosi ka shor mumkin hota hai.' },
         { left: 'Annapurna ke 12 requests ke peeche Bholu Dhaba ka order accept fail ho gaya', right: 'Noisy neighbour', explain: 'Slow motion: Bholu Dhaba ke 7 mein se 3 fail. Lab: shaant tenants ki 40% requests fail.' },
         { left: 'Har tenant ek second mein 2 se zyada requests nahi bhej sakta', right: 'Quota (rate limit)', explain: 'Har tenant ki hadd. Slow motion: Bholu Dhaba ke 0 fail — par Annapurna ki 10 mana, jabki khidkiyan khaali thi.' },
         { left: 'Annapurna ki 3ri request ko turant "mana" mila', right: '429', explain: '429 Too Many Requests: "tumne hadd se zyada bheja". Request line mein lagti hi nahi.' },
-        { left: 'Annapurna, Bholu Dhaba, Chai Adda — partner-api ke grahak', right: 'Tenant', explain: 'Tenant = saajhe system ka ek grahak. Yeh ek company ho sakti hai, ek team, ya ek user.' },
+        { left: 'Annapurna, Bholu Dhaba, Chai Adda — partner-api ke grahak', right: 'Tenant', explain: 'Tenant = saajhe system ka ek grahak. Tenant ek company ho sakti hai, ek team, ya ek user.' },
       ],
     },
   ],
@@ -396,7 +396,7 @@ SD.registerLevels('sdd-resil', [
     { front: 'Noisy neighbour kya hai?', back: 'Saajhe system mein ek tenant ka bojh doosre tenants ka kaam bigaad deta hai. Slow motion: Annapurna ki 12 requests → Bholu Dhaba ke 7 mein se 3 order accept fail. Lab: shaant tenants ki 40% fail.' },
     { front: 'Shor 0.22 second ka tha. Asar 3.5 second kyun raha?', back: 'Line saaf hone mein waqt lagta hai, aur fail ho chuki requests ka kaam bhi line mein khada rehta hai (tablet ja chuka, par line ko pata nahi). Slow motion: 3 requests ka bekaar kaam.' },
     { front: 'Har tenant ki hadd (quota): kya bacha, kya gaya?', back: 'Bacha: shaant tenant (Bholu Dhaba 0 fail). Gaya: khaali jagah — Annapurna ki 10 requests mana, khidkiyon ne 15 s mein sirf 4.50 s kaam kiya. Lab: A ki 1,453 ko 429.' },
-    { front: '"Ek queue laga do" noisy neighbour ka ilaaj hai?', back: 'Nahi. Ek saajhi line bheed ko sokhti hai, baant-ti nahi: line usi ki ho jaati hai jo zyada bhejta hai. Slow motion mein line thi — aur 3 fail hue.' },
+    { front: '"Ek queue laga do" noisy neighbour ka ilaaj hai?', back: 'Nahi. Ek saajhi line bheed ko sokhti hai, baant-ti nahi: line zyada bhejne wale ki ho jaati hai. Slow motion mein line thi — aur 3 fail hue.' },
   ],
 },
 ]);

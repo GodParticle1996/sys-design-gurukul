@@ -32,11 +32,11 @@ SD.registerLevels('sdd-resil', [
     '"Ho gaya" mil chuka order code mein kahan rakha hota hai — aur region abhi gaya toh kitne orders jaayenge?',
     'Copy fail ho jaaye toh orders ka kya hota hai — async mein, aur sync mein?',
     'Router "region A gaya" kab maanta hai, aur A wapas aaye toh apne aap wapas kyun nahi jaata?',
-    'Apne app mein yeh sab kitni lines mein lagta hai?',
+    'Apne app mein health checks kitni lines mein lagte hain?',
   ],
   lesson: [
     `<h3>💻 Jis line par data khota hai</h3>
-     <p>Pichhle levels mein dekha: kuch orders ko "ho gaya" mil chuka tha, phir bhi region A ke saath chale gaye. Woh orders us pal kahan rakhe the? Aur kaunsi line ne un orders ko wahan rakha? Aaj yahi code mein dhoondhte hain. Lab folder: <code>docker-labs/40-disaster-recovery/</code></p>
+     <p>Pichhle levels mein dekha: kuch orders ko "ho gaya" mil chuka tha, phir bhi region A ke saath chale gaye. Khoye orders us pal kahan rakhe the? Aur kaunsi line ne orders ko us jagah rakha? Aaj yahi code mein dhoondhte hain. Lab folder: <code>docker-labs/40-disaster-recovery/</code></p>
      <pre>lib/replicator.js  ← copy ka niyam: kho gaye orders (RPO) yahin paida hote hain   (43 line)
 lib/failover.js    ← router ka faisla: "region A gaya?"                          (16 line)
 tools/mini.js      ← apne app mein lagana                                         (line 8–30)</pre>
@@ -193,7 +193,7 @@ tools/mini.js      ← apne app mein lagana                                     
               <tr><td>Copy (replication)</td><td>async · 1000 (1 s)</td><td>1 order (#9)</td><td>turant</td></tr>
               <tr><td>Sync</td><td>sync</td><td>koi nahi (0 order)</td><td>har baar 0.20 s</td></tr>
             </table></div>
-            Line 55 mein yahi <code>everyMs</code> ghadi ka gap banta hai. Asli raftaar wale lab mein copy ka <code>everyMs</code> 300 hai (line 17 ka default), backup ka 3000. Wahan bhi wahi kram (50 orders/second, teen run): backup mein 50 orders gaye, copy mein 5.`,
+            Line 55 mein yahi <code>everyMs</code> ghadi ka gap banta hai. Asli raftaar wale lab mein copy ka <code>everyMs</code> 300 hai (line 17 ka default), backup ka 3000. Teeno run mein bhi wahi kram (50 orders/second): backup mein 50 orders gaye, copy mein 5.`,
           vars: { orders: '—', waiting: '—', b: '—', lost: 'backup 3 · copy 1 · sync 0', said: '—' },
         },
         {
@@ -274,7 +274,7 @@ tools/mini.js      ← apne app mein lagana                                     
             <b>Line 16:</b> 3 &lt; 3? Nahi → aage.<br>
             <b>Line 17:</b> <code>done = true</code>.<br>
             <b>Line 18:</b> <code>return true</code> — "ab B par chalo". Sirf ek baar.<br><br>
-            Uske baad har health check par line 14 hi chalti hai: <code>done</code> true hai, toh <code>false</code>.`,
+            Phir har health check par line 14 hi chalti hai: <code>done</code> true hai, toh <code>false</code>.`,
           vars: { call: 'teesra ✗ (5.50 s)', fails: '1 → 2 → 3', done: 'true', ret: 'true → B par chalo' },
         },
         {
@@ -311,7 +311,7 @@ tools/mini.js      ← apne app mein lagana                                     
               <tr><td>Slow motion (A 4.00 s par gaya)</td><td>0.5 s</td><td>3</td><td>1.50 s — FAILOVER 5.50 s par</td></tr>
               <tr><td>Asli raftaar lab, active-active (teen run)</td><td>500 ms</td><td>3</td><td>RTO 1.0–1.5 s</td></tr>
             </table></div>
-            Active-active mein region B pehle se poora chal raha hota hai, isliye wahan RTO (orders kitni der fail hote rahe) lagbhag sirf pata chalne ka samay hai. 500 ms × 3 = lagbhag 1.5 s (hisaab). A jawab dena band kar de par connection na tode, toh aakhri check ka 300 ms timeout bhi judta hai — tab 1.5 s se thoda zyada lag sakta hai. Teen run mein kam-zyada isliye: region A health check ke jaal mein kahin bhi gir sakta hai — check ke theek baad girne par poora 1.5 s, theek pehle girne par ek fasla kam.<br><br>
+            Active-active mein region B pehle se poora chal raha hota hai, isliye active-active ka RTO (orders kitni der fail hote rahe) lagbhag sirf pata chalne ka samay hai. 500 ms × 3 = lagbhag 1.5 s (hisaab). A jawab dena band kar de par connection na tode, toh aakhri check ka 300 ms timeout bhi judta hai — tab 1.5 s se thoda zyada lag sakta hai. Teen run mein kam-zyada isliye: region A health check ke jaal mein kahin bhi gir sakta hai — check ke theek baad girne par poora 1.5 s, theek pehle girne par ek fasla kam.<br><br>
             Hadd chhoti = pata jaldi, par jhoothi ghabrahat ka khatra: ek-do dheeme jawab bhi failover karwa denge, aur failover wapas nahi hota. Hadd badi = ulta.`,
           vars: { call: 'fasla × hadd', fails: '3', done: 'true', ret: 'A ke 1.50 s baad true' },
         },
@@ -323,7 +323,7 @@ tools/mini.js      ← apne app mein lagana                                     
     {
       type: 'dryrun',
       title: '🔌 tools/mini.js — apne app mein lagana: line 8–30',
-      goal: 'Sawaal: "ho gaya" kab bolna hai, yeh app ki kaunsi line tay karti hai? Yeh file ek poora chhota app hai, <code>lib/replicator.js</code> ke saath. Neeche ka hissa sirf dikhane ke liye hai, isliye yahan nahi dikhaya. Chaar tukde: banana, order lena, chalana, aur ek sawaal.',
+      goal: 'Sawaal: "ho gaya" kab bolna hai, app ki kaunsi line tay karti hai? server.js ek poora chhota app hai, <code>lib/replicator.js</code> ke saath. Neeche ka hissa sirf dikhane ke liye hai, isliye yahan nahi dikhaya. Chaar tukde: banana, order lena, chalana, aur ek sawaal.',
       code: {
         title: 'docker-labs/40-disaster-recovery/tools/mini.js',
         file: 'docker-labs/40-disaster-recovery/tools/mini.js',
@@ -349,7 +349,7 @@ tools/mini.js      ← apne app mein lagana                                     
           clock: '2 · order lo',
           line: '21-28',
           say: `<b>Line 23:</b> <code>await rep.write(body)</code> — order replicator ko do. Async mein <code>write()</code> turant lautta hai. Sync mein B ka jawab aane tak yahin ruko (line ka comment).<br>
-            <b>Line 24:</b> uske <b>baad</b> 201 — "ho gaya".<br>
+            <b>Line 24:</b> copy ke <b>baad</b> 201 — "ho gaya".<br>
             <b>Line 25–26:</b> <code>write()</code> ne throw kiya (sync mein <code>ship</code> fail) → <b>503</b>, "copy nahi hui". Grahak ko "ho gaya" nahi dikhta.<br><br>
             Pichhle stage ka sync wala order #5 yahin 503 banta hai. Async mein <code>write()</code> ke andar <code>ship</code> bulaya hi nahi jaata, isliye copy ki gadbad se 503 nahi aata.`,
           vars: { part: 'order(req, res, …)', does: 'write() ke baad 201; throw par 503', reply: 'write() ke poora hone ke baad' },
@@ -396,7 +396,7 @@ tools/mini.js      ← apne app mein lagana                                     
       title: '🐳 Lab — wahi app, do mode mein',
       project: '40-disaster-recovery',
       exercise: 'ex0-slowmo',
-      goal: 'Abhi jo file padhi, wahi chalao. App port 5195 par khulta hai. Har 0.5 s par ek order aata hai, aur 3.80 s par yeh region "gaya". Pehle async (pehle "ho gaya"), phir <code>--sync</code> (pehle copy).',
+      goal: 'Abhi jo file padhi, wahi chalao. App port 5195 par khulta hai. Har 0.5 s par ek order aata hai, aur 3.80 s par region A "gaya". Pehle async (pehle "ho gaya"), phir <code>--sync</code> (pehle copy).',
       why: '<code>tools/mini.js</code> ka upar ka hissa (line 8–30) wahi app hai jo abhi padha. Neeche ka hissa sirf dikhane ke liye hai: orders bhejta hai, 3.80 s par region ke "jaane" ka pal tay karta hai, aur batata hai ki doosre region mein kaun se order hain. Koi service nahi chalani, Docker nahi chahiye — sirf Node 18+.',
       steps: [
         { text: 'Chalao (~4 s). Aakhri teen line dekho: "ho gaya" mila, par kitne order doosre region mein nahi hain?', cmd: 'cd docker-labs/40-disaster-recovery && node tools/mini.js', expect: "app :5195 · lib/replicator.js · mode: async · copy har 2 s par\n\n    samay   order  jawab  kitni der   A mein  doosre mein\n   0.35 s   #1    201    0.0 s       1       0       ← \"ho gaya\" turant; copy abhi nahi gayi\n   0.85 s   #2    201    0.0 s       2       0\n   1.35 s   #3    201    0.0 s       3       0\n   1.85 s   #4    201    0.0 s       4       0\n   2.35 s   #5    201    0.0 s       5       4       ← 2.00 s par #1–#4 ki copy gayi (pahunchi 2.20 s par)\n   2.85 s   #6    201    0.0 s       6       4\n   3.35 s   #7    201    0.0 s       7       4\n\n💥 3.80 s par yeh region gaya (jo kuch sirf yahan tha, woh gaya)\n\n  \"ho gaya\" (201) mila:         #1–#7 (7 order)\n  doosre region mein hain:      #1–#4 (4 order)\n  \"ho gaya\" mila, par kho gaye: #5–#7 (3 order)" },
@@ -419,7 +419,7 @@ tools/mini.js      ← apne app mein lagana                                     
           'Sync mein copy 201 se pehle hai. Catch purane backup mein nakaam order nahi daalta.',
         ],
       },
-      lesson: '🎯 <b>Asli baat:</b> wahi app, do mode. Async: "ho gaya" 0.0 s mein, par kho gaye #5–#7 (3 order). Sync: har order 0.2 s mein, kho gaye koi nahi (0 order). Farak ek <code>await</code> ka hai, aur uski keemat har order ka intezaar.',
+      lesson: '🎯 <b>Asli baat:</b> wahi app, do mode. Async: "ho gaya" 0.0 s mein, par kho gaye #5–#7 (3 order). Sync: har order 0.2 s mein, kho gaye koi nahi (0 order). Farak ek <code>await</code> ka hai, aur await ki keemat har order ka intezaar.',
     },
   ],
   interview: {

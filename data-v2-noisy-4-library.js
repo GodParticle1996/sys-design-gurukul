@@ -107,16 +107,16 @@ SD.registerLevels('sdd-resil', [
           vars: { count: four(4), b: 'B#1 → 200 · <b>B#2 → 429</b>', a: '12 mein se 3 andar · 9 ko 429' },
         },
         {
-          clock: 'yeh hua kyun?',
+          clock: 'aisa hua kyun?',
           line: 24,
-          say: `Yeh level 1 wali "sab ek hi line mein" samasya hi hai — is baar <b>limiter ke andar</b>. Ek IP = ek ginti. Us IP ke peeche jitne log hain, sab ek doosre ka hissa khaate hain.<br><br>
+          say: `Level 1 wali "sab ek hi line mein" samasya phir se hai — is baar <b>limiter ke andar</b>. Ek IP = ek ginti. Us IP ke peeche jitne log hain, sab ek doosre ka hissa khaate hain.<br><br>
             Asli duniya mein ek IP ke peeche bahut log hote hain:
             <ul>
               <li>ek office ya college ka Wi-Fi;</li>
               <li>mobile company ka network;</li>
               <li>aur sabse aam: tumhara apna <b>load balancer</b>. Load balancer ke peeche ki har request server ko load balancer ke IP se aati dikhti hai.</li>
             </ul>
-            Library ke apne code mein is galti ki chetaavni likhi hai: library aisi request par ek error chhaapti hai jisme <code>X-Forwarded-For</code> header ho par Express ki <code>trust proxy</code> setting band ho. (Yeh chetaavni library ke source se hai; lab mein ise chalaya nahi gaya.)`,
+            Library ke apne code mein is galti ki chetaavni likhi hai: library aisi request par ek error chhaapti hai jisme <code>X-Forwarded-For</code> header ho par Express ki <code>trust proxy</code> setting band ho. (Chetaavni library ke source se hai; lab mein ye case chalaya nahi gaya.)`,
           vars: { key: 'IP — A aur B dono ka ek hi' },
         },
         {
@@ -185,11 +185,11 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'cards',
       title: '🗺️ Wahi teen tareeke — API gateway aur Kubernetes mein',
-      goal: 'Paanch chhote cards. Yeh cards AWS API Gateway aur Kubernetes ki <b>official documentation</b> se hain; is lab mein yeh dono chalaye nahi gaye. Settings ke naam wahin se hain.',
+      goal: 'Paanch chhote cards. Ye cards AWS API Gateway aur Kubernetes ki <b>official documentation</b> se hain; is lab mein API Gateway aur Kubernetes chalaye nahi gaye. Settings ke naam wahin se hain.',
       steps: [
         {
           title: '1. API gateway: har grahak ki baalti',
-          say: `API gateway woh darwaza hai jisse hokar bahar ki requests tumhari services tak aati hain. Hadd lagane ki yeh sabse aam jagah hai.<br><br>
+          say: `API gateway ek darwaza hai jisse hokar bahar ki requests tumhari services tak aati hain. Gateway hadd lagane ki sabse aam jagah hai.<br><br>
             AWS API Gateway ki documentation ke mutabiq API Gateway requests ko <b>token bucket</b> se rokta hai — wahi baalti:
             <ul>
               <li><b>rate</b>: har second kitne tokens baalti mein aate hain.</li>
@@ -197,15 +197,15 @@ SD.registerLevels('sdd-resil', [
               <li>Har grahak ki apni hadd: grahak ko ek <b>API key</b> do, aur us key ko ek "usage plan" se jodo.</li>
               <li>Hadd paar → <code>429 Too Many Requests</code>.</li>
             </ul>
-            Wahi documentation yeh bhi kehti hai ki yeh hadd "best-effort" hai: ise nishaana samjho, pakki deewar nahi.`,
+            Wahi documentation ye bhi kehti hai ki gateway ki hadd "best-effort" hai: hadd ko nishaana samjho, pakki deewar nahi.`,
         },
         {
           title: '2. Kubernetes: CPU request = baari ka wazan',
-          say: `Kubernetes mein kai services (pods) ek hi machine ka CPU baant-ti hain. Yeh bhi saajha system hai.<br><br>
+          say: `Kubernetes mein kai services (pods) ek hi machine ka CPU baant-ti hain. Kubernetes node bhi saajha system hai.<br><br>
             Har container ke liye do number likhe ja sakte hain: <b>request</b> aur <b>limit</b>. Documentation CPU request ke baare mein kehti hai:
             <pre>"The CPU request typically defines a weighting."</pre>
             Yaani jab CPU par kheencha-taani ho, toh bade request wale container ko zyada CPU milta hai. Aur jab machine par jagah ho, toh container apne request se <b>zyada</b> bhi le sakta hai.<br><br>
-            Yeh baari-baari hi hai — wazan ke saath. Khaali jagah bekaar nahi jaati.`,
+            CPU ka bantwaara baari-baari hi hai — wazan ke saath. Khaali jagah bekaar nahi jaati.`,
         },
         {
           title: '3. Kubernetes: CPU limit = pakki hadd',
@@ -222,9 +222,9 @@ SD.registerLevels('sdd-resil', [
             ],
             answer: 0,
             hint: 'CPU limit level 1 ki hadd jaisa hai. Kya level 1 ki hadd ko khaali khidkiyan dikhti thi?',
-            explain: 'CPU limit wahi "har tenant ki hadd" hai: padosi bache rehte hain, par khaali jagah bekaar jaati hai. Kernel container ko har chhote time-slice mein 1 core ke hisaab tak chalne deta hai, phir rok deta hai (throttle). (Memory ka limit alag chalta hai: memory limit paar karne par container maara ja sakta hai — documentation ise OOM kill kehti hai.)',
+            explain: 'CPU limit wahi "har tenant ki hadd" hai: padosi bache rehte hain, par khaali jagah bekaar jaati hai. Kernel container ko har chhote time-slice mein 1 core ke hisaab tak chalne deta hai, phir rok deta hai (throttle). (Memory ka limit alag chalta hai: memory limit paar karne par container maara ja sakta hai — documentation is maut ko OOM kill kehti hai.)',
             choiceExplanations: [
-              'CPU limit wahi "har tenant ki hadd" hai: padosi bache rehte hain, par khaali jagah bekaar jaati hai. Kernel container ko har chhote time-slice mein 1 core ke hisaab tak chalne deta hai, phir rok deta hai (throttle). (Memory ka limit alag chalta hai: memory limit paar karne par container maara ja sakta hai — documentation ise OOM kill kehti hai.)',
+              'CPU limit wahi "har tenant ki hadd" hai: padosi bache rehte hain, par khaali jagah bekaar jaati hai. Kernel container ko har chhote time-slice mein 1 core ke hisaab tak chalne deta hai, phir rok deta hai (throttle). (Memory ka limit alag chalta hai: memory limit paar karne par container maara ja sakta hai — documentation is maut ko OOM kill kehti hai.)',
               'Limit khaali machine nahi dekhti — jaise level 1 ki hadd khaali khidki nahi dekhti thi.',
               'CPU limit par container rukta hai (throttle), marta nahi. Maarna memory limit ka niyam hai (OOM kill).',
               'Kubernetes chalte pod ko CPU ke liye doosri machine par nahi bhejta. Pod wahin dheema chalta hai.',
@@ -254,7 +254,7 @@ SD.registerLevels('sdd-resil', [
             Naam har jagah alag hain. Sawaal wahi teen: <b>kitna</b>, <b>kiski ginti</b>, aur <b>khaali jagah ka kya</b>.`,
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> naya tool dekho toh us tool ki documentation mein dhoondo: hadd kiski ginti par lagti hai, hadd pakki hai ya nishaana, aur khaali jagah kisi ke kaam aati hai ya nahi. Kubernetes mein yeh do alag number hain: <b>request</b> (baari ka wazan) aur <b>limit</b> (pakki hadd).',
+      lesson: '🎯 <b>Asli baat:</b> naya tool dekho toh us tool ki documentation mein dhoondo: hadd kiski ginti par lagti hai, hadd pakki hai ya nishaana, aur khaali jagah kisi ke kaam aati hai ya nahi. Kubernetes mein do alag number hain: <b>request</b> (baari ka wazan) aur <b>limit</b> (pakki hadd).',
     },
 
     /* ---------------- 3. asli library chalao ---------------- */
@@ -356,7 +356,7 @@ SD.registerLevels('sdd-resil', [
     { front: 'Ginti IP ki ho toh kya ho sakta hai?', back: 'Ek IP ke peeche sab ek doosre ka hissa khaate hain: office, mobile network, ya load balancer ke peeche ki har request. Lab: A ki 12 requests → B#2 ko 429, jabki B ne 2 hi bheji.' },
     { front: '"Har second nayi ginti" banaam token bucket?', back: 'Nayi ginti wale hisaab mein do second ke kinare par lagbhag dugna aa sakta hai. Lab: wahi 8 requests → library 8 andar (0.2 s mein 7), token bucket 5.' },
     { front: 'Kubernetes: request, limit, QoS class? (docs)', back: '<b>Request</b> = baari ka wazan (khaali ho toh request se upar bhi). <b>Limit</b> = pakki chhat (khaali machine par bhi). <b>QoS class</b> = request aur limit se bani pehchaan; tangi mein nikaalne ke kram ka sirf andaaza (asli kram: request se zyada use, phir priority).' },
-    { front: 'API gateway par har grahak ki hadd? (docs)', back: 'AWS API Gateway: token bucket — rate (tokens har second) + burst (baalti). Har grahak ki apni hadd API key + usage plan se. Paar → 429. Documentation ise "best-effort" kehti hai.' },
+    { front: 'API gateway par har grahak ki hadd? (docs)', back: 'AWS API Gateway: token bucket — rate (tokens har second) + burst (baalti). Har grahak ki apni hadd API key + usage plan se. Paar → 429. Documentation is hadd ko "best-effort" kehti hai.' },
   ],
 },
 ]);

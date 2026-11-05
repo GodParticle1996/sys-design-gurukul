@@ -39,7 +39,7 @@ SD.registerLevels('sdd-resil', [
     'Node ka <code>write()</code> jab <code>false</code> lautata hai, toh data ka kya hota hai?',
     '<code>\'drain\'</code> kab aata hai — aur reader ko rokne se kaam dheema kyun nahi hota?',
     '<code>pipeline()</code> kya karta hai jo purana <code>pipe()</code> nahi karta?',
-    'RabbitMQ aur Kafka mein bhari line ke wahi chaar jawab kis naam se milte hain — aur unke default kya hain?',
+    'RabbitMQ aur Kafka mein bhari line ke wahi chaar jawab kis naam se milte hain — aur dono ke default kya hain?',
   ],
   lesson: [
     `<h3>📄 Ek report, 129 MB</h3>
@@ -50,7 +50,7 @@ SD.registerLevels('sdd-resil', [
 writer ke andar jama:     120 MB   (poori file)
 process ki memory chadhi: 129 MB   — ek download par</pre>
      <p>Mahine ki aakhri raat 20 partners ek saath download karte hain. Seedha hisaab: 20 × 129 MB ≈ 2.5 GB. report-service ke paas itni memory nahi hai.</p>
-     <p>Yeh level 1 wali kahani hi hai: tez bhejne wala, dheema kaam karne wala, beech mein bina hadd ki line. Bas is baar line <b>Node ke andar</b> chhupi hai.</p>
+     <p>Level 1 wali kahani phir se: tez bhejne wala, dheema kaam karne wala, beech mein bina hadd ki line. Bas is baar line <b>Node ke andar</b> chhupi hai.</p>
      <p class="tip">👉 Node ke paas is samasya ka ilaaj pehle se hai, aur Node bolta bhi hai. Agle screen par suno ki Node kya bolta hai — 12 tukdon ke saath, slow motion mein.</p>`,
   ],
   stages: [
@@ -133,7 +133,7 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
         },
         {
           clock: '0.45–1.05 s',
-          say: 'Reader ruka hai. (Reader ne ek tukda — #5 — aur padh ke apne paas rakh liya. Uske baad file se padhna band.)<br><br>Writer likhta ja raha hai: 0.45 s par #1 likh diya → andar 3. 0.75 s → andar 2. 1.05 s → andar 1.',
+          say: 'Reader ruka hai. (Reader ne ek tukda — #5 — aur padh ke apne paas rakh liya. Phir file se padhna band.)<br><br>Writer likhta ja raha hai: 0.45 s par #1 likh diya → andar 3. 0.75 s → andar 2. 1.05 s → andar 1.',
           nodes: { src: { tone: 'idle', badge: 'padhna ruka hua' }, rdr: { tone: 'busy', badge: 'ruka · #5 haath mein' }, wtr: { tone: 'ok', badge: 'andar 1/4' } },
           vars: { w: inside(1), ret: '—', src: '5 / 12 — phir ruka' },
           ask: {
@@ -188,7 +188,7 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
         },
         {
           clock: 'pipeline()',
-          say: 'Yeh pause / drain wala code khud likhna zaroori nahi. Node mein ek function yahi sab karta hai:<pre>pipeline(reader, writer, done)</pre>Slow motion mein <code>pipeline()</code> ka trace pause/drain wale trace se <b>akshar-akshar</b> milta hai: andar sabse zyada 4, sab likhne mein 3.75 s.',
+          say: 'Pause / drain wala code khud likhna zaroori nahi. Node mein ek function yahi sab karta hai:<pre>pipeline(reader, writer, done)</pre>Slow motion mein <code>pipeline()</code> ka trace pause/drain wale trace se <b>akshar-akshar</b> milta hai: andar sabse zyada 4, sab likhne mein 3.75 s.',
           nodes: { rdr: { tone: 'ok', badge: 'pipeline() khud rokta hai' }, wtr: { tone: 'ok', badge: 'sabse zyada 4/4' } },
           vars: { how: 'pipeline(reader, writer)' },
         },
@@ -229,7 +229,7 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
         {
           clock: 'har tukde par',
           line: [36, 37],
-          say: 'Yahan <code>r</code> = reader, <code>w</code> = writer.<br><br>Line 36: reader jab bhi ek tukda deta hai, yeh function chalta hai.<br>Line 37: tukda writer ko likho, aur writer ka jawab <code>ok</code> mein rakho.',
+          say: 'Yahan <code>r</code> = reader, <code>w</code> = writer.<br><br>Line 36: reader jab bhi ek tukda deta hai, line 36 ka function chalta hai.<br>Line 37: tukda writer ko likho, aur writer ka jawab <code>ok</code> mein rakho.',
           vars: { mode: '—', buf: '—', err: '—' },
         },
         {
@@ -301,13 +301,13 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
     {
       type: 'cards',
       title: '🗺️ Wahi chaar jawab — RabbitMQ aur Kafka mein',
-      goal: 'Chaar chhote cards. Yeh cards RabbitMQ aur Kafka ki <b>official documentation</b> se hain; is lab mein yeh dono chalaye nahi gaye. Settings ke naam aur default wahin se hain.',
+      goal: 'Chaar chhote cards. Ye cards RabbitMQ aur Kafka ki <b>official documentation</b> se hain; is lab mein RabbitMQ aur Kafka chalaye nahi gaye. Settings ke naam aur default wahin se hain.',
       steps: [
         {
           title: '1. RabbitMQ: queue bhar gayi toh?',
           say: `RabbitMQ ek alag server hai jo producer aur consumer ke beech line rakhta hai.<br><br>
             By default RabbitMQ ki queue par <b>koi hadd nahi</b>. Hadd tum lagate ho: <code>x-max-length</code> (kitne messages) ya <code>x-max-length-bytes</code>.<br><br>
-            Bhari hone par kya ho, yeh <code>x-overflow</code> tay karta hai:
+            Bhari hone par kya ho, <code>x-overflow</code> tay karta hai:
             <div class="dr-scroll"><table>
               <tr><th><code>x-overflow</code></th><th>Kya hota hai</th><th>Hamara naam</th></tr>
               <tr><td><code>drop-head</code> <b>(default)</b></td><td>Queue ka sabse purana message girta hai</td><td>sabse purana girao</td></tr>
@@ -335,7 +335,7 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
         },
         {
           title: '2. RabbitMQ: consumer par bojh kaise rokein?',
-          say: 'Consumer RabbitMQ ko bolta hai: "mere paas ek saath itne hi adhoore messages rakho." Is setting ka naam <b>prefetch</b> hai (<code>basic.qos</code>).<br><br>Jab tak consumer kisi message ko "ho gaya" (ack) nahi bolta, RabbitMQ us consumer ko prefetch se zyada nahi bhejta. Baaki messages queue mein rehte hain, consumer ki memory mein nahi.<br><br>Yeh "rok lo" hai — broker aur consumer ke beech.<br><br>⚠️ Documentation: prefetch <code>0</code> ka matlab <b>koi hadd nahi</b>.',
+          say: 'Consumer RabbitMQ ko bolta hai: "mere paas ek saath itne hi adhoore messages rakho." Is setting ka naam <b>prefetch</b> hai (<code>basic.qos</code>).<br><br>Jab tak consumer kisi message ko "ho gaya" (ack) nahi bolta, RabbitMQ us consumer ko prefetch se zyada nahi bhejta. Baaki messages queue mein rehte hain, consumer ki memory mein nahi.<br><br>Prefetch "rok lo" hai — broker aur consumer ke beech.<br><br>⚠️ Documentation: prefetch <code>0</code> ka matlab <b>koi hadd nahi</b>.',
         },
         {
           title: '3. Kafka: yahan consumer khud maangta hai',
@@ -395,7 +395,7 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
           'Samay barabar tha, par writer ke andar 120 MB vs 1 MB. Bade load par 120 MB aur 1 MB ka farak hi crash ka farak hai.',
         ],
       },
-      lesson: 'Node mein data ek jagah se doosri jagah le jaana ho toh <code>pipeline()</code>. Khud <code>write()</code> bulao toh uska jawab padho.',
+      lesson: 'Node mein data ek jagah se doosri jagah le jaana ho toh <code>pipeline()</code>. Khud <code>write()</code> bulao toh write() ka jawab padho.',
     },
   ],
   interview: {

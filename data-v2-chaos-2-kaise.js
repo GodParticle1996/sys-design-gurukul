@@ -33,7 +33,7 @@ SD.registerLevels('sdd-resil', [
   title: 'Chaos 2 · Kaise — prayog ka dhancha, aur har chot alag kami dikhati hai',
   badge: 'Prayog Ustaad',
   objectives: [
-    'Ek chaos prayog ke kadam kya hain — aur "kuch bhi tod do" se yeh kaise alag hai?',
+    'Ek chaos prayog ke kadam kya hain — aur "kuch bhi tod do" se prayog kaise alag hai?',
     'Band karne ka button kya bachata hai?',
     'Mara hua instance pakda gaya. Dheema ya aadha-zinda instance health check se kyun nikal jaata hai?',
     'Steady state, hypothesis, abort, blast radius, passive health check: kaunsa naam kis cheez ka hai?',
@@ -144,13 +144,13 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
               <tr><td>Rokne ke niyam ke saath</td><td>60%</td><td>1.00 s</td><td><b>2</b></td><td>ABORT</td></tr>
               <tr><td>Niyam ke bina</td><td>60 · 80 · 60 · 60%</td><td>4.00 s</td><td><b>7</b></td><td>hypothesis toota</td></tr>
             </table></div>
-            Dono ne ek hi baat batayi: andaaza galat tha. Doosre ne yeh batane ke liye 5 requests aur girayi.`,
+            Dono ne ek hi baat batayi: andaaza galat tha. Doosre instance ne apni maut batane ke liye 5 requests aur girayi.`,
           nodes: { lb: { tone: 'slow', badge: '2 banaam 7 giri' }, i2: { tone: 'bad', badge: '4.00 s tak bimaar' } },
           vars: { step: 'niyam ke bina', naap: '60 · 80 · 60 · 60%', i2: '4.00 s tak aadha-zinda', fail: '7 (niyam ke saath: 2)', verdict: 'hypothesis toota' },
         },
         {
           clock: 'jab andaaza sahi nikle',
-          say: 'Ab setup mein retry bhi hai (health check + retry). Wahi chot, wahi andaaza.<br><br>Har naap: <b>100%</b>. Instance 2 par gayi har request agle instance par dobara bheji gayi — 7 baar. Faisla: <b>hypothesis tika</b>.<br><br>Yeh "boring" nateeja hi asli inaam hai. Pehle team <i>maanti</i> thi ki aadha-zinda instance sambhal jaayega; ab team <i>jaanti</i> hai.',
+          say: 'Ab setup mein retry bhi hai (health check + retry). Wahi chot, wahi andaaza.<br><br>Har naap: <b>100%</b>. Instance 2 par gayi har request agle instance par dobara bheji gayi — 7 baar. Faisla: <b>hypothesis tika</b>.<br><br>"Boring" nateeja hi asli inaam hai. Pehle team <i>maanti</i> thi ki aadha-zinda instance sambhal jaayega; ab team <i>jaanti</i> hai.',
           flows: to(3, 'dobara ✓', 'ok'),
           nodes: { lb: { tone: 'ok', badge: 'naap: 100%' }, i2: { tone: 'bad', badge: 'health ✓ · kaam ✗' }, i3: { tone: 'ok', badge: 'dobara yahan' } },
           vars: { step: 'retry ke saath', naap: '100 · 100 · 100 · 100%', i2: 'aadha-zinda (4.00 s)', fail: '0 (retry ne 7 bachayi)', verdict: 'hypothesis tika' },
@@ -193,7 +193,7 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           vars: { step: 'lab: chaaron', naap: 'lab: har thodi der mein', i2: 'lab: aadha-zinda', fail: 'lab: 17 (niyam) banaam 200 (bina)', verdict: 'lab: ABORT · hypothesis toota · hypothesis tika' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> prayog = aam din ka naap + likha hua andaaza + <b>ek</b> chot + nazar + band karne ka button. Button ke bina yeh prayog nahi, outage hai.<br>Naam: aam din ka naap = <b>steady state</b> · andaaza = <b>hypothesis</b> · rokne ka niyam = <b>abort</b> (ya stop condition) · kitni requests gir sakti hain = <b>blast radius</b>.',
+      lesson: '🎯 <b>Asli baat:</b> prayog = aam din ka naap + likha hua andaaza + <b>ek</b> chot + nazar + band karne ka button. Rokne ke button ke bina prayog nahi, outage hai.<br>Naam: aam din ka naap = <b>steady state</b> · andaaza = <b>hypothesis</b> · rokne ka niyam = <b>abort</b> (ya stop condition) · kitni requests gir sakti hain = <b>blast radius</b>.',
     },
 
     /* ---------------- 2. teen tarah ki chot ---------------- */
@@ -287,7 +287,7 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
           say: `Ek naya niyam load balancer mein: <b>jis instance par 2 asli requests lagataar fail hon, us instance ko 2 second ke liye list se hata do</b> — "theek ho?" ka jawab kuch bhi ho.
             <pre>2.15 s  ⏏️ instance 2: 2 request lagataar fail → 2.00 s ke liye BAHAR (passive ejection)
 4.15 s  ⏏️ instance 2: 2.00 s poore → rotation mein WAPAS (phir se try hoga)</pre>
-            Dheeme instance par ab sirf <b>2</b> requests pahunchi (pehle 4). Aadhe-zinda instance ko yeh niyam aur jaldi pakadta hai: 1.66 s par. Wajah: 500 ka jawab turant aata hai, jabki timeout ke liye har baar 0.5 second rukna padta hai.`,
+            Dheeme instance par ab sirf <b>2</b> requests pahunchi (pehle 4). Aadhe-zinda instance ko naya niyam aur jaldi pakadta hai: 1.66 s par. Wajah: 500 ka jawab turant aata hai, jabki timeout ke liye har baar 0.5 second rukna padta hai.`,
           flows: to(3, '✓', 'ok'),
           nodes: { lb: { tone: 'ok', badge: 'asli requests dekhta' }, i2: { tone: 'idle', badge: '2 s ke liye bahar' } },
           vars: { chot: 'dheema (aur aadha-zinda)', setup: 'health check + retry + naya niyam', hc: 'nahi — naye niyam ne hataya (2.15 s)', res: '0 fail · sirf 2 requests bimaar instance tak', slow: '510 ms' },
@@ -344,11 +344,11 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
       title: 'Prayog ke kadam — sahi kram mein',
       instructions: 'Ek chaos prayog ke kadam sahi kram mein lagao.',
       steps: [
-        { text: 'Aam din ka haal naapo — number mein (jaise: 100% requests safal)', explain: 'Iske bina "pehle" aur "baad" ka muqabla hi nahi ho sakta. Aur naap pehle se kharab ho, toh yahin ruk jao.' },
+        { text: 'Aam din ka haal naapo — number mein (jaise: 100% requests safal)', explain: 'Steady state ke bina "pehle" aur "baad" ka muqabla hi nahi ho sakta. Aur naap pehle se kharab ho, toh yahin ruk jao.' },
         { text: 'Andaaza likho — number mein — aur rokne ki hadd bhi', explain: 'Slow motion: andaaza "kam se kam 90%", hadd "70% se neeche gaya toh roko".' },
         { text: 'Ek chot do — sirf ek, chhote daayre mein', explain: 'Ek saath do cheezein todoge toh pata nahi chalega ki nuksaan kis se hua.' },
         { text: 'Naapte raho; naap hadd se neeche jaaye toh turant roko', explain: 'Slow motion: 60% &lt; 70% → 1.00 s mein roka, 2 requests giri (rokne ke niyam ke bina: 7).' },
-        { text: 'Chot wapas lo — chahe prayog poora hua ho ya beech mein roka gaya ho', explain: 'Wapas lena hamesha chalta hai. Code mein yeh "finally" ke andar hai (agla level).' },
+        { text: 'Chot wapas lo — chahe prayog poora hua ho ya beech mein roka gaya ho', explain: 'Wapas lena hamesha chalta hai. Code mein wapsi "finally" ke andar hai (agla level).' },
         { text: 'Faisla likho: andaaza tika ya toota — aur toota, toh kaunsi kami mili', explain: 'Tika → ab daava nahi, saboot hai. Toota → ek kami mili, incident se pehle.' },
       ],
     },
@@ -359,7 +359,7 @@ wahi chot, niyam ke bina               → 6.0 second chali       · 200 request
       title: '🐳 Lab — prayog aur chot, slow motion mein',
       project: '42-chaos',
       exercise: 'ex0-slowmo',
-      goal: 'Jo click karke dekha, wahi apni machine par: pehle pichhle level wala "teen instances, ek mara", phir woh prayog jo beech mein roka gaya, phir dheema instance (sirf health check ke saath), phir wahi dheema instance naye niyam ke saath.',
+      goal: 'Jo click karke dekha, wahi apni machine par: pehle pichhle level wala "teen instances, ek mara", phir beech mein roka gaya prayog, phir dheema instance (sirf health check ke saath), phir wahi dheema instance naye niyam ke saath.',
       why: '<code>lib/experiment.js</code> = prayog ka dhancha. <code>lib/rotation.js</code> = load balancer ke niyam (health check, retry, asli requests dekh ke hatana). Slow motion tools aur asli services, dono yahi files chalate hain. Koi service nahi chalani, Docker nahi chahiye — sirf Node 18+. Ghadi tay hai, isliye tumhara output dry run se milega. <code>--fast</code> lagao toh tool bina ruke chalta hai.',
       steps: [
         { text: 'Pichhle level wala: teen instances, health check nahi, instance 2 mara. Har teesri request ✗.', cmd: 'cd docker-labs/42-chaos && node tools/slowmo.js --mode three', expect: "har 0.2 s par ek request, baari-baari · 1.00 s par instance 2 mara, 3.00 s par wapas (jahan sirf ek instance hai, wahi marta hai) · health check har 0.3 s par\n\n=== 3 instances, health check nahi ===\n    0.25 s  #1  → instance 1 ✓\n    0.45 s  #2  → instance 2 ✓\n    0.65 s  #3  → instance 3 ✓\n    0.85 s  #4  → instance 1 ✓\n    1.00 s  💥 instance 2 mar gaya\n    1.05 s  #5  → instance 2 ✗ (connection toota)\n    1.25 s  #6  → instance 3 ✓\n    1.45 s  #7  → instance 1 ✓\n    1.65 s  #8  → instance 2 ✗ (connection toota)\n    1.85 s  #9  → instance 3 ✓\n    2.05 s  #10 → instance 1 ✓\n    2.25 s  #11 → instance 2 ✗ (connection toota)\n    2.45 s  #12 → instance 3 ✓\n    2.65 s  #13 → instance 1 ✓\n    2.85 s  #14 → instance 2 ✗ (connection toota)\n    3.00 s  ✅ instance 2 wapas chalu\n    3.05 s  #15 → instance 3 ✓\n    3.25 s  #16 → instance 1 ✓\n    3.45 s  #17 → instance 2 ✓\n    3.65 s  #18 → instance 3 ✓\n    3.85 s  #19 → instance 1 ✓\n    4.05 s  #20 → instance 2 ✓\n    4.25 s  #21 → instance 3 ✓\n    4.45 s  #22 → instance 1 ✓\n    4.65 s  #23 → instance 2 ✓\n    4.85 s  #24 → instance 3 ✓\n    5.05 s  #25 → instance 1 ✓\n   nateeja → 25 requests · 4 fail · sabse lamba lagataar fail: 1 · retry se bachi: 0\n             health check nahi hai — mara hua bhi rotation mein hi raha" },

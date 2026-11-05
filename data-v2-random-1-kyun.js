@@ -39,8 +39,8 @@ SD.registerLevels('sdd-resil', [
   title: 'Randomness 1 · Kyun — sabse samajhdaar niyam, sabse lambi line',
   badge: 'Jhund Jasoos',
   objectives: [
-    '"Har request sabse khaali server ko bhejo" — yeh niyam ek server par dher kaise laga deta hai?',
-    'Do servers khaali baithe the. Load balancer ko yeh kyun nahi dikha?',
+    '"Har request sabse khaali server ko bhejo" — ye niyam ek server par dher kaise laga deta hai?',
+    'Do servers khaali baithe the. Load balancer ko dher kyun nahi dikha?',
     'Jaankari dekhna hi band kar dein (baari-baari) toh kya sudharta hai — aur kya bigadta hai?',
     'Load balancer, round robin, least loaded, herding: kaunsa naam kis cheez ka hai?',
   ],
@@ -64,7 +64,7 @@ SD.registerLevels('sdd-resil', [
       nodes: NODES, edges: EDGES, viz: VIZ,
       vars: [
         { id: 'seen', label: 'Load balancer ko dikh raha hai' },
-        { id: 'age', label: 'Yeh jaankari kitni purani hai' },
+        { id: 'age', label: 'Load ki jaankari kitni purani hai' },
         { id: 's1', label: 'S1 par asal mein' },
         { id: 's2', label: 'S2 par asal mein' },
         { id: 's3', label: 'S3 par asal mein' },
@@ -120,7 +120,7 @@ SD.registerLevels('sdd-resil', [
           nodes: { lb: { tone: 'ok', badge: 'dikha: S1 1 · S2 0 · S3 3' } },
           vars: { seen: 'S1 1 · <b>S2 0</b> · S3 3', age: 'abhi aayi' },
           ask: {
-            q: 'Agle ek second mein chaar requests aayengi: #5, #6, #7, #8. Yeh kahan jaayengi?',
+            q: 'Agle ek second mein chaar requests aayengi: #5, #6, #7, #8. Agli requests kahan jaayengi?',
             choices: [
               'Chaaron S2 par — agle ek second tak load balancer ko S2 hi sabse khaali dikhega',
               'Ek-ek karke S1, S2, S3, S1 par — ab har server ko barabar mauka diya jaayega',
@@ -218,7 +218,7 @@ SD.registerLevels('sdd-resil', [
         },
         {
           clock: '6 s ka nateeja',
-          say: `Uske baad sab theek chala. Har server ko 8 requests, aur har ek ko nayi request 0.75 second ke fasle par mili.
+          say: `Phir sab theek chala. Har server ko 8 requests, aur har ek ko nayi request 0.75 second ke fasle par mili.
             <div class="dr-scroll"><table>
               <tr><th>Niyam</th><th>Ausat samay</th><th>Sabse lamba</th></tr>
               <tr><td>Sabse khaali ko (purani jaankari)</td><td>1.13 s</td><td>1.65 s</td></tr>
@@ -282,13 +282,13 @@ SD.registerLevels('sdd-resil', [
           vars: { rule: 'lab: baari-baari, ek server dheema', avg: '—', worst: 'lab: sabse dheemi 1% → 1.8–3.0 s+', s3: 'lab: dheeme server ki line 91–113' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> jaankari na dekhne se jhund nahi banta — par load balancer andha ho jaata hai: bhare ya dheeme server ko bhi barabar hissa.<br>Chahiye kuch aisa jo jaankari <b>dekhe</b>, par jisme sab ek hi "sabse achha" na chunein. Agla level isi ka hai.',
+      lesson: '🎯 <b>Asli baat:</b> jaankari na dekhne se jhund nahi banta — par load balancer andha ho jaata hai: bhare ya dheeme server ko bhi barabar hissa.<br>Chahiye kuch aisa jo jaankari <b>dekhe</b>, par jisme sab ek hi "sabse achha" na chunein. Agla level isi sawaal par hai.',
     },
 
     /* ---------------- 3. idea: toll plaza ---------------- */
     {
       type: 'cards',
-      title: '🛣️ Yeh tum dekh chuke ho — toll plaza ki lanes',
+      title: '🛣️ Tum dekh chuke ho — toll plaza ki lanes',
       goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Naam sabse aakhir mein aayenge.',
       steps: [
         {
@@ -297,7 +297,7 @@ SD.registerLevels('sdd-resil', [
         },
         {
           title: '2. Announcement band kar dein toh?',
-          say: 'Toll wale announcement band kar dete hain. Ab ek aadmi gate par khada hai: "tum lane 1, tum lane 2, tum lane 3…"<br><br>Yeh theek chalta hai — jab tak lane 3 ka booth wala dheema na ho. Tab bhi har teesri gaadi lane 3 mein bheji jaati hai, aur lane 3 ki line highway tak pahunch jaati hai.<br><br><b>KhanaKart mein:</b> yahi baari-baari tha. Dheeme S3 ko barabar hissa mila: sabse lambi request 4.95 s.',
+          say: 'Toll wale announcement band kar dete hain. Ab ek aadmi gate par khada hai: "tum lane 1, tum lane 2, tum lane 3…"<br><br>Baari-baari theek chalta hai — jab tak lane 3 ka booth wala dheema na ho. Tab bhi har teesri gaadi lane 3 mein bheji jaati hai, aur lane 3 ki line highway tak pahunch jaati hai.<br><br><b>KhanaKart mein:</b> yahi baari-baari tha. Dheeme S3 ko barabar hissa mila: sabse lambi request 4.95 s.',
         },
         {
           title: '3. Log asal mein kya karte hain?',
@@ -331,7 +331,7 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Jis server par sabse kam kaam ho, usi server ko bhejo</td><td><b>Least loaded</b> (load ki ginti connections se ho toh <b>least connections</b>)</td></tr>
               <tr><td>Purani jaankari par sab ka ek hi jagah pahunchna</td><td><b>Herding</b></td></tr>
             </table></div>
-            ⚠️ <b>Ek aam galatfehmi:</b> "Random sabse achha tareeka hai." Random jhund nahi banata, yeh sach hai. Par random bhi andha hai: dheeme server ko barabar hissa deta hai. Lab mein ek dheeme server ke saath random ki line: 139–152.`,
+            ⚠️ <b>Ek aam galatfehmi:</b> "Random sabse achha tareeka hai." Random jhund nahi banata, itna sach hai. Par random bhi andha hai: dheeme server ko barabar hissa deta hai. Lab mein ek dheeme server ke saath random ki line: 139–152.`,
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> do alag galtiyan hain. <b>Andha hona</b> (baari-baari, random): bhare ya dheeme server ko barabar hissa. <b>Jhund</b> (purani jaankari se "sabse khaali"): sab ek hi server par. Achha tareeka dono se bachta hai.',
@@ -340,8 +340,8 @@ SD.registerLevels('sdd-resil', [
     /* ---------------- 4. naam pakke karo ---------------- */
     {
       type: 'match',
-      title: 'Jo ho raha hai, uska naam',
-      instructions: 'Baayein taraf jo ho raha hai, daayein taraf uska naam.',
+      title: 'Jo ho raha hai, us cheez ka naam',
+      instructions: 'Baayein taraf jo ho raha hai, daayein taraf us cheez ka naam.',
       pairs: [
         { left: 'Requests S1, S2, S3, S1, S2, S3 par jaati hain — koi haal nahi dekha jaata', right: 'Round robin', explain: 'Baari-baari. Slow motion: ausat 0.85 s. Par dheeme S3 ko bhi har teesri request: sabse lamba 4.95 s.' },
         { left: 'Load balancer us server ko bhejta hai jis par sabse kam kaam dikh raha hai', right: 'Least loaded', explain: 'Achha tab, jab jaankari taaza ho. Purani jaankari par yahi niyam jhund banata hai.' },

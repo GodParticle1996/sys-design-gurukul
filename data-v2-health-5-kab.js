@@ -51,7 +51,7 @@ DB ko request ke jawab mein rakha       → /home 100% safal · /orders DB ke 0.
     /* ---------------- 1. pehle socho ---------------- */
     {
       type: 'bins',
-      title: 'Yeh gadbad kahan dikhni chahiye?',
+      title: 'App ki gadbad kahan dikhni chahiye?',
       instructions: 'Aath gadbadiyan. Har ek ke liye socho: is gadbad ka ilaaj restart hai, traffic rokna hai, ya dono nahi? Phir sahi bin mein daalo.',
       bins: [
         { id: 'live', label: '🫀 "Zinda ho?" mein (fail = restart)' },
@@ -59,7 +59,7 @@ DB ko request ke jawab mein rakha       → /home 100% safal · /orders DB ke 0.
         { id: 'req', label: '📨 Health mein nahi — request ke jawab mein' },
       ],
       items: [
-        { text: 'App atak gaya hai: kisi bhi request ka jawab nahi ja raha, aur yeh haalat khud theek nahi hogi', bin: 'live', explain: 'Gadbad pod ke andar hai, aur restart hi ilaaj hai. "Zinda ho?" ka jawab aayega hi nahi → checker restart karega.' },
+        { text: 'App atak gaya hai: kisi bhi request ka jawab nahi ja raha, aur atki haalat khud theek nahi hogi', bin: 'live', explain: 'Gadbad pod ke andar hai, aur restart hi ilaaj hai. "Zinda ho?" ka jawab aayega hi nahi → checker restart karega.' },
         { text: 'App ke do hisse ek doosre ka intezaar kar rahe hain (deadlock). Process chal raha hai, par kaam nahi ho raha', bin: 'live', explain: 'Process zinda dikhta hai, isliye sirf "process chal raha hai?" kaafi nahi. Kubernetes ki documentation liveness ki yahi misaal deti hai: chal raha hai, par aage nahi badh pa raha.' },
         { text: 'App abhi-abhi khula hai aur apna cache bhar raha hai. 20 second mein tayyar ho jaayega', bin: 'ready', explain: 'Pod theek hai, bas abhi kaam nahi le sakta. Traffic roko, restart mat karo. (Boot hi lamba ho, toh "shuru ho gaye?" wala sawaal bhi lagao.)' },
         { text: 'App ko band hone ka signal (SIGTERM) mil chuka hai', bin: 'ready', explain: 'Naya traffic nahi chahiye — par restart bhi nahi. Lab: "traffic mat bhejo" + 2 s tak jawab → har deploy par 0 fail (turant band: 75).' },
@@ -117,7 +117,7 @@ DB ko request ke jawab mein rakha       → /home 100% safal · /orders DB ke 0.
               <tr><td>Yaad se (har 2 s ek baar)</td><td>2.5</td><td>~50</td></tr>
               <tr><td>DB ko chhuta hi nahi</td><td>0</td><td>0</td></tr>
             </table></div>
-            Aur yeh bojh sabse bure waqt par padta hai: jab DB pehle se dheema ho.`,
+            Aur check ka bojh sabse bure waqt par padta hai: jab DB pehle se dheema ho.`,
         },
         {
           title: '4. Chaar galtiyan, chaar number',

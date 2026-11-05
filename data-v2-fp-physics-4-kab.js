@@ -125,7 +125,7 @@ SD.registerLevels('fp-core', [
         },
         {
           "title": "4. 64 KiB scan se kya prove hua?",
-          "say": "Same bytes par Node read operations 1024 se 64 hui. Larger chunks aur fewer calls ka combined result mila. Isse raw SSD sequential/random ratio, cold-cache speed ya device IOPS nahi nikla. Device, cache state, block size, queue depth aur competing load control karna padega."
+          "say": "Same bytes par Node read operations 1024 se 64 hui. Larger chunks aur fewer calls ka combined result mila. Is result se raw SSD sequential/random ratio, cold-cache speed ya device IOPS nahi nikla. Device, cache state, block size, queue depth aur competing load control karna padega."
         },
         {
           "title": "5. Storage engine par is idea ko kaise lagayein?",
@@ -145,7 +145,7 @@ SD.registerLevels('fp-core', [
         },
         {
           "title": "2. Cost practice ke inputs kya maane?",
-          "say": "Origin 100 GiB. Hot subset 5 GiB. Kalpanik origin rate 1 unit/GiB, cache rate 20 units/GiB. Yeh learning knobs hain; market ratios nahi.",
+          "say": "Origin 100 GiB. Hot subset 5 GiB. Kalpanik origin rate 1 unit/GiB, cache rate 20 units/GiB. Ye rates seekhne ke knobs hain, market ratios nahi.",
           "ask": {
             "q": "Poora 100 GiB RAM cache bana diya. Kya origin copy ka bill hata sakte hain?",
             "choices": [

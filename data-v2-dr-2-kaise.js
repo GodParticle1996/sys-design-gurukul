@@ -36,16 +36,16 @@ SD.registerLevels('sdd-resil', [
     'Region B mein jitna zyada pehle se chalu, wapsi utni tez. Is rishte mein khoya data kahan aata hai?',
     '"Ho gaya" copy se pehle bolein ya baad mein — dono ki keemat kya hai?',
     'Failover ho chuka hai. Phir bhi kuch grahakon ke orders kyun fail hote rehte hain?',
-    'Region theek hai, par kisi ne galti se sab mita diya. Lagataar copy isse kyun nahi bachati?',
+    'Region theek hai, par kisi ne galti se sab mita diya. Lagataar copy galat delete se kyun nahi bachati?',
   ],
   lesson: [
     `<h3>🧭 Do alag knob, ek hi din</h3>
      <p>Pichhle level ka hisaab (slow motion, region A 4.00 s par gaya):</p>
      <pre>sirf backup (har 3 s), B mein kuch nahi   → 7.50 s baad chale · 14 fail · 3 orders kho gaye
 copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 order kho gaya</pre>
-     <p>Do cheezein alag-alag badli thi: <b>copy kitni jaldi jaati hai</b> (isse khoya data ghata), aur <b>region B mein kitna pehle se chalu hai</b> (isse wapsi tez hui).</p>
+     <p>Do cheezein alag-alag badli thi: <b>copy kitni jaldi jaati hai</b> (tez copy se khoya data ghata), aur <b>region B mein kitna pehle se chalu hai</b> (pehle se chalu B se wapsi tez hui).</p>
      <p>Is level mein dono knob ko aakhir tak ghumayenge — aur dekhenge ki har kadam ki keemat kya hai.</p>
-     <p class="tip">👉 Chaar slow motion hain. Har ek mein ek hi sawaal poochhte rehna: <b>isse kaunsa nuksaan ghata, aur iske liye roz kya dena pada?</b></p>`,
+     <p class="tip">👉 Chaar slow motion hain. Har ek mein ek hi sawaal poochhte rehna: <b>tareeke se kaunsa nuksaan ghata, aur tareeke ke liye roz kya dena pada?</b></p>`,
   ],
   stages: [
     /* ---------------- 1. chaar tareeke ---------------- */
@@ -63,7 +63,7 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
       steps: [
         {
           clock: 'teesra tareeka',
-          say: 'Pichhle level mein region B ka DB chalu tha, par app band. Failover ke baad app ko chalu hone mein 3 second lage.<br><br>Agla sujhaav: <b>"B mein ek chhota app bhi pehle se chalu rakho."</b> Chhota, kyunki bada app roz ka poora kharcha hai. Yeh chhota app 1 second mein <b>1 hi order</b> le sakta hai; failover ke 2 second baad is app ko bada kiya jaa sakta hai.',
+          say: 'Pichhle level mein region B ka DB chalu tha, par app band. Failover ke baad app ko chalu hone mein 3 second lage.<br><br>Agla sujhaav: <b>"B mein ek chhota app bhi pehle se chalu rakho."</b> Chhota, kyunki bada app roz ka poora kharcha hai. Region B ka chhota app 1 second mein <b>1 hi order</b> le sakta hai; failover ke 2 second baad is app ko bada kiya jaa sakta hai.',
           nodes: { rt: { tone: 'ok', badge: 'sab A par' }, a: { tone: 'ok', badge: 'chal raha hai' }, b: { tone: 'idle', badge: 'DB + chhota app' }, s3: { tone: 'idle', badge: '' } },
           vars: { bday: 'DB + ek chhota app', back: '?', fail: '?', lost: '?' },
           ask: {
@@ -164,7 +164,7 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
           vars: { bday: 'lab: chaaron', back: 'lab: 16.3–16.4 s → 1.0–1.5 s', fail: 'lab: 680–689 → 25–37', lost: 'lab: 50 → 2–3' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> wapsi ka samay = <b>pata chalna</b> + region B ko jo <b>banana, chalu karna ya bada karna</b> pade. B mein jitna zyada pehle se chalu, yeh samay utna kam — aur roz ka kharcha utna zyada. Khoya data ek alag knob se ghat-ta hai: copy ki raftaar se.',
+      lesson: '🎯 <b>Asli baat:</b> wapsi ka samay = <b>pata chalna</b> + region B ko jo <b>banana, chalu karna ya bada karna</b> pade. B mein jitna zyada pehle se chalu, wapsi ka samay utna kam — aur roz ka kharcha utna zyada. Khoya data ek alag knob se ghat-ta hai: copy ki raftaar se.',
     },
 
     /* ---------------- 2. "ho gaya" pehle ya copy pehle ---------------- */
@@ -181,7 +181,7 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
       steps: [
         {
           clock: 'ek line ka farak',
-          say: 'Ab tak region A order rakhte hi "ho gaya" keh deta tha, aur copy baad mein jaati thi. Isiliye jo orders "raaste mein" the, yeh orders A ke saath gaye.<br><br>Sujhaav: <b>"Ho gaya" tabhi bolo jab region B ne order rakh liya ho.</b>',
+          say: 'Ab tak region A order rakhte hi "ho gaya" keh deta tha, aur copy baad mein jaati thi. Isiliye "raaste mein" chal rahe orders A ke saath gaye.<br><br>Sujhaav: <b>"Ho gaya" tabhi bolo jab region B ne order rakh liya ho.</b>',
           vars: { how: '—', ack: '—', lost: '—', bdown: '—' },
           ask: {
             q: 'B tak ek chakkar 0.20 s leta hai. Ab B ke jawab ke baad hi "ho gaya" bolna hai. Roz ke orders par kya asar padega?',
@@ -289,7 +289,7 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
     {
       type: 'dryrun',
       title: '🧭 Failover ho gaya, par grahak purane pate par',
-      goal: 'Ab tak router beech mein khada tha aur ek pal mein badal jaata tha. Asli duniya mein aisa aksar nahi hota. <b>Yeh slow motion ek model hai, asli DNS nahi</b> — par baat wahi hai. Region B yahan pehle se tayyar hai.',
+      goal: 'Ab tak router beech mein khada tha aur ek pal mein badal jaata tha. Asli duniya mein aisa aksar nahi hota. <b>Slow motion ek model hai, asli DNS nahi</b> — par baat wahi hai. Region B yahan pehle se tayyar hai.',
       vars: [
         { id: 'ttl', label: 'Grahak pata kitni der yaad rakhta hai' },
         { id: 'g', label: 'Har grahak kab phir safal hua' },
@@ -297,8 +297,8 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
       ],
       steps: [
         {
-          clock: 'pata, aur uski yaad',
-          say: 'Asli duniya mein grahak ka phone pehle poochhta hai: "KhanaKart kahan hai?" Jawab mein ek <b>pata</b> milta hai. Phone yeh pata kuch der <b>yaad</b> rakhta hai, aur us dauraan dobara nahi poochhta.<br><br>Failover ka matlab yahan: "KhanaKart kahan hai?" ka jawab badal ke region B ho gaya. Jawab 5.50 s par badla.',
+          clock: 'pata, aur pate ki yaad',
+          say: 'Asli duniya mein grahak ka phone pehle poochhta hai: "KhanaKart kahan hai?" Jawab mein ek <b>pata</b> milta hai. Phone region ka pata kuch der <b>yaad</b> rakhta hai, aur us dauraan dobara nahi poochhta.<br><br>Failover ka matlab yahan: "KhanaKart kahan hai?" ka jawab badal ke region B ho gaya. Jawab 5.50 s par badla.',
           vars: { ttl: '6 second', g: '—', total: '—' },
           ask: {
             q: 'Model mein grahak-1 ne 5.00 s par A ka pata liya, 6 s ke liye. DNS 5.50 s par B ho gaya. Grahak kab naya pata poochhega?',
@@ -416,11 +416,11 @@ copy har 1 s, B ka DB chalu (app band)    → 4.50 s baad chale ·  8 fail · 1 
               <tr><td>Sirf lagataar copy</td><td>0</td><td>16</td></tr>
               <tr><td>Lagataar copy + purane backup</td><td><b>12</b></td><td>4 (#13–#16)</td></tr>
             </table></div>
-            #13 se #16 isliye nahi mile ki yeh 6.00 s ke backup ke baad likhe gaye the.`,
+            #13 se #16 isliye nahi mile ki chaaron 6.00 s ke backup ke baad likhe gaye the.`,
           vars: { s3: '6.00 s wala chalaya', back: '12 wapas · 4 nahi mile (#13–#16)' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> lagataar copy <b>region ke jaane</b> se bachati hai. Purane backup <b>galti</b> se bachate hain. Yeh do alag kaam hain; ek doosre ki jagah nahi le sakta.',
+      lesson: '🎯 <b>Asli baat:</b> lagataar copy <b>region ke jaane</b> se bachati hai. Purane backup <b>galti</b> se bachate hain. Backup aur copy do alag kaam hain; ek doosre ki jagah nahi le sakta.',
     },
 
     /* ---------------- 5. asli tool par ---------------- */

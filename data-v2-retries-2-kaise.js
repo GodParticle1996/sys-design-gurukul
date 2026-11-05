@@ -33,7 +33,7 @@ SD.registerLevels('sdd-resil', [
   title: 'Retries 2 · Kaise — random intezaar bheed kaise todta hai',
   badge: 'Jitter Jaadugar',
   objectives: [
-    'Ek phone "random intezaar" kaise ginta hai — hadd kahan se aati hai, aur phone uske andar kya chunta hai?',
+    'Ek phone "random intezaar" kaise ginta hai — hadd kahan se aati hai, aur phone hadd ke andar kya chunta hai?',
     'Chhe phones ek saath fail hue the. Random ke baad alag-alag kyun laute?',
     'Random ki keemat kya hai?',
     'Server khud kaise bole "abhi nahi, 1 second baad aana" — aur phone ko kya karna chahiye?',
@@ -281,9 +281,9 @@ ab:     6 mein se 6 order · 1 crash (sirf deploy wala) · 28 calls</pre>
       instructions: 'Retry ke andar ke faisle, sahi kram mein lagao.',
       steps: [
         { text: 'Call bheji — fail ho gayi', explain: 'Yahin se retry ka hisaab shuru hota hai.' },
-        { text: 'Kya yeh failure dobara bhejne layak hai? (jawab nahi aaya / 503 / 429) — nahi toh ruk jao', explain: '400 ya 404 jaisi galti dobara bhejne se nahi badlegi. Uska poora hisaab level 4 mein.' },
+        { text: 'Kya is failure ko dobara bhejna chahiye? (jawab nahi aaya / 503 / 429) — nahi toh ruk jao', explain: '400 ya 404 jaisi galti dobara bhejne se nahi badlegi. Kis failure par dobara bhejna hai, poora hisaab level 4 mein.' },
         { text: 'Koshishein bachi hain? — nahi toh haar maan lo aur user ko batao', explain: 'Slow motion mein 5 koshish thi. Hadd ke bina phones hamesha lage rehte (132 calls).' },
-        { text: 'Server ne Retry-After diya hai? — toh utna ruko (thoda random jod ke)', explain: 'Server jaanta hai woh kab khaali hoga. Farhan ka phone 1043 ms ruka.' },
+        { text: 'Server ne Retry-After diya hai? — toh utna ruko (thoda random jod ke)', explain: 'Server ko pata hai ki jagah kab banegi. Farhan ka phone 1043 ms ruka.' },
         { text: 'Warna hadd nikalo: base × 2ⁿ, chhat (cap) tak — aur 0 se hadd ke beech random chuno', explain: 'Asha: hadd 300 → chuna 151 · hadd 600 → 550 · hadd 1200 → 830.' },
         { text: 'Utna ruko, phir wahi call dobara bhejo', explain: 'Aur phir yahi poora chakkar — jab tak kaam ho na jaaye ya koshishein khatam na ho jaayein.' },
       ],
@@ -418,7 +418,7 @@ ab:     6 mein se 6 order · 1 crash (sirf deploy wala) · 28 calls</pre>
     ],
   },
   success: [
-    'Kisi bhi koshish ke baad agla intezaar nikal sakte ho: hadd (dugni, chhat tak) aur uske andar random',
+    'Kisi bhi koshish ke baad agla intezaar nikal sakte ho: hadd (dugni, chhat tak) aur hadd ke andar random',
     'Bata sakte ho ki random ke baad phones alag-alag kyun lautte hain, aur random ki keemat kya hai',
     'Server ka brake jaante ho: 503 / 429 + Retry-After, aur client ko use kaise maanna hai',
   ],

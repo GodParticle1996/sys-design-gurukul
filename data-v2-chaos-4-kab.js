@@ -35,14 +35,14 @@ SD.registerLevels('sdd-resil', [
   objectives: [
     'Prayog kab chalana chahiye, kab pehle kuch theek karna chahiye, aur kab bilkul nahi?',
     'Kaunsi chot pehle deni chahiye — aur "mar gaya" wali chot par rukna kyun galat hai?',
-    'Andaaza tik gaya. Kya iska matlab hai ki grahak ko kuch mehsoos nahi hua?',
+    'Andaaza tik gaya. Kya hypothesis tikne ka matlab hai ki grahak ko kuch mehsoos nahi hua?',
     'Paanch aam galatfehmiyan kaunsi hain, aur har ek ka naapa hua jawab kya hai?',
   ],
   lesson: [
     `<h3>⚖️ Todne se pehle: kya seekhne ko milega, aur kis keemat par?</h3>
-     <p>Chaos prayog ka maqsad ek <b>anjaani</b> kami dhoondhna hai, <b>kam se kam</b> nuksaan mein. Isi se teen sawaal nikalte hain:</p>
+     <p>Chaos prayog ka maqsad ek <b>anjaani</b> kami dhoondhna hai, <b>kam se kam</b> nuksaan mein. Is baat se teen sawaal nikalte hain:</p>
      <pre>kami pehle se pata hai?                  → todne se kuch naya nahi milega   → pehle theek karo
-naap, andaaza ya rollback nahi hai?      → yeh prayog nahi, outage hoga     → pehle theek karo
+naap, andaaza ya rollback nahi hai?      → ye prayog nahi, outage hoga     → pehle theek karo
 system abhi hi bimaar hai, ya din bhaari? → nuksaan badhega, seekh nahi      → abhi nahi</pre>
      <pre>lab (asli raftaar, teen run):
 wahi chot, rokne ke niyam ke saath   → 17 requests giri
@@ -54,11 +54,11 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
     /* ---------------- 1. pehle socho ---------------- */
     {
       type: 'bins',
-      title: 'Yeh prayog abhi chalayein?',
+      title: 'Prayog abhi chalayein?',
       instructions: 'Aath haalat. Har ek ke liye socho: prayog chalana chahiye, pehle kuch theek karna chahiye, ya aaj bilkul nahi? Phir sahi bin mein daalo.',
       bins: [
         { id: 'go', label: '✅ Haan — chalao (chhota daayra, rokne ke niyam ke saath)' },
-        { id: 'fix', label: '🔧 Pehle yeh theek karo' },
+        { id: 'fix', label: '🔧 Pehle ye theek karo' },
         { id: 'no', label: '⛔ Abhi nahi' },
       ],
       items: [
@@ -88,7 +88,7 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
               <tr><td>2. Dheema</td><td><b>133–134</b> giri</td><td>0 giri, par <b>133</b> requests dheemi</td><td>0 giri, 36 dheemi</td></tr>
               <tr><td>3. Aadha-zinda</td><td><b>133</b> giri</td><td>0 giri; bimaar instance tak 133</td><td>0 giri; bimaar instance tak 4</td></tr>
             </table></div>
-            ("Dheemi" = 200 ms se zyada.) Iske baad ki chot is lab mein nahi hai: database ya kisi doosri service ka dheema ya band hona. Yeh chot Circuit Breaker aur Health Checks wale levels mein naapi gayi hai.`,
+            ("Dheemi" = 200 ms se zyada.) Dheemi requests ke baad ki chot is lab mein nahi hai: database ya kisi doosri service ka dheema ya band hona. Database ya service ke dheeme hone ki chot Circuit Breaker aur Health Checks wale levels mein naapi gayi hai.`,
           ask: {
             q: 'Ek team ne "mar gaya" wali chot chalayi. Health check + retry ke saath 0 requests giri. Team: "hum resilient hain, kaam khatam." Agla kadam kya hona chahiye?',
             choices: [
@@ -140,13 +140,13 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
           title: '3. Chalane se pehle: chhah sawaal',
           say: `<ol>
               <li><b>Naap dikhta hai?</b> Safal %, samay — kahin, abhi.</li>
-              <li><b>Aam din ka naap kya hai?</b> Number mein. Aaj woh number theek hai?</li>
+              <li><b>Aam din ka naap kya hai?</b> Number mein. Aaj steady state ka number theek hai?</li>
               <li><b>Andaaza likha hai?</b> "Is chot ke dauraan bhi kam se kam ___."</li>
               <li><b>Rokne ki hadd kya hai?</b> "___ se neeche gaya toh turant roko."</li>
               <li><b>Chot wapas kaise loge?</b> Akele chala ke dekha?</li>
               <li><b>Daayra kitna hai?</b> Kitne instances, kitna traffic, kitni der. Team ko khabar hai?</li>
             </ol>
-            Chhah mein se ek bhi "nahi" → pehle woh theek karo.`,
+            Chhah mein se ek bhi "nahi" → pehle wahi kami theek karo.`,
           ask: {
             q: 'Sawaal 4 (rokne ki hadd) aur sawaal 5 (chot wapas) mein se ek hi ho, toh?',
             choices: [
@@ -168,7 +168,7 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
         },
         {
           title: '4. Principles of Chaos Engineering — aur kal subah',
-          say: `principlesofchaos.org par paanch "advanced principles" likhe hain. Unke naam wahin se, matlab lab se:
+          say: `principlesofchaos.org par paanch "advanced principles" likhe hain. Sab naam lab se hain:
             <div class="dr-scroll"><table>
               <tr><th>Principle</th><th>Seedhe shabdon mein</th><th>Lab mein</th></tr>
               <tr><td>Build a Hypothesis around Steady State Behavior</td><td>aam din ka naap, phir us par andaaza</td><td>"kam se kam 95% safal"</td></tr>
@@ -177,7 +177,7 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
               <tr><td>Automate Experiments to Run Continuously</td><td>haath se chalana tikta nahi; apne aap, lagataar</td><td>monkey ka <code>start()</code></td></tr>
               <tr><td>Minimize Blast Radius</td><td>nuksaan ka daayra chhota rakho</td><td>17 banaam 200 requests</td></tr>
             </table></div>
-            Wahi page yeh bhi kehta hai: aam din ke haal ko bigaadna jitna mushkil nikle, system par bharosa utna zyada. Yaani jis prayog mein kuch nahi toota, woh bekaar nahi gaya.<br><br>
+            Wahi page ye bhi kehta hai: aam din ke haal ko bigaadna jitna mushkil nikle, system par bharosa utna zyada. Yaani bina tootne wala prayog bekaar nahi gaya.<br><br>
             <b>Kal subah:</b> apni ek service chuno. Likho: aam din ka naap, ek andaaza, rokne ki hadd. Staging mein ek instance band karo. Jo dikhe, likh lo.`,
           ask: {
             q: 'Us page par "abort" ya "stop condition" jaisa koi shabd nahi hai. Lab ka rokne ka niyam in paanch mein se kis principle ka hissa hai?',
@@ -199,7 +199,7 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
           },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> aasaan chot se shuru karo, par wahin ruko mat. Andaaze mein woh sab likho jo grahak mehsoos karta hai. Aur chhah sawaal mein se ek bhi "nahi" ho, toh prayog nahi — pehle tayyari.',
+      lesson: '🎯 <b>Asli baat:</b> aasaan chot se shuru karo, par wahin ruko mat. Andaaze mein grahak ka har mehsoos hone wala asar likho. Aur chhah sawaal mein se ek bhi "nahi" ho, toh prayog nahi — pehle tayyari.',
     },
 
     /* ---------------- 3. naapo: monkey ---------------- */
@@ -232,7 +232,7 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
           'Doosri aur teesri dono row mein 3 instances the.',
         ],
       },
-      lesson: 'Monkey har setup mein wahi karta hai. Jo badalta hai, woh hai system ka jawab — aur wahi naapna hai.',
+      lesson: 'Monkey har setup mein wahi karta hai. Badalta hai system ka jawab — aur system ka jawab hi naapna hai.',
     },
 
     /* ---------------- 4. naapo: chot aur prayog ---------------- */
@@ -285,7 +285,7 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
         { text: '"Retry laga diya — ab dheema instance koi dikkat nahi."', bin: 'myth', explain: 'Retry request ko bachata hai, samay ko nahi. Lab: dheema + retry → 0 giri, par 133 requests ko 200 ms se zyada laga (sabse dheemi 1%: 515–517 ms).' },
         { text: '"Andaaza tik gaya, matlab grahak ko kuch mehsoos nahi hua."', bin: 'myth', explain: 'Andaaza ek hi naap ke baare mein hota hai. Lab: dheeme instance par "kam se kam 95% safal" wala andaaza tik gaya (0 giri) — jabki 133 requests dheemi thi.' },
         { text: 'Dheema instance mare hue instance se zyada nuksaan kar sakta hai.', bin: 'true', explain: 'Lab (sirf health check): mar gaya → 12 requests giri; dheema → 133–134. Mara hua instance health check ko dikhta hai; dheema nahi dikhta.' },
-        { text: 'Jo prayog staging mein pass hua, woh production mein fail ho sakta hai.', bin: 'true', explain: 'Principles of Chaos Engineering: system alag mahaul aur alag traffic mein alag chalta hai. Isliye staging pehla kadam hai, aakhri nahi.' },
+        { text: 'Staging mein pass hua prayog production mein fail ho sakta hai.', bin: 'true', explain: 'Principles of Chaos Engineering: system alag mahaul aur alag traffic mein alag chalta hai. Isliye staging pehla kadam hai, aakhri nahi.' },
         { text: 'Rokne ke niyam aur chot wapas lene ke tareeke ke bina prayog nahi chalana chahiye.', bin: 'true', explain: 'Lab: wahi chot, wahi kami — 17 banaam 200 giri hui requests (lagbhag 12 guna).' },
       ],
     },
@@ -353,7 +353,7 @@ ek instance pehle se bimaar          → aam din ka naap 68% → prayog shuru hi
     'Bata sakte ho ki andaaze mein sirf safal % rakhna kyun kaafi nahi',
   ],
   cards: [
-    { front: 'Prayog chalane se pehle chhah sawaal?', back: 'Naap dikhta hai? Aam din ka naap? Andaaza likha? Rokne ki hadd? Chot wapas kaise (parkha hua)? Daayra + team ko khabar? Ek bhi "nahi" → pehle woh theek karo.' },
+    { front: 'Prayog chalane se pehle chhah sawaal?', back: 'Naap dikhta hai? Aam din ka naap? Andaaza likha? Rokne ki hadd? Chot wapas kaise (parkha hua)? Daayra + team ko khabar? Ek bhi "nahi" → pehle wahi kami theek karo.' },
     { front: 'Kaunsi chot pehle?', back: 'Mar gaya → dheema → aadha-zinda → jis par service nirbhar hai. Lab (sirf health check): 12 · 133–134 · 133 requests giri.' },
     { front: 'Andaaza tik gaya = sab theek?', back: 'Nahi. Andaaza ek naap ka hota hai. Lab: dheema + retry → safal 100%, prayog pass — par 133 requests 200 ms se dheemi. Samay bhi naapo.' },
     { front: 'Kab bilkul nahi?', back: 'Jab system pehle se bimaar ho (lab: naap 68% → "shuru hi mat karo"), ya din bhaari ho. Aur jo kami pata hai, use todna nahi — pehle theek karna.' },

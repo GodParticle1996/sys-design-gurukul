@@ -32,14 +32,14 @@ SD.registerLevels('sdd-resil', [
     'App ke health wale hisse mein kitna code hai — aur is hisse mein kitne variable yaad rakhe jaate hain?',
     'live() hamesha true lautata hai. Phir "zinda ho?" ka jawab kabhi "nahi" kaise hota hai?',
     'Checker "lagataar 3 fail" kaise ginta hai, aur ek pass se kya hota hai?',
-    'Apne app mein yeh sab kitni lines mein lagta hai?',
+    'Apne app mein health checks kitni lines mein lagte hain?',
   ],
   lesson: [
     `<h3>💻 Do chhoti files: ek app ki, ek checker ki</h3>
-     <p>Pichhle do levels mein jo dekha, uska code do files mein hai. Lab ke pods aur lab ka mini cluster yahi files chalate hain:</p>
+     <p>Pichhle do levels ka code do files mein hai. Lab ke pods aur lab ka mini cluster yahi files chalate hain:</p>
      <pre>docker-labs/43-health-checks/lib/health.js    ← app ka hissa: do jawab + band hona   (27 line)
 docker-labs/43-health-checks/lib/checker.js   ← checker ka niyam: nateeja aaya, ab kya?  (41 line)</pre>
-     <p>Pehli file <b>tumhare app</b> mein jaati hai. Doosri file wahi kaam karti hai jo asli duniya mein Kubernetes ya load balancer karta hai — yeh file tumhe likhni nahi padti, par is file ko padhne se checker ki har setting samajh aa jaati hai.</p>
+     <p>Pehli file <b>tumhare app</b> mein jaati hai. Doosri file wahi kaam karti hai jo asli duniya mein Kubernetes ya load balancer karta hai — checker wali file tumhe likhni nahi padti, par is file ko padhne se checker ki har setting samajh aa jaati hai.</p>
      <p class="tip">👉 Ek cheez dhoondte hue padho: <code>ready()</code> ke andar DB ka naam kahin hai?</p>`,
   ],
   stages: [
@@ -73,7 +73,7 @@ docker-labs/43-health-checks/lib/checker.js   ← checker ka niyam: nateeja aaya
         {
           clock: 'live()',
           line: [24, 25, 26],
-          say: '<code>live()</code> ka poora kaam line 25 hai: <code>return true</code>. Yeh function kisi se kuch nahi poochhta.',
+          say: '<code>live()</code> ka poora kaam line 25 hai: <code>return true</code>. Liveness wala function kisi se kuch nahi poochhta.',
           vars: { live: 'true' },
           ask: {
             q: '<code>live()</code> hamesha <code>true</code> lautata hai. Phir "zinda ho?" ka jawab kabhi "nahi" kaise hoga?',
@@ -177,7 +177,7 @@ docker-labs/43-health-checks/lib/checker.js   ← checker ka niyam: nateeja aaya
             <code>check</code> mein kuch rakhna ho, toh do sawaal poochho:
             <ul>
               <li>Kya is cheez ke bina app ka <b>koi bhi</b> page nahi chal sakta?</li>
-              <li>Kya yeh cheez <b>saare pods ke liye ek hi</b> hai? Agar haan: is cheez ke girte hi saare pods ek saath traffic se bahar honge (level 2: /home 26 mein se 16).</li>
+              <li>Kya dependency <b>saare pods ke liye ek hi</b> hai? Agar haan: is cheez ke girte hi saare pods ek saath traffic se bahar honge (level 2: /home 26 mein se 16).</li>
             </ul>`,
           vars: { dep: 'check nahi diya → hamesha true', stop: 'false', ready: '!stopping' },
         },
@@ -296,7 +296,7 @@ docker-labs/43-health-checks/lib/checker.js   ← checker ka niyam: nateeja aaya
               <tr><td>Kubernetes ki default settings</td><td>10 s</td><td>3</td><td>~30 s tak</td></tr>
               <tr><td>AWS load balancer ki default settings</td><td>30 s</td><td>2</td><td>~60 s tak</td></tr>
             </table></div>
-            Kubernetes aur AWS ke number unki documentation ki default settings se nikala hua hisaab hain — is lab mein naape nahi gaye.<br><br>
+            Kubernetes aur AWS ke number dono ki documentation ki default settings se nikala hua hisaab hain — is lab mein naape nahi gaye.<br><br>
             Hadd chhoti rakhoge toh pata jaldi chalega, par ek dheema jawab bhi karwai karwa dega. Badi rakhoge toh ulta.`,
           vars: { call: 'fasla × hadd', fl: '—', rd: '—', ret: '—' },
         },
@@ -308,7 +308,7 @@ docker-labs/43-health-checks/lib/checker.js   ← checker ka niyam: nateeja aaya
     {
       type: 'dryrun',
       title: '🔌 tools/mini.js — apne app mein lagana: 23 line',
-      goal: 'Yeh file ek poora chhota app hai, <code>lib/health.js</code> ke saath. Chaar tukde dekho: banana, jawab dena, raaste jodna, band hona.',
+      goal: 'server.js ek poora chhota app hai, <code>lib/health.js</code> ke saath. Chaar tukde dekho: banana, jawab dena, raaste jodna, band hona.',
       code: {
         title: 'docker-labs/43-health-checks/tools/mini.js',
         file: 'docker-labs/43-health-checks/tools/mini.js',
@@ -376,7 +376,7 @@ docker-labs/43-health-checks/lib/checker.js   ← checker ka niyam: nateeja aaya
       why: '<code>tools/mini.js</code> ka upar ka hissa app hai (<code>lib/health.js</code> ke saath). Neeche ka hissa sirf dikhane ke liye hai: har 0.5 s par teeno raaston se poochhta hai aur status code chhaapta hai. Koi service nahi chalani, Docker nahi chahiye — sirf Node 18+.',
       steps: [
         { text: 'Chalao (~9 s). /readyz wala khaana dekho: kab 503 hua, kab wapas 200.', cmd: 'cd docker-labs/43-health-checks && node tools/mini.js', expect: "app :5229 · lib/health.js · DB ka check har 1 s par, jawab yaad se\n\n    samay   /livez   /readyz   /home      kya hua\n   0.25 s   200      200       200\n   0.75 s   200      200       200\n   1.25 s   200      200       200\n   1.50 s                                  💥 DB band\n   1.75 s   200      200       200         ← app ko abhi pata nahi: yaad 1.00 s ki hai\n   2.25 s   200      503       200         ← 2.00 s par app ne DB se poochha\n   2.75 s   200      503       200\n   3.25 s   200      503       200\n   3.75 s   200      503       200\n   4.25 s   200      503       200\n   4.50 s                                  ✅ DB wapas\n   4.75 s   200      503       200         ← yaad 4.00 s ki hai\n   5.25 s   200      200       200         ← 5.00 s par app ne DB se poochha\n   5.75 s   200      200       200\n   6.25 s   200      200       200\n   6.50 s                                  🛑 SIGTERM — band hone ka signal\n   6.75 s   200      503       200         ← traffic rukwaya; par jo request aayi, uska jawab diya\n   7.25 s   200      503       200\n   7.75 s   200      503       200\n   8.25 s   200      503       200\n   8.50 s                                  app band" },
-        { text: 'Khud poochhna ho toh: dobara chalao, aur doosre terminal se yeh chalao (pehle 6 second ke andar).', cmd: 'curl -i localhost:5229/readyz' },
+        { text: 'Khud poochhna ho toh: dobara chalao, aur doosre terminal se neeche ki command chalao (pehle 6 second ke andar).', cmd: 'curl -i localhost:5229/readyz' },
       ],
       observe: {
         q: 'DB 1.50 s par band hua, par /readyz 2.25 s par 503 hua. Aur 6.50 s par SIGTERM ke baad /livez 200 hi raha. Dono ki wajah?',

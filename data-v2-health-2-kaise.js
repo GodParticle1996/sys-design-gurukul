@@ -73,7 +73,7 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
       steps: [
         {
           clock: 'sawaal dobara padho',
-          say: 'Sawaal hai: <b>"kya is pod ko traffic bhejein?"</b> Yeh sawaal <b>pod</b> ke baare mein hai. DB ke baare mein nahi.<br><br>Naya setup: <code>/readyz</code> sirf pod ka apna haal bataye, DB se poochhe bina. Aur DB band ho, toh <code>/orders</code> khud apni request par bata de: <b>503</b>.',
+          say: 'Sawaal hai: <b>"kya is pod ko traffic bhejein?"</b> Readiness ka sawaal <b>pod</b> ke baare mein hai. DB ke baare mein nahi.<br><br>Naya setup: <code>/readyz</code> sirf pod ka apna haal bataye, DB se poochhe bina. Aur DB band ho, toh <code>/orders</code> khud apni request par bata de: <b>503</b>.',
           nodes: Object.assign({ chk: { tone: 'ok', badge: '/livez aur /readyz' }, db: { tone: 'ok', badge: 'theek' } }, pods({ tone: 'ok', badge: 'READY' })),
           vars: { setup: 'dono sawaal DB ko chhute hi nahi', ready: '—', eps: 'pod-1 · pod-2 · pod-3', home: '—', orders: '—' },
           ask: {
@@ -142,7 +142,7 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
         {
           clock: 'fail open',
           say: `Nateeja: /home 26 mein se <b>26</b> safal · /orders 26 mein se 16 · restart 0 · /orders DB ke 0.25 s baad theek. Wahi number jo "DB ko chhute hi nahi" wale setup ke the.<br><br>
-            Kaun fail open karta hai? (Documentation se — is lab mein yeh chalaye nahi gaye.)
+            Kaun fail open karta hai? (Documentation se — is lab mein ye tools chalaye nahi gaye.)
             <ul>
               <li><b>AWS Application Load Balancer:</b> jab target group ke saare targets unhealthy hon, toh load balancer saare targets ko bhejta hai.</li>
               <li><b>Envoy:</b> jab healthy hosts ek hadd se kam reh jaayein, toh Envoy health ko andekha karke sab hosts mein baant-ta hai. Is hadd ka naam panic threshold hai; default 50%.</li>
@@ -290,7 +290,7 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
             <ul>
               <li>Har 1 second par poochho. Lagataar 30 "nahi" par hi restart — yaani lagbhag 30 second ki chhoot.</li>
               <li>Jab tak is sawaal ka jawab "haan" na aaye, baaki dono sawaal <b>band</b>.</li>
-              <li>Pehle "haan" ke baad yeh sawaal dobara nahi poochha jaata. "Zinda ho?" apne tez niyam se shuru ho jaata hai.</li>
+              <li>Pehle "haan" ke baad startup ka sawaal dobara nahi poochha jaata. "Zinda ho?" apne tez niyam se shuru ho jaata hai.</li>
             </ul>`,
           vars: { when: '"shuru ho gaye?" ke pehle "haan" ke baad', boot: '12 s', restarts: '—', ready: '—' },
         },
@@ -403,7 +403,7 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
               <tr><td>Turant band</td><td>~1,018</td><td><b>75</b></td></tr>
               <tr><td>"Traffic bhejein?" par "nahi" + 2 s tak jawab, phir band</td><td>~1,018</td><td><b>0</b></td></tr>
             </table></div>
-            Yeh <b>har deploy</b> ka hisaab hai.`,
+            Ye hisaab <b>har deploy</b> par lagta hai.`,
           vars: { app: 'lab: dono', lb: 'lab: ~1 s der se', old: '—', fail: 'lab: 75 → 0' },
         },
       ],
@@ -486,7 +486,7 @@ do raaste, /readyz DB se poochh ke   → 0 restart · /home 26 mein se 16 safal<
   },
   success: [
     'Bata sakte ho ki "traffic bhejein?" ka jawab pod ke apne haal se kyun dena chahiye, aur DB ki gadbad kahan dikhni chahiye',
-    'Fail open kya hai, aur kaun karta hai — yeh samjha sakte ho',
+    'Fail open kya hai, aur kaun karta hai, samjha sakte ho',
     'Dheeme boot ke liye startup probe, aur band hone ka sahi kram bata sakte ho',
   ],
   cards: [

@@ -36,7 +36,7 @@ SD.registerLevels('sdd-resil', [
     'Apne loop ko line ki raftaar par kaise chalate hain?',
   ],
   lesson: [
-    `<h3>💻 Ek line ka code, aur uska bill</h3>
+    `<h3>💻 Ek line ka code, aur code ka bill</h3>
      <p>Line banana ek line ka kaam hai:</p>
      <pre>const line = [];
 line.push(order);        // jo aaye, le lo</pre>
@@ -45,7 +45,7 @@ line.push(order);        // jo aaye, le lo</pre>
      <p>Is level mein do file padhoge. Dono asli file hain, copy nahi. Slow motion ke saaton tareeke aur lab ka asli-raftaar wala tool isi class se chalte hain:</p>
      <pre>docker-labs/15-backpressure/lib/bounded-queue.js   ← hadd wali line (37 line)
 docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo use chalata hai (19 line)</pre>
-     <p class="tip">👉 Pehle <code>bounded-queue.js</code>, wahi order #11 jo bhari line par aaya tha. Is baar dekhoge ki <b>kaunsi line</b> ne uska faisla kiya.</p>`,
+     <p class="tip">👉 Pehle <code>bounded-queue.js</code>, wahi order #11 jo bhari line par aaya tha. Is baar dekhoge ki <b>kaunsi line</b> ne girane ka faisla kiya.</p>`,
   ],
   stages: [
     /* ---------------- 1. lib/bounded-queue.js, line by line ---------------- */
@@ -91,7 +91,7 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
         {
           clock: 'offer(#1) … offer(#10)',
           line: [22, 18],
-          say: `order-service <code>offer(#1)</code> bulati hai. Line 22 poochhti hai: <code>full</code>? Jawab line 18 deti hai: kya line mein <code>cap</code> jitne ya usse zyada orders hain? 0 ≥ 8 — nahi. Order line mein, <code>return true</code>.<br><br>
+          say: `order-service <code>offer(#1)</code> bulati hai. Line 22 poochhti hai: <code>full</code>? Jawab line 18 deti hai: kya line mein <code>cap</code> jitne ya cap se zyada orders hain? 0 ≥ 8 — nahi. Order line mein, <code>return true</code>.<br><br>
             #2 se #10 tak yahi hota hai. (Beech mein dispatch-service #1 aur #2 utha chuki hai.) #10 ke baad line mein <b>8</b>: ab <code>full</code> true hai.`,
           vars: { items: cells(seq(3, 10), 8), full: '<b>true</b> (8 ≥ 8)', ans: 'true — "le liya" (10 baar)' },
         },
@@ -127,8 +127,8 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
           clock: 'offer(#11) · policy \'drop-new\'',
           line: 23,
           say: `Line 23: <code>dropped++</code>, <code>return true</code>. #11 kahin nahi gaya; order-service ko "le liya" mila.<br><br>
-            Poore system mein is nuksaan ka <b>sirf ek nishaan</b> hai: <code>this.dropped</code>. Isliye jahan bhi kaam chupchaap girta ho, yeh ginti dashboard par honi hi chahiye.<br><br>
-            Slow motion mein yeh ginti 16 tak gayi. Lab mein, 30 second mein: <b>2,16,740</b>.`,
+            Poore system mein is nuksaan ka <b>sirf ek nishaan</b> hai: <code>this.dropped</code>. Isliye jahan bhi kaam chupchaap girta ho, gire hue kaam ki ginti dashboard par honi hi chahiye.<br><br>
+            Slow motion mein gire orders ki ginti 16 tak gayi. Lab mein, 30 second mein: <b>2,16,740</b>.`,
           vars: { cfg: 'cap 8 · policy \'drop-new\'', ans: 'true — "le liya" (par #11 gir gaya)', count: 'dropped <b>1</b> · refused 0' },
         },
         {
@@ -196,7 +196,7 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
           line: [9, 18, 22],
           say: `Aakhri baat. <code>cap</code> na do toh line 9 use <code>Infinity</code> maan leti hai.<br><br>
             Tab line 18 ka <code>full</code> kabhi true nahi hota. Line 22 hamesha chalti hai. Line 23 se 28 kabhi nahi chalti.<br><br>
-            Bina hadd ki line koi alag cheez nahi hai. Yahi class hai — bas <code>cap</code> ke bina. Level 1 ka crash isi se chala tha.`,
+            Bina hadd ki line koi alag cheez nahi hai. Yahi class hai — bas <code>cap</code> ke bina. Level 1 ka crash bina hadd ki line se chala tha.`,
           vars: { cfg: 'cap <b>Infinity</b>', full: 'hamesha false', ans: 'hamesha true — "le liya"', count: 'dropped 0 · refused 0 — hamesha', waiting: '[ ] hamesha khaali' },
         },
       ],
@@ -312,7 +312,7 @@ docker-labs/15-backpressure/tools/mini.js          ← sabse chhota program jo u
   ],
   interview: {
     title: 'Interview Round — code mein dikhao',
-    instructions: 'Interviewer jaanna chahta hai ki tumne yeh kabhi khud likha hai ya nahi. 🎤',
+    instructions: 'Interviewer jaanna chahta hai ki tumne bounded queue kabhi khud likhi hai ya nahi. 🎤',
     questions: [
       {
         q: '"Async code mein producer ko consumer ki raftaar par kaise chalaoge — bina sleep ke?"',

@@ -46,7 +46,7 @@ SD.registerLevels('sdd-resil', [
   title: 'Health Checks 1 · Kyun — 5 second ki gadbad, 8 second ka outage',
   badge: 'Nabz Jasoos',
   objectives: [
-    'DB sirf 5 second band tha. Service usse zyada der kyun band rahi — aur /home bhi, jise DB chahiye hi nahi?',
+    'DB sirf 5 second band tha. Service DB ke blip se zyada der kyun band rahi — aur /home bhi, jise DB chahiye hi nahi?',
     'Checker ne teeno pods ko restart kyun kiya, jabki pods mein koi kharabi nahi thi?',
     'Restart rok dein toh kya sudharta hai — aur kya phir bhi toota rehta hai?',
     'Liveness, readiness, deep check, shallow check: kaunsa naam kis cheez ka hai?',
@@ -300,13 +300,13 @@ pods restart hue                    3 (teeno)
           vars: { live: 'lab: restart 0', ready: 'lab: DB ke 0.9 s baad wapas', eps: 'lab: 3 pods', home: 'lab: DB band ke dauraan 17.5–19.5% safal' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> do alag raaston ne restart hataya — yeh zaroori tha. Par jab tak "traffic bhejein?" ka jawab ek <b>shared</b> cheez (DB) se poochh ke diya jaata hai, us cheez ke girte hi <b>saare pods ek saath</b> "nahi" kahenge. Agla level isi ka ilaaj hai.',
+      lesson: '🎯 <b>Asli baat:</b> do alag raaston ne restart hataya — dono raaste zaroori the. Par jab tak "traffic bhejein?" ka jawab ek <b>shared</b> cheez (DB) se poochh ke diya jaata hai, us cheez ke girte hi <b>saare pods ek saath</b> "nahi" kahenge. Agla level isi gadbad ka ilaaj hai.',
     },
 
     /* ---------------- 3. idea: dhaba aur gas ki line ---------------- */
     {
       type: 'cards',
-      title: '🍳 Yeh tum dekh chuke ho — dhaba, teen rasoiye, ek gas ki line',
+      title: '🍳 Tum dekh chuke ho — dhaba, teen rasoiye, ek gas ki line',
       goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Naam sabse aakhir mein aayenge.',
       steps: [
         {
@@ -344,7 +344,7 @@ pods restart hue                    3 (teeno)
           say: `<div class="dr-scroll"><table>
               <tr><th>Jo dekha</th><th>Naam</th></tr>
               <tr><td>App ki ek chalti copy</td><td><b>Pod</b> (ya instance)</td></tr>
-              <tr><td>Jo har pod se baar-baar poochhta hai</td><td><b>Health checker</b>. Kubernetes mein yeh kaam kubelet karta hai; load balancer apna alag check chalate hain</td></tr>
+              <tr><td>Jo har pod se baar-baar poochhta hai</td><td><b>Health checker</b>. Kubernetes mein restart ka kaam kubelet karta hai; load balancer apna alag check chalate hain</td></tr>
               <tr><td>Checker ka ek sawaal</td><td><b>Probe</b> (ya health check)</td></tr>
               <tr><td>"Zinda ho?" — fail hone par restart</td><td><b>Liveness</b> probe</td></tr>
               <tr><td>"Traffic bhejein?" — fail hone par traffic band</td><td><b>Readiness</b> probe</td></tr>
@@ -354,14 +354,14 @@ pods restart hue                    3 (teeno)
             ⚠️ <b>Ek aam galatfehmi:</b> "Health check jitna gehra, utna achha." Gehra check jis cheez ko chhuta hai, us cheez ki har gadbad ko saare pods tak pahuncha deta hai. Lab: liveness mein DB → 3 restart, aur DB ke aane ke baad 4.0–5.0 second aur.`,
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> health ke do sawaal hain, aur dono ke "nahi" ka ilaaj alag hai. <b>"Zinda ho?"</b> ka "nahi" = restart. <b>"Traffic bhejein?"</b> ka "nahi" = bas traffic roko. Jo cheez pod ke bahar hai, uski gadbad ka ilaaj restart nahi.',
+      lesson: '🎯 <b>Asli baat:</b> health ke do sawaal hain, aur dono ke "nahi" ka ilaaj alag hai. <b>"Zinda ho?"</b> ka "nahi" = restart. <b>"Traffic bhejein?"</b> ka "nahi" = bas traffic roko. Pod ke bahar ki cheez mein gadbad ho toh ilaaj restart nahi.',
     },
 
     /* ---------------- 4. naam pakke karo ---------------- */
     {
       type: 'match',
-      title: 'Jo ho raha hai, uska naam',
-      instructions: 'Baayein taraf jo ho raha hai, daayein taraf uska naam.',
+      title: 'Jo ho raha hai, us cheez ka naam',
+      instructions: 'Baayein taraf jo ho raha hai, daayein taraf us cheez ka naam.',
       pairs: [
         { left: 'Checker lagataar 3 baar "nahi" sunta hai aur pod ko dobara chalata hai', right: 'Liveness probe', explain: 'Fail = restart. Slow motion: 5.00 s par teeno pods restart — jabki kharabi DB mein thi.' },
         { left: 'Checker ek "nahi" sunta hai aur us pod ko traffic bhejna band karta hai; pod chalta rehta hai', right: 'Readiness probe', explain: 'Fail = traffic band, restart nahi. Slow motion: restart 0, DB ke 0.75 s baad wapsi.' },
@@ -376,7 +376,7 @@ pods restart hue                    3 (teeno)
     instructions: 'Interviewer yahan "kyun" sunna chahta hai, naam nahi. 🎤',
     questions: [
       {
-        q: '"Kal raat DB ka failover 5 second ka tha. Hamari service usse kaafi zyada der band rahi, aur saare pods restart hue. Sabse pehle kya dekhoge?"',
+        q: '"Kal raat DB ka failover 5 second ka tha. Hamari service DB ke blip se kaafi zyada der band rahi, aur saare pods restart hue. Sabse pehle kya dekhoge?"',
         choices: [
           'Zinda hone ka check dekhunga — kya DB ki gadbad ko pod ki kharabi maana ja raha hai?',
           'Pods ki ginti badhaaunga — shayad DB ki gadbad mein traffic sambhaalne wale kam the',

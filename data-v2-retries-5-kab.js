@@ -47,7 +47,7 @@ SD.registerLevels('sdd-resil', [
      <pre>band padi payment-service par calls:  2700
 har ek "Order place" par:               27</pre>
      <p>Jo service pehle se giri hui thi, us par <b>27 guna</b> bojh. Kisi ek team ne galat nahi kiya — galti <b>jod</b> mein thi.</p>
-     <p class="tip">👉 Is level mein: pehle tum faisla karoge ki kya dobara bhejna hai. Phir 27 kaise bana, yeh ek-ek call gin ke dekhenge. Phir: retry kab khud ruk jaaye.</p>`,
+     <p class="tip">👉 Is level mein: pehle tum faisla karoge ki kya dobara bhejna hai. Phir 27 kaise bana, ek-ek call gin ke dekhenge. Phir: retry kab khud ruk jaaye.</p>`,
   ],
   stages: [
     /* ---------------- 1. pehle socho ---------------- */
@@ -65,8 +65,8 @@ har ek "Order place" par:               27</pre>
         { text: '429 Too Many Requests', bin: 'yes', explain: 'Tum bahut tez bhej rahe ho. Dobara bhejna theek hai — par <b>ruk ke</b>. Retry-After mila ho toh wahi maano.' },
         { text: 'Order ka status dekhte waqt (GET /orders/123) connection beech mein toot gaya', bin: 'yes', explain: 'Jawab nahi aaya, aur status padhna dobara karne mein koi nuksaan nahi. Dobara bhejo.' },
         { text: '400 Bad Request — pincode galat format mein bheja gaya', bin: 'no', explain: 'Request hi galat hai. Wahi request 5 baar bhejoge toh 5 baar 400 milega. Request theek karo.' },
-        { text: '401 Unauthorized — login token expire ho gaya', bin: 'no', explain: 'Wahi token dobara bhejne se wahi jawab aayega. Pehle naya token lo; phir woh ek <b>nayi</b> request hai.' },
-        { text: '404 Not Found — yeh restaurant ab KhanaKart par nahi hai', bin: 'no', explain: 'Cheez hai hi nahi. Dobara poochhne se paida nahi ho jaayegi.' },
+        { text: '401 Unauthorized — login token expire ho gaya', bin: 'no', explain: 'Wahi token dobara bhejne se wahi jawab aayega. Pehle naya token lo; phir naye token wali request ek <b>nayi</b> request hai.' },
+        { text: '404 Not Found — restaurant ab KhanaKart par nahi hai', bin: 'no', explain: 'Cheez hai hi nahi. Dobara poochhne se paida nahi ho jaayegi.' },
         { text: 'Paisa kaatne ki request (POST /payments) par timeout — pata nahi paisa kata ya nahi, aur request par koi pehchaan (Idempotency-Key) nahi hai', bin: 'no', explain: 'Ho sakta hai paisa kat chuka ho aur sirf jawab raaste mein kho gaya ho. Aise hi dobara bheja toh paisa <b>do baar</b> kat sakta hai. Pehle request ko pehchaan do (Idempotency-Key — API track ka Idempotency level), tab retry safe hai.' },
       ],
     },
@@ -169,7 +169,7 @@ har ek "Order place" par:               27</pre>
           vars: { pc: '3', ac: '1 — retry nahi', bc: '1 — retry nahi', c: '3' },
         },
         {
-          clock: 'yeh galti hoti kyun hai',
+          clock: 'galti hoti kyun hai',
           say: `Kyunki chhoti gadbad mein har-layer retry <b>accha dikhta hai</b>. Lab: C thodi bimaar (har 10 mein se 3 requests par 503), 100 users:
             <div class="dr-scroll"><table>
               <tr><th>Kaun retry karta hai</th><th>User ko jawab mila</th><th>C par calls</th></tr>
@@ -177,7 +177,7 @@ har ek "Order place" par:               27</pre>
               <tr><td>Sirf phone 3 koshish</td><td>100 mein se 98</td><td>135</td></tr>
               <tr><td>Koi retry nahi</td><td>100 mein se 73</td><td>100</td></tr>
             </table></div>
-            Aam din par har-layer retry sabse accha number deta hai — isliye har team laga deti hai. Uska bill sirf us din aata hai jab C sach mein gir jaati hai. (Yeh hissa random hai: har run mein number thode alag aate hain.)`,
+            Aam din par har-layer retry sabse accha number deta hai — isliye har team laga deti hai. Har-layer retry ka bill sirf us din aata hai jab C sach mein gir jaati hai. (Random hissa: har run mein number thode alag aate hain.)`,
           flows: CHAIN('', '', ''),
           nodes: { phone: { tone: 'ok', badge: 'aam din: 100 / 100' }, a: { tone: 'idle', badge: '' }, b: { tone: 'idle', badge: '' }, c: { tone: 'slow', badge: '10 mein se 3 par 503' } },
           vars: { pc: 'lab: 100 users', ac: 'lab', bc: 'lab', c: 'lab: 136 (har layer) · 135 (sirf phone)' },
@@ -207,7 +207,7 @@ har ek "Order place" par:               27</pre>
         {
           title: '2. Retry khud kab ruk jaaye?',
           say: `Koshish ki hadd ek request ko rokti hai. Par jab <b>sab</b> requests fail ho rahi hon, tab har request apni 3 koshish karegi — bojh phir bhi 3 guna.<br><br>
-            Iske liye ek doosra brake hai: <b>retry budget</b>. Niyam: "retries, asli requests ke 10% se zyada nahi." Budget khatam → retry band, user ko seedha error.<br><br>
+            Aise din ke liye ek doosra brake hai: <b>retry budget</b>. Niyam: "retries, asli requests ke 10% se zyada nahi." Budget khatam → retry band, user ko seedha error.<br><br>
             Lab (asli raftaar, wahi deploy-crash):
             <div class="dr-scroll"><table>
               <tr><th>Clients ka tareeka</th><th>Crash</th><th>Calls / user action</th><th>Actions par error</th></tr>
@@ -328,7 +328,7 @@ Retry EK layer par (sabse bahar, jahan user hai) — andar ki har layer par nahi
         { id: 'myth', label: '❌ Galatfehmi' },
       ],
       items: [
-        { text: '"1 second, 2 second, 3 second ruko" — yeh exponential backoff hai.', bin: 'myth', explain: 'Yeh linear hai (har baar utna hi badhta hai). Exponential = har baar dugna: 1, 2, 4, 8 second.' },
+        { text: '"1 second, 2 second, 3 second ruko" — exponential backoff hai.', bin: 'myth', explain: '1, 2, 3 second linear hai (har baar utna hi badhta hai). Exponential = har baar dugna: 1, 2, 4, 8 second.' },
         { text: 'Exponential backoff laga diya toh retry storm nahi banega.', bin: 'myth', explain: 'Bina random ke sab clients ek saath lautte hain. Slow motion: 3 crash, 0 order. Lab: 200 mein se 120 ne haar maani. Random (jitter) chahiye.' },
         { text: 'Jitni zyada retries, utna bharosemand system.', bin: 'myth', explain: 'Zyada retries bimaar service par zyada bojh hain. Lab: turant retry → 5 crash, har action par 19.5 calls. Teen layers par 3-3 koshish → 27 guna.' },
         { text: 'Har failure par retry karna chahiye.', bin: 'myth', explain: '400, 401, 403, 404 par wahi request dobara bhejne se jawab nahi badalta. Aur paisa kaatne wali request bina Idempotency-Key ke dobara bhejna khatarnaak hai.' },
@@ -341,7 +341,7 @@ Retry EK layer par (sabse bahar, jahan user hai) — andar ki har layer par nahi
   ],
   interview: {
     title: 'Interview Round — kab aur kahan',
-    instructions: 'Yahan faisla aur uski wajah bolni hai. 🎤',
+    instructions: 'Yahan faisla aur faisle ki wajah bolni hai. 🎤',
     questions: [
       {
         q: '"Hamare yahan app → A → B → C mein har team ne apne client mein \'3 koshish\' laga di. C band ho jaaye toh kya hoga, aur sahi niyam kya hai?"',

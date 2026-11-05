@@ -235,7 +235,7 @@ docker-labs/42-chaos/tools/mini.js       ← dono ko jodna — jaisa tum apne ap
             <code>kill</code> — ek target ko todne ka tareeka (tum likhte ho);<br>
             <code>random</code> — 0 aur 1 ke beech ki sankhya dene wala function;<br>
             <code>everyMs</code> — kitni der mein ek chot.<br><br>
-            Monkey ko yeh nahi pata ki "todna" kya hota hai. Process band karna, container rokna, pod delete karna — yeh sab <code>kill</code> ke andar hai.`,
+            Monkey ko nahi pata ki "todna" kya hota hai. Process band karna, container rokna, pod delete karna — sab <code>kill</code> ke andar hai.`,
           vars: { targets: '[ instance 1, 2, 3 ]', rnd: '—', i: '—', victim: '—' },
         },
         {
@@ -272,7 +272,7 @@ docker-labs/42-chaos/tools/mini.js       ← dono ko jodna — jaisa tum apne ap
         {
           clock: 'baar-baar',
           line: [21, 22, 23],
-          say: '<code>start()</code> ek ghadi lagata hai: har <code>everyMs</code> par ek <code>strike</code>.<br><br>Lab ka <code>tools/monkey.js</code> isi se har 4 second par ek random instance maarta hai.',
+          say: '<code>start()</code> ek ghadi lagata hai: har <code>everyMs</code> par ek <code>strike</code>.<br><br>Lab ka <code>tools/monkey.js</code> start() se har 4 second par ek random instance maarta hai.',
         },
         {
           clock: 'ruko',
@@ -305,7 +305,7 @@ docker-labs/42-chaos/tools/mini.js       ← dono ko jodna — jaisa tum apne ap
     {
       type: 'dryrun',
       title: '🧩 tools/mini.js — dono ko apne app mein jodna',
-      goal: 'File ki lines 5–53 wahi hain jo tum apne project mein likhoge. Upar ki do files ko haath nahi lagana — unhe bas <code>require</code> karna hai.',
+      goal: 'File ki lines 5–53 wahi hain jo tum apne project mein likhoge. Upar ki do files ko haath nahi lagana — dono files ko bas <code>require</code> karna hai.',
       code: {
         title: 'docker-labs/42-chaos/tools/mini.js',
         file: 'docker-labs/42-chaos/tools/mini.js',
@@ -325,7 +325,7 @@ docker-labs/42-chaos/tools/mini.js       ← dono ko jodna — jaisa tum apne ap
           line: '9-20',
           say: `Line 9: teen nakli instances. Har instance ke paas bas ek jhanda hai: <code>dead</code>.<br><br>
             Lines 12–20: nakli load balancer. Baari-baari chunta hai. Instance zinda → <code>true</code>. Instance mara hua, aur retry nahi → <code>false</code>. Retry hai → agle instance se poochho.<br><br>
-            Tumhare app mein yeh hissa nahi hoga: wahan asli instances aur asli load balancer hain.`,
+            Tumhare app mein nakli fleet wala hissa nahi hoga: tumhare app mein asli instances aur asli load balancer hain.`,
           vars: { m: '—', h: '—', inj: '—', rb: '—', ab: '—' },
         },
         {
@@ -339,7 +339,7 @@ docker-labs/42-chaos/tools/mini.js       ← dono ko jodna — jaisa tum apne ap
           line: [42, 47],
           say: `<b>Doosra: andaaza.</b> Line 42: <code>m &gt;= 95</code>.<br>
             <b>Rokne ka niyam.</b> Line 47: <code>m &lt; 80</code>.<br><br>
-            Dono sirf ek sankhya dekhte hain: wahi jo <code>measure</code> ne lautayi. Isliye sabse zaroori yeh hai ki <code>measure</code> sahi cheez naape.`,
+            Dono sirf ek sankhya dekhte hain: wahi jo <code>measure</code> ne lautayi. Isliye sabse zaroori baat: <code>measure</code> sahi cheez naape.`,
           vars: { h: 'm ≥ 95', ab: 'm < 80' },
         },
         {
@@ -454,7 +454,7 @@ retry hai       100%  instance 1 mara    100%   100%   100%   hypothesis tika</p
     {
       type: 'cards',
       title: '🧰 Wahi cheezein — asli tools mein',
-      goal: 'Chaar chhote cards. Yeh cards in tools ki <b>official documentation</b> se hain; is lab mein yeh tools chalaye nahi gaye.',
+      goal: 'Chaar chhote cards. Ye cards in tools ki <b>official documentation</b> se hain; is lab mein ye tools chalaye nahi gaye.',
       steps: [
         {
           title: '1. Chaos Monkey (Netflix): wahi monkey, ek time-table ke saath',
@@ -465,7 +465,7 @@ retry hai       100%  instance 1 mara    100%   100%   100%   hypothesis tika</p
               <li>default: ek group mein ausatan <b>2 din mein ek baar</b>, aur ek din mein ek se zyada kabhi nahi;</li>
               <li>har app ke liye chalu ya band kiya ja sakta hai.</li>
             </ul>
-            Yeh version Spinnaker (deployment ka ek platform) ke saath hi chalta hai.`,
+            Chaos Monkey ka ye version Spinnaker (deployment ka ek platform) ke saath hi chalta hai.`,
           ask: {
             q: 'Team ne Chaos Monkey se instance khona parakh liya. Ab team ko aadha-zinda haal parakhna hai: /health safal, par /work galat jawab. Kya Chaos Monkey akela kaafi hai?',
             choices: [
@@ -488,12 +488,12 @@ retry hai       100%  instance 1 mara    100%   100%   100%   hypothesis tika</p
         {
           title: '2. AWS Fault Injection Service: rokne ka niyam = "stop condition"',
           say: `AWS ki documentation ke mutabiq, <b>stop condition</b> prayog ko rokne ka tareeka hai: jab prayog us hadd tak pahunch jaaye jo tumne ek CloudWatch alarm ke roop mein tay ki hai, AWS FIS prayog rok deta hai. Roka hua prayog dobara chalu nahi hota.<br><br>
-            Wahi page yeh bhi kehta hai: stop condition banane se pehle apne app ka <b>steady state</b> tay karo — jaise latency, CPU load, ya retries ki ginti.
+            Wahi page ye bhi kehta hai: stop condition banane se pehle apne app ka <b>steady state</b> tay karo — jaise latency, CPU load, ya retries ki ginti.
             <pre>"stopConditions": [
   { "source": "aws:cloudwatch:alarm",
     "value": "arn:aws:cloudwatch:region:123456789012:alarm:alarm-name" }
 ]</pre>
-            Documentation yeh bhi dikhati hai ki "koi stop condition nahi" kaise likha jaata hai: <code>"source": "none"</code>.`,
+            Documentation ye bhi dikhati hai ki "koi stop condition nahi" kaise likha jaata hai: <code>"source": "none"</code>.`,
           ask: {
             q: '<code>"source": "none"</code> hamare code mein kis cheez ke barabar hai?',
             choices: [
@@ -523,7 +523,7 @@ retry hai       100%  instance 1 mara    100%   100%   100%   hypothesis tika</p
               <tr><td><code>mode: one</code></td><td><code>random()</code> — documentation: "selecting a random Pod"</td></tr>
               <tr><td><code>action: pod-kill</code></td><td><code>kill</code> — todne ka tareeka</td></tr>
             </table></div>
-            Documentation ke mutabiq yeh udaharan chune hue Pod ko <b>ek baar</b> maarta hai — hamare <code>monkey.strike()</code> ki tarah. Do aur action hain: <code>pod-failure</code> (Pod kuch der ke liye unavailable) aur <code>container-kill</code>.<br><br>
+            Documentation ke mutabiq ye udaharan chune hue Pod ko <b>ek baar</b> maarta hai — hamare <code>monkey.strike()</code> ki tarah. Do aur action hain: <code>pod-failure</code> (Pod kuch der ke liye unavailable) aur <code>container-kill</code>.<br><br>
             Documentation ek shart bhi likhti hai: mara hua Pod wapas tabhi aayega jab ReplicaSet jaisi koi cheez lagi ho. Yaani yahan "chot wapas" tumhare cluster ke bharose hai.`,
         },
         {
@@ -531,7 +531,7 @@ retry hai       100%  instance 1 mara    100%   100%   100%   hypothesis tika</p
           say: `Level 2 ka naya niyam (2 lagataar fail → 2 second bahar) lab ki <code>lib/rotation.js</code> mein 13 lines hai (lines 66–78):
             <pre>${esc(ON_REQUEST)}</pre>
             <code>streak</code> = is instance par lagataar kitni asli requests fail hui. Ek safal → 0. Ginti <code>eject</code> tak pahunchi → instance <code>ejectMs</code> ke liye list se bahar.<br><br>
-            Envoy mein yahi kaam <b>outlier detection</b> karta hai; Envoy ki documentation ise "passive health checking" kehti hai. Default settings, documentation se:
+            Envoy mein yahi kaam <b>outlier detection</b> karta hai; Envoy ki documentation outlier detection ko "passive health checking" kehti hai. Default settings, documentation se:
             <div class="dr-scroll"><table>
               <tr><th>Envoy ki setting</th><th>Envoy ka default</th><th>Lab</th></tr>
               <tr><td><code>consecutive_5xx</code></td><td>5 lagataar 5xx</td><td>2</td></tr>
@@ -559,7 +559,7 @@ retry hai       100%  instance 1 mara    100%   100%   100%   hypothesis tika</p
           },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> naam badalte hain, cheezein wahi rehti hain. Chot: Chaos Monkey, Chaos Mesh. Rokne ka niyam: AWS FIS ka <b>stop condition</b>. Asli requests dekh ke hatana: Envoy ka <b>outlier detection</b>. Aur har tool ke default tumhare system ke liye nahi chune gaye — unhe padh ke lagao.',
+      lesson: '🎯 <b>Asli baat:</b> naam badalte hain, cheezein wahi rehti hain. Chot: Chaos Monkey, Chaos Mesh. Rokne ka niyam: AWS FIS ka <b>stop condition</b>. Asli requests dekh ke hatana: Envoy ka <b>outlier detection</b>. Aur har tool ke default tumhare system ke liye nahi chune gaye — default padh ke lagao.',
     },
   ],
   interview: {

@@ -140,7 +140,7 @@ SD.registerLevels('sdd-eda', [
         {
           "title": "2. ID aur type kyun jaanchein?",
           "line": "11-18",
-          "say": "ID ya type nahi toh event reject. Phir <b>saari lines</b> ki hadd check hoti hai. Koi line bhari ho toh copy daalne se pehle error. Yeh check loop ke pehle hai."
+          "say": "ID ya type nahi toh event reject. Phir <b>saari lines</b> ki hadd check hoti hai. Koi line bhari ho toh copy daalne se pehle error. Hadd ka check loop ke pehle hai."
         },
         {
           "title": "3. Ek event ki do copies kaise?",

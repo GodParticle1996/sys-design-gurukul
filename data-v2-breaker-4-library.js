@@ -90,7 +90,7 @@ opossum:           call #9 par OPEN  ·  latki recs-service tak 5 calls</pre>
         {
           line: [12, 13, 14, 15, 16, 18],
           say: `Pehle <code>fetchRecs</code> dekho (line 12–16). Isme <b>breaker ki ek bhi line nahi</b>: sirf fetch, status check, jawab.<br><br>
-            Line 14 ek kaam karti hai: <code>fetch</code> 404 ya 503 par error nahi phenkta. Isliye line 14 khud error phenkti hai, aur <code>status</code> uske saath chipka deti hai.<br><br>
+            Line 14 ek kaam karti hai: <code>fetch</code> 404 ya 503 par error nahi phenkta. Isliye line 14 khud error phenkti hai, aur <code>status</code> error ke saath chipka deti hai.<br><br>
             Line 18: library is function ko <b>lapet</b> leti hai: <code>new CircuitBreaker(fetchRecs, {…})</code>. <code>allow</code> aur <code>record</code> library ke andar hain. File mein neeche (line 56) <code>breaker.fire()</code> hamare <code>getRecs()</code> ki jagah bulaya jaata hai.<br><br>
             Neeche table mein har setting ke saamne hamari class ki value likhi hai. Library ke naam ek-ek karke bharenge.`,
           vars: {
@@ -298,7 +298,7 @@ opossum:           call #9 par OPEN  ·  latki recs-service tak 5 calls</pre>
           },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> library tumhara <code>allow()</code> aur <code>record()</code> likh deti hai. Par paanch sawaal tumhare hi rehte hain: kitni calls dekhun, kam se kam kitni, kitna fail, kitni der OPEN, kitni trial.<br>Library lagane se pehle teen sawaal apni traffic se poochho: <b>recs-service ko ek minute mein kitni calls jaati hain</b> (isse window aur kam se kam calls banti hain), <b>recs-service aam taur par theek hone mein kitna waqt leti hai</b> (OPEN kitni der), aur <b>fallback kitna purana chalega</b>. Phir har setting ka number likho. Default par mat chhodo.',
+      lesson: '🎯 <b>Asli baat:</b> library tumhara <code>allow()</code> aur <code>record()</code> likh deti hai. Par paanch sawaal tumhare hi rehte hain: kitni calls dekhun, kam se kam kitni, kitna fail, kitni der OPEN, kitni trial.<br>Library lagane se pehle teen sawaal apni traffic se poochho: <b>recs-service ko ek minute mein kitni calls jaati hain</b> (is ginti se window aur kam se kam calls banti hain), <b>recs-service aam taur par theek hone mein kitna waqt leti hai</b> (OPEN kitni der), aur <b>fallback kitna purana chalega</b>. Phir har setting ka number likho. Default par mat chhodo.',
     },
 
     /* ---------------- 3. bonus: opossum khud chalao ---------------- */
@@ -353,7 +353,7 @@ opossum:           call #9 par OPEN  ·  latki recs-service tak 5 calls</pre>
           'opossum timeout ko failure ginti hai. 8 mein se 4 calls fail hi gini gayi.',
         ],
       },
-      lesson: 'Library wahi kaam karti hai, par ginti ka niyam alag hota hai (10 second ka window, "50% se ZYADA"). Library lagane se pehle uska niyam padho.',
+      lesson: 'Library wahi kaam karti hai, par ginti ka niyam alag hota hai (10 second ka window, "50% se ZYADA"). Library lagane se pehle library ka niyam padho.',
     },
   ],
   interview: {

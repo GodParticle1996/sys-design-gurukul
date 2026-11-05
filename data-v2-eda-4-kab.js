@@ -90,7 +90,7 @@ SD.registerLevels('sdd-eda', [
       "steps": [
         {
           "title": "1. Kaam ho gaya, par ack nahi pahuncha?",
-          "say": "<pre>kaam ke baad ack na pahunche: same id do baar padha · SMS 2\nid yaad rakhi (isi process mein): SMS 1</pre>Demo mein same entry ack se pehle do baar padhi. Dono baar SMS effect hua: 2. ID yaad rakhi toh 1. Par yeh Set isi process ki memory hai.",
+          "say": "<pre>kaam ke baad ack na pahunche: same id do baar padha · SMS 2\nid yaad rakhi (isi process mein): SMS 1</pre>Demo mein same entry ack se pehle do baar padhi. Dono baar SMS effect hua: 2. ID yaad rakhi toh 1. Par ID wala Set sirf is process ki memory mein hai.",
           "ask": {
             "q": "SMS effect ho gaya, ack nahi pahuncha. Entry dobara padhi toh kya khatra?",
             "choices": [

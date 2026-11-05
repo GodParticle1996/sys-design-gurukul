@@ -40,18 +40,18 @@ SD.registerLevels('sdd-resil', [
   objectives: [
     'Teen instances the. Ek mara. Phir har teesri request kyun giri?',
     'Health check lagane se kya sudhra — aur kaunsi request phir bhi giri?',
-    'Yeh kami incident se PEHLE kaise mil sakti thi?',
+    'Health check ki kami incident se PEHLE kaise mil sakti thi?',
     'Chaos engineering, chaos monkey, fault, steady state, hypothesis, blast radius: kaunsa naam kis cheez ka hai?',
   ],
   lesson: [
     `<h3>🐒 "Ek mar bhi jaaye toh kuch nahi hoga" — kisne chala ke dekha?</h3>
      <p>KhanaKart ki <b>menu-service</b> ke teen <b>instances</b> chalte hain. (Instance = app ki ek chalti copy.) Aage ek <b>load balancer</b> hai jo har request ko baari-baari ek instance par bhejta hai.</p>
      <p>Team ka daava: <b>"3 copies hain. Ek mar bhi jaaye toh kuch nahi hoga."</b> Kisi ne kabhi ek instance maar ke dekha nahi.</p>
-     <p>Ek raat 2 baje instance 2 mar gaya, aur 2 second mein khud wapas aa gaya. Yeh us raat baar-baar hua. Subah ka dashboard:</p>
+     <p>Ek raat 2 baje instance 2 mar gaya, aur 2 second mein khud wapas aa gaya. Us raat aisa baar-baar hua. Subah ka dashboard:</p>
      <pre>lab, asli raftaar (100 requests/second, 16 second, har 4 second par ek instance mara — teen run):
 3 instances the      → 87.44% requests safal · 201 fail
 1 instance hota toh  → 62.25–62.31% requests safal · 603–604 fail</pre>
-     <p>Teen copies ne nuksaan ghataya, khatam nahi kiya. Aur dashboard par yeh "thoda sa noise" dikha — jabki asal mein har teesra grahak error dekh raha tha.</p>
+     <p>Teen copies ne nuksaan ghataya, khatam nahi kiya. Aur dashboard par errors "thoda sa noise" dikhe — jabki asal mein har teesra grahak error dekh raha tha.</p>
      <p class="tip">👉 Agle screen par wahi raat slow motion mein: teen instances, har 0.2 second par ek request. Dekho ki instance 2 ke marne ke baad load balancer kya karta hai.</p>`,
   ],
   stages: [
@@ -149,7 +149,7 @@ SD.registerLevels('sdd-resil', [
               <li><b>4 fail</b>: #5, #8, #11, #14 — har teesri.</li>
               <li>Sabse lamba lagataar fail: <b>1</b>. Kabhi do requests ek ke baad ek nahi giri.</li>
             </ul>
-            Isi wajah se dashboard par yeh "thoda noise" dikhta hai: errors bikhre hue hain. Par 2 second tak <b>har teesra grahak</b> error dekh raha tha.`,
+            Isi wajah se dashboard par errors "thoda noise" dikhte hain: errors bikhre hue hain. Par 2 second tak <b>har teesra grahak</b> error dekh raha tha.`,
           nodes: { i2: { tone: 'slow', badge: '2 s mara raha' } },
           vars: { list: '1 · 2 · 3 — kabhi nahi badli', req: '25 mein se 4 fail', fail: '4 (har teesri)' },
         },
@@ -171,7 +171,7 @@ SD.registerLevels('sdd-resil', [
           vars: { list: 'lab: 3 instances', i2: 'lab: har 4 s par ek instance mara', req: 'lab: 87.44% safal', fail: 'lab: 201' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> copies hona kaafi nahi. Kisi ko <b>pata bhi chalna chahiye</b> ki ek copy mar gayi. Team ke paas copies thi — "pata chalna" nahi tha. Aur team ko yeh pata nahi tha.',
+      lesson: '🎯 <b>Asli baat:</b> copies hona kaafi nahi. Kisi ko <b>pata bhi chalna chahiye</b> ki ek copy mar gayi. Team ke paas copies thi — "pata chalna" nahi tha. Aur team ko kami ka pata nahi tha.',
     },
 
     /* ---------------- 2. pehla ilaaj: health check, phir retry ---------------- */
@@ -293,13 +293,13 @@ SD.registerLevels('sdd-resil', [
           vars: { hc: 'lab: har 0.3 s', list: 'lab: 3 instances', req: 'lab: 87.44% → 100.00%', fail: 'lab: 201 → 0' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> "ek mar jaaye toh kuch nahi hoga" teen cheezon se banta hai: <b>copies</b> + <b>pata chalna</b> (health check) + <b>dobara koshish</b> (retry). Team ke paas sirf pehli thi. Yeh kami raat 2 baje mili — jabki koi bhi ek instance din mein maar ke dekh leta, toh pehle mil jaati.',
+      lesson: '🎯 <b>Asli baat:</b> "ek mar jaaye toh kuch nahi hoga" teen cheezon se banta hai: <b>copies</b> + <b>pata chalna</b> (health check) + <b>dobara koshish</b> (retry). Team ke paas sirf pehli thi. Kami raat 2 baje mili — jabki koi bhi ek instance din mein maar ke dekh leta, toh pehle mil jaati.',
     },
 
     /* ---------------- 3. idea: generator ---------------- */
     {
       type: 'cards',
-      title: '🔌 Yeh tum dekh chuke ho — dukaan ka generator',
+      title: '🔌 Tum dekh chuke ho — dukaan ka generator',
       goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Naam sabse aakhir mein aayenge.',
       steps: [
         {
@@ -336,30 +336,30 @@ SD.registerLevels('sdd-resil', [
           title: '4. In cheezon ke naam',
           say: `<div class="dr-scroll"><table>
               <tr><th>Jo dekha</th><th>Naam</th></tr>
-              <tr><td>Jaan-boojh ke kuch todna, yeh dekhne ke liye ki system sambhalta hai ya nahi</td><td><b>Chaos engineering</b></td></tr>
+              <tr><td>Jaan-boojh ke kuch todna, taaki dikhe ki system sambhalta hai ya nahi</td><td><b>Chaos engineering</b></td></tr>
               <tr><td>Jo cheez todi gayi (instance maarna, dheema karna)</td><td><b>Fault</b></td></tr>
               <tr><td>Aam din ka haal, number mein ("99% requests safal")</td><td><b>Steady state</b></td></tr>
               <tr><td>Todne se pehle likha andaaza ("ek instance mare, toh bhi 99% safal")</td><td><b>Hypothesis</b></td></tr>
               <tr><td>Test se zyada se zyada kitna nuksaan ho sakta hai</td><td><b>Blast radius</b></td></tr>
               <tr><td>Netflix ka tool jo production mein random instances band karta hai</td><td><b>Chaos Monkey</b></td></tr>
             </table></div>
-            Chaos Monkey ke apne README ke mutabiq yeh tool production mein chalne wale instances ko random tareeke se band karta hai, taaki engineers aisi services banayein jo instance ke jaane ko seh lein. (Yeh documentation se hai; is lab mein Chaos Monkey chalaya nahi gaya.)<br><br>
+            Chaos Monkey ke apne README ke mutabiq Chaos Monkey production mein chalne wale instances ko random tareeke se band karta hai, taaki engineers aisi services banayein jo instance ke jaane ko seh lein. (Baat documentation se hai; is lab mein Chaos Monkey chalaya nahi gaya.)<br><br>
             ⚠️ <b>Ek aam galatfehmi:</b> "3 copies hain toh hum safe hain." Lab: 3 copies, health check ke bina → 201 requests fail. Copies ek daava hain; saboot tab milta hai jab ek copy sach mein maar ke dekho.`,
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> jo bachav kabhi chala ke nahi dekha gaya, woh bachav nahi, ummeed hai. Bachav ko din mein, chhoti der ke liye, khud tod ke dekho — isi ka naam <b>chaos engineering</b> hai.',
+      lesson: '🎯 <b>Asli baat:</b> kabhi na chala ke dekha gaya bachav, bachav nahi, ummeed hai. Bachav ko din mein, chhoti der ke liye, khud tod ke dekho — is aadat ka naam <b>chaos engineering</b> hai.',
     },
 
     /* ---------------- 4. naam pakke karo ---------------- */
     {
       type: 'match',
-      title: 'Jo ho raha hai, uska naam',
-      instructions: 'Baayein taraf jo ho raha hai, daayein taraf uska naam.',
+      title: 'Jo ho raha hai, us cheez ka naam',
+      instructions: 'Baayein taraf jo ho raha hai, daayein taraf us cheez ka naam.',
       pairs: [
-        { left: 'Din mein, jaan-boojh ke, ek instance band karna — yeh dekhne ke liye ki grahak ko kuch pata chalta hai ya nahi', right: 'Chaos engineering', explain: 'Kami ko incident se pehle dhoondhna. Slow motion mein yahi kiya: instance 2 ko 1.00 s par maara.' },
+        { left: 'Din mein, jaan-boojh ke, ek instance band karna — taaki dikhe ki grahak ko kuch pata chalta hai ya nahi', right: 'Chaos engineering', explain: 'Kami ko incident se pehle dhoondhna. Slow motion mein yahi kiya: instance 2 ko 1.00 s par maara.' },
         { left: '"Instance 2 ko 2 second ke liye maar do"', right: 'Fault', explain: 'Jo cheez todi jaati hai. Instance ka marna sabse seedha fault hai; agle level mein dheema aur aadha-zinda instance bhi aayenge.' },
-        { left: '"Aam din mein 100% requests safal hoti hain"', right: 'Steady state', explain: 'Aam din ka haal, number mein. Iske bina pata hi nahi chalega ki todne se kuch bigda ya nahi.' },
-        { left: '"Ek instance mare, toh bhi kam se kam 99% requests safal rahengi"', right: 'Hypothesis', explain: 'Todne se pehle likha andaaza. Lab: health check ke bina yeh andaaza galat nikalta — 87.44% safal.' },
+        { left: '"Aam din mein 100% requests safal hoti hain"', right: 'Steady state', explain: 'Aam din ka haal, number mein. Steady state ke bina pata hi nahi chalega ki todne se kuch bigda ya nahi.' },
+        { left: '"Ek instance mare, toh bhi kam se kam 99% requests safal rahengi"', right: 'Hypothesis', explain: 'Todne se pehle likha andaaza. Lab: health check ke bina andaaza galat nikalta — 87.44% safal.' },
         { left: '"Is test se zyada se zyada ek instance ki requests girengi, 2 second ke liye"', right: 'Blast radius', explain: 'Test ka nuksaan kitna phail sakta hai. Chhota rakho.' },
         { left: 'Ek tool jo production mein random instances band karta rehta hai', right: 'Chaos Monkey', explain: 'Netflix ka tool. Instance ka jaana roz ki baat ban jaaye, toh har service instance ke jaane ko sehna seekh leti hai.' },
       ],

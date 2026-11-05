@@ -57,13 +57,13 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
       ],
       items: [
         { text: 'Public API: koi bhi anjaan client ek second mein hazaaron requests bhej sakta hai', bin: 'quota', explain: 'Anjaan bhejne walon ke saamne pehli deewar hadd hai: har client ki ginti, paar ho toh 429 aur "kab aana hai".' },
-        { text: 'Paid tenants ka saajha API: ek tenant ka bulk kaam doosron ko dheema na kare — par raat ko khaali jagah usi ke kaam aaye', bin: 'fair', explain: 'Shaant tenant bache <b>aur</b> khaali jagah bekaar na jaaye: yeh baari-baari hi karti hai. Lab: A ki 1,046 hui (hadd mein 721).' },
+        { text: 'Paid tenants ka saajha API: ek tenant ka bulk kaam doosron ko dheema na kare — par raat ko khaali jagah bulk kaam ke kaam aaye', bin: 'fair', explain: 'Shaant tenant bache <b>aur</b> khaali jagah bekaar na jaaye: dono kaam baari-baari hi karti hai. Lab: A ki 1,046 hui (hadd mein 721).' },
         { text: 'Payment ka kaam aur report banane ka kaam ek hi workers baant-te hain; report ke lambe kaam payment ko rok dete hain', bin: 'pool', explain: 'Payment ko apni khidkiyan do. Report kitni bhi lambi ho, payment ki khidki tak pahunch hi nahi sakti.' },
         { text: 'Teen tenants, teeno ausat. Kisi ka burst nahi — par teeno ka jod service ki chhat se upar hai', bin: 'cap', explain: 'Koi shor nahi kar raha. Isolation takleef ko barabar baant sakti hai, par jagah nahi bana sakti. Lab: har niyam mein sab dheeme (~796 ms).' },
-        { text: 'Free plan ka vaada: ek minute mein 60 requests. Paid plan: 6,000', bin: 'quota', explain: 'Yahan hadd bachav nahi, <b>plan ka niyam</b> hai. Free tenant ko khaali jagah mile, yeh maqsad hi nahi.' },
+        { text: 'Free plan ka vaada: ek minute mein 60 requests. Paid plan: 6,000', bin: 'quota', explain: 'Yahan hadd bachav nahi, <b>plan ka niyam</b> hai. Free tenant ko khaali jagah dena maqsad hi nahi.' },
         { text: 'Saajha build server: ek team ne 200 builds daal diye; baaki teams ke do-do builds un 200 ke peeche khade hain', bin: 'fair', explain: 'Har team ki apni line, baari-baari. Jab koi aur nahi hoga, badi team ke builds lagataar chalenge.' },
-        { text: 'Ek bahut bada grahak, jisne likh ke maanga hai ki doosron ka bojh is grahak ke kaam ko kabhi na chhue', bin: 'pool', explain: 'Pakka vaada = alag jagah. Keemat: woh jagah khaali bhi baithegi — aur grahak usi ka paisa deta hai.' },
-        { text: 'Har shaam 8 se 10 baje saare tenants ka traffic ek saath badhta hai', bin: 'cap', explain: 'Yeh kisi ek ka shor nahi, sabki roz ki bheed hai. Samay pata hai, toh machines pehle se badha do.' },
+        { text: 'Ek bahut bada grahak, jisne likh ke maanga hai ki doosron ka bojh is grahak ke kaam ko kabhi na chhue', bin: 'pool', explain: 'Pakka vaada = alag jagah. Keemat: pakki jagah khaali bhi baithegi — aur grahak us khaali jagah ka bhi paisa deta hai.' },
+        { text: 'Har shaam 8 se 10 baje saare tenants ka traffic ek saath badhta hai', bin: 'cap', explain: 'Kisi ek ka shor nahi, sabki roz ki bheed hai. Samay pata hai, toh machines pehle se badha do.' },
         { text: 'Raat ka cleanup job din mein chal gaya aur users ke saath wahi workers baant raha hai', bin: 'pool', explain: 'Job ko chhoti alag khidki do: "zyada se zyada 1 worker". Lab: users ka jawab 141 ms se 22 ms.' },
       ],
     },
@@ -77,24 +77,24 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
         {
           title: '1. Teen sawaal, teen tareeke',
           say: `<div class="dr-scroll"><table>
-              <tr><th>Pehle yeh poochho</th><th>Haan ho toh</th><th>Lab</th></tr>
+              <tr><th>Pehle poochho</th><th>Haan ho toh</th><th>Lab</th></tr>
               <tr><td>Bhejne wala anjaan hai, ya hadd plan ka vaada hai?</td><td><b>Har tenant ki hadd</b> (429 + kab aana hai)</td><td>shaant tenants ke 0 fail · A ki 1,453 ko 429</td></tr>
               <tr><td>Khaali jagah kisi ke kaam aani chahiye?</td><td><b>Baari-baari</b></td><td>shaant tenants ke 0 fail · A ki 1,046 hui (hadd mein 721)</td></tr>
               <tr><td>Ek kaam ka doosre par zara bhi asar nahi chalega?</td><td><b>Alag khidki</b></td><td>slow motion: Bholu Dhaba 0.50 s; Annapurna 7.00 s tak</td></tr>
             </table></div>
-            Yeh teeno ek doosre ke badle nahi hain. Aksar saath lagte hain: bahar ke darwaze par dheeli hadd, andar baari-baari, aur paise wale kaam ki alag khidki.`,
+            Teeno tareeke ek doosre ke badle nahi hain. Aksar saath lagte hain: bahar ke darwaze par dheeli hadd, andar baari-baari, aur paise wale kaam ki alag khidki.`,
         },
         {
           title: '2. Badi machine (autoscaling) akeli kaafi kyun nahi?',
           say: `Autoscaler ke do kaam hain, aur dono mein waqt lagta hai: bheed ko <b>pehchaanna</b>, aur nayi machine ko <b>uthana</b>.<br><br>
             Lab: tenant A 2 s par bheed bhejta hai. Autoscaler 3 second tak dekhta hai ki bojh sach mein zyada hai, phir nayi machine uthne mein 5 second.
             <div class="dr-scroll"><table>
-              <tr><th>Setup</th><th>Nayi machines kab</th><th>Us se pehle shaant tenants ke fail</th><th>Uske baad</th></tr>
+              <tr><th>Setup</th><th>Nayi machines kab</th><th>Us se pehle shaant tenants ke fail</th><th>Nayi machines ke baad</th></tr>
               <tr><td>Ek line + autoscaling</td><td>10.1 s</td><td><b>472 mein se 354</b></td><td>342 mein se 0</td></tr>
               <tr><td>Baari-baari, autoscaling nahi</td><td>kabhi nahi</td><td>814 mein se 0</td><td>—</td></tr>
               <tr><td>Baari-baari + autoscaling</td><td>10.1 s</td><td>470 mein se 0</td><td>346 mein se 0</td></tr>
             </table></div>
-            (Teen run mein pehli line ke fail: 354–377 (472 mein se).) Baari-baari ke saath autoscaling ka kaam sirf yeh reh gaya ki A ko zyada mile: A ki 2,162 ki jagah 3,058 requests hui.`,
+            (Teen run mein pehli line ke fail: 354–377 (472 mein se).) Baari-baari ke saath autoscaling ka kaam sirf itna reh gaya ki A ko zyada mile: A ki 2,162 ki jagah 3,058 requests hui.`,
           ask: {
             q: 'Bheed 2 s par aayi. Autoscaler 3 second dekhta hai, phir machine 5 second mein uthti hai. Us 8 second mein shaant tenants ko kaun bachayega?',
             choices: [
@@ -125,7 +125,7 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
             </table></div>
             Teeno niyamon mein <b>sab dheeme</b> hain (aam din: ~20 ms).<ul>
               <li>Hadd ne kuch nahi kiya: koi tenant apni hadd (80) ke upar gaya hi nahi. Teeno hadd ka jod (240) chhat (200) se upar tha.</li>
-              <li>Ek line mein takleef kisi ek par zyada padi. Kis par — yeh sanyog hai. (Lab har baar A, phir B, phir C bhejta hai, isliye bhari line par C sabse zyada gira.)</li>
+              <li>Ek line mein takleef kisi ek par zyada padi. Kis par — sanyog hai. (Lab har baar A, phir B, phir C bhejta hai, isliye bhari line par C sabse zyada gira.)</li>
               <li>Baari-baari ne takleef barabar baant di.</li>
             </ul>
             Isolation takleef ko <b>baant</b> sakti hai. Jagah <b>bana</b> nahi sakti. Yahan ilaaj capacity hai.`,
@@ -143,7 +143,7 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
             <ul>
               <li>"Kam zaroori" akela kaafi nahi: 42 ms, 22 nahi. Jo tukda worker par chadh chuka, us tukde ko beech mein roka nahi ja sakta — user ko us tukde ke 100 ms khatam hone tak rukna padta hai.</li>
               <li>Job ko 1 worker tak rokne par users ko pata bhi nahi chala. Keemat: job aadhi raftaar par.</li>
-              <li>Raat ko chalane se <b>kam log</b> prabhavit hue (164 requests), par jo us waqt aaye unhe 73 ms lage. "Raat" ka matlab "kisi par asar nahi" nahi hai.</li>
+              <li>Raat ko chalane se <b>kam log</b> prabhavit hue (164 requests), par us waqt aaye logon ko 73 ms lage. "Raat" ka matlab "kisi par asar nahi" nahi hai.</li>
             </ul>`,
         },
         {
@@ -154,7 +154,7 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
               <tr><td>Ek tenant ki line ki lambai</td><td>Chhota sa burst bhi "na" ban jaata hai</td><td>Us tenant ki apni requests bahut der line mein rehti hain</td></tr>
               <tr><td>Job ke workers</td><td>Job kabhi khatam nahi hota</td><td>Users dheeme (lab: 141 ms)</td></tr>
             </table></div>
-            <b>Kal subah:</b> apni har saajhi cheez ki list banao — API, database, queue, build server. Har ek ke aage likho: <b>ginti kiski hoti hai</b>, <b>ek grahak zyada se zyada kitna le sakta hai</b>, aur <b>khaali jagah ka kya hota hai</b>. Jahan pehla khaana khaali hai, wahan aaj bhi sab ek hi line mein hain.`,
+            <b>Kal subah:</b> apni har saajhi cheez ki list banao — API, database, queue, build server. Har ek ke aage likho: <b>ginti kiski hoti hai</b>, <b>ek grahak zyada se zyada kitna le sakta hai</b>, aur <b>khaali jagah ka kya hota hai</b>. Pehla khaana khaali ho toh aaj bhi sab ek hi line mein hain.`,
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> pehle poochho: <b>koi ek shor kar raha hai, ya sabka jod hi zyada hai?</b> Ek ka shor → isolation (hadd, baari, alag khidki). Sabka jod → jagah badhao. Autoscaling jagah badhata hai, par der se; us der mein isolation hi bachati hai.',
@@ -248,7 +248,7 @@ us beech shaant tenants ki 472 mein se 354 requests fail  (75%)</pre>
   ],
   interview: {
     title: 'Interview Round — kab aur kya',
-    instructions: 'Yahan faisla aur uski wajah bolni hai — number ke saath. 🎤',
+    instructions: 'Yahan faisla aur faisle ki wajah bolni hai — number ke saath. 🎤',
     questions: [
       {
         q: '"Multi-tenant SaaS hai. Ek tenant ke bulk import se doosre tenants ke requests timeout ho jaate hain. Tum autoscaling ka sujhaav doge?"',

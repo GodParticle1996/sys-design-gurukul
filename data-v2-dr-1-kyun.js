@@ -302,7 +302,7 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
               <tr><td>Sirf backup</td><td>kuch nahi</td><td>16.3–16.4 s</td><td>680–689</td><td>50</td></tr>
               <tr><td>Lagataar copy, B ka DB chalu</td><td>DB chalu, app band</td><td><b>6.4–6.5 s</b></td><td><b>283–286</b></td><td><b>5</b></td></tr>
             </table></div>
-            Doosre khaane par dhyaan do: nuksaan ghatane ke liye region B mein <b>kuch hamesha chalu</b> rakhna pada. Yeh kharcha roz ka hai, aafat ho ya na ho.`,
+            Doosre khaane par dhyaan do: nuksaan ghatane ke liye region B mein <b>kuch hamesha chalu</b> rakhna pada. Doosre region ka kharcha roz ka hai, aafat ho ya na ho.`,
           nodes: { rt: { tone: 'ok', badge: 'lab: 6.4–6.5 s fail' }, b: { tone: 'ok', badge: 'lab: 5 kho gaye' } },
           vars: { a: 'lab: 4 s par gaya', b: 'lab: DB hamesha chalu', only: 'lab: 50 → 5 kho gaye', ord: 'lab: 680–689 → 283–286 fail' },
         },
@@ -313,16 +313,16 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
     /* ---------------- 3. idea: bahi-khata ---------------- */
     {
       type: 'cards',
-      title: '📒 Yeh tum dekh chuke ho — dukaan ka bahi-khata',
+      title: '📒 Tum dekh chuke ho — dukaan ka bahi-khata',
       goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Naam sabse aakhir mein aayenge.',
       steps: [
         {
           title: '1. Seth ka khata, aur raat ki photocopy',
-          say: 'Kirana dukaan. Seth ke paas ek <b>bahi-khata</b> hai: kis grahak par kitna udhaar hai, sab usi mein likha hai.<br><br>Seth samajhdaar hai: har raat dukaan band karke khate ki <b>photocopy</b> ghar le jaata hai.<br><br>Ek din dopahar 3 baje dukaan mein aag lag gayi. Khata jal gaya.<br><br><b>KhanaKart mein:</b> khata = orders ka DB · dukaan = region A · raat ki photocopy = backup.',
+          say: 'Kirana dukaan. Seth ke paas ek <b>bahi-khata</b> hai: kis grahak par kitna udhaar hai, sab khate mein likha hai.<br><br>Seth samajhdaar hai: har raat dukaan band karke khate ki <b>photocopy</b> ghar le jaata hai.<br><br>Ek din dopahar 3 baje dukaan mein aag lag gayi. Khata jal gaya.<br><br><b>KhanaKart mein:</b> khata = orders ka DB · dukaan = region A · raat ki photocopy = backup.',
         },
         {
           title: '2. Do nuksaan, do alag wajah',
-          say: 'Seth ke paas kal raat ki photocopy hai. Phir bhi do nuksaan hue:<br><br><b>Pehla:</b> aaj subah se 3 baje tak jo udhaar diya, woh sirf jale hue khate mein tha. Kis par kitna — ab koi nahi bata sakta.<br><br><b>Doosra:</b> nayi dukaan dhoondhne, saaman bharne aur dobara kholne mein ek hafta laga. Us hafte koi bikri nahi.<br><br><b>KhanaKart mein:</b> pehla nuksaan = #7, #8, #9 (aakhri backup ke baad ke orders) · doosra nuksaan = 7.50 second jab orders fail hote rahe.',
+          say: 'Seth ke paas kal raat ki photocopy hai. Phir bhi do nuksaan hue:<br><br><b>Pehla:</b> aaj subah se 3 baje tak ka udhaar sirf jale hue khate mein tha. Kis par kitna — ab koi nahi bata sakta.<br><br><b>Doosra:</b> nayi dukaan dhoondhne, saaman bharne aur dobara kholne mein ek hafta laga. Us hafte koi bikri nahi.<br><br><b>KhanaKart mein:</b> pehla nuksaan = #7, #8, #9 (aakhri backup ke baad ke orders) · doosra nuksaan = 7.50 second jab orders fail hote rahe.',
         },
         {
           title: '3. Seth kya alag kar sakta tha?',
@@ -357,25 +357,25 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
               <tr><td>"Kitni der mein wapas chalu?" — jo samay tumne tay kiya</td><td><b>RTO</b> (recovery time objective)</td></tr>
               <tr><td>"Kitna data khona manzoor?" — jo hadd tumne tay ki</td><td><b>RPO</b> (recovery point objective)</td></tr>
             </table></div>
-            RTO aur RPO naape hue number nahi hain — yeh <b>lakshya</b> hain, jo business pehle se likhta hai. Lab ke number batate hain ki kaunsa tareeka kaunsa lakshya paa sakta hai.<br><br>
-            ⚠️ <b>Ek aam galatfehmi:</b> "Backup hai, toh hum bache hue hain." Backup yeh nahi batata ki wapas aane mein kitni der lagegi, aur aakhri backup ke baad ka data ja sakta hai. Lab: sirf backup → 16.3–16.4 s band, 50 orders kho gaye.`,
+            RTO aur RPO naape hue number nahi hain — dono <b>lakshya</b> hain, jo business pehle se likhta hai. Lab ke number batate hain ki kaunsa tareeka kaunsa lakshya paa sakta hai.<br><br>
+            ⚠️ <b>Ek aam galatfehmi:</b> "Backup hai, toh hum bache hue hain." Backup nahi batata ki wapas aane mein kitni der lagegi, aur aakhri backup ke baad ka data ja sakta hai. Lab: sirf backup → 16.3–16.4 s band, 50 orders kho gaye.`,
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> aafat ki tayyari do sawaalon se shuru hoti hai, tareeke se nahi: <b>kitni der band reh sakte hain</b> (RTO), aur <b>kitna data kho sakte hain</b> (RPO). Jawab business deta hai; tareeka uske baad chuna jaata hai.',
+      lesson: '🎯 <b>Asli baat:</b> aafat ki tayyari do sawaalon se shuru hoti hai, tareeke se nahi: <b>kitni der band reh sakte hain</b> (RTO), aur <b>kitna data kho sakte hain</b> (RPO). Jawab business deta hai; tareeka jawab ke baad chuna jaata hai.',
     },
 
     /* ---------------- 4. naam pakke karo ---------------- */
     {
       type: 'match',
-      title: 'Jo ho raha hai, uska naam',
-      instructions: 'Baayein taraf jo ho raha hai, daayein taraf uska naam.',
+      title: 'Jo ho raha hai, us cheez ka naam',
+      instructions: 'Baayein taraf jo ho raha hai, daayein taraf us cheez ka naam.',
       pairs: [
         { left: 'Region A har 3 second par apne orders ki copy doosri jagah rakh deta hai', right: 'Backup', explain: 'Copy purani hoti hai: aakhri backup ke baad ke orders usme nahi hote. Slow motion: #7–#9 kho gaye.' },
         { left: 'Region A har naya order thodi der mein region B ke DB mein bhi likh deta hai', right: 'Replication', explain: 'Lagataar copy. Slow motion: har 1 s par → sirf #9 khoya.' },
         { left: 'Router 3 baar jawab na milne par saare orders region B par bhejne lagta hai', right: 'Failover', explain: 'Slow motion: 5.50 s par. A ke jaane aur failover ke beech 1.50 s gaye.' },
         { left: '"Region jaaye, toh hum zyada se zyada 1 ghante mein wapas chalu ho jaayenge"', right: 'RTO', explain: 'Samay ka lakshya. Isme pata chalna, doosre region ko tayyar karna — sab juda hai.' },
-        { left: '"Region jaaye, toh zyada se zyada aakhri 5 minute ka data khona manzoor hai"', right: 'RPO', explain: 'Data ka lakshya. Copy kitni purani ho sakti hai, isi se tay hota hai.' },
-        { left: 'Poora region chale jaane jaisi aafat ke liye pehle se ki gayi tayyari', right: 'Disaster recovery', explain: 'Backup, replication, doosra region, failover — sab isi ke hisse hain.' },
+        { left: '"Region jaaye, toh zyada se zyada aakhri 5 minute ka data khona manzoor hai"', right: 'RPO', explain: 'Data ka lakshya. Copy kitni purani ho sakti hai, RPO se tay hota hai.' },
+        { left: 'Poora region chale jaane jaisi aafat ke liye pehle se ki gayi tayyari', right: 'Disaster recovery', explain: 'Backup, replication, doosra region, failover — sab disaster recovery ke hisse hain.' },
       ],
     },
   ],
@@ -428,7 +428,7 @@ orders fail hote rahe                    16.3–16.4 second tak — 680–689 or
     { front: 'Aafat ke do nuksaan?', back: '<b>Samay</b> (kitni der band) aur <b>data</b> (kitne "ho gaya" wale orders khoye). Slow motion, sirf backup: 7.50 s band, 14 fail, 3 khoye. Lab: 16.3–16.4 s, 50 khoye.' },
     { front: 'Khoya data kis se tay hota hai?', back: 'Doosri jagah ki copy kitni purani hai. Backup har 3 s → #7–#9 khoye. Copy har 1 s → sirf #9. "Ho gaya" copy se pehle bola jaaye, toh zero ki guarantee nahi.' },
     { front: 'Band rehne ka samay kis se tay hota hai?', back: 'Pata chalna (router: 3 baar jawab nahi = 1.50 s) + doosre region ko jo banana ya chalana pade. Kuch nahi chal raha → 7.50 s. DB chalu, app band → 4.50 s.' },
-    { front: 'RTO aur RPO?', back: '<b>RTO</b>: kitni der mein wapas chalu (samay ka lakshya). <b>RPO</b>: kitna data khona manzoor (data ka lakshya). Dono business pehle se likhta hai; tareeka uske baad.' },
+    { front: 'RTO aur RPO?', back: '<b>RTO</b>: kitni der mein wapas chalu (samay ka lakshya). <b>RPO</b>: kitna data khona manzoor (data ka lakshya). Dono business pehle se likhta hai; tareeka lakshya ke baad.' },
   ],
 },
 ]);

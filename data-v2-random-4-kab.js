@@ -121,7 +121,7 @@ SD.registerLevels('sdd-resil', [
               <li><b>Jab kram zaroori hai.</b> Ek order ke events hamesha ek hi worker par.</li>
               <li><b>Jab pakka barabar bantwara chahiye aur sab ek jaise hain.</b> Tab baari-baari kaafi hai, aur random se zyada barabar.</li>
             </ul>
-            Aur ek ulti galti: <b>jahan taaza jaankari sasti mil sakti hai, wahan random pehla ilaaj nahi</b>. Load balancer ki apni ginti muft hai — pehle apni ginti.`,
+            Aur ek ulti galti: <b>taaza jaankari sasti mil sakti ho toh random pehla ilaaj nahi</b>. Load balancer ki apni ginti muft hai — pehle apni ginti.`,
         },
         {
           title: '4. Load balancer ka tareeka kaise chunein?',
@@ -132,10 +132,10 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Load ki jaankari purani hai, ya kai load balancers hain</td><td><b>do mein se behtar</b></td><td>purani jaankari: 29–32 (sabse khaali: 92–106)</td></tr>
               <tr><td>Grahak ko hamesha wahi server chahiye</td><td>hash</td><td>—</td></tr>
             </table></div>
-            <b>Kal subah:</b> apne load balancer ki config kholo. Teen cheezein likho: tareeka kaunsa hai (kuch nahi likha toh shayad baari-baari), load ki jaankari kahan se aati hai, aur yeh jaankari kitni purani hoti hai.`,
+            <b>Kal subah:</b> apne load balancer ki config kholo. Teen cheezein likho: tareeka kaunsa hai (kuch nahi likha toh shayad baari-baari), load ki jaankari kahan se aati hai, aur load ki jaankari kitni purani hoti hai.`,
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> random wahan milao jahan <b>bahut saare ek saath ek jaisa faisla</b> lete hain. Jahan taaza jaankari mil sakti hai, pehle taaza jaankari dekho. Aur jahan "hamesha wahi" chahiye, wahan random bilkul nahi.',
+      lesson: '🎯 <b>Asli baat:</b> random tab milao jab <b>bahut saare ek saath ek jaisa faisla</b> lete hain. Jahan taaza jaankari mil sakti hai, pehle taaza jaankari dekho. Aur "hamesha wahi" chahiye toh random bilkul nahi.',
     },
 
     /* ---------------- 3. wahi auzaar, doosri jagah: leader chunna ---------------- */

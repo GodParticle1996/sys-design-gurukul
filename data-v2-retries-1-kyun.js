@@ -57,7 +57,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'dryrun',
       title: '🔍 Slow motion — fail hua? turant dobara',
-      goal: 'Har click = ek ghatna. Jo badla, woh peele rang mein chamkega. Dekho ki payment-service uthne ke baad bhi tik kyun nahi paati.',
+      goal: 'Har click = ek ghatna. Badli hui cheez peele rang mein chamkegi. Dekho ki payment-service uthne ke baad bhi tik kyun nahi paati.',
       nodes: NODES, edges: EDGES, viz: VIZ,
       vars: [
         { id: 'svc', label: 'payment-service' },
@@ -277,7 +277,7 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Turant retry, koi limit nahi</td><td>132</td><td>5</td><td>6 mein se 0</td></tr>
               <tr><td>Har baar dugna ruko, 5 koshish</td><td><b>30</b></td><td><b>3</b></td><td>6 mein se 0</td></tr>
             </table></div>
-            Calls 132 se 30 ho gayi. Yeh sudhaar hai. Par payment-service phir bhi do baar aur giri, aur ek bhi order nahi laga.`,
+            Calls 132 se 30 ho gayi. Backoff ne sudhaar kiya. Par payment-service phir bhi do baar aur giri, aur ek bhi order nahi laga.`,
           nodes: { phones: { tone: 'bad', badge: '30 calls · 0 order' }, pay: { tone: 'bad', badge: '3 crash' } },
         },
         {
@@ -298,7 +298,7 @@ SD.registerLevels('sdd-resil', [
     /* ---------------- 3. idea: tatkal ticket ---------------- */
     {
       type: 'cards',
-      title: '🚉 Yeh tum dekh chuke ho — tatkal ticket, subah 10 baje',
+      title: '🚉 Tum dekh chuke ho — tatkal ticket, subah 10 baje',
       goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Naam sabse aakhir mein aayenge.',
       steps: [
         {
@@ -340,7 +340,7 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Rukne ke waqt mein random milana</td><td><b>Jitter</b></td></tr>
               <tr><td>Atki hui retries ka ek saath girna, service ka baar-baar girna</td><td><b>Retry storm</b> (isi bheed ko "thundering herd" bhi kehte hain)</td></tr>
             </table></div>
-            ⚠️ <b>Ek aam galatfehmi:</b> "1 second, 2 second, 3 second ruko" exponential backoff <b>nahi</b> hai — yeh seedhi line hai (linear). Exponential ka matlab har baar <b>dugna</b>: 1, 2, 4, 8 second.`,
+            ⚠️ <b>Ek aam galatfehmi:</b> "1 second, 2 second, 3 second ruko" exponential backoff <b>nahi</b> hai — har baar 1 second badhna seedhi line hai (linear). Exponential ka matlab har baar <b>dugna</b>: 1, 2, 4, 8 second.`,
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> retry ki teen galtiyan hoti hain: bahut jaldi, bina ruke, aur <b>sab ek saath</b>. Backoff pehli do theek karta hai. Teesri ko sirf random (jitter) theek karta hai.',
@@ -349,12 +349,12 @@ SD.registerLevels('sdd-resil', [
     /* ---------------- 4. naam pakke karo ---------------- */
     {
       type: 'match',
-      title: 'Jo ho raha hai, uska naam',
-      instructions: 'Baayein taraf jo ho raha hai, daayein taraf uska naam.',
+      title: 'Jo ho raha hai, us cheez ka naam',
+      instructions: 'Baayein taraf jo ho raha hai, daayein taraf us cheez ka naam.',
       pairs: [
         { left: 'Order ki call fail hui, phone ne wahi call dobara bhej di', right: 'Retry', explain: 'Retry = fail hui call ko dobara bhejna. Ek akeli blip ke liye sahi ilaaj.' },
         { left: 'Phone pehle 300 ms ruka, phir 600, phir 1200', right: 'Exponential backoff', explain: 'Har baar dugna rukna. Calls kam hoti hain (slow motion: 132 → 30), par sab phones phir bhi ek saath lautte hain.' },
-        { left: 'Phone 0 se 600 ms ke beech koi bhi waqt chunta hai', right: 'Jitter', explain: 'Rukne mein random. Isi se chhe phones alag-alag pal par lautte hain.' },
+        { left: 'Phone 0 se 600 ms ke beech koi bhi waqt chunta hai', right: 'Jitter', explain: 'Rukne mein random. Random intezaar se hi chhe phones alag-alag pal par lautte hain.' },
         { left: 'payment-service uthi, chhe retries ek saath aayi, payment-service phir giri — baar-baar', right: 'Retry storm', explain: 'Slow motion: 1 deploy-crash 5 crash ban gaya. Lab: har user action par ~19 calls.' },
         { left: 'Phone 1 s, 2 s, 3 s rukta hai', right: 'Linear backoff (exponential nahi)', explain: 'Har baar utna hi badhna = linear. Exponential = har baar dugna: 1, 2, 4, 8.' },
       ],

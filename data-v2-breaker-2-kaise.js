@@ -37,7 +37,7 @@ SD.registerLevels('sdd-resil', [
     'Breaker ko kaise <b>pata chalta hai</b> ki service bimaar hai?',
     'Do calls fail hui — breaker abhi kyun nahi khula?',
     'OPEN ke dauraan aayi request ka kya hota hai, aur kitni der mein?',
-    'Service theek ho gayi — breaker ko yeh khabar kaun deta hai?',
+    'Service theek ho gayi — breaker ko theek hone ki khabar kaun deta hai?',
   ],
   lesson: [
     `<h3>🔬 Idea mil gaya. Ab andar jhaanko.</h3>
@@ -52,7 +52,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'dryrun',
       title: '👣 Dry run — 16 calls, breaker ke andar se',
-      goal: 'Har click = <b>ek ghatna</b> (ek call, ya timer). Us ghatna se breaker ke andar jo-jo badla, woh peele rang mein chamkega. Teen jagah pehle tumse poochha jaayega: "ab kya hoga?"',
+      goal: 'Har click = <b>ek ghatna</b> (ek call, ya timer). Us ghatna se breaker ke andar badli har cheez peele rang mein chamkegi. Teen jagah pehle tumse poochha jaayega: "ab kya hoga?"',
       nodes: NODES, edges: EDGES, viz: VIZ,
       vars: [
         { id: 'win', label: 'Window: pichhli 6 calls' },
@@ -176,12 +176,12 @@ SD.registerLevels('sdd-resil', [
         },
         {
           clock: '5.6 s',
-          say: 'recs-service <b>theek ho gayi</b>. Breaker ko yeh khabar nahi mili.<br><br>Breaker OPEN hai, isliye koi call ja hi nahi rahi — aur khabar sirf call ke nateeje se aati hai.',
+          say: 'recs-service <b>theek ho gayi</b>. Breaker ko theek hone ki khabar nahi mili.<br><br>Breaker OPEN hai, isliye koi call ja hi nahi rahi — aur khabar sirf call ke nateeje se aati hai.',
           nodes: { recs: { tone: 'ok', badge: 'theek' } },
         },
         {
           clock: '6.2 s',
-          say: '<b>#13</b> aati hai. recs-service theek hai — phir bhi #13 <b>roki gayi</b> (timer mein 0.6 s baaki). User ko purana cache mila.<br><br>Yeh breaker ki <b>keemat</b> hai: service theek hone ke baad bhi OPEN ka bacha hua waqt users ko purana jawab milta hai. Isiliye OPEN ka waqt bahut lamba nahi rakhte.',
+          say: '<b>#13</b> aati hai. recs-service theek hai — phir bhi #13 <b>roki gayi</b> (timer mein 0.6 s baaki). User ko purana cache mila.<br><br>Purana cache breaker ki <b>keemat</b> hai: service theek hone ke baad bhi OPEN ka bacha hua waqt users ko purana jawab milta hai. Isiliye OPEN ka waqt bahut lamba nahi rakhte.',
           flows: BLOCKED,
           vars: { timer: '6.8 s tak (0.6 s baaki)' },
         },
@@ -216,7 +216,7 @@ SD.registerLevels('sdd-resil', [
       instructions: 'Abhi jo dekha, use sahi kram mein lagao.',
       steps: [
         { text: 'CLOSED: calls ja rahi hain, breaker har nateeja window mein likh raha hai', explain: 'Normal haal. Breaker beech mein khada hai par kisi ko rokta nahi.' },
-        { text: 'Window mein fail ka hissa hadd tak pahunchta hai (aur kam se kam N nateeje ho chuke hain)', explain: 'Lab: ✓✓✓✗✗✗ = 3/6 = 50%. Isse pehle 2/6 = 33% par breaker nahi gira tha.' },
+        { text: 'Window mein fail ka hissa hadd tak pahunchta hai (aur kam se kam N nateeje ho chuke hain)', explain: 'Lab: ✓✓✓✗✗✗ = 3/6 = 50%. 3/6 se pehle 2/6 = 33% par breaker nahi gira tha.' },
         { text: 'OPEN: calls dependency tak jaati hi nahi; user ko turant fallback', explain: 'Lab: roki gayi calls ko 0 ms mein cache mila. Bimaar service par koi naya bojh nahi.' },
         { text: 'OPEN ka timer poora hota hai', explain: 'Lab mein 2 second. Is dauraan dependency ko saans lene ka waqt milta hai.' },
         { text: 'HALF-OPEN: sirf kuch trial calls jaati hain, baaki ruki rehti hain', explain: 'MCB ko ek baar utha ke dekhna. Poora traffic nahi — sirf jaanch.' },

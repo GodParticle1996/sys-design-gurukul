@@ -55,7 +55,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'dryrun',
       title: '🔍 Slow motion — bina kisi bachav ke',
-      goal: 'Har click = ek ghatna (ek request aayi, ya waqt beeta). Us ghatna se jo badla, woh peele rang mein chamkega. Dekho ki <b>app-api</b> ke workers kahan phanste hain — aur Asha ka profile kyun nahi khulta.',
+      goal: 'Har click = ek ghatna (ek request aayi, ya waqt beeta). Us ghatna se badli hui cheez peele rang mein chamkegi. Dekho ki <b>app-api</b> ke workers kahan phanste hain — aur Asha ka profile kyun nahi khulta.',
       nodes: NODES, edges: EDGES, viz: VIZ,
       vars: [
         { id: 'workers', label: 'app-api ke 4 workers' },
@@ -66,7 +66,7 @@ SD.registerLevels('sdd-resil', [
       steps: [
         {
           clock: '0.0 s',
-          say: 'Sab theek chal raha hai. Phone <code>/home</code> maangta hai. app-api ka ek <b>worker</b> yeh request uthata hai, recs-service se recommendations laata hai, aur <b>24 ms</b> mein jawab de deta hai. Worker phir khaali.<br><br><b>Worker</b> = ek haath jo ek waqt mein ek hi request sambhalta hai. Is slow motion mein app-api ke paas sirf <b>4 workers</b> hain (asli service mein 20–200), taaki har worker dikhe.',
+          say: 'Sab theek chal raha hai. Phone <code>/home</code> maangta hai. app-api ka ek <b>worker</b> request uthata hai, recs-service se recommendations laata hai, aur <b>24 ms</b> mein jawab de deta hai. Worker phir khaali.<br><br><b>Worker</b> = ek haath jo ek waqt mein ek hi request sambhalta hai. Is slow motion mein app-api ke paas sirf <b>4 workers</b> hain (asli service mein 20–200), taaki har worker dikhe.',
           flows: [{ from: 'phone', to: 'api', label: '/home', tone: 'ok' }, { from: 'api', to: 'recs', label: '/recs', tone: 'ok' }],
           nodes: { api: { tone: 'ok', badge: 'jawab 24 ms mein' }, recs: { tone: 'ok', badge: 'theek' } },
           vars: { workers: FREE4, line: 'koi nahi', hung: '0', asha: 'abhi kuch nahi' },
@@ -147,7 +147,7 @@ SD.registerLevels('sdd-resil', [
         },
         {
           clock: 'asli raftaar',
-          say: `Yeh slow motion tha: 4 workers, 18 requests. Lab mein wahi kahani <b>asli raftaar</b> par chalayi — 20 workers, har second 50 <code>/home</code> + 50 <code>/profile</code>, recs-service 6 second latki:
+          say: `Upar slow motion tha: 4 workers, 18 requests. Lab mein wahi kahani <b>asli raftaar</b> par chalayi — 20 workers, har second 50 <code>/home</code> + 50 <code>/profile</code>, recs-service 6 second latki:
             <ul>
               <li><code>/profile</code> (jise recs-service se koi matlab nahi): 600 mein se <b>360 requests fail</b>.</li>
               <li>Jo <code>/profile</code> requests safal hui, unmein har 100 mein se 1 ko <b>9.2 second</b> ya zyada lage.</li>
@@ -155,7 +155,7 @@ SD.registerLevels('sdd-resil', [
             </ul>`,
           nodes: { phone: { tone: 'bad', badge: '360 / 600 fail' }, api: { tone: 'bad', badge: '20/20 workers atke' }, recs: { tone: 'bad', badge: '6 s latki' } },
           flows: [{ from: 'phone', to: 'api', label: '/profile', tone: 'bad' }, { from: 'api', to: 'recs', label: '/recs', tone: 'slow', stuck: true }],
-          vars: { workers: 'lab mein 20 — sab atke', line: '200 tak (isse lambi → 503)', hung: '20 tak (jitne workers)', asha: '❌ 600 mein se 360 fail' },
+          vars: { workers: 'lab mein 20 — sab atke', line: '200 tak (line 200 se lambi → 503)', hung: '20 tak (jitne workers)', asha: '❌ 600 mein se 360 fail' },
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> recs-service ne app-api ko error dekar nahi giraya. recs-service ne app-api ke <b>workers pakad liye</b>.<br>Jis cheez ki ginti seemit hai (workers, database connections, memory) aur jo kisi dheeme jawab ke intezaar mein atki hai — wahi cheez poori service ko le doobti hai.<br>Ek service ki bimaari ka is tarah doosri service mein phailna: <b>cascading failure</b>.',
@@ -239,7 +239,7 @@ SD.registerLevels('sdd-resil', [
         },
         {
           clock: '5.0 s',
-          say: '<b>#10, #11, #12</b>: teen aur calls bimaar recs-service par. Ab recs-service par ek saath <b>8</b> calls latki hain.<br><br>Aur har <code>/home</code> user ne 300 ms khoye — sirf yeh jaanne ke liye ki recs-service <b>abhi bhi</b> bimaar hai.',
+          say: '<b>#10, #11, #12</b>: teen aur calls bimaar recs-service par. Ab recs-service par ek saath <b>8</b> calls latki hain.<br><br>Aur har <code>/home</code> user ne 300 ms khoye — sirf itna jaanne ke liye ki recs-service <b>abhi bhi</b> bimaar hai.',
           flows: [{ from: 'api', to: 'recs', label: '/recs', tone: 'slow', stuck: true }],
           nodes: { recs: { tone: 'bad', badge: '8 calls latki' } },
           vars: { hung: '8', sent: '8' },
@@ -264,7 +264,7 @@ SD.registerLevels('sdd-resil', [
     /* ---------------- 3. idea: ghar ka MCB ---------------- */
     {
       type: 'cards',
-      title: '🏠 Yeh cheez tumhare ghar mein lagi hai — MCB',
+      title: '🏠 Tumhare ghar ke switchboard mein lagi cheez — MCB',
       goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Naam sabse aakhir mein aayega.',
       steps: [
         {
@@ -298,7 +298,7 @@ SD.registerLevels('sdd-resil', [
           },
         },
         {
-          title: '4. Is switch ke teen haal — aur unke naam',
+          title: '4. Is switch ke teen haal — aur teeno ke naam',
           say: `<div class="dr-scroll"><table>
               <tr><th>Haal</th><th>Calls ka kya hota hai</th><th>Naam</th></tr>
               <tr><td>Switch juda hua, sab normal</td><td>ja rahi hain; har nateeja gina ja raha hai</td><td><b>CLOSED</b></td></tr>
@@ -316,13 +316,13 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'match',
       title: 'Haal aur naam jodo',
-      instructions: 'Baayein taraf jo ho raha hai, daayein taraf uska naam.',
+      instructions: 'Baayein taraf jo ho raha hai, daayein taraf us cheez ka naam.',
       pairs: [
         { left: 'recs-service ko calls ja rahi hain, aur har nateeja gina ja raha hai', right: 'CLOSED', explain: 'CLOSED = switch juda hua = current (calls) beh rahi hain. Normal haal.' },
         { left: 'recs-service ko ek bhi call nahi ja rahi; har user ko 2 ms mein cache mil raha hai', right: 'OPEN', explain: 'OPEN = taar kata hua = calls band. "Khula" matlab chalu nahi — ulta.' },
         { left: 'Sirf 2 test calls gayi hain, baaki sab ruki hain', right: 'HALF-OPEN', explain: 'HALF-OPEN = MCB ko ek baar utha ke dekhna. Test pass → CLOSED, fail → phir OPEN.' },
         { left: 'Worker ne 300 ms intezaar kiya, phir chhod diya', right: 'Timeout', explain: 'Timeout sirf bulaane wale ko azaad karta hai. Agli request phir bhi bimaar service ko call karegi.' },
-        { left: 'recs-service nahi boli, toh pichhli baar ki recommendations dikha di', right: 'Fallback', explain: 'Fallback = jab asli jawab na mile toh user ko kya doge. Iske bina breaker sirf "tez error" hai.' },
+        { left: 'recs-service nahi boli, toh pichhli baar ki recommendations dikha di', right: 'Fallback', explain: 'Fallback = jab asli jawab na mile toh user ko kya doge. Fallback ke bina breaker sirf "tez error" hai.' },
       ],
     },
   ],
@@ -372,7 +372,7 @@ SD.registerLevels('sdd-resil', [
     'CLOSED / OPEN / HALF-OPEN ko bina uljhe pehchaan sakte ho',
   ],
   cards: [
-    { front: 'Dheemi dependency poori service kaise girati hai?', back: 'Error se nahi — <b>workers pakad ke</b>. Har latki call ek worker ko rok leti hai; pool khaali nahi → jin endpoints ko us dependency se matlab nahi, woh bhi line mein. Lab: /profile 360/600 fail.' },
+    { front: 'Dheemi dependency poori service kaise girati hai?', back: 'Error se nahi — <b>workers pakad ke</b>. Har latki call ek worker ko rok leti hai; pool khaali nahi → jin endpoints ko us dependency se matlab nahi, aise endpoints bhi line mein. Lab: /profile 360/600 fail.' },
     { front: 'Timeout kisko bachata hai, kisko nahi?', back: 'Bulaane wale ko bachata hai (workers 300 ms mein azaad). Bimaar service ko nahi — calls jaati rehti hain. Lab: 41 → 300 calls, service 3 baar giri.' },
     { front: 'Circuit OPEN ka matlab?', back: 'Taar kata hua = calls <b>band</b>. (CLOSED = calls ja rahi hain. HALF-OPEN = sirf test calls.) Naam ulte lagte hain.' },
     { front: 'Breaker ka idea ek line mein?', back: 'Bimaar service ko poochhna band karo, user ko turant fallback do, aur thodi der baad ek baar poochh ke dekho. Ghar ka MCB.' },

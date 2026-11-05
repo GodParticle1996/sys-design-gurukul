@@ -529,7 +529,7 @@ SD.registerLevels('sdd-eda', [
       "steps": [
         {
           "title": "1. Ek task do workers mein baantna ho?",
-          "say": "RabbitMQ ke Work Queues tutorial ke mutabiq ek queue ka kaam workers mein banta hai. Yeh ek hi tarah ke kaam ke workers hain. Do workers jodne ka matlab har worker ko har event ki alag copy milna nahi."
+          "say": "RabbitMQ ke Work Queues tutorial ke mutabiq ek queue ka kaam workers mein banta hai. Ye sab workers ek hi tarah ka kaam karte hain. Do workers jodne ka matlab har worker ko har event ki alag copy milna nahi."
         },
         {
           "title": "2. Kitchen aur notify dono ko khabar chahiye?",

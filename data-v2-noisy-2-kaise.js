@@ -33,7 +33,7 @@ SD.registerLevels('sdd-resil', [
   badge: 'Baari Bahadur',
   objectives: [
     'Baari-baari wali line mein "agla kaam kiska" kaun tay karta hai?',
-    'Jis tenant ki baari hai par line khaali hai, uski baari ka kya hota hai?',
+    'Jis tenant ki baari hai par line khaali hai, us tenant ki baari ka kya hota hai?',
     'Har tenant ki hadd andar se kaise chalti hai — baalti, tokens, aur do settings?',
     'Hadd, baari, aur alag khidki: teeno mein kya milta hai aur kya jaata hai?',
   ],
@@ -69,7 +69,7 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           say: `partner-api mein ab ek line nahi hai. <b>Har tenant ki apni line</b> hai. Khidki ka niyam:
             <ol>
               <li>Khidki khaali hui → jis tenant ki <b>baari</b> hai, us tenant ki line se <b>ek</b> kaam.</li>
-              <li>Jis tenant ki baari ho gayi, woh baari ke kram mein sabse peeche.</li>
+              <li>Jis tenant ki baari ho gayi, wahi tenant baari ke kram mein sabse peeche.</li>
               <li>Baari hai par line khaali hai → us tenant ko chhodo, agle tenant ko dekho.</li>
             </ol>`,
           nodes: { a: { tone: 'idle', badge: 'A ki line: 0' }, b: { tone: 'ok', badge: 'B ki line: 0' }, api: { tone: 'ok', badge: '2 khidkiyan' } },
@@ -196,12 +196,12 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
               <tr><td>Har tenant 80 / second</td><td>0</td><td>322 ms</td><td>721 (1,453 mana)</td></tr>
               <tr><td>Baari-baari</td><td><b>0</b></td><td><b>41 ms</b></td><td><b>1,046</b></td></tr>
             </table></div>
-            Baari-baari mein A ko hadd wale niyam se <b>zyada</b> mila (1,046 banaam 721): B aur C ne jo hissa nahi liya, woh A ko gaya.<br><br>A ki 1,121 requests ko phir bhi "na" mila — par A ki <b>apni</b> line bharne se. A ki bheed sirf A ki line bharti hai.`,
+            Baari-baari mein A ko hadd wale niyam se <b>zyada</b> mila (1,046 banaam 721): B aur C ka na liya hua hissa A ko gaya.<br><br>A ki 1,121 requests ko phir bhi "na" mila — par A ki <b>apni</b> line bharne se. A ki bheed sirf A ki line bharti hai.`,
           nodes: { a: { tone: 'busy', badge: 'lab: 1,046 hui' }, b: { tone: 'ok', badge: 'lab: 0 fail · 41 ms' }, api: { tone: 'ok', badge: 'lab: 200/s' } },
           vars: { turn: 'lab: A, B, C baari-baari', la: 'lab: A ki line bhari (hadd 100)', lb: 'lab: B, C ki line lagbhag khaali', win: 'lab: 4 khidkiyan', b: 'lab: 580 mein se 0 fail' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> baari-baari mein "kaun pehle aaya" sirf <b>apni line ke andar</b> maayne rakhta hai. Tenants ke beech baari chalti hai. Shaant tenant shor karne wale ke peeche nahi rukta, aur jo baari koi nahi leta, woh bekaar nahi jaati.<br>Is tareeke ka naam <b>fair queuing</b> hai; baari ke is kram ko <b>round robin</b> kehte hain.',
+      lesson: '🎯 <b>Asli baat:</b> baari-baari mein "kaun pehle aaya" sirf <b>apni line ke andar</b> maayne rakhta hai. Tenants ke beech baari chalti hai. Shaant tenant shor karne wale ke peeche nahi rukta, aur na li gayi baari bekaar nahi jaati.<br>Is tareeke ka naam <b>fair queuing</b> hai; baari ke is kram ko <b>round robin</b> kehte hain.',
     },
 
     /* ---------------- 2. token wali baalti ---------------- */
@@ -308,7 +308,7 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
           say: 'Khidki 1 sirf Annapurna ki. Khidki 2 sirf Bholu Dhaba ki. Koi kisi ki khidki par nahi aata.<br><br>Slow motion mein:<ul><li>Bholu Dhaba ka har order accept <b>0.50 s</b> mein — teeno tareekon mein sabse tez. Bholu Dhaba ko pata bhi nahi chala ki Annapurna ne kuch bheja.</li><li>Annapurna ke 12 kaam ek hi khidki par: aakhri kaam <b>7.00 s</b> par. (Baari-baari mein 5.02 s.)</li></ul>',
         },
         {
-          title: '2. Iski keemat kya hai?',
+          title: '2. Alag khidki ki keemat kya hai?',
           say: 'Bholu Dhaba har second sirf ek request bhejta hai, jisme 0.5 second lagta hai. Yaani Bholu Dhaba ki khidki <b>aadhe samay khaali</b> baithi rahi — jabki Annapurna ki line mein 10 kaam khade the.',
           ask: {
             q: 'Annapurna ka kaam 2 second der se hua aur ek khidki aadhe samay khaali rahi. Phir bhi koi "alag khidki" kyun chunega?',
@@ -340,7 +340,7 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
             "Bulkhead" jahaaz se aaya hai: jahaaz ke pet mein alag-alag khaane hote hain, taaki ek khaane mein paani bhare toh poora jahaaz na doobe.`,
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> teeno tareeke shaant tenant ko bachate hain. Farak yeh hai ki <b>khaali jagah ka kya hota hai</b>: hadd mein bekaar, baari mein doosre ko, alag khidki mein khaali. Aksar do saath lagte hain: baari-baari, aur uske upar ek dheeli hadd.',
+      lesson: '🎯 <b>Asli baat:</b> teeno tareeke shaant tenant ko bachate hain. Farak: <b>khaali jagah ka kya hota hai</b>: hadd mein bekaar, baari mein doosre ko, alag khidki mein khaali. Aksar do saath lagte hain: baari-baari, aur baari ke upar ek dheeli hadd.',
     },
 
     /* ---------------- 4. asli tool par ---------------- */
@@ -418,7 +418,7 @@ baari-baari:    Bholu Dhaba 7 mein se 0 ❌ · Annapurna 12 ✅</pre>
   },
   success: [
     'Baari-baari ka niyam teen line mein bata sakte ho, aur khaali baari ka kya hota hai',
-    'Token wali baalti ki do settings aur unka kaam bata sakte ho',
+    'Token wali baalti ki do settings aur dono ka kaam bata sakte ho',
     'Hadd, baari aur alag khidki ko "khaali jagah ka kya hota hai" se alag kar sakte ho',
   ],
   cards: [

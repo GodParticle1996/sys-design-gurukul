@@ -54,9 +54,9 @@ SD.registerLevels('sdd-resil', [
      <p>KhanaKart mein ek order aise chalta hai:</p>
      <pre>phone → order-service → dispatch-service → rider</pre>
      <p><b>order-service</b> order leti hai, paisa kaat-ti hai aur phone ko turant bolti hai: "✅ Order confirm". Phir order <b>dispatch-service</b> ko de deti hai.</p>
-     <p><b>dispatch-service</b> har order ke liye paas ka rider dhoondhti hai. Yeh dheema kaam hai. Isliye aane wale orders dispatch-service ke andar ek <b>line</b> mein khade rehte hain.</p>
+     <p><b>dispatch-service</b> har order ke liye paas ka rider dhoondhti hai. Rider dhoondhna dheema kaam hai. Isliye aane wale orders dispatch-service ke andar ek <b>line</b> mein khade rehte hain.</p>
      <p>Us shaam dashboard poora hara tha. Koi error nahi, koi alert nahi.</p>
-     <p>Phir dispatch-service achanak mar gayi. Uske saath <b>line ke saare orders</b> chale gaye: paisa kat chuka tha, phone par "confirm" likha tha, rider kabhi nahi aaya.</p>
+     <p>Phir dispatch-service achanak mar gayi. Crash ke saath <b>line ke saare orders</b> chale gaye: paisa kat chuka tha, phone par "confirm" likha tha, rider kabhi nahi aaya.</p>
      <pre>lab, asli raftaar: ~36 second mein process mar gaya · line mein 2.2 lakh se zyada kaam the — sab gaye</pre>
      <p>Kisi ne galat code nahi likha tha. Bas ek sawaal kisi ne nahi poochha tha.</p>
      <p class="tip">👉 Agle screen par wahi shaam slow motion mein: har second 5 orders aate hain, 1 nikalta hai. Dekho line ke saath kya hota hai.</p>`,
@@ -66,7 +66,7 @@ SD.registerLevels('sdd-resil', [
     {
       type: 'dryrun',
       title: '🔍 Slow motion — line ki koi hadd nahi',
-      goal: 'Pehle har click = ek ghatna, phir har click = ek second. Jo badla, woh peele rang mein chamkega. Dekho ki sab kuch kab tak "theek" dikhta hai.',
+      goal: 'Pehle har click = ek ghatna, phir har click = ek second. Badli hui cheez peele rang mein chamkegi. Dekho ki sab kuch kab tak "theek" dikhta hai.',
       nodes: NODES, edges: EDGES, viz: VIZ,
       vars: [
         { id: 'in', label: 'Orders aaye (sab ko "confirm" bola)' },
@@ -160,7 +160,7 @@ SD.registerLevels('sdd-resil', [
         },
         {
           clock: '5.0 s',
-          say: '#26 aaya. Line 21, jagah sirf 20 ki → dispatch-service <b>CRASH</b> (out of memory).<br><br>Line dispatch-service ki memory mein thi. dispatch-service gayi toh line ke <b>21 orders</b> bhi gaye. #5, jiska rider dhoondha ja raha tha, woh bhi gaya.',
+          say: '#26 aaya. Line 21, jagah sirf 20 ki → dispatch-service <b>CRASH</b> (out of memory).<br><br>Line dispatch-service ki memory mein thi. dispatch-service gayi toh line ke <b>21 orders</b> bhi gaye. #5 bhi gaya, jiska rider dhoondha ja raha tha.',
           flows: [{ from: 'os', to: 'ds', label: '#26', tone: 'bad' }],
           nodes: { ds: { tone: 'bad', badge: 'CRASH · out of memory' } },
           vars: { in: '26', line: 'gayab — 21 orders', mem: Array.from({ length: 20 }, () => 'bad'), wait: 'kabhi nahi', dash: '🔴 dispatch-service band' },
@@ -296,7 +296,7 @@ SD.registerLevels('sdd-resil', [
         },
         {
           clock: '2.1–3.0 s',
-          say: 'dispatch-service ne #3 uthaya: line 7/8. #12 aaya: 8/8, phir bhari. Uske baad #13, #14, #15, #16 — <b>chaaron gire</b>.<br><br>Ab har second yahi hoga: 5 aaye, 1 ki jagah bani, 4 gire.',
+          say: 'dispatch-service ne #3 uthaya: line 7/8. #12 aaya: 8/8, phir bhari. Phir #13, #14, #15, #16 — <b>chaaron gire</b>.<br><br>Ab har second yahi hoga: 5 aaye, 1 ki jagah bani, 4 gire.',
           flows: BOTH,
           nodes: { ds: { tone: 'slow', badge: 'line 8/8 · 5 gire' } },
           vars: { lost: '5 (#11, #13–#16)' },
@@ -322,7 +322,7 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Dugni memory (40)</td><td>10.0 s par crash</td><td>42</td><td>Kisi ko nahi</td></tr>
               <tr><td>Line ki hadd 8, bhari ho toh chupchaap girao</td><td><b>zinda</b></td><td>16</td><td>Kisi ko nahi</td></tr>
             </table></div>
-            Hadd ne dispatch-service ko bacha liya. Yeh asli sudhaar hai.<br><br>Par 16 customers ke liye kuch nahi badla: paisa kata, "confirm" dikha, rider nahi aayega. Aur ab toh koi crash bhi nahi jo kisi ko jagaye.`,
+            Hadd ne dispatch-service ko bacha liya. Crash ruk gaya, ye asli sudhaar hai.<br><br>Par 16 customers ke liye kuch nahi badla: paisa kata, "confirm" dikha, rider nahi aayega. Aur ab toh koi crash bhi nahi jo kisi ko jagaye.`,
           nodes: { os: { tone: 'slow', badge: '16 jhoothe "confirm"' }, ds: { tone: 'ok', badge: 'zinda' }, rd: { tone: 'ok', badge: '' } },
         },
         {
@@ -337,13 +337,13 @@ SD.registerLevels('sdd-resil', [
           vars: { fix: 'lab: hadd 20,000 + chupchaap girao', proc: 'lab: zinda, 94 MB', line: 'lab: 19,980', lost: 'lab: 2,16,740', know: 'kisi ko nahi' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> line par hadd zaroori hai — par hadd ek sawaal khada karti hai jo pehle chhupa tha: <b>line bhari ho toh kya?</b><br>"Chupchaap gira do" sabse aasaan jawab hai. Behtar jawab ke liye <b>bhejne wale ko pata chalna chahiye</b> ki line bhari hai. Agla level isi ka hai.',
+      lesson: '🎯 <b>Asli baat:</b> line par hadd zaroori hai — par hadd ek sawaal khada karti hai jo pehle chhupa tha: <b>line bhari ho toh kya?</b><br>"Chupchaap gira do" sabse aasaan jawab hai. Behtar jawab ke liye <b>bhejne wale ko pata chalna chahiye</b> ki line bhari hai. Agla level isi sawaal par hai.',
     },
 
     /* ---------------- 3. idea: chhat ki tanki ---------------- */
     {
       type: 'cards',
-      title: '🚰 Yeh tum dekh chuke ho — chhat ki tanki aur motor',
+      title: '🚰 Tum dekh chuke ho — chhat ki tanki aur motor',
       goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Naam sabse aakhir mein aayenge.',
       steps: [
         {
@@ -356,7 +356,7 @@ SD.registerLevels('sdd-resil', [
         },
         {
           title: '3. Paani ka behna kaise rukta hai?',
-          say: 'Har ghar mein koi na koi chillata hai: <b>"Motor band karo, tanki bhar gayi!"</b><br><br>Kai gharon mein yeh kaam ek chhota switch karta hai. Tanki ke andar ek gola tairta hai. Paani upar aaya → gola upar → motor band. Paani neeche gaya → gola neeche → motor chalu.',
+          say: 'Har ghar mein koi na koi chillata hai: <b>"Motor band karo, tanki bhar gayi!"</b><br><br>Kai gharon mein motor band karne ka kaam ek chhota switch karta hai. Tanki ke andar ek gola tairta hai. Paani upar aaya → gola upar → motor band. Paani neeche gaya → gola neeche → motor chalu.',
           ask: {
             q: 'Us tairte hue gole ne asal mein kya kiya?',
             choices: [
@@ -384,10 +384,10 @@ SD.registerLevels('sdd-resil', [
               <tr><td>Jo kaam karta hai (nal, dispatch-service)</td><td><b>Consumer</b></td></tr>
               <tr><td>Beech ki line (tanki)</td><td><b>Queue</b> ya <b>buffer</b></td></tr>
               <tr><td>Line jiski hadd tay hai</td><td><b>Bounded queue</b> (bina hadd wali: unbounded)</td></tr>
-              <tr><td>Bhari line par kaam gira dena</td><td><b>Drop</b> (isi ko load shedding bhi kehte hain)</td></tr>
+              <tr><td>Bhari line par kaam gira dena</td><td><b>Drop</b> (drop ko load shedding bhi kehte hain)</td></tr>
               <tr><td>Consumer ka "ruk ja / dheere bhejo" producer tak pahunchna</td><td><b>Backpressure</b></td></tr>
             </table></div>
-            Naam pipe se aaya hai: aage rukaavat ho toh paani ka dabaav peeche ki taraf banta hai.<br><br>⚠️ <b>Dhyaan do:</b> log "backpressure" do tarah bolte hain. Kabhi samasya ke liye ("line badh rahi hai, backpressure ban raha hai"), kabhi ilaaj ke liye ("producer par backpressure lagao"). Dono ke peeche ek hi baat hai: consumer peeche reh gaya hai, aur yeh khabar producer tak jaani chahiye.`,
+            Naam pipe se aaya hai: aage rukaavat ho toh paani ka dabaav peeche ki taraf banta hai.<br><br>⚠️ <b>Dhyaan do:</b> log "backpressure" do tarah bolte hain. Kabhi samasya ke liye ("line badh rahi hai, backpressure ban raha hai"), kabhi ilaaj ke liye ("producer par backpressure lagao"). Dono ke peeche ek hi baat hai: consumer peeche reh gaya hai, aur peeche rehne ki khabar producer tak jaani chahiye.`,
         },
       ],
       lesson: '🎯 <b>Asli baat:</b> farak (aaya − nikla) ke sirf teen thikane hain. <b>Line mein</b> — thodi der ke liye, hadd ke saath. <b>Producer ke paas</b> — producer ruke ya dheema ho (backpressure). <b>Kahin nahi</b> — gira do (drop).<br>Bina hadd ki line chautha thikana nahi hai. Bina hadd ki line bhi "gira do" hi hai: bas der se, aur sab ek saath.',
@@ -396,8 +396,8 @@ SD.registerLevels('sdd-resil', [
     /* ---------------- 4. naam pakke karo ---------------- */
     {
       type: 'match',
-      title: 'Jo ho raha hai, uska naam',
-      instructions: 'Baayein taraf jo ho raha hai, daayein taraf uska naam.',
+      title: 'Jo ho raha hai, us cheez ka naam',
+      instructions: 'Baayein taraf jo ho raha hai, daayein taraf us cheez ka naam.',
       pairs: [
         { left: 'order-service har second 5 orders bhejti hai', right: 'Producer', explain: 'Producer = jo kaam bhejta hai. Tanki wali misaal mein motor.' },
         { left: 'dispatch-service har second 1 order uthati hai', right: 'Consumer', explain: 'Consumer = jo kaam karta hai. Poore system ki raftaar aakhir mein consumer ki raftaar hi hoti hai.' },

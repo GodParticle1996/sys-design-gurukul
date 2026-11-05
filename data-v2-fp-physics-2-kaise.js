@@ -55,7 +55,7 @@ SD.registerLevels('fp-core', [
         },
         {
           "title": "3. Formula mein bits aur bytes ka dhyaan?",
-          "say": "<code>time = fixed wait + bytes × 8 / bits-per-second</code>. Bytes ko bits mein badlo. Seconds ko ms mein badlo. Yeh simplified completion-time model hai; real TCP/HTTP path mein handshake, headers, retransmit aur queue bhi aa sakte hain."
+          "say": "<code>time = fixed wait + bytes × 8 / bits-per-second</code>. Bytes ko bits mein badlo. Seconds ko ms mein badlo. Formula ek simplified completion-time model hai; real TCP/HTTP path mein handshake, headers, retransmit aur queue bhi aa sakte hain."
         },
         {
           "title": "4. Latency aur bandwidth ka matlab ab?",
@@ -75,7 +75,7 @@ SD.registerLevels('fp-core', [
       "steps": [
         {
           "title": "1. 3 GHz ka ek cycle kitna?",
-          "say": "3 GHz = 3 arab cycles per second. Ek cycle = 1 / 3,000,000,000 second ≈ 0.333 ns. Yeh assumed frequency ka hisaab hai; is machine ka CPU measure nahi kiya."
+          "say": "3 GHz = 3 arab cycles per second. Ek cycle = 1 / 3,000,000,000 second ≈ 0.333 ns. Hisaab maani hui frequency ka hai; is machine ka CPU measure nahi kiya."
         },
         {
           "title": "2. Ek cycle ko ek human second maana. 100 ns kitne?",
@@ -550,7 +550,7 @@ SD.registerLevels('fp-core', [
         },
         {
           "title": "3. Ab Little’s Law ka naam aur units",
-          "say": "<code>L = lambda × W</code>. Is complete-window example mein lambda = 4 / 0.4 s = 10/s. W = 0.175 s. Hisaab: 10 × 0.175 = 1.75. <b>L</b> average andar; <b>lambda</b> same boundary ka flow rate; <b>W</b> mean residence. General use mein suitable stable/long-run averages chahiye. Yeh finite model empty boundaries ki wajah se exact area identity dikhata hai."
+          "say": "<code>L = lambda × W</code>. Is complete-window example mein lambda = 4 / 0.4 s = 10/s. W = 0.175 s. Hisaab: 10 × 0.175 = 1.75. <b>L</b> average andar; <b>lambda</b> same boundary ka flow rate; <b>W</b> mean residence. General use mein suitable stable/long-run averages chahiye. Chhota model khaali boundaries ki wajah se exact area identity dikhata hai."
         },
         {
           "title": "4. Formula se queue ko aur bada kar dein?",

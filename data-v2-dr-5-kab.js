@@ -38,7 +38,7 @@ SD.registerLevels('sdd-resil', [
   objectives: [
     'Kis service ke liye backup kaafi hai, aur kis ke liye doosra region pehle se chalu chahiye?',
     'Tareeka chunne se pehle business se kaunse do number likhwane hain?',
-    'Backup, lagataar copy aur purane version: yeh teen ek doosre ki jagah kyun nahi le sakte?',
+    'Backup, lagataar copy aur purane version: teeno ek doosre ki jagah kyun nahi le sakte?',
     'Paanch aam galatfehmiyan kaunsi hain, aur har ek ka naapa hua jawab kya hai?',
   ],
   lesson: [
@@ -52,7 +52,7 @@ backup & restore   → 16.3–16.4 s band · 50 orders gaye · region B mein aam
 pilot light        → 6.4–6.5 s band   · 5 orders gaye  · DB chalu, app band
 warm standby       → 4.0–4.5 s band   · 5 orders gaye  · DB + chhota app
 active-active      → 1.0–1.5 s band   · 2–3 orders gaye · poora region</pre>
-     <p>Lab mein samay chhota kiya gaya hai: jo kaam yahan second leta hai, asli duniya mein woh kaam kahin zyada samay leta hai. Kram wahi rehta hai.</p>
+     <p>Lab mein samay chhota kiya gaya hai: lab ka second wala kaam asli duniya mein kahin zyada samay leta hai. Kram wahi rehta hai.</p>
      <p class="tip">👉 Is level mein pehle tum faisla karoge: aath services, teen jagah. Phir number.</p>`,
   ],
   stages: [
@@ -82,14 +82,14 @@ active-active      → 1.0–1.5 s band   · 2–3 orders gaye · poora region</
     {
       type: 'cards',
       title: '📋 Faisla — likh ke rakho',
-      goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Number lab ke hain. Jahan "AWS ka whitepaper" likha hai, woh AWS ki official documentation se hai (is lab mein AWS chalaya nahi gaya).',
+      goal: 'Chaar chhote cards. Har card ek hi sawaal ka jawab deta hai. Number lab ke hain. "AWS ka whitepaper" wali baatein AWS ki official documentation se hain (is lab mein AWS chalaya nahi gaya).',
       steps: [
         {
           title: '1. Pehle do number — business se likhwao',
           say: `<b>RTO</b> = service band hone se wapas chalu hone tak, zyada se zyada kitni der manzoor hai.<br>
             <b>RPO</b> = aakhri surakshit copy kitni purani ho sakti hai — yaani kitna data khona manzoor hai.<br><br>
-            AWS ka whitepaper dono ke baare mein ek hi baat kehta hai: yeh number <b>organization tay karta hai</b>. Engineer in numbers ko chunta nahi; engineer batata hai ki har number ki keemat kya hai.<br><br>
-            Wahi whitepaper yeh bhi kehta hai: lakshya banate waqt gadbad ka <b>pata chalna</b>, khabar pahunchna aur faisla lena — sab gino. Lab mein yeh dikha: sabse tez tareeke mein poori wapsi (1.0–1.5 s) lagbhag sirf pata chalne ka samay thi (health check 500 ms × 3).`,
+            AWS ka whitepaper dono ke baare mein ek hi baat kehta hai: dono number <b>organization tay karta hai</b>. Engineer in numbers ko chunta nahi; engineer batata hai ki har number ki keemat kya hai.<br><br>
+            Wahi whitepaper ye bhi kehta hai: lakshya banate waqt gadbad ka <b>pata chalna</b>, khabar pahunchna aur faisla lena — sab gino. Lab mein dikha: sabse tez tareeke mein poori wapsi (1.0–1.5 s) lagbhag sirf pata chalne ka samay thi (health check 500 ms × 3).`,
           ask: {
             q: 'Business maangta hai: "Zero second band, zero data khoye, kharcha kam." Engineer agla kaam kya karega?',
             choices: [
@@ -147,7 +147,7 @@ active-active      → 1.0–1.5 s band   · 2–3 orders gaye · poora region</
               <tr><td>Purane backup (alag-alag samay ke)</td><td>galti se: galti se pehle ka haal wapas</td><td>aakhri backup ke baad ka data nahi milta</td></tr>
               <tr><td>Purane version (har badlav ka pichhla roop)</td><td>galti se, ek-ek cheez ke liye</td><td>region ke jaane se nahi — jab tak version bhi doosri jagah na hon</td></tr>
             </table></div>
-            Slow motion: 7.75 s par kisi ne galti se saare orders mita diye. 8.00 s par yahi DELETE region B tak pahunch gayi: B ke 14 orders bhi gaye. 6.00 s wale backup se 12 orders wapas aaye; 4 nahi mile (#13–#16), kyunki woh us backup ke baad likhe gaye the.<br><br>
+            Slow motion: 7.75 s par kisi ne galti se saare orders mita diye. 8.00 s par yahi DELETE region B tak pahunch gayi: B ke 14 orders bhi gaye. 6.00 s wale backup se 12 orders wapas aaye; 4 nahi mile (#13–#16), kyunki chaaron 6.00 s ke backup ke baad likhe gaye the.<br><br>
             AWS ka whitepaper: lagataar copy kuch tarah ki aafat se bachati hai, par data ke bigadne ya mitne se shayad nahi — jab tak saath mein versioning ya point-in-time recovery na ho.`,
           ask: {
             q: 'Team replica rakhkar purane backup band karna chahti hai. Recovery ki taiyaari mein kya kahoge?',
@@ -169,7 +169,7 @@ active-active      → 1.0–1.5 s band   · 2–3 orders gaye · poora region</
           },
         },
         {
-          title: '4. Jo wapsi chala ke nahi dekhi, woh tayyari nahi',
+          title: '4. Bina chala ke dekhi wapsi tayyari nahi',
           say: `Teen baatein jo kaagaz par nahi dikhti:
             <ul>
               <li><b>Restore chala ke dekho.</b> "Backup hai" ek daava hai. Wapsi ka samay tabhi pata chalta hai jab restore chalao aur ghadi dekho. (Chaos Engineering wale levels: daava nahi, saboot.)</li>
@@ -211,7 +211,7 @@ active-active      → 1.0–1.5 s band   · 2–3 orders gaye · poora region</
       steps: [
         { text: 'Dono regions chalao (ek terminal mein, chalta chhod do). Lines ka kram alag ho sakta hai.', cmd: 'cd docker-labs/40-disaster-recovery && npm start ex2-sync-async', expect: START2 },
         { text: 'Doosre terminal mein: chaaron rows (~15 s). "kho gaye" aur "fail" wale khaane dekho.', cmd: 'node tools/syncrepl.js', expect: "50 orders/s · A se B tak nakli round trip 40 ms · region A 2.5 s par khatam · B-down rows: B 1 s se 3 s tak unreachable\n\nsetup                              median     p99   \"ho gaya\" par kho gaye   B unreachable mein fail   sabse badi waiting list   kill par waiting list\nasync (copy har 300 ms)               2 ms    4 ms          5 / 125                    —                        18                        5\nsync (B ka jawab, phir \"ho gaya\")    45 ms   46 ms          0 / 123                    —                         0                        0\nasync + B 2 s unreachable             2 ms    4 ms         81 / 126               0 / 75                        81                       81\nsync + B 2 s unreachable            542 ms  546 ms           0 / 48              75 / 75                         0                        0" },
-        { text: 'Chaaron tareeke phir se dekhne hon (level 4 wala lab): pehla terminal band karo (Ctrl+C), yeh chalao, phir doosre terminal mein: node tools/dr.js (~1 minute).', cmd: 'npm start ex1-dr-tiers' },
+        { text: 'Chaaron tareeke phir se dekhne hon (level 4 wala lab): pehla terminal band karo (Ctrl+C), neeche ki command chalao, phir doosre terminal mein: node tools/dr.js (~1 minute).', cmd: 'npm start ex1-dr-tiers' },
       ],
       observe: {
         q: 'Recorded sync runs mein B theek tha toh koi "ho gaya" wala order nahi khoya. B unreachable hua toh kill se pehle ke 75/75 orders fail. Farak kya tha?',

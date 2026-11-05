@@ -42,13 +42,13 @@ SD.registerLevels('sdd-resil', [
     'Library ke <b>default</b> ke saath Asha ka order kab laga — aur der tak chalta toh kahan tak jaata?',
   ],
   lesson: [
-    `<h3>📦 Ek line ka retry, aur uska bill</h3>
+    `<h3>📦 Ek line ka retry, aur retry ka bill</h3>
      <p>KhanaKart ki team ne socha: retry khud kyun likhein? npm par library hai — <b>p-retry</b>. Ek line, koi option nahi:</p>
      <pre>await pRetry(placeOrder);</pre>
      <p>Phir wahi kahani chalayi: payment-service 1.00 s par crash, 2.40 s par wapas, Asha 1.30 s par "Order place" dabati hai.</p>
      <pre>haath ka retry (hamari settings):   order 3.15 s par
 p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 s se theek thi</pre>
-     <p>Library ne Asha ko 2 second se zyada <b>bekaar</b> intezaar karaya. Aur payment-service der tak band rehti toh yeh intezaar minutes tak jaata.</p>
+     <p>Library ne Asha ko 2 second se zyada <b>bekaar</b> intezaar karaya. Aur payment-service der tak band rehti toh kul intezaar minutes tak jaata.</p>
      <p class="tip">👉 Library galat nahi hai. Library ke <b>default</b> tumhari service ke liye nahi likhe gaye. Is level mein: library ka code ek-ek line, hamari settings ke asli naam, aur default ka poora bill.</p>`,
   ],
   stages: [
@@ -120,7 +120,7 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
           line: [30, 31, 32],
           say: `Line 30: <code>minTimeout: 300</code> — pehla intezaar. Hamara <code>base</code>.<br>
             Line 31: <code>maxTimeout: 2400</code> — intezaar ki chhat. Hamara <code>cap</code>.<br>
-            Line 32: <code>factor: 2</code> — har baar dugna. (Hamari file mein yeh 2 seedha likha tha: <code>2 ** n</code>.)`,
+            Line 32: <code>factor: 2</code> — har baar dugna. (Hamari file mein 2 seedha likha tha: <code>2 ** n</code>.)`,
           vars: { base: 'hamara: <code>base: 300</code> → p-retry: <b>minTimeout: 300</b>', cap: 'hamara: <code>cap: 2400</code> → p-retry: <b>maxTimeout: 2400</b>' },
         },
         {
@@ -204,7 +204,7 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
               <tr><td>Random?</td><td><code>wait: 'full'</code> (0 se hadd)</td><td><code>randomize</code> (false; true = × 1 se 2)</td><td>hamesha jitter ke saath</td><td>± 20%</td></tr>
               <tr><td>Kis par dobara?</td><td><code>worthRetrying</code></td><td>har error; rokne ko <code>AbortError</code> / <code>shouldRetry</code></td><td>sirf transient aur throttling errors</td><td><code>retryableStatusCodes</code></td></tr>
             </table></div>
-            AWS SDK, gRPC ke naam unke official docs se hain — is lab mein chalaye nahi gaye. gRPC mein koi default policy nahi hoti: likhni padti hai. Kafka ke clients bhi yahi karte hain: <code>retry.backoff.ms</code> (100) se <code>retry.backoff.max.ms</code> (1000) tak dugna, ± 20% random.`,
+            AWS SDK aur gRPC ke naam har project ke official docs se hain — is lab mein chalaye nahi gaye. gRPC mein koi default policy nahi hoti: likhni padti hai. Kafka ke clients bhi yahi karte hain: <code>retry.backoff.ms</code> (100) se <code>retry.backoff.max.ms</code> (1000) tak dugna, ± 20% random.`,
         },
         {
           clock: 'toh main kya karun?',
@@ -212,12 +212,12 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
             <ul>
               <li><b>Kitni baar:</b> utni hi, jitni der user sach mein ruk sakta hai. Saare intezaar jod ke dekho: kul kitne second bante hain?</li>
               <li><b>Chhat:</b> <code>Infinity</code> kabhi nahi.</li>
-              <li><b>Random:</b> on. Aur library ka random kya karta hai, yeh padh lo (0 se hadd, ya × 1–2, ya ± 20%).</li>
+              <li><b>Random:</b> on. Aur library ka random kya karta hai, docs mein padh lo (0 se hadd, ya × 1–2, ya ± 20%).</li>
               <li><b>Kis par dobara:</b> "har error par" mat chhodo. 400 / 401 / 403 / 404 par rok do.</li>
             </ul>`,
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> library retry ka loop likh deti hai, faisle nahi leti. <b>Kitni baar · kitna rukna · random · kis par dobara</b> — yeh chaaron ab options hain, aur inke default tumhari service ko nahi jaante.<br>p-retry ke default ke saath Asha ka order 4.61 s par laga; hamari settings ke saath 3.22 s par.',
+      lesson: '🎯 <b>Asli baat:</b> library retry ka loop likh deti hai, faisle nahi leti. <b>Kitni baar · kitna rukna · random · kis par dobara</b> — chaaron ab options hain, aur options ke default tumhari service ko nahi jaante.<br>p-retry ke default ke saath Asha ka order 4.61 s par laga; hamari settings ke saath 3.22 s par.',
     },
 
     /* ---------------- 2. naam jodo ---------------- */
@@ -227,7 +227,7 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
       instructions: 'Baayein hamara sawaal, daayein p-retry ka option.',
       pairs: [
         { left: 'Kul 5 koshish chahiye', right: 'retries: 4', explain: 'p-retry retries ginta hai. Kul koshish = retries + 1. (Default retries: 10 → kul 11.)' },
-        { left: 'Pehla intezaar 300 ms', right: 'minTimeout: 300', explain: 'Hamara base. Default 1000 ms — isi ne Asha ke order ko 4.61 s tak kheencha.' },
+        { left: 'Pehla intezaar 300 ms', right: 'minTimeout: 300', explain: 'Hamara base. Default 1000 ms — is default ne hi Asha ke order ko 4.61 s tak kheencha.' },
         { left: 'Intezaar 2400 ms se upar na jaaye', right: 'maxTimeout: 2400', explain: 'Hamara cap. Default Infinity: intezaar 512 second tak dugna hota jaata hai.' },
         { left: 'Sab clients ek saath na lautein', right: 'randomize: true', explain: 'Intezaar × (1 se 2). Default false: bina random, sab ek saath.' },
         { left: '404 par dobara mat bhejo', right: 'throw new AbortError(err)', explain: 'Default mein har error par retry hota hai. AbortError (ya shouldRetry option) se rokna padta hai.' },
@@ -279,7 +279,7 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
           'Default maxTimeout Infinity hai, 2 second nahi. 2000 ms sirf 1000 × 2 ka nateeja tha.',
         ],
       },
-      lesson: 'Library wahi kaam karti hai, par uske default tumhari service ke nahi hain. Chaar options hamesha khud likho.',
+      lesson: 'Library wahi kaam karti hai, par library ke default tumhari service ke nahi hain. Chaar options hamesha khud likho.',
     },
   ],
   interview: {

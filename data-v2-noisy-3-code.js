@@ -35,15 +35,15 @@ SD.registerLevels('sdd-resil', [
     'Bade plan wale tenant ko do baari kaise dete hain?',
   ],
   lesson: [
-    `<h3>💻 Ek line badli thi. Woh line kaunsi hai?</h3>
-     <p>Pichhle level mein partner-api ka ek hi sawaal badla tha: <b>"agla kaam kiska?"</b> Is level mein woh jawab code mein dekhoge.</p>
+    `<h3>💻 Ek line badli thi. Faisla karne wali line kaunsi hai?</h3>
+     <p>Pichhle level mein partner-api ka ek hi sawaal badla tha: <b>"agla kaam kiska?"</b> Is level mein "agla kaam kiska" ka jawab code mein dekhoge.</p>
      <p>Do asli files. Lab ki service, slow motion wala tool aur sabse chhota program — teeno yahi do files chalate hain:</p>
      <pre>docker-labs/39-noisy-neighbor/lib/fair-queue.js     ← baari-baari wali line (33 line)
 docker-labs/39-noisy-neighbor/lib/token-bucket.js   ← token wali baalti (18 line)</pre>
-     <p>Dono ke saath wahi chhota program chalega jo lab mein hai (<code>tools/mini.js</code>). Uska output yeh hai:</p>
+     <p>Dono ke saath wahi chhota program chalega jo lab mein hai (<code>tools/mini.js</code>). Lab ka output:</p>
      <pre>aane ka kram:     A#1  A#2  A#3  A#4  A#5  B#1  B#2
 uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
-     <p class="tip">👉 B#1 chhathe number par aaya aur doosre number par utha. Agle screen par dekho ki kaunsi line ne yeh kiya.</p>`,
+     <p class="tip">👉 B#1 chhathe number par aaya aur doosre number par utha. Agle screen par dekho ki kaunsi line ne baari tay ki.</p>`,
   ],
   stages: [
     /* ---------------- 1. lib/fair-queue.js ---------------- */
@@ -87,7 +87,7 @@ uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
           line: [13, 15, 16],
           say: `B pehli baar aaya. Line 13: B ki line bani; <code>turn</code> = [A, B].<br>
             B#1 aur B#2 <b>B ki apni line</b> mein gaye. A ki line ko kisi ne chhua nahi.<br><br>
-            Line 15 par dhyaan do: ek tenant ki line mein jagah ki hadd (<code>perTenant</code>). Line bhari ho toh <code>return false</code> — sirf <b>us tenant</b> ko "na". Lab ki service mein yeh hadd 100 hai.`,
+            Line 15 par dhyaan do: ek tenant ki line mein jagah ki hadd (<code>perTenant</code>). Line bhari ho toh <code>return false</code> — sirf <b>us tenant</b> ko "na". Lab ki service mein line ki hadd 100 hai.`,
           vars: { turn: '[ A, B ]', lb: line('B', [1, 2]) },
         },
         {
@@ -181,7 +181,7 @@ uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
           vars: { turn: '[ A, B, A ] — A do baar', la: 'A#1 … A#6', lb: 'B#1 … B#3', ret: '—', out: 'A#1 · B#1 · A#2 · A#3 · B#2 · A#4 · A#5 · B#3 · A#6' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> baari-baari mein teen cheezein hain: har tenant ki <b>apni line</b>, ek <b>baari ka kram</b>, aur "jiski baari ho gayi woh peeche". Khaali line wale tenant ko loop chhod deta hai.<br>Baari mein wazan dena ho (kisi ko do baari) toh us tareeke ko <b>weighted round robin</b> kehte hain.',
+      lesson: '🎯 <b>Asli baat:</b> baari-baari mein teen cheezein hain: har tenant ki <b>apni line</b>, ek <b>baari ka kram</b>, aur "jiski baari ho gayi, wahi peeche". Khaali line wale tenant ko loop chhod deta hai.<br>Baari mein wazan dena ho (kisi ko do baari) toh us tareeke ko <b>weighted round robin</b> kehte hain.',
     },
 
     /* ---------------- 2. lib/token-bucket.js ---------------- */
@@ -288,7 +288,7 @@ uthane ka kram:   A#1  B#1  A#2  B#2  A#3  A#4  A#5</pre>
           line: [15, 16],
           say: `Is file mein koi timer nahi hai. Koi cheez har second nahi chalti.<br><br>
             Poori baalti <b>do number</b> hai: <code>tokens</code> aur <code>at</code>. Jab request aati hai, tab line 15 purana hisaab chukta karti hai aur line 16 samay note kar leti hai.<br><br>
-            Isiliye lakhon tenants ki lakhon baaltiyan sasti padti hain: jo tenant kuch nahi bhej raha, uski baalti par koi kaam hi nahi hota.<br><br>
+            Isiliye lakhon tenants ki lakhon baaltiyan sasti padti hain: jo tenant kuch nahi bhej raha, us tenant ki baalti par koi kaam hi nahi hota.<br><br>
             Lab ki service mein har tenant ki apni baalti hai. <code>take()</code> ne <code>false</code> diya → <code>429</code>.`,
           vars: { cfg: 'do number: tokens · at' },
         },

@@ -53,7 +53,7 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
       title: 'Roko, "na" bolo, ya girao?',
       instructions: 'KhanaKart ki nau situations. Har ek mein line bhar gayi hai. Sahi jawab wale bin mein daalo. Pehle apna jawab socho, phir daalo.',
       bins: [
-        { id: 'block', label: '✋ Bhejne wale ko roko — woh ruk sakta hai' },
+        { id: 'block', label: '✋ Bhejne wale ko roko — bhejne wala ruk sakta hai' },
         { id: 'no', label: '🚪 Turant "na" bolo, aur batao kab aana hai' },
         { id: 'drop', label: '🗑️ Gira do — purana ya extra' },
       ],
@@ -64,7 +64,7 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
         { text: 'Restaurant partner 120 MB ki report download kar raha hai; partner ka internet dheema hai', bin: 'block', explain: 'File ruk sakti hai. <code>pipeline()</code>: reader utna hi padhega jitna writer bhej paaye. Lab: writer ke andar 120 MB ki jagah 1 MB.' },
         { text: 'Ek partner company ka system KhanaKart ki API ko bahut tezi se bula raha hai', bin: 'no', explain: 'Kisi aur ka program tumhare haath mein nahi; use rok nahi sakte, sirf bata sakte ho. <code>429</code> + <code>Retry-After</code>.' },
         { text: 'Match ki raat app ki live chat: har second 5,000 messages, sab screen par dikhane hain', bin: 'drop', explain: 'Koi insaan 5,000 messages/second padh nahi sakta. Har frame mein naye kuch dikhao, baaki chhodo. Lab: 47 fps; sab dikhane ki zid par 5 fps.' },
-        { text: 'Kafka se orders padhne wala consumer; consumer ke aage ka database dheema ho gaya', bin: 'block', explain: 'Yeh consumer khud maangta hai (<code>poll()</code>). Dheema ho toh kam maange, ya <code>pause()</code> kare. Messages Kafka mein surakshit hain; girane ya "na" bolne ki zaroorat nahi.' },
+        { text: 'Kafka se orders padhne wala consumer; consumer ke aage ka database dheema ho gaya', bin: 'block', explain: 'Kafka consumer khud maangta hai (<code>poll()</code>). Dheema ho toh kam maange, ya <code>pause()</code> kare. Messages Kafka mein surakshit hain; girane ya "na" bolne ki zaroorat nahi.' },
         { text: 'Payment company ka system payment ka nateeja bhej raha hai; KhanaKart ki service bhari hai', bin: 'no', explain: 'Saaf "na" do (503 ya 429): aise systems fail hone par dobara bhejte hain. Sabse bura: "200 OK" bol ke chupchaap gira dena — tab payment company maan legi ki khabar pahunch gayi.' },
         { text: 'Har request par ek log line likhi jaati hai; log bhejne wali line bhar gayi', bin: 'drop', explain: 'Log ke liye customer ki request ko rokna ya fail karna ulta nuksaan hai. Extra log girao — par ginti rakho ki kitne gire.' },
       ],
@@ -81,7 +81,7 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
           say: `<div class="dr-scroll"><table>
               <tr><th>Bhejne wala</th><th>Bhari line ka jawab</th><th>Kyun</th></tr>
               <tr><td>Program jo ruk sakta hai: raat ka kaam, file, stream, queue se padhne wala</td><td><b>Roko</b> — <code>await</code>, <code>pipeline()</code>, ya consumer khud maange</td><td>Kuch nahi girta. Raftaar apne aap kaam karne wale ki ho jaati hai</td></tr>
-              <tr><td>Insaan, ya kisi aur ka system</td><td><b>Turant "na"</b> + kab aana hai — <code>429</code> + <code>Retry-After</code></td><td>Yeh bhejne wala rukega nahi. Rokoge toh ruke hue requests tumhare andar jama honge</td></tr>
+              <tr><td>Insaan, ya kisi aur ka system</td><td><b>Turant "na"</b> + kab aana hai — <code>429</code> + <code>Retry-After</code></td><td>Aisa bhejne wala rukega nahi. Rokoge toh ruke hue requests tumhare andar jama honge</td></tr>
               <tr><td>Data jiski keemat taazgi hai: location, bhaav, live feed</td><td><b>Purana ya extra girao</b> — ginti ke saath</td><td>Purana data der se nahi, galat hota hai</td></tr>
             </table></div>
             Aur jo data kho bhi nahi sakta aur jiska bhejne wala ruk bhi nahi sakta? Use line mein rakho — par line <b>disk par</b> ho (Kafka jaisi), memory mein nahi. Disk wali line bhi bhar sakti hai, isliye us par bhi nazar chahiye.`,
@@ -124,7 +124,7 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
         },
         {
           title: '4. "Kab aana hai" kitna rakhein?',
-          say: `Lab: 150 phones → app-api → order-service (ek saath 44, ~200 orders/second). app-api 429 ke saath alag-alag <code>Retry-After</code> bhejta hai. Har baar orders ~2,990 hi poore hue. Badla yeh:
+          say: `Lab: 150 phones → app-api → order-service (ek saath 44, ~200 orders/second). app-api 429 ke saath alag-alag <code>Retry-After</code> bhejta hai. Har baar orders ~2,990 hi poore hue. Kya badla:
             <div class="dr-scroll"><table>
               <tr><th>app-api ka jawab</th><th>Ek order par requests</th><th>150 mein se kitne phones ka ek bhi order nahi laga</th></tr>
               <tr><td>429, bina Retry-After</td><td>179–209</td><td>0</td></tr>
@@ -133,18 +133,18 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
               <tr><td>Retry-After 1000 ms</td><td>1.5</td><td>66–78</td></tr>
               <tr><td>Retry-After 3000 ms</td><td>1.2</td><td>89–99</td></tr>
             </table></div>
-            (Teen run ka dayra.) Retry-After badhane se <b>bekaar requests ghat-ti hain</b>. Par <b>baari bigadti hai</b>: jis phone ka order abhi laga, wahi phone agla order usi pal bhejta hai jis pal jagah bani. Jo phone bahar ruka tha, woh laut-ta hai toh jagah phir bhari milti hai.<br><br>
+            (Teen run ka dayra.) Retry-After badhane se <b>bekaar requests ghat-ti hain</b>. Par <b>baari bigadti hai</b>: jis phone ka order abhi laga, wahi phone agla order usi pal bhejta hai jis pal jagah bani. Bahar ruka phone laut-ta hai toh jagah phir bhari milti hai.<br><br>
             Do seekh:
             <ol>
               <li>Retry-After ka shuruaati andaaza: <b>line ÷ raftaar</b> (line khaali hone ka waqt). Yahan 44 ÷ 200 ≈ 0.2 second. Agli ek jagah 0.2 s se pehle bhi ban sakti hai — phir naap ke tune karo.</li>
-              <li>Retry-After bheed kam karta hai, <b>baari nahi deta</b>. Jahan baari zaroori ho, wahan intezaar karne walon ki apni line chahiye (pehle aaya, pehle paya).</li>
+              <li>Retry-After bheed kam karta hai, <b>baari nahi deta</b>. Baari zaroori ho toh intezaar karne walon ki apni line chahiye (pehle aaya, pehle paya).</li>
             </ol>
-            ⚠️ Lab ke phones lalchi hain: order lagte hi agla bhej dete hain. Asli customers aisa nahi karte, toh asli farak isse chhota hoga. Disha yahi rahegi.`,
+            ⚠️ Lab ke phones lalchi hain: order lagte hi agla bhej dete hain. Asli customers aisa nahi karte, toh asli farak lab se chhota hoga. Disha yahi rahegi.`,
         },
         {
-          title: '5. Kab yeh kaafi nahi, kab zaroori nahi — aur kal subah kya karoon?',
-          say: `<b>Kaafi nahi:</b> agar farak roz ka hai (har shaam kaam karne wala peeche), toh backpressure sirf yeh tay karta hai ki takleef <b>kisko</b> ho. Asli ilaaj tab kaam karne wale ko tez karna ya badhana hai. (Badhane se pehle dekho ki kaam karne wale ke aage kya hai: das consumers ek hi dheeme database par likhenge toh database aur dheema hoga.)<br><br>
-            <b>Zaroori nahi:</b> agar bhejne wale ki raftaar pakki pata hai aur us raftaar par line kabhi hadd tak nahi pahunch sakti (jaise har minute ek chhoti file), toh kuch alag karne ki zaroorat nahi. Bas yeh "pakka pata hai" likha hua ho — andaza nahi.<br><br>
+          title: '5. Backpressure kab kaafi nahi, kab zaroori nahi — aur kal subah kya karoon?',
+          say: `<b>Kaafi nahi:</b> agar farak roz ka hai (har shaam kaam karne wala peeche), toh backpressure sirf itna tay karta hai ki takleef <b>kisko</b> ho. Asli ilaaj tab kaam karne wale ko tez karna ya badhana hai. (Badhane se pehle dekho ki kaam karne wale ke aage kya hai: das consumers ek hi dheeme database par likhenge toh database aur dheema hoga.)<br><br>
+            <b>Zaroori nahi:</b> agar bhejne wale ki raftaar pakki pata hai aur us raftaar par line kabhi hadd tak nahi pahunch sakti (jaise har minute ek chhoti file), toh kuch alag karne ki zaroorat nahi. Bas "pakka pata hai" likha hua ho — andaza nahi.<br><br>
             <b>Kal subah:</b> apne system ki har line ki list banao — queue, array, thread pool, connection pool, stream. Har line ke aage teen cheezein likho: <b>hadd kya hai</b>, <b>bhari ho toh kya hota hai</b>, aur <b>kisko pata chalta hai</b>. Jis line ke aage teeno khaane khaali hain, wahi agla incident hai.`,
         },
       ],
@@ -191,7 +191,7 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
       project: '15-backpressure',
       exercise: 'ex4-chat',
       goal: 'Match ki raat KhanaKart ke app ki live chat: 5,000 messages har second. Screen ek hi hai, aur use har second 60 baar taaza hona hai. Teen tareeke aazmao.',
-      why: '<code>tools/chat.js</code> browser nahi hai: yeh browser ke akele dhaage (main thread) ki nakal Node mein karta hai. Ek message dikhana = 0.2 ms ka kaam; har screen update ke baad 1 ms. Saath mein har 50 ms par ek "click" — taaki dikhe ki page ungli ka jawab kitni der mein deta hai. Koi service nahi chalani.',
+      why: '<code>tools/chat.js</code> browser nahi hai: chat.js browser ke akele dhaage (main thread) ki nakal Node mein karta hai. Ek message dikhana = 0.2 ms ka kaam; har screen update ke baad 1 ms. Saath mein har 50 ms par ek "click" — taaki dikhe ki page ungli ka jawab kitni der mein deta hai. Koi service nahi chalani.',
       steps: [
         { text: 'Teeno tareeke ek ke baad ek (~16 s).', cmd: 'cd docker-labs/15-backpressure && node tools/chat.js', expect: "5000 messages/s · ek message 0.2 ms + har DOM update par 1 ms layout · 60 fps = 16.7 ms/frame · 5 s\n\ntareeka                            fps   sabse lamba frame   click ki der (p99)   message kitna purana dikha (p99)   dikhaye / chhode / abhi line mein\nhar message turant (apna layout)    61        17 ms              1 ms              4131 ms                     4116 / 0 / 20874\nframe mein ek baar, sab              5       393 ms            341 ms               408 ms                     23200 / 0 / 0\nframe mein ek baar, naye 20         47        22 ms              6 ms                11 ms                     4740 / 20230 / 0" },
         { text: 'Sirf "frame mein naye 20" dobara. Aakhri khaane mein dekho: kitne dikhaye, kitne chhode.', cmd: 'node tools/chat.js --mode cap', expect: "5000 messages/s · ek message 0.2 ms + har DOM update par 1 ms layout · 60 fps = 16.7 ms/frame · 5 s\n\ntareeka                            fps   sabse lamba frame   click ki der (p99)   message kitna purana dikha (p99)   dikhaye / chhode / abhi line mein\nframe mein ek baar, naye 20         47        22 ms              6 ms                11 ms                     4720 / 20235 / 0" },
@@ -233,14 +233,14 @@ report ko "na" bol diya   → hisaab adhoora, jabki report ruk sakti thi</pre>
         { text: '"Data girana hamesha galat hai."', bin: 'myth', explain: 'Location, bhaav, live feed mein purana girana safai hai. Lab ki chat: 81% chhodne par 47 fps; sab dikhane par 5 fps.' },
         { text: '"429 bhej diya, kaam ho gaya."', bin: 'myth', explain: 'Bina Retry-After ke client turant laut-ta hai. Lab: ek order par 202.6 requests; Retry-After 250 ms ke saath 3.1.' },
         { text: '"Ek saath sirf 10 kaam chalenge" likh diya, toh backpressure ho gaya.', bin: 'myth', explain: 'Baaki kaam kahan khade hain? Agar baaki kaam ki line par hadd nahi, toh wahi kahani. Slow motion: line ki hadd 8 thi, par 16 ruke hue orders order-service ke andar jama ho gaye.' },
-        { text: '"Ruk ja" ko wahan tak pahunchna chahiye jahan se kaam paida hota hai.', bin: 'true', explain: 'Beech ki ek bhi kadi chup rahi toh line usi kadi ke andar banti hai. Lab: 503 sirf aage badhane par ek order par 26.8 requests.' },
-        { text: 'Jahan kaam chupchaap girta ho, wahan gire hue kaam ki ginti dashboard par honi chahiye.', bin: 'true', explain: 'Bhejne wale ko "le liya" hi milta hai. Lab: 2,16,740 kaam gire, aur bhejne wale ko ek baar bhi pata nahi chala.' },
+        { text: '"Ruk ja" ko us jagah tak pahunchna chahiye jahan se kaam paida hota hai.', bin: 'true', explain: 'Beech ki ek bhi kadi chup rahi toh line usi kadi ke andar banti hai. Lab: 503 sirf aage badhane par ek order par 26.8 requests.' },
+        { text: 'Kaam chupchaap girta ho toh gire hue kaam ki ginti dashboard par honi chahiye.', bin: 'true', explain: 'Bhejne wale ko "le liya" hi milta hai. Lab: 2,16,740 kaam gire, aur bhejne wale ko ek baar bhi pata nahi chala.' },
       ],
     },
   ],
   interview: {
     title: 'Interview Round — kab aur kitna',
-    instructions: 'Yahan faisla aur uski wajah bolni hai — number ke saath. 🎤',
+    instructions: 'Yahan faisla aur faisle ki wajah bolni hai — number ke saath. 🎤',
     questions: [
       {
         q: '"Flash sale mein order API par 10 guna traffic aayega. Beech mein ek queue laga dein?"',
