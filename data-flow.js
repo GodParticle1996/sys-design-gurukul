@@ -109,12 +109,12 @@ SD.registerLevels('flow', [
      <i>"jitna baahar ho sake"</i> hota hai.</p>
      <p><b>2. Ek hop baaki sab se alag hai — connection pool.</b> Baaki
      saare hops <b>kaam</b> karte hain. Pool <b>intezaar</b> karwata hai.
-     Aur production mein jo outage aate hain, woh lagbhag hamesha
+     Aur production ke outage lagbhag hamesha
      intezaar se aate hain — kaam se nahi.</p>`,
     `<h3>🔬 "CPU 10% hai, memory theek hai, health green hai — phir timeout kyun?"</h3>
-     <p>Yeh interview ka sabse achha sawaal hai, aur production ka sabse
+     <p>Interview ka sabse achha sawaal, aur production ka sabse
      common 3 baje raat wala confusion. Agar app <b>busy nahi</b> hai, toh
-     woh <b>kis cheez ka intezaar</b> kar rahi hai?</p>
+     app <b>kis cheez ka intezaar</b> kar rahi hai?</p>
      <p>Ek request ko trace karo — machine ke metrics ghoorna band karo:</p>
      <pre>  app handler (CPU)        5 ms   ← app ka apna kaam
   ⏳ pool.acquire()    9,900 ms   ← 💀 YAHI HAI
@@ -128,11 +128,11 @@ SD.registerLevels('flow', [
      sasta banaya gaya hai — health check sirf itna kehta hai <i>"process zinda hai"</i>.
      Health check ne na connection liya, na dependency chhui.</p>
      <p class="tip">🎯 <b>Health check pass hona</b> aur <b>service traffic
-     serve kar paana</b> — yeh do alag baatein hain.</p>`,
+     serve kar paana</b> — dono alag baatein hain.</p>`,
     `<h3>🧰 perfsim — is app ka terminal</h3>
      <p>Baaki Gurukul apps mein terminal ek <i>tool</i> sikhata hai. Yahan
      terminal ek <b>poora system chalata hai</b>. Har daava jo tum padhoge,
-     woh yahin prove hoga.</p>
+     us daave ka saboot yahin milega.</p>
      <pre>GET /api/v1/transactions?page=1&limit=50   ← request bhejo, cost dekho
 show tables                                ← system mein kya-kya hai
 sim status                                 ← poora dashboard
@@ -150,13 +150,13 @@ help                                       ← saare commands</pre>
       instructions: 'Browser se database tak — sahi order lagao.',
       steps: [
         { text: 'DNS lookup — domain se IP', explain: 'Sabse pehla network kaam. Cached ho toh 0 ms, warna ~20 ms. Isiliye pehla page load hamesha dheema lagta hai.' },
-        { text: 'TCP + TLS handshake', explain: '~80 ms, aur yeh har naye connection par lagta hai. Keep-alive / HTTP/2 isliye itna matter karta hai — handshake dobara nahi hota.' },
-        { text: 'CDN edge — cached hai kya?', explain: 'Yahan HIT ho gaya toh request tumhare server tak pahunchi hi nahi. Sabse sasti request woh hai jo aayi hi nahi.' },
-        { text: 'Load balancer — kaunsa instance', explain: 'TLS terminate + healthy instance chuno. ~1 ms. Yahi woh jagah hai jahan "instance down hai" pata chalta hai.' },
+        { text: 'TCP + TLS handshake', explain: '~80 ms, aur ye kharch har naye connection par lagta hai. Keep-alive / HTTP/2 isliye itna matter karta hai — handshake dobara nahi hota.' },
+        { text: 'CDN edge — cached hai kya?', explain: 'Yahan HIT ho gaya toh request tumhare server tak pahunchi hi nahi. Sabse sasti request — jo aayi hi nahi.' },
+        { text: 'Load balancer — kaunsa instance', explain: 'TLS terminate + healthy instance chuno. ~1 ms. Isi jagah pata chalta hai ki "instance down hai".' },
         { text: 'API gateway — auth + rate limit', explain: 'AuthN aur rate limiting YAHAN hote hain — service mein nahi. Jo request andar aane hi nahi chahiye, use baahar hi roko.' },
         { text: 'Service — business logic', explain: 'Ab tumhara code chalta hai. Aksar sirf 5 ms CPU — baaki sab intezaar hai.' },
         { text: 'Cache — Redis/memcached', explain: 'HIT = ~1 ms aur DB bacha. MISS = aage jao. Hit rate 90% ka matlab DB par load 10x kam.' },
-        { text: 'DB connection pool — ek connection maango', explain: '🚧 Yahi woh jagah hai jahan QUEUE banti hai. Sab connections busy? Tumhari request line mein lag jaati hai — CPU 0% par.' },
+        { text: 'DB connection pool — ek connection maango', explain: '🚧 QUEUE isi jagah banti hai. Sab connections busy? Tumhari request line mein lag jaati hai — CPU 0% par.' },
         { text: 'Database — query chalao', explain: 'Aakhir mein asli kaam. 5 ms bhi ho sakta hai, 8 second bhi — depend karta hai ki query ne kitni rows chhui.' },
       ],
     },
@@ -166,7 +166,7 @@ help                                       ← saare commands</pre>
       instructions: 'Diagram mein sahi hop click karo.',
       visual: 'lifecycle',
       questions: [
-        { q: 'Kaunsa hop request ko poori tarah ROK sakta hai (server tak pahunchne hi na de)?', target: 'cdn', explain: 'CDN edge. HIT hua toh tumhara server ko pata bhi nahi chalta ki request aayi thi. Yeh sabse sasti "optimization" hai.' },
+        { q: 'Kaunsa hop request ko poori tarah ROK sakta hai (server tak pahunchne hi na de)?', target: 'cdn', explain: 'CDN edge. HIT hua toh tumhara server ko pata bhi nahi chalta ki request aayi thi. Ye sabse sasti "optimization" hai.' },
         { q: 'Kaunsa hop KAAM nahi karta — sirf INTEZAAR karwata hai?', target: 'pool', explain: 'Connection pool. Baaki sab hops kuch karte hain; pool sirf line lagwata hai. Aur outage lagbhag hamesha yahin se aate hain.' },
         { q: 'AuthN (tum kaun ho?) aur rate limiting kahan honi chahiye?', target: 'gateway', explain: 'API gateway — jitna baahar ho sake. Service tak pahunchne ke baad reject karne ka matlab hai ki thread, memory aur shayad connection pehle hi kharch ho chuke.' },
         { q: 'Handshake ki 80 ms ki keemat kahan lagti hai?', target: 'tls', explain: 'TCP + TLS. Isiliye keep-alive, connection pooling aur HTTP/2 itne zaroori hain — handshake ek hi baar ho, har request par nahi.' },
@@ -196,7 +196,7 @@ help                                       ← saare commands</pre>
     {
       type: 'bins',
       title: 'Kaunsa kaam kaunsi layer par?',
-      instructions: 'Har kaam ko uski sahi jagah par daalo.',
+      instructions: 'Har kaam ko kaam ki sahi jagah par daalo.',
       bins: [
         { id: 'edge', label: '🌍 CDN / Edge' },
         { id: 'gw', label: '🚪 Gateway' },
@@ -206,11 +206,11 @@ help                                       ← saare commands</pre>
         { text: 'Product images aur JS bundles', bin: 'edge', explain: 'Public + immutable = CDN ka perfect candidate. User ke sabse paas, aur tumhara server bilkul involve nahi.' },
         { text: 'JWT verify karna (tum kaun ho?)', bin: 'gw', explain: 'AuthN gateway par. Ek jagah, sab services ke liye. Har service mein dobara likhna = ek din koi bhool jaayega.' },
         { text: 'Per-user rate limit — 100 req/min', bin: 'gw', explain: 'Baahar hi roko. Service tak aane diya toh thread + memory + shayad ek DB connection pehle hi kharch ho gaya.' },
-        { text: '"Kya yeh user IS order ko dekh sakta hai?"', bin: 'svc', explain: 'AuthZ service mein. Gateway ko yeh pata nahi ki order kiska hai — us business rule ka maalik service hai.' },
-        { text: 'Refund tabhi jab order 30 din se purana na ho', bin: 'svc', explain: 'Pura business rule. Ise gateway mein daalna matlab business logic ko infrastructure mein bikhraana.' },
+        { text: '"Kya user IS order ko dekh sakta hai?"', bin: 'svc', explain: 'AuthZ service mein. Gateway ko pata nahi ki order kiska hai — us business rule ka maalik service hai.' },
+        { text: 'Refund tabhi jab order 30 din se purana na ho', bin: 'svc', explain: 'Pura business rule. Ownership ka check gateway mein daalna matlab business logic ko infrastructure mein bikhraana.' },
         { text: 'TLS terminate karna', bin: 'gw', explain: 'Gateway/LB par. Har service ko certificate manage karwana ek operational duswapna hai.' },
         { text: 'Public blog post ka HTML', bin: 'edge', explain: 'Sab ke liye same content = CDN. Yahi cheez agar per-user hoti toh CDN par daalna ek security bug hota.' },
-        { text: 'Order total calculate karna', bin: 'svc', explain: 'Core domain logic. Ise kabhi bhi edge par mat le jao — wahan na data hai na consistency.' },
+        { text: 'Order total calculate karna', bin: 'svc', explain: 'Core domain logic. Ownership ka check kabhi edge par mat le jao — edge par na data hai na consistency.' },
       ],
     },
     {
@@ -370,17 +370,17 @@ help                                       ← saare commands</pre>
     '<code>trace</code> se bottleneck dhoondh sakte ho',
     'Samjha sakte ho ki health green kyun rehta hai jab service mar rahi ho',
   ],
-  homework: `Apne project ka ek asli endpoint chuno aur uske <b>saare hops</b> likho —
+  homework: `Apne project ka ek asli endpoint chuno aur endpoint ke <b>saare hops</b> likho —
     CDN hai? gateway? cache? pool size kitna hai? Phir ek sawaal ka jawab dhoondo:
     <b>agar 10x traffic aa jaaye toh sabse pehle kaunsa hop bharega?</b>
     Zyadatar logon ka jawab "CPU" hota hai, aur zyadatar log galat hote hain.`,
   cards: [
     { front: 'Ek request ke hops?', back: 'DNS → TCP/TLS → CDN → LB → Gateway → Service → Cache → <b>Pool</b> → DB. Har layer ka kaam: <b>agli layer tak jaane se rokna</b>.' },
-    { front: 'Health green par sab timeout — kyun?', back: 'Health checks jaan-boojh ke saste hain — sirf "process zinda hai". Woh na pool se connection lete hain, na dependencies chhute hain. <b>Health pass ≠ traffic serve ho raha hai.</b>' },
-    { front: 'Trace mein: app 5ms, pool.acquire 9900ms, SQL 20ms — kya karoge?', back: 'Query ko haath mat lagao (woh 20ms hai). Dekho <b>connections kaun pakde hai</b> — lambi transaction, leak, ya asli overload. Pool andha-dhundh badhana ulta padta hai.' },
+    { front: 'Health green par sab timeout — kyun?', back: 'Health checks jaan-boojh ke saste hain — sirf "process zinda hai". Health checks na pool se connection lete hain, na dependencies chhute hain. <b>Health pass ≠ traffic serve ho raha hai.</b>' },
+    { front: 'Trace mein: app 5ms, pool.acquire 9900ms, SQL 20ms — kya karoge?', back: 'Query ko haath mat lagao (query sirf 20ms hai). Dekho <b>connections kaun pakde hai</b> — lambi transaction, leak, ya asli overload. Pool andha-dhundh badhana ulta padta hai.' },
     { front: 'Rate limit kahan?', back: '<b>Gateway par</b> — jitna baahar ho sake. Service mein reject karne se pehle hi thread + memory + connection kharch ho chuka hota hai.' },
-    { front: 'AuthN vs AuthZ kahan?', back: 'AuthN (tum <b>kaun</b> ho) = gateway, ek jagah sab ke liye. AuthZ (tum yeh <b>kar sakte</b> ho?) = service, kyunki business rule ka maalik wahi hai.' },
-    { front: 'CDN par kya daal sakte ho?', back: 'Sirf woh jo <b>sab users ke liye ek jaisa</b> ho. Unsafe common cache key se per-user data leak ho sakta hai;private/no-store aur tested key isolation enforce karo.' },
+    { front: 'AuthN vs AuthZ kahan?', back: 'AuthN (tum <b>kaun</b> ho) = gateway, ek jagah sab ke liye. AuthZ (kya tum <b>kar sakte</b> ho?) = service, kyunki business rule ka maalik wahi hai.' },
+    { front: 'CDN par kya daal sakte ho?', back: 'Sirf wahi data jo <b>sab users ke liye ek jaisa</b> ho. Unsafe common cache key se per-user data leak ho sakta hai;private/no-store aur tested key isolation enforce karo.' },
   ],
 },
 
@@ -400,23 +400,23 @@ help                                       ← saare commands</pre>
   ],
   lesson: [
     `<h3>📖 Ek galti jo har codebase mein milti hai</h3>
-     <p>Kisi bhi purane codebase mein yeh dikhega: rate limiting service ke
+     <p>Kisi bhi purane codebase mein ye dikhega: rate limiting service ke
      andar, business rules gateway mein, aur per-user data CDN par.
      Har ek "kaam kar raha tha" — isliye kabhi theek nahi hua.</p>
      <p>Boundary decide karne ka ek hi asli sawaal hai:
      <b>"Is faisle ke liye zaroori GYAAN kiske paas hai?"</b></p>
      <table>
        <tr><th>Faisla</th><th>Gyaan chahiye</th><th>Jagah</th></tr>
-       <tr><td>Yeh token asli hai?</td><td>public key — sab ke liye same</td><td>🚪 Gateway</td></tr>
-       <tr><td>Yeh user IS order ko dekh sakta hai?</td><td>order kiska hai — sirf service jaanti hai</td><td>⚙️ Service</td></tr>
-       <tr><td>Yeh user ne 100 req/min paar kiya?</td><td>counter — sab ke liye same</td><td>🚪 Gateway</td></tr>
+       <tr><td>Token asli hai?</td><td>public key — sab ke liye same</td><td>🚪 Gateway</td></tr>
+       <tr><td>Kya user IS order ko dekh sakta hai?</td><td>order kiska hai — sirf service jaanti hai</td><td>⚙️ Service</td></tr>
+       <tr><td>User ne 100 req/min paar kiya?</td><td>counter — sab ke liye same</td><td>🚪 Gateway</td></tr>
        <tr><td>Refund allowed hai?</td><td>order date, policy, payment state</td><td>⚙️ Service</td></tr>
-       <tr><td>Yeh email unique hai?</td><td>poori table — race condition safe</td><td>🗄️ DB constraint</td></tr>
+       <tr><td>Email unique hai?</td><td>poori table — race condition safe</td><td>🗄️ DB constraint</td></tr>
      </table>
      <p class="tip">🎯 Aakhri row important hai. Application code mein
      "pehle SELECT karke check karo, phir INSERT karo" <b>hamesha</b> ek
      race condition hai. Uniqueness ka faisla sirf DB kar sakta hai,
-     kyunki sirf uske paas poora sach hai.</p>`,
+     kyunki poora sach sirf database ke paas hai.</p>`,
     `<h3>🔬 Rate limit vs Quota vs Backpressure</h3>
      <p>Teen alag cheezein, teen alag maqsad — log teenon ko "rate limiting"
      bol dete hain:</p>
@@ -435,7 +435,7 @@ help                                       ← saare commands</pre>
 Gateway  → schema/size/content-type (kachra andar hi na aaye)
 Service  → business rules (amount > 0, order cancel ho sakta hai?)
 Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
-     <p>Naye developers poochhte hain "yeh duplicate nahi hai?" — nahi.
+     <p>Naye developers poochhte hain "kya ye duplicate nahi hai?" — nahi.
      Har layer <b>alag cheez</b> se bacha rahi hai. Client wali UX ke liye
      hai; DB wali <b>concurrency</b> ke liye hai. Client wali validation
      hata do toh form kharab lagega. DB wali hata do toh <b>data
@@ -449,7 +449,7 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
       visual: 'boundaries',
       questions: [
         { q: 'JWT signature verify karna kahan?', target: 'gateway', explain: 'Gateway — ek jagah, sab services ke liye. Har service mein alag se likhoge toh ek din koi service purani library par reh jaayegi.' },
-        { q: '"Kya yeh user IS order ka maalik hai?" — kahan?', target: 'service', explain: 'Service. Gateway ko pata hi nahi ki order kiska hai. Yeh gyaan sirf domain ke paas hai.' },
+        { q: '"Kya user IS order ka maalik hai?" — kahan?', target: 'service', explain: 'Service. Gateway ko pata hi nahi ki order kiska hai. Ye gyaan sirf domain ke paas hai.' },
         { q: 'Uniqueness ki aakhri guarantee kahan?', target: 'db', explain: 'DB constraint. App mein "check karke insert" karna hamesha race condition hai — do requests ek saath check kar lengi aur dono pass ho jaayengi.' },
         { q: 'Product images kahan se serve honi chahiye?', target: 'cdn', explain: "Public immutable assets CDN se serve karo. Cache hits origin requests ghataate hain; misses, revalidation aur invalidation ka load rehta hai. Private images ko authorization-aware policy chahiye." },
       ],
@@ -464,10 +464,10 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
         { id: 'bp', label: '🌊 Backpressure (503)' },
       ],
       items: [
-        { text: 'Ek client 5000 req/sec maar raha hai, baaki ko jagah nahi mil rahi', bin: 'rl', explain: 'Fairness ka masla — ek client ko uski limit mein rakho. 429 + Retry-After bhejo.' },
+        { text: 'Ek client 5000 req/sec maar raha hai, baaki ko jagah nahi mil rahi', bin: 'rl', explain: 'Fairness ka masla — har client ko client ki apni limit mein rakho. 429 + Retry-After bhejo.' },
         { text: 'Free plan wala user is mahine ke 1M calls kar chuka', bin: 'q', explain: 'Business rule, capacity ka masla nahi. System bilkul serve kar sakta hai — tum nahi karna chahte. 402 Payment Required ya 403.' },
-        { text: 'Saare DB connections busy hain, queue 8000 tak pahunch gayi', bin: 'bp', explain: 'Tumhari halat kharab hai, client ki galti nahi. 503 + Retry-After. Isse client ko pata chalta hai ki dobara koshish karna theek hai.' },
-        { text: 'Ek buggy mobile release har 100ms par poll kar raha hai', bin: 'rl', explain: 'Per-client limit. Yeh galti client ki hai aur 429 usse yahi batata hai.' },
+        { text: 'Saare DB connections busy hain, queue 8000 tak pahunch gayi', bin: 'bp', explain: 'Tumhari halat kharab hai, client ki galti nahi. 503 + Retry-After. Retry-After se client ko pata chalta hai ki dobara koshish karna theek hai.' },
+        { text: 'Ek buggy mobile release har 100ms par poll kar raha hai', bin: 'rl', explain: 'Per-client limit. Galti client ki hai, aur 429 client ko yahi batata hai.' },
         { text: 'Downstream payment provider ne bola "1000 rps se zyada mat bhejo"', bin: 'bp', explain: 'Tumhe apna outbound flow control karna hai — queue mein daalo aur dheere bhejo. Users ko 429 bhejna galat hoga, unhone kuch galat nahi kiya.' },
         { text: 'Trial account 30 din baad expire ho gaya', bin: 'q', explain: 'Pure business/billing decision. Capacity se koi lena-dena nahi.' },
       ],
@@ -617,10 +617,10 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
   ],
   homework: `Apne project ka <code>POST</code> endpoint dekho jo kuch banata hai (user, order, kuch bhi).
     Pata karo: uniqueness kahan enforce hoti hai — app code mein ya DB constraint mein?
-    Agar app code mein hai, toh woh ek race condition hai. Test karo:
+    Agar check app code mein hai, toh race condition hai. Test karo:
     do requests theek ek saath bhejo aur dekho kya hota hai.`,
   cards: [
-    { front: 'Boundary decide karne ka sawaal?', back: '<b>"Is faisle ke liye zaroori gyaan kiske paas hai?"</b> Public key gateway ke paas → AuthN wahan. Order kiska hai — service ke paas → AuthZ wahan.' },
+    { front: 'Boundary decide karne ka sawaal?', back: '<b>"Is faisle ke liye zaroori gyaan kiske paas hai?"</b> Public key gateway ke paas → AuthN gateway par. Order kiska hai — service ke paas → AuthZ service mein.' },
     { front: '429 vs 503?', back: '<b>429</b> = "tumne bahut maara" (client ki galti). <b>503</b> = "main bhara hoon" (meri halat). Overload par 429 bhejna client ko galat sandesh deta hai.' },
     { front: 'Rate limit vs Quota vs Backpressure?', back: 'Rate limit = burst rokna, <i>fairness</i>. Quota = total rokna, <i>business</i>. Backpressure = khud ko bachana, <i>capacity</i>.' },
     { front: 'Check-then-act kyun toota hua hai?', back: '"SELECT karke dekho, phir INSERT" — do concurrent requests dono pass ho jaayengi. Uniqueness sirf <b>DB unique constraint</b> guarantee kar sakta hai.' },
@@ -639,7 +639,7 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
     'Average kyun <b>hamesha</b> gumraah karta hai',
     'p50 / p95 / p99 ka asli matlab — aur kaunsa dekhna hai',
     '<b>Tail amplification</b>: 5 calls, 1% tail → 5% slow requests',
-    'Latency ke woh numbers jo har engineer ko pata hone chahiye',
+    'Latency ke numbers jo har engineer ko pata hone chahiye',
   ],
   lesson: [
     `<h3>📖 100 requests, ek jhooth</h3>
@@ -650,7 +650,7 @@ average     →    59 ms   😊 "sab theek hai"
 p50         →    10 ms   😊
 p99         → 5,000 ms   😡 ← asli kahani</pre>
      <p>Average ka kaam hi outliers ko <b>ghol dena</b> hai. Par user
-     average anubhav nahi karta — woh <b>apni</b> request anubhav karta hai.
+     average anubhav nahi karta — user <b>apni</b> request anubhav karta hai.
      Aur agar tumhare 10 lakh requests roz hain, toh p99 ka matlab hai
      <b>10,000 log roz</b> 5 second ruk rahe hain.</p>
      <p>Percentile padhne ka sahi tareeka:</p>
@@ -659,11 +659,11 @@ p99         → 5,000 ms   😡 ← asli kahani</pre>
        <tr><td>p50</td><td>"normal din kaisa hai"</td><td>capacity planning</td></tr>
        <tr><td>p95</td><td>"thoda kharab din"</td><td>SLO ke liye aksar yahi</td></tr>
        <tr><td>p99</td><td>"sabse kharab 1%"</td><td>tail problems dhoondhne</td></tr>
-       <tr><td>p99.9</td><td>"tumhare sabse bade users"</td><td>heavy users ka data zyada hota hai — unka p50 tumhara p99.9 hai</td></tr>
+       <tr><td>p99.9</td><td>"tumhare sabse bade users"</td><td>heavy users ka data zyada hota hai — heavy users ka p50 tumhara p99.9 hai</td></tr>
        <tr><td>max</td><td>"ek bar aisa hua tha"</td><td>alerting ke liye bekaar</td></tr>
      </table>
      <p class="tip">🎯 Ek gehri baat: <b>tumhare sabse bade customer ka
-     har request tumhara p99 hai.</b> Uske paas 10x data hai, isliye uski
+     har request tumhara p99 hai.</b> Sabse bade customer ke paas 10x data hai, isliye us customer ki
      har query tail mein baithti hai. p99 theek karna = apne sabse
      valuable users ko theek karna.</p>`,
     `<h3>🔬 Tail amplification — microservices ka chhupa tax</h3>
@@ -680,10 +680,10 @@ P(koi ek slow) = 1 − 0.99⁵ =  4.9%   ← 1% se 4.9% ho gaya!
      <p>Teen ilaaj:</p>
      <p><b>1. Kam calls.</b> 5 calls ko 2 banao — batch ya aggregate endpoint.</p>
      <p><b>2. Optional ko async karo.</b> Reviews aur recommendations page
-     load ke <i>baad</i> load ho — unki latency user ke first paint mein
+     load ke <i>baad</i> load ho — recommendations ki latency user ke first paint mein
      ginni hi nahi chahiye.</p>
      <p><b>3. Hedged requests.</b> p95 par doosri copy bhej do, jo pehle
-     aaye woh lo. Thoda extra load, bahut behtar tail.</p>`,
+     aaye, wahi lo. Thoda extra load, bahut behtar tail.</p>`,
   ],
   stages: [
     {
@@ -746,14 +746,14 @@ P(koi ek slow) = 1 − 0.99⁵ =  4.9%   ← 1% se 4.9% ho gaya!
     {
       type: 'match',
       title: 'Latency numbers yaad karo',
-      instructions: 'Har operation ko uske order-of-magnitude se jodo.',
+      instructions: 'Har operation ko operation ke order-of-magnitude se jodo.',
       pairs: [
-        { left: 'CPU L1 cache reference', right: '~1 nanosecond', explain: 'Sabse tez cheez jo hoti hai. Baaki sab isi se compare hota hai.' },
+        { left: 'CPU L1 cache reference', right: '~1 nanosecond', explain: 'Sabse tez cheez jo hoti hai. Baaki sab isi number se compare hota hai.' },
         { left: 'Main memory (RAM) read', right: '~100 nanoseconds', explain: 'RAM cache se ~100x dheema — par disk se ~1000x tez. Isiliye in-memory cache itna kaam karta hai.' },
         { left: 'SSD random read', right: '~100 microseconds (0.1 ms)', explain: 'RAM se ~1000x dheema. Yahi wajah hai ki buffer pool mein data hona itna matter karta hai.' },
         { left: 'Same datacenter round trip', right: '~0.5 milliseconds', explain: 'Ek network hop lagbhag muft lagta hai — par 100 hops nahi. Fan-out isi liye mehenga hai.' },
-        { left: 'Simple indexed DB query', right: '~1–5 milliseconds', explain: 'Achhi query ka target. Isse zyada lag raha hai toh EXPLAIN chalao.' },
-        { left: 'India → US round trip', right: '~150 milliseconds', explain: 'Yeh light ki speed ki limit hai — koi optimization ise nahi todega. Isiliye CDN aur regional deployment.' },
+        { left: 'Simple indexed DB query', right: '~1–5 milliseconds', explain: 'Achhi query ka target. Query ko 5 ms se zyada lag raha hai toh EXPLAIN chalao.' },
+        { left: 'India → US round trip', right: '~150 milliseconds', explain: 'Ye light ki speed ki limit hai — koi optimization is limit ko nahi todega. Isiliye CDN aur regional deployment.' },
       ],
     },
     {
@@ -827,12 +827,12 @@ P(koi ek slow) = 1 − 0.99⁵ =  4.9%   ← 1% se 4.9% ho gaya!
   ],
   homework: `Apne sabse zyada chalne wale endpoint ka p50 aur p99 nikalo.
     Ratio dekho: agar p99/p50 &gt; 10 hai, toh kahin queueing ho rahi hai (pool, thread, lock).
-    Phir poochho: <b>kitni downstream calls</b> karta hai yeh endpoint? Kya sabhi zaroori hain?`,
+    Phir poochho: endpoint <b>kitni downstream calls</b> karta hai? Kya sabhi zaroori hain?`,
   cards: [
     { front: 'Average kyun jhooth bolta hai?', back: '99 requests 10ms + 1 request 5000ms = average 59ms 😊 par p99 = 5000ms 😡. Average ka kaam hi outliers ko <b>ghol dena</b> hai — user apni request anubhav karta hai, average nahi.' },
     { front: 'Tail amplification formula?', back: "<code>P(any slow) = 1 − (1−p)ⁿ</code> independent equal-p events ke liye. n=5, p=1% → 4.9%; n=100 → 63%. Exact page p99 correlation, deadlines aur wait-for-all behavior par depend hai." },
     { front: 'p99 theek karne ka pehla kadam?', back: 'Aksar <b>fan-out kam karo</b> — calls ghatao ya optional calls ko async karo. Har service ko 2x tez karne se zyada asar hota hai.' },
-    { front: 'Bade customers aur p99?', back: 'Unke paas 10x data hai, isliye unki har query tail mein baithti hai. <b>Unka p50 tumhara p99 hai.</b> Per-tenant percentiles rakho.' },
+    { front: 'Bade customers aur p99?', back: 'Bade customers ke paas 10x data hai, isliye bade customers ki har query tail mein baithti hai. <b>Bade customers ka p50 tumhara p99 hai.</b> Per-tenant percentiles rakho.' },
     { front: 'Latency numbers?', back: 'L1 1ns · RAM 100ns · SSD 0.1ms · same-DC RTT 0.5ms · indexed query 1-5ms · India→US 150ms. Yaad rakhne ki cheez: <b>RAM disk se ~1000x tez hai</b>.' },
   ],
 },
@@ -849,12 +849,12 @@ P(koi ek slow) = 1 − 0.99⁵ =  4.9%   ← 1% se 4.9% ho gaya!
     'DAU se rps nikalna — aur <b>peak</b> ke liye design karna',
     'Storage aur bandwidth ka hisaab (replication ke saath)',
     "<b>Little's Law</b>: L = λ × W — concurrency ka formula",
-    'Yeh numbers interview mein bol ke dikhana',
+    'Ye numbers interview mein bol ke dikhana',
   ],
   lesson: [
     `<h3>📖 Teen numbers, poora system</h3>
      <p>System design interview mein "scale kar lenge" bolna sabse kamzor
-     jawab hai. Do line ka hisaab uske jagah bahut aage le jaata hai.
+     jawab hai. Do line ka hisaab "scale kar lenge" se bahut aage le jaata hai.
      Sirf teen cheezein yaad rakho:</p>
      <pre>1 din      = 86,400 seconds   (≈ 10⁵ maan lo, math aasan)
 1 M/din    ≈ 12 rps
@@ -863,19 +863,19 @@ peak       = average × 2–5     (flash sale? × 50)</pre>
      <pre>12 lakh users/din, har ek 2 requests
   = 24 lakh req/din
   = 24,00,000 / 86,400 ≈ 28 rps average
-  = 28 × 3 ≈ 84 rps peak      ← ISKE liye design karo
+  = 28 × 3 ≈ 84 rps peak      ← PEAK ke liye design karo
 
 Har record 2 KB:
   28 × 2 KB × 86,400  = 4.8 GB/din
   × 365               = 1.8 TB/saal
-  × 3 (replication)   = 5.3 TB  ← yeh number budget meeting mein chahiye</pre>`,
+  × 3 (replication)   = 5.3 TB  ← ye number budget meeting mein chahiye</pre>`,
     `<h3>🔬 Little's Law — poore Resilience track ki neev</h3>
-     <p>Ek hi formula, aur woh sab kuch bata deta hai:</p>
+     <p>Ek hi formula, aur formula sab kuch bata deta hai:</p>
      <pre>L = λ × W
 concurrency = arrival rate × service time</pre>
      <p>500 requests/sec aa rahi hain, har ek 20 ms leti hai:</p>
      <pre>L = 500 × 0.020 = 10 requests ek saath andar</pre>
-     <p>Matlab tumhe <b>10 connections</b> chahiye, 500 nahi. Yeh sabse
+     <p>Matlab tumhe <b>10 connections</b> chahiye, 500 nahi. Little's Law sabse
      bada gurumantra hai pool sizing ke liye — log aksar rps jitna pool
      bana dete hain, jo bilkul galat hai.</p>
      <p>Ulta karke padho toh aur bhi kaam ka hai:</p>
@@ -886,7 +886,7 @@ pool 50, query 200 ms → 50 × 5  =   250 rps  ⚠️
 pool 50, query 8 s    → 50 × 0.125 =  6 rps  💀</pre>
      <p class="tip">🎯 Dekho kya hua: <b>query 10x dheemi hui toh capacity
      10x gir gayi.</b> Isiliye ek slow query poore system ko gira sakti hai,
-     chahe CPU 10% ho. Yahi woh pul hai jo "deep pagination" ko "3AM outage"
+     chahe CPU 10% ho. Yahi pul "deep pagination" ko "3AM outage"
      se jodta hai.</p>`,
   ],
   stages: [
@@ -1025,7 +1025,7 @@ Ab query 8 second ki ho gayi (deep pagination):
     { front: 'Estimation ke 3 numbers?', back: '<b>1 din = 86,400 s</b> (≈10⁵) · <b>1M/din ≈ 12 rps</b> · <b>peak = average × 2-5</b> (predictable event ho toh 50x).' },
     { front: "Little's Law?", back: '<code>L = λ × W</code> — concurrency = arrival rate × service time. 500 rps × 20ms = <b>10 concurrent</b>, matlab 10 connections chahiye, 500 nahi.' },
     { front: 'Capacity ka formula?', back: '<code>capacity = pool_size × (1000 / service_ms)</code>. Pool 50 + query 20ms = 2500 rps. Wahi pool + query 8s = <b>6 rps</b>.' },
-    { front: 'Storage kaise nikalte ho?', back: '<code>rps × bytes × 86400</code> = per din. × 365 = per saal. <b>× 3 replication</b> — yeh aakhri step log bhool jaate hain aur budget teen guna galat ho jaata hai.' },
+    { front: 'Storage kaise nikalte ho?', back: '<code>rps × bytes × 86400</code> = per din. × 365 = per saal. <b>× 3 replication</b> — aakhri step log bhool jaate hain aur budget teen guna galat ho jaata hai.' },
   ],
 },
 
@@ -1039,7 +1039,7 @@ Ab query 8 second ki ho gayi (deep pagination):
   badge: 'Queue Master',
   objectives: [
     'Sync mein SIRF kya hona chahiye — do sawaal ka test',
-    '<code>202 Accepted</code> aur uska status endpoint',
+    '<code>202 Accepted</code> aur job ka status endpoint',
     'Async se latency theek hoti hai par <b>consistency ka problem</b> milta hai',
     'Queue spike ko smooth karta hai — par unbounded queue ek jaal hai',
   ],
@@ -1059,7 +1059,7 @@ Ab query 8 second ki ho gayi (deep pagination):
      <p><b>2.</b> Agar email service down hai toh <b>order hi fail ho
      gaya</b> — jabki order ban chuka tha aur paisa kat chuka tha. Ab
      tumhare paas ek aisa order hai jo DB mein hai par user ko error mila.</p>
-     <p><b>Test — sync mein sirf woh cheez rakho jo:</b></p>
+     <p><b>Test — sync mein sirf aisi cheez rakho jo:</b></p>
      <p>(a) user ke jawab ke liye <b>zaroori</b> ho, YA<br>
         (b) fail hone par <b>poora kaam radd</b> karna pade.</p>
      <pre>SYNC:  order likho + payment    → 420 ms → 201 Created ✅
@@ -1075,7 +1075,7 @@ Location: /reports/rep_8821
 
 GET /reports/rep_8821
 { "status": "processing", "progress": 40 }   → phir "done" + result URL</pre>
-     <p>Yeh chhota sa status code poore async design ko client ke saamne
+     <p>202 jaisa chhota sa status code poore async design ko client ke saamne
      <b>imaandaar</b> bana deta hai. Client ko pata hai ki poll karna hai.</p>
      <h3>⚠️ Async free nahi hai</h3>
      <p>Async ne latency ka problem hataya aur <b>chaar naye problem</b>
@@ -1088,7 +1088,7 @@ GET /reports/rep_8821
        <tr><td>Queue bharti ja rahi hai</td><td>bounded queue + backpressure — unbounded queue matlab "problem baad mein, aur bada"</td></tr>
      </table>
      <p class="tip">🎯 <b>Async ek trade hai, jeet nahi.</b> Tumne latency
-     ka problem <b>consistency</b> ke problem se badal liya. Yeh aksar
+     ka problem <b>consistency</b> ke problem se badal liya. Ye sauda aksar
      achha sauda hai — par jaante hue karo.</p>`,
   ],
   stages: [
@@ -1101,12 +1101,12 @@ GET /reports/rep_8821
         { id: 'async', label: '📮 ASYNC — queue mein' },
       ],
       items: [
-        { text: 'Order DB mein likhna', bin: 'sync', explain: 'User ko order ID chahiye jawab mein. Aur yeh fail ho toh poora kaam radd — dono shartein poori.' },
+        { text: 'Order DB mein likhna', bin: 'sync', explain: 'User ko order ID chahiye jawab mein. Aur payment fail ho toh poora kaam radd — dono shartein poori.' },
         { text: 'Payment authorize karna', bin: 'sync', explain: 'Card decline ho toh user ko TURANT pata chalna chahiye. Baad mein "aapka payment fail ho gaya" bhejna bura anubhav hai.' },
         { text: 'Stock available hai ya nahi check karna', bin: 'sync', explain: 'Order lene ka matlab hi tab hai jab cheez hai. Baad mein cancel karna sabse mehenga customer experience hai.' },
         { text: 'Confirmation email bhejna', bin: 'async', explain: 'User ne order screen par confirmation dekh liya. Email 2 second baad aaye ya 20 — koi farak nahi. Aur email service down hone se order fail nahi hona chahiye.' },
-        { text: 'Warehouse ko notify karna', bin: 'async', explain: 'Shipping ghante mein hoti hai, millisecond mein nahi. Queue + retry se yeh zyada reliable bhi ho jaata hai.' },
-        { text: 'Analytics event bhejna', bin: 'async', explain: 'Kabhi bhi analytics ko user request block nahi karni chahiye. Yeh sabse aasan async decision hai.' },
+        { text: 'Warehouse ko notify karna', bin: 'async', explain: 'Shipping ghante mein hoti hai, millisecond mein nahi. Queue + retry se email bhejna zyada reliable bhi ho jaata hai.' },
+        { text: 'Analytics event bhejna', bin: 'async', explain: 'Kabhi bhi analytics ko user request block nahi karni chahiye. Ye sabse aasan async decision hai.' },
         { text: 'Invoice PDF banana', bin: 'async', explain: '1.5 second ka CPU kaam. User ko turant nahi chahiye — email mein link bhej do ya "download ready" dikhao.' },
         { text: 'Loyalty points update karna', bin: 'async', explain: 'Eventually consistent bilkul theek hai. Par UI mein "points jald hi update honge" dikhana zaroori hai — warna user ko lagega bug hai.' },
       ],
@@ -1118,11 +1118,11 @@ GET /reports/rep_8821
       steps: [
         { text: 'POST /reports — request validate karo', explain: 'Validation SYNC hai — galat request ko queue mein daalna bekaar hai, aur user ko turant pata chalna chahiye.' },
         { text: 'Job row banao (status: queued) aur ek ID do', explain: 'Pehle DB mein likho, phir queue mein daalo. Ulta karoge toh worker aise job par kaam kar sakta hai jo DB mein hai hi nahi.' },
-        { text: 'Queue mein message daalo', explain: 'Ab worker ise uthayega. (Aage <b>outbox pattern</b> milega — jo isi do-step ko atomic banata hai.)' },
+        { text: 'Queue mein message daalo', explain: 'Ab worker message uthayega. (Aage <b>outbox pattern</b> milega — jo isi do-step ko atomic banata hai.)' },
         { text: '202 Accepted + Location: /reports/:id lautao', explain: '200 nahi — <b>202</b>. Kaam hua nahi hai, sirf maan liya gaya hai. Location header client ko batata hai ki status kahan dekhna hai.' },
         { text: 'Worker job uthaye, status: processing karo', explain: 'Ab client poll karega toh use pata chalega ki kaam chal raha hai — "kuch nahi ho raha" wala confusion khatm.' },
-        { text: 'Kaam khatam — status: done + result URL', explain: 'Client ko poll se ya webhook se pata chal jaata hai. Result ko alag URL par rakhna behtar hai — woh cacheable ho jaata hai.' },
-        { text: 'Fail hua toh retry, phir DLQ', explain: 'Bina DLQ ke ek kharab message infinite retry mein ja sakta hai aur poori queue rok sakta hai. DLQ = "isse alag rakh do, insaan dekhega".' },
+        { text: 'Kaam khatam — status: done + result URL', explain: 'Client ko poll se ya webhook se pata chal jaata hai. Result ko alag URL par rakhna behtar hai — result cacheable ho jaata hai.' },
+        { text: 'Fail hua toh retry, phir DLQ', explain: 'Bina DLQ ke ek kharab message infinite retry mein ja sakta hai aur poori queue rok sakta hai. DLQ = "is message ko alag rakh do, insaan dekhega".' },
       ],
     },
     {
@@ -1185,7 +1185,7 @@ GET /reports/rep_8821
   ],
   interview: {
     title: 'Interview Round — Sync vs Async',
-    instructions: 'Yeh sawaal lagbhag har design interview mein aata hai. 🎤',
+    instructions: 'Ye sawaal lagbhag har design interview mein aata hai. 🎤',
     questions: [
       {
         q: '"Kaise decide karoge ki koi kaam sync ho ya async?"',
@@ -1226,14 +1226,14 @@ GET /reports/rep_8821
   success: [
     'Do sawaal ke test se sync/async decide kar sakte ho',
     '202 Accepted + status endpoint ka pattern jaante ho',
-    'Async ke chaaron naye problem aur unke ilaaj bata sakte ho',
+    'Async ke chaaron naye problem aur har problem ka ilaaj bata sakte ho',
     'Samjha sakte ho ki har sync dependency availability ko guna karti hai',
   ],
   homework: `Apne sabse dheeme <code>POST</code> endpoint ko dekho. Har kaam ke saamne do sawaal
     likho — "user ke jawab ke liye zaroori?" aur "fail ho toh sab radd?".
-    Jitne kaamon par dono "nahi" hain, unhe queue mein daal ke dekho latency kitni girti hai.`,
+    Jin kaamon par dono jawab "nahi" hain, un kaamon ko queue mein daal ke dekho latency kitni girti hai.`,
   cards: [
-    { front: 'Sync mein kya rakhein?', back: 'Sirf woh jo (a) user ke jawab ke liye <b>zaroori</b> ho, YA (b) fail hone par <b>poora kaam radd</b> karna pade. Baaki sab async.' },
+    { front: 'Sync mein kya rakhein?', back: 'Sirf wahi kaam jo (a) user ke jawab ke liye <b>zaroori</b> ho, YA (b) fail hone par <b>poora kaam radd</b> karna pade. Baaki sab async.' },
     { front: 'Async ka status code?', back: '<b>202 Accepted</b> + <code>Location</code> header. 200 jhooth hai (kaam hua nahi). Client us URL par status poll karta hai.' },
     { front: 'Async se kya naya problem milta hai?', back: '<b>Consistency.</b> Duplicate delivery → idempotent consumer. Permanent failure → DLQ. "Hua ya nahi?" → status endpoint. Queue growth → bounded + backpressure.' },
     { front: 'Sync dependency aur availability?', back: 'Availability <b>guna</b> hoti hai. Order 99.9% × email 99% = 98.9%. Har sync call tumhari availability ko neeche kheenchti hai.' },
@@ -1274,12 +1274,12 @@ parallel → max(...)         = 200 ms  ⚡</pre>
      <p><b>Teen ilaaj:</b></p>
      <p><b>1. Kam calls.</b> Ek aggregate endpoint ya batch API — 5 calls ko 2 banao.</p>
      <p><b>2. Optional ko async.</b> Reviews aur recommendations page render
-     ke <i>baad</i> aaye. Ab unki latency user ke first paint mein hai hi nahi.</p>
+     ke <i>baad</i> aaye. Ab optional calls ki latency user ke first paint mein hai hi nahi.</p>
      <p><b>3. Hedged request.</b> p95 beet gaya? doosri copy bhej do, jo pehle
-     aaye woh lo. ~5% extra load, bahut behtar tail.</p>`,
+     aaye, wahi lo. ~5% extra load, bahut behtar tail.</p>`,
     `<h3>🔬 Fan-in — ulta problem</h3>
      <p>Fan-out = ek request, bahut calls. Fan-in = bahut writers, ek jagah.
-     Yeh dheere-dheere marta hai:</p>
+     Fan-in dheere-dheere maarta hai:</p>
      <pre>1000 workers → UPDATE counters SET views = views + 1 WHERE id = 1
 
 Sab ek hi row par lock maang rahe hain.
@@ -1304,8 +1304,8 @@ Sab ek hi row par lock maang rahe hain.
       questions: [
         { q: "5 independent calls, har call 1% chance se threshold cross kare; any-slow chance?", target: 'tail', explain: "Independence mein 1 − 0.99⁵ ≈ 4.9% any-slow probability hai. Correlated calls ya full page latency distribution ke liye separate measurement/model chahiye." },
         { q: 'p99 theek karne ka sabse asardaar PEHLA kadam?', target: 'fewer', explain: 'Calls ki sankhya ghatao. 8 calls ko 3 karna, har service ko 2x tez karne se zyada asar karta hai — kyunki tail har call par multiply hota hai.' },
-        { q: '1000 workers ek hi row par likh rahe hain — yeh kaunsa problem hai?', target: 'fanin', explain: 'Fan-in. Lock contention — throughput lock hold time se tay hota hai, workers ki sankhya se nahi. Aur workers badhane se ulta kharab hota hai.' },
-        { q: 'Har fan-out call par sabse zaroori guard kya hai?', target: 'timeout', explain: 'Timeout — aur woh tumhare apne SLO se CHHOTA. Bina timeout ke ek dheemi dependency tumhara poora p99 apne saath le doobti hai.' },
+        { q: '1000 workers ek hi row par likh rahe hain — ye kaunsa problem hai?', target: 'fanin', explain: 'Fan-in. Lock contention — throughput lock hold time se tay hota hai, workers ki sankhya se nahi. Aur workers badhane se ulta kharab hota hai.' },
+        { q: 'Har fan-out call par sabse zaroori guard kya hai?', target: 'timeout', explain: 'Timeout — aur timeout tumhare apne SLO se CHHOTA. Bina timeout ke ek dheemi dependency tumhara poora p99 apne saath le doobti hai.' },
       ],
     },
     {
@@ -1314,11 +1314,11 @@ Sab ek hi row par lock maang rahe hain.
       instructions: 'Har halat ko sahi ilaaj se milao.',
       pairs: [
         { left: '🌿 Page 8 services ko call karta hai, p99 kharab', right: 'Calls ghatao — aggregate/batch endpoint', explain: 'Sabse asardaar pehla kadam. 8 calls ko 3 karna, har service ko 2x tez karne se zyada asar karta hai.' },
-        { left: '⭐ Reviews section p99 200ms le raha hai', right: 'Optional content ko page load ke BAAD lao', explain: 'Woh first paint ke liye zaroori nahi. Async load karo — ab uski latency user ke perceived time mein hai hi nahi.' },
-        { left: '🎲 Ek replica kabhi-kabhi dheema ho jaata hai', right: 'Hedged request — p95 par doosri copy bhejo', explain: '~5% extra load ke badle tail bahut behtar. Google ne yeh technique famous ki thi.' },
+        { left: '⭐ Reviews section p99 200ms le raha hai', right: 'Optional content ko page load ke BAAD lao', explain: 'Reviews first paint ke liye zaroori nahi. Async load karo — ab reviews ki latency user ke perceived time mein hai hi nahi.' },
+        { left: '🎲 Ek replica kabhi-kabhi dheema ho jaata hai', right: 'Hedged request — p95 par doosri copy bhejo', explain: '~5% extra load ke badle tail bahut behtar. Google ne hedged requests ki technique famous ki thi.' },
         { left: '🔥 1000 workers ek counter row par', right: 'Counter ko 100 rows mein partition karo', explain: 'Contention 100x kam. Padhte waqt SUM kar lo. Classic "sharded counter" pattern.' },
-        { left: '⏳ Ek dependency latak gayi, threads khatam', right: 'Timeout + bulkhead', explain: 'Timeout ise chhodne par majboor karta hai; bulkhead uske liye threads ki limit baandhta hai taaki baaki service zinda rahe.' },
-        { left: '📊 Har second 1000 view-count updates', right: 'App mein batch karo, ek write bhejo', explain: '1000 writes → 1 write. View count ko exact hone ki zaroorat bhi nahi — yeh perfect batching candidate hai.' },
+        { left: '⏳ Ek dependency latak gayi, threads khatam', right: 'Timeout + bulkhead', explain: 'Timeout latki call ko chhodne par majboor karta hai; bulkhead dependency ke liye threads ki limit baandhta hai taaki baaki service zinda rahe.' },
+        { left: '📊 Har second 1000 view-count updates', right: 'App mein batch karo, ek write bhejo', explain: '1000 writes → 1 write. View count ko exact hone ki zaroorat bhi nahi — view count perfect batching candidate hai.' },
       ],
     },
     {
@@ -1391,10 +1391,10 @@ Sab ek hi row par lock maang rahe hain.
     'Har remote call par timeout lagate ho — SLO se kam',
   ],
   homework: `Apne sabse bhaari page ka network tab kholo. Ginti karo kitni API calls hoti hain.
-    Har ek ke saamne likho: "first paint ke liye zaroori?" Jo "nahi" hain unhe defer karke
+    Har ek ke saamne likho: "first paint ke liye zaroori?" Jinka jawab "nahi" hai, un calls ko defer karke
     dekho ki perceived latency kitni girti hai.`,
   cards: [
-    { front: 'Fan-out ka tail formula?', back: "<code>P(any slow) = 1 − (1−p)ⁿ</code> independent calls ke liye. 5 × 1% slow-event probability → 4.9%; 100 → 63%. Yeh exact latency p99 nahi." },
+    { front: 'Fan-out ka tail formula?', back: "<code>P(any slow) = 1 − (1−p)ⁿ</code> independent calls ke liye. 5 × 1% slow-event probability → 4.9%; 100 → 63%. Ye probability hai, exact latency p99 nahi." },
     { front: 'Fan-out tail ke 3 ilaaj?', back: '<b>1.</b> Calls ghatao (aggregate/batch). <b>2.</b> Optional content ko async karo. <b>3.</b> Hedged request — p95 par doosri copy.' },
     { front: 'Fan-in problem?', back: '1000 writers, ek row → lock contention. <b>Throughput = 1 / lock_hold_time</b>, workers se koi farak nahi. Ilaaj: partition (sharded counter) ya batch.' },
     { front: 'Fan-out vs Fan-in?', back: 'Fan-out = <b>latency</b> ka problem (intezaar). Fan-in = <b>throughput</b> ka problem (contention). Ilaaj bilkul alag hain.' },
@@ -1439,20 +1439,20 @@ Sab ek hi row par lock maang rahe hain.
      <p><b>2. Alag scaling shape.</b> Search ko 40 machine chahiye, billing
      ko 2. Ek saath rakhoge toh billing ko bhi 40 par chalana padega.</p>
      <p><b>3. Blast radius.</b> Recommendation engine gire toh checkout na
-     gire. Yeh sabse achhi wajah hai.</p>
+     gire. Ye sabse achhi wajah hai.</p>
      <p><b>4. Alag tech ya compliance.</b> ML Python mein, PCI card data
      alag boundary mein.</p>
      <p><b>Nakli wajah:</b> "microservices modern hai" / "Netflix aisa karta
      hai". Netflix ke paas 2000 engineers hain; tumhare paas 6.</p>
      <h3>⚠️ Distributed monolith — sabse bura nateeja</h3>
-     <p>Agar do services <b>ek hi table</b> par likhti hain, toh woh do
+     <p>Agar do services <b>ek hi table</b> par likhti hain, toh dono do
      services nahi hain. Tumne network latency, partial failure aur
      deployment complexity le li — aur independence mili hi nahi.</p>
      <pre>❌ order-service  → orders table ← inventory-service
 ✅ order-service  → orders table
    inventory-service → inventory table
    (baat karne ke liye: API ya event, table nahi)</pre>
-     <p><b>Ek service, ek data ka maalik.</b> Yeh ek niyam microservices ki
+     <p><b>Ek service, ek data ka maalik.</b> Ye ek niyam microservices ki
      zyadatar galtiyan rok deta hai.</p>`,
   ],
   stages: [
@@ -1466,13 +1466,13 @@ Sab ek hi row par lock maang rahe hain.
       ],
       items: [
         { text: 'Search ko 40 machine chahiye, baaki app ko 2', bin: 'split', explain: 'Alag scaling shape — sabse saaf wajah. Ek saath rakhoge toh poore app ko 40 par chalana padega.' },
-        { text: 'Recommendation engine gire toh checkout na gire', bin: 'split', explain: 'Blast radius. Yeh sabse achhi wajah hai — ek non-critical feature critical path ko na le doobe.' },
+        { text: 'Recommendation engine gire toh checkout na gire', bin: 'split', explain: 'Blast radius. Ye sabse achhi wajah hai — ek non-critical feature critical path ko na le doobe.' },
         { text: 'Alag team, alag release cycle chahiye', bin: 'split', explain: "Team ownership. Conway's Law — agar do teams ek hi deploy par ladti hain toh boundary galat hai." },
         { text: 'ML model Python mein, baaki app Java mein', bin: 'split', explain: 'Alag tech stack — legitimate wajah. Par dhyaan rakho ki ab ek naya operational surface bhi mila.' },
-        { text: 'Orders aur order-items — dono order flow ka hissa', bin: 'keep', explain: 'Ek hi transaction boundary. Inhe todna matlab ek simple INSERT ko saga bana dena. Yeh koi faayda nahi deta.' },
-        { text: '"Microservices modern hai, sab kar rahe hain"', bin: 'keep', explain: 'Yeh wajah nahi hai. Netflix ke paas 2000 engineers hain. Tumhare paas 6. Same architecture dono ke liye sahi nahi ho sakta.' },
+        { text: 'Orders aur order-items — dono order flow ka hissa', bin: 'keep', explain: 'Ek hi transaction boundary. Orders aur order-items ko todna matlab ek simple INSERT ko saga bana dena. Is bantwaare se koi faayda nahi.' },
+        { text: '"Microservices modern hai, sab kar rahe hain"', bin: 'keep', explain: '"Sab kar rahe hain" wajah nahi hai. Netflix ke paas 2000 engineers hain. Tumhare paas 6. Same architecture dono ke liye sahi nahi ho sakta.' },
         { text: 'User profile aur user settings', bin: 'keep', explain: 'Same entity, same team, same lifecycle. Todne se sirf ek network call aur ek consistency problem milega.' },
-        { text: 'PCI card data — compliance boundary chahiye', bin: 'split', explain: 'Compliance. Card data ko alag rakhne se audit scope chhota ho jaata hai — yeh asli, mehenga faayda hai.' },
+        { text: 'PCI card data — compliance boundary chahiye', bin: 'split', explain: 'Compliance. Card data ko alag rakhne se audit scope chhota ho jaata hai — ye asli, mehenga faayda hai.' },
       ],
     },
     {
@@ -1482,7 +1482,7 @@ Sab ek hi row par lock maang rahe hain.
       pager: `<b>#prod-alerts</b> — 3:11 AM<br>
         Checkout ka p99 <b>8 second</b> hai, error rate 40%. CPU 12%. Memory theek.<br>
         Pichhle hafte hi <code>recommendation-service</code> deploy hui thi —
-        checkout page uske "aapke liye" section ke liye use call karta hai.<br>
+        checkout page "aapke liye" section ke liye recommendation-service ko call karta hai.<br>
         Recommendation service ka p99 abhi <b>9 second</b> hai.`,
       start: 'first',
       nodes: {
@@ -1490,17 +1490,17 @@ Sab ek hi row par lock maang rahe hain.
           text: 'Pehla kadam?',
           choices: [
             { t: "Recommendation call par timeout + khaali fallback lagao — section optional hai", good: true, next: 'why', explain: 'Bilkul. Ek optional feature critical path ko block kar raha hai. Timeout + empty fallback se checkout turant theek ho jaayega.' },
-            { t: "Recommendation service ke workers badhao, taaki call jaldi laut aaye", good: false, explain: 'Isse shayad woh theek ho jaaye — par asli bug yeh hai ki checkout uspar DEPEND kar raha hai. Kal koi aur dependency dheemi hogi toh phir yahi hoga.' },
+            { t: "Recommendation service ke workers badhao, taaki call jaldi laut aaye", good: false, explain: 'Rollback se shayad aaj ka masla theek ho jaaye — par asli bug ye hai ki checkout recommendation-service par DEPEND kar raha hai. Kal koi aur dependency dheemi hogi toh phir yahi hoga.' },
             { t: "Checkout service rollback karo — shayad pichhle deploy mein kuch toota", good: false, explain: 'Checkout mein badlaav hi nahi hua. Rollback se kuch nahi badlega.' },
             { t: "DB ki queries optimize karo — checkout ki SQL shayad dheemi ho gayi", good: false, explain: 'CPU 12% hai aur DB shaant hai. Problem ek dheemi downstream call hai, query nahi.' },
           ],
         },
         why: {
           sitrep: '✅ Timeout 200ms + empty fallback laga diya. Checkout p99 wapas 240ms. Error rate 0%.',
-          text: 'Ab post-incident: yeh hua hi kyun?',
+          text: 'Ab post-incident: aisa hua hi kyun?',
           choices: [
             { t: "Optional recommendation call bina timeout ke checkout ke raaste par thi", good: true, next: 'fix', explain: 'Do galtiyan ek saath: bina timeout ka remote call, aur optional cheez ko blocking bana dena.' },
-            { t: "Recommendation service mein bug tha — galti poori tarah doosri team ki hai", good: false, explain: 'Woh dheemi thi — par asli sawaal yeh hai ki uski dheemi hone se checkout kyun gira. Ek service ki kharabi ko doosri ko nahi le doobna chahiye.' },
+            { t: "Recommendation service mein bug tha — galti poori tarah doosri team ki hai", good: false, explain: 'Recommendation service dheemi thi — par asli sawaal ye hai ki recommendation ke dheeme hone se checkout kyun gira. Ek service ki kharabi ko doosri ko nahi le doobna chahiye.' },
             { t: "Traffic achanak zyada aa gaya tha, isliye checkout bojh se gir gaya", good: false, explain: 'CPU 12% hai. Traffic problem nahi tha.' },
           ],
         },
@@ -1520,7 +1520,7 @@ Sab ek hi row par lock maang rahe hain.
             <br><br><b>Teen niyam:</b>
             <br>1. Har remote call par timeout — <b>default</b>, opt-in nahi.
             <br>2. Optional dependencies ke liye fallback likho (khaali list bhi chalega).
-            <br>3. Bulkhead — optional calls ka apna thread pool ho, taaki woh critical path ke threads na khaayein.`,
+            <br>3. Bulkhead — optional calls ka apna thread pool ho, taaki optional calls critical path ke threads na khaayein.`,
         },
       },
     },
@@ -1567,7 +1567,7 @@ Sab ek hi row par lock maang rahe hain.
   ],
   interview: {
     title: 'Interview Round — Decomposition',
-    instructions: 'Yeh sawaal candidates ko sabse zyada uljhata hai. 🎤',
+    instructions: 'Ye sawaal candidates ko sabse zyada uljhata hai. 🎤',
     questions: [
       {
         q: '"Kab microservices mein todoge?"',
@@ -1611,8 +1611,8 @@ Sab ek hi row par lock maang rahe hain.
     'Distributed monolith ka jaal dekh sakte ho',
     'Ek dheemi dependency se apni service bacha sakte ho',
   ],
-  homework: `Apne system ka ek "service" chuno. Poochho: kya koi doosri service uske table ko
-    seedha padhti/likhti hai? Agar haan, toh woh independent nahi hai. List banao ki
+  homework: `Apne system ka ek "service" chuno. Poochho: kya koi doosri service is service ki table ko
+    seedha padhti/likhti hai? Agar haan, toh service independent nahi hai. List banao ki
     us coupling ko todne ke liye kaunse API ya events chahiye.`,
   cards: [
     { front: 'Microservices ki asli keemat?', back: 'function call → <b>network call jo fail ho sakti hai</b>; transaction → <b>saga</b>; JOIN → <b>API composition</b>; stack trace → <b>distributed tracing</b>; galat boundary → <b>migration project</b>.' },
@@ -1658,7 +1658,7 @@ Sab ek hi row par lock maang rahe hain.
       instructions: 'Har slot par ek decision chuno, phir review karao.',
       brief: `Marketing team ek campaign banati hai jo <b>50 lakh users</b> ko push notification
         bhejta hai. Users ko transactional notifications bhi milte hain (order shipped, payment failed) —
-        woh <b>turant</b> jaane chahiye, campaign ke peeche fanse nahi.
+        transactional notifications <b>turant</b> jaane chahiye, campaign ke peeche fanse nahi.
         FCM ki limit <b>1000 rps</b> hai.`,
       requirements: [
         '50 lakh notifications, ek campaign',
@@ -1674,7 +1674,7 @@ Sab ek hi row par lock maang rahe hain.
           note: 'Campaign create hone par client ko kya milega?',
           options: [
             { id: 'sync200', label: "200 OK — saare 50 lakh push bhej ke hi jawab do", score: -3,
-              why: 'Ek request mein 50 lakh push bhejna? Woh request ghanton chalegi aur pehle timeout par mar jaayegi. Aur retry par sab dobara chala jaayega.' },
+              why: 'Ek request mein 50 lakh push bhejna? Aisi request ghanton chalegi aur pehle timeout par mar jaayegi. Aur retry par sab dobara chala jaayega.' },
             { id: 'a202', label: "202 Accepted + campaign ka status URL lauta do", score: 3,
               why: 'Sahi. Kaam hua nahi hai, sirf maan liya gaya hai. Client status URL par progress dekh sakta hai. Yahi async ka imaandaar contract hai.' },
             { id: 'a201', label: "201 Created — campaign resource ban gaya, bas", score: 1,
@@ -1686,9 +1686,9 @@ Sab ek hi row par lock maang rahe hain.
           note: 'Transactional aur campaign ek saath?',
           options: [
             { id: 'one', label: "Ek hi queue aur ek hi worker pool, sab ke liye", score: -3,
-              why: 'Campaign ke 50 lakh messages queue mein bharenge aur "payment failed" notification unke PEECHE lag jaayega. Yeh classic head-of-line blocking hai.' },
+              why: 'Campaign ke 50 lakh messages queue mein bharenge aur "payment failed" notification campaign ke messages ke PEECHE lag jaayega. Ye classic head-of-line blocking hai.' },
             { id: 'two', label: "Alag queues, alag workers: transactional + bulk", score: 3,
-              why: 'Bilkul. Alag queue = alag priority aur alag consumers. Yeh queue-level bulkhead hai — campaign ka spike transactional ko chhu bhi nahi sakta.' },
+              why: 'Bilkul. Alag queue = alag priority aur alag consumers. Ye queue-level bulkhead hai — campaign ka spike transactional ko chhu bhi nahi sakta.' },
             { id: 'prio', label: "Ek hi queue, har message par priority ka label", score: 0,
               why: 'Kagaz par theek, practice mein nazuk. Zyadatar brokers priority theek se nahi karte, aur agar consumers busy hain toh priority se koi farak nahi padta.' },
           ],
@@ -1698,9 +1698,9 @@ Sab ek hi row par lock maang rahe hain.
           note: 'Provider ki limit kaise respect karoge?',
           options: [
             { id: 'retry', label: "Jitna ho sake bhejo, 429 aaye toh turant retry", score: -3,
-              why: 'Yeh retry storm hai. Provider ko aur maaroge, tumhara account throttle ya block ho sakta hai. "Retry karke handle kar lenge" sabse mehengi galti hai.' },
+              why: 'Ye retry storm hai. Provider ko aur maaroge, tumhara account throttle ya block ho sakta hai. "Retry karke handle kar lenge" sabse mehengi galti hai.' },
             { id: 'shape', label: "Outbound limiter: quota se neeche, ~900 rps par", score: 3,
-              why: 'Sahi. Limit ke thoda NEECHE raho (headroom). Yeh backpressure hai — tum apni speed control kar rahe ho, provider ko majboor nahi kar rahe.' },
+              why: 'Sahi. Limit ke thoda NEECHE raho (headroom). Ye backpressure hai — tum apni speed control kar rahe ho, provider ko majboor nahi kar rahe.' },
             { id: 'workers', label: "Utne workers rakho ki rate lagbhag 1000 rps bane", score: 1,
               why: 'Kaam kar sakta hai par nazuk — worker count se rate control karna indirect hai. Ek worker restart ya slow provider par ganit bigad jaayega. Explicit limiter behtar hai.' },
           ],
@@ -1710,7 +1710,7 @@ Sab ek hi row par lock maang rahe hain.
           note: 'Worker crash hua, message dobara aaya',
           options: [
             { id: 'hope', label: "Broker ke \"exactly-once\" flag par bharosa karo", score: -3,
-              why: 'Exactly-once delivery distributed systems mein hoti hi nahi. Jo hota hai woh hai at-least-once delivery + <b>idempotent processing</b>. Yeh sabse common galatfehmi hai.' },
+              why: 'Exactly-once delivery distributed systems mein hoti hi nahi. Asal mein hota hai at-least-once delivery + <b>idempotent processing</b>. Ye sabse common galatfehmi hai.' },
             { id: 'idem', label: "Unique key (campaign_id, user_id) se dedupe karo", score: 3,
               why: 'Sahi. "Bheja gaya" ko DB mein unique constraint ke saath likho. Dobara aane par insert fail hoga aur tum skip kar doge. At-least-once + idempotent = effectively-once.' },
             { id: 'mem', label: "Bheje gaye IDs ko worker ki memory mein rakho", score: -2,
@@ -1722,7 +1722,7 @@ Sab ek hi row par lock maang rahe hain.
           note: 'Ek message har baar crash kar raha hai',
           options: [
             { id: 'inf', label: "Har error par retry karte raho, jab tak chal na jaaye", score: -3,
-              why: 'Poison message. Woh kabhi nahi chalega, aur uske peeche ki POORI queue ruk jaayegi. Yeh ek message ek outage ban jaata hai.' },
+              why: 'Poison message. Poison message kabhi nahi chalega, aur poison message ke peeche ki POORI queue ruk jaayegi. Ek message poora outage ban jaata hai.' },
             { id: 'drop', label: "Pehli baar fail hote hi message phenk do, aage badho", score: -1,
               why: 'Ab transient failures (network blip) mein bhi notifications gum ho rahe hain. Retry chahiye — bas anant nahi.' },
             { id: 'dlq', label: "Error pehchaano; 3 retries (backoff), phir DLQ", score: 3,
@@ -1734,7 +1734,7 @@ Sab ek hi row par lock maang rahe hain.
           note: 'Marketing team ko kaise pata chale?',
           options: [
             { id: 'none', label: "Kuch nahi — bas bhej do, status ki zaroorat nahi", score: -2,
-              why: 'Team ko pata hi nahi chalega ki 50 lakh mein se kitne gaye, kitne fail. Woh support ticket ban jaayega.' },
+              why: 'Team ko pata hi nahi chalega ki 50 lakh mein se kitne gaye, kitne fail. Har sawaal support ticket ban jaayega.' },
             { id: 'poll', label: "GET /campaigns/:id — sent / failed / pending ginti", score: 3,
               why: 'Sahi, aur 202 wale Location header ke saath perfectly fit hota hai. Counters worker se update hote rahein.' },
             { id: 'log', label: "Operators ke liye logs — wahi status ka zariya", score: -1,
@@ -1743,9 +1743,9 @@ Sab ek hi row par lock maang rahe hain.
         },
       ],
       verdicts: {
-        great: 'Har decision production-grade hai. Yeh design 50 lakh notifications bhejega aur transactional traffic ko chhuyega bhi nahi.',
+        great: 'Har decision production-grade hai. Ye design 50 lakh notifications bhejega aur transactional traffic ko chhuyega bhi nahi.',
         ok: 'Design chal jaayega, par upar dekho — ek-do decisions par tumne apne aap ko future incident de diya hai.',
-        bad: 'Yeh design pehle bade campaign par toot jaayega. Neeche har option ka tradeoff padho — asli seekh wahi hai.',
+        bad: 'Ye design pehle bade campaign par toot jaayega. Neeche har option ka tradeoff padho — asli seekh wahi hai.',
       },
     },
     {
@@ -1841,8 +1841,8 @@ Sab ek hi row par lock maang rahe hain.
     Jitne sawaalon ka jawab nahi hai, utne future incidents hain.`,
   cards: [
     { front: 'Head-of-line blocking?', back: 'Bulk messages ke peeche urgent message atak jaata hai. Ilaaj: <b>alag queue + alag consumers</b> — queue-level bulkhead.' },
-    { front: 'Exactly-once ka sach?', back: 'Woh hoti hi nahi. <b>At-least-once delivery + idempotent processing = effectively-once.</b> Dedupe key par unique constraint lagao.' },
-    { front: 'Poison message?', back: 'Woh message jo har baar crash karta hai. Bina DLQ ke woh poori queue rok deta hai. Pattern: <b>N retries with backoff → DLQ</b>.' },
+    { front: 'Exactly-once ka sach?', back: 'Exactly-once hoti hi nahi. <b>At-least-once delivery + idempotent processing = effectively-once.</b> Dedupe key par unique constraint lagao.' },
+    { front: 'Poison message?', back: 'Aisa message jo har baar crash karta hai. Bina DLQ ke poison message poori queue rok deta hai. Pattern: <b>N retries with backoff → DLQ</b>.' },
     { front: 'Downstream rate limit kaise respect karein?', back: '<b>Outbound rate limiter</b> — limit se thoda NEECHE (headroom). "429 par retry kar lenge" retry storm banata hai.' },
   ],
 },
@@ -1885,7 +1885,7 @@ SD.registerLevelsAfter('flow', 'lifecycle', [
 {
   id: 'networking',
   icon: '🌐',
-  title: 'Network — Woh Sab Jo Request Bhejne Se PEHLE Hota Hai',
+  title: 'Network — Request Bhejne Se PEHLE Ka Sab Kuch',
   badge: 'Protocol Pandit',
   objectives: [
     'DNS + TCP + TLS ka handshake tax — data se <b>pehle</b> ka waqt',
@@ -1895,14 +1895,14 @@ SD.registerLevelsAfter('flow', 'lifecycle', [
   ],
   lesson: [
     `<h3>📖 "Ek request 200ms leti hai" — usme se aadha kya tha?</h3>
-     <p>Nayi HTTPS connection par ek byte data jaane se <b>pehle</b> yeh sab hota hai:</p>
+     <p>Nayi HTTPS connection par ek byte data jaane se <b>pehle</b> itna kuch hota hai:</p>
      <pre>DNS lookup       30 ms   "api.example.com ka IP kya hai?"
 TCP handshake    40 ms   SYN → SYN-ACK → ACK        (1 RTT)
 TLS handshake    40 ms   keys ka exchange           (TLS 1.3: 1 RTT · purana TLS 1.2: 2 RTT = 80 ms)
 ─────────────────────
                 110 ms   ...ab request bhej sakte ho  (TLS 1.2 par 150 ms)</pre>
      <p>Isiliye <b>connection reuse</b> (keep-alive / connection pooling) itna matter
-     karta hai. Jo purane clients har request par nayi connection kholte the, unki
+     karta hai. Har request par nayi connection kholne wale purane clients ki
      latency dugni thi — aur code mein kuch "galat" nahi dikhta tha.</p>
      <h3>🔀 TCP vs UDP</h3>
      <table>
@@ -1914,7 +1914,7 @@ TLS handshake    40 ms   keys ka exchange           (TLS 1.3: 1 RTT · purana TL
      </table>
      <p>UDP tab chuno jab der se aaya data <b>kaam ka hi nahi</b> hai: live video ka
      purana frame, game mein 200ms purani position, VoIP ka pichhla syllable.
-     Wahan "ruk ke dobara bhejo" ulta nuksaan hai.</p>
+     Aise data ke liye "ruk ke dobara bhejo" ulta nuksaan hai.</p>
      <p class="tip">🎯 <b>QUIC</b> (HTTP/3 ki neev) UDP par banaya gaya hai — par usne
      reliability, ordering aur congestion control <b>khud</b> implement kar liye.
      Kyun? Kyunki TCP kernel mein hai aur use badalna lagbhag namumkin hai;
@@ -1936,7 +1936,7 @@ HTTP/3    QUIC (UDP) — har stream apne aap mein
      <b>nuksaan</b> karti hain. Domain sharding ab extra DNS + TCP + TLS handshakes
      hai. Sprite sheets ab ek badi file hai jiska ek pixel badalne par poori dobara
      download hoti hai. Optimization hamesha <b>us zamaane ki bottleneck</b> ke liye
-     hoti hai — bottleneck badal jaaye toh woh optimization ek bug ban jaati hai.</p>
+     hoti hai — bottleneck badal jaaye toh purani optimization ek bug ban jaati hai.</p>
      <h3>⚖️ L4 vs L7 load balancer</h3>
      <table>
        <tr><th></th><th>L4 (transport)</th><th>L7 (application)</th></tr>
@@ -1950,7 +1950,7 @@ HTTP/3    QUIC (UDP) — har stream apne aap mein
      <p>Zyadatar HTTP traffic ke liye <b>L7</b> chahiye — kyunki path se routing,
      retry aur rate limiting wahin milte hain. Par <b>persistent connections</b>
      (WebSocket, gRPC streams, database proxies) ke liye L4 sahi hai:
-     woh connection ghanton chalti hai, aur L4 use bas aage badha deta hai.</p>`,
+     aisi connection ghanton chalti hai, aur L4 connection ko bas aage badha deta hai.</p>`,
   ],
   stages: [
     {
@@ -1985,11 +1985,11 @@ HTTP/3    QUIC (UDP) — har stream apne aap mein
       title: 'Kaunsa protocol / layer kahan',
       pairs: [
         { left: 'REST API, mobile app se', right: 'HTTP/2 ya /3 over TCP/QUIC', explain: 'Data ka har byte chahiye aur kram matter karta hai — TCP-jaisi reliability zaroori hai. Mobile par HTTP/3 extra faayda deta hai: network badalne par connection nahi tootti.' },
-        { left: 'Live video streaming', right: 'UDP', explain: 'Kho gaya frame dobara bhejne ka koi matlab nahi — jab woh aayega tab tak woh scene ja chuka hoga. Ek frame drop karke aage badhna hi sahi hai.' },
+        { left: 'Live video streaming', right: 'UDP', explain: 'Kho gaya frame dobara bhejne ka koi matlab nahi — frame dobara aayega tab tak scene ja chuka hoga. Ek frame drop karke aage badhna hi sahi hai.' },
         { left: 'WebSocket chat gateway', right: 'L4 load balancer', explain: 'Connection ghanton chalti hai. L4 use bas aage badha deta hai aur beech mein aata hi nahi. L7 ko har connection ka state rakhna padta hai.' },
-        { left: '/api → svc-a, /images → svc-b', right: 'L7 load balancer', explain: 'Path se routing ke liye LB ko HTTP request <b>padhni</b> padegi — yeh sirf L7 kar sakta hai.' },
-        { left: 'Multiplayer game ki player position', right: 'UDP', explain: '200 ms purani position bekaar hai. TCP usse dobara bhejne ke liye <b>ruk</b> jaata — aur us doraan nayi positions bhi ruk jaati (HOL blocking). Ek chhoot jaana behtar hai.' },
-        { left: 'Bank transfer API call', right: 'TCP', explain: 'Yahan har byte chahiye aur kram bhi. "Shayad pahunch gaya" jaisi koi cheez nahi hai. TCP default hai — aur yeh default badalne ki bahut khaas wajah chahiye.' },
+        { left: '/api → svc-a, /images → svc-b', right: 'L7 load balancer', explain: 'Path se routing ke liye LB ko HTTP request <b>padhni</b> padegi — request sirf L7 padh sakta hai.' },
+        { left: 'Multiplayer game ki player position', right: 'UDP', explain: '200 ms purani position bekaar hai. TCP khoya packet dobara bhejne ke liye <b>ruk</b> jaata — aur us doraan nayi positions bhi ruk jaati (HOL blocking). Ek chhoot jaana behtar hai.' },
+        { left: 'Bank transfer API call', right: 'TCP', explain: 'Yahan har byte chahiye aur kram bhi. "Shayad pahunch gaya" jaisi koi cheez nahi hai. TCP default hai — aur default badalne ki bahut khaas wajah chahiye.' },
       ],
     },
     {
@@ -2055,15 +2055,15 @@ HTTP/3    QUIC (UDP) — har stream apne aap mein
       visual: 'networking',
       questions: [
         { q: 'Data bhejne se pehle ka sabse bada kharch?', target: 'setup', explain: 'DNS + TCP + TLS milke ek RTT-heavy setup banate hain. Isiliye connection reuse sabse sasta optimization hai.' },
-        { q: 'HTTP/1.1 mein assets line mein kyun lagte hain?', target: 'hol', explain: 'Ek connection par ek waqt mein ek request — head-of-line blocking. Browser 6 connections khol ke ise thoda kam karta hai, khatam nahi.' },
-        { q: 'QUIC TCP ka handshake kaise bachaata hai?', target: 'quic', explain: 'Woh UDP par hai, isliye TCP handshake hai hi nahi — aur TLS usi ke saath ho jaata hai. Cold connection par ek poora RTT bach jaata hai.' },
-        { q: 'WebSocket ke liye kaunsi LB layer?', target: 'l4', explain: 'L4 — woh connection ko bas aage badha deta hai. L7 ko har lambi connection ka state rakhna padta hai.' },
+        { q: 'HTTP/1.1 mein assets line mein kyun lagte hain?', target: 'hol', explain: 'Ek connection par ek waqt mein ek request — head-of-line blocking. Browser 6 connections khol ke HOL blocking thoda kam karta hai, khatam nahi.' },
+        { q: 'QUIC TCP ka handshake kaise bachaata hai?', target: 'quic', explain: 'QUIC UDP par chalta hai, isliye TCP handshake hai hi nahi — aur TLS QUIC ke handshake ke saath hi ho jaata hai. Cold connection par ek poora RTT bach jaata hai.' },
+        { q: 'WebSocket ke liye kaunsi LB layer?', target: 'l4', explain: 'L4 — connection ko bas aage badha deta hai. L7 ko har lambi connection ka state rakhna padta hai.' },
       ],
     },
   ],
   interview: {
     title: 'Interview Round — Networking',
-    instructions: 'Yeh woh layer hai jise log skip kar dete hain. 🎤',
+    instructions: 'Is layer ko log aksar skip kar dete hain. 🎤',
     questions: [
       {
         q: "\"Tumhari API ka p99 achanak 400 ms badh gaya, par server ka processing time wahi hai. Kahan dekhoge?\"",
@@ -2112,9 +2112,9 @@ HTTP/3    QUIC (UDP) — har stream apne aap mein
     Aur apne load balancer ka pata karo — L4 hai ya L7?`,
   cards: [
     { front: 'Nayi HTTPS connection ka tax?', back: 'DNS (~30 ms) + TCP (1 RTT) + TLS 1.3 (1 RTT) ≈ <b>110 ms</b> at 40 ms RTT — data bhejne se <b>pehle</b>. Purane TLS 1.2 par ek RTT aur: 150 ms. Isliye keep-alive / connection pooling sabse sasta optimization hai.' },
-    { front: 'UDP kab?', back: 'Jab <b>purana data bekaar</b> ho — live video, gaming, VoIP. Wahan "ruk ke dobara bhejo" ulta nuksaan hai. Baaki sab jagah TCP default.' },
+    { front: 'UDP kab?', back: 'Jab <b>purana data bekaar</b> ho — live video, gaming, VoIP. Aise data ke liye "ruk ke dobara bhejo" ulta nuksaan hai. Baaki sab jagah TCP default.' },
     { front: 'HTTP/1.1 vs 2 vs 3?', back: '<b>1.1</b> — ek connection = ek request (browser 6 kholta hai). <b>2</b> — multiplexed, par TCP par HOL blocking baaki. <b>3</b> — QUIC/UDP, har stream alag; aur connection ID se network badalne par bhi zinda.' },
-    { front: 'HTTP/2 ke baad domain sharding?', back: '<b>Nuksaan.</b> Har domain = extra DNS+TCP+TLS. Woh HTTP/1.1 ki 6-connection limit ke liye thi. Har optimization apne zamaane ki bottleneck ke liye hoti hai.' },
+    { front: 'HTTP/2 ke baad domain sharding?', back: '<b>Nuksaan.</b> Har domain = extra DNS+TCP+TLS. Domain sharding HTTP/1.1 ki 6-connection limit ke liye thi. Har optimization apne zamaane ki bottleneck ke liye hoti hai.' },
     { front: 'L4 vs L7 LB?', back: '<b>L4</b> = IP+port, tez, TLS pass-through, <b>WebSocket ke liye sahi</b>. <b>L7</b> = poori request padhta hai → path routing, retry, rate limit, TLS terminate. HTTP traffic ke liye L7.' },
   ],
 },
@@ -2128,13 +2128,13 @@ SD.registerLevelsAfter('flow', 'latency', [
   badge: 'Number Nipun',
   objectives: [
     'Latency ka ladder — L1 cache se cross-continent tak',
-    'Ek RTT kitna mehenga hai — aur usse design kaise badalta hai',
+    'Ek RTT kitna mehenga hai — aur RTT se design kaise badalta hai',
     'Throughput aur size ke mote numbers',
     'Anumaan ko <b>naap</b> se milaana',
   ],
   lesson: [
     `<h3>📖 Latency ka ladder</h3>
-     <p>Yeh numbers rat-ne ke liye nahi hain — inka faayda yeh hai ki inse
+     <p>Ye numbers rat-ne ke liye nahi hain — in numbers ka faayda ye hai ki in numbers se
      <b>design ke faisle apne aap</b> nikal aate hain.</p>
      <pre>L1 cache                    0.5 ns
 Branch mispredict             5 ns
@@ -2148,11 +2148,11 @@ Disk (HDD) seek              10 ms
 Cross-country RTT (US)       40 ms
 Cross-continent RTT         150 ms
 </pre>
-     <p class="tip">🎯 Inhe insaani paimane par rakho — sab kuch 1 billion se guna karo:
+     <p class="tip">🎯 In numbers ko insaani paimane par rakho — sab kuch 1 billion se guna karo:
      L1 cache = <b>0.5 second</b>. RAM = <b>100 second</b>. SSD = <b>27 ghante</b>.
      Same-DC network = <b>6 din</b>. Cross-continent = <b>5 saal</b>.
      <br><br>Ab socho ki tumhare code mein ek loop ke andar ek network call hai.
-     Woh har chakkar par <b>5 saal</b> intezaar kar raha hai.</p>
+     Loop har chakkar par <b>5 saal</b> intezaar kar raha hai.</p>
      <h3>🔬 In numbers se design kaise nikalta hai</h3>
      <table>
        <tr><th>Number</th><th>Design ka natija</th></tr>
@@ -2180,14 +2180,14 @@ Ek Kafka partition     ~10 MB/s
 Ek modern NIC          1–10 Gbps</pre>
      <h3>✂️ Do shortcuts jo har estimate mein kaam aate hain</h3>
      <p><b>1. "Roz ka X" ko rps mein badalna:</b> 86,400 ko 100,000 maan lo.
-     Toh <code>1M/din ≈ 10 rps</code>. Yeh 15% galat hai aur bilkul kaafi hai —
+     Toh <code>1M/din ≈ 10 rps</code>. Andaaza 15% galat hai aur bilkul kaafi hai —
      back-of-envelope mein tumhe order of magnitude chahiye, decimal nahi.</p>
      <p><b>2. Peak = average × 2 se 5.</b> Aur agar tumhare traffic mein koi
-     <b>event</b> hai (result declaration, sale, match) toh woh 100x bhi ho sakta hai.
-     Isliye pehle poochho: "kya iska traffic predictable spike wala hai?"</p>
+     <b>event</b> hai (result declaration, sale, match) toh peak 100x bhi ho sakta hai.
+     Isliye pehle poochho: "kya system ka traffic predictable spike wala hai?"</p>
      <p class="tip">🎯 Aur sabse zaroori: <b>anumaan lagane ke baad naapo.</b>
-     Estimate ka kaam yeh batana hai ki tumhe kis <b>paimane</b> ki cheez chahiye —
-     10 servers ya 1000. Uske baad asli number load test se aata hai, dimaag se nahi.</p>`,
+     Estimate ka kaam batana hai ki tumhe kis <b>paimane</b> ki cheez chahiye —
+     10 servers ya 1000. Estimate ke baad asli number load test se aata hai, dimaag se nahi.</p>`,
   ],
   stages: [
     {
@@ -2222,24 +2222,24 @@ Ek modern NIC          1–10 Gbps</pre>
       template: `RAM se ek value padhne mein ~{0} lagta hai, SSD se random read mein ~{1},
         aur same-datacenter network round trip mein ~{2}.
         Cross-continent round trip ~{3} hai — isliye ek user-facing request mein
-        usse ek se zyada baar guzarna SLO tod deta hai.`,
+        cross-continent round trip se ek se zyada baar guzarna SLO tod deta hai.`,
       tokens: ['100 ns', '100 µs', '0.5 ms', '150 ms', '10 ms', '1 s'],
       blanks: [
-        { answer: '100 ns', explain: 'RAM ~100 nanosecond. Yahi cache ka poora karan hai — SSD se woh <b>1000x</b> tez hai.' },
+        { answer: '100 ns', explain: 'RAM ~100 nanosecond. Yahi cache ka poora karan hai — RAM SSD se <b>1000x</b> tez hai.' },
         { answer: '100 µs', explain: 'SSD random read ~100 microsecond = 0.1 ms. Isiliye ek index lookup sasta hai, par 1000 lookups (N+1) 100ms ban jaate hain.' },
         { answer: '0.5 ms', explain: 'Same-DC RTT ~0.5ms. Chhota lagta hai — par ek request mein 20 service hops = 10ms sirf network par, bina kuch kiye.' },
-        { answer: '150 ms', explain: 'Cross-continent ~150ms. Yeh <b>physics</b> hai (light speed + fiber), koi tuning ise theek nahi kar sakti. Ilaaj sirf architecture hai: data user ke paas rakho.' },
+        { answer: '150 ms', explain: 'Cross-continent ~150ms. Ye <b>physics</b> hai (light speed + fiber), koi tuning physics ko theek nahi kar sakti. Ilaaj sirf architecture hai: data user ke paas rakho.' },
       ],
     },
     {
       type: 'match',
       title: 'Number → design ka faisla',
       pairs: [
-        { left: 'RAM 100ns vs SSD 100µs (1000x)', right: 'Cache lagane ka poora karan', explain: 'Yeh ek number caching ki poori duniya justify karta hai. Working set ko memory mein rakhna 1000x ka farak hai.' },
-        { left: 'Cross-continent RTT 150ms', right: 'Data ko user ke paas rakho (regional partitioning)', explain: 'Ek user-facing request mein ek se zyada cross-continent hop = SLO gaya. Isiliye Uber city-wise partition karta hai aur CDN edge par baithta hai. Yeh physics hai, tuning nahi.' },
+        { left: 'RAM 100ns vs SSD 100µs (1000x)', right: 'Cache lagane ka poora karan', explain: 'Ye ek number caching ki poori duniya justify karta hai. Working set ko memory mein rakhna 1000x ka farak hai.' },
+        { left: 'Cross-continent RTT 150ms', right: 'Data ko user ke paas rakho (regional partitioning)', explain: 'Ek user-facing request mein ek se zyada cross-continent hop = SLO gaya. Isiliye Uber city-wise partition karta hai aur CDN edge par baithta hai. Ye physics hai, tuning nahi.' },
         { left: 'Same-DC RTT 0.5ms × 20 hops', right: 'Service decomposition ki chhupi hui keemat', explain: '20 microservice hops = 10ms sirf network par, bina kisi kaam ke. Isiliye ek request path mein service count bhi ek design number hai.' },
-        { left: 'Ek Postgres ~10,000 qps', right: 'Sharding ka sawaal kab uthega', explain: 'Agar tumhara peak 2,000 qps hai toh sharding ki baat hi bekaar hai. Yeh number "abhi zaroorat hai ya nahi" ka seedha jawab de deta hai.' },
-        { left: '1M requests/din ≈ 12 rps', right: '"Bahut traffic" aksar bahut kam hota hai', explain: 'Log "10 lakh requests roz" sun ke ghabra jaate hain. Woh 12 rps hai — ek laptop bhi kar lega. Isliye hamesha rps mein badlo, phir faisla karo.' },
+        { left: 'Ek Postgres ~10,000 qps', right: 'Sharding ka sawaal kab uthega', explain: 'Agar tumhara peak 2,000 qps hai toh sharding ki baat hi bekaar hai. rps ka number "abhi zaroorat hai ya nahi" ka seedha jawab de deta hai.' },
+        { left: '1M requests/din ≈ 12 rps', right: '"Bahut traffic" aksar bahut kam hota hai', explain: 'Log "10 lakh requests roz" sun ke ghabra jaate hain. 10 lakh roz = 12 rps — ek laptop bhi kar lega. Isliye hamesha rps mein badlo, phir faisla karo.' },
       ],
     },
     {
@@ -2346,14 +2346,14 @@ Ek modern NIC          1–10 Gbps</pre>
     '"Roz ka X" ko turant rps mein badal sakte ho',
     'Anumaan ke baad naapne ki aadat hai',
   ],
-  homework: `Apne system ki ek asli request lo aur uska waqt teen hisson mein baanto:
+  homework: `Apne system ki ek asli request lo aur request ka waqt teen hisson mein baanto:
     network, DB, aur app ka apna kaam. Phir dekho ki sabse bada hissa kaunsa hai —
-    aur kya woh us latency ladder ke hisaab se <b>samajh mein aata hai</b>.
+    aur kya har hissa latency ladder ke hisaab se <b>samajh mein aata hai</b>.
     Jo hissa numbers se mel na khaaye, wahi tumhara chhupa hua bug hai.`,
   cards: [
     { front: 'Latency ladder (mote taur par)?', back: 'L1 0.5ns · RAM <b>100ns</b> · SSD random <b>100µs</b> · same-DC RTT <b>0.5ms</b> · HDD seek 10ms · cross-country 40ms · <b>cross-continent 150ms</b>.' },
     { front: 'Insaani paimane par?', back: '×1 billion: L1 = 0.5 sec · RAM = 100 sec · SSD = 27 ghante · same-DC network = <b>6 din</b> · cross-continent = <b>5 saal</b>.' },
-    { front: 'RAM vs SSD ka farak?', back: '<b>1000x</b> (100ns vs 100µs). Yeh ek number poori caching duniya ko justify karta hai.' },
+    { front: 'RAM vs SSD ka farak?', back: '<b>1000x</b> (100ns vs 100µs). Ye ek number poori caching duniya ko justify karta hai.' },
     { front: '"Roz ka X" → rps?', back: '86,400 ko <b>100,000</b> maan lo. 1M/din ≈ 12 rps · 100M/din ≈ 1,200 rps · 1B/din ≈ 12,000 rps. Peak = average × 2–5 (event ho toh 100x).' },
     { front: 'Cross-continent SLO?', back: 'WAN RTT measurement route-specific hai. Propagation ko CPU/index se remove nahi kar sakte;connection reuse,call reduction aur regional placement ka remaining budget measure karo.' },
     { front: 'Ek Postgres kitna?', back: '~10,000 simple qps · Redis ~100k ops/s · Kafka partition ~10 MB/s. In numbers se pata chalta hai ki sharding ki baat <b>abhi</b> zaroori hai ya nahi.' },

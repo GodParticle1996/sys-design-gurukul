@@ -632,7 +632,7 @@ power of two choices (apni ginti)    204 ms       1            602 ms          2
        <li><b>Ek machine dheemi</b> (kharab disk, noisy neighbour VM): round robin / random dheeme backend ko barabar hissa dete rehte hain → round robin ka p99 1.8–3.0 second (teen run).
          Least connections khud sambhalta hai — dheeme par requests der tak andar rehti hain, ginti badi dikhti hai.</li>
        <li><b>Purani jaankari par "sabse kam load":</b> sab ek hi "sabse khaali" ko chunte hain → wahi backend bhar jaata hai → agli baar doosra. Ginti mein
-         har backend ko lagbhag barabar milta hai (476 / 486 / 485 / 464 / 489) — par dher mein: ek ki line 92–106. Ise <b>herding</b> kehte hain.</li>
+         har backend ko lagbhag barabar milta hai (476 / 486 / 485 / 464 / 489) — par dher mein: ek ki line 92–106. Is jhund ko <b>herding</b> kehte hain.</li>
        <li><b>Power of two choices:</b> do random mein se behtar — herding risk reduce ho sakta hai; har baar saare backends dekhne ki zaroorat nahi. Signal quality aur selection distribution still matter karti hai. Envoy
          (<code>LEAST_REQUEST</code>, 2 choices) aur NGINX (<code>random two least_conn</code>) yahi karte hain.</li>
      </ol>
@@ -686,7 +686,7 @@ power of two choices (apni ginti)    204 ms       1            602 ms          2
   ],
   cards: [
     { front: 'Power of two choices kya hai?', back: 'Do random backends, unme se kam load wala. Herding se bachata hai, saare backends dekhne ki zaroorat nahi. Envoy LEAST_REQUEST, NGINX "random two least_conn".' },
-    { front: 'Round robin kab toot-ta hai?', back: 'Ek backend dheema ho (ya requests ka size alag ho) — usse bhi barabar hissa. Lab 41: dheeme backend ki line 91–113; least-conn mein 0–1.' },
+    { front: 'Round robin kab toot-ta hai?', back: 'Ek backend dheema ho (ya requests ka size alag ho) — dheeme backend ko bhi barabar hissa. Lab 41: dheeme backend ki line 91–113; least-conn mein 0–1.' },
   ],
 });
 

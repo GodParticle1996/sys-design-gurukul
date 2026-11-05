@@ -1104,7 +1104,7 @@ recommendations poori tarah mar jaaye?
     Abhi usmein kitne messages pade hain? Zyadatar teams ke liye teesre sawaal ka jawab
     "pata nahi" hota hai — aur usme aksar mahino ka gum hua data hota hai.`,
   cards: [
-    { front: 'Poison message?', back: 'Woh message jo har baar crash karta hai. Bina DLQ ke: infinite retry → consumer offset atka → <b>uske peeche ki poori queue ruk gayi</b>.' },
+    { front: 'Poison message?', back: 'Aisa message jo har baar crash karta hai. Bina DLQ ke: infinite retry → consumer offset atka → <b>uske peeche ki poori queue ruk gayi</b>.' },
     { front: 'DLQ ka pattern?', back: '<code>N retries (backoff) → DLQ → alert</code>. Consumer aage badh jaata hai, baaki messages chal jaate hain.' },
     { front: 'DLQ ke 4 niyam?', back: '<b>1.</b> Alert (<code>dlq.depth &gt; 0</code>) <b>2.</b> Poora context (message + error + stack + retry count) <b>3.</b> Replay tool <b>4.</b> Consumer idempotent.' },
     { front: 'DLQ ka chhupa hua jaal?', back: 'Downstream down hai → saare <b>theek</b> messages DLQ mein chale jaate hain. DLQ <b>permanent</b> failures ke liye hai; transient par lamba backoff ya breaker.' },
