@@ -88,7 +88,7 @@ NON-FUNCTIONAL
   • Upload resumable ho — network toote toh shuru se nahi
   • Sync mein change kabhi KHOYE nahi</pre>
      <h3>🚪 Sabse bada faisla: file app server se guzarti hi nahi</h3>
-     <p>Sabse aam galti yeh hai ki upload backend par jaata hai aur backend
+     <p>Sabse aam galti: upload backend par jaata hai aur backend
      usko S3 par daalta hai. Us design mein har byte <b>do baar</b> chalti hai
      aur tumhare app servers bandwidth ke liye khareede jaate hain.</p>
      <pre>❌ Client → App Server → S3            (har byte do baar, app server bottleneck)
@@ -96,13 +96,13 @@ NON-FUNCTIONAL
    App Server → Client: presigned URL
    Client → S3 seedha                  (app server sirf permission deta hai)
    S3 → App Server: notification       (metadata update)</pre>
-     <p class="tip">🎯 Yeh pattern har jagah dikhta hai — YouTube upload,
+     <p class="tip">🎯 Presigned URL ka pattern har jagah dikhta hai — YouTube upload,
      Instagram photo, resume upload, sab. Is large-file design mein app metadata aur authorization sambhalta hai; bytes direct storage par jaati hain. Presigned URL bearer capability hai: <b>shortest practical expiry</b>, scoped key/method, checksum aur renewal/resume design karo. Fixed one-minute expiry universal rule nahi; credentials pehle expire ho sakte hain.</p>`,
     `<h3>🧩 Chunking — ek design, teen faayde</h3>
      <p>File ko 5-10 MB ke chunks mein todo aur har chunk ka
      <b>fingerprint</b> (SHA-256) nikalo. Ek hi faisla teen problem hal karta hai:</p>
      <table>
-       <tr><td><b>Resumable</b></td><td>network toota? sirf woh chunks bhejo jo abhi tak nahi gaye</td></tr>
+       <tr><td><b>Resumable</b></td><td>network toota? sirf abhi tak na gaye chunks bhejo</td></tr>
        <tr><td><b>Dedup</b></td><td>fingerprint pehle se hai? chunk bhejna hi mat — bas reference jodo</td></tr>
        <tr><td><b>Parallel</b></td><td>kai chunks ek saath ja sakte hain, isliye upload tez</td></tr>
      </table>
@@ -276,7 +276,7 @@ Content-defined (rolling hash se boundary chuno):
     },
   ],
   success: [
-    'Presigned URL wala raasta bata sakte ho aur uski wajah bhi',
+    'Presigned URL wala raasta bata sakte ho aur raaste ki wajah bhi',
     'Chunking se milne wale teenon faayde ek saath samjha sakte ho',
     'Content-defined chunking ka delta-sync faayda bol sakte ho',
     'Durable history/cursor catch-up ko transport se alag reliability contract samjha sakte ho',
@@ -290,7 +290,7 @@ Content-defined (rolling hash se boundary chuno):
     { front: 'Chunking se kaunse teen faayde?', back: '<b>Resumable</b> (sirf bache hue chunks bhejo) · <b>Dedup</b> (fingerprint pehle se hai toh bhejo hi mat) · <b>Parallel</b> (kai chunks ek saath). Ek faisla, teen problem hal.' },
     { front: 'Content-defined vs fixed-size chunking?', back: 'File ke shuru mein ek byte jodo: fixed-size ke <b>saare boundaries khisak</b> jaate hain (poori file dobara), content-defined mein sirf <b>aas-paas</b> ke chunks badalte hain. Delta sync yahi banata hai.' },
     { front: 'Sync mein push aur poll dono kyun?', back: 'Push live latency reduce karta hai. Disconnect recovery ke liye durable change history, last-applied cursor aur replay/dedup contract chahiye. Periodic polling ya retained stream replay dono recovery mechanisms ho sakte hain.' },
-    { front: 'Presigned URL ki expiry?', back: '<b>Minute mein</b>, din mein nahi. Presigned URL ek <b>bearer token</b> hai — jiske paas URL hai uske paas access hai. Resume ke liye client naya URL maang sakta hai.' },
+    { front: 'Presigned URL ki expiry?', back: '<b>Minute mein</b>, din mein nahi. Presigned URL ek <b>bearer token</b> hai — URL rakhne wale ke paas access hai. Resume ke liye client naya URL maang sakta hai.' },
   ],
   interview: {
     title: 'Interview Round — File Storage',
@@ -378,13 +378,13 @@ Par un domains mein se zyadatar chhote hain — asli mix aisa hota hai:
     `<h3>🔁 Do alag dedup</h3>
      <table>
        <tr><th></th><th>URL dedup</th><th>Content dedup</th></tr>
-       <tr><td>Sawaal</td><td>"yeh URL pehle crawl hua?"</td><td>"yeh PAGE pehle dekha?"</td></tr>
+       <tr><td>Sawaal</td><td>"kya URL pehle crawl hua?"</td><td>"kya PAGE pehle dekha?"</td></tr>
        <tr><td>Kab</td><td>queue mein daalne se PEHLE</td><td>fetch karne ke BAAD</td></tr>
        <tr><td>Kaise</td><td>URL normalize karo, phir hash → index/bloom</td><td>content ka hash (ya simhash, near-duplicate ke liye)</td></tr>
        <tr><td>Kyun zaroori</td><td>ek hi page baar-baar fetch na ho</td><td>ek hi content alag URLs par milta hai (session ids, tracking params, mirrors)</td></tr>
      </table>
      <p>Content dedup ke bina crawler apni storage ka bada hissa <b>ek hi page ke
-     alag-alag URLs</b> par kharch kar deta hai — aur woh baad mein har downstream
+     alag-alag URLs</b> par kharch kar deta hai — aur duplicate pages baad mein har downstream
      system (index, training data) mein bhi ghusta hai.</p>
      <h3>🌐 DNS — chhupa hua kharcha measure karo</h3>
      <p>Cache misses par DNS lookup, phir TCP/TLS setup har nayi origin ki latency aur resource cost badha sakte hain. Koi universal 70% figure nahi; traces se DNS time, resolver cache hit aur connection reuse dekho.</p>
@@ -573,7 +573,7 @@ Warm connection:                                             request</pre>
   ],
   interview: {
     title: 'Interview Round — Web Crawler',
-    instructions: 'Yeh sawaal estimation aur coordination dono test karta hai. 🎤',
+    instructions: 'Web crawler ka sawaal estimation aur coordination dono test karta hai. 🎤',
     questions: [
       {
         q: '"Web crawler design karo, 10 arab pages 5 din mein." Pehla kaam?',

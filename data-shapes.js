@@ -938,7 +938,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      wapas bolna ho.</p>
      <h3>🔢 Connection ek resource hai</h3>
      <p>Stateless HTTP mein request 40 ms rehti hai aur chali jaati hai. WebSocket
-     <b>ghanton</b> tak rehta hai. Iska matlab:</p>
+     <b>ghanton</b> tak rehta hai. Lambe connection ka matlab:</p>
      <pre>10 lakh concurrent users
    ÷ 50,000 connections per node       ← memory + file descriptors ki hadd
    = 20 nodes SIRF connections ke liye
