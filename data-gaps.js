@@ -25,20 +25,21 @@
 const T_DROPBOX = [
   { text: 'Traffic aur storage ka andaaza lagao',
     check: s => s.records.some(r => r.kind === 'estimate') },
-  { text: 'Chunk dedup ka index kitna bada hoga — bloom filter se naapo',
-    check: s => s.records.some(r => r.kind === 'probabilistic' && r.op === 'bloom' && r.fpRate < 2) },
-  { text: 'Chunk id sortable chuno (index khush rahe)',
-    check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.sortable === true) },
-  { text: 'Metadata API par peak load — yahi asli service hai',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 8000) },
-  { text: 'Metadata cache lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'cache') },
+  { text: '100M chunks ka Bloom membership prefilter,1% target; positive par exact content-hash lookup',
+    check: s => s.records.some(r => r.kind === 'probabilistic' && r.op === 'bloom' && r.items === 100000000 && r.fpRate <= 1.01) },
+  { text: 'Metadata row key par 1M ULID inserts; content-hash identity ka badal nahi',
+    check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.sortable === true && r.type === 'ulid' && r.rows === 1000000) },
+  { text: "Metadata list ka 12000-rps baseline load: saturation dekho",
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 12000 && r.saturated) },
+  { text: "Metadata cache TTL300s, jitter 20%, warm hit-rate 1 lagao",
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'cache' && s.sys.api.cache?.ttlSec === 300 && s.sys.api.cache.jitterPct === 20 && s.sys.api.cache.hitRate === 1) },
   { text: 'Ek shared link viral ho gaya',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true) },
-  { text: 'Us file ki key ko phailao',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1) },
-  { text: 'Ek badi file = bahut saare chunks — protocol ka farak dekho',
-    check: s => s.records.some(r => r.kind === 'net' && r.op === 'compare' && r.assets >= 40) },
+  { text: 'file:qtr-report read-key par 50000 rps replicate karo',
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1 && r.rps === 50000 && r === SD.mission.latest(s, 'cache', 'hotkey')) },
+  { text: 'Ek badi file = bahut saare chunks — 60 chunks par protocol ka farak dekho',
+    check: s => s.records.some(r => r.kind === 'net' && r.op === 'compare' && r.assets === 60) },
+  { text: "Fresh 12000-rps metadata load: saturation band ho, backend errors zero", check: s => SD.mission.current(s, 'load', r => r.rps === 12000 && !r.saturated && r.errPct === 0) },
 ];
 
 const T_CRAWLER = [
@@ -50,16 +51,16 @@ const T_CRAWLER = [
     check: s => s.records.some(r => r.kind === 'probabilistic' && r.op === 'hll') },
   { text: 'Frontier queue: consumers partitions se zyada — kuch khaali baithenge',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle > 0) },
-  { text: 'Ab partitions theek karo',
-    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle === 0) },
-  { text: 'Ek bada domain saara traffic khaa raha hai',
+  { text: 'Partitions/consumers balance karo: latest idle=0 ho',
+    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle === 0 && r === SD.mission.latest(s, 'stream', 'partitions')) },
+  { text: 'Alag read-key demo: domain:wikipedia.org par 50000 rps',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true) },
-  { text: 'Us domain ko todo',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1) },
+  { text: 'domain:wikipedia.org read-key replicate karo; actual crawl politeness simulate nahi hoti',
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1 && r.rps === 50000 && r === SD.mission.latest(s, 'cache', 'hotkey')) },
   { text: 'Thande connection ka kharcha dekho (DNS + TCP + TLS)',
     check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.warm === false) },
-  { text: 'Ab warm connection — farak dekho',
-    check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.warm === true) },
+  { text: 'Latest trace warm connection ka ho — handshake ka farak dekho',
+    check: s => s.records.some(r => r.kind === 'net' && r.op === 'trace' && r.warm === true && r === SD.mission.latest(s, 'net', 'trace')) },
 ];
 
 SD.registerLevelsAfter('builds', 'youtube', [
@@ -180,25 +181,23 @@ Content-defined (rolling hash se boundary chuno):
       }),
       tasks: T_DROPBOX,
       success: SD.allTasks(T_DROPBOX),
-      successText: `Dhyan do ki mission mein <b>file ki bytes</b> kahin naapi hi
-        nahi gayin — kyunki woh bytes tumhare servers se guzarti hi nahi. Asli
-        service <b>metadata</b> hai, aur uske teen dabav yahi the: dedup ka index,
-        peak read load, aur ek viral shared link.`,
+      successText: "Metadata benchmark mein 12000-rps cache recovery aur viral read-key replication naapi gayi. ULID metadata row key hai; dedup identity content hash hai. Bloom positive par exact lookup chahiye. File bytes ka upload/download simulator ne nahi naapa.",
       solution: [
         "estimate --users 500000000 --rps 12000 --bytes 500",
         "bloom --items 100000000 --fp 0.01",
         "id bench --type ulid --rows 1000000",
         "load --rps 12000 --duration 8",
-        "sim add cache --ttl 300 --jitter 20",
+        "sim add cache --ttl 300 --jitter 20 --hit-rate 1",
         "cache hotkey --key file:qtr-report --rps 50000",
         "cache hotkey --key file:qtr-report --rps 50000 --replicas 8",
         "net compare --assets 60",
+        "load --rps 12000 --duration 8"
       ],
-      verify: s => { const m = SD.mission; return s.sys.api.cache?.jitterPct > 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
+      verify: s => { const m = SD.mission; return s.sys.api.cache?.jitterPct > 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false && m.current(s, 'load', r => r.rps === 12000 && !r.saturated && r.errPct === 0); },
       hints: [
-        'Pehle `estimate` se metadata traffic aur record size ka hisaab nikalo. File bytes direct storage par jaati hain; mission metadata service ka kharch naapta hai.',
-        '`bloom --items <count> --fp <fraction>` chunk membership ka memory estimate hai; positive par exact hash lookup chahiye. `id bench --type <scheme> --rows <count>` metadata key ka test hai, content hash ka badal nahi.',
-        'Poora raasta — har command alag Enter se chalao:\nestimate --users 500000000 --rps 12000 --bytes 500\nbloom --items 100000000 --fp 0.01\nid bench --type ulid --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20\ncache hotkey --key file:qtr-report --rps 50000\ncache hotkey --key file:qtr-report --rps 50000 --replicas 8\nnet compare --assets 60',
+        "Metadata traffic ka estimate nikalo. Bloom filter chunk-membership prefilter ka size batata hai; positive par exact content-hash lookup chahiye.",
+        "ULID metadata row-key benchmark content hash ka badal nahi. TTL300s,jitter20%,hit-rate1 cache ke baad 12000-rps load repeat karo. Protocol comparison60 chunks par rakho.",
+        "Poora raasta — har command alag Enter se chalao:\nestimate --users 500000000 --rps 12000 --bytes 500\nbloom --items 100000000 --fp 0.01\nid bench --type ulid --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20 --hit-rate 1\ncache hotkey --key file:qtr-report --rps 50000\ncache hotkey --key file:qtr-report --rps 50000 --replicas 8\nnet compare --assets 60\nload --rps 12000 --duration 8",
       ],
     },
     {
@@ -451,9 +450,7 @@ Warm connection:                                             request</pre>
     {
       type: 'terminal',
       title: 'Mission — crawler ke chaar dabav',
-      goal: `Paimana nikalo, dedup ka index naapo, frontier ke partitions theek
-             karo, ek bade domain ka hot partition sambhaalo, aur DNS/handshake
-             ka kharcha dekho.`,
+      goal: `Paimana aur Bloom sizing naapo; partitions aur handshake dekho. domain:wikipedia.org par 50000-rps read-key replication alag demo hai. Global domain crawl budget aur politeness simulator mein implement nahi hain.`,
       sys: SD.sys.txn({
         name: 'crawler-frontier',
         slo: { p99Ms: 500, availability: 99 },
@@ -462,8 +459,7 @@ Warm connection:                                             request</pre>
       tasks: T_CRAWLER,
       success: SD.allTasks(T_CRAWLER),
       successText: `Dhyan do ki kahin bhi "aur machines daalo" jawab nahi tha.
-        Crawler ke chaaron dabav — dedup ka index, partition ka balance, ek bada
-        domain, aur DNS ka handshake — <b>coordination</b> ke dabav hain,
+        Actual per-domain crawl limit shared scheduling authority mein enforce karni hogi. Read-key copies domain dispatch rate enforce nahi karti. Crawler ke dabav — dedup ka index, partition ka balance aur DNS — <b>coordination</b> ke dabav hain,
         capacity ke saath aate hain. Eight-machine NIC estimate actual CPU/storage/latency capacity prove nahi karta.`,
       solution: [
         "estimate --users 10000000 --rps 3750 --bytes 2000000",
@@ -478,8 +474,8 @@ Warm connection:                                             request</pre>
       ],
       verify: s => { const m = SD.mission; return m.latest(s, 'stream', 'partitions')?.idle === 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false && m.latest(s, 'net', 'trace')?.warm === true; },
       hints: [
-        'Pehle `estimate` se crawl ka paimana nikalo. Bytes aur rps bandwidth ka hisaab dete hain; domain ki politeness alag seema hai.',
-        '`stream partitions --partitions <count> --consumers <count>` mein consumers ko kaam milna chahiye. `cache hotkey --key <domain> --rps <rate> --replicas <copies>` sirf load model hai; domain ki request hadd mat badhao.',
+        "Crawl estimate aur Bloom/HLL sizing se paimana samjho. Global per-domain dispatch limit ko shared scheduling authority chahiye.",
+        "Partitions ko consumers se balance karo. domain:wikipedia.org par 50000-rps read-key demo scheduler/politeness prove nahi karta. Cold/warm network traces mein handshake ka farak naapo.",
         'Poora raasta — har command alag Enter se chalao:\nestimate --users 10000000 --rps 3750 --bytes 2000000\nbloom --items 1000000000 --fp 0.01\nhll --items 1000000000\nstream partitions --partitions 6 --consumers 8\nstream partitions --partitions 12 --consumers 8\ncache hotkey --key domain:wikipedia.org --rps 50000\ncache hotkey --key domain:wikipedia.org --rps 50000 --replicas 8\nnet trace --rtt 40\nnet trace --rtt 40 --warm',
       ],
     },

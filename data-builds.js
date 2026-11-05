@@ -12,63 +12,67 @@
 const T_BITLY = [
   { text: 'Traffic ka andaaza lagao',
     check: s => s.records.some(r => r.kind === 'estimate') },
-  { text: 'Random short code ke liye har insert par collision check — id bench se dekho',
-    check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.sortable === false) },
-  { text: 'Counter + base62 wala raasta (sortable id)',
-    check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.sortable === true) },
-  { text: 'Redirect path par load — 5,000 rps',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 5000) },
-  { text: 'Cache lagao — redirect 99% read hai',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'cache') },
+  { text: 'UUID4 par 1M metadata inserts; random B-tree cost dekho (collision check nahi)',
+    check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.type === 'uuid4' && r.rows === 1000000 && r.sortable === false) },
+  { text: "Snowflake par 1M inserts; sorted B-tree cost dekho (base 62 encoding nahi)",
+    check: s => s.records.some(r => r.kind === 'id' && r.op === 'bench' && r.type === 'snowflake' && r.rows === 1000000 && r.sortable === true) },
+  { text: "Generic list workload par 12000 rps baseline (redirect handler nahi)",
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 12000 && r.saturated) },
+  { text: "Cache TTL300s, jitter 20%, hit-rate 1 ka warm workload lagao",
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'cache' && s.sys.api.cache?.ttlSec === 300 && s.sys.api.cache.jitterPct === 20 && s.sys.api.cache.hitRate === 1) },
   { text: 'Ek viral link — dekho ki viral link ek cache node jala deta hai',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true) },
-  { text: 'Us viral link ko phailao',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1) },
+  { text: "url:aX9k 2Lq read-key ko phailao;50000 rps ka hotspot",
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1 && r.rps === 50000 && r === SD.mission.latest(s, 'cache', 'hotkey')) },
+  { text: "Cache ke baad fresh 12000 rps load: unsaturated aur zero backend errors", check: s => SD.mission.current(s, 'load', r => r.rps === 12000 && !r.saturated && r.errPct === 0) },
 ];
 
 const T_ADCLICK = [
   { text: 'Bina watermark ke minute-window — late clicks kho jaayenge',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'window' && !r.watermark && r.dropped > 0) },
-  { text: 'Watermark lagao — nuksaan kam hona chahiye',
-    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'window' && r.watermark > 0 && r.caught > 0) },
-  { text: 'Bada watermark aur bachaata hai — par natija der se',
+  { text: "10s grace interval lagao (--watermark 10); late clicks catch hon",
+    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'window' && r.watermark === 10 && r.caught > 0) },
+  { text: '30s grace lagao; catch count badhe aur drops zero ho',
     check: s => {
       const w = s.records.filter(r => r.kind === 'stream' && r.op === 'window' && r.watermark > 0);
-      return w.length >= 2 && w.some(a => w.some(b => b.watermark > a.watermark && b.caught > a.caught));
+      return w.some(a => a.watermark === 10) && w.some(a => a.watermark === 30 && a.dropped === 0 && a === SD.mission.latest(s, 'stream', 'window'));
     } },
   { text: 'Consumers partitions se zyada lagao — kuch khaali baithenge',
     check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle > 0) },
   { text: 'Ab partitions aur consumers ka milaan theek karo',
-    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle === 0) },
-  { text: 'Dedup ke liye bloom filter ka size nikalo (1% false positive)',
-    check: s => s.records.some(r => r.kind === 'probabilistic' && r.op === 'bloom' && r.fpRate < 2) },
-  { text: 'Super Bowl ad — ek partition par 40% traffic',
+    check: s => s.records.some(r => r.kind === 'stream' && r.op === 'partitions' && r.idle === 0 && r === SD.mission.latest(s, 'stream', 'partitions')) },
+  { text: '10M items,1% Bloom membership prefilter naapo; exact billing dedup prove nahi hota',
+    check: s => s.records.some(r => r.kind === 'probabilistic' && r.op === 'bloom' && r.items === 10000000 && r.bits === 95850584 && r.fpRate <= 1.01) },
+  { text: "Alag read-hotkey arithmetic: ad:sb 2026 par 400000 rps (stream partition model nahi)",
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true) },
-  { text: 'Us ad ki key ko todo',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1) },
+  { text: "ad:sb 2026 read-key replicate karo;400000 rps per-node cap ke andar ho",
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1 && r.rps === 400000 && r === SD.mission.latest(s, 'cache', 'hotkey')) },
 ];
 const T_TICKET = [
-  { text: 'Bina kisi protection ke ek seat par do log — double booking',
-    check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.doubleBooked === true) },
-  { text: 'Seats reset karo',
+  { text: "Bina protection A14 par do buyers: double booking dekho",
+    check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.doubleBooked) },
+  { text: "Seats reset karo",
     check: s => s.records.some(r => r.kind === 'book' && r.op === 'reset') },
-  { text: 'Reservation mode chalu karo',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /booking\.mode/.test(r.path) && r.value === 'reservation') },
-  { text: 'Seat par TTL ke saath hold lagao',
-    check: s => s.records.some(r => r.kind === 'book' && r.op === 'hold' && r.ok === true && r.ttl > 0) },
-  { text: 'Doosra khareedaar ab ruk jaana chahiye',
-    check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.blockedByHold === true) },
-  { text: 'Ab on-sale ka load — system girega',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 50000 && r.saturated === true) },
-  { text: 'Waiting room (admission control) lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'admission') },
-  { text: 'Seat map ko cache karo',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'cache') },
-  { text: 'Ab load dobara — ab system khada rehna chahiye',
-    check: s => {
-      const i = s.records.findIndex(r => r.kind === 'sim' && r.op === 'add' && r.what === 'admission');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps >= 50000 && r.saturated === false);
-    } },
+  { text: "Reservation mode chalu karo",
+    check: s => s.sys.booking?.mode === 'reservation' },
+  { text: "A14 par alice ka 600s hold lagao",
+    check: s => s.records.some(r => r.kind === 'book' && r.op === 'hold' && r.seat === 'A14' && r.owner === 'alice' && r.ttl === 600 && r.ok) },
+  { text: "A14 ka active hold doosra buyer roke",
+    check: s => s.records.some(r => r.kind === 'book' && r.seat === 'A14' && r.blockedByHold) },
+  { text: "bob A14 confirm kare: owner mismatch reject ho",
+    check: s => s.records.some(r => r.kind === 'book' && r.op === 'confirm' && r.seat === 'A14' && r.owner === 'bob' && r.denied === 'owner') },
+  { text: "alice A14 confirm kare: ek sale ho",
+    check: s => s.sys.booking?.seats.A14 === 'alice' && s.records.some(r => r.kind === 'book' && r.op === 'confirm' && r.seat === 'A14' && r.owner === 'alice' && r.ok) },
+  { text: "B15 par alice ka 10s hold lagao; 10s advance ke baad B15 doosra buyer khareed sake",
+    check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.seat === 'B15' && r.releasedByExpiry && r.sold === 1) },
+  { text: "50000 rps baseline load: saturation dekho",
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 50000 && r.saturated) },
+  { text: "Admission 3000 rps, queue 8s lagao",
+    check: s => s.sys.api.admission?.maxRps === 3000 && s.sys.api.admission.queueSec === 8 },
+  { text: "Seat-map cache TTL2s, jitter 20% lagao",
+    check: s => s.sys.api.cache?.ttlSec === 2 && s.sys.api.cache.jitterPct === 20 },
+  { text: "Fresh 50000 rps load: backend unsaturated aur admission rejection>0 ho",
+    check: s => SD.mission.current(s, 'load', r => r.rps === 50000 && !r.saturated && r.rejectedRequests > 0) },
 ];
 
 const T_UBER = [
@@ -76,46 +80,49 @@ const T_UBER = [
     check: s => s.records.some(r => r.kind === 'estimate') },
   { text: 'Bina geo index ke nearby query — full scan',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.rowsExamined > 500000) },
-  { text: 'Geo index banao (geohash pehle)',
-    check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'geohash') },
+  { text: "Geo index (geohash, updated_at) banao",
+    check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'geohash' && r.cols[1] === 'updated_at' && SD.mission.index(s, 'drivers', ['geohash','updated_at'])) },
   { text: 'Ab wahi query tez honi chahiye',
     check: s => {
-      const i = s.records.findIndex(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'geohash');
+      const i = s.records.findIndex(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'geohash' && r.cols[1] === 'updated_at' && SD.mission.index(s, 'drivers', ['geohash','updated_at']));
       return i > -1 && s.records.slice(i).some(r => r.kind === 'http' && r.status === 200 && r.rowsExamined < 1000);
     } },
   { text: 'Location store ka distribution dekho',
     check: s => s.records.some(r => r.kind === 'ring' && r.op === 'show') },
-  { text: 'Virtual nodes se skew theek karo',
-    check: s => s.records.some(r => r.kind === 'ring' && r.op === 'vnodes' && r.skew < 1.1) },
-  { text: '8 PM, baarish — ek cell par saara load',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true) },
-  { text: 'Us cell ko todo',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1) },
+  { text: '150 virtual nodes se skew theek karo',
+    check: s => s.records.some(r => r.kind === 'ring' && r.op === 'vnodes' && r.vnodes === 150 && s.sys.ring?.vnodes === 150 && r.skew < 1.1) },
+  { text: "Alag read-hotspot experiment: cell:te 7ud 9 par 60000 rps",
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true && r.key === 'cell:te7ud9' && r.rps === 60000) },
+  { text: "cell:te 7ud 9 read-key replicate karo; spatial split nahi",
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1 && r.key === 'cell:te7ud9' && r.rps === 60000) },
   { text: 'Matching bina protection ke — ek driver do riders ko',
     check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.doubleBooked === true) },
   { text: 'Reservation mode chalu karo',
     check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /booking\.mode/.test(r.path) && r.value === 'reservation') },
-  { text: 'Driver par 15s ka hold lagao',
-    check: s => s.records.some(r => r.kind === 'book' && r.op === 'hold' && r.ok === true && r.ttl > 0) },
+  { text: 'driver:8891 par rider-1 ka 15s hold lagao',
+    check: s => s.records.some(r => r.kind === 'book' && r.op === 'hold' && r.ok === true && r.seat === 'driver:8891' && r.owner === 'rider-1' && r.ttl === 15) },
   { text: 'Doosra rider ab ruke',
     check: s => s.records.some(r => r.kind === 'book' && r.op === 'seat' && r.blockedByHold === true) },
-  { text: 'Peak load — system girega',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 20000 && r.saturated === true) },
-  { text: 'Pricing service par timeout',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'timeout') },
+  { text: '25000 rps baseline load: saturation dekho',
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 25000 && r.saturated === true) },
+  { text: "Pricing timeout 10ms lagao (slow pricing p99=1500ms)",
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'timeout' && r.target === 'pricing' && r.ms === 10 && s.sys.deps.pricing?.timeoutMs === 10) },
   { text: 'Aur ek fallback',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'fallback') },
-  { text: 'Waiting room lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'admission') },
-  { text: 'Aur ab pool badhao — service time ka kaam ho chukne ke BAAD',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool') },
-  { text: 'Ab peak dobara — system khada rehna chahiye',
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'fallback' && r.target === 'pricing' && !!s.sys.deps.pricing?.fallback) },
+  { text: "Admission 8000 rps, queue 5s lagao",
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'admission' && s.sys.api.admission?.maxRps === 8000 && s.sys.api.admission.queueSec === 5) },
+  { text: "Ab pool 200 par scale karo",
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 200 && s.sys.pool.size === 200) },
+  { text: "Fresh 25000 rps load: unsaturated, pricing timeout/fallback exercised ho",
     check: s => {
-      const i = s.records.findIndex(r => r.kind === 'sim' && r.op === 'add' && r.what === 'admission');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps >= 20000 && r.saturated === false);
+      const i = s.records.findIndex(r => r.kind === 'sim' && r.op === 'add' && r.what === 'admission' && s.sys.api.admission?.maxRps === 8000 && s.sys.api.admission.queueSec === 5);
+      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps === 25000 && r.saturated === false && r.revision === s.revision && r.dependencies.pricing.failed && r.dependencies.pricing.ok);
     } },
-  { text: 'SLO budget check karo',
-    check: s => s.records.some(r => r.kind === 'slo') },
+  { text: '99.95% SLO: observed consumption aur remaining budget padho',
+    check: s => s.records.some(r => r.kind === 'slo' && r.avail === 99.95 && r === SD.mission.latest(s, 'slo')) },
+  { text: 'rider-2 active driver hold confirm kare: owner mismatch reject ho', check: s => s.records.some(r => r.kind === 'book' && r.op === 'confirm' && r.owner === 'rider-2' && r.denied === 'owner') },
+  { text: '15s advance karo; rider-1 ka expired driver hold confirm reject ho', check: s => s.records.some(r => r.kind === 'book' && r.op === 'confirm' && r.owner === 'rider-1' && r.denied === 'expired-or-missing') },
+  { text: 'rider-2 naya 15s driver hold lekar confirm kare', check: s => s.sys.booking?.seats['driver:8891'] === 'rider-2' && s.records.some(r => r.kind === 'book' && r.op === 'hold' && r.owner === 'rider-2' && r.ttl === 15 && r.ok) },
 ];
 
 SD.registerLevels('builds', [
@@ -245,8 +252,7 @@ READ (12,000/sec peak — yahan sab kuch hai)
     {
       type: 'terminal',
       title: 'Mission — Shortener ka bottleneck',
-      goal: `Code generation ke dono raaste naapo, phir redirect path ko
-             12,000 rps aur ek viral link ke liye tayyar karo.`,
+      goal: "Metadata ID insert costs compare karo; collision checks aur base 62 encoding simulate nahi hote. Generic list workload par 12000 rps cache recovery naapo; actual redirect handler ka proof alag chahiye.",
       sys: SD.sys.txn({
         name: 'shortener',
         slo: { p99Ms: 50, availability: 99.99 },
@@ -254,24 +260,22 @@ READ (12,000/sec peak — yahan sab kuch hai)
       }),
       tasks: T_BITLY,
       success: SD.allTasks(T_BITLY),
-      successText: `Poora design ek ratio se nikla: <b>100:1</b>.
-        Write path itna chhota hai ki uspar sochna bhi bekaar tha; saara kaam
-        read path par tha. Aur viral link koi naya problem nahi tha —
-        woh wahi <b>hot key</b> thi jo tum pehle se jaante ho.`,
+      successText: "Generic list benchmark mein cache ke baad 12000-rps load recover hua. Viral read-key replication ne per-node demand ghataayi. ID benchmarks B-tree inserts compare karte hain; redirect handler, base 62 encoding aur collision checks implement nahi hue.",
       solution: [
         "estimate --users 100000000 --rps 12000 --bytes 500",
         "id bench --type uuid4 --rows 1000000",
         "id bench --type snowflake --rows 1000000",
         "load --rps 12000 --duration 8",
-        "sim add cache --ttl 300 --jitter 20",
+        "sim add cache --ttl 300 --jitter 20 --hit-rate 1",
         "cache hotkey --key url:aX9k2Lq --rps 50000",
         "cache hotkey --key url:aX9k2Lq --rps 50000 --replicas 8",
+        "load --rps 12000 --duration 8"
       ],
-      verify: s => { const m = SD.mission; return s.sys.api.cache?.jitterPct > 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false; },
+      verify: s => { const m = SD.mission; return s.sys.api.cache?.jitterPct > 0 && m.latest(s, 'cache', 'hotkey')?.rps === 50000 && m.latest(s, 'cache', 'hotkey')?.hot === false && m.current(s, 'load', r => r.rps === 12000 && !r.saturated && r.errPct === 0); },
       hints: [
-        'Pehle `estimate` se redirect traffic ka paimana nikalo. Read-heavy shortener mein code generation aur viral link ka bojh alag samajhna hai.',
-        '`id bench --type <scheme> --rows <count>` se random aur sortable inserts milao. Viral key par sirf cache nodes badhaana kaafi nahi: `cache hotkey --key <url-key> --rps <rate> --replicas <copies>` se copies test karo.',
-        'Poora raasta — har command alag Enter se chalao:\nestimate --users 100000000 --rps 12000 --bytes 500\nid bench --type uuid4 --rows 1000000\nid bench --type snowflake --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20\ncache hotkey --key url:aX9k2Lq --rps 50000\ncache hotkey --key url:aX9k2Lq --rps 50000 --replicas 8',
+        "Estimate se workload ka paimana nikalo. Mission generic list cost ka proxy hai; redirect handler implement nahi hota.",
+        "UUID4/Snowflake benchmark sirf random/sorted B-tree inserts naapta hai; collision checks/base62 encoding nahi. Cache TTL300s,jitter20%,hit-rate1 ke baad 12000-rps load dobara chalao. Viral read-key copies alag test hain.",
+        "Poora raasta — har command alag Enter se chalao:\nestimate --users 100000000 --rps 12000 --bytes 500\nid bench --type uuid4 --rows 1000000\nid bench --type snowflake --rows 1000000\nload --rps 12000 --duration 8\nsim add cache --ttl 300 --jitter 20 --hit-rate 1\ncache hotkey --key url:aX9k2Lq --rps 50000\ncache hotkey --key url:aX9k2Lq --rps 50000 --replicas 8\nload --rps 12000 --duration 8",
       ],
     },
     {
@@ -726,15 +730,13 @@ watermark 60s  →  simulator mein 0 chhoote, par har number 1 minute der se
     {
       type: 'terminal',
       title: 'Mission — Windows, watermarks, dedup',
-      goal: `Late events ka nuksaan naapo, watermark se sudhaaro, partitions
-             theek karo, aur dedup ka daam dekho.`,
+      goal: `Grace interval se late-event drops ghatao. Bloom filter sirf membership prefilter hai; positive par exact click-ID lookup chahiye. Read-key replication stream salting ya exact billing dedup prove nahi karti.`,
       sys: SD.sys.orders({ name: 'ad-ingest' }),
       tasks: T_ADCLICK,
       success: SD.allTasks(T_ADCLICK),
-      successText: `Yeh system paise ka hai, isliye har faisla thoda alag hua:
+      successText: `Commands ne simplified grace window aur Bloom sizing dikhayi; exact billing pipeline implement nahi hui. Real system paise ka hai, isliye
         event time (processing time nahi), dedup laazmi, aur ek <b>doosra</b> exact
-        pass jo raat ko chalta hai. Aur hot partition wahi purana shape tha —
-        Super Bowl ad ne wahi kiya jo airport wali cell ne kiya tha.`,
+        pass jo raat ko chalta hai. Hot-key arithmetic ne read copies ka load baanta; stream aggregation/salting ka proof alag chahiye.`,
       solution: [
         "stream window --size 60 --events 1000000 --late 4",
         "stream window --size 60 --watermark 10 --events 1000000 --late 4",
@@ -1026,27 +1028,28 @@ booking      →  seedha, atomic, primary par</pre>
       },
       tasks: T_TICKET,
       success: SD.allTasks(T_TICKET),
-      successText: `Do alag problems, do alag ilaaj:
-        <b>contention</b> ka jawab reservation (hold + TTL) tha,
-        <b>flash crowd</b> ka jawab admission control tha.
-        Dhyaan do ki lock lagane se load kam nahi hua, aur admission control se
-        double booking nahi ruki — <b>har problem ko uska apna ilaaj chahiye tha</b>.`,
+      successText: "alice ka active hold bob ko confirm nahi karne deta; alice ek sale confirm karti hai. Dusra hold TTL ke baad inventory release karta hai. Admission aur seat-map cache ne 50000-rps backend load baandha. Ownership aur overload alag guards hain.",
       solution: [
         "book seat A14 --concurrent 2",
         "book reset",
         "sim set booking.mode reservation",
-        "book hold A14 --ttl 600",
+        "book hold A14 --ttl 600 --owner alice",
         "book seat A14 --concurrent 1",
+        "book confirm A14 --owner bob",
+        "book confirm A14 --owner alice",
+        "book hold B15 --ttl 10 --owner alice",
+        "sim advance 10",
+        "book seat B15 --concurrent 1",
         "load --rps 50000 --duration 8",
         "sim add admission --max-rps 3000 --queue 8",
         "sim add cache --ttl 2 --jitter 20",
-        "load --rps 50000 --duration 8",
+        "load --rps 50000 --duration 8"
       ],
-      verify: s => { const m = SD.mission; return s.sys.booking?.mode === 'reservation' && s.sys.booking.holds.A14 === 600 && s.sys.api.admission?.maxRps === 3000 && s.sys.api.cache?.ttlSec === 2 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated); },
+      verify: s => { const m = SD.mission; return s.sys.booking?.mode === 'reservation' && s.sys.booking.seats.A14 === 'alice' && !!s.sys.booking.seats.B15 && s.sys.api.admission?.maxRps === 3000 && s.sys.api.cache?.ttlSec === 2 && s.sys.api.cache.jitterPct === 20 && s.sys.api.admission.queueSec === 8 && m.current(s, 'load', r => r.rps === 50000 && !r.saturated && r.rejectedRequests > 0); },
       hints: [
-        'Pehle ek seat par concurrent buyers bhejkar double booking dekho. Seat ki correctness aur on-sale traffic ka overload do alag problems hain.',
-        '`book reset` ke baad `sim set booking.mode reservation`, phir `book hold <seat> --ttl <seconds>`. Hold doosra buyer rokta hai. Load bachane ke liye `sim add admission --max-rps <safe-rate> --queue <seconds>` alag lagao.',
-        'Poora raasta — har command alag Enter se chalao:\nbook seat A14 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold A14 --ttl 600\nbook seat A14 --concurrent 1\nload --rps 50000 --duration 8\nsim add admission --max-rps 3000 --queue 8\nsim add cache --ttl 2 --jitter 20\nload --rps 50000 --duration 8',
+        "A14 ki double booking ke baad reset aur reservation mode lagao. alice ka600s hold doosra buyer roke; bob confirm na kar sake, alice confirm kar sake.",
+        "B15 par 10s hold lagao; sim advance10 ke baad seat khulni chahiye. On-sale50000-rps load alag test hai: admission3000 rps,queue8s aur TTL2s cache se backend bachao.",
+        "Poora raasta — har command alag Enter se chalao:\nbook seat A14 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold A14 --ttl 600 --owner alice\nbook seat A14 --concurrent 1\nbook confirm A14 --owner bob\nbook confirm A14 --owner alice\nbook hold B15 --ttl 10 --owner alice\nsim advance 10\nbook seat B15 --concurrent 1\nload --rps 50000 --duration 8\nsim add admission --max-rps 3000 --queue 8\nsim add cache --ttl 2 --jitter 20\nload --rps 50000 --duration 8",
       ],
     },
     {
@@ -1881,20 +1884,12 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
         pool: { size: 50, acquireTimeoutMs: 10000 },
         app: { instances: 8, cpuMsPerReq: 5 },
         api: { pagination: 'cursor', countTotal: false, defaultSort: 'updated_at', primaryTable: 'drivers' },
-        deps: { pricing: { p50: 8, p99: 20, errorRate: 0 } },
+        deps: { pricing: { p50: 800, p99: 1500, errorRate: 0 } },
         booking: { mode: 'none', seats: {}, holds: {} },
       },
       tasks: T_UBER,
       success: SD.allTasks(T_UBER),
-      successText: `👑 <b>Architect Mahaguru.</b><br><br>
-        Saat shapes, saat failure modes — aur tumne ek bhi <b>naya</b> nahi seekha.
-        Geohash prefix wahi B-tree prefix tha. Hot cell wahi hot key thi.
-        Driver matching wahi reservation pattern tha. Pool wahi Little's Law thi.<br><br>
-        <b>Yahi is poore app ka nichod hai:</b> naye systems naye nahi hote —
-        woh un hi shapes ke naye libaas hote hain. Pattern ka naam lo,
-        uska known failure dhoondo, aur phir <b>maap ke</b> theek karo.<br><br>
-        Boxes koi bhi bana leta hai. Tradeoff bolna, bottleneck maapna,
-        aur "iski keemat yeh hai" keh paana — wahi architect banata hai. 🏛️`,
+      successText: "Driver hold ne owner mismatch aur 15s expiry dono enforce kiye. Slow pricing par 10ms timeout aur fallback exercised hue; service time 1500.06ms se 10.06ms hua. Pool 200 aur admission 8000 rps ke baad 25000 offered rps par backend unsaturated raha. Geo index aur read-key copies alag measurements hain.",
       solution: [
         "estimate --users 1000000 --rps 25000 --bytes 512",
         "GET /api/v1/drivers?geohash=te7ud9&limit=20",
@@ -1907,21 +1902,26 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
         "book seat driver:8891 --concurrent 2",
         "book reset",
         "sim set booking.mode reservation",
-        "book hold driver:8891 --ttl 15",
+        "book hold driver:8891 --ttl 15 --owner rider-1",
         "book seat driver:8891 --concurrent 1",
+        "book confirm driver:8891 --owner rider-2",
+        "sim advance 15",
+        "book confirm driver:8891 --owner rider-1",
+        "book hold driver:8891 --ttl 15 --owner rider-2",
+        "book confirm driver:8891 --owner rider-2",
         "load --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'",
-        "sim add timeout pricing 200",
+        "sim add timeout pricing 10",
         "sim add fallback pricing \"last known surge multiplier\"",
         "sim add admission --max-rps 8000 --queue 5",
         "sim scale pool 200",
         "load --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'",
-        "slo --availability 99.95",
+        "slo --availability 99.95"
       ],
-      verify: s => { const m = SD.mission; return m.index(s, 'drivers', ['geohash', 'updated_at']) && s.sys.ring?.vnodes === 150 && s.sys.booking?.mode === 'reservation' && s.sys.booking.holds['driver:8891'] === 15 && s.sys.deps.pricing?.timeoutMs === 200 && !!s.sys.deps.pricing.fallback && s.sys.api.admission?.maxRps === 8000 && s.sys.pool.size === 200 && m.current(s, 'load', r => r.rps === 25000 && !r.saturated); },
+      verify: s => { const m = SD.mission; return m.index(s, 'drivers', ['geohash', 'updated_at']) && s.sys.ring?.vnodes === 150 && s.sys.booking?.mode === 'reservation' && s.sys.booking.seats['driver:8891'] === 'rider-2' && s.sys.deps.pricing?.timeoutMs === 10 && !!s.sys.deps.pricing.fallback && s.sys.api.admission?.maxRps === 8000 && s.sys.pool.size === 200 && m.current(s, 'load', r => r.rps === 25000 && !r.saturated && r.dependencies.pricing.failed && r.dependencies.pricing.ok); },
       hints: [
-        'Pehle peak ka `estimate` nikalo aur bina geo index nearby GET bhejo. Kam drivers lautne par bhi bada scan nearby search ka kharch dikhayega.',
-        '`CREATE INDEX <name> ON drivers(geohash, <sort-column>)` ke baad same GET naapo. Matching mein `book reset`, phir `sim set booking.mode reservation` aur `book hold <driver> --ttl 15`; hot-cell copies double match nahi rokti.',
-        'Poora raasta — har command alag Enter se chalao:\nestimate --users 1000000 --rps 25000 --bytes 512\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nCREATE INDEX ix_geo ON drivers(geohash, updated_at)\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nring show\nring set vnodes 150\ncache hotkey --key cell:te7ud9 --rps 60000\ncache hotkey --key cell:te7ud9 --rps 60000 --replicas 16\nbook seat driver:8891 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold driver:8891 --ttl 15\nbook seat driver:8891 --concurrent 1\nload --rps 25000 --duration 8 --path \'/api/v1/drivers?geohash=te7ud9&limit=50\'\nsim add timeout pricing 200\nsim add fallback pricing "last known surge multiplier"\nsim add admission --max-rps 8000 --queue 5\nsim scale pool 200\nload --rps 25000 --duration 8 --path \'/api/v1/drivers?geohash=te7ud9&limit=50\'\nslo --availability 99.95',
+        "Geo query aur location-store distribution naapo. Driver matching mein 15s hold ka owner aur expiry check karo; read-key copies ownership nahi deti.",
+        "driver:8891 par rider-1 ka hold, wrong-owner confirm aur15s expiry prove karo. Rider-2 naya hold lekar confirm kare. Slow pricing par timeout10ms aur fallback lagao; final load mein fallback exercised ho.",
+        "Poora raasta — har command alag Enter se chalao:\nestimate --users 1000000 --rps 25000 --bytes 512\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nCREATE INDEX ix_geo ON drivers(geohash, updated_at)\nGET /api/v1/drivers?geohash=te7ud9&limit=20\nring show\nring set vnodes 150\ncache hotkey --key cell:te7ud9 --rps 60000\ncache hotkey --key cell:te7ud9 --rps 60000 --replicas 16\nbook seat driver:8891 --concurrent 2\nbook reset\nsim set booking.mode reservation\nbook hold driver:8891 --ttl 15 --owner rider-1\nbook seat driver:8891 --concurrent 1\nbook confirm driver:8891 --owner rider-2\nsim advance 15\nbook confirm driver:8891 --owner rider-1\nbook hold driver:8891 --ttl 15 --owner rider-2\nbook confirm driver:8891 --owner rider-2\nload --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'\nsim add timeout pricing 10\nsim add fallback pricing \"last known surge multiplier\"\nsim add admission --max-rps 8000 --queue 5\nsim scale pool 200\nload --rps 25000 --duration 8 --path '/api/v1/drivers?geohash=te7ud9&limit=50'\nslo --availability 99.95",
       ],
     },
     {

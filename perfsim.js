@@ -235,6 +235,7 @@ SD.depCost = function (sys, name, opts) {
   const o = opts || {};
   const breaker = d.breaker;
 
+  if (breaker && d.breakerState === 'open' && o.recordOutcome && o.nowSec >= d.openUntilSec) d.breakerState = 'half-open';
   if (breaker && d.breakerState === 'open') {
     return { ms: 1, ok: !!d.fallback, note: 'circuit OPEN — fail fast (1ms)' + (d.fallback ? ', fallback bheja' : ''), shortCircuit: true };
   }
@@ -246,18 +247,56 @@ SD.depCost = function (sys, name, opts) {
   let total = latency;
   if (!ok && d.retry) {
     total = latency * attempts;
-    if (d.retry.backoff === 'exp') {
-      let wait = d.retry.baseMs || 100;
-      for (let i = 1; i < attempts; i++) { total += wait; wait *= 2; }
-      note = (note ? note + '; ' : '') + attempts + ' attempts, exponential backoff';
-    } else {
-      total += (attempts - 1) * (d.retry.baseMs || 100);
-      note = (note ? note + '; ' : '') + attempts + ' attempts, fixed backoff';
+    // Expected wait of full/equal jitter keeps the cost deterministic.
+    const jitterFactor = d.retry.jitter === 'full' ? 0.5 : d.retry.jitter === 'equal' ? 0.75 : 1;
+    let wait = d.retry.baseMs || 100;
+    for (let i = 1; i < attempts; i++) {
+      total += wait * jitterFactor;
+      if (d.retry.backoff === 'exp') wait *= 2;
     }
+    note = (note ? note + '; ' : '') + attempts + ' attempts, ' + d.retry.backoff + ' backoff, jitter=' + d.retry.jitter;
   }
   const failed = !ok;                       // ASLI downstream call ka natija
+  if (breaker && o.recordOutcome) {
+    // Only real calls enter the time window; fallback success never erases failures.
+    d.outcomes = (d.outcomes || []).filter(x => x.at > o.nowSec - breaker.windowSec);
+    d.outcomes.push({ at: o.nowSec, failed });
+    const failureRate = d.outcomes.filter(x => x.failed).length / d.outcomes.length;
+    if (d.breakerState === 'half-open') {
+      d.breakerState = failed ? 'open' : 'closed';
+      if (!failed) d.outcomes = [];
+    } else if (d.outcomes.length >= (breaker.minCalls || 4) && failureRate >= breaker.threshold) d.breakerState = 'open';
+    if (d.breakerState === 'open') d.openUntilSec = o.nowSec + breaker.halfOpenAfter;
+  }
   if (!ok && d.fallback) { ok = true; note = (note ? note + '; ' : '') + 'fallback: ' + d.fallback; }
   return { ms: Math.round(total), ok, failed, note, attempts };
+};
+
+// A miss batch shares one DB call per key only when single-flight is enabled.
+SD.cacheMissBatch = (cache, misses, keys = 1) => ({
+  misses, dbQueries: cache?.singleFlight ? Math.min(misses, keys) : misses,
+});
+// Fixed TTL cohorts model expiry without randomness; replayed workloads stay identical.
+SD.cacheWindow = function (cache, start, duration, rps, coldMs, singleKey) {
+  const count = singleKey ? 1 : 100;
+  const expiry = cache.expiry || (cache.expiry = {});
+  const group = singleKey ? 'hot' : 'keys';
+  if (!expiry[group]) expiry[group] = Array.from({ length: count }, (_, i) =>
+    start + cache.ttlSec * (1 + (cache.jitterPct || 0) / 100 * (count === 1 ? 0 : 2 * i / (count - 1) - 1)));
+  const steps = [];
+  for (let second = 1; second <= duration; second++) {
+    let expired = 0;
+    expiry[group].forEach((at, i) => {
+      if (at <= start + second) {
+        expired++;
+        expiry[group][i] = start + second + cache.ttlSec * (1 + (cache.jitterPct || 0) / 100 * (count === 1 ? 0 : 2 * i / (count - 1) - 1));
+      }
+    });
+    const fraction = Math.min(1, 1 - (cache.hitRate ?? 0.9) + expired / count);
+    const batch = SD.cacheMissBatch(cache, rps * fraction, count);
+    steps.push({ ...batch, expiredKeys: expired, serviceMs: 1.2 + coldMs * batch.dbQueries / Math.max(1, rps) });
+  }
+  return steps;
 };
 
 /* ---------------------------------------------------------------------
@@ -266,19 +305,44 @@ SD.depCost = function (sys, name, opts) {
 SD.loadRun = function (sys, opts) {
   const rps = opts.rps;
   const duration = opts.duration || 10;
-  const serviceMs = opts.serviceMs;                   // ek request ka DB+dep time
+  let serviceMs = opts.serviceMs;                   // ek request ka DB+dep time
   const appMs = sys.app.cpuMsPerReq;
   const holds = sys.db.longTxHolding || 0;
   const effPool = Math.max(1, sys.pool.size - holds);  // leaked / lambi tx ne jo pakad rakhe hain
-  const capacity = effPool * (1000 / Math.max(0.01, serviceMs));   // rps jo pool sambhal sakta hai
+  let capacity = effPool * (1000 / Math.max(0.01, serviceMs));   // rps jo pool sambhal sakta hai
   const buckets = [];
   let backlog = 0;
   let totalErr = 0, totalReq = 0;
   let amp = sys.retryAmp || 1;
+  const waiting = [];
+  let rejectedRequests = 0, expiredRequests = 0, maxQueueWaitSec = 0;
+  const admission = sys.api.admission;
 
   for (let s = 1; s <= duration; s++) {
+    serviceMs = opts.cacheSteps ? opts.cacheSteps[s - 1].serviceMs : opts.serviceMs;
+    capacity = effPool * (1000 / Math.max(0.01, serviceMs));
     const offered = rps * amp;
-    const admitted = sys.api.admission ? Math.min(offered, sys.api.admission.maxRps) : offered;
+    let admitted = offered, rejected = 0;
+    if (admission) {
+      while (waiting.length && s - waiting[0].at >= admission.queueSec) {
+        const stale = waiting.shift(); rejected += stale.n; expiredRequests += stale.n;
+        maxQueueWaitSec = Math.max(maxQueueWaitSec, admission.queueSec);
+      }
+      let slots = admission.maxRps;
+      while (waiting.length && slots > 0) {
+        const first = waiting[0], n = Math.min(slots, first.n);
+        maxQueueWaitSec = Math.max(maxQueueWaitSec, s - first.at);
+        first.n -= n; slots -= n;
+        if (!first.n) waiting.shift();
+      }
+      const direct = Math.min(offered, slots);
+      admitted = admission.maxRps - slots + direct;
+      const queueSize = waiting.reduce((n, x) => n + x.n, 0);
+      const pending = Math.min(offered - direct, Math.max(0, admission.maxRps * admission.queueSec - queueSize));
+      if (pending > 0) waiting.push({ at: s, n: pending });
+      rejected += offered - direct - pending;
+      rejectedRequests += rejected;
+    }
     const served = Math.min(admitted + backlog, capacity);
     backlog = Math.max(0, admitted + backlog - capacity);
     const rho = admitted / capacity;
@@ -294,19 +358,20 @@ SD.loadRun = function (sys, opts) {
     if (timedOut) waitMs = sys.pool.acquireTimeoutMs;
     const p50 = Math.round(appMs + serviceMs + waitMs * 0.3);
     const p99 = Math.round(appMs + serviceMs * 1.35 + waitMs);
-    const errPct = timedOut ? Math.min(100, Math.round((1 - capacity / admitted) * 100)) : 0;
+    const errPct = opts.dependencyOK === false ? 100 : timedOut ? Math.min(100, Math.round((1 - capacity / admitted) * 100)) : 0;
     const queued = sys.api.admission ? Math.max(0, Math.round(offered - admitted)) : 0;
     totalErr += (errPct / 100) * admitted; totalReq += offered;
     buckets.push({
       s, offered: Math.round(offered), served: Math.round(served),
       p50, p99, waitMs: Math.round(waitMs),
       poolUsed: Math.min(effPool, Math.round(admitted * serviceMs / 1000)), poolSize: effPool,
-      backlog: Math.round(backlog), errPct, queued,
+      backlog: Math.round(backlog), errPct, queued, capacity, serviceMs, rejected, waiting: waiting.reduce((n, x) => n + x.n, 0),
     });
     /* errors → clients retry karte hain → load aur badhta hai (retry storm) */
     if (errPct > 0 && opts.clientRetries) amp = Math.min(3, amp * 1.25);
   }
   const maxWait = Math.max(...buckets.map(b => b.waitMs));
+  capacity = Math.min(...buckets.map(b => b.capacity));
   /* Admission control ka POORA maksad yahi hai: offered load capacity se upar ho
      sakta hai, par ANDAR utna hi aata hai jitna system sambhaal sakta hai.
      Isliye saturation offered par nahi, ADMITTED par naapa jaata hai — warna
@@ -314,7 +379,7 @@ SD.loadRun = function (sys, opts) {
   const offered = rps * (sys.retryAmp || 1);
   const admittedRps = sys.api.admission ? Math.min(offered, sys.api.admission.maxRps) : offered;
   return {
-    buckets, capacity: Math.round(capacity), effPool, serviceMs, maxWait,
+    buckets, rejectedRequests, expiredRequests, maxQueueWaitSec, waitingRequests: waiting.reduce((n, x) => n + x.n, 0), capacity: Math.round(capacity), effPool, serviceMs, maxWait,
     offeredRps: Math.round(offered), admittedRps: Math.round(admittedRps),
     queuedRps: Math.round(offered - admittedRps),
     rho: +(admittedRps / capacity).toFixed(2),
@@ -354,6 +419,7 @@ SD.perfFmt = { fmt, ms, bar, bytes };
 SD.mission = {
   latest(s, kind, op) { return [...s.records].reverse().find(r => r.kind === kind && (!op || r.op === op)); },
   current(s, kind, test) { return s.records.some(r => r.kind === kind && r.revision === s.revision && (!test || test(r))); },
+  hold(s, seat, ttl, owner) { const h = s.sys.booking?.holds[seat]; return !!h && h.ttl === ttl && h.expiresAt > s.timeSec && (!owner || h.owner === owner); },
   index(s, table, cols) { const t = s.sys.db.tables[table]; return !!t && (t.indexes || []).some(i => cols.every((c, n) => i.cols[n] === c)); },
 };
 SD.allTasks = tasks => s => tasks.every(t => t.check(s)) && (!s.stage.verify || !!s.stage.verify(s));
@@ -434,6 +500,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     hintsUsed: 0,
     done: false,
     revision: 0,
+    timeSec: 0,
     stage,
   };
   sim.responses = stage.responses || [];
@@ -561,6 +628,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       if ((norm.match(/'/g) || []).length % 2 || (norm.match(/"/g) || []).length % 2) err('400 — quote band nahi hui; header/key ko matching quotes mein likho');
       const before = JSON.stringify(sim.sys);
       exec(norm);
+      expireHolds();
       if (before !== JSON.stringify(sim.sys)) {
         sim.revision++;
         /* The record describes the state produced by this command. */
@@ -593,6 +661,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     const m = cmd.match(/^(GET|POST|PUT|PATCH|DELETE)\s+(.+)$/i);
     if (!m) err("400 — request aise likho:  GET /api/v1/transactions?page=1&limit=50");
     const method = m[1].toUpperCase();
+    sim.timeSec++;
     const flags = parseFlags(m[2], ['H', 'header', 'n']);
     const url = flags._[0];
     if (!url || !/^\//.test(url) || flags._.length !== 1) err('400 — ek relative URL do, jaise GET /api/v1/transactions?limit=50; flags URL se pehle ya baad aa sakte hain');
@@ -643,6 +712,9 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
                    denied: who.reason, actedAs: who.actedAs || null, claimed: who.claimed || null });
     }
 
+    // POST output follows its resource; idempotency is still an in-memory demonstration.
+    const postResource = route(method, url).resource;
+    const postBody = id => postResource === 'orders' ? { id: 'ord_' + id, status: 'pending' } : { id: 'pay_' + id, status: 'captured', amount: qs.amount || 4999 };
     /* ---- idempotency (POST) ---- */
     if (method === 'POST' && api.idempotency) {
       const key = headers['idempotency-key'];
@@ -652,17 +724,17 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       }
       if (sim.sys.seenKeys[key]) {
         print('ok', `HTTP/1.1 200 OK\nx-idempotent-replay: true\n\n${JSON.stringify(sim.sys.seenKeys[key])}`);
-        print('sys', `♻️ Wahi key phir se aayi — naya charge NAHI hua, pehle wala jawab lauta diya. ` +
+        print('sys', `♻️ Wahi key phir se aayi — naya record NAHI bana, pehle wala jawab lauta diya. ` +
           `Yahi idempotency hai: "N baar bhejo, asar ek hi baar".`);
-        return rec({ kind: 'http', method, path: url, status: 200, idem: 'replay', key });
+        return rec({ kind: 'http', method, path: url, status: 200, resource: postResource, body: sim.sys.seenKeys[key], idem: 'replay', key });
       }
-      const body = { id: 'pay_' + (Object.keys(sim.sys.seenKeys).length + 1001), status: 'captured', amount: qs.amount || 4999 };
+      const body = postBody(Object.keys(sim.sys.seenKeys).length + 1001);
       sim.sys.seenKeys[key] = body;
-      print('ok', `HTTP/1.1 201 Created\nlocation: /v1/payments/${body.id}\n\n${JSON.stringify(body)}`);
-      return rec({ kind: 'http', method, path: url, status: 201, idem: 'new', key });
+      print('ok', `HTTP/1.1 201 Created\nlocation: /v1/${postResource}/${body.id}\n\n${JSON.stringify(body)}`);
+      return rec({ kind: 'http', method, path: url, status: 201, resource: postResource, body, idem: 'new', key });
     }
     if (method === 'POST' && !api.idempotency) {
-      const body = { id: 'pay_' + (sim.records.filter(r => r.kind === 'http' && r.method === 'POST').length + 1001), status: 'captured' };
+      const body = postBody(sim.records.filter(r => r.kind === 'http' && r.method === 'POST').length + 1001);
       print('ok', `HTTP/1.1 201 Created\n\n${JSON.stringify(body)}`);
       if (headers['idempotency-key']) {
         print('sys', `⚠️ Tumne Idempotency-Key bheja — par server use dekh hi nahi raha (api.idempotency = false). ` +
@@ -703,14 +775,22 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       return rec({ kind: 'http', method, path: url, status: 400, guard: 'maxDepth', page });
     }
 
-    /* --- cache --- */
-    if (api.cache && r.kind === 'list') {
-      const hit = api.cache.hitRate == null ? 0.9 : api.cache.hitRate;
-      if (hit >= 1 || (sim.records.filter(x => x.kind === 'http' && x.path === url).length > 0 && hit > 0)) {
-        print('ok', `HTTP/1.1 200 OK\nx-cache: HIT\nage: 12\n\n{ "data": [ ${limit} items ] }`);
+    /* Cache entries expire on the virtual clock; a cold request fills the entry. */
+    let cacheBatch = null, pendingCache = null;
+    if (api.cache) {
+      const cache = api.cache;
+      const entries = cache.entries || (cache.entries = {});
+      const key = method + ':' + url + ':' + (who?.actedAs || 'public');
+      const entry = entries[key];
+      if (entry && entry.expiresAt > sim.timeSec && cache.hitRate > 0) {
+        print('ok', `HTTP/1.1 200 OK\nx-cache: HIT\nage: ${Math.floor(sim.timeSec - entry.at)}\n\n{ "data": [ ${limit} items ] }`);
         panel('COST', ['cache HIT — DB tak gaya hi nahi', 'total           ~1.2 ms']);
-        return rec({ kind: 'http', method, path: url, status: 200, cache: 'HIT', p99: 2, rowsExamined: 0 });
+        return rec({ kind: 'http', method, path: url, status: 200, cache: 'HIT', p99: 2, rowsExamined: 0, dbQueries: 0 });
       }
+      cacheBatch = SD.cacheMissBatch(cache, repeat);
+      // Stable key hash spreads different keys, never retries of the same key.
+      const phase = [...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0) % 101 / 50 - 1;
+      pendingCache = { entries, key, value: { at: sim.timeSec, expiresAt: sim.timeSec + cache.ttlSec * (1 + cache.jitterPct / 100 * phase) } };
     }
 
     /* --- query banao --- */
@@ -728,33 +808,11 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     Object.keys(sim.sys.deps).forEach(dn => {
       const d = sim.sys.deps[dn];
       if (d.calledBy && d.calledBy !== r.resource) return;
-      const dc = SD.depCost(sim.sys, dn);
+      const dc = SD.depCost(sim.sys, dn, { nowSec: sim.timeSec, recordOutcome: true });
       dependencyOK = dependencyOK && dc.ok;
       depMs += dc.ms;
       if (dc.note) depNotes.push(`${dn}: ${dc.note}`);
-      /* --- breaker ki state machine: user ise trip hote DEKHE --- */
-      if (d.breaker) {
-        if (dc.shortCircuit) {
-          d._openCalls = (d._openCalls || 0) + 1;
-          if (d._openCalls >= 5) {                       // thodi der baad ek test request
-            d.breakerState = 'half-open'; d._openCalls = 0;
-            depNotes.push(`${dn}: circuit HALF-OPEN — ek test request jaane de rahe hain`);
-          }
-        } else if (dc.failed) {
-          d._fails = (d._fails || 0) + 1;
-          if (d.breakerState === 'half-open') {
-            d.breakerState = 'open'; d._openCalls = 0;
-            depNotes.push(`${dn}: test request bhi fail — circuit wapas OPEN`);
-          } else if (d._fails >= (d.breaker.minCalls || 4)) {
-            d.breakerState = 'open'; d._fails = 0;
-            depNotes.push(`${dn}: ⚡ CIRCUIT OPEN — ${d.breaker.minCalls || 4} lagataar fail. ` +
-              `Ab calls 1ms mein fail hongi, 30s tak koi request downstream nahi jaayegi.`);
-          }
-        } else {
-          d._fails = 0;
-          if (d.breakerState === 'half-open') { d.breakerState = 'closed'; depNotes.push(`${dn}: test request pass — circuit CLOSED, sab normal`); }
-        }
-      }
+
     });
     totalMs += depMs;
     const p99 = Math.round(totalMs * 1.35);
@@ -762,6 +820,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     /* --- response --- */
     const t = r.table;
     const status = dependencyOK ? 200 : 504;
+    if (status === 200 && pendingCache) pendingCache.entries[pendingCache.key] = pendingCache.value;
     if (!dependencyOK) {
       print('err', 'HTTP/1.1 504 Gateway Timeout\n\n{ "type": "/errors/dependency-unavailable", "title": "Downstream call complete nahi hui; timeout, breaker aur fallback inspect karo", "status": 504 }');
     } else if (r.kind === 'detail') {
@@ -807,7 +866,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       page, limit, offset, keyset, cursor: keyset,
       rowsExamined: cost.rowsExamined + (countCost ? countCost.rowsExamined : 0),
       rowsSent: cost.rowsSent, plan: cost.plan, indexUsed: cost.key,
-      ms: +totalMs.toFixed(2), p99, countTotal: !!countCost, cache: 'MISS',
+      ms: +totalMs.toFixed(2), p99, countTotal: !!countCost, cache: 'MISS', cacheEnabled: !!api.cache, dbQueries: cacheBatch ? cacheBatch.dbQueries : repeat,
       auth: sim.sys.api.auth || 'none',
       actedAs: who ? (who.actedAs || null) : null,
       claimed: who ? (who.claimed || null) : (qs.user_id != null ? String(qs.user_id) : null),
@@ -1013,9 +1072,17 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     if (verb === 'status') return simStatus();
     if (verb === 'reset') {
       sim.sys = initialSystem(); sim.history = [cmd]; sim.records = []; sim.last = null;
-      sim.rl = { tokens: 0, at: 0 }; sim.lastError = null;
+      sim.rl = { tokens: 0, at: 0 }; sim.lastError = null; sim.timeSec = 0;
       print('ok', 'System aur mission evidence reset ho gaye. Pehle baseline se dobara shuru karo.');
       return rec({ kind: 'sim', op: 'reset' });
+    }
+
+    if (verb === 'advance') {
+      const seconds = Number(args);
+      if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 86400) err('400 — sim advance <seconds>: 0 se bada, 86400 tak do');
+      sim.timeSec += seconds;
+      print('ok', `Virtual clock ${sim.timeSec}s; TTL aur breaker cooldown clock se chalte hain`);
+      return rec({ kind: 'sim', op: 'advance', seconds, timeSec: sim.timeSec });
     }
 
     if (verb === 'set') {
@@ -1054,11 +1121,12 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       const target = f._[1];
       if (target && ['__proto__', 'prototype', 'constructor'].includes(target)) err('400 — dependency ka naam reserved hai; ledger jaisa service name do');
       if (what === 'cache') {
+        if (f.jitter != null && (!Number.isFinite(+f.jitter) || +f.jitter > 100)) err('400 — cache jitter percentage 0 se 100 tak do');
         sys.api.cache = { ttlSec: +(f.ttl || 60), jitterPct: +(f.jitter || 0), hitRate: f['hit-rate'] != null ? +f['hit-rate'] : 0.9 };
         print('ok', `Cache on — TTL ${sys.api.cache.ttlSec}s, jitter ${sys.api.cache.jitterPct}%`);
         if (!sys.api.cache.jitterPct) print('sys', `⚠️ Jitter 0 hai. Agar 10,000 keys ek saath cache hui thi, toh woh ek saath EXPIRE hongi — ` +
           `aur us ek second mein 10,000 requests seedha DB par. Isi ko cache stampede kehte hain.`);
-        else print('sys', `✅ TTL par ±${sys.api.cache.jitterPct}% jitter — expiry bikhar gayi, stampede nahi hoga.`);
+        else print('sys', `✅ TTL par ±${sys.api.cache.jitterPct}% jitter — expiry alag seconds mein hogi; ek hot key ke liye single-flight bhi chahiye.`);
         return rec({ kind: 'sim', op: 'add', what: 'cache', cfg: sys.api.cache });
       }
       if (what === 'timeout') {
@@ -1090,7 +1158,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         sys.deps[target] = sys.deps[target] || { p50: 40, p99: 120, errorRate: 0 };
         sys.deps[target].breaker = { threshold: +(f.threshold || 0.5), windowSec: +(f.window || 20), halfOpenAfter: +(f['half-open'] || 30) };
         sys.deps[target].breakerState = 'closed';
-        sys.deps[target]._fails = 0; sys.deps[target]._openCalls = 0;
+        sys.deps[target].outcomes = []; delete sys.deps[target].openUntilSec;
         print('ok', `${target}: circuit breaker on (threshold ${sys.deps[target].breaker.threshold * 100}%, window ${sys.deps[target].breaker.windowSec}s)`);
         print('sys', `🔌 States: CLOSED (sab normal) → OPEN (fail fast, 1ms) → HALF-OPEN (ek test request) → CLOSED. ` +
           `Breaker ka kaam downstream ko bachana NAHI — TUMHE bachana hai, taaki tumhare threads uske intezaar mein na mar jaayein.`);
@@ -1211,8 +1279,9 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         (d.timeoutMs ? ` · timeout ${d.timeoutMs}ms` : ' · ⚠️ no timeout') +
         (d.retry ? ` · retry×${d.retry.max}` : '') + (d.breaker ? ' · breaker' : '') + (d.fallback ? ' · fallback' : ''));
     });
+    Object.entries(sys.app.bulkheads || {}).forEach(([name, cap]) => lines.push(`bulkhead ${name} cap ${cap} concurrent`));
     panel('SYSTEM', lines);
-    return rec({ kind: 'status' });
+    return rec({ kind: 'status', bulkheads: sys.app.bulkheads || {} });
   }
 
   /* =====================================================================
@@ -1223,8 +1292,24 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     'deep-page': { desc: 'gehre offset pages', build: () => ({ page: 485728 }) },
     'cursor': { desc: 'keyset cursor', build: () => ({ keyset: true }) },
     'detail': { desc: 'GET /:id', build: () => ({ detail: true }) },
+    'mixed': { desc: 'ledger + search pools', build: () => ({}) },
     'flash': { desc: 'sab ek saath, ek hi key', build: () => ({ detail: true }) },
   };
+
+  function mixedLoad(rps, duration) {
+    const sys = sim.sys;
+    if (!sys.deps.ledger || !sys.deps.search) err('400 — mixed load ke liye ledger aur search dependencies chahiye');
+    const badMs = SD.depCost(sys, 'ledger').ms, healthyMs = SD.depCost(sys, 'search').ms;
+    const cap = sys.app.bulkheads?.ledger ?? sys.pool.size;
+    const badPoolUsed = Math.min(sys.pool.size, cap, Math.ceil(rps * badMs / 1000));
+    const healthyPool = Math.max(0, sys.pool.size - badPoolUsed);
+    const healthyCapacity = healthyPool * 1000 / Math.max(0.5, healthyMs);
+    const healthyServedRps = Math.min(rps, healthyCapacity);
+    const healthyP99 = healthyServedRps < rps ? sys.pool.acquireTimeoutMs : Math.round(healthyMs * 1.35);
+    sim.timeSec += duration;
+    panel('MIXED DEPENDENCY LOAD', [`ledger pool used ${badPoolUsed}/${cap}`, `search pool free ${healthyPool}`, `search served ${healthyServedRps}/${rps} rps · p99 ${healthyP99}ms`]);
+    return rec({ kind: 'load', pattern: 'mixed', rps, duration, badPoolUsed, healthyPool, healthyCapacity, healthyServedRps, healthyP99, saturated: healthyServedRps < rps, p99: healthyP99 });
+  }
 
   function cmdLoad(cmd) {
     const f = parseFlags(cmd.replace(/^load\s*/i, ''), ['rps', 'duration', 'pattern', 'path', 'write']);
@@ -1235,15 +1320,22 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     const pname = f.path ? 'path' : String(f.pattern || 'shallow').toLowerCase();
     const p = f.path ? { desc: f.path, build: () => ({}) } : PATTERNS[pname];
     if (!p) err(`400 — pattern '${pname}' pata nahi. Options: ${Object.keys(PATTERNS).join(', ')}  (ya --path '/api/v1/...' do)`);
+    if (pname === 'mixed') return mixedLoad(rps, duration);
     const shape = p.build();
 
     /* ek request ka service time nikalo */
     let serviceMs;
+    const dependencies = {};
+    const addDependencies = () => Object.keys(sys.deps).forEach(dn => {
+      const d = sys.deps[dn];
+      const resource = f.path ? route('GET', f.path).resource : sys.api.primaryTable;
+      if (d.calledBy && d.calledBy !== resource) return;
+      dependencies[dn] = SD.depCost(sys, dn); serviceMs += dependencies[dn].ms;
+    });
     if (sys.api.precomputed) serviceMs = sys.api.serviceMsOverride || 2;
     else if (f.path) {
       serviceMs = serviceMsForUrl(f.path);
-      if (sys.api.cache) serviceMs = serviceMs * (1 - (sys.api.cache.hitRate == null ? 0.9 : sys.api.cache.hitRate)) + 1.2;
-      Object.keys(sys.deps).forEach(dn => { serviceMs += SD.depCost(sys, dn).ms; });
+      addDependencies();
     }
     else {
       const tn = sys.api.primaryTable || Object.keys(sys.db.tables)[0];
@@ -1255,12 +1347,15 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       const c = SD.queryCost(sys, q);
       serviceMs = c.ms;
       if (sys.api.countTotal && !shape.keyset && !shape.detail) serviceMs += SD.queryCost(sys, { table: tn, whereCols: [], count: true }).ms;
-      if (sys.api.cache) serviceMs = serviceMs * (1 - (sys.api.cache.hitRate == null ? 0.9 : sys.api.cache.hitRate)) + 1.2;
-      Object.keys(sys.deps).forEach(dn => { serviceMs += SD.depCost(sys, dn).ms; });
+      addDependencies();
     }
     serviceMs = Math.max(0.5, serviceMs);
 
-    const res = SD.loadRun(sys, { rps, duration, serviceMs, clientRetries: sys.retryAmp > 1, writeHeavy: !!f.write });
+    const cacheSteps = sys.api.cache ? SD.cacheWindow(sys.api.cache, sim.timeSec, duration, rps, serviceMs, pname === 'flash') : null;
+    const coldServiceMs = serviceMs;
+    if (cacheSteps) serviceMs = Math.max(...cacheSteps.map(x => x.serviceMs));
+    const res = SD.loadRun(sys, { rps, duration, serviceMs, cacheSteps, dependencyOK: Object.values(dependencies).every(d => d.ok), clientRetries: sys.retryAmp > 1, writeHeavy: !!f.write });
+    sim.timeSec += duration;
     print('sys', `load: ${fmt(rps)} rps · ${duration}s · pattern '${pname}' (${p.desc}) · service time ${ms(serviceMs)}`);
     const maxP99 = Math.max(...res.buckets.map(b => b.p99));
     table(['sec', 'offered', 'served', 'p50', 'p99', 'pool', 'pool wait', 'queue', 'err%'],
@@ -1274,13 +1369,14 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       "Little's Law capacity        " + fmt(res.capacity) + ' rps   = pool ' + res.effPool + ' × (1000 / ' + ms(serviceMs) + ')',
       'offered load                 ' + fmt(res.offeredRps) + ' rps' + ((sys.retryAmp || 1) > 1 ? `  (${fmt(rps)} asli × ${sys.retryAmp} retry amplification)` : ''),
     ].concat(sys.api.admission ? [
-      'admission control            ' + fmt(res.admittedRps) + ' rps ANDAR, ' + fmt(res.queuedRps) + ' waiting room mein',
+      'admission control            ' + fmt(res.admittedRps) + ' rps ANDAR, ' + fmt(res.queuedRps) + ' rps waiting room ki taraf',
+      'waiting / rejected          ' + fmt(res.waitingRequests) + ' / ' + fmt(res.rejectedRequests) + ' · max wait ' + res.maxQueueWaitSec + 's',
     ] : []).concat([
       'utilization ρ                ' + res.rho.toFixed(2) + (sys.api.admission ? '   (admitted ÷ capacity)' : ''),
       '',
       res.saturated
-        ? '🔥 SATURATED — ρ ≥ 1. Queue badhti gayi, pool wait timeout tak pahuncha, requests marne lagi.'
-        : '✅ Capacity ke andar. Queue nahi bani.',
+        ? (res.rho >= 1 ? '🔥 SATURATED — ρ ≥ 1. Pool wait aur err% alag padho.' : '🔥 Dependency failure — backend err% inspect karo.')
+        : '✅ Backend capacity ke andar; admission waiting queue alag hai.',
     ]);
     if (res.saturated) {
       lines.push('   Note: CPU abhi bhi kam hai. Server "aaram se" baitha hai —');
@@ -1288,9 +1384,17 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     }
     panel("CAPACITY", lines);
     return rec({
-      kind: 'load', rps, duration, pattern: pname, serviceMs: +serviceMs.toFixed(2),
+      kind: 'load', rps, duration, pattern: pname, dependencies,
+      cacheConfig: sys.api.cache ? {
+        ttlSec: sys.api.cache.ttlSec, jitterPct: sys.api.cache.jitterPct,
+        hitRate: sys.api.cache.hitRate, singleFlight: !!sys.api.cache.singleFlight,
+      } : null,
+      coldServiceMs, cacheSteps,
+      dbQueries: cacheSteps ? cacheSteps.reduce((n, x) => n + x.dbQueries, 0) : rps * duration,
+      expiryMisses: cacheSteps ? cacheSteps.reduce((n, x) => n + x.expiredKeys, 0) : 0,
+      serviceMs: +serviceMs.toFixed(2),
       capacity: res.capacity, saturated: res.saturated, maxP99, errPct: res.errPct,
-      offeredRps: res.offeredRps, admittedRps: res.admittedRps, queuedRps: res.queuedRps,
+      offeredRps: res.offeredRps, admittedRps: res.admittedRps, queuedRps: res.queuedRps, rejectedRequests: res.rejectedRequests, expiredRequests: res.expiredRequests, waitingRequests: res.waitingRequests, maxQueueWaitSec: res.maxQueueWaitSec,
       effPool: res.effPool, p99: maxP99, rho: res.rho, maxWait: res.maxWait,
       poolStarved: res.maxWait > 100,
     });
@@ -1393,10 +1497,18 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     const avail = parseFloat(f.availability || sys.slo.availability);
     const days = parseInt(f.days, 10) || 30;
     const budgetMin = (100 - avail) / 100 * days * 24 * 60;
+    const loads = sim.records.filter(r => r.kind === 'load' && r.pattern !== 'mixed');
+    const observedSec = loads.reduce((n, r) => n + r.duration, 0);
+    const consumedMin = loads.reduce((n, r) => n + r.duration * r.errPct / 100 + (r.rejectedRequests || 0) / Math.max(1, r.offeredRps), 0) / 60;
+    const remainingMin = Math.max(0, budgetMin - consumedMin);
+    const burnRate = observedSec && avail < 100 ? consumedMin * 60 / observedSec / ((100 - avail) / 100) : 0;
     panel('ERROR BUDGET', [
       'target availability   ' + avail + '%',
       'window                ' + days + ' din',
       'error budget          ' + budgetMin.toFixed(1) + ' minutes  (' + (budgetMin / 60).toFixed(2) + ' ghante)',
+      'observed load         ' + observedSec + ' seconds; baaki window unknown',
+      'consumed / remaining  ' + consumedMin.toFixed(4) + ' / ' + remainingMin.toFixed(4) + ' minutes',
+      'observed burn rate    ' + burnRate.toFixed(2) + 'x (failed-request equivalent)',
       '',
       '99%     → ' + (0.01 * days * 24 * 60).toFixed(0) + ' min/mahina',
       '99.9%   → ' + (0.001 * days * 24 * 60).toFixed(0) + ' min/mahina',
@@ -1407,7 +1519,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       'ek galatfehmi hai — budget hi woh cheez hai jo deploy karne ki',
       'ijaazat deti hai.',
     ]);
-    return rec({ kind: 'slo', avail, budgetMin: +budgetMin.toFixed(1) });
+    return rec({ kind: 'slo', avail, budgetMin: +budgetMin.toFixed(1), observedSec, consumedMin, remainingMin, burnRate });
   }
 
   function cmdEstimate(cmd) {
@@ -1440,7 +1552,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     }
     panel('BACK OF THE ENVELOPE', lines);
     print('sys', `💡 Yaad rakho: 1 din ≈ 86,400 second. 1 lakh/din ≈ 1.2 rps. 1 million/din ≈ 12 rps. Peak = average × 2-5.`);
-    return rec({ kind: 'estimate', users, rps: writesPerSec, peak: writesPerSec * peak });
+    return rec({ kind: 'estimate', users, bytesPer, rps: writesPerSec, peak: writesPerSec * peak });
   }
 
   function cmdCursor(cmd) {
@@ -1566,14 +1678,15 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         `  cache mein bacha: [ ${cache.map(x => x.k).join(', ')} ]`,
         `  hits ${hits} · misses ${misses} · HIT RATE ${rate}%`,
       ].join('\n'));
-      return rec({ kind: 'cache', op: 'sim', policy, size, requests: keys.length, hits, misses, hitRate: rate });
+      return rec({ kind: 'cache', op: 'sim', policy, size, keys: keys.join(' '), requests: keys.length, hits, misses, hitRate: rate });
     }
 
     if (verb === 'hotkey' || verb === 'hot-key') {
       const key = f.key || 'post:celeb42';
       const rps = parseInt(f.rps, 10) || 50000;
-      const nodes = Math.max(1, parseInt(f.nodes, 10) || 8);
       const replicas = Math.max(1, parseInt(f.replicas, 10) || 1);
+      const nodes = Math.max(1, parseInt(f.nodes, 10) || Math.max(8, replicas));
+      if (replicas > nodes) err('400 — read copies ko alag nodes chahiye; --nodes replicas se kam nahi ho sakta');
       const perNode = Math.round(rps / replicas);
       const NODE_CAP = 20000;
       const hot = perNode > NODE_CAP;
@@ -1597,7 +1710,9 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     if (verb === 'coalesce' || verb === 'singleflight' || verb === 'single-flight') {
       const misses = parseInt(f.misses, 10) || 5000;
       const on = !!(f.on || f.enable);
-      const dbQueries = on ? 1 : misses;
+      sim.sys.api.cache = sim.sys.api.cache || { ttlSec: 60, jitterPct: 0, hitRate: 0.9 };
+      sim.sys.api.cache.singleFlight = on;
+      const { dbQueries } = SD.cacheMissBatch(sim.sys.api.cache, misses);
       print(on ? 'ok' : 'err', [
         `ek hi key par ek saath miss   ${fmt(misses)} requests`,
         `DB tak pahunchi                ${fmt(dbQueries)} ${on ? 'query  ✅' : 'queries  💥'}`,
@@ -2264,15 +2379,30 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   /* =====================================================================
      BOOK — contention: do log, ek seat
      ===================================================================== */
+  // Hold authority stores expiry and owner; every command advances/observes virtual time.
+  function expireHolds() {
+    const B = sim.sys.booking;
+    if (!B) return;
+    Object.entries(B.holds).forEach(([seat, hold]) => {
+      if (hold.expiresAt <= sim.timeSec) {
+        B.expiredHolds = B.expiredHolds || {};
+        B.expiredHolds[seat] = hold;
+        delete B.holds[seat];
+      }
+    });
+  }
+
   function bookState() {
     if (!sim.sys.booking) sim.sys.booking = { mode: 'none', seats: {}, holds: {} };
+    expireHolds();
     return sim.sys.booking;
   }
 
   function cmdBook(cmd) {
     const rest = cmd.replace(/^book\s*/i, '');
     const verb = (rest.split(' ')[0] || '').toLowerCase();
-    const f = parseFlags(rest.slice(verb.length).trim(), ['concurrent', 'ttl']);
+    const f = parseFlags(rest.slice(verb.length).trim(), ['concurrent', 'ttl', 'owner']);
+    sim.timeSec++;
     const B = bookState();
 
     if (verb === 'status') {
@@ -2281,11 +2411,13 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         `mode             ${B.mode}`,
         `seats sold       ${sold}${sold ? '  (' + Object.keys(B.seats).join(', ') + ')' : ''}`,
         `active holds     ${held}${held ? '  (' + Object.keys(B.holds).join(', ') + ')' : ''}`,
+        ...Object.entries(B.holds).map(([seat, h]) => `${seat}: owner=${h.owner}, remaining=${Math.max(0, h.expiresAt - sim.timeSec)}s`),
+        `expired holds    ${Object.keys(B.expiredHolds || {}).join(', ') || 'none'}`,
       ].join('\n'));
-      return rec({ kind: 'book', op: 'status', mode: B.mode, sold, held });
+      return rec({ kind: 'book', op: 'status', mode: B.mode, sold, held, holds: Object.fromEntries(Object.entries(B.holds).map(([seat, h]) => [seat, { ...h, remainingSec: Math.max(0, h.expiresAt - sim.timeSec) }])) });
     }
 
-    if (verb === 'reset') { B.seats = {}; B.holds = {}; print('ok', 'Saare seats khaali.'); return rec({ kind: 'book', op: 'reset', mode: B.mode }); }
+    if (verb === 'reset') { B.seats = {}; B.holds = {}; B.expiredHolds = {}; print('ok', 'Saare seats khaali.'); return rec({ kind: 'book', op: 'reset', mode: B.mode }); }
 
     if (verb === 'seat' || verb === 'hold' || verb === 'confirm') {
       const seat = f._[0];
@@ -2296,21 +2428,39 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       if (verb === 'hold') {
         const ttl = parseInt(f.ttl, 10) || 600;
         if (B.seats[seat]) { print('err', `${seat} pehle hi bik chuka hai.`); return rec({ kind: 'book', op: 'hold', seat, ok: false, mode }); }
-        B.holds[seat] = ttl;
-        print('ok', `${seat} par ${ttl}s ka HOLD lag gaya (checkout ke liye).`);
+        const owner = String(f.owner || 'holder');
+        if (B.holds[seat] && B.holds[seat].owner !== owner) {
+          print('err', `${seat} doosre owner ke active hold mein hai`);
+          return rec({ kind: 'book', op: 'hold', seat, ok: false, owner, mode });
+        }
+        B.holds[seat] = { ttl, owner, expiresAt: sim.timeSec + ttl };
+        print('ok', `${seat} par ${ttl}s ka HOLD; owner=${owner} (checkout ke liye).`);
         print('sys', `🎟️ Reservation pattern: seat ko <b>abhi</b> lock karo, par ek <b>TTL</b> ke saath. ` +
           `User ke paas ${Math.round(ttl / 60)} minute hain payment poora karne ko. ` +
           `Yeh ek DB lock se behtar hai kyunki lock aadmi ke sochne ke waqt tak nahi latakta — ` +
           `aur agar user chhod ke chala gaya, toh seat <b>apne aap</b> wapas aa jaati hai. ` +
           `TTL ke bina abandoned checkouts poora inventory kha jaate hain.`);
-        return rec({ kind: 'book', op: 'hold', seat, ttl, ok: true, mode });
+        return rec({ kind: 'book', op: 'hold', seat, ttl, owner, expiresAt: B.holds[seat].expiresAt, ok: true, mode });
+      }
+
+      if (verb === 'confirm') {
+        const hold = B.holds[seat];
+        const owner = f.owner && String(f.owner);
+        if (!hold || !owner || hold.owner !== owner || B.seats[seat]) {
+          print('err', `${seat}: confirmation reject — live hold aur matching owner chahiye`);
+          return rec({ kind: 'book', op: 'confirm', seat, owner: owner || null, ok: false, denied: !hold ? 'expired-or-missing' : 'owner', mode });
+        }
+        B.seats[seat] = owner;
+        delete B.holds[seat];
+        print('ok', `${seat}: ${owner} ne live hold confirm kiya; ek sale`);
+        return rec({ kind: 'book', op: 'confirm', seat, owner, ok: true, sold: 1, mode });
       }
 
       /* seat = kharidne ki koshish, conc log ek saath */
       if (B.holds[seat] && verb !== 'confirm') {
-        print('err', `${seat} abhi kisi ke HOLD mein hai — ${B.holds[seat]}s baaki.`);
+        print('err', `${seat} abhi kisi ke HOLD mein hai — ${Math.max(0, B.holds[seat].expiresAt - sim.timeSec)}s baaki.`);
         print('sys', `✅ Hold ne doosre khareedaar ko bina "sold out" bole rok diya. Use turant pata chal gaya, ` +
-          `aur agar pehla user chhod deta hai toh seat ${B.holds[seat]}s mein wapas mil jaayegi.`);
+          `aur agar pehla user chhod deta hai toh seat ${Math.max(0, B.holds[seat].expiresAt - sim.timeSec)}s mein wapas mil jaayegi.`);
         return rec({ kind: 'book', op: 'seat', seat, ok: false, blockedByHold: true, mode });
       }
 
@@ -2344,7 +2494,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       else if (mode === 'reservation') print('sys', `🎟️ <b>Reservation:</b> kharidne se pehle ` +
         `<code>book hold ${seat} --ttl 600</code> lagao — user ko checkout ka waqt milta hai bina seat gawaaye.`);
 
-      return rec({ kind: 'book', op: 'seat', seat, concurrent: conc, mode, sold, rejected, doubleBooked, already });
+      return rec({ kind: 'book', op: 'seat', seat, concurrent: conc, mode, sold, rejected, doubleBooked, already, releasedByExpiry: !!B.expiredHolds?.[seat] });
     }
 
     err('400 — aise:  book seat A1 --concurrent 2   |   book hold A1 --ttl 600   |   book status   |   book reset');
@@ -2372,6 +2522,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       '  sim add retry ledger --max 3 --backoff exp --jitter full',
       '  sim add breaker ledger --threshold 0.5    sim add fallback ledger "stale"',
       '  sim add admission --max-rps 150000 --queue 8',
+      '  sim advance 15  (virtual seconds; TTL/cooldown)',
       '  sim add ratelimit --rps 100 --burst 200   sim add bulkhead ledger --max 20',
       '  sim inject latency ledger 3000       sim inject down ledger',
       '  sim inject long-tx --holds 45        sim inject flash',
@@ -2423,7 +2574,8 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       '',
       'CONTENTION',
       '  sim set booking.mode none|optimistic|pessimistic|reservation',
-      '  book seat A1 --concurrent 2          book hold A1 --ttl 600      book status',
+      '  book seat A1 --concurrent 2   book hold A1 --ttl 600 --owner alice',
+      '  book confirm A1 --owner alice   book status   sim advance 15',
     ].join('\n'));
     return rec({ kind: 'help' });
   }

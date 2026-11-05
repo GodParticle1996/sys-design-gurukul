@@ -15,66 +15,66 @@ const T_GEO = [
   { text: 'Bina index ke ek cell ke drivers maango — full scan dekho',
     check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.rowsExamined > 1000000) },
   { text: 'geohash par composite index banao (geohash, updated_at)',
-    check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'geohash') },
+    check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'geohash' && r.cols[1] === 'updated_at' && SD.mission.index(s, 'drivers', ['geohash', 'updated_at'])) },
   { text: 'Ab wahi query — 1000 se kam rows examined honi chahiye',
     check: s => {
-      const i = s.records.findIndex(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'geohash');
+      const i = s.records.findIndex(r => r.kind === 'index' && r.op === 'create' && r.cols[0] === 'geohash' && r.cols[1] === 'updated_at' && SD.mission.index(s, 'drivers', ['geohash', 'updated_at']));
       return i > -1 && s.records.slice(i).some(r => r.kind === 'http' && r.status === 200 && r.rowsExamined < 1000);
     } },
   { text: 'Ab hot cell: airport par surge — ek cell par 40,000 rps',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true) },
-  { text: 'Us cell ko todo — load bant jaana chahiye',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1) },
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.key === 'cell:te7ud9' && r.rps === 40000 && r.hot === true) },
+  { text: "cell:te 7ud 9 read-key ki copies banao — spatial split nahi; 40000 rps load baanto",
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.key === 'cell:te7ud9' && r.rps === 40000 && r.hot === false && r.replicas > 1 && r.rps === 40000 && r === SD.mission.latest(s, 'cache', 'hotkey')) },
 ];
 const T_REVIEW = [
   { text: 'Aaj ke numbers estimate karo',
     check: s => s.records.some(r => r.kind === 'estimate') },
   { text: 'Aaj ka load chalao (500 rps) — system theek hona chahiye',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps <= 1000 && r.saturated === false) },
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 500 && r.saturated === false) },
   { text: 'Ab 10x load daalo — kuch toota hoga',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 5000 && r.saturated === true) },
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 5000 && r.saturated === true) },
   { text: 'metrics se dekho ki sabse pehle kya toota',
     check: s => s.records.some(r => r.kind === 'metrics') },
   { text: 'Ek trace lo — waqt kahan ja raha hai',
     check: s => s.records.some(r => r.kind === 'trace') },
-  { text: 'Bottleneck theek karo',
-    check: s => s.records.some(r => r.kind === 'sim' && (r.op === 'scale' || r.op === 'add')) },
+  { text: "Is exercise mein pool 200 par scale karo",
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 200 && s.sys.pool.size === 200) },
   { text: 'Ab 10x dobara — ab saturated nahi hona chahiye',
     check: s => {
-      const i = s.records.findIndex(r => r.kind === 'sim' && (r.op === 'scale' || r.op === 'add'));
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps >= 5000 && r.saturated === false);
+      const i = s.records.findIndex(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 200 && s.sys.pool.size === 200);
+      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps === 5000 && r.saturated === false && r.revision === s.revision);
     } },
 ];
 const T_BOSS_SHAPES = [
   { text: 'Peak ka andaaza lagao',
     check: s => s.records.some(r => r.kind === 'estimate') },
   { text: 'Naive design par 8,000 rps chalao — design girega',
-    check: s => s.records.some(r => r.kind === 'load' && r.rps >= 8000 && r.saturated === true) },
+    check: s => s.records.some(r => r.kind === 'load' && r.rps === 8000 && r.saturated === true) },
   { text: 'trace se dekho ki waqt kahan ja raha hai',
     check: s => s.records.some(r => r.kind === 'trace') },
-  { text: 'Sabse bada kharch: har request par COUNT(*) — use band karo',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /countTotal/.test(r.path) && r.value === false) },
-  { text: 'Ab geo ka hot cell pehchano — ek cell par saara load',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === true) },
-  { text: 'Us cell ko todo',
-    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.hot === false && r.replicas > 1) },
+  { text: 'Sabse bada kharch: har request par COUNT(*) — countTotal false karo',
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'set' && /countTotal/.test(r.path) && r.value === false && s.sys.api.countTotal === false) },
+  { text: "Alag read-hotspot experiment: cell:te 7ud 9 par 40000 rps; 8000-rps API load se alag",
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.key === 'cell:te7ud9' && r.rps === 40000 && r.hot === true) },
+  { text: "cell:te 7ud 9 read-key ki copies banao; spatial split simulate nahi hota",
+    check: s => s.records.some(r => r.kind === 'cache' && r.op === 'hotkey' && r.key === 'cell:te7ud9' && r.rps === 40000 && r.hot === false && r.replicas > 1) },
   { text: 'Read path ko cache do — TTL par jitter ke saath',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'cache' && r.cfg && r.cfg.jitterPct > 0) },
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'cache' && r.cfg && r.cfg.jitterPct > 0 && s.sys.api.cache?.jitterPct > 0) },
   { text: 'Ek key ke ek-saath miss ko single-flight se samet lo',
     check: s => s.records.some(r => r.kind === 'cache' && r.op === 'coalesce' && r.on === true && r.dbQueries === 1) },
-  { text: 'Downstream par timeout lagao',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'timeout') },
+  { text: "restaurant_svc timeout 300ms lagao",
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'timeout' && r.target === 'restaurant_svc' && r.ms === 300 && s.sys.deps.restaurant_svc?.timeoutMs === 300) },
   { text: 'Aur ek fallback — taaki downstream girne par bhi jawab mile',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'fallback') },
-  { text: 'Ab pool badhao — service time ghatane ke BAAD',
-    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool') },
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'add' && r.what === 'fallback' && r.target === 'restaurant_svc' && !!s.sys.deps.restaurant_svc?.fallback) },
+  { text: "Service time ghatane ke baad pool 300 par scale karo",
+    check: s => s.records.some(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 300 && s.sys.pool.size === 300) },
   { text: 'Ab 8,000 rps dobara — ab system khada rehna chahiye',
     check: s => {
-      const i = s.records.findIndex(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool');
-      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps >= 8000 && r.saturated === false);
+      const i = s.records.findIndex(r => r.kind === 'sim' && r.op === 'scale' && r.what === 'pool' && r.n === 300 && s.sys.pool.size === 300);
+      return i > -1 && s.records.slice(i).some(r => r.kind === 'load' && r.rps === 8000 && r.saturated === false && r.revision === s.revision);
     } },
-  { text: 'SLO check karo — error budget bacha hai?',
-    check: s => s.records.some(r => r.kind === 'slo') },
+  { text: '99.9% SLO: observed consumed/remaining budget aur burn rate padho',
+    check: s => s.records.some(r => r.kind === 'slo' && r.avail === 99.9 && r.observedSec > 0 && Number.isFinite(r.remainingMin) && r === SD.mission.latest(s, 'slo')) },
 ];
 
 SD.registerLevels('shapes', [
@@ -2299,10 +2299,7 @@ ek shared lock</pre>
       sys: SD.sys.orders(),
       tasks: T_REVIEW,
       success: SD.allTasks(T_REVIEW),
-      successText: `Tumne bottleneck <b>anumaan</b> se nahi, <b>maap</b> ke nikaala —
-        aur woh CPU nahi tha. Yahi 10x wale sawaal ka poora faayda hai:
-        woh tumhe woh hadd dhoondhne par majboor karta hai jo dashboard par
-        nahi dikhti. Ab har design review mein yeh sawaal poochho.`,
+      successText: "500-rps baseline aur 5000-rps incident ne capacity boundary dikhayi. Metrics aur trace se pool bottleneck mila. Pool 200 ke baad fresh 5000-rps load unsaturated raha. Real DB par extra connections ki keemat bhi naapo.",
       solution: [
         "estimate --users 12000000 --rps 500 --bytes 2048",
         "load --rps 500 --duration 8",
@@ -2502,8 +2499,7 @@ ek shared lock</pre>
     {
       type: 'terminal',
       title: 'BOSS Mission — 8 PM ka peak',
-      goal: `Ek food delivery system, 8 PM ka peak, 8,000 rps — aur aadha traffic ek cell se.
-             <b>Har cheez maapo, phir theek karo.</b> Yeh poore app ka nichod hai.`,
+      goal: "Food-delivery API par 8000 rps peak naapo. Alag 40000-rps read-hotspot experiment mein cell-key copies dekho. COUNT, cache, timeout, fallback aur pool changes ka measured asar jaancho.",
       sys: {
         name: 'delivery-api',
         slo: { p99Ms: 300, availability: 99.9 },
@@ -2527,14 +2523,7 @@ ek shared lock</pre>
       },
       tasks: T_BOSS_SHAPES,
       success: SD.allTasks(T_BOSS_SHAPES),
-      successText: `👑 <b>Architect Mahaguru.</b><br><br>
-        Tumne saat shapes pehchane, har ek ka failure mode pehle se naam liya,
-        aur phir har fix ko <b>chalaake</b> saabit kiya — anumaan se nahi.
-        Yahi poore System Gurukul ka nichod hai:
-        <b>pehle pattern ka naam lo, phir uska known failure dhoondo,
-        phir maap ke theek karo.</b><br><br>
-        Boxes koi bhi bana leta hai. Tradeoff bolna, bottleneck maapna,
-        aur "iski keemat yeh hai" keh paana — wahi architect banata hai.`,
+      successText: "API load aur read-key hotspot alag measurements hain. countTotal=false, jitter cache, single-flight, restaurant timeout/fallback aur pool 300 ke baad fresh 8000-rps load chala. SLO panel observed load ka budget dikhata hai; read-key copies spatial splitting ka proof nahi hain.",
       solution: [
         "estimate --users 8000000 --rps 8000 --bytes 1024",
         "load --rps 8000 --duration 8",
