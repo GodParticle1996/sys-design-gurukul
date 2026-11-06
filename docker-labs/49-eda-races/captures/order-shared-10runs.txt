@@ -1,0 +1,10 @@
+shared     likhe=15 ulte-kram=2 [o1#2(B) o2#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=11/4
+shared     likhe=15 ulte-kram=3 [o1#2(B) o2#1(B) o3#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=12/3
+shared     likhe=15 ulte-kram=2 [o1#2(B) o2#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=11/4
+shared     likhe=15 ulte-kram=2 [o1#2(B) o2#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=11/4
+shared     likhe=15 ulte-kram=3 [o1#2(B) o2#1(B) o3#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=12/3
+shared     likhe=15 ulte-kram=3 [o1#1(B) o2#4(B) o3#4(B)] galat-aakhri=o2=shipped,o3=shipped buffer-mein-atke=0 A/B=11/4
+shared     likhe=15 ulte-kram=2 [o1#2(B) o2#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=11/4
+shared     likhe=15 ulte-kram=2 [o1#2(B) o2#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=11/4
+shared     likhe=15 ulte-kram=2 [o1#2(B) o2#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=11/4
+shared     likhe=15 ulte-kram=2 [o1#2(B) o2#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=11/4

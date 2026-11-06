@@ -1,0 +1,12 @@
+story=order mode=keyed | nakli ghadi; lab ke tay ms
+  0 ms  o1 ki 5 haalatein line mein (placed → delivered) | o1=— line=5
+  0 ms  A ne #1 uthaya | o1=— line=5
+  5 ms  A ne #1 (placed) likha | o1=placed line=4
+  5 ms  A ne #2 uthaya | o1=placed line=4
+ 10 ms  A ne #2 (paid) likha | o1=paid line=3
+ 10 ms  A ne #3 uthaya | o1=paid line=3
+ 15 ms  A ne #3 (packed) likha | o1=packed line=2
+ 15 ms  A ne #4 uthaya | o1=packed line=2
+ 20 ms  A ne #4 (shipped) likha | o1=shipped line=1
+ 20 ms  A ne #5 uthaya | o1=shipped line=1
+ 25 ms  A ne #5 (delivered) likha | o1=delivered line=0

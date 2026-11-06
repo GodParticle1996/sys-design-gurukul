@@ -1,6 +1,6 @@
 # 🐳 System Gurukul — Docker Projects
 
-Saare tracks ke hands-on projects (48). Lab 46 ke alawa saare projects **zero-dependency Node.js** services aur tools hain.
+Saare tracks ke hands-on projects (49). Lab 46 ke alawa saare projects **zero-dependency Node.js** services aur tools hain.
 Lab 46 mein **Java 21+** ke asli platform threads hain; Node sirf launcher hai. Koi Maven/Gradle dependency nahi.
 Har README measured output aur model ki boundary bataata hai.
 
@@ -54,6 +54,7 @@ Har README measured output aur model ki boundary bataata hai.
 | [46-concurrency](46-concurrency/README.md) | 20 concepts, five build–break–fix labs: race, bounded FIFO, semaphore pool, deadlock, bounded executor + concurrent dedup | Concurrency 1–6 |
 | [47-event-payloads](47-event-payloads/README.md) | Thin callbacks, full-state copies, version guard, delta gaps aur payload spread (asli HTTP, 3 runs) | EDA topic 2 · Event payloads |
 | [48-eda-tradeoffs](48-eda-tradeoffs/README.md) | Burst vs lagataar load, consumer offline + retention/dead-letter, sync chain vs events (asli HTTP) | EDA topic 3 · Tradeoffs |
+| [49-eda-races](49-eda-races/README.md) | Competing consumers ka ulta kram, do consumers ka khoya update (CAS/atomic), crash ke baad duplicate charge aur sahi idempotency key (asli processes + SQLite) | EDA topic 4 · Races |
 
 ```bash
 cd docker-labs/09-raft

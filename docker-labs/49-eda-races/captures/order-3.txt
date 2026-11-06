@@ -1,0 +1,4 @@
+shared     likhe=15 ulte-kram=3 [o1#2(B) o2#1(B) o3#1(B)] galat-aakhri=0 buffer-mein-atke=0 A/B=12/3
+keyed      likhe=15 ulte-kram=0 galat-aakhri=0 buffer-mein-atke=0 A/B=12/3
+buffer     likhe=15 ulte-kram=0 galat-aakhri=0 buffer-mein-atke=0 A/B=6/9
+buffer-gap likhe=12 ulte-kram=0 galat-aakhri=o2=paid buffer-mein-atke=2 A/B=3/9

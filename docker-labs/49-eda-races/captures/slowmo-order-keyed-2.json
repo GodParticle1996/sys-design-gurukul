@@ -1,0 +1,72 @@
+{
+  "story": "order",
+  "mode": "keyed",
+  "rows": [
+    {
+      "t": 0,
+      "say": "o1 ki 5 haalatein line mein (placed → delivered)",
+      "db": "—",
+      "pending": 5
+    },
+    {
+      "t": 0,
+      "say": "A ne #1 uthaya",
+      "db": "—",
+      "pending": 5
+    },
+    {
+      "t": 5,
+      "say": "A ne #1 (placed) likha",
+      "db": "placed",
+      "pending": 4
+    },
+    {
+      "t": 5,
+      "say": "A ne #2 uthaya",
+      "db": "placed",
+      "pending": 4
+    },
+    {
+      "t": 10,
+      "say": "A ne #2 (paid) likha",
+      "db": "paid",
+      "pending": 3
+    },
+    {
+      "t": 10,
+      "say": "A ne #3 uthaya",
+      "db": "paid",
+      "pending": 3
+    },
+    {
+      "t": 15,
+      "say": "A ne #3 (packed) likha",
+      "db": "packed",
+      "pending": 2
+    },
+    {
+      "t": 15,
+      "say": "A ne #4 uthaya",
+      "db": "packed",
+      "pending": 2
+    },
+    {
+      "t": 20,
+      "say": "A ne #4 (shipped) likha",
+      "db": "shipped",
+      "pending": 1
+    },
+    {
+      "t": 20,
+      "say": "A ne #5 uthaya",
+      "db": "shipped",
+      "pending": 1
+    },
+    {
+      "t": 25,
+      "say": "A ne #5 (delivered) likha",
+      "db": "delivered",
+      "pending": 0
+    }
+  ]
+}

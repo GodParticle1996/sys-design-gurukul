@@ -1,0 +1,6 @@
+unsafe  balance=1100 (sahi 1200) khoye-updates=10 koshishein=20 version=0
+cas     balance=1200 (sahi 1200) khoye-updates=0 koshishein=39 version=20
+atomic  balance=1200 (sahi 1200) khoye-updates=0 koshishein=20 version=0
+set events (balance = 90, phir 100): sahi kram 100 · ulta kram 90
+delta events (+100, −30) 1000 se: sahi kram 1070 · ulta kram 1070
+delta events 0 se, niyam "balance minus mein nahi": sahi kram 70 · ulta kram 100 (−30 reject)

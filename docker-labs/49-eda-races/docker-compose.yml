@@ -1,0 +1,15 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har tool apne broker aur consumer processes ek hi container mein chalata hai (ports 5800–5821, bahar publish nahi).
+services:
+  phantom:
+    build: .
+    profiles: [ex3-phantom]
+    command: node start.js ex3-phantom
+  conflict:
+    build: .
+    profiles: [ex2-conflict]
+    command: node start.js ex2-conflict
+  order:
+    build: .
+    profiles: [ex1-order]
+    command: node start.js ex1-order

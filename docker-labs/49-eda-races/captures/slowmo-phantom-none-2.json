@@ -1,0 +1,48 @@
+{
+  "story": "phantom",
+  "mode": "none",
+  "rows": [
+    {
+      "t": 0,
+      "say": "p1 (u1, ₹100) line mein",
+      "charges": "—",
+      "pending": 1
+    },
+    {
+      "t": 10,
+      "say": "consumer ne p1 uthaya (attempt 1)",
+      "charges": "—",
+      "pending": 1
+    },
+    {
+      "t": 20,
+      "say": "charge DB mein likha",
+      "charges": "p1",
+      "pending": 1
+    },
+    {
+      "t": 21,
+      "say": "ack se pehle consumer crash — broker ko ack nahi mila",
+      "charges": "p1",
+      "pending": 1
+    },
+    {
+      "t": 300,
+      "say": "consumer dobara chalu; p1 abhi lease par",
+      "charges": "p1",
+      "pending": 1
+    },
+    {
+      "t": 310,
+      "say": "lease khatam: p1 dobara mila (attempt 2)",
+      "charges": "p1",
+      "pending": 1
+    },
+    {
+      "t": 320,
+      "say": "phir se charge likha, ack",
+      "charges": "p1,p1",
+      "pending": 0
+    }
+  ]
+}

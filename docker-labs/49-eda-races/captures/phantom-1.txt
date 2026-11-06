@@ -1,0 +1,4 @@
+none       crash=1 charges=3 [p1,p2,p1] GALAT (sahi: p1,p2)
+userAmount crash=1 charges=1 [p1] GALAT (sahi: p1,p2)
+arrival    crash=1 charges=3 [p1,p2,p1] GALAT (sahi: p1,p2)
+paymentId  crash=1 charges=2 [p1,p2] sahi

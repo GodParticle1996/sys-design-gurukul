@@ -38,6 +38,8 @@
     ecst: { title: 'Martin Fowler — What do you mean by "Event-Driven"?', url: 'https://martinfowler.com/articles/201701-event-driven.html' },
     leveling: { title: 'Azure — Queue-Based Load Leveling pattern', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/queue-based-load-leveling' },
     sqsdlq: { title: 'Amazon SQS — dead-letter queues', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html' },
+    rmqack: { title: 'RabbitMQ — consumer acknowledgements and publisher confirms', url: 'https://www.rabbitmq.com/docs/confirms' },
+    kafkaintro: { title: 'Apache Kafka — introduction: partitions and ordering', url: 'https://kafka.apache.org/41/getting-started/introduction/' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -181,6 +183,26 @@
     ],
     followup: 'Consumer 3 din band raha aur retention 1 din thi. Kitna kaam bachega, aur kaise pata chalega?',
     sources: ['leveling', 'sqsdlq'],
+  });
+  add('eda-races', 'er-kyun er-kaise er-code er-kab', {
+    title: 'Ulta kram, khoya update, dohra kaam: kaunsa ilaaj?',
+    misaal: 'Do waiter, ek board: dheema waiter purani parchi baad mein likhta hai. Do cashier, ek gullak: dono ne 1,000 padha, ek ₹10 gaya. Cashier bill likh ke behosh: parchi wapas aayi, bill do baar.',
+    asli: 'Har consumer ke liye teen sawaal: kram chahiye, do writers hain, message dobara aa sakta hai?',
+    points: [
+      '<b>Kram:</b> ek key ke events ek waqt ek consumer ko, kram mein (Kafka: key se partition; RabbitMQ: key se queues + SAC).',
+      '<b>Do writers:</b> atomic update, ya version ki shart ke saath likho aur fail par dobara.',
+      '<b>Redelivery:</b> producer ki stable id, kaam ke saath ek transaction mein unique.',
+    ],
+    use: 'Har naye consumer ke review mein teeno sawaal poochho — teeno ka ilaaj alag hai.',
+    avoid: 'Idempotency key user + amount ya aane ke waqt se mat banao.',
+    mistake: 'Ek test pass hone ko saboot maanna: race timing par tiki hai aur kabhi-kabhi hi dikhti hai.',
+    compare: [
+      { choice: 'Key se routing', when: 'Ek cheez ke events kram mein chahiye', tradeoff: 'Kram bachta; busy key ek consumer par atak sakti hai' },
+      { choice: 'Version / atomic', when: 'Do writers ek value badlein', tradeoff: 'Update nahi khota; CAS mein dobara koshish' },
+      { choice: 'Stable id + transaction', when: 'Kaam ho ke bhi message dobara aaye', tradeoff: 'Dohra kaam nahi; keys kitni der rakhni hain, tay karo' },
+    ],
+    followup: 'Payment gateway par charge hua, apni DB mein key likhne se pehle crash. Dohra charge kaun rokega?',
+    sources: ['rmqack', 'kafkaintro'],
   });
   add('service-boundaries', 'decompose st-reddit-strangle prime-boundary-tax prime-replicate prime-when-split', {
     title: 'Har nayi service ka fayda kya hai?',

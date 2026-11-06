@@ -1,0 +1,8 @@
+story=phantom mode=none | nakli ghadi; lab ke tay ms
+  0 ms  p1 (u1, ₹100) line mein | charges=— line=1
+ 10 ms  consumer ne p1 uthaya (attempt 1) | charges=— line=1
+ 20 ms  charge DB mein likha | charges=p1 line=1
+ 21 ms  ack se pehle consumer crash — broker ko ack nahi mila | charges=p1 line=1
+300 ms  consumer dobara chalu; p1 abhi lease par | charges=p1 line=1
+310 ms  lease khatam: p1 dobara mila (attempt 2) | charges=p1 line=1
+320 ms  phir se charge likha, ack | charges=p1,p1 line=0

@@ -69,7 +69,24 @@ The playlist was refreshed through Video-Translate on 2026-10-20: 64 entries, in
 | Event Sourcing: Genius or Just Over-Engineering? | `wXg_aON4oj8` | Append events and reconstruct state; snapshots and read models separately |
 | 4 Event-Modeling Mistakes in Event-Driven Architectures | `m3mY3Ra-BcI` | Contracts, naming, payloads and schema evolution, each backed by a lab |
 
-Done: event payloads; EDA tradeoffs (below). Next: delivery problems, event sourcing/CQRS and event modeling.
+Done: event payloads; EDA tradeoffs; EDA races (below). Next: event sourcing/CQRS, then event modeling.
+
+## Ready: fourth topic, EDA Races (2026-11-06)
+
+`er-kyun` → `er-kaise` → `er-code` → `er-kab`, in `data-v2-eda-races-1…4`, group "🏁 EDA Races", guide `eda-races`.
+Source: *The Hardest Problems in Event-Driven Architectures* (`skb6-JaBNQw`), transcript `vu_output/sd5-eda-hardest`.
+Lab 49 (built by Claude, Node 24+ for node:sqlite): leasing RAM broker (+ keyed mode), consumer processes over HTTP, one
+real SQLite file. ex1 order race (shared 2–3 out-of-order writes in all 13 saved runs, a wrong final state in only 1 of 13;
+keyed/buffer 0; a missing seq leaves 2 stuck), ex2 lost update (read-wait-write 1,100 of 1,200; CAS 1,200 in 39 tries; atomic 1,200) and set-vs-delta
+ordering, ex3 real crash after write before ack (no key / arrival key: p1 charged twice; user+amount: genuine p2 dropped;
+payment id in the same transaction: correct). Corrections taught: key routing (Kafka partition, RabbitMQ single active
+consumer) before reorder buffers; the video's "compensation" was just commutative deltas; requeue is not ordering; consumer
+acks vs publisher confirms are orthogonal; idempotency keys come from the producer's stable id, written with the effect.
+Codex fact-check (11 findings, all verified and fixed): a pre-send "sent" marker can lose an email (provider idempotency
+key needed); stale acks could remove a newer delivery (ack now carries `attempt`) and a lease does not fence an old
+worker's DB write (taught as a limit); Kafka log order ≠ DB write order after a rebalance; RabbitMQ SAC is queue-wide;
+missing ROLLBACK on SQL errors; already-applied seqs were buffered forever; drain timeouts were ignored; Node 22.5 needs
+a flag (now Node 24+); BEGIN wording; pronoun stand-ins; the `line=` counter includes leased messages ("Ack baaki").
 
 ## Ready: third topic, EDA Tradeoffs (2026-11-06)
 
@@ -88,4 +105,4 @@ proof of failure; SQS counts receives; DLX alone does not guarantee saving; medi
 Read the relevant source and primary docs before choosing the exact split. Keep the KhanaKart world and four-question course shape.
 Outbox, CDC and DLQ have their later Messaging theme; show the failure here without claiming those topics already have new playlist lessons.
 
-Next free lab number: 49. Lab 44 uses 5400–5404; inspect all current ports before assigning a new range.
+Next free lab number: 50. Lab 44 uses 5400–5404; inspect all current ports before assigning a new range.

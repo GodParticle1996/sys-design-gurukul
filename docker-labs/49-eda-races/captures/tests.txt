@@ -1,0 +1,18 @@
+✔ broker: lease khatam toh dobara, keyed mein ek key ek waqt (0.926635ms)
+✔ inOrder: buffer kram theek karta hai; gap par atakta hai (0.674776ms)
+✔ broker: purane attempt ka ack naye worker ki delivery nahi hatata (0.155305ms)
+✔ inOrder: pehle likha seq dobara aaye toh duplicate, buffer mein nahi (0.398365ms)
+✔ SQL error par ROLLBACK: na key bachti, na charge; agla payment chalta hai (0.694848ms)
+✔ drain: timeout par adhura result nahi, error (1.563553ms)
+✔ charge: kaunsi key duplicate pakadti hai (42.132567ms)
+✔ ex2-conflict (asli processes): padho-ruko-likho updates khota hai; cas aur atomic nahi (1727.481335ms)
+✔ ex3-phantom (asli crash): sirf paymentId key sahi (2317.88178ms)
+✔ ex1-order (asli processes): keyed aur buffer kram bachate; gap par buffer atakta (1675.907978ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5805.05653
