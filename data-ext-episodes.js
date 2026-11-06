@@ -159,7 +159,7 @@ SD.extendLevel('caching', {
      hai) ko padho:</p>
      <pre>App → DB → WAL → Debezium (WAL tail, har insert/update/delete ka event) → Kafka (retention, replication aur durable offsets ke andar recovery buffer)
     → chhota invalidation consumer (change → kaunsi keys) → Redis DEL          end-to-end delay workload se measure karo</pre>
-     <p>Product/price/inventory updates ko CDC se cache tak la sakte ho; lag, lost invalidation, reconnect aur stale-refill race verify karo. Yeh reference pattern hai, Shopify ke current internal implementation ka claim nahi. (Poora khel — tags, versions, L1 —
+     <p>Product/price/inventory updates ko CDC se cache tak la sakte ho; lag, lost invalidation, reconnect aur stale-refill race verify karo. CDC se cache update karna reference pattern hai, Shopify ke current internal implementation ka claim nahi. (Poora khel — tags, versions, L1 —
      agle level "Cache Invalidation" mein, lab ke saath.)</p>`,
   ],
   cards: [
@@ -306,7 +306,7 @@ SD.extendLevel('pool', {
        <tr><td>Statement</td><td>Ek query</td><td>Transactions hi nahi — lagbhag sab</td></tr>
      </table>
      <p>PgBouncer (chhota, single-threaded C, ~2 MB, sirf pooling) se shuru karo; Pgpool-II (read/write split, cache, failover — zyada failure modes)
-     tabhi jab woh cheezein chahiye.</p>`,
+     tabhi jab read/write split, cache, failover chahiye.</p>`,
     `<h3>📐 Pool kitna bada? latency/concurrency sweep</h3>
      <p>More connections execution capacity create nahi karti. CPU, I/O wait, query mix, locks aur downstream budgets measure karo. <code>2 × cores</code> jaisi heuristic starting hypothesis hai, exact universal optimum nahi. Har app replica/pool ka aggregate DB budget gino; bounded queue aur request deadline rakho.</p>
      <pre>lab 35 — 200 clients bina ruke (8 cores wala DB model):
@@ -391,7 +391,7 @@ SD.extendLevel('locks', {
      mujrim ek lock tha. Aam Redis lock: <code>SET key NX EX 10</code> — zyadatar kaam karta hai, chupchaap toota hua.</p>
      <p>Lock tabhi kaam karta hai jab holder <b>sach mein chal raha ho</b>. GC pause (10+ sec), network delay, pod restart, VM live migration → process
      jam, par lock ka TTL chalta rahta hai. A lock leta hai (10 s), card charge shuru, 12 s GC pause → Redis key expire → B lock leta hai, charge karta
-     hai → A jaagta hai, sochta hai lock uska hai → phir charge.</p>
+     hai → A jaagta hai, sochta hai lock A ka hai → phir charge.</p>
      <h3>⚔️ Redlock bahas</h3>
      <p>antirez (Redis ke banane wale): 5 Redis instances, majority maane. Martin <b>Kleppmann</b>: pause <b>client</b> ki problem hai — 1 Redis ho ya 5,
      12 sec chup client ko kuch nahi bachata. Jawab: <b>fencing tokens</b> — storage chhota token mana kare. "Lock correctness ki seema nahi hai,
@@ -1090,7 +1090,7 @@ CDC + L1 ko pub/sub se khabar            ~91–121 ms</pre>
   homework: `<p>Apne app ke caches list karo — browser, CDN, in-process, Redis. Har ek ke liye: invalidation kaise hoti hai (TTL/CDC/tag/version)? Kaunsi
     layer ko badlaav ki khabar hi nahi milti? Wahi tumhare "kabhi-kabhi purana data" bugs ki jad hai.</p>`,
   cards: [
-    { front: 'Tag-based invalidation?', back: 'Har cached view ko uske records ke tags ("product:123"); badlaav par tag purge — ek call. Cloudflare surrogate keys.' },
+    { front: 'Tag-based invalidation?', back: 'Har cached view ko view ke records ke tags ("product:123"); badlaav par tag purge — ek call. Cloudflare surrogate keys.' },
     { front: 'Version keys?', back: 'Key badlo (product:123:v5 → v6) — purana unreachable, TTL se khatam. Purge logic zero, keemat memory. GitHub asset hashes.' },
     { front: 'Lab 33: L1?', back: 'TTL: ~4 s galat. CDC (sirf Redis DEL): phir bhi ~4 s (L1). CDC + pub/sub: ~100 ms.' },
   ],

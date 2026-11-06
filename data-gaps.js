@@ -959,20 +959,20 @@ SD.registerLevelsAfter('dist', 'eventual', [
 2. LOCK JO DO JAGAH HAI
    Lock ki expiry wall clock par hai. Node A ki ghadi 5 second aage hai,
    isliye A samajhta hai lock khatam ho gaya aur le leta hai —
-   jabki B ke hisaab se lock abhi bhi uska hai. DONO likhte hain.
+   jabki B ke hisaab se lock abhi bhi B ka hai. DONO likhte hain.
 
 3. LAST-WRITE-WINS SE DATA LOSS
-   Do writes, do alag machines. Jiski ghadi AAGE thi, woh "jeet" gaya —
-   chahe uska write pehle hua ho. Naya data chup-chaap gaayab.</pre>`,
+   Do writes, do alag machines. AAGE wali ghadi ka write "jeet" gaya —
+   chahe aage wali ghadi ka write pehle hua ho. Naya data chup-chaap gaayab.</pre>`,
     `<h3>🔢 Logical clocks — samay ki jagah KRAM</h3>
      <p>Asli sawaal aksar "kab hua" nahi hota, <b>"pehle kya hua"</b> hota hai.
-     Aur uske liye ghadi ki zaroorat hi nahi.</p>
+     Aur kram jaanne ke liye ghadi ki zaroorat hi nahi.</p>
      <table>
        <tr><th>Tareeka</th><th>Kya deta hai</th><th>Keemat</th></tr>
        <tr><td><b>Lamport clock</b></td><td>ek badhta hua counter — agar A ne B ko kaaran diya toh A ka number chhota hoga</td><td>ulta sach nahi: chhota number matlab "pehle hua" zaroori nahi</td></tr>
        <tr><td><b>Vector clock</b></td><td>bata deta hai ki do events <b>concurrent</b> the ya ek doosre par nirbhar</td><td>size nodes ke saath badhta hai; conflicts app ko suljhhane padte hain</td></tr>
        <tr><td><b>Hybrid (HLC)</b></td><td>physical time + logical counter; causal ordering support karta hai</td><td>concurrent writes ka semantic winner ya linearizability alone decide nahi karta</td></tr>
-       <tr><td><b>TrueTime (Spanner)</b></td><td>ghadi ke saath uski <b>anishchitta</b> bhi deta hai; commit us anishchitta ka intezaar karta hai</td><td>khaas hardware (atomic clocks + GPS) chahiye</td></tr>
+       <tr><td><b>TrueTime (Spanner)</b></td><td>ghadi ke saath ghadi ki <b>anishchitta</b> bhi deta hai; commit us anishchitta ka intezaar karta hai</td><td>khaas hardware (atomic clocks + GPS) chahiye</td></tr>
      </table>
      <p class="tip">🎯 TrueTime <b>bounded uncertainty interval</b> expose karta hai; accurate clock infrastructure us interval ko useful rakhti hai. Spanner quorum/timestamp protocol ke saath commit wait karta hai jab tak <code>TT.after(commitTimestamp)</code> true na ho. Fixed 7 ms delay ya TrueTime alone linearizability ka proof nahi.</p>
      <h3>⚖️ Last-write-wins kab theek hai?</h3>
@@ -987,7 +987,7 @@ SD.registerLevelsAfter('dist', 'eventual', [
     {
       type: 'bins',
       title: 'Kaunsi ghadi, kis kaam ke liye',
-      instructions: 'Har kaam ko us cheez mein daalo jispar woh sach mein tikna chahiye.',
+      instructions: 'Har kaam ko us cheez mein daalo jispar kaam sach mein tikna chahiye.',
       bins: [
         { id: 'mono', label: '⏱️ Monotonic clock' },
         { id: 'wall', label: '🕰️ Wall clock' },
@@ -995,12 +995,12 @@ SD.registerLevelsAfter('dist', 'eventual', [
       ],
       items: [
         { text: 'Request ka timeout naapna', bin: 'mono', explain: 'Duration ka har naap monotonic clock par hona chahiye. Wall clock NTP correction par peeche ja sakti hai aur tumhara elapsed time <b>rinatmak</b> ho jaayega.' },
-        { text: 'Circuit breaker ka "kitni der se khula hai"', bin: 'mono', explain: 'Yeh bhi ek duration hai. Wall clock par bana breaker NTP correction ke baad ya toh turant band ho jaayega ya hamesha khula rahega.' },
+        { text: 'Circuit breaker ka "kitni der se khula hai"', bin: 'mono', explain: 'Breaker ka khula rehna bhi ek duration hai. Wall clock par bana breaker NTP correction ke baad ya toh turant band ho jaayega ya hamesha khula rahega.' },
         { text: 'Rate limiter ka window', bin: 'mono', explain: 'Window ek beeta hua samay hai. Wall clock peeche jaane par window "reset" ho jaati hai aur user ko muft mein doguna quota mil jaata hai.' },
-        { text: 'Log line par timestamp likhna', bin: 'wall', explain: 'Yahan wall clock hi chahiye — insaan ko "kab hua" jaanna hai, aur usko doosre systems ke logs se milana hai. Skew se woh milana thoda tedha hota hai, par kaam ka rehta hai.' },
-        { text: 'User ko "2 ghante pehle" dikhana', bin: 'wall', explain: 'Yeh display hai, decision nahi. Thodi si galti se koi nuksaan nahi hota, aur user ki apni ghadi se milna zaroori hai.' },
+        { text: 'Log line par timestamp likhna', bin: 'wall', explain: 'Yahan wall clock hi chahiye — insaan ko "kab hua" jaanna hai, aur usko doosre systems ke logs se milana hai. Skew se logs milana thoda tedha hota hai, par kaam ka rehta hai.' },
+        { text: 'User ko "2 ghante pehle" dikhana', bin: 'wall', explain: 'User ko samay dikhana display hai, decision nahi. Thodi si galti se koi nuksaan nahi hota, aur user ki apni ghadi se milna zaroori hai.' },
         { text: 'Certificate ki expiry check karna', bin: 'wall', explain: 'Expiry ek absolute samay hai jispar sab sehmat hote hain. Isiliye badi ghadi ki galti par TLS toot-ta hai — aur wahi <code>x509: certificate has expired</code> wala outage banti hai.' },
-        { text: 'Concurrent writes ka version/causal conflict detect karna', bin: 'logical', explain: 'Yahan wall clock <b>data loss</b> ka kaaran ban jaati hai: jiski machine ki ghadi aage thi woh jeet gaya, chahe uska write pehle hua ho. Version vector concurrency detect kar sakta hai; HLC timestamp ordering deta hai, semantic conflict policy app ko chahiye.' },
+        { text: 'Concurrent writes ka version/causal conflict detect karna', bin: 'logical', explain: 'Yahan wall clock <b>data loss</b> ka kaaran ban jaati hai: aage wali ghadi ka write jeet gaya, chahe aage wali ghadi ka write pehle hua ho. Version vector concurrency detect kar sakta hai; HLC timestamp ordering deta hai, semantic conflict policy app ko chahiye.' },
         { text: 'Distributed lock ki maalikana haq', bin: 'logical', explain: 'Wall clock expiry par bana lock do jagah ja sakta hai (ek node ki ghadi aage, doosri peeche). Sahi tareeka <b>fencing token</b> hai — ek badhta hua number jo storage khud check karta hai.' },
         { text: 'Replicated data mein event ka kram', bin: 'logical', explain: '"Pehle kya hua" ek <b>kram</b> ka sawaal hai, samay ka nahi. Lamport causal order preserve karta hai par converse nahi; vector concurrency identify kar sakta hai; HLC physical time + logical counter use karta hai. Inmein se koi app merge/invariant policy replace nahi karta.' },
       ],
@@ -1010,10 +1010,10 @@ SD.registerLevelsAfter('dist', 'eventual', [
       title: 'Clock skew wala bug — kram lagao',
       instructions: 'Ek raat ke incident ke kadam sahi kram mein lagao.',
       steps: [
-        { text: '🕰️ Ek node par NTP fail ho gaya aur uski ghadi dheere-dheere 4 second aage khisak gayi', explain: 'Skew achanak nahi aata — woh dheere badhta hai, aur isiliye lambe samay tak koi alert nahi bajta. NTP <b>offset</b> par alert hona chahiye, sirf NTP process zinda hai ya nahi uspar nahi.' },
-        { text: '🔒 Us node ne ek distributed lock liya jiski expiry WALL CLOCK par thi', explain: 'Uski ghadi 4 second aage hai, isliye woh maanta hai ki purana lock khatam ho chuka hai — jabki lock ke asli maalik ke hisaab se lock abhi bhi uska hai.' },
-        { text: '✍️ Do nodes ek hi record par ek saath likhne lage', explain: 'Ab lock do jagah hai. Yeh wahi <b>split brain</b> hai jo GitHub 2018 mein tha, bas trigger network nahi, ghadi thi.' },
-        { text: '🏆 Last-write-wins ne aage wali ghadi ka write chuna — bhale hi woh PEHLE hua tha', explain: 'Yahin data chup-chaap khota hai. Koi error nahi, koi alert nahi — bas naya data purane se "haar" gaya kyunki uske timestamp par ek dheemi ghadi thi.' },
+        { text: '🕰️ Ek node par NTP fail ho gaya aur node ki ghadi dheere-dheere 4 second aage khisak gayi', explain: 'Skew achanak nahi aata — skew dheere badhta hai, aur isiliye lambe samay tak koi alert nahi bajta. NTP <b>offset</b> par alert hona chahiye, sirf NTP process zinda hai ya nahi uspar nahi.' },
+        { text: '🔒 Us node ne ek distributed lock liya jiski expiry WALL CLOCK par thi', explain: 'Lock lene wale node ki ghadi 4 second aage hai, isliye node maanta hai ki purana lock khatam ho chuka hai — jabki lock ke asli maalik ke hisaab se lock abhi bhi asli maalik ka hai.' },
+        { text: '✍️ Do nodes ek hi record par ek saath likhne lage', explain: 'Ab lock do jagah hai. Do nodes ki likhai wahi <b>split brain</b> hai jo GitHub 2018 mein tha, bas trigger network nahi, ghadi thi.' },
+        { text: '🏆 Last-write-wins ne aage wali ghadi ka write chuna — bhale hi chuna gaya write PEHLE hua tha', explain: 'Yahin data chup-chaap khota hai. Koi error nahi, koi alert nahi — bas naya data purane se "haar" gaya kyunki naye data ke timestamp par ek dheemi ghadi thi.' },
         { text: '🤷 Customer ne shikayat ki: "maine save kiya tha, par purana data dikh raha hai"', explain: 'Request errors zero hone par bhi stale/wrong values possible hain. Version comparison, invariant checks aur request traces se detect karo; controlled skew/concurrency test se reproduce karne ki koshish karo.' },
         { text: '🔧 Fix: lock par FENCING TOKEN, aur conflict ke liye version vector', explain: 'Fencing token ek badhta hua number hai jo storage khud check karti hai — purane token wala write reject ho jaata hai, ghadi chahe kuch bhi kahe. Aur version vector conflict ko chhupane ki jagah <b>saamne</b> le aata hai.' },
       ],
@@ -1094,14 +1094,14 @@ SD.registerLevelsAfter('dist', 'eventual', [
     },
   ],
   success: [
-    'Wall clock aur monotonic clock ka farak aur unka sahi istemaal jaante ho',
+    'Wall clock aur monotonic clock ka farak aur dono clocks ka sahi istemaal jaante ho',
     'Clock skew ke teen bug pehchan sakte ho',
     'Fencing token se lock ko ghadi se swatantra kar sakte ho',
     'Last-write-wins ka nuksaan-aadharit faisla le sakte ho',
   ],
   homework: `Apne codebase mein <code>System.currentTimeMillis()</code>,
     <code>Date.now()</code>, <code>time.time()</code> ya inke jaise call dhoondho
-    aur har ek ke saamne likho: yeh "kab hua" naap raha hai ya "kitna beeta"?
+    aur har ek ke saamne likho: call "kab hua" naap raha hai ya "kitna beeta"?
     Doosra wala har call ek chhupa hua bug hai — usko monotonic clock par le jao
     (<code>performance.now()</code>, <code>System.nanoTime()</code>,
     <code>time.monotonic()</code>).`,
@@ -1109,12 +1109,12 @@ SD.registerLevelsAfter('dist', 'eventual', [
     { front: 'Wall clock vs monotonic clock?', back: '<b>Wall</b> = "kab hua" (peeche ja sakti hai — NTP, leap second). <b>Monotonic</b> = "kitna beeta" (kabhi peeche nahi jaati, machines ke beech tulna nahi ho sakti). Duration, timeout, breaker, rate limit — sab <b>monotonic</b> par.' },
     { front: 'Clock skew ke teen bug?', back: '<b>1.</b> Negative duration (wall clock peeche gayi) · <b>2.</b> Lock do jagah (wall-clock expiry + skew) · <b>3.</b> Last-write-wins se chup-chaap data loss (aage wali ghadi jeet gayi).' },
     { front: 'Distributed lock ka sahi tareeka?', back: '<b>Fencing token</b> — har lock ke saath ek badhta hua number, aur <b>storage khud</b> purane number wale write ko reject karti hai. Paused owner ka stale write reject ho sakta hai only if resource token atomically validates kare. Token service correctness, lease liveness aur duplicate effects ke liye idempotency still chahiye.' },
-    { front: 'Last-write-wins kab theek?', back: '✅ ek user ki setting, cache entry, presence (nuksaan chhota) · ❌ paise, inventory, order status, collaborative doc — wahan "haara" write = <b>khoya hua data</b>. Vikalp: append-only events, ya conflict app ke saamne rakho.' },
+    { front: 'Last-write-wins kab theek?', back: '✅ ek user ki setting, cache entry, presence (nuksaan chhota) · ❌ paise, inventory, order status, collaborative doc — in kaamon mein "haara" write = <b>khoya hua data</b>. Vikalp: append-only events, ya conflict app ke saamne rakho.' },
     { front: 'Spanner ka TrueTime idea?', back: 'TrueTime current uncertainty interval deta hai. Spanner timestamp/quorum protocol aur commit wait (TT.after(commit timestamp)) se external consistency achieve karta hai. Uncertainty variable hai; universal fixed 7 ms wait nahi.' },
   ],
   interview: {
     title: 'Interview Round — Time in distributed systems',
-    instructions: 'Yeh sawaal seedha depth check karta hai. 🎤',
+    instructions: 'Clocks ka sawaal seedha depth check karta hai. 🎤',
     questions: [
       {
         q: '"Do replicas par ek hi record ke do writes aaye. Kaunsa rakhoge?"',

@@ -49,16 +49,16 @@ SD.registerLevels('dist', [
     'P optional nahi hai — asli sawaal C ya A ka hai',
     'CP aur AP kahan-kahan sahi hain',
     '<b>PACELC</b> — normal din ka faisla',
-    'Yeh faisla <b>per-operation</b> hai, per-system nahi',
+    'CAP ka faisla <b>per-operation</b> hai, per-system nahi',
   ],
   lesson: [
     `<h3>📖 "Teen mein se do" wali baat adhoori hai</h3>
      <p>CAP ko aksar aise padhaya jaata hai: "Consistency, Availability,
-     Partition tolerance — teen mein se do chuno." Yeh galat framing hai.</p>
+     Partition tolerance — teen mein se do chuno." Teen mein se do chunna galat framing hai.</p>
      <p><b>P optional nahi hai.</b> Network toot-ta <b>hai</b> — cable kate,
      switch mare, ek datacenter alag ho jaaye. Tum "P nahi chunte" nahi kar
-     sakte; woh tumhare saath ho jaata hai.</p>
-     <p>Toh asli sawaal yeh hai:</p>
+     sakte; partition tumhare saath ho jaata hai.</p>
+     <p>Toh asli sawaal hai:</p>
      <pre>"Jab partition ho jaaye, tab tum kya karoge?"
 
 CP → ERROR do          "abhi nahi bata sakta"
@@ -70,7 +70,7 @@ AP → PURANA data do    "shayad thoda purana hai"</pre>
        <tr><td>permissions</td><td>recommendations</td></tr>
        <tr><td>unique username</td><td>analytics dashboards</td></tr>
      </table>
-     <p>Dhyaan do: yeh dono cheezein <b>ek hi app</b> mein ho sakti hain.
+     <p>Dhyaan do: CP aur AP dono <b>ek hi app</b> mein ho sakti hain.
      Isliye "hum ek AP system hain" bolna adhoora hai — <b>faisla
      per-operation hota hai</b>.</p>`,
     `<h3>🔬 PACELC — jo har din kaam aata hai</h3>
@@ -81,12 +81,12 @@ AP → PURANA data do    "shayad thoda purana hai"</pre>
      par</b> lena padta hai:</p>
      <pre>Replica se padhun?   tez (2 ms) par shayad 500 ms purana
 Primary se padhun?   sahi par dheema, aur primary par load</pre>
-     <p>Yeh wahi read-after-write wala sawaal hai jo Data track mein tha —
-     bas ab uska naam pata hai.</p>
+     <p>PACELC wahi read-after-write wala sawaal hai jo Data track mein tha —
+     bas ab framework ka naam pata hai.</p>
      <p class="tip">🎯 Interview mein CAP ka naam lena aasan hai. Farak
      <b>PACELC</b> aur <b>per-operation</b> wali baat se padta hai:
      "checkout ke liye main CP chunuunga, catalog ke liye AP — aur normal
-     din mein catalog replica se padhunga kyunki wahan latency zyada matter
+     din mein catalog replica se padhunga kyunki catalog mein latency zyada matter
      karti hai."</p>`,
   ],
   stages: [
@@ -103,8 +103,8 @@ Primary se padhun?   sahi par dheema, aur primary par load</pre>
         { text: 'Product catalog dikhana', bin: 'ap', explain: 'Product ka description 30 second purana ho toh kya farak? Kuch na dikhane se hazaar guna behtar hai.' },
         { text: 'Concert ki aakhri seat book karna', bin: 'cp', explain: 'Double booking ek asli business problem hai — refund, apology, reputation. Error dena sasta hai.' },
         { text: 'Social media feed', bin: 'ap', explain: 'Ek post 10 second baad dikhe toh kisi ko farak nahi padta. Feed ka na dikhna bahut bura hai.' },
-        { text: 'User ki permissions check karna', bin: 'cp', explain: 'Nikaale gaye employee ka access purana data se abhi bhi chal jaaye — yeh security incident hai.' },
-        { text: '"Aapke liye" recommendations', bin: 'ap', explain: 'Purani recommendations bilkul theek hain. Yeh optional feature hai — iski wajah se page nahi girna chahiye.' },
+        { text: 'User ki permissions check karna', bin: 'cp', explain: 'Nikaale gaye employee ka access purana data se abhi bhi chal jaaye — purana access security incident hai.' },
+        { text: '"Aapke liye" recommendations', bin: 'ap', explain: 'Purani recommendations bilkul theek hain. Recommendations optional feature hai — recommendations ki wajah se page nahi girna chahiye.' },
         { text: 'Naya username register karna', bin: 'cp', explain: 'Uniqueness ke liye ek hi sach chahiye. Partition mein do log ek naam le lenge — aur baad mein us conflict ko theek karna bahut mushkil hai.' },
         { text: 'View count dikhana', bin: 'ap', explain: '"1.2M views" aur "1.19M views" mein koi farak nahi. Approximate hona bilkul theek hai.' },
       ],
@@ -116,8 +116,8 @@ Primary se padhun?   sahi par dheema, aur primary par load</pre>
       visual: 'cap',
       questions: [
         { q: 'Kaunsa hissa OPTIONAL nahi hai?', target: 'p', explain: 'Partition tolerance. Network toot-ta HAI — tum "P nahi chunte" nahi kar sakte. Isliye asli sawaal C ya A ka hai.' },
-        { q: 'Normal din ke faisle (partition ke bina) ka framework?', target: 'pacelc', explain: 'PACELC. Else branch: Latency ya Consistency — "replica se padhun (tez, purana) ya primary se (sahi, dheema)?" Yeh har din ka sawaal hai.' },
-        { q: 'CAP ke baare mein sabse aam galtfehmi kaunsi hai?', target: 'perop', explain: 'Ki yeh poore system ka faisla hai. Woh PER-OPERATION hota hai — ek hi app mein balance CP aur catalog AP ho sakta hai.' },
+        { q: 'Normal din ke faisle (partition ke bina) ka framework?', target: 'pacelc', explain: 'PACELC. Else branch: Latency ya Consistency — "replica se padhun (tez, purana) ya primary se (sahi, dheema)?" Latency ya consistency har din ka sawaal hai.' },
+        { q: 'CAP ke baare mein sabse aam galtfehmi kaunsi hai?', target: 'perop', explain: 'Ki CAP poore system ka faisla hai. CAP ka faisla PER-OPERATION hota hai — ek hi app mein balance CP aur catalog AP ho sakta hai.' },
       ],
     },
     {
@@ -191,13 +191,13 @@ Primary se padhun?   sahi par dheema, aur primary par load</pre>
     'Per-operation soch apply kar sakte ho',
   ],
   homework: `Apne product ke 10 operations list karo. Har ek ke saamne CP ya AP likho.
-    Phir dekho: kya tumhara system unhe waise hi treat karta hai? Aksar sab kuch
+    Phir dekho: kya tumhara system operations ko waise hi treat karta hai? Aksar sab kuch
     ek hi tarah handle hota hai — jo kisi ek group ke liye galat hai.`,
   cards: [
     { front: 'CAP ka sahi framing?', back: '<b>P optional nahi hai</b> — network toot-ta hai. Asli sawaal: <b>partition ke waqt C chunoge ya A?</b> "Teen mein se do" adhoora hai.' },
     { front: 'CP vs AP kahan?', back: '<b>CP:</b> balance, inventory, permissions, unique username. <b>AP:</b> catalog, feed, recommendations, view counts.' },
     { front: 'PACELC?', back: 'if <b>P</b>artition → A ya C; <b>E</b>lse → <b>L</b>atency ya <b>C</b>onsistency. Doosra hissa roz kaam aata hai: "replica se padhun ya primary se?"' },
-    { front: 'CAP ki sabse aam galatfehmi?', back: 'Ki yeh <b>poore system</b> ka faisla hai. Woh <b>per-operation</b> hota hai — ek hi app mein balance CP aur catalog AP.' },
+    { front: 'CAP ki sabse aam galatfehmi?', back: 'Ki CAP <b>poore system</b> ka faisla hai. CAP ka faisla <b>per-operation</b> hota hai — ek hi app mein balance CP aur catalog AP.' },
   ],
 },
 
@@ -220,19 +220,19 @@ t1  page reload                     → replica se padha, PURANI photo
 t2  "save nahi hua?" → dobara upload → ab do photos 😡
 t3  2 second baad sab sync           → par user ja chuka hai</pre>
      <p>System ne kuch galat nahi kiya. Replication lag 2 second tha, jo
-     bilkul normal hai. <b>Galti UX mein thi</b> — user ko woh state dikhayi
-     gayi jo uske apne action se mel nahi khaati thi.</p>
+     bilkul normal hai. <b>Galti UX mein thi</b> — user ko purani state dikhayi
+     gayi jo user ke apne action se mel nahi khaati thi.</p>
      <p>Eventual consistency ki asli mushkil technical nahi, <b>product</b>
-     ki hai. Aur uske chaar standard ilaaj hain.</p>`,
+     ki hai. Aur eventual consistency ke chaar standard ilaaj hain.</p>`,
     `<h3>🔬 Chaar UX patterns</h3>
      <p><b>1. Read-your-own-writes.</b> Sabse zaroori. User ko <b>apna</b>
      data hamesha fresh dikhna chahiye; doosron ka thoda purana chalega.
      Implementation: write ke baad kuch second us user ke reads primary se
      (sticky), ya session mein write timestamp rakho aur replica ko utna
      catch-up karne do.</p>
-     <p><b>2. Optimistic UI.</b> UI mein turant dikha do (jaise woh ho gaya),
+     <p><b>2. Optimistic UI.</b> UI mein turant dikha do (jaise kaam ho gaya),
      background mein confirm karo. Fail ho toh saaf batao aur wapas lo.
-     WhatsApp ka single-tick isi ka roop hai.</p>
+     WhatsApp ka single-tick optimistic UI ka roop hai.</p>
      <p><b>3. Pending state dikhao.</b> Chhupao mat — batao.</p>
      <pre>"Processing…"  ·  "Sync ho raha hai"  ·  "2 ghante purana data"</pre>
      <p><b>4. Version / conflict handling.</b> Do log ek saath edit karein
@@ -245,7 +245,7 @@ t3  2 second baad sab sync           → par user ja chuka hai</pre>
 ❌ Unique username      do log, ek naam</pre>
      <p class="tip">🎯 In sab mein ek baat common hai: <b>galti ko baad mein
      theek karna mehenga ya namumkin hai.</b> Yahi asli test hai —
-     "agar do jagah alag jawab mila, toh usse theek karna kitna mehenga hoga?"
+     "agar do jagah alag jawab mila, toh jawabon ka farak theek karna kitna mehenga hoga?"
      Sasta hai toh eventual chalega. Mehenga hai toh strong chahiye.</p>`,
   ],
   stages: [
@@ -256,10 +256,10 @@ t3  2 second baad sab sync           → par user ja chuka hai</pre>
       pairs: [
         { left: '📸 User ne photo badli, reload par purani dikhi', right: 'Read-your-own-writes — apna data primary se', explain: 'Sabse zaroori pattern. Apna data hamesha fresh; doosron ka replica se chalega.' },
         { left: '❤️ Like button dabaya, 300ms baad update hua', right: 'Optimistic UI — turant dikha do, background mein confirm', explain: 'User ko turant feedback milta hai. Fail ho toh saaf batao aur wapas lo.' },
-        { left: '📤 Bulk import chal raha hai, user confuse hai', right: 'Pending state dikhao — "Processing…"', explain: 'State chhupao mat. Ek user jo jaanta hai ki kaam chal raha hai, woh dobara try nahi karega.' },
+        { left: '📤 Bulk import chal raha hai, user confuse hai', right: 'Pending state dikhao — "Processing…"', explain: 'State chhupao mat. Kaam chalne ki baat jaanne wala user dobara try nahi karega.' },
         { left: '✍️ Do log ek hi document edit kar rahe hain', right: 'Version check → 409 Conflict ya merge', explain: 'Last-write-wins sabse aasan hai aur sabse zyada data khota hai. Version se conflict dikhta hai.' },
         { left: '💰 Balance dikhana — purana ho toh overdraft', right: 'Strong consistency — primary se padho', explain: 'Yahan eventual bilkul nahi. Galti ko baad mein theek karna mehenga hai.' },
-        { left: '📊 View count 1.2M ya 1.19M', right: 'Eventual bilkul theek — approximate chalega', explain: 'Yahan strong consistency ki koi zaroorat nahi. Iske liye lock lagana barbaadi hogi.' },
+        { left: '📊 View count 1.2M ya 1.19M', right: 'Eventual bilkul theek — approximate chalega', explain: 'Yahan strong consistency ki koi zaroorat nahi. View count ke liye lock lagana barbaadi hogi.' },
       ],
     },
     {
@@ -269,7 +269,7 @@ t3  2 second baad sab sync           → par user ja chuka hai</pre>
       visual: 'eventual',
       questions: [
         { q: 'Sabse zaroori pattern kaunsa hai?', target: 'own', explain: 'Read-your-own-writes — apna data primary se. Doosron ka thoda purana chalega, par apna action turant dikhna chahiye.' },
-        { q: 'Bulk kaam chal raha hai — user ko kya dikhao?', target: 'pending', explain: 'Pending state — "Processing…". State chhupao mat. Jo user jaanta hai ki kaam chal raha hai woh dobara try nahi karega.' },
+        { q: 'Bulk kaam chal raha hai — user ko kya dikhao?', target: 'pending', explain: 'Pending state — "Processing…". State chhupao mat. Kaam chalne ki baat jaanne wala user dobara try nahi karega.' },
         { q: 'Kahan eventual consistency bilkul nahi chalegi?', target: 'money', explain: 'Paisa nikaalna — do ATM, purana balance, overdraft. In sab mein galti ko baad mein theek karna mehenga ya namumkin hai.' },
       ],
     },
@@ -362,11 +362,11 @@ t3  2 second baad sab sync           → par user ja chuka hai</pre>
   ],
   homework: `Apne app mein ek aisa flow dhoondo jahan user kuch save karke turant use dekhta hai.
     10 baar tez-tez try karo. Ek baar bhi purana data dikha? Toh tumhare paas
-    read-after-write bug hai — aur woh users ko dikh raha hai.`,
+    read-after-write bug hai — aur bug users ko dikh raha hai.`,
   cards: [
-    { front: 'Eventual consistency ki asli mushkil?', back: '<b>Product/UX</b> ki hai, technical nahi. "System sahi tha, UX galat tha" — user ko woh state dikhi jo uske apne action se mel nahi khaati thi.' },
+    { front: 'Eventual consistency ki asli mushkil?', back: '<b>Product/UX</b> ki hai, technical nahi. "System sahi tha, UX galat tha" — user ko purani state dikhi jo user ke apne action se mel nahi khaati thi.' },
     { front: '4 UX patterns?', back: '<b>1.</b> Read-your-own-writes <b>2.</b> Optimistic UI <b>3.</b> Pending state dikhao <b>4.</b> Version check → 409 (last-write-wins data khota hai).' },
-    { front: 'Consistency chunne ka test?', back: '"Do jagah alag jawab mila toh usse <b>theek karna kitna mehenga</b> hoga?" Sasta → eventual. Mehenga/namumkin → strong.' },
+    { front: 'Consistency chunne ka test?', back: '"Do jagah alag jawab mila toh jawabon ka farak <b>theek karna kitna mehenga</b> hoga?" Sasta → eventual. Mehenga/namumkin → strong.' },
     { front: 'Eventual kahan NAHI?', back: 'Paisa nikaalna · aakhri seat · permissions revoke · unique username. Sab mein galti ko baad mein theek karna mehenga ya namumkin hai.' },
   ],
 },
@@ -385,7 +385,7 @@ t3  2 second baad sab sync           → par user ja chuka hai</pre>
   ],
   lesson: [
     `<h3>📖 Ek niyam jo zyadatar galtiyan rok deta hai</h3>
-     <p><b>Ek service, ek data ka maalik.</b> Baaki sab uske paas
+     <p><b>Ek service, ek data ka maalik.</b> Baaki sab data ki maalik service ke paas
      <b>API</b> ya <b>events</b> se aayein — table se kabhi nahi.</p>
      <pre>❌ order-service  → orders table ← inventory-service   (dono likh rahe hain)
 ✅ order-service     → orders table
@@ -401,8 +401,8 @@ t3  2 second baad sab sync           → par user ja chuka hai</pre>
      <p>Tumne network latency, partial failure aur deployment complexity
      <b>khareed li</b> — aur independence <b>mili hi nahi</b>. Yahi
      <b>distributed monolith</b> hai.</p>`,
-    `<h3>🔬 "Hum sirf PADHENGE" — yeh bhi coupling hai</h3>
-     <p>Yeh sabse aam samjhauta hai, aur woh dheere-dheere marta hai:</p>
+    `<h3>🔬 "Hum sirf PADHENGE" — seedha padhna bhi coupling hai</h3>
+     <p>Seedha padhna sabse aam samjhauta hai, aur service ki azaadi dheere-dheere marti hai:</p>
      <pre>reporting-service → orders table (sirf SELECT)
 
 order-service ne column rename kiya
@@ -417,16 +417,16 @@ order-service ne column rename kiya
      <pre>• JOIN                → API composition ya read model
 • ACID transaction    → saga + compensating actions
 • Foreign key         → ab tum "orphan" rows handle karoge
-• "SELECT COUNT(*)"   → ab woh N services ka sawaal hai</pre>
+• "SELECT COUNT(*)"   → ab COUNT N services ka sawaal hai</pre>
      <p class="tip">🎯 <b>Shuru kahan se:</b> ek DB, par <b>per-module alag
-     schema/tables</b> aur cross-module foreign key nahi. Yeh "modular
+     schema/tables</b> aur cross-module foreign key nahi. Alag schema/tables "modular
      monolith" wala rasta hai — aage service nikaalni ho toh line pehle se
      khinchi hui hai, aur aaj tumhe saga nahi likhna pad raha.</p>`,
   ],
   stages: [
     {
       type: 'bins',
-      title: 'Yeh coupling hai?',
+      title: 'Kaunsi situation coupling hai?',
       instructions: 'Har situation ko sahi bin mein daalo.',
       bins: [
         { id: 'ok', label: '✅ Theek hai' },
@@ -448,7 +448,7 @@ order-service ne column rename kiya
       visual: 'dbperservice',
       questions: [
         { q: 'Sabse zaroori niyam kaunsa hai?', target: 'own', explain: 'Ek service, ek data ka maalik. Baaki API ya events se pahunchein — table se kabhi nahi.' },
-        { q: '"Hum sirf padhenge" mein kya problem hai?', target: 'read', explain: 'Woh bhi coupling hai — ek chhupa hua contract jise kisi ne likha nahi. Schema badle toh tum tootoge aur owner ko pata bhi nahi chalega.' },
+        { q: '"Hum sirf padhenge" mein kya problem hai?', target: 'read', explain: 'Seedha padhna bhi coupling hai — ek chhupa hua contract jise kisi ne likha nahi. Schema badle toh tum tootoge aur owner ko pata bhi nahi chalega.' },
         { q: 'Chhoti team ko kahan se shuru karna chahiye?', target: 'start', explain: 'Ek DB, par per-module alag schema aur cross-module FK nahi. Boundary khinchi hui hai par aaj saga nahi likhna pad raha.' },
       ],
     },
@@ -495,7 +495,7 @@ order-service ne column rename kiya
   ],
   interview: {
     title: 'Interview Round — Data Ownership',
-    instructions: 'Yeh microservices ka sabse discriminating sawaal hai. 🎤',
+    instructions: 'Data ownership microservices ka sabse discriminating sawaal hai. 🎤',
     questions: [
       {
         q: '"Har service ka apna DB kyun hona chahiye?"',
@@ -523,12 +523,12 @@ order-service ne column rename kiya
     'Modular monolith ka rasta jaante ho',
   ],
   homework: `Apne system mein pata karo: kya koi service doosri ki table seedha chhuti hai
-    (padhna bhi)? Har aise case ke liye likho ki uski jagah API chahiye ya event.
-    Yeh list tumhare architecture debt ka sabse imaandaar naksha hai.`,
+    (padhna bhi)? Har aise case ke liye likho ki seedha table chhoone ki jagah API chahiye ya event.
+    Table access ki list tumhare architecture debt ka sabse imaandaar naksha hai.`,
   cards: [
     { front: 'Data ownership ka niyam?', back: '<b>Ek service, ek data ka maalik.</b> Baaki API ya events se pahunchein — table se kabhi nahi.' },
     { front: 'Shared writable DB?', back: '<b>Distributed monolith</b> — ek migration = sab ka coordination, ek slow query = sab down. Network latency mili, aazadi nahi.' },
-    { front: '"Sirf padhenge" theek hai?', back: 'Nahi — woh bhi coupling hai. Ek <b>chhupa hua contract</b> jise kisi ne likha nahi. Schema badle toh tum tootoge aur owner ko pata bhi nahi chalega.' },
+    { front: '"Sirf padhenge" theek hai?', back: 'Nahi — seedha padhna bhi coupling hai. Ek <b>chhupa hua contract</b> jise kisi ne likha nahi. Schema badle toh tum tootoge aur owner ko pata bhi nahi chalega.' },
     { front: 'DB per service ki keemat?', back: '<b>JOIN</b> → API composition/read model · <b>ACID transaction</b> → saga · <b>FK</b> → orphan rows handle karo · <b>COUNT(*)</b> → ab N services ka sawaal.' },
     { front: 'Shuru kahan se?', back: '<b>Ek DB, per-module alag schema, koi cross-module FK nahi.</b> Boundary khinchi hui hai par aaj saga nahi likhna pad raha.' },
   ],
@@ -548,12 +548,12 @@ order-service ne column rename kiya
   ],
   lesson: [
     `<h3>📖 "Delhi ke users ke pending orders"</h3>
-     <p>Monolith mein yeh ek JOIN hai, 5 ms. Services mein:</p>
+     <p>Monolith mein pending orders ki query ek JOIN hai, 5 ms. Services mein:</p>
      <pre>❌ Naive:
    user-service se Delhi ke users lo    → 50,000 users
    har user ke liye order-service call  → 50,000 calls 💀
 
-Yeh N+1 ka distributed roop hai — aur yahan har "query"
+Har user ke orders alag maangna N+1 ka distributed roop hai — aur yahan har "query"
 ek network call hai, isliye 100x zyada mehengi.</pre>
      <p>Chaar asli vikalp hain:</p>
      <table>
@@ -575,7 +575,7 @@ UserMoved      → UPDATE order_summary SET user_city = ...
 OrderCreated   → INSERT ...
 OrderShipped   → UPDATE status = ...
 
--- ab woh query:
+-- ab wahi query:
 SELECT * FROM order_summary
 WHERE user_city = 'Delhi' AND status = 'pending';   → ek query, 5 ms ✅</pre>
      <p><b>Jo tum bech rahe ho:</b> freshness (data kuch second purana ho
@@ -590,7 +590,7 @@ baar-baar chalne wali query, bada data           → CQRS read model
 sirf 2-3 fields chahiye (naam, city)             → un fields ki local copy
 arbitrary search + facets + typo tolerance       → search index</pre>
      <p class="tip">🎯 Sabse aam galti: har cross-service query ke liye
-     API composition use karna. Woh 2-3 calls tak theek hai — uske baad
+     API composition use karna. API composition 2-3 calls tak theek hai — zyada calls par
      tail latency aur fan-out failures tumhe kha jaate hain.</p>`,
   ],
   stages: [
@@ -600,11 +600,11 @@ arbitrary search + facets + typo tolerance       → search index</pre>
       instructions: 'Har zaroorat ko sahi pattern se jodo.',
       pairs: [
         { left: '📄 Order detail page — order + user + payment', right: 'API composition — 3 calls, jodo', explain: '2-3 services aur ek hi record. Composition simple hai aur yahan bilkul theek hai.' },
-        { left: '🔍 "Delhi ke pending orders" — roz 10,000 baar', right: 'CQRS read model — denormalized view table', explain: 'Baar-baar chalne wali cross-service query. Read model ise ek 5ms query bana deta hai.' },
-        { left: '👤 Order list mein bas user ka naam dikhana hai', right: 'Local copy — sirf woh field event se sync karo', explain: 'Poora user object nahi chahiye. Sirf naam apni table mein rakho aur UserRenamed event se update karo.' },
-        { left: '🔎 "laptop" search + brand/price facets', right: 'Search index (Elasticsearch)', explain: 'Arbitrary search, facets aur relevance — yeh transactional DB ka kaam nahi hai.' },
+        { left: '🔍 "Delhi ke pending orders" — roz 10,000 baar', right: 'CQRS read model — denormalized view table', explain: 'Baar-baar chalne wali cross-service query. Read model cross-service query ko ek 5ms query bana deta hai.' },
+        { left: '👤 Order list mein bas user ka naam dikhana hai', right: 'Local copy — sirf naam ka field event se sync karo', explain: 'Poora user object nahi chahiye. Sirf naam apni table mein rakho aur UserRenamed event se update karo.' },
+        { left: '🔎 "laptop" search + brand/price facets', right: 'Search index (Elasticsearch)', explain: 'Arbitrary search, facets aur relevance — aisa search transactional DB ka kaam nahi hai.' },
         { left: '📊 "Pichhle saal ka revenue by region"', right: 'Data warehouse / analytics pipeline', explain: 'Analytical query — prod services se kabhi nahi. Pipeline se warehouse mein bhejo.' },
-        { left: '⚡ 50,000 users ke orders ek page par', right: 'Read model — composition yahan tootegi', explain: '50,000 API calls namumkin hai. Yeh classic case hai jahan composition kaam nahi karti.' },
+        { left: '⚡ 50,000 users ke orders ek page par', right: 'Read model — composition yahan tootegi', explain: '50,000 API calls namumkin hai. Itni saari API calls classic case hai jahan composition kaam nahi karti.' },
       ],
     },
     {
@@ -624,12 +624,12 @@ arbitrary search + facets + typo tolerance       → search index</pre>
       instructions: 'Ek CQRS read model banane ka sahi kram.',
       steps: [
         { text: 'Query likho jo tumhe chahiye — pehle sawaal, phir schema', explain: 'Read model poori tarah query-driven hota hai. "Delhi ke pending orders" — basisi ke liye table banao.' },
-        { text: 'Denormalized table design karo — jo columns query mein chahiye', explain: 'Yahan normalization ka koi matlab nahi. Yeh table ek query ka jawab hai, sach ka source nahi.' },
+        { text: 'Denormalized table design karo — jo columns query mein chahiye', explain: 'Yahan normalization ka koi matlab nahi. Read model ki table ek query ka jawab hai, sach ka source nahi.' },
         { text: 'Source services se zaroori events subscribe karo', explain: 'OrderCreated, OrderShipped, UserMoved. Har event ek update banega.' },
         { text: 'Consumer likho — idempotent, kyunki at-least-once', explain: 'Events dobara aayenge. Upsert use karo (INSERT ... ON CONFLICT UPDATE), blind INSERT nahi.' },
         { text: 'Backfill karo — purane data se table bharo', explain: 'Events sirf aage ka data denge. Purane orders ke liye ek one-time backfill chahiye, warna table adhoori rahegi.' },
-        { text: 'Lag monitor karo — read model kitna peeche hai', explain: 'Yeh sabse zaroori metric hai. Lag badhna matlab users purana data dekh rahe hain — aur yeh chup-chaap hota hai.' },
-        { text: 'Rebuild ka rasta rakho — events se poora dobara banao', explain: 'Bug ya schema change par read model ko phenk ke dobara banana aana chahiye. Iske bina har galti hamesha ke liye reh jaati hai.' },
+        { text: 'Lag monitor karo — read model kitna peeche hai', explain: 'Read model ka lag sabse zaroori metric hai. Lag badhna matlab users purana data dekh rahe hain — aur lag badhna chup-chaap hota hai.' },
+        { text: 'Rebuild ka rasta rakho — events se poora dobara banao', explain: 'Bug ya schema change par read model ko phenk ke dobara banana aana chahiye. Rebuild ke bina har galti hamesha ke liye reh jaati hai.' },
       ],
     },
     {
@@ -697,17 +697,17 @@ arbitrary search + facets + typo tolerance       → search index</pre>
     ],
   },
   success: [
-    'Chaaron patterns aur unki keemat jaante ho',
+    'Chaaron patterns aur patterns ki keemat jaante ho',
     'Situation ke hisaab se pattern chun sakte ho',
     'Read model bana sakte ho — backfill aur rebuild ke saath',
     'Distributed N+1 pehchaan sakte ho',
   ],
-  homework: `Apne system ki ek cross-service query dhoondo. Ginti karo ki woh kitne network
+  homework: `Apne system ki ek cross-service query dhoondo. Ginti karo ki query kitne network
     calls karti hai. Agar 3 se zyada hain, toh ek read model ka design likho:
     kaunsi table, kaunse events, aur backfill kaise karoge.`,
   cards: [
     { front: 'Cross-service query ke 4 patterns?', back: '<b>API composition</b> (2-3 calls, ek record) · <b>CQRS read model</b> (baar-baar chalne wali query) · <b>local copy</b> (2-3 fields) · <b>search index</b> (arbitrary search).' },
-    { front: 'API composition kab tootegi?', back: 'Jab <b>calls badhein</b> (tail latency) ya <b>dataset bada ho</b> (50,000 users = 50,000 calls). Yeh N+1 ka distributed roop hai.' },
+    { front: 'API composition kab tootegi?', back: 'Jab <b>calls badhein</b> (tail latency) ya <b>dataset bada ho</b> (50,000 users = 50,000 calls). Har user ke liye call N+1 ka distributed roop hai.' },
     { front: 'CQRS read model?', back: 'Events se ek <b>denormalized view table</b>. Tum <b>freshness</b> bech ke <b>query speed</b> khareedte ho — aur schema tumhara apna hota hai.' },
     { front: 'Read model banane ke zaroori kadam?', back: 'Query pehle → denormalized table → events subscribe → <b>idempotent upsert</b> → <b>backfill</b> → <b>lag monitor</b> → <b>rebuild ka rasta</b>.' },
   ],
@@ -726,13 +726,13 @@ arbitrary search + facets + typo tolerance       → search index</pre>
     'Saga mein <b>isolation nahi</b> hai',
   ],
   lesson: [
-    `<h3>📖 2PC pehle — aur woh kyun nahi chalta</h3>
+    `<h3>📖 2PC pehle — aur 2PC kyun nahi chalta</h3>
      <p>Do-phase commit ka vaada achha hai: coordinator sabse "ready?"
      poochhta hai, sab "haan" bolein toh sab commit karte hain.</p>
-     <p>Par ek problem hai jo use microservices ke liye lagbhag bekaar bana
-     deti hai: <b>woh blocking hai</b>. Coordinator prepare ke <b>baad</b>
+     <p>Par ek problem hai jo 2PC ko microservices ke liye lagbhag bekaar bana
+     deti hai: <b>2PC blocking hai</b>. Coordinator prepare ke <b>baad</b>
      mar gaya, toh participants apne locks pakde <b>latke</b> rehte hain —
-     aur unhe pata bhi nahi ki commit karna hai ya rollback.</p>
+     aur participants ko pata bhi nahi ki commit karna hai ya rollback.</p>
      <p>Nateeja: tumhari availability <b>sabse kamzor participant</b> jaisi
      ho jaati hai. Aur 5 services mein se koi ek toh hamesha kharab hoti hi
      hai.</p>
@@ -758,20 +758,20 @@ arbitrary search + facets + typo tolerance       → search index</pre>
      ek jagah rakhta hai. Choreography chhote, saaf flows mein sundar hai —
      bade flows mein tracing aur documented flow ke bina <b>samajh se bahar</b>.</p>
      <h3>⚠️ Saga mein ISOLATION nahi hai</h3>
-     <p>Yeh sabse zaroori baat hai. ACID mein "I" isolation hai — beech ki
+     <p>Isolation ka farak sabse zaroori baat hai. ACID mein "I" isolation hai — beech ki
      halat kisi ko nahi dikhti. Saga mein <b>dikhti hai</b>:</p>
      <pre>Step 2 ke baad, step 3 se pehle:
   → order EXIST karta hai (pending)
   → stock reserved hai
   → payment nahi hua
-  → aur yeh sab doosron ko DIKH raha hai</pre>
+  → aur saga ki beech ki halat doosron ko DIKH raha hai</pre>
      <p>Isliye:</p>
      <pre>• State explicit rakho: pending → confirmed → cancelled
 • UI mein bhi dikhao — "payment processing…"
 • Kuch cheezein ULTI nahi hoti — email chala gaya toh gaya
   (ilaaj: "hamari galti" wala doosra email)</pre>
      <p class="tip">🎯 Isiliye saga design karte waqt sabse zaroori sawaal
-     yeh hai: <b>"beech mein fail hua toh user ko kya dikhega?"</b></p>`,
+     hai: <b>"beech mein fail hua toh user ko kya dikhega?"</b></p>`,
   ],
   stages: [
     {
@@ -783,7 +783,7 @@ arbitrary search + facets + typo tolerance       → search index</pre>
         { text: 'Stock reservation chhodo (step 2 ka ulta)', explain: 'Sabse aakhri safal step pehle undo hota hai. Warna stock blocked reh jaayega aur doosre customers ko "out of stock" dikhega.' },
         { text: 'Order ko cancelled mark karo (step 1 ka ulta)', explain: 'Order DELETE nahi karte — <b>cancelled</b> mark karte hain. Audit trail chahiye, aur user ko bhi dikhna chahiye ki kya hua.' },
         { text: 'User ko batao ki payment fail hua aur kya karna hai', explain: 'Saga mein isolation nahi hai — user ne shayad "order placed" dekh liya tha. Use saaf batao, chup mat raho.' },
-        { text: 'Poora saga ek trace_id ke saath log karo', explain: 'Kal koi poochhega "yeh order cancel kyun hua?". Bina saga-level trace ke jawab 4 services ke logs mein dhoondhna padega.' },
+        { text: 'Poora saga ek trace_id ke saath log karo', explain: 'Kal koi poochhega "order cancel kyun hua?". Bina saga-level trace ke jawab 4 services ke logs mein dhoondhna padega.' },
       ],
     },
     {
@@ -798,9 +798,9 @@ arbitrary search + facets + typo tolerance       → search index</pre>
         { text: '2 steps: order bana → email bhejo', bin: 'choreo', explain: 'Chhota flow, ek event kaafi hai. Yahan orchestrator banana over-engineering hai.' },
         { text: '6 steps with compensations aur conditional branches', bin: 'orch', explain: 'Compensations aur shaakhon wale lambe flow mein orchestrator poora flow ek jagah rakhta hai. Choreography mein flow events mein bikhra hota hai.' },
         { text: 'Naye services ko bina purana code chhue jodna hai', bin: 'choreo', explain: 'Choreography ka sabse bada faayda: naya subscriber jodo, publisher ko pata bhi nahi chalega.' },
-        { text: 'Business team poochhti hai "order abhi kis step par hai?"', bin: 'orch', explain: 'Orchestrator ke paas explicit state hoti hai. Choreography mein yeh jawab dena bahut mushkil hai.' },
+        { text: 'Business team poochhti hai "order abhi kis step par hai?"', bin: 'orch', explain: 'Orchestrator ke paas explicit state hoti hai. Choreography mein order ke step ka jawab dena bahut mushkil hai.' },
         { text: 'Analytics events — kai consumers, koi flow nahi', bin: 'choreo', explain: 'Pure pub-sub. Yahan koi saga hai hi nahi — bas events broadcast ho rahe hain.' },
-        { text: 'Har step par retry, timeout aur alag compensation chahiye', bin: 'orch', explain: 'Yeh sab state machine ka kaam hai. Ek jagah rakhna hi practical hai — 6 services mein bikhraana nahi.' },
+        { text: 'Har step par retry, timeout aur alag compensation chahiye', bin: 'orch', explain: 'Retry, timeout aur compensation sab state machine ka kaam hai. Ek jagah rakhna hi practical hai — 6 services mein bikhraana nahi.' },
       ],
     },
     {
@@ -809,7 +809,7 @@ arbitrary search + facets + typo tolerance       → search index</pre>
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'saga',
       questions: [
-        { q: '2PC microservices mein kyun use nahi hota?', target: '2pc', explain: 'Woh blocking hai — coordinator prepare ke baad mar jaaye toh participants locks pakde latke rehte hain. Availability sabse kamzor participant jaisi ho jaati hai.' },
+        { q: '2PC microservices mein kyun use nahi hota?', target: '2pc', explain: '2PC blocking hai — coordinator prepare ke baad mar jaaye toh participants locks pakde latke rehte hain. Availability sabse kamzor participant jaisi ho jaati hai.' },
         { q: 'Saga ki sabse badi kami kaunsi hai?', target: 'isolation', explain: 'Isolation nahi hai — beech ki halat doosron ko DIKHTI hai. Isliye state explicit rakho aur UI mein bhi dikhao.' },
         { q: '6 steps, compensations aur shaakhon wale flow ke liye kya chuno?', target: 'orch', explain: 'Orchestration — shaakhein, retries aur compensations ek jagah dikhte hain. Steps ki ginti akele niyam nahi; flow ki complexity dekho.' },
       ],
@@ -918,11 +918,11 @@ arbitrary search + facets + typo tolerance       → search index</pre>
     'Choreography aur orchestration mein chun sakte ho',
     'Saga ki isolation ki kami handle kar sakte ho',
   ],
-  homework: `Apne system ka ek multi-service flow lo. Har step ke saamne uska compensating
-    action likho. Jinke saamne kuch nahi likh paaye — woh irreversible steps hain.
-    Kya woh flow ke AAKHIR mein hain? Agar nahi, toh unhe wahan le jao.`,
+  homework: `Apne system ka ek multi-service flow lo. Har step ke saamne step ka compensating
+    action likho. Jinke saamne kuch nahi likh paaye — aise steps irreversible steps hain.
+    Kya irreversible steps flow ke AAKHIR mein hain? Agar nahi, toh irreversible steps flow ke aakhir mein le jao.`,
   cards: [
-    { front: '2PC microservices mein kyun nahi?', back: 'Woh <b>blocking</b> hai — coordinator prepare ke baad mare toh participants locks pakde latke rehte hain. Availability <b>sabse kamzor participant</b> jaisi ho jaati hai.' },
+    { front: '2PC microservices mein kyun nahi?', back: '2PC <b>blocking</b> hai — coordinator prepare ke baad mare toh participants locks pakde latke rehte hain. Availability <b>sabse kamzor participant</b> jaisi ho jaati hai.' },
     { front: 'Saga?', back: 'Chhote <b>local</b> transactions ki shrinkhala, har ek ka apna <b>compensating action</b>. Step 3 fail? → 2 aur 1 ko ulta karo.' },
     { front: 'Choreography vs Orchestration?', back: '<b>Choreography</b>: events, decoupled, par flow kahin likha nahi. <b>Orchestration</b>: ek jagah flow + state + retry. <b>3 se zyada steps? Orchestration.</b>' },
     { front: 'Saga ki sabse badi kami?', back: '<b>Isolation nahi hai</b> — beech ki halat doosron ko dikhti hai. Isliye state explicit rakho (pending/confirmed/cancelled) aur UI mein dikhao.' },
@@ -956,9 +956,9 @@ kafka.publish(event)    ❌ crash!
      nahi — ab downstream services ek aise order par kaam kar rahi hain jo
      exist nahi karta.</p>
      <p><b>Do alag systems ko ek saath atomic likhna namumkin hai.</b>
-     Yeh koi library ya framework theek nahi kar sakta — yeh distributed
+     Atomicity ki dikkat koi library ya framework theek nahi kar sakta — do systems ki atomicity distributed
      systems ka basic sach hai.</p>
-     <h3>✅ Outbox — trick yeh hai ki DOOSRA system hi na ho</h3>
+     <h3>✅ Outbox — trick hai ki DOOSRA system hi na ho</h3>
      <pre>BEGIN;
   INSERT INTO orders (...);
   INSERT INTO outbox (event_type, payload);   ← USI DB mein
@@ -988,12 +988,12 @@ crash!           💥
 UPDATE sent=true  ← nahi hua
 
 → restart par event DOBARA jaayega</pre>
-     <p>Yeh at-least-once hai. Outbox ka vaada yeh <b>nahi</b> hai ki event
-     ek hi baar jaayega — uska vaada hai ki event <b>kabhi kho nahi
+     <p>Outbox se delivery at-least-once hai. Outbox ka vaada <b>nahi</b> hai ki event
+     ek hi baar jaayega — outbox ka vaada hai ki event <b>kabhi kho nahi
      sakta</b>. Duplicates handle karna consumers ka kaam hai
      (agla level).</p>
      <p class="tip">🎯 Do aur baatein: <b>(1)</b> outbox table ko regularly
-     saaf karo (purane sent rows delete) warna woh anant badhegi.
+     saaf karo (purane sent rows delete) warna outbox table anant badhegi.
      <b>(2)</b> Agar order matter karta hai toh relay ko per-key ordering
      rakhni padegi — parallel publish se events out-of-order ja sakte hain.</p>`,
   ],
@@ -1003,10 +1003,10 @@ UPDATE sent=true  ← nahi hua
       title: 'Outbox ka flow',
       instructions: 'Sahi kram lagao.',
       steps: [
-        { text: 'Ek transaction kholo', explain: 'Sab kuch isi ke andar hoga — yahi poora point hai.' },
+        { text: 'Ek transaction kholo', explain: 'Sab kuch transaction ke andar hoga — yahi poora point hai.' },
         { text: 'Business data likho (order INSERT)', explain: 'Normal kaam. Ab tak kuch naya nahi.' },
-        { text: 'Usi transaction mein outbox row INSERT karo', explain: 'Yahi trick hai — event ko ek MESSAGE ki tarah nahi, ek DB ROW ki tarah treat karo. Ab woh usi atomic unit ka hissa hai.' },
-        { text: 'COMMIT — ab dono ya toh hue, ya dono nahi', explain: 'Atomicity mil gayi bina distributed transaction ke. Yeh outbox ka poora jaadu hai.' },
+        { text: 'Ek hi transaction mein outbox row INSERT karo', explain: 'Yahi trick hai — event ko ek MESSAGE ki tarah nahi, ek DB ROW ki tarah treat karo. Ab event transaction ki atomic unit ka hissa hai.' },
+        { text: 'COMMIT — ab dono ya toh hue, ya dono nahi', explain: 'Atomicity mil gayi bina distributed transaction ke. Atomicity outbox ka poora jaadu hai.' },
         { text: 'Alag relay process outbox se unsent rows padhe', explain: 'Polling ya CDC. Request path se poori tarah alag — isliye publish ki latency user ko nahi lagti.' },
         { text: 'Broker par publish karo', explain: 'Fail ho toh koi baat nahi — row abhi bhi outbox mein hai aur agle loop mein dobara koshish hogi.' },
         { text: 'Row ko sent mark karo', explain: 'Publish ke baad aur mark ke pehle crash ho toh event <b>dobara</b> jaayega. Isliye consumers ko idempotent hona hi hoga.' },
@@ -1118,7 +1118,7 @@ UPDATE sent=true  ← nahi hua
     { front: 'Outbox pattern?', back: 'Business data aur event row <b>USI DB</b> mein, <b>ek transaction</b> mein. Phir ek alag relay outbox se publish kare. Doosra system hi nahi raha, isliye atomicity mil gayi.' },
     { front: 'Outbox kya guarantee deta hai?', back: "<b>Durable intent + retrying relay.</b> Eventual handoff relay recovery, retention aur durable DB par depend hai. Publish ke baad mark se pehle crash redelivery kar sakta hai; consumers idempotent aur lag/retention monitored ho." },
     { front: 'Polling vs CDC?', back: '<b>Polling</b>: simple, latency = interval. <b>CDC</b> (Debezium): DB ka transaction log, kam latency, par ek aur system. <b>Polling se shuru karo.</b>' },
-    { front: 'Outbox ka maintenance?', back: 'Purane sent rows <b>regularly delete</b> karo — woh ek high-write table hai aur bina cleanup ke crore rows tak pahunch jaati hai.' },
+    { front: 'Outbox ka maintenance?', back: 'Purane sent rows <b>regularly delete</b> karo — outbox ek high-write table hai aur bina cleanup ke crore rows tak pahunch jaati hai.' },
   ],
 },
 
@@ -1140,13 +1140,13 @@ UPDATE sent=true  ← nahi hua
 2. ack bhejne se PEHLE crash            💥
 3. broker ko pata nahi: kaam hua ya nahi?</pre>
      <p>Broker ke liye dono halat <b>bilkul ek jaisi</b> dikhti hain:
-     "message bheja, ack nahi mila". Uske paas do hi vikalp hain:</p>
+     "message bheja, ack nahi mila". Broker ke paas do hi vikalp hain:</p>
      <pre>Dobara bhejo  → at-least-once → DUPLICATES
 Mat bhejo     → at-most-once  → DATA LOSS</pre>
      <p>Sirf broker ACK ke basis par effect ambiguous hai.<b>Scoped transactional processing</b> additional shared durable state aur cooperating sink se stronger outcome de sakti hai. Two Generals ko every exactly-once implementation impossible proof mat banao.</p>
      <h3>✅ Toh log "exactly-once" kaise karte hain?</h3>
      <pre>at-least-once delivery + idempotent processing = effectively-once</pre>
-     <p>Duplicates <b>aayenge</b>. Bas unka koi asar nahi hoga.</p>`,
+     <p>Duplicates <b>aayenge</b>. Bas duplicates ka koi asar nahi hoga.</p>`,
     `<h3>🔬 Idempotent consumer — teen kadam</h3>
      <pre>1. Har message mein ek unique id ho (producer deta hai)
 2. processed_ids table par UNIQUE constraint
@@ -1158,7 +1158,7 @@ COMMIT;</pre>
      <p>Teesra kadam sabse zaroori hai. Agar tum pehle side-effect karo aur
      phir alag se id likho, toh tumne <b>dual write ka problem dobara bana
      diya</b> — beech mein crash ho toh kaam ho chuka hai par id nahi likhi
-     gayi, aur agli baar woh dobara ho jaayega.</p>
+     gayi, aur agli baar side-effect dobara ho jaayega.</p>
      <p>Aur dhyaan do: <b>app-level check nahi chalega</b>:</p>
      <pre>❌ if not exists(msg_id): process()      ← race condition
 ✅ INSERT ... ON CONFLICT DO NOTHING     ← atomic</pre>
@@ -1290,7 +1290,7 @@ COMMIT;</pre>
   ],
   interview: {
     title: 'Interview Round — Exactly-Once',
-    instructions: 'Yeh sawaal bahut se strong engineers ko fansaata hai. 🎤',
+    instructions: 'Exactly-once ka sawaal bahut se strong engineers ko fansaata hai. 🎤',
     questions: [
       {
         q: 'Bahar ke business effects (charge, email) par "exactly-once" kaise pakka karoge?',
@@ -1339,7 +1339,7 @@ COMMIT;</pre>
     unme dedupe key aur ek transaction chahiye — aaj.`,
   cards: [
     { front: 'Exactly-once kyun namumkin?', back: 'Crash ke baad "kaam hua ya nahi" pata karna namumkin hai — dono halat ek jaisi dikhti hain. Do vikalp: <b>at-least-once</b> (duplicates) ya <b>at-most-once</b> (data loss).' },
-    { front: 'Asli formula?', back: '<b>at-least-once delivery + idempotent processing = effectively-once.</b> Duplicates aayenge — bas unka koi asar nahi hoga.' },
+    { front: 'Asli formula?', back: '<b>at-least-once delivery + idempotent processing = effectively-once.</b> Duplicates aayenge — bas duplicates ka koi asar nahi hoga.' },
     { front: 'Idempotent consumer ke 3 kadam?', back: '<b>1.</b> Message mein unique id <b>2.</b> <code>processed_ids</code> par UNIQUE constraint <b>3.</b> side-effect + id <b>ek hi transaction</b> mein (warna dual write dobara).' },
     { front: 'Sabse sasti idempotency?', back: 'Design se: <b>"value SET karo"</b> (<code>SET status = shipped</code>), "value BADHAO" nahi. Koi extra table, koi constraint nahi lagti.' },
     { front: '"Broker exactly-once deta hai"?', back: 'Kafka transactions supported Kafka read-process-write boundary protect karti hain.External sink/payment/email ko cooperating transaction,idempotency ya reconciliation contract chahiye.' },
@@ -1371,11 +1371,11 @@ WHERE due_date - INTERVAL '5 days' BETWEEN now() AND now() + 1 hour;
 → 2 CRORE rows scan
 → 50,000 reminders mile
 → har ghante, hamesha</pre>
-     <p>Yeh <b>bilkul wahi bimari</b> hai jo deep pagination mein thi:
+     <p>Har ghante poora dataset scan karna <b>bilkul wahi bimari</b> hai jo deep pagination mein thi:
      jawab ke liye <b>poora dataset chhuna</b>. Aur ilaaj bhi wahi hai —
      <b>access pattern badlo</b>.</p>
      <h3>⚡ Sawaal ulta karo</h3>
-     <p>Har bill se poochhna band karo ki "tera waqt aa gaya?". Uski jagah
+     <p>Har bill se poochhna band karo ki "tera waqt aa gaya?". Har bill se poochhne ki jagah
      <b>ek baar hisaab karo aur likh lo</b>:</p>
      <pre>-- jab bill aaye YA due date badle:
 reminder_at = due_date - 5 days   (user ke timezone mein)
@@ -1387,25 +1387,25 @@ WHERE reminder_at <= now() AND status = 'pending'
 ORDER BY reminder_at
 LIMIT 1000;                        ← index par ek SEEK</pre>
      <p>2 crore scan ki jagah <b>50,000 due rows par seedha seek</b>.
-     Aur yeh ek B-tree index par range scan hai — bilkul wahi cheez jo
+     Aur due rows dhoondhna ek B-tree index par range scan hai — bilkul wahi cheez jo
      cursor pagination karti hai.</p>`,
     `<h3>🔬 Scale par: buckets, partitions, stagger</h3>
      <p><b>Time buckets / timer wheel:</b></p>
      <pre>agle 1 minute ke reminders  → in-memory / fast queue
 agle 5 minute ke            → doosra bucket
-usse aage                    → durable storage mein pade rahein
+agle bucket se aage                    → durable storage mein pade rahein
 
 Worker sirf paas wale bucket ko dekhta hai.</pre>
      <p>Technology (delayed queue, sorted set, timer wheel, ya bas ek index)
      se zyada <b>access pattern</b> matter karta hai.</p>
      <p><b>Partition karo:</b> <code>user_id</code>, date, ya region se —
      taaki kai workers alag-alag partitions par bina takraav ke kaam karein.
-     (Aur isse distributed lock ki zaroorat bhi khatam ho jaati hai —
+     (Aur partition karne se distributed lock ki zaroorat bhi khatam ho jaati hai —
      ek partition, ek worker.)</p>
      <p><b>Stagger karo:</b> 50 lakh notifications theek 9:00 AM par mat
      bhejo. 9:00–9:30 mein phailao — warna tumne khud apne liye ek
      flash crowd bana liya (aur provider ki rate limit bhi paar kar doge).</p>
-     <h3>🔄 Asli duniya badalti hai — yahi ise cron se alag banata hai</h3>
+     <h3>🔄 Asli duniya badalti hai — badalti duniya scheduler ko cron se alag banata hai</h3>
      <table>
        <tr><th>Kya hua</th><th>Schedule ka kya</th></tr>
        <tr><td>User ne pehle pay kar diya</td><td>pending reminder <b>cancel</b></td></tr>
@@ -1416,7 +1416,7 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
      </table>
      <p class="tip">🎯 Aakhri wali sabse zaroori hai: <code>(user_id,
      bill_id, reminder_date)</code> par unique constraint. Warna ek user ko
-     wahi reminder 3 baar jaayega — aur woh app uninstall karne ki wajah
+     wahi reminder 3 baar jaayega — aur baar-baar reminder app uninstall karne ki wajah
      banta hai.</p>`,
   ],
   stages: [
@@ -1445,14 +1445,14 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
       title: 'Reminder system ka design',
       instructions: 'Sahi kram lagao.',
       steps: [
-        { text: 'Bill aaya ya due date badli — reminder_at ek baar calculate karo', explain: 'due_date − 5 din, user ke timezone mein. Yeh hisaab ek baar hota hai, har ghante nahi.' },
+        { text: 'Bill aaya ya due date badli — reminder_at ek baar calculate karo', explain: 'due_date − 5 din, user ke timezone mein. reminder_at ka hisaab ek baar hota hai, har ghante nahi.' },
         { text: 'reminders table mein store karo (status: pending)', explain: 'Ab system ko pata hai ki is bill ko kab dhyaan chahiye. Use har scan mein dobara dhoondhne ki zaroorat nahi.' },
-        { text: 'reminder_at par index banao', explain: 'Isse worker ki query ek seek ban jaati hai. Technology se zyada yahi matter karta hai.' },
+        { text: 'reminder_at par index banao', explain: 'Index se worker ki query ek seek ban jaati hai. Technology se zyada yahi matter karta hai.' },
         { text: 'Worker due jobs uthaye — WHERE reminder_at <= now() LIMIT 1000', explain: '2 crore scan ki jagah due rows par seedha seek. Batch mein lo taaki ek query bahut badi na ho.' },
-        { text: 'Partition karo — user_id ya date se', explain: 'Kai workers bina takraav ke chalein. Isse distributed lock ki zaroorat bhi khatam ho jaati hai: ek partition, ek worker.' },
+        { text: 'Partition karo — user_id ya date se', explain: 'Kai workers bina takraav ke chalein. Partition karne se distributed lock ki zaroorat bhi khatam ho jaati hai: ek partition, ek worker.' },
         { text: 'Stagger karo — 9:00-9:30 mein phailao', explain: '50 lakh notifications theek 9:00 par bhejna apne liye flash crowd banana hai — aur provider ki rate limit bhi paar ho jaayegi.' },
-        { text: 'Idempotent send — (user, bill, date) par unique constraint', explain: 'Workers crash hote hain, queues redeliver karti hain. Iske bina user ko wahi reminder 3 baar jaayega.' },
-        { text: 'Reality change handle karo — pay/cancel/date change par update', explain: 'Yahi ise cron se alag banata hai. Schedule ek jeeti-jaagti cheez hai — user pehle pay kare toh reminder cancel hona chahiye.' },
+        { text: 'Idempotent send — (user, bill, date) par unique constraint', explain: 'Workers crash hote hain, queues redeliver karti hain. Idempotent send ke bina user ko wahi reminder 3 baar jaayega.' },
+        { text: 'Reality change handle karo — pay/cancel/date change par update', explain: 'Badlaav sambhaalna scheduler ko cron se alag banata hai. Schedule ek jeeti-jaagti cheez hai — user pehle pay kare toh reminder cancel hona chahiye.' },
       ],
     },
     {
@@ -1461,9 +1461,9 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'scheduling',
       questions: [
-        { q: 'Technology se zyada kya matter karta hai?', target: 'index', explain: 'Access pattern. reminder_at par index — chahe woh Postgres ho, Redis sorted set ho ya timer wheel. Sawaal hamesha "poora scan ya seedha seek" ka hai.' },
+        { q: 'Technology se zyada kya matter karta hai?', target: 'index', explain: 'Access pattern. reminder_at par index — chahe store Postgres ho, Redis sorted set ho ya timer wheel. Sawaal hamesha "poora scan ya seedha seek" ka hai.' },
         { q: '50 lakh notifications 9:00 AM par bhejne mein kya problem hai?', target: 'stagger', explain: 'Tumne apne liye ek flash crowd bana liya — aur provider ki rate limit bhi paar ho jaayegi. 9:00-9:30 mein phailao.' },
-        { q: 'Yeh cron se alag kyun hai?', target: 'change', explain: 'Asli duniya badalti hai — user pehle pay kar de, bank due date badle, user reminders band kare. Schedule ek jeeti-jaagti cheez hai.' },
+        { q: 'Scheduler cron se alag kyun hai?', target: 'change', explain: 'Asli duniya badalti hai — user pehle pay kar de, bank due date badle, user reminders band kare. Schedule ek jeeti-jaagti cheez hai.' },
         { q: 'Worker crash hua aur job dobara uthi — kya chahiye?', target: 'idem', explain: 'Idempotent send: (user_id, bill_id, reminder_date) par unique constraint. Warna user ko wahi reminder 3 baar jaayega.' },
       ],
     },
@@ -1527,7 +1527,7 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
   ],
   interview: {
     title: 'Interview Round — Scheduling',
-    instructions: 'Yeh sawaal "20M cards, reminders" ke roop mein aata hai. 🎤',
+    instructions: 'Scheduling ka sawaal "20M cards, reminders" ke roop mein aata hai. 🎤',
     questions: [
       {
         q: '"2 crore credit cards hain, har ek par due date se 5 din pehle reminder bhejna hai. Design karo."',
@@ -1573,7 +1573,7 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
   ],
   homework: `Apne system mein koi periodic scan dhoondo ("har ghante saare X check karo").
     Poochho: kya jawab pehle se calculate karke store kiya ja sakta hai?
-    Zyadatar cases mein jawab "haan" hota hai — aur woh ek full scan ko ek seek bana deta hai.`,
+    Zyadatar cases mein jawab "haan" hota hai — aur pehle se store kiya jawab ek full scan ko ek seek bana deta hai.`,
   cards: [
     { front: 'Polling vs scheduled event?', back: '<b>Polling:</b> har ghante 2 crore rows scan. <b>Scheduled:</b> <code>reminder_at</code> ek baar calculate karke store karo, phir due rows par seedha seek. Wahi seekh jo deep pagination mein thi.' },
     { front: 'Scale par 3 cheezein?', back: '<b>Time buckets</b> (agla 1 min / 5 min / baad mein) · <b>Partition</b> (user_id/date/region — lock ki zaroorat bhi khatam) · <b>Stagger</b> (9:00-9:30, apna flash crowd mat banao).' },
@@ -1586,12 +1586,12 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
 {
   id: 'locks',
   icon: '🔒',
-  title: 'Distributed Locks — Sabse Achha Lock Woh Jo Lagta Hi Nahi',
+  title: 'Distributed Locks — Sabse Achha Lock — Jiski Zaroorat Hi Nahi',
   badge: 'Lock Skeptic',
   objectives: [
     'Distributed lock kyun <b>toota hua</b> hai',
     'Fencing token',
-    'Lock hataane ke tareeke (aur woh behtar kyun hain)',
+    'Lock hataane ke tareeke (aur lock hataane ke tareeke behtar kyun hain)',
     'Leader election aur split-brain',
   ],
   lesson: [
@@ -1600,17 +1600,17 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
 2. A ka GC pause / network freeze — 40 s   (A ko pata nahi)
 3. Lock expire hua, B ne le liya           B kaam kar raha hai
 4. A jaaga aur likhne laga                 💀 DONO likh rahe hain</pre>
-     <p>A ko lagta hai uske paas lock hai. Woh <b>galat</b> hai — par
-     jaan-ne ka koi tareeka nahi. Yeh Redis ya kisi bhi lock implementation
-     ka bug nahi; yeh distributed systems ka sach hai: <b>process ko nahi
-     pata ki woh kitni der ruka tha.</b></p>
+     <p>A ko lagta hai A ke paas lock hai. A <b>galat</b> hai — par
+     jaan-ne ka koi tareeka nahi. Lock ka expire hona Redis ya kisi bhi lock implementation
+     ka bug nahi; pause ki anjaani muddat distributed systems ka sach hai: <b>process ko nahi
+     pata ki process kitni der ruka tha.</b></p>
      <h3>🔐 Fencing token — asli ilaaj</h3>
      <pre>lock lo   → token 33 mila
 A freeze hua
 B ne lock liya → token 34 mila
 B ne likha (token 34) → storage ne accept kiya, ab max = 34
 A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
-     <p>Shart yeh hai ki <b>storage</b> ko token samajhna padega. Bina uske
+     <p>Shart hai ki <b>storage</b> ko token samajhna padega. Token samjhe bina
      lock sirf "best effort" hai — aur us par correctness nahi tikni chahiye.</p>`,
     `<h3>🔬 Behtar: lock hi mat lo</h3>
      <p>Zyadatar cases mein design badal ke lock hataya ja sakta hai:</p>
@@ -1621,7 +1621,7 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
        <tr><td><b>Partition</b></td><td>ek key sirf ek worker ko — do worker same cheez chhuenge hi nahi</td></tr>
        <tr><td><b>Idempotency</b></td><td>do baar ho bhi jaaye toh koi nuksaan nahi</td></tr>
      </table>
-     <p><b>Sabse achha distributed lock woh hai jiski zaroorat hi na pade.</b></p>
+     <p><b>Sabse achha distributed lock aisa hai jiski zaroorat hi na pade.</b></p>
      <h3>👑 Leader election</h3>
      <p>Kabhi-kabhi sach mein ek "leader" chahiye — cron jobs, partition
      assignment, sequence generation. Yahan sabse bada khatra
@@ -1650,7 +1650,7 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
         { text: 'Ek order sirf ek baar ship ho', bin: 'db', explain: "Atomic conditional claim ek worker ko order own karne deta hai. Actual carrier shipment alag effect hai: stable shipment ID, durable outbox, idempotency aur reconciliation chahiye; status update alone physical once-only shipping prove nahi karta." },
         { text: '10 workers, 2 crore reminders process karne hain', bin: 'part', explain: 'user_id ya date se partition karo — har worker apna hissa lega. Do worker same reminder chhuenge hi nahi, isliye lock ki zaroorat khatam.' },
         { text: 'Ek username sirf ek user ko mile', bin: 'db', explain: "UNIQUE constraint chosen DB scope mein concurrent duplicate writes reject karti hai. Index maintenance, locking aur replicated commit ka cost hota hai; application-side check race se stronger invariant milta hai." },
-        { text: 'Cluster mein sirf ek node nightly job chalaye', bin: 'lock', explain: 'Yeh sach mein leader election hai. Quorum-based (etcd/ZooKeeper) chahiye — warna split-brain mein do node job chala denge.' },
+        { text: 'Cluster mein sirf ek node nightly job chalaye', bin: 'lock', explain: 'Sirf ek node ka job chalaana sach mein leader election hai. Quorum-based (etcd/ZooKeeper) chahiye — warna split-brain mein do node job chala denge.' },
         { text: 'Ek cache key sirf ek baar refresh ho (stampede)', bin: 'lock', explain: 'Best-effort lock bilkul theek hai. Do baar refresh ho bhi jaaye toh sirf thodi extra query hai — correctness par koi asar nahi.' },
         { text: 'Ek payment sirf ek baar charge ho', bin: 'db', explain: "Local ledger effect aur idempotency record ek atomic transaction mein rakho. External payment provider ke liye stable operation ID, provider idempotency aur uncertain-outcome reconciliation chahiye; local UNIQUE alone remote charge ko atomic nahi banati." },
       ],
@@ -1661,8 +1661,8 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'locks',
       questions: [
-        { q: 'Toote hue lock ka asli ilaaj kya hai?', target: 'fence', explain: 'Fencing token — har lock ke saath ek badhta hua number, aur storage purane token ko REJECT kare. Bina iske lock sirf best-effort hai.' },
-        { q: 'Usse bhi behtar kya hai?', target: 'avoid', explain: 'Lock hi mat lo — DB unique constraint, conditional update, ya partition. Sabse achha distributed lock woh hai jiski zaroorat hi na pade.' },
+        { q: 'Toote hue lock ka asli ilaaj kya hai?', target: 'fence', explain: 'Fencing token — har lock ke saath ek badhta hua number, aur storage purane token ko REJECT kare. Fencing token ke bina lock sirf best-effort hai.' },
+        { q: 'Fencing token se bhi behtar kya hai?', target: 'avoid', explain: 'Lock hi mat lo — DB unique constraint, conditional update, ya partition. Sabse achha distributed lock aisa hai jiski zaroorat hi na pade.' },
         { q: 'Leader election ka sabse bada khatra?', target: 'split', explain: 'Split-brain — network partition mein DO leader ban sakte hain. Isliye quorum (majority) chahiye, ek simple Redis key nahi.' },
       ],
     },
@@ -1754,13 +1754,13 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
     'Split-brain aur quorum jaante ho',
   ],
   homework: `Apne code mein har distributed lock dhoondo. Har ek ke saamne poochho:
-    "agar yeh lock TOOT jaaye aur do process ek saath chalein toh kya hoga?"
-    Agar jawab "data kharab ho jaayega" hai, toh usse ek DB constraint ya
+    "agar distributed lock TOOT jaaye aur do process ek saath chalein toh kya hoga?"
+    Agar jawab "data kharab ho jaayega" hai, toh lock ko ek DB constraint ya
     conditional update se replace karo.`,
   cards: [
-    { front: 'Distributed lock kyun toota hua hai?', back: 'Process ko nahi pata ki woh kitni der ruka tha (GC pause, network freeze). Uska lock expire ho chuka ho sakta hai aur <b>usse pata bhi nahi chalega</b>.' },
-    { front: 'Fencing token?', back: 'Har lock ke saath ek <b>badhta hua number</b>. Storage purane token wale write ko <b>reject</b> kare. Bina iske lock sirf best-effort hai.' },
-    { front: 'Lock ki jagah kya?', back: '<b>DB unique constraint</b> · <b>conditional update</b> (<code>WHERE status=\'pending\'</code>) · <b>partition</b> (ek key, ek worker) · <b>idempotency</b>. Sabse achha lock woh jiski zaroorat na pade.' },
+    { front: 'Distributed lock kyun toota hua hai?', back: 'Process ko nahi pata ki process kitni der ruka tha (GC pause, network freeze). Process ka lock expire ho chuka ho sakta hai aur <b>process ko pata bhi nahi chalega</b>.' },
+    { front: 'Fencing token?', back: 'Har lock ke saath ek <b>badhta hua number</b>. Storage purane token wale write ko <b>reject</b> kare. Fencing token ke bina lock sirf best-effort hai.' },
+    { front: 'Lock ki jagah kya?', back: '<b>DB unique constraint</b> · <b>conditional update</b> (<code>WHERE status=\'pending\'</code>) · <b>partition</b> (ek key, ek worker) · <b>idempotency</b>. Sabse achha lock aisa jiski zaroorat na pade.' },
     { front: 'Split-brain?', back: 'Network partition mein <b>do leader</b> ban jaate hain. Isliye leader election ke liye <b>quorum</b> (etcd/ZooKeeper) chahiye — ek simple Redis key nahi.' },
     { front: 'Redis lock kahan theek hai?', back: '<b>Best-effort</b> kaam mein — cache warming, duplicate email kam karna. Poochho: "do baar ho gaya toh kya?" Jawab "kuch khaas nahi" hai toh theek hai. Strong correctness ke liye lease/failure assumptions aur resource-enforced fencing/atomic guards verify karo.' },
   ],
@@ -1881,7 +1881,7 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
       verdicts: {
         great: 'Har decision production-grade hai. Patterns defined failure cases mein recovery improve karte hain;durability,external idempotency,reconciliation aur failure drills se actual guarantees verify karo.',
         ok: 'Design chal jaayega, par upar dekho — ek-do jagah tumne apne aap ko future incident de diya hai.',
-        bad: 'Yeh system pehle bade spike ya pehli dheemi dependency par toot jaayega. Har option ka "why" padho — asli seekh wahi hai.',
+        bad: 'Chuna gaya system pehle bade spike ya pehli dheemi dependency par toot jaayega. Har option ka "why" padho — asli seekh wahi hai.',
       },
     },
     {
@@ -1972,8 +1972,8 @@ Distributed  → outbox, saga, idempotent consumers, CQRS</pre>
   ],
   homework: `Apne system ka ek asli flow lo aur is app ki poori checklist se review karo:
     request path · API contract · index/cache/pool · timeout/retry/breaker/fallback ·
-    idempotency/outbox/saga. Har "❌" ke saamne likho ki woh kis din incident banega.
-    Woh list tumhare agle quarter ka roadmap hai.`,
+    idempotency/outbox/saga. Har "❌" ke saamne likho ki chhoota hua guard kis din incident banega.
+    Chhoote guards ki list tumhare agle quarter ka roadmap hai.`,
   cards: [
     { front: 'Order system ke 5 guards?', back: '<b>Idempotency-Key</b> (client retry) · <b>Outbox</b> (dual write) · <b>Saga</b> (distributed transaction) · <b>Idempotent consumer</b> (at-least-once) · <b>Read model</b> (cross-service query).' },
     { front: 'Distributed systems ka nichod?', back: '"Ek saath" jaisi koi cheez nahi hoti, sirf <b>"aakhir mein"</b>. Isliye har cheez <b>idempotent</b>, <b>retryable</b> aur <b>observable</b> banao.' },
@@ -2009,7 +2009,7 @@ SD.registerLevelsAfter('dist', 'locks', [
   title: 'Contention — Ek Seat, Do Khareedaar',
   badge: 'Contention Vijeta',
   objectives: [
-    'Check-then-act race — woh bug jo test mein kabhi nahi dikhta',
+    'Check-then-act race — aisa bug jo test mein kabhi nahi dikhta',
     'Pessimistic vs optimistic — aur hot row par kaun jeetta hai',
     'Reservation (hold + TTL) — checkout ke liye asli pattern',
     'Lock ke andar kabhi network call nahi',
@@ -2020,17 +2020,17 @@ SD.registerLevelsAfter('dist', 'locks', [
 if (seat.status == 'free') {                   ← "haan"
     UPDATE seats SET status='sold' WHERE id='A1';
 }</pre>
-     <p>Yeh code sahi <b>dikhta</b> hai. Aur 99.9% waqt sahi <b>chalta</b> bhi hai.
+     <p>Check-then-act code sahi <b>dikhta</b> hai. Aur 99.9% waqt sahi <b>chalta</b> bhi hai.
      Par jab do requests theek ek saath aayein:</p>
      <pre>request A: SELECT → "free"
 request B: SELECT → "free"     ← A ne abhi tak UPDATE nahi kiya
 request A: UPDATE → sold
 request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
-     <p class="tip">🎯 Ise <b>check-then-act race</b> kehte hain, aur yeh production
-     bugs ki sabse chalak kism hai — kyunki woh testing mein lagbhag kabhi nahi dikhti
-     (uske liye do requests ka <b>theek</b> ek saath aana zaroori hai), par
-     jab traffic aata hai toh woh roz hoti hai. Aur uska nishaan hamesha ek hi hota
-     hai: "yeh kaise ho sakta hai?"</p>
+     <p class="tip">🎯 Is race ko <b>check-then-act race</b> kehte hain, aur check-then-act race production
+     bugs ki sabse chalak kism hai — kyunki check-then-act race testing mein lagbhag kabhi nahi dikhti
+     (race ke liye do requests ka <b>theek</b> ek saath aana zaroori hai), par
+     jab traffic aata hai toh race roz hoti hai. Aur race ka nishaan hamesha ek hi hota
+     hai: "ek seat do baar kaise bik gayi?"</p>
      <h3>🔒 Do tareeke, do alag soch</h3>
      <table>
        <tr><th></th><th>Pessimistic</th><th>Optimistic</th></tr>
@@ -2041,32 +2041,32 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
        <tr><td>Zyada contention (hot row)</td><td>✅ ek-ek karke, saaf</td><td>❌ sab bar-bar retry karke haarte hain</td></tr>
      </table>
      <p>Optimistic mein version column badhta hai, aur haarne wali request ko
-     <code>0 rows updated</code> milta hai — usse pata chal jaata hai ki woh haar gayi.
+     <code>0 rows updated</code> milta hai — haarne wali request ko pata chal jaata hai ki update nahi hua.
      Isliye "optimistic" ka matlab "bina protection" nahi hai; matlab hai
      "protection <b>likhne</b> ke pal par, padhne ke pal par nahi".</p>`,
     `<h3>🎟️ Reservation — asli duniya ka pattern</h3>
      <p>Ticket booking mein ek teesra problem hai jo dono locks hal nahi karte:
      user ko <b>payment karne ka waqt</b> chahiye. 3 minute. Us doraan seat
      kisi aur ko nahi jaani chahiye — par ek DB lock 3 minute tak pakde rakhna
-     paagalpan hai (woh connection, woh transaction, woh row — sab block).</p>
+     paagalpan hai (DB connection, DB transaction, seat ki row — sab block).</p>
      <pre>1. HOLD    seat par ek reservation banao, TTL 10 minute
 2. PAY     user checkout karta hai (koi DB lock nahi latka hua)
 3a. CONFIRM  payment ok → hold ko sale mein badlo
 3b. EXPIRE   user chala gaya → TTL khatam → seat apne aap wapas</pre>
-     <p class="tip">🎯 <b>TTL hi is pattern ka dil hai.</b> Uske bina abandoned
-     checkouts dheere-dheere poora inventory kha jaate hain — aur woh dikhta bhi
+     <p class="tip">🎯 <b>TTL hi is pattern ka dil hai.</b> TTL ke bina abandoned
+     checkouts dheere-dheere poora inventory kha jaate hain — aur inventory ka ghatna dikhta bhi
      nahi, kyunki technically kuch "fail" nahi hua. Sold-out show jiske aadhe seats
-     kisi ke cart mein pade hain, yeh usi ka natija hai.</p>
-     <p>Redis mein yeh ek line hai — <code>SET seat:A1 user123 NX EX 600</code>:
-     <code>NX</code> se woh tabhi banega jab pehle se na ho (atomic check-and-set),
-     aur <code>EX</code> se woh apne aap mit jaayega.</p>
+     kisi ke cart mein pade hain, TTL na hone ka natija hai.</p>
+     <p>Redis mein reservation ek line hai — <code>SET seat:A1 user123 NX EX 600</code>:
+     <code>NX</code> se reservation tabhi banega jab pehle se na ho (atomic check-and-set),
+     aur <code>EX</code> se reservation apne aap mit jaayega.</p>
      <h3>⚠️ Do niyam jo mehenge padte hain</h3>
      <p><b>1. Lock ke andar kabhi network call mat karo.</b> Lock ka waqt =
      us row par sabka wait. Agar tumne lock ke andar payment gateway ko call kiya
      (2 second), toh us seat par sab 2 second ruke rehte hain. Lock sirf
      <b>DB operations</b> ke around ho.</p>
      <p><b>2. Lock ki umar hamesha bandhi ho.</b> Jo process lock leke crash ho gaya,
-     uska lock hamesha ke liye nahi rehna chahiye. Redis mein TTL, DB mein
+     crash hue process ka lock hamesha ke liye nahi rehna chahiye. Redis mein TTL, DB mein
      transaction timeout, aur distributed lock mein <b>fencing token</b>
      (jo tumne pichhle level mein dekha) — taaki purana maalik wapas aake
      ganda na kar de.</p>`,
@@ -2112,10 +2112,10 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
         { id: 'res', label: '🎟️ Reservation (TTL)' },
       ],
       items: [
-        { text: 'Concert ki front-row seat — 50,000 log ek saath', bin: 'pess', explain: 'Ek hi hot row par bhaari contention. Optimistic mein lagbhag sab haarenge aur retry karenge — woh ek retry storm hai. Yahan queue lagwana (lock) hi saaf hai.' },
+        { text: 'Concert ki front-row seat — 50,000 log ek saath', bin: 'pess', explain: 'Ek hi hot row par bhaari contention. Optimistic mein lagbhag sab haarenge aur retry karenge — sabki retry ek retry storm hai. Yahan queue lagwana (lock) hi saaf hai.' },
         { text: 'User apni profile edit kar raha hai', bin: 'opt', explain: 'Takraav lagbhag kabhi nahi hoga (do log ek hi profile ek saath kam hi edit karte hain). Version check se koi rukta nahi, aur jo dulrbh takraav ho use "kisi aur ne badal diya" dikha do.' },
         { text: 'Flight seat select ki, ab payment page par 5 minute', bin: 'res', explain: 'Beech mein <b>insaan ka waqt</b> hai. DB lock 5 minute nahi pakda ja sakta. Hold + TTL: seat surakshit, aur user chhod de toh apne aap wapas.' },
-        { text: 'Warehouse mein inventory count ghatana', bin: 'pess', explain: 'Kai orders ek saath usi SKU ko chhoote hain aur oversell ka daam asli hai. <code>UPDATE … SET qty = qty - 1 WHERE qty > 0</code> bhi ek achha atomic hal hai — woh bhi ek tarah ka lock hi hai.' },
+        { text: 'Warehouse mein inventory count ghatana', bin: 'pess', explain: 'Kai orders ek saath usi SKU ko chhoote hain aur oversell ka daam asli hai. <code>UPDATE … SET qty = qty - 1 WHERE qty > 0</code> bhi ek achha atomic hal hai — atomic UPDATE bhi ek tarah ka lock hi hai.' },
         { text: 'Ek shared document ka title badalna', bin: 'opt', explain: 'Contention kam, aur haarne ka nuksaan chhota ("kisi aur ne abhi badla, dobara dekho"). Yahan rukna ulta bekaar hai.' },
         { text: 'Cart mein daala hua limited-edition item', bin: 'res', explain: 'Wahi ticket wala shape: cart mein daalna = hold. Aur TTL laazmi hai, warna log cart mein cheezein daal ke bhool jaate hain aur stock chup-chaap khatam dikhta hai.' },
       ],
@@ -2156,9 +2156,9 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
           summary: `<b>Seekh:</b> teen alag problems the, aur teenon ek hi galat jagah se aa rahe the.
             <br><br>• <b>Race</b> → transaction kaafi nahi; <code>FOR UPDATE</code> ya atomic conditional update chahiye
             <br>• <b>Lock ka waqt</b> → lock ke andar <b>kabhi</b> network call nahi
-            <br>• <b>User ka waqt</b> → uske liye lock nahi, <b>reservation (hold + TTL)</b>
-            <br><br><b>Aur TTL optional nahi hai:</b> uske bina abandoned checkouts chup-chaap
-            poora inventory kha jaate hain — aur kuch "fail" na hone ki wajah se woh
+            <br>• <b>User ka waqt</b> → user ke waqt ke liye lock nahi, <b>reservation (hold + TTL)</b>
+            <br><br><b>Aur TTL optional nahi hai:</b> TTL ke bina abandoned checkouts chup-chaap
+            poora inventory kha jaate hain — aur kuch "fail" na hone ki wajah se inventory ka ghatna
             kisi dashboard par nahi dikhta.`,
         },
       },
@@ -2268,14 +2268,14 @@ request B: UPDATE → sold       ← ek hi seat, do log 💥</pre>
     'Jaante ho ki lock ke andar network call kyun nahi',
   ],
   homework: `Apne code mein ek "check karke phir likho" wala hissa dhoondo —
-    stock, seat, quota, ya "kya yeh naam liya hua hai". Poochho:
-    (1) do requests ek saath aayein toh? (2) kya woh check <b>update ke andar</b>
+    stock, seat, quota, ya "kya naam liya hua hai". Poochho:
+    (1) do requests ek saath aayein toh? (2) kya stock, seat, quota ya naam ka check <b>update ke andar</b>
     ho sakta hai (<code>WHERE qty > 0</code>)? (3) agar beech mein user ka waqt hai,
-    toh kya wahan hold + TTL chahiye?`,
+    toh kya user ke waqt ke liye hold + TTL chahiye?`,
   cards: [
     { front: 'Check-then-act race?', back: 'SELECT "free" → UPDATE "sold", do requests ek saath = <b>dono</b> jeet gaye. Testing mein lagbhag kabhi nahi dikhta, production mein roz.' },
     { front: 'Transaction se race rukti hai?', back: '<b>Nahi.</b> Transaction <b>atomicity</b> deta hai, mutual exclusion nahi. Chahiye: <code>SELECT … FOR UPDATE</code>, ya condition ko update ke andar daalo (<code>WHERE status=\'free\'</code>).' },
-    { front: 'Pessimistic vs optimistic?', back: 'Faisla <b>contention rate</b> se. Kam takraav → optimistic (koi rukta nahi). Hot row → pessimistic (optimistic wahan sabko retry karwaata hai = storm).' },
+    { front: 'Pessimistic vs optimistic?', back: 'Faisla <b>contention rate</b> se. Kam takraav → optimistic (koi rukta nahi). Hot row → pessimistic (hot row par optimistic sabko retry karwaata hai = storm).' },
     { front: 'Reservation pattern?', back: '<b>HOLD (TTL) → PAY → CONFIRM/EXPIRE.</b> Redis: <code>SET seat:A1 user NX EX 600</code>. Lock milliseconds ka, asar 10 minute ka.' },
     { front: 'TTL ke bina hold?', back: 'Abandoned checkouts <b>chup-chaap</b> poora inventory kha jaate hain — koi error nahi, koi alert nahi, bas "sold out" jabki seats kisi ke cart mein hain.' },
     { front: 'Lock ka sunehra niyam?', back: '<b>Lock ke andar kabhi network call nahi.</b> Lock ka waqt = us row par sabka wait. Aur lock ki umar hamesha bandhi ho (TTL / timeout / fencing token).' },
@@ -2321,19 +2321,19 @@ SD.registerLevelsAfter('dist', 'exactlyonce', [
        <tr><td>Ordering</td><td>aksar nahi</td><td>✅ partition ke andar</td></tr>
        <tr><td>Position kaun rakhta hai</td><td>broker</td><td><b>consumer</b> (offset)</td></tr>
      </table>
-     <p>Yeh sirf feature ka farak nahi — <b>soch</b> ka farak hai.
+     <p>Queue aur log ka farak sirf feature ka farak nahi — <b>soch</b> ka farak hai.
      Queue ek <b>to-do list</b> hai: kaam lo, karo, hatao.
      Log ek <b>itihaas</b> hai: sab kuch likha hai, aur har padhne wala apni
      jagah khud yaad rakhta hai.</p>
-     <p>Isse jo cheezein mumkin ho jaati hain, woh queue mein ho hi nahi saktin:</p>
+     <p>Log se jo cheezein mumkin ho jaati hain, aisi cheezein queue mein ho hi nahi saktin:</p>
      <pre>• Naya feature banaya? Purana data usi log se replay kar lo
 • Bug se galat aggregation bani? Offset peeche karo, dobara chalao
 • Nayi team ko wahi events chahiye? Naya consumer group — purane par koi asar nahi
-• Debugging? Woh exact event abhi bhi wahin pada hai</pre>
+• Debugging? Debug karne wala exact event abhi bhi wahin pada hai</pre>
      <p class="tip">🎯 Aur ulta bhi sach hai: agar tumhe <b>sirf</b> "kaam lo aur karo"
      chahiye — background jobs, emails, thumbnails — toh queue simple, sasti aur
      kaafi hai. Kafka ka bill (cluster, partitions, offsets, rebalancing) tabhi
-     jaayaz hai jab tumhe uska <b>log</b> wala gun chahiye.</p>`,
+     jaayaz hai jab tumhe Kafka ka <b>log</b> wala gun chahiye.</p>`,
     `<h3>🔢 Partitions = parallelism ki hadd</h3>
      <pre>topic: orders   (6 partitions)
 
@@ -2349,24 +2349,24 @@ SD.registerLevelsAfter('dist', 'exactlyonce', [
      ordering toot jaati. Isliye <b>partitions se zyada consumers bekaar hain</b>.</p>
      <p class="tip">🎯 Aur partition count baad mein badhana mehenga hai, kyunki
      <code>hash(key) % partitions</code> ka jawab badal jaata hai — yaani ek user ke
-     naye events ab <b>alag</b> partition mein jaayenge, aur uske purane events se
-     unka kram toot jaayega. Isliye partition count shuru mein hi soch ke chuno:
+     naye events ab <b>alag</b> partition mein jaayenge, aur user ke purane events se
+     naye events ka kram toot jaayega. Isliye partition count shuru mein hi soch ke chuno:
      aaj ki zaroorat se 2–3x.</p>
      <p><b>Ordering ka niyam:</b> kram sirf <b>ek partition ke andar</b> guarantee hai.
-     Isliye jin cheezon ka kram matter karta hai unhe ek hi <b>key</b> par bhejo —
+     Isliye jin cheezon ka kram matter karta hai, aise events ko ek hi <b>key</b> par bhejo —
      jaise <code>user_id</code>. Tab us user ke saare events hamesha ek hi partition
      mein, hamesha sahi kram mein.</p>
      <h3>⏱️ Event time vs processing time</h3>
      <p>Ek event 8:59:58 par <b>hua</b>, par tumhare paas 9:00:03 par <b>pahuncha</b>
-     (phone tunnel mein tha). Woh 8:59 wale minute mein ginna chahiye ya 9:00 mein?</p>
+     (phone tunnel mein tha). Event 8:59 wale minute mein ginna chahiye ya 9:00 mein?</p>
      <pre>Processing time se ginoge  →  aasan, par GALAT numbers
 Event time se ginoge       →  sahi, par "window kab band karein?"</pre>
-     <p><b>Watermark</b> isi ka jawab hai: "main maan raha hoon ki 10 second se
+     <p><b>Watermark</b> "window kab band karein" ka jawab hai: "main maan raha hoon ki 10 second se
      purana koi event ab nahi aayega". Us waqt tak window khuli rehti hai.</p>
      <pre>Bada watermark  →  kam data khoya, par natija DER se
 Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
-     <p class="tip">🎯 Yeh <b>completeness vs latency</b> ka seedha tradeoff hai —
-     aur iska jawab engineering nahi, <b>business</b> deta hai. Billing ke liye
+     <p class="tip">🎯 Watermark ka intezaar <b>completeness vs latency</b> ka seedha tradeoff hai —
+     aur "kitni der rukna hai" ka jawab engineering nahi, <b>business</b> deta hai. Billing ke liye
      der manzoor hai, galti nahi. Live dashboard ke liye ulta hai.
      Aur teesra raasta bhi hai: pehle approximate number turant dikhao,
      phir baad mein correct karo (Lambda/Kappa architecture ka asli maksad).</p>`,
@@ -2408,10 +2408,10 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
       ],
       items: [
         { text: 'Signup par welcome email bhejna', bin: 'q', explain: 'Kaam lo, karo, hatao. Koi replay nahi chahiye, koi doosra consumer nahi. Yahan Kafka lagana sirf ek aur cluster chalana hai.' },
-        { text: 'User events — analytics, ML training, aur fraud detection teenon ko chahiye', bin: 'log', explain: 'Ek hi data, <b>teen independent</b> consumers. Queue mein woh events baant lete, teenon ko poora data milta hi nahi. Har group ka apna offset — yeh log ka core gun hai.' },
-        { text: 'Image upload par thumbnail banana', bin: 'q', explain: 'Classic background job. Fail ho toh retry, baar-baar fail ho toh DLQ. Queue isi ke liye bani hai.' },
-        { text: 'Order events, jinse baad mein naya read model banana pad sakta hai', bin: 'log', explain: 'CQRS/event sourcing. Naya projection banana matlab shuru se replay karna — aur woh sirf log de sakta hai.' },
-        { text: 'Ek galat deploy ne 2 ghante ke events galat process kiye', bin: 'log', explain: 'Fix deploy karo, offset 2 ghante peeche karo, dobara chala do. Queue mein woh events consume ho chuke the — woh <b>wapas nahi aayenge</b>.' },
+        { text: 'User events — analytics, ML training, aur fraud detection teenon ko chahiye', bin: 'log', explain: 'Ek hi data, <b>teen independent</b> consumers. Queue mein teen consumers events baant lete, teenon ko poora data milta hi nahi. Har group ka apna offset — alag offset log ka core gun hai.' },
+        { text: 'Image upload par thumbnail banana', bin: 'q', explain: 'Classic background job. Fail ho toh retry, baar-baar fail ho toh DLQ. Queue background jobs ke liye bani hai.' },
+        { text: 'Order events, jinse baad mein naya read model banana pad sakta hai', bin: 'log', explain: 'CQRS/event sourcing. Naya projection banana matlab shuru se replay karna — aur replay sirf log de sakta hai.' },
+        { text: 'Ek galat deploy ne 2 ghante ke events galat process kiye', bin: 'log', explain: 'Fix deploy karo, offset 2 ghante peeche karo, dobara chala do. Queue mein galat process hue events consume ho chuke the — consume ho chuke events <b>wapas nahi aayenge</b>.' },
         { text: 'Ek batch job ko roz raat ko trigger karna', bin: 'q', explain: 'Ek message, ek consumer, ek kaam. Yahan Kafka ka ek bhi gun kaam nahi aa raha.' },
       ],
     },
@@ -2476,12 +2476,12 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
       type: 'match',
       title: 'Stream ke concepts',
       pairs: [
-        { left: 'Offset', right: 'Consumer kahan tak padh chuka hai — usi ke paas rehta hai', explain: 'Yahi replay ko mumkin banata hai: offset ek number hai jise tum peeche kar sakte ho. Queue mein position broker ke paas hoti hai aur tum use badal nahi sakte.' },
+        { left: 'Offset', right: 'Consumer kahan tak padh chuka hai — consumer ke paas rehta hai', explain: 'Yahi replay ko mumkin banata hai: offset ek number hai jise tum peeche kar sakte ho. Queue mein position broker ke paas hoti hai aur tum use badal nahi sakte.' },
         { left: 'Consumer group', right: 'Ek team jo milke topic padhti hai — apna alag offset rakhti hai', explain: 'Do groups = dono ko <b>poora</b> data, ek doosre se bilkul independent. Ek group ke andar partitions baant liye jaate hain.' },
-        { left: 'Partition key', right: 'Kaunse events ek saath aur kram mein rahenge', explain: 'Yeh ek design decision hai, config nahi. <code>user_id</code> par bhejoge toh us user ka kram bacha rahega; random bhejoge toh nahi.' },
-        { left: 'Retention', right: 'Log kitne din tak rakha jaayega', explain: 'Yeh tay karta hai ki tum kitna peeche replay kar sakte ho. 7 din common hai; kuch teams "hamesha" rakhti hain aur log ko hi source of truth bana leti hain.' },
-        { left: 'Watermark', right: '"Itni der se purana event ab nahi aayega" ka anumaan', explain: 'Isi se window band hoti hai. Bada = zyada sahi par der se; chhota = jaldi par kuch chhoot gaya.' },
-        { left: 'Tumbling window', right: 'Ek ke baad ek, bina overlap ke (0-60s, 60-120s)', explain: 'Sabse simple. Overlap chahiye toh sliding window (har 10s par pichhle 60s) — woh "aakhri ek minute mein" wale dashboards ke liye hai.' },
+        { left: 'Partition key', right: 'Kaunse events ek saath aur kram mein rahenge', explain: 'Partition key ek design decision hai, config nahi. <code>user_id</code> par bhejoge toh us user ka kram bacha rahega; random bhejoge toh nahi.' },
+        { left: 'Retention', right: 'Log kitne din tak rakha jaayega', explain: 'Retention tay karta hai ki tum kitna peeche replay kar sakte ho. 7 din common hai; kuch teams "hamesha" rakhti hain aur log ko hi source of truth bana leti hain.' },
+        { left: 'Watermark', right: '"Itni der se purana event ab nahi aayega" ka anumaan', explain: 'Watermark se window band hoti hai. Bada = zyada sahi par der se; chhota = jaldi par kuch chhoot gaya.' },
+        { left: 'Tumbling window', right: 'Ek ke baad ek, bina overlap ke (0-60s, 60-120s)', explain: 'Sabse simple. Overlap chahiye toh sliding window (har 10s par pichhle 60s) — sliding window "aakhri ek minute mein" wale dashboards ke liye hai.' },
       ],
     },
   ],
@@ -2532,17 +2532,17 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
     'Event time vs processing time aur watermark ka tradeoff bol sakte ho',
   ],
   homework: `Apne system ka koi ek queue dhoondo. Poochho:
-    (1) kya kabhi kisi ne kaha "kaash hum woh events dobara process kar paate"?
+    (1) kya kabhi kisi ne kaha "kaash hum purane events dobara process kar paate"?
     (2) kya do alag teams ko wahi events chahiye?
     Agar dono ka jawab "haan" hai, toh tumhe queue nahi <b>log</b> chahiye.
     Agar dono "nahi" hain, toh Kafka lagana sirf ek aur cluster hai.`,
   cards: [
     { front: 'Queue vs log?', back: '<b>Queue</b> = to-do list (padha ki gaya). <b>Log</b> = itihaas (retention tak rehta hai, har consumer ka apna offset). Log deta hai: <b>replay · kai independent consumers · ordering</b>.' },
     { front: 'Partitions ka matlab?', back: '<b>Max parallelism.</b> Ek partition = ek consumer (warna ordering tootti). Zyada consumers khaali baithenge. Aur partition count badhana <b>baad mein mehenga</b> — key→partition mapping badal jaata hai.' },
-    { front: 'Kafka mein ordering?', back: 'Sirf <b>ek partition ke andar</b>. Isliye jin cheezon ka kram chahiye unhe ek hi <b>key</b> (jaise user_id) par bhejo. Global ordering = ek partition = zero parallelism.' },
+    { front: 'Kafka mein ordering?', back: 'Sirf <b>ek partition ke andar</b>. Isliye jin cheezon ka kram chahiye, aise events ko ek hi <b>key</b> (jaise user_id) par bhejo. Global ordering = ek partition = zero parallelism.' },
     { front: 'Event time vs processing time?', back: 'Event <b>hua</b> kab vs tumhe <b>mila</b> kab. Processing time se ginna aasan par galat. Event time sahi — par phir "window kab band karein?"' },
     { front: 'Watermark?', back: '"Itni der se purana event ab nahi aayega" ka anumaan. <b>Bada</b> = zyada sahi, natija der se. <b>Chhota</b> = jaldi, par late events chhoote. <b>Completeness vs latency</b> — jawab business deta hai.' },
-    { front: 'Kafka kab NAHI?', back: 'Jab sirf "kaam lo aur karo" chahiye — emails, thumbnails, nightly jobs. Wahan queue simple, sasti aur kaafi hai. Kafka ka bill tabhi jaayaz hai jab uska <b>log</b> wala gun chahiye.' },
+    { front: 'Kafka kab NAHI?', back: 'Jab sirf "kaam lo aur karo" chahiye — emails, thumbnails, nightly jobs. Background jobs ke liye queue simple, sasti aur kaafi hai. Kafka ka bill tabhi jaayaz hai jab Kafka ka <b>log</b> wala gun chahiye.' },
   ],
 },
 ]);

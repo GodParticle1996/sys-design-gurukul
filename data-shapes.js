@@ -96,11 +96,11 @@ SD.registerLevels('shapes', [
   lesson: [
     `<h3>📖 Log design mein fansate kyun hain</h3>
      <p>"Instagram design karo" sunte hi zyadatar log <b>boxes banane</b> lagte hain —
-     load balancer, service, DB, cache, queue. Woh boxes shayad sahi bhi hon, par unke
+     load balancer, service, DB, cache, queue. Boxes shayad sahi bhi hon, par boxes ke
      peechhe koi soch nahi hoti. Poochho "cache kyun?" toh jawab aata hai "scale ke liye".</p>
      <p>Ek chhota sa kadam sab badal deta hai: <b>boxes banane se pehle problem ka
      naam lo.</b></p>
-     <pre>"Yeh ek READ-HEAVY problem hai jisme ek REALTIME FANOUT hissa hai."</pre>
+     <pre>"Instagram ek READ-HEAVY problem hai jisme ek REALTIME FANOUT hissa hai."</pre>
      <p>Ab tumhare paas soch ka dhaancha hai. Read-heavy ka matlab hai: source of truth
      kya hai, kya cache hoga, cache miss par kya, replication kaisi. Realtime fanout ka
      matlab hai: connections kaun sambhaalega, offline user ko kya milega, fanout
@@ -117,7 +117,7 @@ SD.registerLevels('shapes', [
      <b>"Yahan galat jawab kitna mehenga hai?"</b> Ek feed mein purana post dikh jaana
      theek hai. Ek wallet mein galat balance dikhna theek <b>nahi</b> hai.
      Yahi ek sawaal caching, consistency aur transactions — teenon ka jawab de deta hai.</p>`,
-    `<h3>🗺️ 12 shapes aur unke jaane-pehchane failure modes</h3>
+    `<h3>🗺️ 12 shapes aur jaane-pehchane failure modes</h3>
      <table>
        <tr><th>Shape</th><th>Udaharan</th><th>Yahi toota hai</th></tr>
        <tr><td>1. Read-heavy</td><td>Feed, catalog, profile</td><td>Cache invalidation · hot key</td></tr>
@@ -135,10 +135,10 @@ SD.registerLevels('shapes', [
      </table>
      <p><b>Zaroori:</b> asli systems mein aksar 2–3 shapes hote hain. Instagram =
      read-heavy (feed) + media (photos) + realtime fanout (notifications) +
-     recommendation (explore). Har hisse ko uske apne shape se design karo —
+     recommendation (explore). Har hisse ko hisse ke apne shape se design karo —
      ek hi hathoda sab par mat chalao.</p>
-     <p class="tip">🎯 Yeh 12 naam yaad karne ki cheez nahi hain. Inka faayda yeh hai ki
-     naam ke saath <b>failure mode</b> aata hai. Jaise hi tum bolo "yeh realtime fanout
+     <p class="tip">🎯 Shapes ke 12 naam yaad karne ki cheez nahi hain. Shapes ke naam ka faayda hai ki
+     naam ke saath <b>failure mode</b> aata hai. Jaise hi tum bolo "system realtime fanout
      hai", agla sawaal khud aa jaata hai: "offline user ka kya hoga?" — aur wahi sawaal
      asli design hai.</p>`,
   ],
@@ -146,7 +146,7 @@ SD.registerLevels('shapes', [
     {
       type: 'bins',
       title: 'Is problem ka shape kya hai?',
-      instructions: 'Har system ko uske MUKHYA shape mein daalo.',
+      instructions: 'Har system ko system ke MUKHYA shape mein daalo.',
       bins: [
         { id: 'read', label: '📖 Read-heavy' },
         { id: 'write', label: '✍️ Write-heavy / event' },
@@ -166,7 +166,7 @@ SD.registerLevels('shapes', [
     },
     {
       type: 'match',
-      title: 'Shape → uska jaana-pehchana failure mode',
+      title: 'Shape → jaana-pehchana failure mode',
       pairs: [
         { left: 'Search & filtering', right: 'Indexing lag — "maine save kiya, search mein nahi dikh raha"', explain: 'Search index lagbhag hamesha <b>async</b> bharta hai. Bug nahi, design hai — par user ko dikhna chahiye ("indexing ho raha hai"), warna user dobara save karega.' },
         { left: 'Geo / spatial', right: 'Hot cell — airport par surge, ek cell mein saare drivers', explain: 'Geo data <b>uniformly</b> nahi bikhra hota. Aadha shehar ek cell mein aa jaata hai. Cell size fixed rakhna hi galti hai — adaptive grid ya cell splitting chahiye.' },
@@ -236,7 +236,7 @@ SD.registerLevels('shapes', [
     {
       type: 'design',
       title: 'Design Canvas — "Design Twitter" ka pehla kadam',
-      instructions: 'Boxes se pehle: har hisse ka shape aur uska sabse zaroori decision chuno.',
+      instructions: 'Boxes se pehle: har hisse ka shape aur hisse ka sabse zaroori decision chuno.',
       brief: `Interviewer ne kaha: <b>"Twitter design karo."</b> 30 crore users, ek user
         average 200 logon ko follow karta hai, kuch celebs ke 5 crore followers hain.
         Tum abhi boxes nahi bana rahe — tum <b>shapes</b> pehchaan rahe ho.`,
@@ -282,7 +282,7 @@ SD.registerLevels('shapes', [
       verdicts: {
         great: '🏆 Tumne boxes banane se pehle <b>shapes</b> pehchaan liye — aur isi wajah se hybrid fanout khud saamne aa gaya, yaad karne ki zaroorat nahi padi.',
         ok: '👍 Theek hai, par ek decision ne tumhe galat direction mein dhakela. Har option ka "why" padho — asli seekh wahi hai.',
-        bad: '🤔 Yeh shapes ka sawaal tha, components ka nahi. Dobara socho: kaun sa hissa read-heavy hai, kaun sa media, aur galat jawab kahan mehenga hai.',
+        bad: '🤔 Design Twitter shapes ka sawaal tha, components ka nahi. Dobara socho: kaun sa hissa read-heavy hai, kaun sa media, aur galat jawab kahan mehenga hai.',
       },
     },
   ],
@@ -328,19 +328,19 @@ SD.registerLevels('shapes', [
   },
   success: [
     'Chaar sawaalon se 30 second mein pattern bol sakte ho',
-    '12 shapes aur unke failure modes jaante ho',
+    '12 shapes aur failure modes jaante ho',
     'Ek system mein kai shapes pehchaan sakte ho',
     '"Galat jawab kitna mehenga hai" se data layer decide kar sakte ho',
   ],
   homework: `Apne kaam ka system lo aur use tod ke likho: har hissa kaunsa shape hai.
-    Phir har shape ke saamne uska jaana-pehchana failure mode likho —
-    aur poochho "hum uske liye tayyar hain?"`,
+    Phir har shape ke saamne shape ka jaana-pehchana failure mode likho —
+    aur poochho "hum failure mode ke liye tayyar hain?"`,
   cards: [
-    { front: 'Boxes se pehle kya?', back: 'Problem ka <b>naam</b>. "Yeh read-heavy hai jisme realtime fanout ka hissa hai." Naam ke saath uske failure modes aate hain — aur wahi agle sawaal hain.' },
+    { front: 'Boxes se pehle kya?', back: 'Problem ka <b>naam</b>. "Problem read-heavy hai jisme realtime fanout ka hissa hai." Naam ke saath problem ke failure modes aate hain — aur wahi agle sawaal hain.' },
     { front: 'Classification ke 4 sawaal?', back: '1. Read ya write zyada? 2. Turant ya thodi der mein? 3. Serve ya process? 4. Ek user ya laakhon tak fanout?' },
     { front: 'Paanchva (sabse zaroori) sawaal?', back: '<b>"Galat jawab kitna mehenga hai?"</b> Feed mein purana post = theek. Wallet mein purana balance = nahi. Ek sawaal ne caching, consistency aur transactions teenon tay kar diye.' },
-    { front: 'Ek system = ek shape?', back: 'Nahi — aksar 2–3. Instagram = read-heavy + media + realtime fanout + recommendation. Har hisse ko uske apne shape se design karo.' },
-    { front: 'Twitter timeline ka asli jawab?', back: '<b>Hybrid fanout</b> — aam user ke liye write par (200 inboxes sasta), celeb ke liye read par merge (warna 5 crore writes). Yeh "celebrity problem" ka standard hal hai.' },
+    { front: 'Ek system = ek shape?', back: 'Nahi — aksar 2–3. Instagram = read-heavy + media + realtime fanout + recommendation. Har hisse ko hisse ke apne shape se design karo.' },
+    { front: 'Twitter timeline ka asli jawab?', back: '<b>Hybrid fanout</b> — aam user ke liye write par (200 inboxes sasta), celeb ke liye read par merge (warna 5 crore writes). Hybrid fanout "celebrity problem" ka standard hal hai.' },
   ],
 },
 
@@ -361,14 +361,14 @@ SD.registerLevels('shapes', [
   lesson: [
     `<h3>📖 Ek query jo har startup ko ek din kaatti hai</h3>
      <pre>SELECT * FROM products WHERE name LIKE '%wireless%';</pre>
-     <p>Yeh 10,000 rows tak theek chalti hai. 50 lakh par yeh <b>full table scan</b> hai —
+     <p>LIKE query 10,000 rows tak theek chalti hai. 50 lakh par LIKE query <b>full table scan</b> hai —
      aur index laga dene se bhi kuch nahi hota. Kyun? Kyunki B-tree ek <b>sorted</b>
-     dhaancha hai. Woh "w se shuru hone wale" jaldi dhoondh sakta hai, par
-     "jisme kahin bhi wireless ho" ke liye use har row dekhni hi padegi.
+     dhaancha hai. B-tree "w se shuru hone wale" jaldi dhoondh sakta hai, par
+     "jisme kahin bhi wireless ho" ke liye B-tree ko har row dekhni hi padegi.
      <code>LIKE 'wireless%'</code> index use karta hai; <code>LIKE '%wireless%'</code>
-     nahi kar sakta — aur yeh farak sirf ek <code>%</code> ka hai.</p>
+     nahi kar sakta — aur prefix aur substring ka farak sirf ek <code>%</code> ka hai.</p>
      <h3>🔄 Inverted index — table ko ulta kar do</h3>
-     <pre>NORMAL index:   row → uske shabd
+     <pre>NORMAL index:   row → row ke shabd
    doc 12  →  "wireless bluetooth headphones"
    doc 47  →  "wireless mouse"
 
@@ -377,7 +377,7 @@ INVERTED index: shabd → un rows ki list
    "bluetooth"  →  [12, 205, ...]
    "headphones" →  [12, 99, ...]</pre>
      <p>Ab "wireless bluetooth" ki search do sorted lists ka <b>intersection</b> hai —
-     aur woh microseconds ka kaam hai, chahe crore documents hon.
+     aur intersection microseconds ka kaam hai, chahe crore documents hon.
      Yahi Elasticsearch/Lucene, Postgres ka GIN, aur har search engine karta hai.</p>
      <p>Par index banane se pehle text ko <b>saaf</b> karna padta hai — aur yahi hissa
      search ko "database" se alag banata hai:</p>
@@ -389,8 +389,8 @@ INVERTED index: shabd → un rows ki list
   → stemming         ["wireless", "headphone"]   ← "headphones" bhi milega
   → synonyms         earphone → headphone</pre>
      <p class="tip">🎯 Yahi wajah hai ki search "bas ek index" nahi hai —
-     woh ek <b>bhasha</b> ka faisla hai. Hindi ke liye stemming alag hogi, aur
-     "iphone 15" ko "iphone" + "15" mein todna sahi hai ya nahi, yeh product decide
+     search ek <b>bhasha</b> ka faisla hai. Hindi ke liye stemming alag hogi, aur
+     "iphone 15" ko "iphone" + "15" mein todna sahi hai ya nahi, token todne ka faisla product decide
      karta hai, database nahi.</p>`,
     `<h3>⏳ Indexing lag — is shape ka signature bug</h3>
      <p>Search index lagbhag hamesha <b>alag</b> system hai (Elasticsearch), aur usme
@@ -400,18 +400,18 @@ INVERTED index: shabd → un rows ki list
                    Elasticsearch                  ⏳ 2–30 second
 GET /search?q=... →  abhi tak nahi mila            😕</pre>
      <p>User ne product save kiya, list mein dikh raha hai, par search mein nahi.
-     Woh soch le<b>ga</b> ki save nahi hua — aur dobara save karega. Ab tumhare paas
+     User soch le<b>ga</b> ki save nahi hua — aur dobara save karega. Ab tumhare paas
      duplicate hai.</p>
-     <p>Ilaaj bug fix karna nahi hai — yeh design hai. Ilaaj <b>UX</b> hai:</p>
+     <p>Ilaaj bug fix karna nahi hai — indexing lag design hai. Ilaaj <b>UX</b> hai:</p>
      <table>
        <tr><td>Apna banaya hua item</td><td>Search bypass karke seedha DB se dikhao ("read your own writes")</td></tr>
        <tr><td>Saaf signal</td><td>"Indexing... kuch second mein search mein aayega"</td></tr>
        <tr><td>Monitor</td><td>Indexing lag ek <b>SLI</b> ho — p99 lag par alert</td></tr>
      </table>
      <p class="tip">🎯 Aur sabse zaroori niyam: <b>search index kabhi source of truth
-     nahi hota</b>. Woh kisi bhi din poora dobara banaya ja sakta hona chahiye —
-     kyunki mapping badalne par, corruption par, ya version upgrade par woh dobara
-     banega hi. Agar koi data sirf Elasticsearch mein hai, toh woh data ek din
+     nahi hota</b>. Search index kisi bhi din poora dobara banaya ja sakta hona chahiye —
+     kyunki mapping badalne par, corruption par, ya version upgrade par search index dobara
+     banega hi. Agar koi data sirf Elasticsearch mein hai, toh sirf Elasticsearch mein rakha data ek din
      chala jaayega.</p>
      <h3>🎯 Relevance — engineering nahi, product</h3>
      <p>"Sahi natija" ka jawab database ke paas nahi hai. Ranking signals mila ke bante hain:</p>
@@ -420,7 +420,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
       + recency   × w3         (naya maal upar)
       + personalization × w4   (isne pehle kya dekha)
       + business  × w5         (stock hai? margin?)</pre>
-     <p>Weights product/data science tay karte hain, aur woh <b>A/B test</b> se badalte
+     <p>Weights product/data science tay karte hain, aur weights <b>A/B test</b> se badalte
      hain. Isliye search ka sabse zaroori infra CTR logging hai — bina click data ke
      relevance sudhaari hi nahi ja sakti.</p>`,
   ],
@@ -528,12 +528,12 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
         end: {
           end: true,
           text: 'Backlog saaf. Daam ab live source se dikh rahe hain.',
-          summary: `<b>Seekh:</b> Search index mein woh data mat rakho jo <b>tezi se badalta</b> hai
+          summary: `<b>Seekh:</b> Search index mein aisa data mat rakho jo <b>tezi se badalta</b> hai
             aur jiska galat hona mehenga hai.
             <br><br>• Daam se <b>filter</b> karna theek hai (thodi galti chalti hai)
             <br>• Daam <b>dikhana</b> live source se hona chahiye
-            <br>• Bulk updates ko throttle karo — warna woh realtime updates ko peechhe dhakel dete hain
-            <br>• Indexing lag ek <b>SLI</b> ho, alert ke saath — warna yeh chup-chaap badhta hai`,
+            <br>• Bulk updates ko throttle karo — warna bulk updates realtime updates ko peechhe dhakel dete hain
+            <br>• Indexing lag ek <b>SLI</b> ho, alert ke saath — warna indexing lag chup-chaap badhta hai`,
         },
       },
     },
@@ -586,7 +586,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
   ],
   interview: {
     title: 'Interview Round — Search',
-    instructions: 'Yeh shape "async" ke around ghoomta hai. 🎤',
+    instructions: 'Search shape "async" ke around ghoomta hai. 🎤',
     questions: [
       {
         q: '"Elasticsearch poora chala gaya. Kya hoga?"',
@@ -627,18 +627,18 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
   success: [
     "Bata sakte ho ki LIKE '%x%' par index kyun bekaar hai",
     'Inverted index aur analysis pipeline samjha sakte ho',
-    'Indexing lag ko design maan ke uska UX bana sakte ho',
+    'Indexing lag ko design maan ke indexing lag ka UX bana sakte ho',
     'Search ko derived store ki tarah treat karte ho',
   ],
-  homework: `Apne product mein koi search box dhoondo. Poochho: (1) woh kis par chalta hai,
-    (2) data wahan kaise pahunchta hai, (3) indexing lag ka koi metric hai?
+  homework: `Apne product mein koi search box dhoondo. Poochho: (1) search box kis par chalta hai,
+    (2) data search index mein kaise pahunchta hai, (3) indexing lag ka koi metric hai?
     Aur ek test: ek naya item banao aur ginti karo ki search mein aane mein kitne second lage.`,
   cards: [
     { front: "LIKE '%x%' par index kyun nahi chalta?", back: 'B-tree <b>sorted</b> hai — navigate shuruaat se hota hai. Beech ka match unknown shuruaat hai, isliye har row dekhni padti hai. <code>LIKE \'x%\'</code> chalta hai.' },
     { front: 'Inverted index kya hai?', back: 'Table ka ulta: <b>shabd → document ids ki sorted list</b>. Multi-word search = lists ka intersection. Lucene/Elasticsearch/GIN sab yahi hain.' },
     { front: 'Analysis pipeline ke kadam?', back: 'lowercase → tokenize → punctuation/stopwords → stemming → synonyms → postings. <b>Query bhi isi pipeline se</b> guzarni chahiye.' },
     { front: 'Indexing lag ka ilaaj?', back: 'Bug nahi, design hai. Ilaaj UX mein: apne items DB se dikhao (read-your-own-writes) + "indexing" signal + lag par SLI/alert.' },
-    { front: 'Search index source of truth?', back: '<b>Kabhi nahi.</b> Woh reindex hoga hi (mapping/version/corruption). Sirf wahan rakha data ek din chala jaayega.' },
+    { front: 'Search index source of truth?', back: '<b>Kabhi nahi.</b> Search index reindex hoga hi (mapping/version/corruption). Sirf search index mein rakha data ek din chala jaayega.' },
     { front: 'Search index mein kya NA rakhein?', back: 'Tezi se badalne wala data jiska galat hona mehenga ho — jaise <b>daam</b>. Filter uspar karo, par dikhao live source se.' },
   ],
 },
@@ -654,20 +654,20 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
   objectives: [
     'Presigned URL: client seedha object storage par likhe',
     'Bytes object storage mein, metadata DB mein — <b>hamesha</b>',
-    'Upload ke baad ka processing pipeline aur uska status',
+    'Upload ke baad ka processing pipeline aur processing ka status',
     'Storage tiering — purana data sasta hona chahiye',
   ],
   lesson: [
     `<h3>📖 Ek 4 GB video, ek app server</h3>
-     <p>Sabse seedha design yeh lagta hai:</p>
+     <p>Sabse seedha design aisa lagta hai:</p>
      <pre>client → POST /upload → app server → S3</pre>
-     <p>Aur yeh chhoti files par kaam bhi karta hai. Par ab hisaab lagao: ek 4 GB video
+     <p>Aur app server se upload chhoti files par kaam bhi karta hai. Par ab hisaab lagao: ek 4 GB video
      ek dheeme mobile network se aa rahi hai — 12 minute lagenge. Un 12 minute mein
      us request ne <b>ek thread pakad rakha hai</b>, aur aksar ek DB connection bhi
      (kyunki handler ne pehle hi le liya tha). 50 log ek saath upload kar rahe hain
      toh tumhara poora pool khatam — aur baaki poori API, jiska upload se koi lena-dena
      nahi, timeout karne lagti hai.</p>
-     <p>Yaad aaya? Yeh bilkul wahi <b>connection pool exhaustion</b> hai jo tumne
+     <p>Yaad aaya? Upload ke connections bharna bilkul wahi <b>connection pool exhaustion</b> hai jo tumne
      Resilience track mein dekha tha — CPU 10%, health green, sab timeout.
      Wajah alag hai, shape wahi hai.</p>
      <h3>✅ Presigned URL — bytes ko backend se bahar nikaal do</h3>
@@ -692,7 +692,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      </table>
      <p>DB mein BLOB rakhne ka anjaam: buffer pool bytes se bhar jaata hai (isliye
      tumhari <b>asli</b> queries slow hoti hain), backup ka size 100x, replication lag,
-     aur ek din woh migration jo koi nahi karna chahta.</p>
+     aur ek din DB se object storage ki migration jo koi nahi karna chahta.</p>
      <h3>⚙️ Upload ke baad — status ek first-class cheez hai</h3>
      <pre>uploaded → scanning → processing → ready
                   ↓            ↓
@@ -700,7 +700,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      <p>Transcode aur thumbnail banane mein minute lagte hain. Isliye upload API
      <b>202 Accepted</b> jaisa vyavhaar kare aur ek status endpoint de. UI ko
      "processing..." dikhana chahiye — nahi toh user ek toota hua video dekhega
-     aur samjhega upload fail ho gaya. (Yeh wahi async pattern hai jo tumne
+     aur samjhega upload fail ho gaya. (Processing status wahi async pattern hai jo tumne
      API track mein dekha tha.)</p>
      <h3>💸 Tiering — purana data sasta hona chahiye</h3>
      <table>
@@ -708,7 +708,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
        <tr><td>30–90 din</td><td>Infrequent Access</td><td>sasta store, mehenga read</td></tr>
        <tr><td>90+ din</td><td>Glacier / Archive</td><td>bahut sasta, ghanton mein milta hai</td></tr>
      </table>
-     <p class="tip">🎯 Yeh lifecycle rule <b>din 1</b> par likho. Baad mein yeh
+     <p class="tip">🎯 Storage ka lifecycle rule <b>din 1</b> par likho. Baad mein lifecycle rule
      "kabhi kar lenge" ban jaata hai, aur do saal baad storage bill compute bill se
      bada ho jaata hai. Aur delete ka bhi ek rule ho: kya cheez kabhi delete <b>hoti</b>
      hai?</p>`,
@@ -730,7 +730,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     },
     {
       type: 'bins',
-      title: 'Yeh cheez kahan rakhein?',
+      title: 'Data kahan rakhein?',
       instructions: 'Object storage mein ya database mein?',
       bins: [
         { id: 'obj', label: '🪣 Object storage' },
@@ -923,7 +923,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     'Reconnect storm — jab sab ek saath wapas aate hain',
   ],
   lesson: [
-    `<h3>📖 Chaar tareeke, aur unka asli farak</h3>
+    `<h3>📖 Chaar tareeke, aur chaar tareekon ka asli farak</h3>
      <table>
        <tr><th></th><th>Kaise</th><th>Kab</th></tr>
        <tr><td><b>Polling</b></td><td>Har 5s ek request</td><td>Update kabhi-kabhi. Sabse simple — aur aksar kaafi</td></tr>
@@ -933,7 +933,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      </table>
      <p class="tip">🎯 Sabse aam over-engineering yahi hai: notifications ke liye
      WebSocket lagana. Agar data sirf server se client ki taraf jaata hai, toh
-     <b>SSE</b> chuno — woh plain HTTP hai, isliye proxies, load balancers aur
+     <b>SSE</b> chuno — SSE plain HTTP hai, isliye proxies, load balancers aur
      reconnect sab apne aap kaam karte hain. WebSocket tab lo jab client ko bhi
      wapas bolna ho.</p>
      <h3>🔢 Connection ek resource hai</h3>
@@ -943,28 +943,28 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
    ÷ 50,000 connections per node       ← memory + file descriptors ki hadd
    = 20 nodes SIRF connections ke liye
 
-...aur woh 20 nodes tab bhi chahiye jab koi kuch bhej hi nahi raha.</pre>
+...aur 20 gateway nodes tab bhi chahiye jab koi kuch bhej hi nahi raha.</pre>
      <p>Isliye realtime systems mein <b>connection layer</b> aur <b>business logic</b>
      alag scale hote hain. Gateway nodes sirf sockets rakhte hain; asli kaam peechhe
-     hota hai, aur unke beech ek pub/sub baithta hai.</p>
+     hota hai, aur gateway nodes aur services ke beech ek pub/sub baithta hai.</p>
      <pre>client ⇄ WS gateway (sirf sockets)  ⇄  pub/sub (Redis/Kafka)  ⇄  services</pre>
-     <p>Yeh isliye zaroori hai ki user A gateway-3 par hai aur user B gateway-17 par.
+     <p>Pub/sub isliye zaroori hai ki user A gateway-3 par hai aur user B gateway-17 par.
      Bina pub/sub ke gateway-3 ko pata hi nahi ki B kahan hai.</p>`,
     `<h3>📴 Sabse bada sawaal: offline user</h3>
-     <p>Realtime design ka 80% "message bhejna" nahi hai — woh aasan hai. Asli sawaal
-     yeh hai: <b>jo connected nahi tha, use kya milega?</b></p>
+     <p>Realtime design ka 80% "message bhejna" nahi hai — message bhejna aasan hai. Asli sawaal
+     hai: <b>jo connected nahi tha, use kya milega?</b></p>
      <pre>❌ sirf broadcast:  offline user ne message MISS kar diya, hamesha ke liye
 ✅ persist + push:  message pehle STORE hoto, phir connected logon ko push
                     reconnect par: "mere last_seen_id ke baad kya aaya?"</pre>
      <p>Isliye chat mein WebSocket sirf ek <b>tez raasta</b> hai, source of truth nahi.
      Message pehle DB/log mein likha jaata hai, phir push hota hai. Reconnect par
-     client apna aakhri id bhejta hai aur gap bhar leta hai. Yeh design kar liya toh
+     client apna aakhri id bhejta hai aur gap bhar leta hai. Persist karke push karne ka design kar liya toh
      "message kho gaya" wale bugs khud khatam ho jaate hain.</p>
      <h3>🌩️ Reconnect storm</h3>
-     <p>Ek gateway node restart hua. Uspar 50,000 connections the. Ab woh sab
+     <p>Ek gateway node restart hua. Uspar 50,000 connections the. Ab saare connections
      <b>ek saath</b> reconnect karenge — aur har reconnect sasta nahi hai:
      auth, subscription restore, aur "maine kya miss kiya" ka backlog fetch.</p>
-     <p>Yeh bilkul wahi retry storm hai jo tumne Resilience track mein dekha tha,
+     <p>Saath reconnect karna bilkul wahi retry storm hai jo tumne Resilience track mein dekha tha,
      aur ilaaj bhi wahi hai: <b>client par exponential backoff + full jitter</b>.
      Bina jitter ke 50,000 clients theek 1 second baad ek saath wapas aayenge,
      agla node giraayenge, aur cascade shuru.</p>
@@ -1084,9 +1084,9 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
           text: 'Ab message pehle store hota hai, phir push. Gayab hona band.',
           summary: `<b>Seekh:</b> WebSocket ek <b>tez raasta</b> hai — source of truth nahi.
             <br><br><b>Pattern:</b> <code>persist (id ke saath) → push → reconnect par last_seen_id se gap bharo</code>
-            <br><br>Yeh ek design chaar problems hal karta hai: offline users, reconnects,
+            <br><br>Persist karke push karne ka ek design chaar problems hal karta hai: offline users, reconnects,
             multi-device sync, aur "message kho gaya". Delivery/read receipts bhi ismein
-            natural roop se fit ho jaate hain — woh bas per-user cursors hain.
+            natural roop se fit ho jaate hain — delivery/read receipts bas per-user cursors hain.
             <br><br><b>Limit lagana mat bhoolna:</b> 3 din baad wapas aane wale ko
             40,000 messages ek saath mat bhejo.`,
         },
@@ -1096,10 +1096,10 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
       type: 'fill',
       title: 'Realtime ke faisle',
       instructions: 'Sahi shabd chuno.',
-      template: `Server se client ek-tarfa stream ke liye {0} chuno — woh plain HTTP hai.
+      template: `Server se client ek-tarfa stream ke liye {0} chuno — SSE plain HTTP hai.
         Do-tarfa chahiye tab {1}. Connections stateful hain isliye {2} layer ko
         business logic se alag scale karo. Aur node restart par sab ek saath
-        wapas na aayein, iske liye client par {3} lagao.`,
+        wapas na aayein, sabko saath lautne se rokne ke liye client par {3} lagao.`,
       tokens: ['SSE', 'WebSocket', 'gateway', 'backoff + jitter', 'polling', 'cache'],
       blanks: [
         { answer: 'SSE', explain: 'Server-Sent Events plain HTTP par chalta hai — proxies, LB aur auto-reconnect sab muft. Notifications aur LLM streaming SSE ke classic use hain.' },
@@ -1160,7 +1160,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     (3) saare gateway nodes ek saath restart hue toh kya hoga?`,
   cards: [
     { front: 'SSE vs WebSocket?', back: '<b>SSE</b> = ek-tarfa (server→client), plain HTTP, reconnect muft — notifications, LLM streaming. <b>WebSocket</b> = do-tarfa — chat, collab, gaming. Ek-tarfa ke liye WS over-engineering hai.' },
-    { front: 'Realtime design ka sabse bada sawaal?', back: '<b>"Offline user ko message kaise milega?"</b> Isi se nikalta hai: pehle STORE karo (id ke saath), phir push. Reconnect par client last_seen_id se gap bhare.' },
+    { front: 'Realtime design ka sabse bada sawaal?', back: '<b>"Offline user ko message kaise milega?"</b> Offline user ke sawaal se nikalta hai: pehle STORE karo (id ke saath), phir push. Reconnect par client last_seen_id se gap bhare.' },
     { front: 'Connections ka scaling?', back: 'Connection ek <b>capacity dimension</b> hai — ~50k/node (memory + FDs). 10 lakh users = 20 gateway nodes, chahe koi kuch bhej hi na raha ho. Gateway aur logic alag scale karo, beech mein pub/sub.' },
     { front: 'Reconnect storm?', back: 'Node restart = 50,000 ek saath reconnect (auth + subs + backlog). Ilaaj: client par <b>backoff + full jitter</b>, backlog fetch par limit, aur staggered/rolling restarts.' },
     { front: 'Fanout write par ya read par?', back: '<b>Write par</b> = read turant, par celeb par phatta hai. <b>Read par</b> = write sasta, read mehenga. Asli systems <b>hybrid</b> karte hain.' },
@@ -1180,24 +1180,24 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     'lat/lng ka BETWEEN kyun ek jaal hai',
     'Geohash: do dimensions ko ek <b>sorted string</b> mein badalna',
     'Hot cell — geo data kabhi uniformly nahi bikhra hota',
-    'Cell boundary ka problem aur uska hal',
+    'Cell boundary ka problem aur cell boundary ka hal',
   ],
   lesson: [
     `<h3>📖 Seedha jawab jo dhokha deta hai</h3>
      <pre>SELECT * FROM drivers
 WHERE lat BETWEEN 19.05 AND 19.15
   AND lng BETWEEN 72.80 AND 72.90;</pre>
-     <p>Yeh sahi lagta hai. Par yaad karo composite index ka niyam:
+     <p>lat/lng range query sahi lagta hai. Par yaad karo composite index ka niyam:
      <b>range column ke baad index ruk jaata hai</b>. Yahan
      <b>dono</b> columns range hain. Index <code>(lat, lng)</code> banao toh
-     woh <code>lat</code> ki range tak chalega — yaani poori latitude patti ke
-     saare drivers — aur phir <code>lng</code> se filter karne ke liye woh
+     index <code>lat</code> ki range tak chalega — yaani poori latitude patti ke
+     saare drivers — aur phir <code>lng</code> se filter karne ke liye DB ko
      saari rows padhni padengi.</p>
      <pre>(lat, lng) index ke saath:
    lat 19.05–19.15 ki patti  →  poore desh ki us patti ke 4 lakh drivers
    phir lng se filter        →  bache 900
    yaani 4 lakh rows padh ke 900 nikale</pre>
-     <p>Asli problem yeh hai: <b>B-tree ek-dimension ka hai</b>, aur jagah do-dimension ki.</p>
+     <p>Asli problem hai: <b>B-tree ek-dimension ka hai</b>, aur jagah do-dimension ki.</p>
      <h3>🔡 Geohash — do dimensions ko ek line mein badlo</h3>
      <p>Geohash duniya ko baar-baar aadha karta hai (kabhi lng, kabhi lat) aur har
      faisle ko ek bit banata hai. Un bits ko base32 mein likho — bas, ek string:</p>
@@ -1217,7 +1217,7 @@ te7ud9k   →  ~150 m</pre>
      aur 8 PM par airport wali ek cell mein poore region ka traffic aa jaata hai.</p>
      <pre>cell te7ud9  (airport, 8 PM)   ████████████  40,000 rps  🔥
 cell te7uc2  (samundar)                        0 rps  😴</pre>
-     <p>Yeh bilkul wahi <b>hot key</b> problem hai jo cache level mein tha —
+     <p>Hot cell bilkul wahi <b>hot key</b> problem hai jo cache level mein tha —
      aur ilaaj bhi wahi shape rakhta hai:</p>
      <table>
        <tr><td>Cell ko todo</td><td>Hot cell ko finer spatial resolution par split karo (geohash5 →7characters)</td></tr>
@@ -1227,15 +1227,15 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
      <p>Isliye fixed grid size lagbhag hamesha galti hai. Manhattan aur Rajasthan
      ke liye ek hi cell size sahi ho hi nahi sakta.</p>
      <h3>🧩 Cell boundary ka problem</h3>
-     <p>Tum cell <code>te7ud9</code> mein ho, bilkul uske kinare par. Sabse paas ka
-     driver 50 meter door hai — par woh <b>bagal wale cell</b> mein hai. Sirf apni
-     cell dekhoge toh woh milega hi nahi.</p>
-     <pre>Ilaaj: apni cell + uske 8 padosi cells query karo (geohash ke neighbours)
+     <p>Tum cell <code>te7ud9</code> mein ho, bilkul cell ke kinare par. Sabse paas ka
+     driver 50 meter door hai — par driver <b>bagal wale cell</b> mein hai. Sirf apni
+     cell dekhoge toh driver milega hi nahi.</p>
+     <pre>Ilaaj: apni cell + apni cell ke 8 padosi cells query karo (geohash ke neighbours)
        phir un candidates par ASLI doori nikaal ke sort karo</pre>
      <p class="tip">🎯 Yahi geo ka standard do-kadam design hai:
      <b>1. index se candidates chuno (mota chhanna), 2. unhi par sahi hisaab karo
      (baarik chhanna).</b> Index ka kaam 84 lakh ko 900 tak laana hai —
-     "sabse paas kaun" ka sahi jawab uske baad nikalta hai.</p>`,
+     "sabse paas kaun" ka sahi jawab asli doori nikaalne ke baad nikalta hai.</p>`,
   ],
   stages: [
     {
@@ -1424,8 +1424,8 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
     { front: 'lat/lng dono par BETWEEN — kya hota hai?', back: 'Composite index <b>pehli range ke baad ruk jaata hai</b>. Poori latitude patti padhni padti hai. B-tree 1D hai, jagah 2D.' },
     { front: 'Geohash ka kamaal?', back: 'Common prefix same coarse cell dikhata hai;nearby points across boundaries different prefixes rakh sakte hain. Isliye "nearby" = <code>LIKE \'te7ud%\'</code> = B-tree prefix scan. 2D problem 1D ban gaya.' },
     { front: 'Geo query ka do-kadam design?', back: '1. Index se <b>mota chhanna</b> (cell + 8 padosi → ~900 candidates). 2. Un par <b>asli doori</b> (haversine) nikaal ke sort. Index ka kaam sirf candidates dena hai.' },
-    { front: 'Hot cell?', back: 'Geo data uniformly nahi bikhra — airport 8 PM par jalta hai. Yeh <b>wahi hot key</b> problem hai: cell ko finer resolution par split karo ya replicate karo. Fixed grid size lagbhag hamesha galti hai.' },
-    { front: 'Driver locations kahan store karein?', back: '<b>In-memory geo store</b> (Redis) — yeh current state hai, history nahi. 1 lakh drivers × 15 ping/min DB par bhejna write storm hai.' },
+    { front: 'Hot cell?', back: 'Geo data uniformly nahi bikhra — airport 8 PM par jalta hai. Hot cell <b>wahi hot key</b> problem hai: cell ko finer resolution par split karo ya replicate karo. Fixed grid size lagbhag hamesha galti hai.' },
+    { front: 'Driver locations kahan store karein?', back: '<b>In-memory geo store</b> (Redis) — driver locations current state hai, history nahi. 1 lakh drivers × 15 ping/min DB par bhejna write storm hai.' },
     { front: 'H3 hexagons kyun?', back: "H3 mostly hexagonal hierarchical grid hai,pentagons aur projection distortion bhi hain.Neighbor/radius cover gridDisk ya appropriate coverage algorithm se nikalo,phir exact distance verify karo." },
   ],
 },
@@ -1447,13 +1447,13 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
   lesson: [
     `<h3>📖 Sabse pehli galti: balance ko update karna</h3>
      <pre>UPDATE accounts SET balance = balance - 500 WHERE id = 7;</pre>
-     <p>Yeh chalta hai. Par ab ek sawaal ka jawab do: <b>"3 tareekh ko dopahar
-     2 baje iska balance kya tha?"</b> Jawab hai — pata nahi. Tumne purani value
+     <p>Balance update chalta hai. Par ab ek sawaal ka jawab do: <b>"3 tareekh ko dopahar
+     2 baje account ka balance kya tha?"</b> Jawab hai — pata nahi. Tumne purani value
      ke upar likh diya. Itihaas kahin nahi hai.</p>
      <p>Aur agla sawaal: <b>"balance 4,700 kyun hai?"</b> Jawab: pata nahi.
      Bas 4,700 hai.</p>
      <p>Isliye har asli financial system balance ko <b>store</b> nahi karta —
-     woh <b>immutable entries</b> store karta hai aur balance unka sum hota hai:</p>
+     financial system <b>immutable entries</b> store karta hai aur balance entries ka sum hota hai:</p>
      <pre>entries (kabhi UPDATE nahi, kabhi DELETE nahi — sirf INSERT)
    id  account  amount   type      ref
    1   7        +5000    credit    topup_881
@@ -1462,8 +1462,8 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
 
 balance(7) = SUM(amount) = 4700   ← hamesha derive hota hai</pre>
      <p class="tip">🎯 Ab har sawaal ka jawab hai: kab, kitna, kyun, kis wajah se.
-     Yeh event sourcing ka sabse purana aur sabse aazmaaya hua roop hai —
-     accountants isi ko 600 saal se chala rahe hain.</p>
+     Ledger event sourcing ka sabse purana aur sabse aazmaaya hua roop hai —
+     accountants ledger ko 600 saal se chala rahe hain.</p>
      <h3>⚖️ Double-entry — paisa banta ya mitta nahi</h3>
      <p>Har transaction <b>do</b> entries banata hai: ek jagah se nikla, doosri jagah
      gaya. Aur system ka ek hi invariant hai:</p>
@@ -1471,22 +1471,22 @@ balance(7) = SUM(amount) = 4700   ← hamesha derive hota hai</pre>
 merchant       +500
              -------
 SUM              0     ← poore system ka sum hamesha ZERO hona chahiye</pre>
-     <p>Yeh sirf hisaab-kitaab nahi hai — yeh ek <b>checkable invariant</b> hai.
-     Ek query jo poore system ka sum leti hai; agar woh kabhi zero nahi hai, toh
-     kahin paisa bana ya mita hai. Yeh alert automatic ho sakta hai, aur woh bugs
+     <p>Double-entry sirf hisaab-kitaab nahi hai — zero sum ek <b>checkable invariant</b> hai.
+     Ek query jo poore system ka sum leti hai; agar sum kabhi zero nahi hai, toh
+     kahin paisa bana ya mita hai. Zero sum ka alert automatic ho sakta hai, aur alert bugs
      pakadta hai jo kisi test mein nahi milte.</p>
      <p>Performance ke liye ek <b>materialized balance</b> rakhna theek hai —
-     par woh sirf ek cache hai, aur usse regularly entries ke sum se milaana padta hai.</p>`,
+     par materialized balance sirf ek cache hai, aur materialized balance ko regularly entries ke sum se milaana padta hai.</p>`,
     `<h3>🔍 Reconciliation — "numbers match nahi kar rahe"</h3>
-     <p>Yeh is shape ka signature failure mode hai. Tumhara ledger kehta hai
+     <p>Numbers ka mismatch money shape ka signature failure mode hai. Tumhara ledger kehta hai
      ₹4,82,100 aaye. Payment gateway kehta hai ₹4,81,650. Kaun sahi hai?</p>
      <p>Jawab: <b>koi bhi nahi, jab tak tum milaao na.</b> Reconciliation ek roz ka
      job hai jo dono taraf ke records line-by-line milaata hai:</p>
      <pre>Teen tarah ke farak milte hain:
-   1. Hamare paas hai, unke paas nahi  →  humne count kar liya, paisa aaya nahi?
-   2. Unke paas hai, hamare paas nahi  →  webhook chhoot gaya / event kho gaya
+   1. Hamare paas hai, payment gateway ke paas nahi  →  humne count kar liya, paisa aaya nahi?
+   2. Payment gateway ke paas hai, hamare paas nahi  →  webhook chhoot gaya / event kho gaya
    3. Dono ke paas, amount alag        →  fees, currency conversion, rounding</pre>
-     <p>Teesra sabse aam hai aur sabse boring — aur isiliye log ise skip karte hain
+     <p>Teesra sabse aam hai aur sabse boring — aur isiliye log amount ka farak skip karte hain
      aur phir saal ke ant mein 40 lakh ka farak dhoondte hain.</p>
      <p class="tip">🎯 Distributed systems mein reconciliation optional nahi hai.
      Broker ki transactional processing boundary ko external payment/ledger effects par automatic mat lagao. Retried delivery, missing acknowledgments aur partial failures handle karo. Idempotency repeated effects ko limit karti hai; independent reconciliation missing ya mismatched outcomes <b>pakadti</b> hai. Dono chahiye.</p>
@@ -1498,9 +1498,9 @@ SUM              0     ← poore system ka sum hamesha ZERO hona chahiye</pre>
        <tr><td><b>Kharch se pehle balance check</b></td><td>❌ <b>kabhi nahi</b> — yahan overdraft ban jaayega</td></tr>
        <tr><td>Refund ki eligibility</td><td>❌ nahi — double refund ban jaayega</td></tr>
      </table>
-     <p>Yeh wahi "galat jawab kitna mehenga hai" wala sawaal hai. Yahan poora system
+     <p>Balance check wahi "galat jawab kitna mehenga hai" wala sawaal hai. Yahan poora system
      eventual ho sakta hai — <b>siwaay us ek query ke jo paisa nikaalne se pehle
-     chalti hai</b>. Woh primary se, ek transaction ke andar, aur account row par
+     chalti hai</b>. Balance check ki query primary se, ek transaction ke andar, aur account row par
      lock ke saath chalni chahiye.</p>`,
   ],
   stages: [
@@ -1635,8 +1635,8 @@ SUM              0     ← poore system ka sum hamesha ZERO hona chahiye</pre>
         },
       ],
       verdicts: {
-        great: '🏆 Immutable entries + lock + idempotency + reconciliation. Yahi woh chaar cheezein hain jinke bina money system ek din chup-chaap galat ho jaata hai.',
-        ok: '👍 Buniyaad theek hai, par ek jagah tumne woh maan liya jo distributed system mein maana nahi ja sakta.',
+        great: '🏆 Immutable entries + lock + idempotency + reconciliation. Yahi chaar cheezein hain jinke bina money system ek din chup-chaap galat ho jaata hai.',
+        ok: '👍 Buniyaad theek hai, par ek jagah tumne distributed system mein ek galat bharosa kar liya.',
         bad: '🤔 Money mein "lagbhag sahi" jaisi koi cheez nahi hoti. Balance derive karo, lock lo, idempotent bano, aur milaate raho.',
       },
     },
@@ -1688,15 +1688,15 @@ SUM              0     ← poore system ka sum hamesha ZERO hona chahiye</pre>
     'Jaante ho ki money mein cache kahan chalta hai aur kahan nahi',
   ],
   homework: `Agar tumhare system mein paisa, points, credits ya quota jaisi koi cheez hai —
-    dekho ki woh ek column hai ya entries. Agar column hai, toh yeh sawaal poochho:
-    "kal dopahar ise kya value thi, aur kyun?" Agar jawab nahi hai, wahi tumhara agla design hai.`,
+    dekho ki balance ek column hai ya entries. Agar column hai, toh balance ka sawaal poochho:
+    "kal dopahar balance ki kya value thi, aur kyun?" Agar jawab nahi hai, wahi tumhara agla design hai.`,
   cards: [
     { front: 'Balance kaise rakhein?', back: 'Column mein <b>nahi</b> — <b>immutable entries</b> rakho, balance = SUM(amount). Itihaas, karan aur audit teenon muft milte hain. Materialized balance sirf cache hai.' },
     { front: 'Double-entry ka invariant?', back: 'Har transaction ki <b>do</b> entries; poore system ka <code>SUM(amount) = 0</code>. Ek query jo batati hai ki kahin paisa bana ya mita toh nahi. Uspar alert lagao.' },
-    { front: 'Reconciliation ke teen buckets?', back: '1. Sirf hamare paas · 2. Sirf unke paas (webhook chhoota) · 3. Dono par amount alag (fees/rounding). Har bucket ka fix alag hai.' },
+    { front: 'Reconciliation ke teen buckets?', back: '1. Sirf hamare paas · 2. Sirf payment gateway ke paas (webhook chhoota) · 3. Dono par amount alag (fees/rounding). Har bucket ka fix alag hai.' },
     { front: 'Idempotency vs reconciliation?', back: 'Idempotency duplicates <b>rokti</b> hai, reconciliation kho gaye/alag records <b>pakadti</b> hai. Exactly-once mumkin nahi — isliye dono chahiye.' },
     { front: 'Money mein cache kahan NAHI?', back: 'History/dashboard par theek. Par <b>kharch se pehle ka balance check</b> hamesha primary se, transaction ke andar, row lock ke saath — warna overdraft.' },
-    { front: 'Paisa kis type mein?', back: '<b>Integer paise/cents</b> ya decimal. Float kabhi nahi — 0.1+0.2≠0.3, aur woh galti reconciliation mein hi dikhti hai.' },
+    { front: 'Paisa kis type mein?', back: '<b>Integer paise/cents</b> ya decimal. Float kabhi nahi — 0.1+0.2≠0.3, aur float ki galti reconciliation mein hi dikhti hai.' },
     { front: 'Galat entry ka fix?', back: 'Nayi <b>reversal entry</b>. Purani entry ko kabhi update/delete mat karo — audit trail jhootha ho jaata hai.' },
   ],
 },
@@ -1716,25 +1716,25 @@ SUM              0     ← poore system ka sum hamesha ZERO hona chahiye</pre>
     'Ek achha sawaal jo har technology chunav ko saaf kar deta hai',
   ],
   lesson: [
-    `<h3>📖 Woh candidate jo microservices samjha raha tha</h3>
+    `<h3>📖 Ek candidate jo microservices samjha raha tha</h3>
      <p>Ek engineer microservices ke faayde bilkul sahi bata raha tha — independent
-     deploys, fault isolation, alag scaling. Sab sahi. Phir usse ek 3-table wala CRUD
-     app diya gaya, aur usne use <b>15 services</b> mein tod diya.</p>
-     <p>Usne pattern <b>yaad</b> kar liya tha. Woh yeh nahi samajh paaya ki pattern
-     kis dard ka ilaaj hai — aur uske badle mein kya keemat maangta hai.</p>
-     <p class="tip">🎯 Har pattern ek <b>vyapaar</b> hai. Jab tak tum yeh nahi bata
-     sakte ki woh kya <b>bigadta</b> hai, tab tak tumne use samjha nahi hai —
-     bas uska naam seekha hai.</p>
+     deploys, fault isolation, alag scaling. Sab sahi. Phir engineer ko ek 3-table wala CRUD
+     app diya gaya, aur engineer ne app ko <b>15 services</b> mein tod diya.</p>
+     <p>Engineer ne pattern <b>yaad</b> kar liya tha. Engineer nahi samajh paaya ki pattern
+     kis dard ka ilaaj hai — aur ilaaj ke badle mein kya keemat maangta hai.</p>
+     <p class="tip">🎯 Har pattern ek <b>vyapaar</b> hai. Jab tak tum nahi bata
+     sakte ki pattern kya <b>bigadta</b> hai, tab tak tumne pattern samjha nahi hai —
+     bas pattern ka naam seekha hai.</p>
      <table>
        <tr><th>Pattern</th><th>Kya hal karta hai</th><th>Kya banata hai</th></tr>
        <tr><td>Microservices</td><td>Team independence, alag scaling</td><td>Network har jagah, distributed debugging, data consistency ka jhanjhat</td></tr>
        <tr><td>Event sourcing</td><td>Poora itihaas, time travel, audit</td><td>Har query ke liye projections, schema evolution, "abhi state kya hai" mushkil</td></tr>
-       <tr><td>CQRS</td><td>Read aur write alag scale</td><td>Do models, eventual consistency, aur uska UX</td></tr>
+       <tr><td>CQRS</td><td>Read aur write alag scale</td><td>Do models, eventual consistency, aur eventual consistency ka UX</td></tr>
        <tr><td>Kafka</td><td>Durable log, replay, decoupling</td><td>Ek aur cluster chalana, partition/ordering ki samajh, ops ka boj</td></tr>
        <tr><td>Cache</td><td>Latency aur DB load</td><td>Invalidation, staleness, stampede, aur ek naya failure mode</td></tr>
        <tr><td>Sharding</td><td>Ek node ki hadd tod do</td><td>Cross-shard queries, rebalancing, hot shards, distributed transactions</td></tr>
      </table>
-     <p>Daayen column ko padho. Woh galtiyan nahi hain — woh <b>keemat</b> hai.
+     <p>Daayen column ko padho. Daayen column ki dikkatein galtiyan nahi hain — dikkatein <b>keemat</b> hai.
      Aur keemat tabhi chukani chahiye jab baayan column ka dard sach mein ho raha ho.</p>`,
     `<h3>🥱 Boring SQL kab jeetta hai</h3>
      <p>Ek Postgres instance aaj ke hardware par:</p>
@@ -1742,27 +1742,27 @@ SUM              0     ← poore system ka sum hamesha ZERO hona chahiye</pre>
 ~5–10 TB tak aaram se
 JSONB (document store), full-text search (GIN),
 geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
-     <p>Yaani woh <b>ek hi box</b> mein document DB, search engine, geo store aur
+     <p>Yaani Postgres <b>ek hi box</b> mein document DB, search engine, geo store aur
      queue ka kaam kar deta hai — ek hi transaction, ek hi backup, ek hi cheez jise
-     monitor karna hai. Zyadatar products isse kabhi bahar nikalte hi nahi.</p>
-     <p>Aur jab tum use todte ho, tum sirf technology nahi jodte — tum
-     <b>failure modes</b> jodte ho. Do systems ka matlab hai unke beech consistency,
-     unka sync, unka alag-alag down hona, aur ek naya on-call rotation.</p>
+     monitor karna hai. Zyadatar products Postgres se kabhi bahar nikalte hi nahi.</p>
+     <p>Aur jab tum Postgres ko todte ho, tum sirf technology nahi jodte — tum
+     <b>failure modes</b> jodte ho. Do systems ka matlab hai dono systems ke beech consistency,
+     dono systems ka sync, dono ka alag-alag down hona, aur ek naya on-call rotation.</p>
      <h3>❓ Ek sawaal jo har chunav saaf kar deta hai</h3>
-     <p class="tip">🎯 <b>"Yeh kis cheez ko theek kar raha hai, jo abhi sach mein
+     <p class="tip">🎯 <b>"Chuna gaya pattern kis cheez ko theek kar raha hai, jo abhi sach mein
      toota hua hai?"</b></p>
      <p>Agar jawab mein "scale par..." ya "aage chal ke..." aata hai, toh abhi
      zaroorat nahi hai. Aaj ka dard chahiye, kal ka anumaan nahi.</p>
      <table>
-       <tr><th>Ye sunte ho...</th><th>Toh yeh poochho</th></tr>
+       <tr><th>Ye sunte ho...</th><th>Toh sawaal poochho</th></tr>
        <tr><td>"Kafka laga dete hain"</td><td>"Roz kitne events hain? Replay chahiye? 1000/din ke liye ek table kaafi hai."</td></tr>
        <tr><td>"Redis cache laga dete hain"</td><td>"Query abhi kitni slow hai? Data kitni baar badalta hai? Ek index se kaam ho jaayega?"</td></tr>
-       <tr><td>"Yeh service alag kar dete hain"</td><td>"Alag deploy karna hai, ya alag scale? Ya bas code ganda lag raha hai?"</td></tr>
+       <tr><td>"Service alag kar dete hain"</td><td>"Alag deploy karna hai, ya alag scale? Ya bas code ganda lag raha hai?"</td></tr>
        <tr><td>"MongoDB behtar hai"</td><td>"Kaunsi query abhi mushkil hai? Schema sach mein badal raha hai ya humne design nahi kiya?"</td></tr>
        <tr><td>"Event sourcing karte hain"</td><td>"Audit chahiye ya time-travel? Sirf audit ke liye ek audit table kaafi hai."</td></tr>
      </table>
-     <p>Yeh sawaal cynical nahi hai. Aadhe waqt jawab "haan, sach mein zaroorat hai"
-     hoga — aur tab tum use <b>saaf iraade</b> ke saath laga rahe ho, aur uski keemat
+     <p>Zaroorat ka sawaal cynical nahi hai. Aadhe waqt jawab "haan, sach mein zaroorat hai"
+     hoga — aur tab tum pattern <b>saaf iraade</b> ke saath laga rahe ho, aur pattern ki keemat
      jaante hue.</p>`,
   ],
   stages: [
@@ -1786,13 +1786,13 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
     },
     {
       type: 'match',
-      title: 'Pattern → uski chhupi hui keemat',
+      title: 'Pattern → chhupi hui keemat',
       pairs: [
         { left: 'Microservices', right: 'Har function call ab ek network call hai — jo fail, dheemi ya duplicate ho sakti hai', explain: 'Monolith mein method call 0.001 ms leti hai aur network ki wajah se kabhi fail nahi hoti. Service call 5 ms leti hai, timeout kar sakti hai, retry ho sakti hai, aur ab service call ke liye circuit breaker chahiye. Ek line ka change ab distributed systems ka problem hai.' },
         { left: 'Event sourcing', right: '"Abhi state kya hai" ke liye projections chahiye — har query ke liye ek', explain: 'Events se current state seedha nahi milti; use replay ya projection se banana padta hai. Aur jab business rule badalta hai toh purane events ka matlab bhi badalta hai — schema evolution yahan sabse mushkil hissa hai.' },
-        { left: 'CQRS', right: 'Write ke turant baad read purana data de sakta hai — aur UX ko woh sambhaalna padta hai', explain: 'User ne save kiya, list refresh ki, purana data dikha. Bug nahi hai, design hai — par user ko dikhana padta hai (optimistic UI, ya "sync ho raha hai" ka signal).' },
+        { left: 'CQRS', right: 'Write ke turant baad read purana data de sakta hai — aur UX ko purana data sambhaalna padta hai', explain: 'User ne save kiya, list refresh ki, purana data dikha. Bug nahi hai, design hai — par user ko dikhana padta hai (optimistic UI, ya "sync ho raha hai" ka signal).' },
         { left: 'Sharding', right: 'Cross-shard query aur transaction — dono lagbhag khatam', explain: 'Jo pehle ek JOIN tha, ab N queries + application mein merge hai. Aur do shards ke beech atomic transaction ke liye 2PC ya saga chahiye. Isiliye shard key soch ke chuno — badalna bahut mehenga padta hai.' },
-        { left: 'Cache', right: 'Ek naya failure mode — aur woh "load-bearing" ban jaata hai', explain: '95% hit rate ka matlab hai cache girte hi DB par load 20x. Cache "optional speedup" lagta hai par chupke se aisi cheez ban jaata hai jiske bina system khada hi nahi rehta.' },
+        { left: 'Cache', right: 'Ek naya failure mode — aur cache "load-bearing" ban jaata hai', explain: '95% hit rate ka matlab hai cache girte hi DB par load 20x. Cache "optional speedup" lagta hai par chupke se aisi cheez ban jaata hai jiske bina system khada hi nahi rehta.' },
       ],
     },
     {
@@ -1887,13 +1887,13 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
           text: 'Design ek service + Postgres par aa gaya — aur engineer khush hai.',
           summary: `<b>Seekh:</b> Sabse achha design review <b>dono</b> zaroorton ko maanta hai —
             system ki, aur engineer ki.
-            <br><br><b>Sawaal jo sab kholta hai:</b> "Yeh kis cheez ko theek kar raha hai,
+            <br><br><b>Sawaal jo sab kholta hai:</b> "Chuna gaya pattern kis cheez ko theek kar raha hai,
             jo <b>abhi</b> sach mein toota hua hai?"
             <br><br>Jawab mein "aage chal ke" ya "seekhna chahta tha" aaye — dono asli wajah hain,
-            par production system unki jagah nahi. Engineer ko seekhne ka mauka
-            <b>wahan</b> do jahan woh cheez sach mein chahiye.
+            par production system seekhne ya aage ki taiyari ki jagah nahi. Engineer ko seekhne ka mauka
+            <b>aise system mein</b> do jahan nayi technology sach mein chahiye.
             <br><br><b>Aur yaad rakho:</b> "beech ka raasta" (3 services) aksar dono ka bura hissa
-            hota hai — distributed complexity, bina uske faayde ke.`,
+            hota hai — distributed complexity, bina alag services ke faayde ke.`,
         },
       },
     },
@@ -1940,20 +1940,20 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
   },
   success: [
     'Har pattern ki chhupi hui keemat bata sakte ho',
-    '"Yeh kya theek kar raha hai jo abhi toota hai" poochh sakte ho',
+    '"Pattern kya theek kar raha hai jo abhi toota hai" poochh sakte ho',
     'Jaante ho ki ek Postgres kitna kar leta hai',
     'Over-engineering ko bina engineer ko kaate rok sakte ho',
   ],
   homework: `Apne system ka koi ek component chuno — cache, queue, ya ek alag service.
-    Likho: (1) yeh kis dard ke liye aaya tha, (2) woh dard aaj bhi hai?,
-    (3) iski keemat kya hai (ops, failure modes, samajhne ka boj).
-    Agar (2) ka jawab "nahi" hai — toh ek achha PR wahan chhupa hai.`,
+    Likho: (1) component kis dard ke liye aaya tha, (2) component laane wala dard aaj bhi hai?,
+    (3) component ki keemat kya hai (ops, failure modes, samajhne ka boj).
+    Agar (2) ka jawab "nahi" hai — toh ek achha PR component hataane mein chhupa hai.`,
   cards: [
-    { front: 'Pattern samajhne ka test?', back: 'Tum bata sako ki woh kya <b>bigadta</b> hai. Sirf faayde bata paana = naam yaad hai, samajh nahi.' },
-    { front: 'Technology chunav se pehle ka sawaal?', back: '<b>"Yeh kis cheez ko theek kar raha hai, jo abhi sach mein toota hua hai?"</b> Jawab mein "aage chal ke" aaye toh abhi zaroorat nahi.' },
+    { front: 'Pattern samajhne ka test?', back: 'Tum bata sako ki pattern kya <b>bigadta</b> hai. Sirf faayde bata paana = naam yaad hai, samajh nahi.' },
+    { front: 'Technology chunav se pehle ka sawaal?', back: '<b>"Chuni gayi technology kis cheez ko theek kar rahi hai, jo abhi sach mein toota hua hai?"</b> Jawab mein "aage chal ke" aaye toh abhi zaroorat nahi.' },
     { front: 'Ek Postgres kitna kar leta hai?', back: "Capacity fixed universal number nahi:query mix,hardware,durability aurSLO benchmark karo.Postgres JSONB,full-text,PostGIS aur SKIP LOCKED useful tools hain if requirements fit." },
     { front: 'Microservices ki asli keemat?', back: 'Har method call ab ek <b>network call</b> hai — fail, dheemi, ya duplicate ho sakti hai. Ek stack trace ab distributed trace hai. Faayda organizational hai, technical nahi.' },
-    { front: '8-second query par cache?', back: 'Pehle poochho <b>kyun</b> 8 second. Aksar missing index ya N+1. Cache slow query ko chhupata hai, hataata nahi — aur miss par woh 8 second sabse bure waqt par wapas aate hain.' },
+    { front: '8-second query par cache?', back: 'Pehle poochho <b>kyun</b> 8 second. Aksar missing index ya N+1. Cache slow query ko chhupata hai, hataata nahi — aur miss par query ke 8 second sabse bure waqt par wapas aate hain.' },
     { front: 'Sharding se pehle?', back: '20 GB RAM mein aa jaata hai. Sharding cross-shard queries, rebalancing aur hot shards laati hai. Shard key badalna <b>bahut mehenga</b> hai — poora data dobara baantna padta hai.' },
   ],
 },
@@ -1978,8 +1978,8 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
      machines manage karo, rush hour sambhaalo, aur coffee ready hone par customer
      ko batao."</b></p>
      <p>Senior engineers is sawaal par aksar phisal jaate hain — aur wajah ulti hai
-     jo tum socho. Woh isliye nahi phisalte ki sawaal mushkil hai; woh isliye
-     phisalte hain ki woh <b>jaana-pehchana</b> hai. Dimaag "arre yeh toh coffee shop
+     jo tum socho. Senior engineers isliye nahi phisalte ki sawaal mushkil hai; engineers isliye
+     phisalte hain ki sawaal <b>jaana-pehchana</b> hai. Dimaag "arre sawaal toh coffee shop
      hai" bol ke abstraction dhoondna hi band kar deta hai. "Design Uber" sunte hi
      wahi log turant queues aur workers ki baat karne lagte hain.</p>
      <h3>🔄 Ek-ek karke, dono taraf</h3>
@@ -1996,29 +1996,29 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
        <tr><td>Doodh khatam ho gaya</td><td><b>Downstream dependency fail</b> + degrade</td></tr>
        <tr><td>Customer coffee lene aaya hi nahi</td><td><b>Orphan / abandoned job</b> + TTL cleanup</td></tr>
      </table>
-     <p>Yeh mazaak ki tulna nahi hai. Yeh bilkul wahi shape hai jo Uber, DoorDash,
+     <p>Coffee shop ki tulna mazaak ki tulna nahi hai. Coffee shop bilkul wahi shape hai jo Uber, DoorDash,
      video transcoding, print jobs — har <b>task processing system</b> ka hai.</p>`,
-    `<h3>🤔 Woh sawaal jinke jawab dukaan mein saaf dikhte hain</h3>
+    `<h3>🤔 Aise sawaal jinke jawab dukaan mein saaf dikhte hain</h3>
      <p><b>"Line bahut lambi ho jaaye toh?"</b><br>
      Dukaan do cheezein karti hai: kuch log line dekh ke chale jaate hain
      (<b>load shedding</b>), aur kabhi staff kehta hai "aaj sirf simple coffee"
      (<b>graceful degradation</b>). Aur agar tum honest ho toh entrance par likh doge
-     "abhi 20 minute wait" — yeh <b>admission control</b> hai, aur woh customer ke
+     "abhi 20 minute wait" — wait ka notice <b>admission control</b> hai, aur notice customer ke
      liye bhi behtar hai jo intezaar nahi kar sakta.</p>
      <p><b>"Barista ne coffee banayi par customer aaya hi nahi?"</b><br>
-     10 minute baad woh coffee phenk di jaati hai. Yeh <b>TTL + cleanup</b> hai —
-     bina iske pending jobs ka dher lagta rehta hai.</p>
+     10 minute baad bina li gayi coffee phenk di jaati hai. Coffee hataana <b>TTL + cleanup</b> hai —
+     TTL + cleanup ke bina pending jobs ka dher lagta rehta hai.</p>
      <p><b>"Ek order beech mein gir gaya?"</b><br>
-     Token slip abhi bhi customer ke paas hai. Woh dobara bolega, aur staff dekhega
-     ki woh bana ya nahi. Yeh <b>idempotency</b> hai — token id se woh dobara nahi
-     banayi jaayegi. Bina token ke woh do coffee bana dete.</p>
+     Token slip abhi bhi customer ke paas hai. Customer dobara bolega, aur staff dekhega
+     ki order bana ya nahi. Token se jaanchna <b>idempotency</b> hai — token id se coffee dobara nahi
+     banayi jaayegi. Bina token ke staff do coffee bana dete.</p>
      <p><b>"Ek customer 30 coffee maang le?"</b><br>
-     Woh poori dukaan ko block kar dega. Ilaaj: bade orders ke liye alag counter —
-     yeh <b>bulkhead</b> hai. (Grocery store ka "10 items or less" lane bilkul yahi hai.)</p>
-     <p class="tip">🎯 Yeh level ek trick sikhata hai jo interview aur asli kaam
+     Bada order poori dukaan ko block kar dega. Ilaaj: bade orders ke liye alag counter —
+     alag counter <b>bulkhead</b> hai. (Grocery store ka "10 items or less" lane bilkul yahi hai.)</p>
+     <p class="tip">🎯 Coffee shop ka level ek trick sikhata hai jo interview aur asli kaam
      dono mein chalti hai: <b>jab design mein fans jao, use ek insaani cheez
      bana ke socho.</b> Warehouse, restaurant, post office, hospital ka ER —
-     sabne apni scaling problems dashak pehle hal kar li hain, aur unke hal
+     sabne apni scaling problems dashak pehle hal kar li hain, aur roz ki jagahon ke hal
      tumhe pehle se pata hain.</p>`,
   ],
   stages: [
@@ -2189,15 +2189,15 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
     'Fans jaane par insaani analogy se raasta nikaal sakte ho',
   ],
   homework: `Koi ek roz ki jagah chuno — restaurant, hospital ER, ya airport check-in.
-    Uske 5 hisse likho aur unke system-naam do. Phir poochho: "yeh log overload
-    kaise sambhaalte hain?" Uska jawab lagbhag hamesha tumhare system par bhi lagta hai.`,
+    Chuni gayi jagah ke 5 hisse likho aur hisson ke system-naam do. Phir poochho: "jagah ke log overload
+    kaise sambhaalte hain?" Overload sambhaalne ka jawab lagbhag hamesha tumhare system par bhi lagta hai.`,
   cards: [
     { front: 'Coffee shop asli mein kya hai?', back: 'Ek <b>task processing system</b> — orders (requests) → limited resources (pool) → completion notification. Wahi shape jo Uber/DoorDash/transcoding ka hai.' },
     { front: 'Senior engineers yahan kyun phisalte hain?', back: 'Jaani-pehchani cheez abstraction <b>chhupa</b> deti hai. Wahi log "Design Uber" par turant queues ki baat karte hain par "coffee shop" par literal jawab dete hain.' },
     { front: '8 baristas, 3 machines — barista badhao?', back: 'Kuch nahi hoga. Bottleneck <b>machines</b> hain. Wahi galti: app instances badhana jab DB pool 50 par atka ho. Pehle bottleneck dhoondo.' },
-    { front: 'Token slip = ?', back: '<b>202 Accepted + job id + status endpoint</b>, aur woh id <b>idempotency</b> ka anchor bhi hai — dobara maangne par nayi coffee nahi banti.' },
+    { front: 'Token slip = ?', back: '<b>202 Accepted + job id + status endpoint</b>, aur job id <b>idempotency</b> ka anchor bhi hai — dobara maangne par nayi coffee nahi banti.' },
     { front: '"10 items or less" lane = ?', back: '<b>Bulkhead.</b> Bada order poori line block na kare. Systems mein: bhaari kaam alag pool/queue mein.' },
-    { front: 'Design mein fans jao toh?', back: 'Use ek <b>insaani cheez</b> bana ke socho — dukaan, warehouse, ER. Unhone queueing aur degradation dashakon pehle hal kiya, aur woh hal tumhe intuitively pata hain.' },
+    { front: 'Design mein fans jao toh?', back: 'Use ek <b>insaani cheez</b> bana ke socho — dukaan, warehouse, ER. Dukaan, warehouse, ER ne queueing aur degradation dashakon pehle hal kiya, aur queueing aur degradation ke hal tumhe intuitively pata hain.' },
   ],
 },
 
@@ -2214,23 +2214,23 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
     'Ek dohrane laayak dhaancha: FR → NFR → estimate → API → data → components → tradeoffs → failure modes',
     'Functional vs non-functional ka saaf farak',
     '"10x par kya sabse pehle tootega" — ek sawaal jo bottleneck khol deta hai',
-    'Har design ke saath uska rollback aur migration plan',
+    'Har design ka rollback aur migration plan',
   ],
   lesson: [
     `<h3>📖 Ek hi kram, har baar</h3>
-     <p>Achhe engineers har design ko naye siray se nahi sochte — unke paas ek
-     <b>dhaancha</b> hota hai jo woh har baar chalate hain. Isse woh cheezein
+     <p>Achhe engineers har design ko naye siray se nahi sochte — engineers ke paas ek
+     <b>dhaancha</b> hota hai jo engineers har baar chalate hain. Dhaanche se zaroori cheezein
      chhootni band ho jaati hain jo warna chhootti hain.</p>
-     <pre>1. FR         system ko KYA karna hai (3–5 line, isse zyada nahi)
+     <pre>1. FR         system ko KYA karna hai (zyada se zyada 3–5 line)
 2. NFR        kitna, kitni jaldi, kitna bharosemand, kitna paisa
 3. Estimate   traffic, data size, growth — mote numbers
-4. API        entities → endpoints (5 minute, isse zyada nahi)
+4. API        entities → endpoints (zyada se zyada 5 minute)
 5. Data model access patterns → schema → indexes
 6. Components services, queues, caches, stores
-7. Tradeoffs  har bade faisle ka "kyun" aur uski keemat
+7. Tradeoffs  har bade faisle ka "kyun" aur faisle ki keemat
 8. Failure    10x par kya tootega, aur har hop gir jaaye toh kya</pre>
      <p class="tip">🎯 Log kadam 6 se shuru kar dete hain — boxes banane se.
-     Aur isiliye unka design "sahi" ho ke bhi <b>bina karan</b> ka rehta hai.
+     Aur isiliye boxes se shuru karne walon ka design "sahi" ho ke bhi <b>bina karan</b> ka rehta hai.
      Kadam 2 aur 3 sabse zyada waqt bachaate hain: aksar unhi se pata chalta hai ki
      poora problem hi bahut chhota ya bahut bada hai jitna socha tha.</p>
      <h3>🔀 FR vs NFR</h3>
@@ -2242,10 +2242,10 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
        <tr><td>Notification jaata hai</td><td>Peak 5,000 rps</td></tr>
      </table>
      <p>NFR hi <b>architecture</b> banate hain. "User order de sakta hai" har design mein
-     mumkin hai. "Order kabhi kho na sake, p99 200ms, 5000 rps" — yeh teen shartein
+     mumkin hai. "Order kabhi kho na sake, p99 200ms, 5000 rps" — saari teen shartein
      milke tumhare aadhe faisle khud kar deti hain.</p>`,
     `<h3>🔟 "10x par kya sabse pehle tootega?"</h3>
-     <p>Yeh ek sawaal poore review ka nichod hai. Aur uska jawab lagbhag hamesha
+     <p>Traffic badhne ka ek sawaal poore review ka nichod hai. Aur pehle tootne wali cheez ka jawab lagbhag hamesha
      un cheezon mein se ek hota hai jo <b>CPU se bahut pehle</b> khatam ho jaati hain:</p>
      <pre>DB connection pool      ← sabse aam
 thread / worker pool
@@ -2255,13 +2255,13 @@ queue ki capacity
 file descriptors
 ek shared lock</pre>
      <p>Dhyaan do: <b>ek bhi CPU nahi hai.</b> Isiliye "CPU 10%, health green,
-     phir bhi timeout" itna aam hai. 10x ka sawaal tumhe woh limit dhoondhne
+     phir bhi timeout" itna aam hai. 10x ka sawaal tumhe pehle tootne wali limit dhoondhne
      par majboor karta hai jo dashboard par nahi dikhti.</p>
      <h3>🔙 Do sawaal jo aksar chhoot jaate hain</h3>
      <p><b>"Migration plan kya hai?"</b> — greenfield design interview mein bhi aksar
-     ek purana system hota hai. Uske bina design ek <b>kalpana</b> hai. Dual-write,
+     ek purana system hota hai. Migration plan ke bina design ek <b>kalpana</b> hai. Dual-write,
      backfill, verify, cutover — wahi kram jo tumne Data track mein seekha.</p>
-     <p><b>"Rollback mein kitna waqt lagega?"</b> — yeh ek design ka gun hai, ops ka
+     <p><b>"Rollback mein kitna waqt lagega?"</b> — rollback ka waqt ek design ka gun hai, ops ka
      detail nahi. Agar jawab "20 minute" hai toh tumhara har change 20 minute ka
      risk hai. Agar "20 second (flag)" hai toh tum tez chal sakte ho.</p>
      <h3>✅ Review checklist</h3>
@@ -2394,7 +2394,7 @@ ek shared lock</pre>
   ],
   interview: {
     title: 'Interview Round — Review',
-    instructions: 'Yeh sawaal tumhare kaam karne ka tareeka dikhate hain. 🎤',
+    instructions: 'Review ke sawaal tumhare kaam karne ka tareeka dikhate hain. 🎤',
     questions: [
       {
         q: '"Ek design review mein tum kya dhoondte ho?"',
@@ -2438,15 +2438,15 @@ ek shared lock</pre>
     '10x ka sawaal poochh ke bottleneck naam se nikaal sakte ho',
     'Har design ke saath migration aur rollback ka plan maangte ho',
   ],
-  homework: `Apne kaam ka koi ek system lo aur uspar yeh dhaancha chalao — 20 minute mein.
+  homework: `Apne kaam ka koi ek system lo aur system par review ka dhaancha chalao — 20 minute mein.
     Sabse zaroori: "10x traffic par sabse pehle kya tootega?" Agar jawab nahi pata,
     toh ek load test lagao. Aur likho ki rollback mein kitna waqt lagta hai.`,
   cards: [
-    { front: 'Design ka kram?', back: 'FR → NFR → estimates → API → data model → components → tradeoffs → <b>failure modes</b>. Log kadam 6 (boxes) se shuru karte hain — isiliye unka design bina karan ka rehta hai.' },
+    { front: 'Design ka kram?', back: 'FR → NFR → estimates → API → data model → components → tradeoffs → <b>failure modes</b>. Log kadam 6 (boxes) se shuru karte hain — isiliye boxes se shuru karne walon ka design bina karan ka rehta hai.' },
     { front: 'FR vs NFR?', back: '<b>FR</b> = kya karta hai (har design mein mumkin). <b>NFR</b> = kaisa (p99 200ms, 99.9%, 5000 rps, kabhi kho na sake). <b>NFR hi architecture banate hain.</b>' },
     { front: '10x par kya tootega?', back: 'DB connection pool · thread pool · downstream rate limit · hot partition · queue capacity · file descriptors. <b>CPU,IO ya network bhi first bottleneck ho sakte hain</b> — isiliye "CPU 10% par timeout" itna aam hai.' },
     { front: 'Review mein sabse zyada kya skip hota hai?', back: '<b>Failure modes.</b> Happy path banana majedaar hai; "har dependency gir jaaye toh kya" boring. Par production ka 90% waqt wahin jaata hai.' },
-    { front: 'Do sawaal jo chhoot jaate hain?', back: '<b>"Migration plan kya hai?"</b> (bina uske design ek kalpana hai) aur <b>"rollback mein kitna waqt?"</b> (20 min = har change 20 min ka risk; 20 sec = tez chal sakte ho).' },
+    { front: 'Do sawaal jo chhoot jaate hain?', back: '<b>"Migration plan kya hai?"</b> (migration plan ke bina design ek kalpana hai) aur <b>"rollback mein kitna waqt?"</b> (20 min = har change 20 min ka risk; 20 sec = tez chal sakte ho).' },
     { front: 'Production mein kaise le jaayein?', back: 'Flag ke peechhe → <b>shadow traffic</b> se compare → 1%→10%→100% → har step par error rate + ek <b>business metric</b> (silent data bugs error rate par nahi dikhte).' },
   ],
 },
@@ -2468,12 +2468,12 @@ ek shared lock</pre>
   ],
   lesson: [
     `<h3>👑 Aakhri imtihaan</h3>
-     <p>Yeh app tumne parts se shuru kiya tha — ek request ka safar, ek API ka contract,
-     ek index, ek timeout. Phir tumne unhe <b>shapes</b> mein pehchana.
+     <p>App tumne parts se shuru kiya tha — ek request ka safar, ek API ka contract,
+     ek index, ek timeout. Phir tumne parts ko <b>shapes</b> mein pehchana.
      Ab dono ek saath.</p>
      <p class="tip">🍽️ <b>Problem:</b> Ek food delivery system. Users nearby restaurants
      dekhte hain, order dete hain, order ek pipeline se guzarta hai (accept → cook →
-     pickup → deliver), aur woh live track hota hai. 8 PM par ek shehar mein
+     pickup → deliver), aur order live track hota hai. 8 PM par ek shehar mein
      8,000 requests/second aate hain — aur unmein se aadhe <b>ek hi ilaake</b> se.</p>
      <h3>🧩 Pehle shapes ginno</h3>
      <table>
@@ -2489,7 +2489,7 @@ ek shared lock</pre>
      <p>Saat shapes. Aur dhyaan do — tumne kuch <b>naya</b> nahi seekha.
      Har failure mode tumhe pehle se pata hai, aur har ek ka ilaaj bhi.
      Yahi pattern pehchanne ka poora faayda hai.</p>
-     <h3>🎯 Ab isse chalaake dikhao</h3>
+     <h3>🎯 Ab design chalaake dikhao</h3>
      <p>Neeche ek chalta hua system hai jo abhi <b>naive</b> hai: koi cache nahi,
      koi timeout nahi, pool chhota, aur ek hot cell. Tumhara kaam:
      bottleneck <b>maap ke</b> nikaalo aur ek-ek karke theek karo —
@@ -2552,7 +2552,7 @@ ek shared lock</pre>
       instructions: 'Ab khaali page se. Har slot ka sahi chunav — aur galton ka why zaroor padho.',
       brief: `<b>Food delivery, ek shehar, 8 PM peak.</b> 8,000 rps, aadha traffic ek ilaake se.
         Order kabhi kho na sake, payment double na ho, aur live tracking chale.
-        Yeh poore app ke saare tracks ek saath maangta hai.`,
+        Food delivery poore app ke saare tracks ek saath maangta hai.`,
       requirements: ['8,000 rps peak', 'p99 &lt; 300ms', 'Order kabhi kho na sake', 'Double charge kabhi nahi'],
       pass: 17,
       slots: [
@@ -2606,8 +2606,8 @@ ek shared lock</pre>
       ],
       verdicts: {
         great: '👑 <b>Architect Mahaguru.</b> Saat shapes, saat failure modes, aur har ek ka ilaaj — sab pehle se pata tha. Yahi poore app ka nichod hai.',
-        ok: '💪 Bahut kuch sahi hai. Jahan galti hui, wahan ek shape ka failure mode chhoot gaya — uska why padho, woh exact incident kisi na kisi din aata hai.',
-        bad: '🤔 Dobara shuru karo: pehle har hisse ka <b>shape</b> likho, phir uska known failure mode. Ilaaj apne aap saamne aa jaayega.',
+        ok: '💪 Bahut kuch sahi hai. Jahan galti hui, usi hisse mein ek shape ka failure mode chhoot gaya — chhoote failure mode ka why padho, chhoota hua exact incident kisi na kisi din aata hai.',
+        bad: '🤔 Dobara shuru karo: pehle har hisse ka <b>shape</b> likho, phir hisse ka known failure mode. Ilaaj apne aap saamne aa jaayega.',
       },
     },
     {
@@ -2687,7 +2687,7 @@ ek shared lock</pre>
   ],
   interview: {
     title: 'FINAL Round — Architect',
-    instructions: 'Aakhri chaar sawaal. Yeh poore app ka saar hain. 🎤👑',
+    instructions: 'Aakhri chaar sawaal. Aakhri sawaal poore app ka saar hain. 🎤👑',
     questions: [
       {
         q: '"Ek line mein — achha system design kya hai?"',
@@ -2769,14 +2769,14 @@ ek shared lock</pre>
   homework: `Aakhri homework, aur sabse asli: apne kaam ka ek system chuno aur uspar
     poora dhaancha chalao — shapes ginno, har ek ka failure mode likho, "10x par kya tootega"
     ka jawab maap ke nikaalo, aur ek cheez dhoondo jo ab <b>hatai</b> ja sakti hai.
-    Phir woh page apni team ko dikhao. Yahi asli design review hai.`,
+    Phir design ka page apni team ko dikhao. Yahi asli design review hai.`,
   cards: [
-    { front: 'Design ka pehla kadam?', back: 'Har hisse ka <b>shape</b> likho. Naam ke saath uska known failure mode aata hai — aur wahi agla sawaal hai. Scale estimate doosra kadam hai.' },
+    { front: 'Design ka pehla kadam?', back: 'Har hisse ka <b>shape</b> likho. Naam ke saath shape ka known failure mode aata hai — aur wahi agla sawaal hai. Scale estimate doosra kadam hai.' },
     { front: 'Food delivery mein kitne shapes?', back: 'Saat — geo, read-heavy, workflow, ledger, realtime fanout, notification, search. Aur har failure mode pehle se pata hai. Yahi patterns ka poora faayda hai.' },
-    { front: '"CPU 10% par timeout" — pehla kadam?', back: '<b>Concurrency limits</b> dekho, CPU nahi. Ek <code>trace</code> lo — 96% waqt aksar <code>pool.acquire()</code> mein hota hai. Health green isliye hai ki usne DB chhua hi nahi.' },
-    { front: 'Naya pattern add karne se pehle?', back: '"Yeh kis cheez ko theek kar raha hai, jo <b>abhi</b> toota hua hai?" aur "iski keemat kya hai?" Keemat na bata sako toh samjha nahi — naam seekha hai.' },
+    { front: '"CPU 10% par timeout" — pehla kadam?', back: '<b>Concurrency limits</b> dekho, CPU nahi. Ek <code>trace</code> lo — 96% waqt aksar <code>pool.acquire()</code> mein hota hai. Health green isliye hai ki health check ne DB chhua hi nahi.' },
+    { front: 'Naya pattern add karne se pehle?', back: '"Naya pattern kis cheez ko theek kar raha hai, jo <b>abhi</b> toota hua hai?" aur "pattern ki keemat kya hai?" Keemat na bata sako toh samjha nahi — naam seekha hai.' },
     { front: 'Achha system design ek line mein?', back: 'Jismein har faisla ek <b>maapi hui zaroorat</b> se aaya ho, aur har faisle ki <b>keemat likhi</b> ho.' },
-    { front: '6 mahine baad kya dekhein?', back: 'Kaunse <b>anumaan galat</b> nikle, aur ab kya <b>hataya</b> ja sakta hai. Jo engineer sirf jodta hai, uska system har saal bhaari hota jaata hai.' },
+    { front: '6 mahine baad kya dekhein?', back: 'Kaunse <b>anumaan galat</b> nikle, aur ab kya <b>hataya</b> ja sakta hai. Jo engineer sirf jodta hai, sirf jodne wale engineer ka system har saal bhaari hota jaata hai.' },
   ],
 },
 ]);
@@ -2788,18 +2788,18 @@ SD.registerLevelsAfter('shapes', 'antipattern', [
 {
   id: 'chooser',
   icon: '🧰',
-  title: 'Kaunsa Aujaar Kab — Aur Uska "Yeh Mat Karo"',
+  title: 'Kaunsa Aujaar Kab — Aur Aujaar Ka Galat Istemaal',
   badge: 'Tool Tapasvi',
   objectives: [
     'Har technology ek <b>kaam</b> ke liye hai, sab kaam ke liye nahi',
     'Har ek ka jaana-pehchana galat istemaal',
     'Interview mein "NoSQL for scale" jaisi baatein kyun kaatti hain',
-    'Ek default stack, aur usse hatne ke saaf karan',
+    'Ek default stack, aur default stack se hatne ke saaf karan',
   ],
   lesson: [
     `<h3>📖 Aujaaron ka naksha</h3>
      <table>
-       <tr><th>Aujaar</th><th>Kis kaam ke liye</th><th>❌ Yeh mat karo</th></tr>
+       <tr><th>Aujaar</th><th>Kis kaam ke liye</th><th>❌ Galat istemaal</th></tr>
        <tr><td><b>Postgres / MySQL</b></td><td>Transactions, joins, constraints — <b>default</b></td><td>Ismein 4 GB videos mat rakho; crore rows par analytics mat chalao</td></tr>
        <tr><td><b>Cassandra / Scylla</b></td><td>Bhaari writes, time-series, known access pattern</td><td>Ad-hoc queries mat maango; joins hai hi nahi; partition key baad mein nahi badal sakte</td></tr>
        <tr><td><b>DynamoDB</b></td><td>Predictable key-value at scale, zero ops</td><td>Access pattern <b>pehle</b> socho — warna scans par bill aur latency dono phatenge</td></tr>
@@ -2808,16 +2808,16 @@ SD.registerLevelsAfter('shapes', 'antipattern', [
        <tr><td><b>Kafka</b></td><td>Durable log, replay, kai consumers, ordering by key</td><td>Sirf background jobs ke liye mat lagao; sync request path mein mat daalo</td></tr>
        <tr><td><b>SQS / RabbitMQ</b></td><td>Background jobs, retries, DLQ</td><td>Replay mat maango; "kai teams ko wahi data" mat maango</td></tr>
        <tr><td><b>S3 / blob</b></td><td>Bytes — files, media, backups, data lake</td><td>Database mat banao; usme "query" karne ki koshish mat karo</td></tr>
-       <tr><td><b>ClickHouse / BigQuery</b></td><td>OLAP — crore rows par aggregate</td><td>Single-row updates mat karo; ise OLTP ki jagah mat use karo</td></tr>
+       <tr><td><b>ClickHouse / BigQuery</b></td><td>OLAP — crore rows par aggregate</td><td>Single-row updates mat karo; ClickHouse / BigQuery ko OLTP ki jagah mat use karo</td></tr>
        <tr><td><b>CDN</b></td><td>Static + rarely-changing dynamic, edge par</td><td>Personalized responses bina <code>Vary</code>/cache-key ke mat cache karo</td></tr>
      </table>`,
-    `<h3>🎯 Ek default stack — aur usse hatne ke karan</h3>
-     <p>Zyadatar systems ki shuruaat yeh honi chahiye:</p>
+    `<h3>🎯 Ek default stack — aur default stack se hatne ke karan</h3>
+     <p>Zyadatar systems ki shuruaat aisi honi chahiye:</p>
      <pre>Postgres    +    Redis    +    S3    +    ek queue
 (sab kuch)    (cache/lock)   (bytes)   (background jobs)</pre>
-     <p>Aur uske baad, sirf tab hato jab ek <b>maapa hua</b> karan ho:</p>
+     <p>Aur default stack ke baad, sirf tab hato jab ek <b>maapa hua</b> karan ho:</p>
      <table>
-       <tr><th>Yeh maapa</th><th>Toh yeh jodo</th></tr>
+       <tr><th>Maapi hui dikkat</th><th>Toh aujaar jodo</th></tr>
        <tr><td>Full-text search par LIKE full scan kar raha hai</td><td>Elasticsearch</td></tr>
        <tr><td>Kai teams ko wahi events chahiye, ya replay chahiye</td><td>Kafka</td></tr>
        <tr><td>Analytics queries OLTP DB ka buffer pool dho rahi hain</td><td>Columnar store (ClickHouse/BigQuery)</td></tr>
@@ -2825,19 +2825,19 @@ SD.registerLevelsAfter('shapes', 'antipattern', [
        <tr><td>Users door hain aur latency physics ki hadd par hai</td><td>CDN / regional deployment</td></tr>
      </table>
      <p class="tip">🎯 Dhyaan do ki har row mein baayen taraf ek <b>maapi hui cheez</b> hai —
-     "shayad aage chal ke" nahi. Yeh table ek permission slip hai: jab woh cheez
-     sach mein ho rahi ho, tab naya aujaar lena bilkul sahi hai. Us se pehle woh
+     "shayad aage chal ke" nahi. Maapi hui dikkaton ki table ek permission slip hai: jab maapi hui dikkat
+     sach mein ho rahi ho, tab naya aujaar lena bilkul sahi hai. Dikkat maapne se pehle naya aujaar
      sirf complexity hai jiska koi kharidaar nahi.</p>
      <h3>🗣️ Interview mein kya nahi bolna</h3>
      <table>
-       <tr><th>❌ Yeh</th><th>✅ Iski jagah</th></tr>
+       <tr><th>❌ Khaali daava</th><th>✅ Daave ki jagah</th></tr>
        <tr><td>"Scale ke liye NoSQL chahiye"</td><td>"Is table ka write rate X hai jo ek node se bahar hai, aur access pattern hamesha by user_id — isliye Cassandra"</td></tr>
        <tr><td>"Mere data mein relationships hain isliye SQL"</td><td>"Mujhe multi-row transactions aur ad-hoc joins chahiye — isliye Postgres"</td></tr>
-       <tr><td>"Redis laga denge"</td><td>"Yeh key, yeh structure (sorted set), yeh TTL, aur miss par yeh hota hai"</td></tr>
+       <tr><td>"Redis laga denge"</td><td>"Cache ki key, data ka structure (sorted set), key ka TTL, aur miss par kya hota hai"</td></tr>
        <tr><td>"Kafka laga denge"</td><td>"Mujhe replay aur teen independent consumers chahiye — warna SQS kaafi thi"</td></tr>
      </table>
-     <p>Farak yeh hai ki daayen taraf har jawab mein ek <b>zaroorat</b> hai
-     jisse woh chunav nikla. Baayen taraf sirf aujaar ka naam hai.</p>`,
+     <p>Farak hai ki daayen taraf har jawab mein ek <b>zaroorat</b> hai
+     jisse aujaar ka chunav nikla. Baayen taraf sirf aujaar ka naam hai.</p>`,
   ],
   stages: [
     {
@@ -2855,7 +2855,7 @@ SD.registerLevelsAfter('shapes', 'antipattern', [
     },
     {
       type: 'bins',
-      title: 'Yeh statement — sahi ya kaatne laayak?',
+      title: 'Statement — sahi ya kaatne laayak?',
       instructions: 'Design review mein tum kya kehte?',
       bins: [
         { id: 'ok', label: '✅ Chalega' },
@@ -2980,7 +2980,7 @@ SD.registerLevelsAfter('shapes', 'antipattern', [
       verdicts: {
         great: '🏆 Boring stack, saaf karan. Har aujaar ek asli zaroorat se aaya, "aage chal ke" se nahi.',
         ok: '👍 Zyadatar sahi. Ek-do jagah tum aaj ki keemat ek kal ki problem ke liye chuka rahe ho.',
-        bad: '🤔 200 customers hain. Har chunav se pehle poochho: "yeh kis cheez ko theek kar raha hai, jo ABHI toota hua hai?"',
+        bad: '🤔 200 customers hain. Har chunav se pehle poochho: "chuna gaya aujaar kis cheez ko theek kar raha hai, jo ABHI toota hua hai?"',
       },
     },
   ],
@@ -3025,17 +3025,17 @@ SD.registerLevelsAfter('shapes', 'antipattern', [
     ],
   },
   success: [
-    'Har aam technology ka kaam aur uska "yeh mat karo" bata sakte ho',
+    'Har aam technology ka kaam aur technology ka galat istemaal bata sakte ho',
     'Ek default stack se shuru karke maape hue karan par hat sakte ho',
     '"NoSQL for scale" jaisi baaton ko kaat sakte ho',
     'Har chunav ke saath ek zaroorat bol sakte ho',
   ],
   homework: `Apne system ke saare data stores aur infra pieces list karo.
-    Har ek ke saamne likho: (1) kaunsi zaroorat se aaya, (2) woh zaroorat aaj bhi hai?,
-    (3) kya iska kaam kisi doosre maujood system se ho sakta hai?
+    Har ek ke saamne likho: (1) kaunsi zaroorat se aaya, (2) aujaar laane ki zaroorat aaj bhi hai?,
+    (3) kya aujaar ka kaam kisi doosre maujood system se ho sakta hai?
     Agar do systems ek jaisa kaam kar rahe hain, ek hataane ka case ban gaya.`,
   cards: [
-    { front: 'Default stack?', back: '<b>Postgres + Redis + S3 + ek queue.</b> Isse hato sirf jab koi <b>maapi hui</b> cheez majboor kare — "aage chal ke" ek karan nahi hai.' },
+    { front: 'Default stack?', back: '<b>Postgres + Redis + S3 + ek queue.</b> Default stack se hato sirf jab koi <b>maapi hui</b> cheez majboor kare — "aage chal ke" ek karan nahi hai.' },
     { front: 'Redis source of truth?', back: '<b>Nahi.</b> Memory-first — dataset RAM mein aana hi padega, aur crash par aakhri kuch second ke writes ja sakte hain. Cache/counters/locks/sorted sets ke liye bemisaal.' },
     { front: '"Scale ke liye NoSQL" — kya kaato?', back: 'Poochho <b>kya</b> scale nahi kar raha: writes? dataset size? hot partition? Postgres bhi bahut achha scale karta hai. Karan hona chahiye: write rate + access pattern.' },
     { front: 'Kafka vs SQS?', back: 'Kafka tabhi jab <b>replay</b>, <b>kai independent consumers</b>, ya <b>key-wise ordering</b> chahiye. Warna SQS simple aur sasti hai.' },

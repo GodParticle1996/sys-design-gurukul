@@ -28,7 +28,7 @@ SD.extendLevel('scheduling', {
   ],
   lesson: [
     `<h3>🌙 Raat 3 baje — cron wali machine mar gayi</h3>
-     <p>Aadhi raat ko woh machine band ho gayi jis par cron chal raha tha. Teen ghante tak
+     <p>Aadhi raat ko cron chalane wali machine band ho gayi. Teen ghante tak
      na billing jobs chale, na invoice emails gaye, na exports bane, na cleanup hua. Cron ne
      kisi ko nahi bataya — na retry, na alert. Subah 8 baje ek customer ka email aaya:
      "meri invoice kahan hai?"</p>
@@ -82,7 +82,7 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
      purana? → wapas <code>pending</code>, <code>attempt_count + 1</code>. 60 s vs 10 s ka
      matlab 5 heartbeat chhootne ki chhoot — dheeme par zinda worker ko maara nahi jaata.
      <code>max_attempts</code> par pahunche toh dead letter.</p>
-     <p class="tip">🎯 Kab yeh design kaafi nahi: 4 ghante ka job jisme checkpoints chahiye,
+     <p class="tip">🎯 Kab scheduler ka design kaafi nahi: 4 ghante ka job jisme checkpoints chahiye,
      10,000 sub-tasks ka fan-out/aggregate (Temporal, Step Functions), ya external API calls ki
      zanjeer jisme compensation chahiye (saga). Baaki cron-style kaam ke liye yahi kaafi hai —
      aur sabse mushkil hissa code nahi, <b>har job ko pehle din se idempotent banana</b> hai.</p>`,
@@ -111,7 +111,7 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
                    'Bas workers badha do — scheduler gira toh workers khud scheduler wapas le aayenge',
                  ], answer: 0,
                  explain: 'Scheduler bhi ek machine hai — gir sakta hai, aur girne par shor nahi hota: job chala hi nahi toh error log bhi nahi. Isliye scheduler ki sehat aur "job ka nateeja aaya ya nahi" alag se monitor karo (missed-run alert). Schedule aur state durable rakho, aur failover test karo. Tez disk khatra kam karti hai, mitaati nahi.',
-                 wrongHints: ['Behtar disk bhi marti hai — sawaal yeh hai ki marne par kya hota hai.', 'Technology se farq nahi padta, design se padta hai.', 'Jobs zaroori the — invoices bhejni hi thin.'] , choiceExplanations: [
+                 wrongHints: ['Behtar disk bhi marti hai — sawaal hai ki marne par kya hota hai.', 'Technology se farq nahi padta, design se padta hai.', 'Jobs zaroori the — invoices bhejni hi thin.'] , choiceExplanations: [
                    'Scheduler bhi ek machine hai — gir sakta hai, aur girne par shor nahi hota: job chala hi nahi toh error log bhi nahi. Isliye scheduler ki sehat aur "job ka nateeja aaya ya nahi" alag se monitor karo (missed-run alert). Schedule aur state durable rakho, aur failover test karo. Tez disk khatra kam karti hai, mitaati nahi.',
                    'Tez disk bhi kharab hoti hai. Scheduler girne ka plan aur missed-run alert phir bhi chahiye.',
                    'Job chala hi nahi toh log aayega hi nahi. Chuppi ka matlab theek hona nahi — alag alert chahiye.',
@@ -199,7 +199,7 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
       title: '🐳 Lab — leader election, idempotency aur watchdog',
       project: '08-scheduler',
       exercise: 'ex1-leader-election',
-      goal: 'Teen scheduler nodes chalao, leader maaro, failover ka waqt naapo; phir dekho ki "zombie" leader bina fencing ke duplicate kaise banata hai, aur idempotency key usse kaise rokti hai.',
+      goal: 'Teen scheduler nodes chalao, leader maaro, failover ka waqt naapo; phir dekho ki "zombie" leader bina fencing ke duplicate kaise banata hai, aur idempotency key duplicate ko kaise rokti hai.',
       why: `Lab mein ek chhota lock server (Redis jaisa, TTL ke saath), teen schedulers aur ek
         "billing" sink hai jo har charge ginta hai. Worker pool <code>SKIP LOCKED</code> jaisa
         claim karta hai, heartbeat bhejta hai, aur watchdog atke jobs wapas laata hai.`,
@@ -268,7 +268,7 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
     },
   ],
   success: [
-    'Main scheduler ke teen failure modes aur unke ilaaj bata sakta hoon',
+    'Main scheduler ke teen failure modes aur failure modes ke ilaaj bata sakta hoon',
     'Main lease TTL, renew aur watchdog timeout ko saath mein tune kar sakta hoon',
   ],
   cards: [
@@ -278,8 +278,8 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
     { front: 'Watchdog kaise kaam karta hai?', back: 'Worker har 10 s heartbeat likhta hai; watchdog har minute running + heartbeat > 60 s wali rows ko pending karta hai aur attempt_count badhata hai. max_attempts par dead letter.' },
   ],
   homework: `<p><b>Naya (video se):</b> apne cron jobs ki list banao aur har ek ke saamne
-    likho — agar yeh job aaj do baar chal jaaye toh kya hoga? Jahan jawab "double charge"
-    ya "double email" hai, wahan pehle idempotency, phir hi high availability.</p>`,
+    likho — agar cron job aaj do baar chal jaaye toh kya hoga? Jahan jawab "double charge"
+    ya "double email" hai, aise jobs mein pehle idempotency, phir hi high availability.</p>`,
 });
 
 function leaseModel(k) {
@@ -299,7 +299,7 @@ SD.extendLevel('locks', {
      book karte hain. Teeno <code>free</code> padhte hain, teeno <code>booked</code> likhte
      hain, teeno ko success — ek seat teen baar biki. Pehla jawab hota hai: critical section
      par <code>synchronized</code> (ya mutex) laga do.</p>
-     <p>Ek process ke threads ke liye yeh sahi hai. Par service teen machines par chal rahi hai,
+     <p>Ek process ke threads ke liye synchronized sahi hai. Par service teen machines par chal rahi hai,
      load balancer ke peechhe — ab teen <b>alag processes</b> ek saath critical section mein hain,
      aur har process ka lock sirf apne threads ko rokta hai. Language-level lock distributed
      system mein <b>kuch nahi rokta</b>.</p>
@@ -351,7 +351,7 @@ SD.extendLevel('locks', {
     },
   ],
   cards: [
-    { front: 'synchronized distributed system mein kyun fail hota hai?', back: 'Woh sirf ek process ke threads ko rokta hai. Teen machines = teen processes = teen alag locks. Shared resource (DB row) par lock/version chahiye.' },
+    { front: 'synchronized distributed system mein kyun fail hota hai?', back: 'synchronized sirf ek process ke threads ko rokta hai. Teen machines = teen processes = teen alag locks. Shared resource (DB row) par lock/version chahiye.' },
   ],
 });
 
@@ -361,7 +361,7 @@ SD.extendLevel('locks', {
 SD.extendLevel('contention', {
   lesson: [
     `<h3>⚖️ Optimistic vs pessimistic — conflict rate faisla karta hai</h3>
-     <p><b>Optimistic</b> (read committed par chalta hai): row padho aur uska <b>version</b> yaad
+     <p><b>Optimistic</b> (read committed par chalta hai): row padho aur row ka <b>version</b> yaad
      rakho → kaam karo → likhte waqt check karo ki version wahi hai. Wahi hai → update +
      version + 1. Badal gaya → rollback aur <b>poora kaam dobara</b>.</p>
      <pre>UPDATE seats SET status = 'booked', version = version + 1
@@ -393,7 +393,7 @@ T2: B padha (lock B) ... ab A likhna hai → A par T1 ka lock → ruka
       scenario: `Ek booking service. Kabhi traffic alag-alag seats par hota hai (conflict kam),
         kabhi ek hi hot event ki kuch seats par (conflict zyada).`,
       knobs: [
-        { id: 'conflict', label: 'Conflict rate (kitne % transactions ek hi row par takraate hain)', min: 0, max: 60, step: 5, value: 40, unit: '%', note: 'Hot event par yeh bahut badh jaata hai.' },
+        { id: 'conflict', label: 'Conflict rate (kitne % transactions ek hi row par takraate hain)', min: 0, max: 60, step: 5, value: 40, unit: '%', note: 'Hot event par conflict rate bahut badh jaata hai.' },
         { id: 'mode', label: 'Tareeka (0 = optimistic/version · 1 = pessimistic/FOR UPDATE)', min: 0, max: 1, step: 1, value: 0, unit: '', note: 'Optimistic = retry. Pessimistic = intezaar (aur deadlock ka khatra).' },
         { id: 'order', label: 'Locks ek hi kram mein lete ho? (0 = nahi · 1 = haan)', min: 0, max: 1, step: 1, value: 0, unit: '', note: 'Sab transactions A pehle phir B — toh deadlock ka chakra ban hi nahi sakta.' },
       ],
@@ -476,7 +476,7 @@ SD.extendLevel('migrations', {
      <pre>Offline dump: 10 Gbit link, poori tarah bhara (asal mein ho hi nahi sakta, disk I/O rokti hai)
    50 TB  →  lagbhag 11–12 ghante
    12 ghante × 1,00,000 writes/s  ≈  4.3 ARAB writes jo hue hi nahi
-   → "yeh zero downtime nahi, company ka diwaaliya hai"</pre>
+   → "offline dump zero downtime nahi, company ka diwaaliya hai"</pre>
      <h3>🪤 Application-level dual writes — jaal</h3>
      <p>"App dono databases mein likh de" — sunne mein aasan. Par Oracle mein write safal,
      naye DB mein fail → ab do sach. Bina coordinator ke distributed transaction hai hi nahi
@@ -485,22 +485,22 @@ SD.extendLevel('migrations', {
      <p class="tip">🎯 Ilaaj ka siddhant: <b>write hone ki ghatna ko data ke replication se alag
      karo</b>.</p>
      <h3>🪵 Log hi sach hai</h3>
-     <p>Jay Kreps ka "The Log": jo table tum SQL se padhte ho woh ek <b>derived view</b> hai.
-     Sach transaction log hai — Oracle ka redo log, Postgres ka WAL, MySQL ka binlog. Woh 1 lakh
+     <p>Jay Kreps ka "The Log": jo table tum SQL se padhte ho, table ek <b>derived view</b> hai.
+     Sach transaction log hai — Oracle ka redo log, Postgres ka WAL, MySQL ka binlog. Source ke 1 lakh
      writes/second bas ek file mein appends hain. <b>Wahi stream poori strategy hai.</b></p>
      <pre>Debezium (CDC) → khud ko REPLICA dikhata hai, redo log tail karta hai (user ki tarah query nahi)
              → har change JSON/Avro event → KAFKA (100k/s ka dabaav sokhne wala durable buffer)
              → naya service apni raftaar se padhta hai</pre>`,
     `<h3>📸 50 TB ka itihaas kaise jaaye — snapshot + log position</h3>
      <p>Log mein sirf naye changes hain. Purana 50 TB? Debezium ka initial snapshot tables ko
-     chunk-by-chunk padhta hai <b>aur saath mein yaad rakhta hai ki log mein woh kahan tha</b>.
+     chunk-by-chunk padhta hai <b>aur saath mein yaad rakhta hai ki snapshot ke waqt log ki position kya thi</b>.
      Snapshot mein din lagte hain; us dauraan naye writes Kafka mein jama hote rehte hain.
      Snapshot khatam → naya DB base data ke saath (par din bhar purana) → consumer <b>usi log
      position se</b> replay shuru karta hai jahan snapshot shuru hua tha → dheere-dheere "abhi"
      tak — master se ~500 ms peechhe.</p>
      <h3>🔢 Do details jo log bhool jaate hain</h3>
      <p><b>Ordering:</b> ek consumer 1 lakh/s nahi sambhal sakta → Kafka partitions. Par user A
-     ne pehle profile badla aur phir password — yeh kram nahi tootna chahiye. Isliye <b>user id
+     ne pehle profile badla aur phir password — profile aur password badalne ka kram nahi tootna chahiye. Isliye <b>user id
      se partition karo</b>: ek user ke saare events ek partition mein, 100 consumers parallel.</p>
      <p><b>Idempotency:</b> Kafka ek message do baar de sakta hai. "balance = 50" do baar —
      theek. "balance mein se 10 ghatao" do baar — aafat. Isliye jahan ho sake <b>poori row ki
@@ -514,7 +514,7 @@ SD.extendLevel('migrations', {
    1% → 10% → 50% → 100%. Ek user ke do master kabhi nahi.</pre>
      <p><b>Gotcha:</b> monolith ki koi purani report ya background job abhi bhi un 1% users ka
      data Oracle mein padhti hai — jo ab purana hai. Ilaaj: kuch waqt ke liye <b>reverse
-     CDC</b> — naye DB se changes wapas Oracle mein. Galat lagta hai, par yeh ek asthaayi pul
+     CDC</b> — naye DB se changes wapas Oracle mein. Galat lagta hai, par reverse CDC ek asthaayi pul
      hai.</p>
      <p class="tip">🎯 Mindset: koi silver-bullet tool nahi ("bas Snowflake/CockroachDB le lo").
      Data ko <b>bucket nahi, stream</b> samjho. Har kadam <b>reversible</b> ho — proxy ka ek
@@ -531,7 +531,7 @@ SD.extendLevel('migrations', {
           q: '50 TB ko 10 Gbit/s link par (poori speed, 1.25 GB/s) bhejne mein kitne GHANTE lagenge?',
           unit: 'ghante', given: ['50 TB = 50,000 GB', '10 Gbit/s = 1.25 GB/s'],
           answer: 11.1, tol: 0.3,
-          steps: ['50,000 / 1.25 = 40,000 second', '40,000 / 3,600 ≈ 11.1 ghante — aur asal mein disk I/O isse bhi dheema karegi'],
+          steps: ['50,000 / 1.25 = 40,000 second', '40,000 / 3,600 ≈ 11.1 ghante — aur asal mein disk I/O transfer ko aur dheema karegi'],
           lesson: 'Sabse achhe case mein bhi aadha din.',
         },
         {
@@ -661,18 +661,18 @@ SD.extendLevel('migrations', {
   ],
   success: [
     'Main bada online migration CDC + snapshot + shadow + percentage cutover se plan kar sakta hoon',
-    'Main dual writes ka jaal aur uska ilaaj samjha sakta hoon',
+    'Main dual writes ka jaal aur dual writes ka ilaaj samjha sakta hoon',
   ],
   cards: [
     { front: '50 TB offline migration kyun nahi?', back: '10 Gbit perfect link par bhi ~11–12 ghante; 1 lakh writes/s par ≈ 4.3 arab writes chhootenge.' },
     { front: 'App-level dual writes ka jaal?', back: 'Ek DB mein safal, doosre mein fail → do sach. Coordinator ke bina distributed txn nahi; 100 ms blip = 10,000 failed writes. Write ki ghatna ko replication se alag karo — log/CDC.' },
     { front: 'Snapshot + log position?', back: 'Snapshot tables ko chunks mein padhta hai aur saath mein log position yaad rakhta hai; khatam hone par consumer usi position se replay karta hai — history + "abhi" bina gap ke.' },
     { front: 'CDC mein ordering aur idempotency?', back: 'User id se partition karo taaki ek user ke events kram mein rahein; events mein poori row ki state + version bhejo, aur target par "sirf naya version lagao" ka guard rakho — tab duplicate delivery safe. (Delta bhi chal sakta hai, agar event ID se atomic dedupe ho.)' },
-    { front: 'Reverse CDC kab?', back: 'Jab kuch users naye service par shift ho gaye par monolith ki purani reports/jobs abhi bhi unka data padhti hain — naye DB se changes wapas purane mein, asthaayi pul ki tarah.' },
+    { front: 'Reverse CDC kab?', back: 'Jab kuch users naye service par shift ho gaye par monolith ki purani reports/jobs abhi bhi shift hue users ka data padhti hain — naye DB se changes wapas purane mein, asthaayi pul ki tarah.' },
   ],
   homework: `<p><b>Naya (50 TB video se):</b> apne sabse bade table ke liye likho — offline dump
     kitne ghante lega, aur us dauraan kitne writes aayenge? Phir likho ki tumhare database
-    ka "log" kya hai (binlog/WAL) aur usse kaunsa CDC tool padh sakta hai.</p>`,
+    ka "log" kya hai (binlog/WAL) aur log ko kaunsa CDC tool padh sakta hai.</p>`,
 });
 
 function cdcModel(k) {
@@ -757,7 +757,7 @@ SD.registerLevelsAfter('dist', 'clocks', [
   ],
   lesson: [
     `<h3>☎️ Paanch kamre, tin-can telephone</h3>
-     <p>Ek machine ho toh aasan hai — uski RAM hi sach hai. Par woh ek single point of failure
+     <p>Ek machine ho toh aasan hai — machine ki RAM hi sach hai. Par akeli machine ek single point of failure
      hai. Toh paanch machines ko <b>ek jaisa</b> vyavhaar karna hai. Kyun mushkil?</p>
      <table>
        <tr><th>Tin-can ki duniya</th><th>Asli naam</th></tr>
@@ -768,12 +768,12 @@ SD.registerLevelsAfter('dist', 'clocks', [
      <p>Yahan maan ke chalte hain ki koi jhooth nahi bolta, bas bharosemand nahi hai (crash-stop
      model). Sab ek saath chillayein toh <b>split brain</b>: kamra 1-2 "$50,000" maanta hai,
      kamra 4-5 "$51,000", kamra 3 deewar dekh raha hai.</p>
-     <p>Paxos is problem ka purana devta tha — itna mushkil ki uske lekhak ko baad mein
+     <p>Paxos is problem ka purana devta tha — itna mushkil ki Paxos ke lekhak ko baad mein
      "Paxos Made Simple" likhna pada. <b>Raft</b> (Stanford, 2013-14) ka ek hi maqsad tha:
      <b>samajh mein aaye</b>.</p>
      <h3>👑 Har byte par chunav nahi — ek leader</h3>
      <p>Har password change par paanch-node ka chunav karoge toh baat-cheet hi saara
-     performance kha jaayegi. Isliye: <b>ek leader</b>, saare writes uske paas, followers bas
+     performance kha jaayegi. Isliye: <b>ek leader</b>, saare writes leader ke paas, followers bas
      copy karte hain. Leader hardcode nahi kar sakte (node 1 jal gaya toh sab ruk jaayega) —
      leader <b>apne aap</b> chuna jaata hai.</p>
      <p>Teen states: <b>follower</b> (sunta hai), <b>candidate</b> (leader banna chahta hai),
@@ -782,14 +782,14 @@ SD.registerLevelsAfter('dist', 'clocks', [
      <h3>🎲 Random timeout — ek chhoti chaal, bada asar</h3>
      <p>Agar sab followers 500 ms timeout rakhte, toh 501 ms par sab ek saath candidate bante
      aur vote bant jaate. Raft mein har node <b>random</b> timeout chunta hai (jaise 150–300 ms).
-     Node 1 ka 175 ms pehle bajta hai → woh candidate: <b>term badhata hai, khud ko vote deta
+     Node 1 ka 175 ms pehle bajta hai → pehle jaaga node candidate: <b>term badhata hai, khud ko vote deta
      hai, sabse RequestVote maangta hai</b>.</p>`,
     `<h3>🗳️ Term — election ka saal</h3>
      <p>Distributed system mein deewar ki ghadi bekaar hai (Clocks level yaad karo). Raft
      <b>logical time</b> use karta hai: term 1, term 2, term 3. Agar tumhe apne se <b>bada
      term</b> dikha → tum purane ho → term update karo aur follower ban jao. Higher term observe hone tak old leader khud ko leader maan sakta hai; quorum rules usko new conflicting committed history banane se rokte hain.</p>
      <p>Follower vote tab deta hai jab (1) is term mein pehle kisi ko vote nahi diya, aur (2)
-     candidate ka log kam se kam uske jitna up-to-date hai.</p>
+     candidate ka log kam se kam vote dene wale follower ke log jitna up-to-date hai.</p>
      <h3>🔢 Quorum — majority hi kyun</h3>
      <pre>5 nodes → quorum 3    3 nodes → quorum 2    100 nodes → quorum 51</pre>
      <p>Ek seedha ganit: <b>kisi set ki koi bhi do majorities kam se kam ek node par milti
@@ -801,7 +801,7 @@ SD.registerLevelsAfter('dist', 'clocks', [
 3. AppendEntries → followers apne log mein likh kar ack
 4. leader QUORUM ka intezaar (khud samet)
 5. COMMIT → apni state machine par apply → client ko "success"
-6. agli heartbeat → followers ko "entry 100 committed", woh bhi apply karte hain</pre>
+6. agli heartbeat → followers ko "entry 100 committed", followers bhi apply karte hain</pre>
      <p class="tip">🎯 Junior soch: "leader disk par likh ke done bol dega." Nahi — leader
      tabhi mara toh followers ko x = 10 pata hi nahi. Current-term entry <b>durable majority</b> par leader commit index advance kar sakta hai; older-term entries directly replica-count se commit nahi hoti, committed prefix ke through hoti hain (Raft §5.4.2). Linearizable reads ko appropriate read protocol bhi chahiye; majority count alone complete CAP proof nahi.</p>`,
   ],
@@ -811,12 +811,12 @@ SD.registerLevelsAfter('dist', 'clocks', [
       title: 'Leader election — sahi kram',
       instructions: 'Leader ki heartbeat ruk gayi. Aage kya-kya hota hai?',
       steps: [
-        { text: 'Followers ko heartbeat aana band ho jaata hai', explain: 'Leader mara, ya uska network kata.' },
+        { text: 'Followers ko heartbeat aana band ho jaata hai', explain: 'Leader mara, ya leader ka network kata.' },
         { text: 'Sabse chhota random timeout wala follower pehle jaagta hai', explain: 'Random timeouts se sab ek saath candidate nahi bante.' },
-        { text: 'Woh candidate banta hai: term + 1, khud ko vote', explain: 'Naya term = naya election saal.' },
-        { text: 'Woh sabse RequestVote maangta hai', explain: 'Har node is term mein sirf ek vote de sakta hai.' },
+        { text: 'Pehle jaaga follower candidate banta hai: term + 1, khud ko vote', explain: 'Naya term = naya election saal.' },
+        { text: 'Candidate sabse RequestVote maangta hai', explain: 'Har node is term mein sirf ek vote de sakta hai.' },
         { text: 'Followers vote dete hain agar is term mein vote nahi diya aur candidate ka log up-to-date hai', explain: 'Purane log wala leader nahi ban sakta — warna committed data kho jaata.' },
-        { text: 'Majority milte hi woh leader ban kar heartbeats bhejta hai', explain: 'Bade term ki heartbeat dekh kar baaki sab follower ban jaate hain.' },
+        { text: 'Majority milte hi candidate leader ban kar heartbeats bhejta hai', explain: 'Bade term ki heartbeat dekh kar baaki sab follower ban jaate hain.' },
       ],
     },
     {
@@ -824,8 +824,8 @@ SD.registerLevelsAfter('dist', 'clocks', [
       title: 'Diagram par pehchano',
       visual: 'consensus',
       questions: [
-        { q: 'Kaunsi cheez rokti hai ki purana leader naye leader ke baad bhi hukm de?', target: 'term', explain: 'Bada term dikhte hi purana leader samajh jaata hai ki woh hat chuka hai.' },
-        { q: 'Ek term mein do leader namumkin kyun hain?', target: 'quorum', explain: 'Do majorities hamesha ek node par overlap karti hain, aur woh node ek term mein ek hi vote deta hai.' },
+        { q: 'Kaunsi cheez rokti hai ki purana leader naye leader ke baad bhi hukm de?', target: 'term', explain: 'Bada term dikhte hi purana leader samajh jaata hai ki purana leader hat chuka hai.' },
+        { q: 'Ek term mein do leader namumkin kyun hain?', target: 'quorum', explain: 'Do majorities hamesha ek node par overlap karti hain, aur dono majorities mein aane wala node ek term mein ek hi vote deta hai.' },
         { q: 'Kaun sa state khud ko vote deta hai aur term badhata hai?', target: 'cand', explain: 'Candidate — timeout ke baad.' },
       ],
     },
@@ -924,7 +924,7 @@ SD.registerLevelsAfter('dist', 'clocks', [
   badge: 'Quorum Qazi',
   objectives: [
     'Leader marna: ek timeout mein self-heal',
-    'Partition mein purana leader minority mein — woh commit kyun nahi kar sakta',
+    'Partition mein purana leader minority mein — purana leader commit kyun nahi kar sakta',
     'Network theek hone par purana leader kaise hat-ta hai',
     'Kitne nodes: 3, 5, 7 — aur 4 kyun bekaar',
     'Consensus fit: metadata/user data, sharding, latency aur consistency budget',
@@ -932,7 +932,7 @@ SD.registerLevelsAfter('dist', 'clocks', [
   lesson: [
     `<h3>💀 Scene 1: leader mar gaya</h3>
      <p>Paanch nodes, node 1 leader. Node 1 ki power cable gayi. Followers 2-5 ko heartbeat
-     aana band. Unke random timers chal rahe hain; node 3 ka (180 ms) pehle bajta hai → woh
+     aana band. Followers ke random timers chal rahe hain; node 3 ka (180 ms) pehle bajta hai → pehle jaaga node
      agle term ka candidate → 2, 4, 5 ne is term mein kisi ko vote nahi diya aur node 3 up-to-date
      hai → 4 vote → <b>node 3 leader</b>. System lagbhag <b>200 ms</b> ke liye unavailable raha,
      aur bina kisi insaan ke khud theek ho gaya.</p>
@@ -971,7 +971,7 @@ NETWORK THEEK:
      <ul>
        <li><b>etcd</b> — Kubernetes ka dimaag (Raft). etcd ne consensus khoya toh poora cluster
        jam jaata hai.</li>
-       <li><b>ZooKeeper</b> (ZAB) — Kafka isse partition leaders tay karta tha; Kafka 4.0 (2025)
+       <li><b>ZooKeeper</b> (ZAB) — Kafka ZooKeeper se partition leaders tay karta tha; Kafka 4.0 (2025)
        ne ZooKeeper poori tarah chhod kar apna Raft-based <b>KRaft</b> le liya.</li>
        <li><b>Google Spanner</b> — har shard ek Paxos group: sharded consensus.</li>
      </ul>
@@ -1174,11 +1174,11 @@ NETWORK THEEK:
   },
   success: [
     'Main partition mein consensus ka vyavhaar kram se bata sakta hoon',
-    'Main cluster size (3/5/7) aur uski keemat samjha sakta hoon',
+    'Main cluster size (3/5/7) aur cluster size ki keemat samjha sakta hoon',
     'Main bata sakta hoon ki consensus kis data ke liye hai aur kiske liye nahi',
   ],
   homework: `<p>Apne system mein aisi 3 "chaabiyan" dhoondho jo galat hon toh sab toot jaaye
-    (leader kaun, config, feature flag). Likho ki aaj woh kahan rehti hain — aur kya woh jagah
+    (leader kaun, config, feature flag). Likho ki aaj chaabiyan kahan rehti hain — aur kya chaabiyon ki jagah
     partition mein do alag jawab de sakti hai?</p>`,
   cards: [
     { front: 'Leader marne par Raft kitni der mein theek hota hai?', back: 'Configured timeout, RPC/fsync delay, vote splits aur majority reachability determine recovery. 150–300 ms paper example hai; production guarantee nahi. Detection + successful election + catch-up/client routing measure karo.' },
