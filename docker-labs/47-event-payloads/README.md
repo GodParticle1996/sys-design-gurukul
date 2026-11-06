@@ -15,6 +15,7 @@ node tools/slowmo.js --mode fat           # fixed clock; artificial pacing
 node tools/slowmo.js --mode fat --json    # lesson ke liye structured trace
 
 npm start -- ex1-load                    # har tool apni services start/stop karta hai
+npm start -- ex1-load --brief            # har mode ki ek line (captures/brief-*-{1,2,3}.txt)
 npm start -- ex2-owner-down
 npm start -- ex3-now-then
 npm start -- ex4-order-duplicates

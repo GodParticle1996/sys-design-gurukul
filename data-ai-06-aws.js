@@ -51,7 +51,7 @@ VISUALS['aws-constant-work'] = {
     <div class="dg-split">
       <div class="dg-box is-bad"><span class="bx-label">☕ Delta sync (barista)</span>
         <div class="dg-cap">Shaant din: kuch kaam nahi. Bura din: hazaron badlaav — thik jab system pareshan hai.
-          Ek message khoya → hamesha ke liye galat. Lab: storm par 9,772 msgs/sec, drift 108 hamesha.</div></div>
+          Ek message khoye toh copy galat reh sakti hai; naya update ya repair state mila sakta hai. Lab: storm par 9,772 msgs/sec, storm ke baad drift lagbhag 108.</div></div>
       <div class="dg-box is-good"><span class="bx-label">🤖 Constant work (coffee machine)</span>
         <div class="dg-cap">Har few seconds POORI state ek fixed-size file mein; har DNS server poori file le jaata hai.
           0 badlaav ho ya 1 lakh — same kaam. Lab: hamesha 10 KB/sec, drift 0.</div></div>
@@ -360,13 +360,13 @@ SD.registerLevels('ai', [
   title: 'Constant work aur chhote databases',
   badge: 'Coffee Machine Wala',
   objectives: [
-    'Delta sync ki do bimaariyan: bure din zyada kaam, khoya message = hamesha drift',
+    'Delta sync ki do bimaariyan: bure din zyada kaam, khoye update ke baad drift pehchaanne aur sudhaarne ka raasta',
     'Constant work: Route 53 health checks',
     'EBS 2011: re-mirroring storm aur ek shared metadata DB',
     'Physalia: har volume ka apna chhota database',
   ],
   lesson: [
-    "<h3>☕ Barista vs coffee machine</h3>\n     <p>Barista: order aaya toh banaya, nahi toh baitha. Shaant din aaram, rush hour mein pagal. Coffee machine:\n     har minute ek cup, chahe koi pee ya na pee. \"Wasteful\" — par rush hour mein bhi wahi kaam.</p>\n     <p><b>Delta sync</b> barista hai: sirf badlaav bhejo. Do bimaariyan:</p>\n     <ul>\n       <li>Shaant din kuch kaam nahi, <b>bure din hazaron updates</b> — thik tab jab system pehle se pareshan hai.</li>\n       <li>Ek update khoya → <b>hamesha ke liye drift</b>. Koi dobara nahi bhejta.</li>\n     </ul>\n     <p><b>Route 53 health checks</b> coffee machine hain: har kuch second ek service <b>har</b> health check ki\n     <b>poori</b> state ek <b>fixed-size</b> file mein S3 par likhti hai; har DNS server poori file le jaata hai.\n     Is bounded-state example mein 0 ya1,00,000 changes par scheduled full-state transfer ka budget same rakha hai. Lost delta valid newer authoritative snapshot se repair ho sakti hai; corrupt source/config or missing delivery alag problem hain.</p>\n     <pre>lab 20 (10,000 checks, t=4 par 10,000 ek saath badle):\ndelta     peak 9,772 msgs/sec per DNS server   drift (1% messages khoye): ~108 hamesha\nconstant  hamesha 1 msg (10 KB)/sec             drift: 0</pre>\n     <p class=\"tip\">🎯 <b>Jo cheez fail nahi honi chahiye, us cheez ka kaam predictable rakho.</b> Sabse bura din =\n     sabse shaant din.</p>",
+    "<h3>☕ Barista vs coffee machine</h3>\n     <p>Barista: order aaya toh banaya, nahi toh baitha. Shaant din aaram, rush hour mein pagal. Coffee machine:\n     har minute ek cup, chahe koi pee ya na pee. \"Wasteful\" — par rush hour mein bhi wahi kaam.</p>\n     <p><b>Delta sync</b> barista hai: sirf badlaav bhejo. Do bimaariyan:</p>\n     <ul>\n       <li>Shaant din kuch kaam nahi, <b>bure din hazaron updates</b> — thik tab jab system pehle se pareshan hai.</li>\n       <li>Ek update khoya toh copy <b>galat reh sakti hai</b>. Khoye update wale check ka agla successful update state mila sakta hai; check dobara na badle aur repair na ho, toh galti bani rehti hai.</li>\n     </ul>\n     <p><b>Route 53 health checks</b> coffee machine hain: har kuch second ek service <b>har</b> health check ki\n     <b>poori</b> state ek <b>fixed-size</b> file mein S3 par likhti hai; har DNS server poori file le jaata hai.\n     Is bounded-state example mein 0 ya1,00,000 changes par scheduled full-state transfer ka budget same rakha hai. Lost delta valid newer authoritative snapshot se repair ho sakti hai; corrupt source/config or missing delivery alag problem hain.</p>\n     <pre>lab 20 (10,000 checks, t=4 par 10,000 ek saath badle):\ndelta     peak 9,772 msgs/sec per DNS server   drift (1% messages khoye): storm ke baad ~108\nconstant  hamesha 1 msg (10 KB)/sec             drift: 0</pre>\n     <p class=\"tip\">🎯 <b>Jo cheez fail nahi honi chahiye, us cheez ka kaam predictable rakho.</b> Sabse bura din =\n     sabse shaant din.</p>",
     `<h3>🌪️ EBS, 21 April 2011, us-east-1</h3>
      <p>Ek routine network change ne EBS ka replication traffic ek kam-capacity backup network par bhej diya.
      Volumes ne apne replicas kho diye. Network wapas aaya toh sab volumes ne ek saath <b>re-mirror</b> shuru
@@ -398,7 +398,7 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf usi 
         { text: 'Constant work.', cmd: 'node tools/storm.js --sync constant', expect: '   4    10010          1 msgs     10 KB           0   ← storm\n  14       10          1 msgs     10 KB           0\npeak kaam: 1 msgs/sec, 10 KB/sec per DNS server' },
       ],
       observe: {
-        q: 'Delta mein storm ke baad drift ~108 hamesha kyun reh gaya?',
+        q: 'Delta mein storm ke baad bhi drift ~108 kyun bacha?',
         choices: [
           '1% deltas kho gaye aur koi repair nahi — check dobara na badle toh DNS galat jawab deta rahega',
           'Har replica aakhir mein khud missing update bana leta hai — 108 bas der se theek honge',
@@ -406,9 +406,9 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf usi 
           'DNS ka TTL source ki values khud dobara bana leta hai — 108 jaldi gayab ho jaayenge',
         ],
         answer: 0,
-        explain: 'Is model mein khoye deltas ke baad pakka full snapshot state milata hai. Kharab source, purana version, delivery na hona ya galat validation agle snapshot se apne aap theek nahi hote.',
+        explain: 'Delta mode mein 1% messages kho gaye aur koi repair snapshot nahi chalta. Jis check ka update khoya aur baad mein dobara nahi badla, DNS par us check ki value galat bani rahi. Constant mode har second poori file deta hai, isliye drift 0.',
         choiceExplanations: [
-          'Is model mein khoye deltas ke baad pakka full snapshot state milata hai. Kharab source, purana version, delivery na hona ya galat validation agle snapshot se apne aap theek nahi hote.',
+          'Delta mode mein 1% messages kho gaye aur koi repair snapshot nahi chalta. Jis check ka update khoya aur baad mein dobara nahi badla, DNS par us check ki value galat bani rahi. Constant mode har second poori file deta hai, isliye drift 0.',
           'Replica khoya update khud nahi bana sakta.',
           'Storm ruka, par khoye messages wapas nahi aaye.',
           'TTL sirf cache ki umar hai — source value nahi banata.',
@@ -464,7 +464,7 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf usi 
         explain: 'Bounded control state ko tay cadence par version/checksum ke saath milana update storms ka kaam predictable rakhta hai. Bura din = shaant din, aur drift apne aap theek. Full snapshot har jagah best nahi; state size, bandwidth aur freshness tolo.',
         choiceExplanations: [
           'Bounded control state ko tay cadence par version/checksum ke saath milana update storms ka kaam predictable rakhta hai. Bura din = shaant din, aur drift apne aap theek. Full snapshot har jagah best nahi; state size, bandwidth aur freshness tolo.',
-          'Khoya delta bina repair ke hamesha drift rakhta hai.',
+          'Khoya delta copy ko galat chhod sakta hai. Baad ka update galti zaroor sudhaarega, aisa bharosa nahi; isliye repair ka raasta rakho.',
           'Storm ke din global push sabse bada bojh banta hai.',
           'Constant work tabhi constant hai jab size bounded ho.',
         ],

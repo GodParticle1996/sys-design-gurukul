@@ -1,0 +1,3 @@
+HTTP between child processes
+guard=false orders=4 consumers=3 deliveryVersionsPerOrder=2,1,1 wrongFinalCopies=12 completed=36 ignored=0
+guard=true orders=4 consumers=3 deliveryVersionsPerOrder=2,1,1 wrongFinalCopies=0 completed=12 ignored=24

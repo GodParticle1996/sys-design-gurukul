@@ -1,0 +1,3 @@
+HTTP between child processes
+guard=false deliveredVersions=1,3 droppedVersion=2 wrongFinalCopies=3 reads=0
+guard=true deliveredVersions=1,3 droppedVersion=2 wrongFinalCopies=0 reads=3

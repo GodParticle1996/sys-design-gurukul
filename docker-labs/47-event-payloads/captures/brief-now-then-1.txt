@@ -1,0 +1,3 @@
+HTTP between child processes
+mode=thin ownerVersionBeforeConsumption=2 reads=6
+mode=fat ownerVersionBeforeConsumption=2 reads=0

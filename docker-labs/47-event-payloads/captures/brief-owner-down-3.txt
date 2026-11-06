@@ -1,0 +1,3 @@
+HTTP between child processes
+mode=thin queuedBeforeStop=12 ownerProcessExited=true ownerUnavailableVerified=true retryRounds=2 completed=0 failedAttempts=6 stuck=12
+mode=fat queuedBeforeStop=12 ownerProcessExited=true ownerUnavailableVerified=true retryRounds=2 completed=12 failedAttempts=0 stuck=0

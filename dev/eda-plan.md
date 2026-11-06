@@ -44,6 +44,18 @@ Points requiring care as coverage grows:
 
 Primary documentation used in the first topic is linked in lab 44's README: Node Events, RabbitMQ Work Queues, RabbitMQ Publish/Subscribe.
 
+## Ready: second topic, Event Payloads (2026-11-06)
+
+`ep-kyun` → `ep-kaise` → `ep-code` → `ep-kab`, in `data-v2-eda-payload-1…4`, group "📦 Event Payloads", guide `event-payloads`.
+Lab: `docker-labs/47-event-payloads` (ports 5600–5604), built by Codex; Codex's sandbox blocked TCP, so Claude ran the
+real HTTP captures: 18/18 runs, three byte-identical runs per experiment, equal to the in-process model; 12 tests pass over HTTP.
+`--brief` prints one line per mode (captures/brief-*). Levels written by Claude from the captures; Codex fact-checked them
+(13 findings: a wrong bin answer for backfill, a two-answer question, a dry-run step showing the copy saved at the counter
+line, overstated "hamesha drift", contiguous-version assumption, per-consumer payload routing for privacy) — all fixed.
+Source corrections taught: ECST does not require old/new diffs (Fowler 2017: consumers "don't need to contact the source
+system"); a thin callback that returns the whole order is not privacy-safe; resync restores current state, not missed work.
+Also fixed `aws-constant-work`: a lost delta can be repaired by the check's next full-value update; drift is not "hamesha".
+
 ## Remaining EDA Core work
 
 The playlist was refreshed through Video-Translate on 2026-10-20: 64 entries, including one unavailable entry. Track titles and video IDs; positions have shifted.
@@ -57,8 +69,8 @@ The playlist was refreshed through Video-Translate on 2026-10-20: 64 entries, in
 | Event Sourcing: Genius or Just Over-Engineering? | `wXg_aON4oj8` | Append events and reconstruct state; snapshots and read models separately |
 | 4 Event-Modeling Mistakes in Event-Driven Architectures | `m3mY3Ra-BcI` | Contracts, naming, payloads and schema evolution, each backed by a lab |
 
-Suggested next topic: event payloads/state transfer, then EDA tradeoffs, delivery problems, event sourcing/CQRS and event modeling.
+Done: event payloads. Next: EDA tradeoffs (lab 48, ports 5700–5704), delivery problems, event sourcing/CQRS and event modeling.
 Read the relevant source and primary docs before choosing the exact split. Keep the KhanaKart world and four-question course shape.
 Outbox, CDC and DLQ have their later Messaging theme; show the failure here without claiming those topics already have new playlist lessons.
 
-Next free lab number: 45. Lab 44 uses 5400–5404; inspect all current ports before assigning a new range.
+Next free lab number: 48. Lab 44 uses 5400–5404; inspect all current ports before assigning a new range.

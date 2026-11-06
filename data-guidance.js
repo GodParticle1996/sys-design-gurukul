@@ -35,6 +35,7 @@
     runtime: { title: 'Node.js — event loop and worker pool', url: 'https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop' },
     warehouse: { title: 'Snowflake — warehouse architecture', url: 'https://docs.snowflake.com/en/user-guide/warehouses-overview' },
     launch: { title: 'Google SRE — reliable product launches', url: 'https://sre.google/sre-book/reliable-product-launches/' },
+    ecst: { title: 'Martin Fowler — What do you mean by "Event-Driven"?', url: 'https://martinfowler.com/articles/201701-event-driven.html' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -138,6 +139,26 @@
     ],
     followup: 'Order save hua par khabar publish nahi hui. Kitchen tak khabar pahunchane ka owner kaun hai?',
     sources: ['kafka', 'http'],
+  });
+  add('event-payloads', 'ep-kyun ep-kaise ep-code ep-kab', {
+    title: 'Khabar mein kitna data: ghanti, parchi ya sirf badlaav?',
+    misaal: 'Munshi sirf ghanti bajaye toh har helper register padhne daudta hai, aur munshi chhutti par ho toh sab ruk jaate hain. Parchi ki copy saath do toh helper apni diary se kaam karte hain — par diary ko sahi rakhna padta hai.',
+    asli: 'Patli khabar owner par reads aur nirbharta laati hai; moti khabar copies, version aur nazuk data ka kharcha.',
+    points: [
+      '<b>Patli khabar:</b> reads = khabrein × consumers, aur data owner ka abhi ka milta hai.',
+      '<b>Moti khabar:</b> consumer apni copy se chalta hai; sirf bada version likho.',
+      '<b>Sirf badlaav:</b> shuruaati copy + lagataar versions; gap par resync, aakhri khoya badlaav alag jaancho.',
+    ],
+    use: 'Consumer ko owner band hone par bhi chalna ho aur thodi purani copy manzoor ho: kaam ka data event mein bhejo.',
+    avoid: 'Nazuk data (phone, pata) har subscriber tak mat failao; har consumer ko alag payload, sirf kaam ke fields.',
+    mistake: 'Version jaanche bina har event copy par likh dena: purana event naye data ko mita deta hai.',
+    compare: [
+      { choice: 'Patli khabar + call', when: 'Faisla taaze data par ho', tradeoff: 'Owner par reads; owner band toh kaam band' },
+      { choice: 'Moti khabar', when: 'Consumer ko owner se azaad chalna ho', tradeoff: 'Bada event; har jagah copy aur version check' },
+      { choice: 'Sirf badlaav', when: 'Data bada ho, badlaav chhote', tradeoff: 'Lagataar version check, gap par resync, aakhri khoye badlaav ki alag jaanch' },
+    ],
+    followup: 'Ek delta chhoota aur agla event kabhi nahi aaya. Consumer ko gap ka pata kaise chalega?',
+    sources: ['ecst', 'kafka'],
   });
   add('service-boundaries', 'decompose st-reddit-strangle prime-boundary-tax prime-replicate prime-when-split', {
     title: 'Har nayi service ka fayda kya hai?',

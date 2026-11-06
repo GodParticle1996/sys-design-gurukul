@@ -76,10 +76,15 @@ async function states(urls) {
   for (const name of names) out[name] = await call(urls[name], '/state');
   return out;
 }
-function main(run) { run().then(value => console.log(JSON.stringify({
-  transport: model() ? 'IN-PROCESS MODEL; no sockets or child exit' : 'HTTP between child processes',
-  results: value,
-}, null, 2))).catch(e => {
+/* --brief: har mode ki ek line, sirf seedhe counters (nested objects JSON output mein). */
+const brief = r => Object.entries(r)
+  .filter(([, v]) => v === null || typeof v !== 'object' || (Array.isArray(v) && v.every(x => typeof x !== 'object')))
+  .map(([k, v]) => `${k}=${Array.isArray(v) ? v.join(',') : v}`).join(' ');
+function main(run) { run().then(value => {
+  const transport = model() ? 'IN-PROCESS MODEL; no sockets or child exit' : 'HTTP between child processes';
+  if (process.argv.includes('--brief')) console.log([transport, ...value.map(brief)].join('\n'));
+  else console.log(JSON.stringify({ transport, results: value }, null, 2));
+}).catch(e => {
   console.error(e.message); process.exitCode = 1;
 }); }
 module.exports = { call, model, names, withStack, reset, save, publish, drain, states, main };
