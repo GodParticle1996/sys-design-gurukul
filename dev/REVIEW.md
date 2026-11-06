@@ -285,8 +285,8 @@ Sixth round (cc-*, the language pass on Codex's own track):
   as a pointer to cc-stuck. Codex's cc-start distractor "processes cannot reach the same row" contradicted its own
   stem; replaced with "separate connections don't touch each other's work".
 - **Open:** cc-race teaches six ideas; Codex independently recommends the same split (race + mutex + atomic / lock
-  size + reentrant + immutable). Waiting for the user. The track's step text is still English-heavy ("CPU work, I/O
-  wait aur shared bottleneck alag dekho"); a step-text pass is still to do.
+  size + reentrant + immutable). Waiting for the user. The track's step text was English-heavy; done 2026-11-05: all 24 flashcards and 6 clipped lesson/step lines
+  rewritten in plain Hinglish (facts unchanged).
 
 Seventh round (hc-*) — the first batch Codex *wrote* and Claude reviewed:
 

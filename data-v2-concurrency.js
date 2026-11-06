@@ -129,7 +129,7 @@
                 "Der se CPU milne par bhi 7 nahi aayega — value bhejne ka koi raasta hi nahi bana.",
               ],
               "Threads ek hi process ki memory baant-te hain. Alag process ki memory kiski hai?") },
-          { title: '3. Common model aur Java ka enum', say: 'Common sketch: new → runnable/running → blocked ya waiting → terminated. Java 21 enum alag hai: <code>NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED</code>. Java mein RUNNING alag enum nahi. RUNNABLE thread CPU par chal bhi sakta hai ya CPU ka wait kar sakta hai.',
+          { title: '3. Common model aur Java ka enum', say: 'Aam taur par thread ka safar aise dikhate hain: new → runnable/running → blocked ya waiting → terminated. Java 21 enum alag hai: <code>NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED</code>. Java mein RUNNING alag enum nahi. RUNNABLE thread CPU par chal bhi sakta hai ya CPU ka wait kar sakta hai.',
             ask: ask("Java ka getState() RUNNABLE bata raha hai. RUNNABLE se kya pakka pata chalta hai?",
               [
                 "Thread chalne ke liye taiyaar hai — par isi pal CPU par chal raha hai, aisa pakka nahi",
@@ -185,7 +185,7 @@
       ]),
       success: ['Concurrency aur parallelism ko timeline se alag kar sakte ho', 'Process/thread memory aur JVM state ki hadd bata sakte ho'],
       homework: 'BasicsLab.java mein timed latch wait dekho. JDK docs se WAITING aur TIMED_WAITING compare karo; state ko CPU benchmark mat bolo.',
-      cards: [{ front: 'Concurrency aur parallelism?', back: 'Concurrency: overlapping tasks ka progress. Parallelism: ek hi pal execution. Dono saath bhi ho sakte hain.' }, { front: 'Process aur thread?', back: 'Process ka address space alag; threads same process ka heap share karte hain aur apne stacks rakhte hain.' }, { front: 'Java mein RUNNING?', back: 'Alag enum nahi. RUNNABLE CPU par chalna ya CPU ke liye ready hona cover kar sakta hai.' }],
+      cards: [{ front: 'Concurrency aur parallelism?', back: 'Concurrency: kai kaam ek hi samay mein thoda-thoda aage badhte hain. Parallelism: kai kaam theek ek hi pal mein alag cores par chalte hain. Dono ek saath bhi ho sakte hain.' }, { front: 'Process aur thread?', back: 'Har process ki apni alag memory hoti hai. Ek process ke threads usi process ka heap baant-te hain, par har thread ka apna stack hota hai.' }, { front: 'Java mein RUNNING?', back: 'Java mein RUNNING naam ki alag state nahi. RUNNABLE ka matlab: thread CPU par chal raha hai, ya CPU milne ke liye taiyaar khada hai.' }],
     },
 
     {
@@ -294,7 +294,7 @@
       ]),
       success: ['Lost update ko bina timing luck reproduce kar sakte ho', 'Mutex aur atomic increment ka scope bata sakte ho'],
       homework: 'RaceLab.java mein ek naya fixed method khud banao. Broken baseline rakho. Sirf write par lock lagaakar pehle failure dekho; phir read–add–write guard karo.',
-      cards: [{ front: 'Atomic increment kya bachata hai?', back: 'Us counter ka one-step update; do counters ka joint business rule nahi.' }, { front: 'unlock() kahan likho?', back: 'finally mein, taaki exception aaye tab bhi lock chhoote.' }],
+      cards: [{ front: 'Atomic increment kya bachata hai?', back: 'Sirf ek counter ka ek kadam wala update. Do counters ko saath milake chalne wala business rule atomic increment nahi bachata.' }, { front: 'unlock() kahan likho?', back: 'finally mein, taaki exception aaye tab bhi lock chhoote.' }],
     },
     {
       id: 'cc-locks', icon: '🔐', group: '🔐 3 · Taale ka size', title: 'Concurrency 3 · Ek taala ya kai?', badge: 'Taala Paarkhi',
@@ -401,7 +401,7 @@
       ]),
       success: ['Ek bade aur kai chhote locks ka tradeoff bata sakte ho', 'Reentrant hold count aur immutable snapshot ki hadd samjha sakte ho'],
       homework: 'RaceLab.otherKeyCanEnter mein fine lock ko coarse jaisa banao (keyB = keyA) aur fine=false dekho. Phir ek transfer method likho jo do keys ke locks hamesha ek tay kram mein le.',
-      cards: [{ front: 'Coarse ya fine?', back: 'Bada lock simple par unrelated work rok sakta hai. Fine locks independent work allow karte hain; ordering aur invariants mushkil ho sakte hain.' }, { front: 'Reentrant ka owner?', back: 'Same thread dobara acquire kar sakta hai. Har acquire ka matching unlock chahiye.' }, { front: 'Immutable ka matlab final reference?', back: 'Nahi. Object aur nested values ki mutability alag dekho; safe publication bhi matter karti hai.' }],
+      cards: [{ front: 'Coarse ya fine?', back: 'Ek bada lock simple hai, par alag keys ke kaam ko bhi rok deta hai. Chhote locks alag kaam saath chalne dete hain, par lock ka order aur niyam sambhaalna mushkil ho jaata hai.' }, { front: 'Reentrant lock dobara kaun le sakta hai?', back: 'Sirf wahi thread jiske paas lock pehle se hai. Jitni baar lock liya, utni baar unlock karna padega.' }, { front: 'Immutable ka matlab final reference?', back: 'Nahi. final sirf reference ko baandhta hai. Andar ka object aur nested values badal sakti hain ya nahi, alag dekho; aur naya object doosre threads tak theek se pahunchana (safe publication) bhi zaroori hai.' }],
     },
     {
       id: 'cc-queue', icon: '📦', group: '📦 4 · Kaam ki line', title: 'Concurrency 4 · Queue bhari, producer kahan?', badge: 'Queue Sambhalak',
@@ -523,7 +523,7 @@
       ]),
       success: ['Bounded FIFO aur condition recheck implement kar sakte ho', 'Nonwaiting API ko formal lock-free guarantee se alag rakh sakte ho'],
       homework: 'QueueLab.Buffer ko pehle paper par put/take rules se banao. while→if experiment chalao, phir restore karo. README ke test se false offer aur interrupted wait verify karo.',
-      cards: [{ front: 'Signal ka matlab condition true?', back: 'Nahi. Same lock dobara lekar predicate while mein check karo.' }, { front: 'Queue bounded toh process memory bounded?', back: 'Nahi. Pending producers, request handlers aur payloads ki alag limits chahiye.' }, { front: 'Offer false ka matlab?', back: 'Is buffer mein item accept nahi hua. Caller overload policy handle kare.' }, { front: 'Nonwaiting aur lock-free?', back: 'Capacity/data ka wait nahi aur formal progress guarantee alag claims hain.' }],
+      cards: [{ front: 'Signal ka matlab condition true?', back: 'Nahi. Signal sirf jagata hai. Lock dobara lo aur shart ko while loop mein phir se jaancho.' }, { front: 'Queue bounded toh process memory bounded?', back: 'Nahi. Intezaar karte producers, request handlers aur payloads ki hadd alag rakhni padti hai.' }, { front: 'offer() false lautaye toh?', back: 'Item buffer mein nahi gaya. Ab bhejne wala tay kare: baad mein dobara bheje, mana kare, ya kaam chhode.' }, { front: 'Na rukne wala (nonwaiting) = lock-free?', back: 'Nahi. Jagah ya data ke liye na rukna ek baat hai; lock-free ki pakki progress guarantee bilkul alag daava hai.' }],
     },
     {
       id: 'cc-pool', icon: '🔌', group: '🔌 5 · Limited resources', title: 'Concurrency 5 · Do connections, teesra caller', badge: 'Permit Paalak',
@@ -588,7 +588,7 @@
               ],
               "Borrower kiska intezaar kar raha hai? Lautane wala kiska? Kya dono ek doosre ka intezaar kar rahe hain?") },
           { title: '2. Fair semaphore ka scope', say: 'Lab <code>new Semaphore(2, true)</code> use karta hai. Fair acquisition ki ordering API ke internal arrival points par apply hoti hai. Scheduler ko har caller ko turant CPU dene ki guarantee nahi. Untimed tryAcquire ka fairness contract bhi alag hai.' },
-          { title: '3. Connection sach mein healthy?', say: 'Permit free hona connection ki health ka proof nahi. Real database pool ko connection validation, broken connection replacement, borrow deadline aur query deadline alag handle karne padte hain.',
+          { title: '3. Connection sach mein healthy?', say: 'Permit khaali hona ye saabit nahi karta ki connection theek hai. Asli database pool ko chaar cheezein alag sambhaalni padti hain: connection ki jaanch, toote connection ki jagah naya, connection milne ki deadline, aur query ki deadline.',
             ask: ask("Permit mil gaya, par database ka socket toot chuka hai. Permit se kya pakka hua?",
               [
                 "Sirf itna ki local capacity mein jagah mili — connection ki sehat alag se jaanchni hogi",
@@ -644,7 +644,7 @@
       ]),
       success: ['Semaphore aur free-ID list se small pool bana sakte ho', 'Failure aur duplicate close par capacity wapas verify kar sakte ho'],
       homework: 'Logical pool ko database benchmark mat bolo. Pehle close ka duplicate guard hataakar test failure dekho. Restore karke chhe simultaneous borrowers ka peak aur end counts check karo.',
-      cards: [{ front: 'Semaphore kya ginta hai?', back: 'Permits. Connection IDs, health aur ownership ka alag design chahiye.' }, { front: 'Extra release safe?', back: 'Generic Java semaphore upper resource limit enforce nahi karta. Lease ka once-only return guard rakho.' }, { front: 'Fair semaphore aur CPU fairness?', back: 'Acquisition ordering scheduler ko turant CPU dene ki guarantee nahi.' }, { front: 'Local cap global cap?', back: 'Nahi. Har process ka cap fleet ke total resource budget mein add hota hai.' }],
+      cards: [{ front: 'Semaphore kya ginta hai?', back: 'Sirf permits. Kaunsa connection kiske paas hai, aur connection theek hai ya nahi — in dono baaton ke liye alag design chahiye.' }, { front: 'Zyada release() safe hai?', back: 'Nahi. Java ka aam Semaphore upar ki hadd nahi rokta — faltu release() permits badha deta hai. Lease sirf ek baar lautane ka guard rakho.' }, { front: 'Fair semaphore aur CPU fairness?', back: 'Nahi. Fair semaphore sirf permit milne ka kram tay karta hai; turant CPU milne ki guarantee nahi.' }, { front: 'Har process ki hadd = poore system ki hadd?', back: 'Nahi. Har process ki hadd jud ke poore fleet ka kharch banti hai; total resource budget alag dekho.' }],
     },
     {
       id: 'cc-stuck', icon: '🔒', group: '🔒 6 · Useful progress', title: 'Concurrency 6 · Dono zinda, kaam kyun band?', badge: 'Progress Pehredaar',
@@ -693,7 +693,7 @@
                 "Fair lock sirf intezaar ka kram badalta hai, gola nahi todta.",
               ],
               "Deadlock ke liye kitne ulte raaste chahiye? Teesra raasta pehle do mein se kisi ke saath kya bana sakta hai?") },
-          { title: '6. Zinda thread, useful result?', say: 'CPU, heartbeat aur alive count akela progress nahi dikhata. Completed jobs, oldest pending age aur waits ka evidence rakho. Is lab ne counts aur lock cycle verify ki; production performance benchmark nahi kiya.' },
+          { title: '6. Zinda thread, useful result?', say: 'CPU chal raha hai, heartbeat aa rahi hai, threads zinda hain — koi bhi akela kaam aage badhne ka saboot nahi. Saboot rakho: kitne jobs poore hue, sabse purana pending job kitna purana hai, aur kaun kiska intezaar kar raha hai. Is lab ne sirf ginti aur lock cycle jaanchi; production speed ka benchmark nahi kiya.' },
         ], 'Deadlock ka repair resource dependency ko badalta hai. Sirf aur threads ya CPU badhaana wait cycle nahi hataata.'),
         cards('Deadlock, livelock, starvation', [
           { title: '1. Dono raasta badalte rahe', say: '<b>Livelock</b>: tasks active rehte hain, par useful work nahi hota. MODEL: har round A/B same side choose karte hain, clash dekhkar dono side badalte hain. Chaar rounds baad moves hue, completions 0. Waiting deadlock aur active livelock alag hain.',
@@ -736,7 +736,7 @@
               ],
               "Kya vyast hona aur kaam poora hona ek hi cheez hai? Retries aur poore kaam ka rishta kahan dikhega?") },
           { title: '4. Khud break–fix karo', say: 'DeadlockLab.ordered mein ek path ka order ulta karke thread joins ka timeout dekho; daemon/process guard ko mat hatao. Fixed version mein same total order restore karo. Model se scheduler ki real fairness benchmark claim mat karo.' },
-        ], 'Deadlock: wait cycle. Livelock: active no-work cycle. Starvation: baaki tasks aage, ek task denied. Alag cause ke liye alag repair.', CODE.deadlock),
+        ], 'Deadlock: tasks gol chakkar mein ek doosre ka intezaar karte hain. Livelock: tasks chal rahe hain, par kaam aage nahi badhta. Starvation: baaki tasks aage nikal jaate hain, ek task ko baari kabhi nahi milti. Teeno ki wajah alag hai, toh ilaaj bhi alag.', CODE.deadlock),
         lab('ex4-deadlock', 'Lab 4 · deadlock banao, detect karo, saaf karo', ask("Detector ne demo ke dono thread IDs pakde; same-order run mein 2/2 poore hue. Kya saabit hua?",
           [
             "Ulte kram wala deadlock dobara bana aur pakda gaya; same kram mein dono jobs poori hui",
@@ -778,7 +778,7 @@
       ]),
       success: ['Deadlock ko bounded local demo mein reproduce/detect kar sakte ho', 'No progress ke teen patterns se alag diagnosis nikaal sakte ho'],
       homework: 'Do tasks ke wait-for arrows khud banao. Opposite order aur fixed order compare karo. Livelock model mein same reaction rule aur starvation model mein endless-priority assumption likho.',
-      cards: [{ front: 'Deadlock?', back: 'Tasks held resources ke wait cycle mein hain; normal release path nahi pahunchta.' }, { front: 'Livelock?', back: 'Tasks react kar rahe hain, par useful work finish nahi hota.' }, { front: 'Starvation?', back: 'Doosre tasks progress karte hain, ek task ko service baar-baar nahi milti.' }, { front: 'Fairness se deadlock cure?', back: 'Nahi. Wait order aur resource dependency cycle alag design questions hain.' }],
+      cards: [{ front: 'Deadlock?', back: 'Tasks pakde hue resources ke saath ek gol chakkar mein ek doosre ka intezaar karte hain; lock chhodne wali line tak koi nahi pahunchta.' }, { front: 'Livelock?', back: 'Tasks chal rahe hain aur ek doosre ko jawab de rahe hain, par kaam poora nahi hota.' }, { front: 'Starvation?', back: 'Baaki tasks aage badhte hain; ek task ko baari baar-baar nahi milti.' }, { front: 'Fair lock se deadlock theek?', back: 'Nahi. Intezaar ka kram (fairness) aur resources ka gol chakkar (dependency cycle) alag sawaal hain.' }],
     },
     {
       id: 'cc-workers', icon: '🏭', group: '🏭 7 · Kaam admit aur dedupe karo', title: 'Concurrency 7 · Do workers, do waiting slots', badge: 'Worker Nirmata',
@@ -828,7 +828,7 @@
                 "Har job (Runnable) apna request data aur state pakde rehti hai.",
               ],
               "Do cook tay hain. Bahar kursiyan kitni hain? Bheed badhe toh bahar kya badhega?") },
-        ], 'Thread cap aur queue cap dono chahiye. Rejection ko accepted/completed ka label mat do.'),
+        ], 'Threads ki hadd aur queue ki hadd, dono chahiye. Mana hue kaam ko "accepted" ya "completed" mat likho.'),
         cards('Same key, do workers: idempotency under concurrency', [
           { title: '1. Thread-safe map, unsafe workflow', say: '<b>Idempotency</b> mein same logical operation repeat hone par business effect dobara nahi lagna chahiye. <b>Race</b> tab bhi ho sakti hai jab map ki individual get/put thread-safe hon. Broken code mein do requests same key absent dekhti hain, phir dono effect karti hain.',
             ask: ask("ConcurrentHashMap par pehle get(key), phir effect, phir put(key). Kya duplicate effect ruka?",
@@ -869,7 +869,7 @@
                 "Thread pool kaam chalane ki machine hai, effects ka khaata nahi.",
               ],
               "Map kahan rehta hai: disk par ya process ki memory mein? Crash ke baad memory ka kya hota hai?") },
-          { title: '4. Build task aur production choice', say: 'WorkersLab.java mein bounded executor pehle khud configure karo: workers=2, queue=2, explicit rejection, shutdown. Dedup ke broken baseline ke saath fixed per-key claim banao. Production DB/provider design ki recovery policy alag likho.' },
+          { title: '4. Build task aur production choice', say: 'WorkersLab.java mein pehle executor khud set karo: workers=2, queue=2, bhari queue par saaf mana, aur shutdown. Phir dedup ke toote version ke saath sahi per-key claim banao. Asli production mein DB aur payment provider ke saath recovery ka niyam alag likhna padega.' },
         ], 'Same key ke concurrent callers ko one local effect mil sakta hai. Multi-process, crash aur external effects ki boundary alag enforce karo.', CODE.workers),
         lab('ex5-workers', 'Lab 5 · bounded thread pool aur duplicate execution', ask("Bounded run: 2 active / 2 queued / 1 rejected; fixed dedup mein effects = 1. Kya guarantee mili?",
           [
@@ -912,7 +912,7 @@
       ]),
       success: ['Bounded executor aur caller rejection contract bana sakte ho', 'Thread-safe map aur concurrent idempotent workflow ko alag samajh sakte ho'],
       homework: 'Pool ki worker count badle bina queue size badlo aur fifth job ka admission predict karo. Per-key dedup ke liye two-request trace banao; restart aur external charge ki boundary alag likho.',
-      cards: [{ front: 'Fixed thread pool ka backlog bounded?', back: 'Java newFixedThreadPool ki waiting queue unbounded hai. Explicit queue/rejection policy choose karo.' }, { front: 'Rejected = accepted?', back: 'Nahi. Caller ko outcome aur retry/admission policy handle karni hai.' }, { front: 'Thread-safe get + put = idempotent workflow?', back: 'Nahi. Absent check aur effect ke beech concurrent caller enter kar sakta hai.' }, { front: 'One-JVM dedup = exactly-once payment?', back: 'Nahi. Durable record, payload/key contract aur remote provider/status recovery alag chahiye.' }],
+      cards: [{ front: 'Threads fixed hain, toh backlog ki bhi hadd hai?', back: 'Nahi. Java newFixedThreadPool ki waiting queue ki koi hadd nahi. Hadd wali queue aur mana karne ka niyam khud chuno.' }, { front: 'Mana hua kaam = accepted?', back: 'Nahi. Bhejne wale ko nateeja sambhaalna hai: dobara bheje ya mana maan le.' }, { front: 'Thread-safe get + put = poora kaam idempotent?', back: 'Nahi. "Key nahi hai" wale check aur asli kaam ke beech doosra caller ghus sakta hai.' }, { front: 'Ek JVM ka dedup = payment theek ek baar?', back: 'Nahi. Theek ek baar ke liye alag chahiye: disk par tikne wala record, key aur payload ka pakka contract, aur payment provider se status poochh ke recovery.' }],
     },
   ];
 
