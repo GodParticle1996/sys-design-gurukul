@@ -146,7 +146,7 @@ SD.registerLevels('ai', [
     line mein tark likho. Lab 12 ke "Khud try karo" #3 bhi karo: 10 file ops ko ek message mein batch
     karo — sentry ka tax kitna gira?</p>`,
   cards: [
-    { front: 'Container ki kamzori?', back: "Containers host kernel share kar sakte hain; reachable kernel/runtime vulnerabilities and misconfiguration isolation risk hain. Har kernel bug exploitable escape nahi; privileges and defense layers matter karte hain." },
+    { front: 'Container ki kamzori?', back: "Containers host ka kernel baant sakte hain; pahunch mein aane wale kernel/runtime bugs aur galat config isolation ke liye khatra hain. Har kernel bug escape nahi banta; privileges aur suraksha ki parten bhi farak daalti hain." },
     { front: 'gVisor kya karta hai?', back: "User-space application kernel guest syscall interface implement karke host exposure reduce karta hai. Independent sandboxing layers useful hain, lekin escape ka fixed two-bug rule nahi; configuration and implementation threat model verify karo." },
     { front: 'Sandbox tax kahan lagta hai?', back: 'Syscalls par sabse zyada, par memory, network aur file ke raaston par bhi; kitna — workload aur platform tay karte hain. Lab (chhota toy): compute noise, IO 8–11×.' },
   ],

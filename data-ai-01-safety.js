@@ -617,7 +617,7 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
     Us tool ko <b>aaj</b> ek purane log par chala ke dekho — kya tool mana karta hai? Kya data tumhare
     network se bahar jaata hai?</p>`,
   cards: [
-    { front: 'Incident mein self-hosted model ke do faayde?', back: 'Approved local deployment data handling control de sakta hai. Model task suitability, refusals, logs, administrator access and retention test karo; self-hosting automatic availability or privacy guarantee nahi.' },
+    { front: 'Incident mein self-hosted model ke do faayde?', back: 'Manzoor kiya hua local model data ko apne haath mein rakh sakta hai. Phir bhi test karo: model kaam ke layak hai ya nahi, kab mana karta hai, logs, admin access aur data kitne din rehta hai. Self-hosting se uptime ya privacy apne aap pakki nahi hoti.' },
     { front: 'Itihaas ke teen misaal (video)?', back: 'Kamzor export crypto → FREAK/Logjam (2015); Metasploit/Mimikatz → standard defense, Credential Guard; disclosure → CVE, bug bounty, Project Zero.' },
     { front: 'Video ki opinion ko design mein kaise use karein?', back: 'Threat model aur domain-specific impact alag evaluate karo. Unverified incident/timeline claims proof nahi. Downloaded weights revoke karna difficult hai, isliye release se pehle capability and risk assessment chahiye.' },
   ],

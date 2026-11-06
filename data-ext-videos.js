@@ -585,7 +585,7 @@ SD.extendLevel('migrations', {
         return { ok: true, text: `User-id key, ${m.active} active consumers, ${(m.tput / 1000).toFixed(0)}k/s capacity: modeled burst catch-up <b>${m.lag.toFixed(2)} s</b>. Per-user ordering serial partition apply par depend karti hai; hot-key skew aur rebalances production mein verify karo.` };
       },
       check: k => { const m = cdcModel(k); return k.key === 1 && m.headroom > 0 && m.lag < 2; },
-      lesson: 'Classic consumer group mein useful parallelism partitions se bounded hai. Same-user key partition log order deti hai only with correct ordered apply; rebalances, partition-count changes aur redelivery handle karo. Arrival rate ke barabar capacity burst drain nahi karti: measured headroom chahiye.',
+      lesson: 'Classic consumer group mein kaam ka parallelism partitions ki ginti tak hi jaata hai. Same-user key ek partition mein kram deti hai — par sirf tab, jab consumer bhi kram se apply kare; rebalance, partition-count badalna aur dobara delivery bhi sambhaalo. Aane ki raftaar jitni capacity burst ko khaali nahi karti: naapa hua headroom chahiye.',
       quiz: {
         q: 'Events dobara aur ulte kram mein aa sakte hain. Alag event-ID dedupe ke bina kaunsa update safe ban sakta hai?',
         choices: [

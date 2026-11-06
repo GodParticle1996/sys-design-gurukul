@@ -214,7 +214,7 @@ READ (12,000/sec peak — yahan sab kuch hai)
         {
           id: 'code', label: 'Short code kaise bane', icon: '🔑',
           options: [
-            { id: 'counter', label: "Pakka counter, alag range; phir base62 code", score: 3, why: "Durable disjoint counter unreused bounded namespace mein random collision retries avoid karta hai. UNIQUE constraint still prudent hai; width capacity se derive karo. Scrambling alone guessing-resistant security guarantee nahi." },
+            { id: 'counter', label: "Pakka counter, alag range; phir base62 code", score: 3, why: "Durable counter jiske range kabhi takraate nahi, seemit aur dobara na use hone wale namespace mein random takraav aur retry se bachata hai. UNIQUE constraint phir bhi samajhdaari hai; code ki lambai capacity se nikaalo. Sirf scramble karna andaaza-proof security guarantee nahi." },
             { id: 'random', label: "Random code; UNIQUE insert par clash ho toh retry", score: -1, why: "Random code ko atomic UNIQUE insert karo; clash par retry valid hai. Pehle SELECT ka check race kar sakta hai. Is exercise mein counter ko collision retries bachaane ke liye preference di hai; random width occupancy aur guessing risk se chuno." },
             { id: 'hash', label: "URL hash chhota karo; collision ki jaanch chhodo", score: -2, why: 'Do problems: wahi URL hamesha wahi code dega (do alag users, do alag campaigns — ek hi link), aur collisions phir bhi handle karne padenge kyunki 7 characters mein hash truncate ho raha hai.' },
           ],
@@ -387,8 +387,8 @@ READ (12,000/sec peak — yahan sab kuch hai)
     Phir code ki lambai gino aur hisaab lagao ki us space mein kitne links aa sakte hain.`,
   cards: [
     { front: 'Shortener ka pehla sawaal?', back: '<b>Read:write ratio.</b> 100:1 nikla → poora design read path ka hai; 40 writes/sec par write path pe sochna hi galti hai.' },
-    { front: 'Short code kaise banayein?', back: "<b>Durable disjoint counter → optional one-to-one mapping → base62.</b> Namespace reuse/exhaustion guard karo; no separate SELECT needed, UNIQUE still useful. 7 chars ≈ 3.52 trillion = 35.2 kharab codes. Encoding/scramble authorization replace nahi karte." },
-    { front: 'Click analytics kaise?', back: '<b>Async event</b> — redirect critical path par sync analytics cost avoid/measure karo;async durability/loss policy explicit ho. Warna 12k reads/sec = 12k writes/sec ek hi row par (hot row).' },
+    { front: 'Short code kaise banayein?', back: "<b>Durable counter (range na takraayein) → chaaho toh one-to-one mapping → base62.</b> Namespace ka dobara use aur khatam hona roko; alag SELECT ki zaroorat nahi, par UNIQUE phir bhi kaam ka. 7 chars ≈ 3.52 trillion = 35.2 kharab codes. Encoding ya scramble authorization ki jagah nahi lete." },
+    { front: 'Click analytics kaise?', back: '<b>Async event</b> — redirect ke zaroori raaste par analytics ka sync kharcha mat daalo (ya naapo); async event kitna tikega aur khone par kya hoga, ye saaf likho. Warna 12k reads/sec = 12k writes/sec ek hi row par (hot row).' },
     { front: '301 vs 302?', back: "301 heuristically cacheable permanent redirect hai;302 temporary,but explicit cache headers se cache ho sakta hai.Destination change/analytics needs se status aur cache policy choose karo;every302 always hits server nahi." },
     { front: 'Viral link (50k rps ek code par)?', back: 'Hot key. <b>1-second local cache</b> (99.9% traffic wahin) + cache key ki N copies. Cache nodes badhane se kuch nahi hoga.' },
     { front: 'Custom alias ka chhupa hua bug?', back: '<b>Check-then-insert race.</b> Unique index par seedha insert karo aur violation ko 409 banao. Aur reserved words (admin, api, login) block karo.' },

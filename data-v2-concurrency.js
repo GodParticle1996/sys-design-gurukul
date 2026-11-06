@@ -558,7 +558,7 @@
                 "Method se bahar aana ya exception close ki jagah nahi leta. close() bulana padta hai.",
               ],
               "Connection aur permit kaun wapas karta hai: semaphore khud, ya close()?") },
-          { title: '4. Do baar return?', say: 'Raw Java semaphore par extra release available count badha sakta hai. Lab ek acquisition ke baad do releases se 3/2 dikhata hai. Fixed <b>lease</b> resource ka temporary handle hai; close ka atomic once-only guard duplicate return rokta hai.', vars: { permits: 'Broken raw release: 3/2', free: 'Fixed lease: har ID ek baar', c: 'Duplicate return reject' },
+          { title: '4. Do baar return?', say: 'Java ke aam semaphore par faltu release() khaali permits ki ginti badha deta hai. Lab mein ek acquire ke baad do release() se ginti 3/2 dikhti hai. Theek kiya hua <b>lease</b> resource ka kuch der ka handle hai; close() par ek hi baar chalne wala atomic guard dobara lautana rokta hai.', vars: { permits: 'Broken raw release: 3/2', free: 'Fixed lease: har ID ek baar', c: 'Duplicate return reject' },
             ask: ask("Lease ka close() do baar bula diya gaya. Pool mein sahi nateeja kya rehna chahiye?",
               [
                 "ID aur permit ek-ek baar hi wapas aayein — kul capacity 2 hi rahe",
@@ -601,7 +601,7 @@
                 "Permit transaction ya safalta ka vaada nahi. Sirf andar aane ki ijaazat hai.",
               ],
               "Semaphore kya ginta hai: local jagah, ya database ki sehat?") },
-          { title: '4. Khud build karo', say: 'PoolLab.java mein pehle borrow/close ko paper par likho. Failure ko lease ke andar throw karo aur counts dekho. close ka once-only guard hataoge toh duplicate ID/permit test fail hona chahiye; guard restore karo.' },
+          { title: '4. Khud build karo', say: 'PoolLab.java mein pehle borrow aur close ka kram paper par likho. Phir lease ke andar failure throw karo aur ginti dekho. close() ka ek-baar wala guard hataoge toh duplicate ID/permit wala test fail hona chahiye; phir guard wapas lagao.' },
         ], 'Capacity, health aur ownership alag cheezein hain. Cleanup failure paths par bhi verify karo.', CODE.pool),
         lab('ex3-pool', 'Lab 3 · semaphore connection pool banao', ask("Raw semaphore ne double release par 3/2 dikhaya; fixed lease ke baad permits = 2, free = 2. Asli repair kya tha?",
           [
