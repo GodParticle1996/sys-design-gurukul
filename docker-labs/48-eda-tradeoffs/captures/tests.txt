@@ -1,0 +1,14 @@
+✔ queue: FIFO, aur ttl ke baad phenko ya dead-letter (2.636253ms)
+✔ burst: queue reject ko intezaar mein badalti hai (2.038301ms)
+✔ sustained: aane ki raftaar zyada ho toh line kabhi khaali nahi (147.289965ms)
+✔ offline: retention se purane messages kho jaate (ya dead-letter) (2.15784ms)
+✔ step: failure ya toh chup, ya OrderFailed khabar (8.862036ms)
+✔ chain: asli HTTP par teeno raaste (3059.870752ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3276.909931

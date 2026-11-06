@@ -1,0 +1,12 @@
+profile=sustained workers=50 queue=true | capacity 10000/min
+  1 min  aaye=10000 hue=10000 reject=0 line=0 sabse-purana=0 min
+  2 min  aaye=20000 hue=20000 reject=0 line=0 sabse-purana=0 min
+  3 min  aaye=30000 hue=30000 reject=0 line=0 sabse-purana=0 min
+  4 min  aaye=40000 hue=40000 reject=0 line=0 sabse-purana=0 min
+  5 min  aaye=50000 hue=50000 reject=0 line=0 sabse-purana=0 min
+  6 min  aaye=60000 hue=60000 reject=0 line=0 sabse-purana=0 min
+  7 min  aaye=70000 hue=70000 reject=0 line=0 sabse-purana=0 min
+  8 min  aaye=80000 hue=80000 reject=0 line=0 sabse-purana=0 min
+  9 min  aaye=90000 hue=90000 reject=0 line=0 sabse-purana=0 min
+ 10 min  aaye=100000 hue=100000 reject=0 line=0 sabse-purana=0 min
+peak line=0 (1 min) · khaali hui=line bani hi nahi · sabse lamba intezaar=0 min · reject=0

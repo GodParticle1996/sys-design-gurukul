@@ -1,0 +1,10 @@
+mode=direct | nakli ghadi; lab ke tay numbers (60/s burst, 20/s capacity)
+ 1 s  Sale shuru: har second 60 order, recs-service 20/s sambhalta hai | aaye=60 hue=20 reject=40 line=0 sabse-purana=0 s
+ 5 s  Burst ka 5va second | aaye=300 hue=100 reject=200 line=0 sabse-purana=0 s
+10 s  Burst ka aakhri second | aaye=600 hue=200 reject=400 line=0 sabse-purana=0 s
+11 s  Burst khatam: ab 10 order/s | aaye=610 hue=210 reject=400 line=0 sabse-purana=0 s
+20 s  20va second | aaye=700 hue=300 reject=400 line=0 sabse-purana=0 s
+30 s  30va second | aaye=800 hue=400 reject=400 line=0 sabse-purana=0 s
+49 s  49va second | aaye=990 hue=590 reject=400 line=0 sabse-purana=0 s
+50 s  50va second | aaye=1000 hue=600 reject=400 line=0 sabse-purana=0 s
+60 s  Aakhri (60va) second | aaye=1100 hue=700 reject=400 line=0 sabse-purana=0 s

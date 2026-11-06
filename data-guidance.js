@@ -36,6 +36,8 @@
     warehouse: { title: 'Snowflake — warehouse architecture', url: 'https://docs.snowflake.com/en/user-guide/warehouses-overview' },
     launch: { title: 'Google SRE — reliable product launches', url: 'https://sre.google/sre-book/reliable-product-launches/' },
     ecst: { title: 'Martin Fowler — What do you mean by "Event-Driven"?', url: 'https://martinfowler.com/articles/201701-event-driven.html' },
+    leveling: { title: 'Azure — Queue-Based Load Leveling pattern', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/queue-based-load-leveling' },
+    sqsdlq: { title: 'Amazon SQS — dead-letter queues', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -159,6 +161,26 @@
     ],
     followup: 'Ek delta chhoota aur agla event kabhi nahi aaya. Consumer ko gap ka pata kaise chalega?',
     sources: ['ecst', 'kafka'],
+  });
+  add('eda-tradeoffs', 'et-kyun et-kaise et-code et-kab', {
+    title: 'Line lagao, seedha bulao, ya raftaar badhao?',
+    misaal: 'Diwali ki bheed mein token line ne har grahak ko jagah di, par sabse purana 20 second ruka. Roz 50 guna bheed ho toh line ghanton lambi. Grahak thali ke liye khada ho toh token \"pending\" hi deta hai.',
+    asli: 'Line thodi der ki bheed aur band consumer sambhaalti hai; user ka intezaar aur roz ka farak nahi.',
+    points: [
+      '<b>Burst:</b> line reject ko intezaar mein badalti hai; khaali = backlog / (nikalna − aana).',
+      '<b>Band consumer:</b> line sirf retention tak rakhti hai; phir phenko ya dead-letter.',
+      '<b>Chain:</b> user ko nateeja abhi chahiye toh events se zaroori kaam ka intezaar nahi mitta.',
+    ],
+    use: 'Alag reactions, thodi der ki bheed, ya consumer ka band rehna — jab der manzoor ho.',
+    avoid: 'User screen par nateeja maang raha ho, ya aana roz nikalne se zyada ho.',
+    mistake: 'Band rehne se chhoti retention: messages expire. Failure ki khabar ya pending deadline nahi: orders hamesha pending.',
+    compare: [
+      { choice: 'Line / events', when: 'Der manzoor, bheed thodi der ki', tradeoff: 'Reject bache; intezaar, retention aur status ka hisaab' },
+      { choice: 'Seedha call', when: 'User abhi nateeja maange', tradeoff: 'Seedha jawab aur error; dependency ka wait juda' },
+      { choice: 'Raftaar badhao', when: 'Aana roz nikalne se zyada', tradeoff: 'Workers ka kharcha, ya kaam kam/shed karna' },
+    ],
+    followup: 'Consumer 3 din band raha aur retention 1 din thi. Kitna kaam bachega, aur kaise pata chalega?',
+    sources: ['leveling', 'sqsdlq'],
   });
   add('service-boundaries', 'decompose st-reddit-strangle prime-boundary-tax prime-replicate prime-when-split', {
     title: 'Har nayi service ka fayda kya hai?',

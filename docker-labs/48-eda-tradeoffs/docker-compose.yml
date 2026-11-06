@@ -1,0 +1,11 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# ex3-chain apne paanch Node processes ek hi container mein chalata hai (ports 5700–5704, bahar publish nahi).
+services:
+  chain:
+    build: .
+    profiles: [ex3-chain]
+    command: node start.js ex3-chain
+  level:
+    build: .
+    profiles: [ex1-level]
+    command: node start.js ex1-level --profile sustained

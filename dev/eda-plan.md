@@ -69,8 +69,23 @@ The playlist was refreshed through Video-Translate on 2026-10-20: 64 entries, in
 | Event Sourcing: Genius or Just Over-Engineering? | `wXg_aON4oj8` | Append events and reconstruct state; snapshots and read models separately |
 | 4 Event-Modeling Mistakes in Event-Driven Architectures | `m3mY3Ra-BcI` | Contracts, naming, payloads and schema evolution, each backed by a lab |
 
-Done: event payloads. Next: EDA tradeoffs (lab 48, ports 5700–5704), delivery problems, event sourcing/CQRS and event modeling.
+Done: event payloads; EDA tradeoffs (below). Next: delivery problems, event sourcing/CQRS and event modeling.
+
+## Ready: third topic, EDA Tradeoffs (2026-11-06)
+
+`et-kyun` → `et-kaise` → `et-code` → `et-kab`, in `data-v2-eda-tradeoffs-1…4`, group "⚖️ EDA Tradeoffs", guide `eda-tradeoffs`.
+Sources: *Here's when Event-Driven Systems should REALLY be used* (`Of-br0OG5ic`) and *Here's why Event-Driven Architecture
+might be a BAD choice* (`ttEYKoP53DM`); transcripts in video-translate `vu_output/sd5-eda-when`, `sd5-eda-bad`.
+Lab 48 (built by Claude): fixed-clock model for burst vs sustained load and consumer-offline retention/dead-letter
+(byte-identical runs), plus a real-HTTP payment → stock → confirm chain (ports 5700–5704; three runs, ranges).
+Corrections taught: a queue only levels bursts (Azure: average producer rate above consumer rate grows the queue);
+"messages are always safe" depends on retention and DLQ settings (SQS deletes expired messages; its DLQ is maxReceiveCount;
+RabbitMQ dead-letters expired messages only with a DLX); idempotency handles duplicates, not ordering; "3+ hops → events"
+only when the caller does not need the result now (lab's 202-pending API: median reply 4–10 ms, median confirm of
+successful orders 101.5–149.5 ms vs direct 85–108 ms over three runs). Codex fact-checked the topic: 19 findings, all fixed
+(FIFO max-wait = backlog / total capacity; HTTP helper carries errors across services; pending deadline is a warning, not
+proof of failure; SQS counts receives; DLX alone does not guarantee saving; median helper; slowmo/level tool output). Max XP grew to 53,450, so the top ranks moved to 45,500 / 50,000 (xp-test keeps the top rank at 90–95%).
 Read the relevant source and primary docs before choosing the exact split. Keep the KhanaKart world and four-question course shape.
 Outbox, CDC and DLQ have their later Messaging theme; show the failure here without claiming those topics already have new playlist lessons.
 
-Next free lab number: 48. Lab 44 uses 5400–5404; inspect all current ports before assigning a new range.
+Next free lab number: 49. Lab 44 uses 5400–5404; inspect all current ports before assigning a new range.

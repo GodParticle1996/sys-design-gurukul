@@ -1,0 +1,24 @@
+
+== direct
+  #101 thali       jawab 615 ms | aakhri haalat  615 ms | confirmed
+  #102 thali       jawab  93 ms | aakhri haalat   93 ms | confirmed
+  #103 thali       jawab  96 ms | aakhri haalat   96 ms | confirmed
+  #104 gulab-jamun jawab  82 ms | aakhri haalat   82 ms | error (stock: gulab-jamun khatam)
+  #105 thali       jawab 120 ms | aakhri haalat  120 ms | confirmed
+  median jawab (paanchon) 96 ms · median confirmed (4 safal) 108 ms
+
+== events (failure par chup)
+  #201 thali       jawab  11 ms | aakhri haalat  169 ms | confirmed
+  #202 thali       jawab  10 ms | aakhri haalat  142 ms | confirmed
+  #203 thali       jawab  18 ms | aakhri haalat  125 ms | confirmed
+  #204 gulab-jamun jawab   8 ms | aakhri haalat    — | pending (1500 ms tak)
+  #205 thali       jawab   9 ms | aakhri haalat  135 ms | confirmed
+  median jawab (paanchon) 10 ms · median confirmed (4 safal) 138.5 ms
+
+== events + OrderFailed
+  #301 thali       jawab   7 ms | aakhri haalat  116 ms | confirmed
+  #302 thali       jawab   8 ms | aakhri haalat  122 ms | confirmed
+  #303 thali       jawab   8 ms | aakhri haalat  114 ms | confirmed
+  #304 gulab-jamun jawab   9 ms | aakhri haalat   86 ms | failed (stock: gulab-jamun khatam)
+  #305 thali       jawab   7 ms | aakhri haalat  112 ms | confirmed
+  median jawab (paanchon) 8 ms · median confirmed (4 safal) 115 ms

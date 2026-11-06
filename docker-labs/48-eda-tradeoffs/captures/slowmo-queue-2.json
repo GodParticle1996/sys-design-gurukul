@@ -1,0 +1,123 @@
+{
+  "mode": "queue",
+  "scenario": "burst",
+  "rows": [
+    {
+      "t": 1,
+      "say": "Sale shuru: har second 60 order, recs-service 20/s sambhalta hai",
+      "tick": 0,
+      "arrived": 60,
+      "done": 20,
+      "rejected": 0,
+      "maxWaitMs": 0,
+      "depth": 40,
+      "oldestMs": 0,
+      "expired": 0,
+      "deadLettered": 0
+    },
+    {
+      "t": 5,
+      "say": "Burst ka 5va second",
+      "tick": 4,
+      "arrived": 300,
+      "done": 100,
+      "rejected": 0,
+      "maxWaitMs": 3000,
+      "depth": 200,
+      "oldestMs": 3000,
+      "expired": 0,
+      "deadLettered": 0
+    },
+    {
+      "t": 10,
+      "say": "Burst ka aakhri second",
+      "tick": 9,
+      "arrived": 600,
+      "done": 200,
+      "rejected": 0,
+      "maxWaitMs": 6000,
+      "depth": 400,
+      "oldestMs": 6000,
+      "expired": 0,
+      "deadLettered": 0
+    },
+    {
+      "t": 11,
+      "say": "Burst khatam: ab 10 order/s",
+      "tick": 10,
+      "arrived": 610,
+      "done": 220,
+      "rejected": 0,
+      "maxWaitMs": 7000,
+      "depth": 390,
+      "oldestMs": 7000,
+      "expired": 0,
+      "deadLettered": 0
+    },
+    {
+      "t": 20,
+      "say": "20va second",
+      "tick": 19,
+      "arrived": 700,
+      "done": 400,
+      "rejected": 0,
+      "maxWaitMs": 13000,
+      "depth": 300,
+      "oldestMs": 13000,
+      "expired": 0,
+      "deadLettered": 0
+    },
+    {
+      "t": 30,
+      "say": "30va second",
+      "tick": 29,
+      "arrived": 800,
+      "done": 600,
+      "rejected": 0,
+      "maxWaitMs": 20000,
+      "depth": 200,
+      "oldestMs": 19000,
+      "expired": 0,
+      "deadLettered": 0
+    },
+    {
+      "t": 49,
+      "say": "49va second",
+      "tick": 48,
+      "arrived": 990,
+      "done": 980,
+      "rejected": 0,
+      "maxWaitMs": 20000,
+      "depth": 10,
+      "oldestMs": 0,
+      "expired": 0,
+      "deadLettered": 0
+    },
+    {
+      "t": 50,
+      "say": "50va second",
+      "tick": 49,
+      "arrived": 1000,
+      "done": 1000,
+      "rejected": 0,
+      "maxWaitMs": 20000,
+      "depth": 0,
+      "oldestMs": 0,
+      "expired": 0,
+      "deadLettered": 0
+    },
+    {
+      "t": 60,
+      "say": "Aakhri (60va) second",
+      "tick": 59,
+      "arrived": 1100,
+      "done": 1100,
+      "rejected": 0,
+      "maxWaitMs": 20000,
+      "depth": 0,
+      "oldestMs": 0,
+      "expired": 0,
+      "deadLettered": 0
+    }
+  ]
+}

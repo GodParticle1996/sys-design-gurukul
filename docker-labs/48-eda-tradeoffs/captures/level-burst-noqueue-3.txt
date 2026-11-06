@@ -1,0 +1,14 @@
+profile=burst workers=1 queue=false | capacity 20/s
+  5 s  aaye=300 hue=100 reject=200 line=0 sabse-purana=0 s
+ 10 s  aaye=600 hue=200 reject=400 line=0 sabse-purana=0 s
+ 15 s  aaye=650 hue=250 reject=400 line=0 sabse-purana=0 s
+ 20 s  aaye=700 hue=300 reject=400 line=0 sabse-purana=0 s
+ 25 s  aaye=750 hue=350 reject=400 line=0 sabse-purana=0 s
+ 30 s  aaye=800 hue=400 reject=400 line=0 sabse-purana=0 s
+ 35 s  aaye=850 hue=450 reject=400 line=0 sabse-purana=0 s
+ 40 s  aaye=900 hue=500 reject=400 line=0 sabse-purana=0 s
+ 45 s  aaye=950 hue=550 reject=400 line=0 sabse-purana=0 s
+ 50 s  aaye=1000 hue=600 reject=400 line=0 sabse-purana=0 s
+ 55 s  aaye=1050 hue=650 reject=400 line=0 sabse-purana=0 s
+ 60 s  aaye=1100 hue=700 reject=400 line=0 sabse-purana=0 s
+peak line=0 (1 s) · khaali hui=line bani hi nahi · sabse lamba intezaar=0 s · reject=400

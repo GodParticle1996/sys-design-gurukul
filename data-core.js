@@ -42,8 +42,8 @@ const RANKS = [
   { xp: 34000, name: 'Resilience Rajguru',   icon: '🌳' },
   { xp: 37500, name: 'Consensus Chakravarti', icon: '🤝' },
   { xp: 41200, name: 'Vitaran Vidvaan',      icon: '🕸️' },
-  { xp: 45000, name: 'Pranali Paramguru',    icon: '🌟' },
-  { xp: 48000, name: 'System Samrat',        icon: '🔱' },
+  { xp: 45500, name: 'Pranali Paramguru',    icon: '🌟' },
+  { xp: 50000, name: 'System Samrat',        icon: '🔱' },
 ];
 
 SD.tracks = [

@@ -1,0 +1,12 @@
+profile=sustained workers=1 queue=true | capacity 200/min
+  1 min  aaye=10000 hue=200 reject=0 line=9800 sabse-purana=0 min
+  2 min  aaye=20000 hue=400 reject=0 line=19600 sabse-purana=1 min
+  3 min  aaye=30000 hue=600 reject=0 line=29400 sabse-purana=2 min
+  4 min  aaye=40000 hue=800 reject=0 line=39200 sabse-purana=3 min
+  5 min  aaye=50000 hue=1000 reject=0 line=49000 sabse-purana=4 min
+  6 min  aaye=60000 hue=1200 reject=0 line=58800 sabse-purana=5 min
+  7 min  aaye=70000 hue=1400 reject=0 line=68600 sabse-purana=6 min
+  8 min  aaye=80000 hue=1600 reject=0 line=78400 sabse-purana=7 min
+  9 min  aaye=90000 hue=1800 reject=0 line=88200 sabse-purana=8 min
+ 10 min  aaye=100000 hue=2000 reject=0 line=98000 sabse-purana=9 min
+peak line=98000 (10 min) · khaali hui=run ke ant tak nahi · sabse lamba intezaar=9 min · reject=0

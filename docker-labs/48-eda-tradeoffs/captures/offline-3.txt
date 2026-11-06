@@ -1,0 +1,4 @@
+consumer 0–90 min band · 20 msg/min aate · wapas aakar 50 msg/min (nakli ghadi)
+retention 60 min, dead-letter nahi   aaye=4000 hue=3400 phenke=600 dead-letter=0 line khaali=130 min sabse lamba intezaar=60 min
+retention 60 min, dead-letter chalu  aaye=4000 hue=3400 phenke=0 dead-letter=600 line khaali=130 min sabse lamba intezaar=60 min
+retention 4 din                      aaye=4000 hue=4000 phenke=0 dead-letter=0 line khaali=150 min sabse lamba intezaar=90 min
