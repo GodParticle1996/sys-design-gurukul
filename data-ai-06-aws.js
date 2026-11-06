@@ -84,10 +84,10 @@ SD.registerLevels('ai', [
     'Production par SSH nahi — security aur scaling dono',
   ],
   lesson: [
-    "<h3>🛒 Yeh aam shopping list nahi</h3>\n     <p>Amazon ka capex ~$200B saal (roz $0.5B se zyada), zyadatar AWS. 2016 mein James Hamilton ne kaha\n     tha: AWS har din itni capacity jodta hai jitni 2004 ke poore Amazon (ek $7B company) ko chalane ke\n     liye chahiye thi. Aur yeh servers \"khareedna\" nahi — apne servers, apne CPUs (Graviton), apne routers,\n     apna fiber aur undersea cables mein hissa, data center ke andar apna transport (TCP nahi).</p>\n     <p>Kyun? Vendor ka saamaan hazaron machines ke liye bana hai. <b>Laakhon</b> par jo kharche aur failure\n     rates dikhte nahi the, woh bahut bade ho jaate hain → khud banana sasta.</p>\n     <p class=\"tip\">Ek mithak bhi: \"AWS retail ke khaali servers kiraye par dene se bana\" — galat. Holiday peak\n     par woh servers wapas chahiye hote. Asli wajah: andar ki takleef, har team infra dobara bana rahi thi;\n     Bezos ka mandate — mazboot internal services; phir woh hunar bech diya.</p>\n     <h3>🎲 Failure ek RATE hai</h3>\n     <p>Ek machine par 1-in-a-million/din wali galti shayad kabhi na dikhe. 10 lakh machines par wahi galti\n     <b>roz</b> hoti hai. Werner Vogels: <b>\"Everything fails all the time.\"</b> Design ka sawaal \"kya yeh\n     fail hoga?\" nahi, \"yeh roz kitni baar fail hoga, aur tab kya?\"</p>",
+    "<h3>🛒 Ye aam shopping list nahi</h3>\n     <p>Amazon ka capex ~$200B saal (roz $0.5B se zyada), zyadatar AWS. 2016 mein James Hamilton ne kaha\n     tha: AWS har din itni capacity jodta hai jitni 2004 ke poore Amazon (ek $7B company) ko chalane ke\n     liye chahiye thi. Aur ye servers \"khareedna\" nahi — apne servers, apne CPUs (Graviton), apne routers,\n     apna fiber aur undersea cables mein hissa, data center ke andar apna transport (TCP nahi).</p>\n     <p>Kyun? Vendor ka saamaan hazaron machines ke liye bana hai. <b>Laakhon</b> par jo kharche aur failure\n     rates dikhte nahi the, ve kharche bahut bade ho jaate hain → khud banana sasta.</p>\n     <p class=\"tip\">Ek mithak bhi: \"AWS retail ke khaali servers kiraye par dene se bana\" — galat. Holiday peak\n     par retail ko apne servers wapas chahiye hote. Asli wajah: andar ki takleef, har team infra dobara bana rahi thi;\n     Bezos ka mandate — mazboot internal services; phir infra banane ka hunar bech diya.</p>\n     <h3>🎲 Failure ek RATE hai</h3>\n     <p>Ek machine par 1-in-a-million/din wali galti shayad kabhi na dikhe. 10 lakh machines par wahi galti\n     <b>roz</b> hoti hai. Werner Vogels: <b>\"Everything fails all the time.\"</b> Design ka sawaal \"kya system\n     fail hoga?\" nahi, \"system roz kitni baar fail hoga, aur tab kya?\"</p>",
     `<h3>🖥️ Nitro — overhead ko CPU se hatao</h3>
      <p>Pehle dashak AWS Xen hypervisor chalata tha — virtual networking, storage emulation, management, sab
-     customer ke CPU par. Yeh overhead × crore machines = <b>poore data centers</b> sirf Xen chala rahe the.</p>
+     customer ke CPU par. Ye overhead × crore machines = <b>poore data centers</b> sirf Xen chala rahe the.</p>
      <p>2015: Annapurna Labs (~$350M) khareeda → <b>Nitro</b>: VPC networking, EBS, local storage ke liye alag
      cards; security chip jo boot se pehle firmware/software jaanchta hai; ek chhota hypervisor jo sirf batwara
      karta hai. Bare metal instance = Nitro, hypervisor ke bina. EC2 Mac = Mac mini, Thunderbolt se Nitro par.
@@ -112,7 +112,7 @@ SD.registerLevels('ai', [
           unit: 'disks/din', given: ['1% per saal', '10,00,000 disks', '365 din'],
           answer: 27, tol: 0.3,
           steps: ['10,00,000 × 1% = 10,000 disks/saal', '10,000 / 365 ≈ 27 roz'],
-          lesson: 'Roz 27 disks — yeh incident nahi, ek routine hai. Isliye replacement aur repair automatic hone chahiye.',
+          lesson: 'Roz 27 disks — ye incident nahi, ek routine hai. Isliye replacement aur repair automatic hone chahiye.',
         },
         {
           q: 'Hypervisor har machine ka 10% CPU khata hai. 20 lakh machines par kitni machines ka CPU sirf hypervisor par?',
@@ -209,9 +209,9 @@ SD.registerLevels('ai', [
     'Main scale par chhote kharchon ka hisaab laga sakta hoon',
     'Main no-SSH ops ka security aur scaling tark de sakta hoon',
   ],
-  homework: `<p>Apne system ka ek "kabhi-kabhi" wala failure lo (disk bhari, cert expire, process OOM). Uska rate
+  homework: `<p>Apne system ka ek "kabhi-kabhi" wala failure lo (disk bhari, cert expire, process OOM). Failure ka rate
     nikaalo (mahine mein kitni baar per machine) aur fleet size se guna karo. Agar jawab "hafte mein kai baar"
-    aaye toh woh incident nahi, automation ka kaam hai.</p>`,
+    aaye toh failure incident nahi, automation ka kaam hai.</p>`,
   cards: [
     { front: '"Failure ek rate hai" ka matlab?', back: '1-in-a-million/din × 10 lakh machines = roz ek baar. Design ka sawaal: roz kitni baar, aur tab kya automatic hoga?' },
     { front: 'Nitro kya hai?', back: 'Networking, EBS, storage ka kaam alag cards par; security chip boot se pehle jaanch; chhota hypervisor. Xen ka overhead customer CPU se hata.' },
@@ -228,18 +228,18 @@ SD.registerLevels('ai', [
   title: 'Network — simple switches aur 64 raaston wala transport',
   badge: 'Raasta Bikherne Wala',
   objectives: [
-    '"Jab yeh fail hoga toh failure kaisa dikhega?" — Hamilton ka sawaal',
+    '"Jab ye fail hoga toh failure kaisa dikhega?" — Hamilton ka sawaal',
     'Single-chip switches aur Clos fabric',
     'TCP ki teen maanyataein data center mein kyun galat',
     'SRD: multipath, no ordering, µs retransmit — lab mein tail latency',
   ],
   lesson: [
     `<h3>🔧 "Kitne failures hamare hain?"</h3>
-     <p>James Hamilton ka sawaal: <b>jab yeh fail hoga, failure kaisa dikhega, aur uske kitne hisse hamare
+     <p>James Hamilton ka sawaal: <b>jab ye fail hoga, failure kaisa dikhega, aur failure ke kitne hisse hamare
      control mein hain?</b> Bade chassis routers (Cisco/Juniper) sophisticated tareeke se fail hote hain —
      diagnose karne mein hafta. 10 routers ke liye theek, hazaron ke liye nahi.</p>
      <p>AWS ke routers: <b>ek commodity switching chip</b>, kam features, jo simple tareeke se fail ho —
-     "chal raha hai ya mara hua". Aur unhe <b>Clos fabric</b> mein lagao: ek jaise switches ki layers, beech
+     "chal raha hai ya mara hua". Aur in switches ko <b>Clos fabric</b> mein lagao: ek jaise switches ki layers, beech
      mein bahut saare barabar raaste; badhna ho toh aur boxes jodo. Upar se apna global backbone aur undersea
      cables mein hissa → regions ke beech traffic public internet par nahi.</p>
      <h3>🚗 TCP ki teen maanyataein</h3>
@@ -342,10 +342,10 @@ SD.registerLevels('ai', [
     'Main lab se dikha sakta hoon ki multipath tail latency kaise bachata hai',
   ],
   homework: `<p>Apne system ki koi ek purani maanyata dhoondho jo naye environment mein galat ho sakti hai
-    (jaise "network reliable hai", "clock sahi hai", "disk tez hai"). Likho: yeh maanyata kahan se aayi, aur
-    tumhare environment mein iski jagah kya sach hai?</p>`,
+    (jaise "network reliable hai", "clock sahi hai", "disk tez hai"). Likho: ye maanyata kahan se aayi, aur
+    tumhare environment mein maanyata ki jagah kya sach hai?</p>`,
   cards: [
-    { front: 'Hamilton ka network sawaal?', back: '"Jab yeh fail hoga, failure kaisa dikhega, aur kitna hamare control mein?" → simple single-chip switches + Clos fabric.' },
+    { front: 'Hamilton ka network sawaal?', back: '"Jab ye fail hoga, failure kaisa dikhega, aur kitna hamare control mein?" → simple single-chip switches + Clos fabric.' },
     { front: 'TCP ki DC mein galat maanyataein?', back: 'Ek raasta (hazaron khaali), order zaroori (HOL blocking), ms recovery (RTT µs mein).' },
     { front: 'SRD?', back: 'Ek flow 64 raaston par, no ordering, µs retransmit dusre raaste se. Lab: ek raasta dead → TCP p99 31 ms, SRD 110 µs.' },
   ],
@@ -366,7 +366,7 @@ SD.registerLevels('ai', [
     'Physalia: har volume ka apna chhota database',
   ],
   lesson: [
-    "<h3>☕ Barista vs coffee machine</h3>\n     <p>Barista: order aaya toh banaya, nahi toh baitha. Shaant din aaram, rush hour mein pagal. Coffee machine:\n     har minute ek cup, chahe koi pee ya na pee. \"Wasteful\" — par rush hour mein bhi wahi kaam.</p>\n     <p><b>Delta sync</b> barista hai: sirf badlaav bhejo. Do bimaariyan:</p>\n     <ul>\n       <li>Shaant din kuch kaam nahi, <b>bure din hazaron updates</b> — thik tab jab system pehle se pareshan hai.</li>\n       <li>Ek update khoya → <b>hamesha ke liye drift</b>. Koi dobara nahi bhejta.</li>\n     </ul>\n     <p><b>Route 53 health checks</b> coffee machine hain: har kuch second ek service <b>har</b> health check ki\n     <b>poori</b> state ek <b>fixed-size</b> file mein S3 par likhti hai; har DNS server poori file le jaata hai.\n     Is bounded-state example mein 0 ya1,00,000 changes par scheduled full-state transfer ka budget same rakha hai. Lost delta valid newer authoritative snapshot se repair ho sakti hai; corrupt source/config or missing delivery alag problem hain.</p>\n     <pre>lab 20 (10,000 checks, t=4 par 10,000 ek saath badle):\ndelta     peak 9,772 msgs/sec per DNS server   drift (1% messages khoye): ~108 hamesha\nconstant  hamesha 1 msg (10 KB)/sec             drift: 0</pre>\n     <p class=\"tip\">🎯 <b>Jo cheez fail nahi honi chahiye, uska kaam predictable rakho.</b> Sabse bura din =\n     sabse shaant din.</p>",
+    "<h3>☕ Barista vs coffee machine</h3>\n     <p>Barista: order aaya toh banaya, nahi toh baitha. Shaant din aaram, rush hour mein pagal. Coffee machine:\n     har minute ek cup, chahe koi pee ya na pee. \"Wasteful\" — par rush hour mein bhi wahi kaam.</p>\n     <p><b>Delta sync</b> barista hai: sirf badlaav bhejo. Do bimaariyan:</p>\n     <ul>\n       <li>Shaant din kuch kaam nahi, <b>bure din hazaron updates</b> — thik tab jab system pehle se pareshan hai.</li>\n       <li>Ek update khoya → <b>hamesha ke liye drift</b>. Koi dobara nahi bhejta.</li>\n     </ul>\n     <p><b>Route 53 health checks</b> coffee machine hain: har kuch second ek service <b>har</b> health check ki\n     <b>poori</b> state ek <b>fixed-size</b> file mein S3 par likhti hai; har DNS server poori file le jaata hai.\n     Is bounded-state example mein 0 ya1,00,000 changes par scheduled full-state transfer ka budget same rakha hai. Lost delta valid newer authoritative snapshot se repair ho sakti hai; corrupt source/config or missing delivery alag problem hain.</p>\n     <pre>lab 20 (10,000 checks, t=4 par 10,000 ek saath badle):\ndelta     peak 9,772 msgs/sec per DNS server   drift (1% messages khoye): ~108 hamesha\nconstant  hamesha 1 msg (10 KB)/sec             drift: 0</pre>\n     <p class=\"tip\">🎯 <b>Jo cheez fail nahi honi chahiye, us cheez ka kaam predictable rakho.</b> Sabse bura din =\n     sabse shaant din.</p>",
     `<h3>🌪️ EBS, 21 April 2011, us-east-1</h3>
      <p>Ek routine network change ne EBS ka replication traffic ek kam-capacity backup network par bhej diya.
      Volumes ne apne replicas kho diye. Network wapas aaya toh sab volumes ne ek saath <b>re-mirror</b> shuru
@@ -378,8 +378,8 @@ SD.registerLevels('ai', [
      aur network topology mein). CP system (partition mein consistency pehle), aur availability chhotepan +
      paas hone se wapas jeeti.</p>
      <pre>lab 20 (ex4) — 1,500 volumes, AZ-A mein 300 ka re-mirror storm, kul DB capacity dono mein same:
-shared DB    storm ke dauraan: AZ-A 56%, AZ-B 58%, AZ-C 55%   ← jinka kuch nahi bigda, woh bhi dukhi
-cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf wahan jahan aag lagi</pre>
+shared DB    storm ke dauraan: AZ-A 56%, AZ-B 58%, AZ-C 55%   ← jin AZs ka kuch nahi bigda, un AZs ko bhi dard
+cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf usi AZ mein jahan aag lagi</pre>
      <p>Cells mein AZ-A ko zyada dard — use sirf apne hisse ki capacity mili. Yahi trade-off hai: blast radius
      ek <b>jaana-pehchaana number</b>, poora region nahi.</p>`,
   ],
@@ -445,7 +445,7 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf waha
           'AZ-A ki queries kharab hui — guarantee nahi.',
         ],
       },
-      lesson: '"Guaranteed bottleneck" ko chhote tukdon mein todo aur jiska kaam hai uske paas rakho.',
+      lesson: '"Guaranteed bottleneck" ko chhote tukdon mein todo aur har tukda kaam ke asli maalik ke paas rakho.',
     },
   ],
   interview: {
@@ -494,8 +494,8 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf waha
     'Main shared bottleneck ko cells mein todne ka design de sakta hoon',
   ],
   homework: `<p>Apne system mein ek "barista" dhoondho — koi cheez jo sirf badlaav par kaam karti hai (config push,
-    cache invalidation, feature flags). Likho: bure din uska kaam kitna badhta hai, aur ek message kho jaaye toh
-    kya hota hai? Kya use "har N second poori state" mein badal sakte ho?</p>`,
+    cache invalidation, feature flags). Likho: bure din barista ka kaam kitna badhta hai, aur ek message kho jaaye toh
+    kya hota hai? Kya barista ko "har N second poori state" mein badal sakte ho?</p>`,
   cards: [
     { front: 'Constant work?', back: "Bounded state ko version/checksum ke saath periodic full snapshot se reconcile karo. Lost updates next valid newer authoritative snapshot repair kar sakti hai; corrupt source or failed delivery nahi. Route53 course example historical bounded design hai." },
     { front: 'EBS 2011 root cause?', back: 'Network change → replicas chhoote → sab volumes ne ek saath re-mirror → sab ek shared control-plane DB se poochh rahe the → DB gira → dinon ka recovery.' },
@@ -518,7 +518,7 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf waha
     'Poore AWS ke sabak ek jagah',
   ],
   lesson: [
-    "<h3>🎯 Testing = kuch raaste chala ke dekhna</h3>\n     <p>Tests kuch raaste chalate hain. Scale par 1-in-a-billion raasta ek aam dopahar ko chal jaata hai — aur\n     woh raasta tumhare test mein kabhi nahi tha.</p>\n     <h3>📐 TLA+ — har mumkin haalat</h3>\n     <p>TLA+ mein system ka <b>design</b> (code nahi) likhte hain — states aur transitions — aur model checker\n     <b>specified bounded model ki reachable states</b> explore karta hai, jab search successfully complete ho. AWS ne DynamoDB replication mein aisa bug pakda jiska sabse\n     chhota failing trace <b>35 kadam</b> ka tha. Random tests kuch aise bugs pakad sakte hain, par rare interleavings ki coverage establish karna mushkil hai.</p>\n     <h3>🔏 Zelkova — \"kya KOI bhi request?\"</h3>\n     <p>IAM/S3 policy ko math ke formula mein badlo, phir SMT solver (theorem prover) se poochho: <b>\"kya koi\n     bhi request is bucket ko public bana sakti hai?\"</b> Jawab \"haan\" ho toh solver misaal bhi deta hai. Yahi\n     IAM Access Analyzer, S3 Block Public Access aur console ke \"Public\" badge ke peeche hai.</p>\n     <p class=\"tip\">🎯 Test poochhta hai \"yeh request kya karti hai?\". Proof poochhta hai \"<b>koi bhi</b> request\n     kya kar sakti hai?\"</p>",
+    "<h3>🎯 Testing = kuch raaste chala ke dekhna</h3>\n     <p>Tests kuch raaste chalate hain. Scale par 1-in-a-billion raasta ek aam dopahar ko chal jaata hai — aur\n     ye raasta tumhare test mein kabhi nahi tha.</p>\n     <h3>📐 TLA+ — har mumkin haalat</h3>\n     <p>TLA+ mein system ka <b>design</b> (code nahi) likhte hain — states aur transitions — aur model checker\n     <b>specified bounded model ki reachable states</b> explore karta hai, jab search successfully complete ho. AWS ne DynamoDB replication mein aisa bug pakda jiska sabse\n     chhota failing trace <b>35 kadam</b> ka tha. Random tests kuch aise bugs pakad sakte hain, par rare interleavings ki coverage establish karna mushkil hai.</p>\n     <h3>🔏 Zelkova — \"kya KOI bhi request?\"</h3>\n     <p>IAM/S3 policy ko math ke formula mein badlo, phir SMT solver (theorem prover) se poochho: <b>\"kya koi\n     bhi request is bucket ko public bana sakti hai?\"</b> Jawab \"haan\" ho toh solver misaal bhi deta hai. Yahi\n     IAM Access Analyzer, S3 Block Public Access aur console ke \"Public\" badge ke peeche hai.</p>\n     <p class=\"tip\">🎯 Test poochhta hai \"ye request kya karti hai?\". Proof poochhta hai \"<b>koi bhi</b> request\n     kya kar sakti hai?\"</p>",
     `<h3>🧵 Ek VM launch — poori kahani ek saath (video)</h3>
      <pre>shuffle-sharded control plane  → ek kharab customer sabko nahi gira sakta
 Nitro-verified host            → boot se pehle firmware jaancha, koi SSH nahi
@@ -638,7 +638,7 @@ Zelkova-proved bucket policy   → "public?" ka math wala jawab
     ],
   },
   success: [
-    'Main test aur proof ka farq "yeh request" vs "koi bhi request" se samjha sakta hoon',
+    'Main test aur proof ka farq "ye request" vs "koi bhi request" se samjha sakta hoon',
     'Main TLA+ aur Zelkova ka kaam bata sakta hoon',
     'Main AWS ke saath sabak ek VM launch ki kahani mein jod sakta hoon',
   ],
@@ -648,7 +648,7 @@ Zelkova-proved bucket policy   → "public?" ka math wala jawab
   cards: [
     { front: 'TLA+ model checking?', back: "Design ko states/transitions mein likho; finite configured model ka completed search reachable states explore karta hai. Unbounded system/actual source code automatically proved nahi. DynamoDB replication bug: sabse chhota failing trace 35 kadam." },
     { front: 'Zelkova?', back: 'Supported IAM/S3 policy semantics ka solver analysis possible access classify karta hai. Identity/configuration context aur unmodeled behavior separately verify karo; solver answer complete system proof nahi.' },
-    { front: 'Test vs proof?', back: 'Test: "yeh request kya karti hai?" Proof: "koi bhi request kya kar sakti hai?" Scale par rare raaste roz chalte hain.' },
+    { front: 'Test vs proof?', back: 'Test: "ye request kya karti hai?" Proof: "koi bhi request kya kar sakti hai?" Scale par rare raaste roz chalte hain.' },
   ],
 },
 ]);

@@ -87,21 +87,21 @@ SD.registerLevels('ai', [
     `<h3>🚨 Pehle kahani (video ke mutabik)</h3>
      <p>Video ke hisaab se July 2026 mein Hugging Face par ek attack hua — ek test setup mein chal rahe
      AI model se, jiske safeguards <b>band</b> the. Hugging Face ki team ko <b>17,000 events</b> ki
-     logs dekhni thin. Unhone bade American models se madad maangi: "yeh malware hai, yeh payload hai,
-     samjhao kya hua." Jawab mila: <b>mana</b>. Model ko attack ka data dikh raha tha, aur woh
+     logs dekhni thin. Team ne bade American models se madad maangi: "ye malware hai, ye payload hai,
+     samjhao kya hua." Jawab mila: <b>mana</b>. Model ko attack ka data dikh raha tha, aur model
      "attack" jaisa dikhne wali cheez par baat nahi karna chahta tha.</p>
      <p>Phir team ne ek open-weights model apne hi hardware par chalaya. Kaam ho gaya — aur passwords,
-     payloads building se bahar bhi nahi gaye. Video ise <b>"asymmetry problem"</b> kehta hai:
+     payloads building se bahar bhi nahi gaye. Video is ulti haalat ko <b>"asymmetry problem"</b> kehta hai:
      defender ko jawab chahiye tha, par "na" defender ko mila.</p>
-     <p class="tip">⚠️ Yeh ek <b>opinion video</b> hai aur 2026 ke incidents video ke mutabik hain — hum
-     unhe verify nahi kar sakte. Is level mein hum speaker ki raay ko raay hi kahenge, aur jo cheez
-     hum khud naap sakte hain (containment) woh lab mein naapenge.</p>`,
+     <p class="tip">⚠️ Hamara source ek <b>opinion video</b> hai aur 2026 ke incidents video ke mutabik hain — hum
+     in incidents ko verify nahi kar sakte. Is level mein hum speaker ki raay ko raay hi kahenge, aur jo cheez
+     hum khud naap sakte hain (containment), wahi cheez lab mein naapenge.</p>`,
     `<h3>🛂 Airport security vs 🔒 cockpit ka darwaaza</h3>
      <p>Socho airport par do tarah ki suraksha hai:</p>
      <ul>
        <li><b>Security check</b> — ek insaan tumhari baat aur bag dekh ke faisla karta hai. Achhi
        kahani sunane wala nikal sakta hai; ghabraya hua imaandar musafir ruk sakta hai.</li>
-       <li><b>Cockpit ka band darwaaza</b> — andar kaun baitha hai, uski kahani kya hai, farq nahi
+       <li><b>Cockpit ka band darwaaza</b> — andar kaun baitha hai, andar wale ki kahani kya hai, farq nahi
        padta. Darwaaza band hai toh band hai.</li>
      </ul>
      <p>AI mein bhi "safety" do alag cheezon ka naam hai:</p>
@@ -115,9 +115,9 @@ SD.registerLevels('ai', [
      <p class="tip">🎯 Video ki line: <b>"You can audit a wall. You can't audit a vibe."</b> — deewar
      ko audit kar sakte ho, "mood" ko nahi.</p>`,
     `<h3>🎭 Filter kahani sunne wala hai</h3>
-     <p>Filter sirf shabd dekhta hai, isliye woh ek ajeeb cheez karta hai: jo <b>sach</b> bolta hai
-     ("breach chal raha hai, yeh malware hai") woh aksar ruk jaata hai, aur jo acchi kahani banata hai
-     woh nikal jaata hai. Anthropic ne Nov 2025 mein khud ek report di thi: ek state-backed group ne
+     <p>Filter sirf shabd dekhta hai, isliye filter ek ajeeb cheez karta hai: jo <b>sach</b> bolta hai
+     ("breach chal raha hai, ye malware hai") sach bolne wala aksar ruk jaata hai, aur jo acchi kahani banata hai
+     kahani sunane wala nikal jaata hai. Anthropic ne Nov 2025 mein khud ek report di thi: ek state-backed group ne
      AI coding agent ko "hum security company hain, authorized testing hai" bol ke istemaal kiya, aur
      kaam ko chhote-chhote masoom dikhne wale tukdon mein baanta. Context bhi sirf text hai — use
      banana aasaan hai.</p>
@@ -127,8 +127,8 @@ SD.registerLevels('ai', [
      hai, isliye defender ke har sawaal par bhi thoda nuksaan hota hai.</p>
      <h3>⚖️ Toh kya filter bekaar hai?</h3>
      <p>Nahi — aur yahan hum video se thoda alag khade hain. Filter <b>kam mehnat wali galtiyon</b> ko
-     rokta hai aur ek layer hai. Par woh <b>security boundary</b> nahi hai: jo control tabhi chale
-     jab user sach bole, woh control nahi, request hai. Asli boundary — jise tum audit kar sako —
+     rokta hai aur ek layer hai. Par filter <b>security boundary</b> nahi hai: jo control tabhi chale
+     jab user sach bole, aisa control asal mein control nahi, request hai. Asli boundary — jise tum audit kar sako —
      containment hai.</p>
      <p class="tip">🎯 Jab koi bole "hamara AI safe hai", poochho: <b>kaunsi safety?</b> Filter ka
      "safe" aur deewar ka "safe" bilkul alag guarantee hain.</p>`,
@@ -256,7 +256,7 @@ SD.registerLevels('ai', [
     'Main kisi bhi control ko "audit ho sakta hai ya nahi" se parakh sakta hoon',
   ],
   homework: `<p>Apne team ke kisi bhi AI feature ki list banao (chatbot, coding agent, summarizer). Har ek
-    ke saamne likho: (1) yeh model kya <b>kar</b> sakta hai — internet? files? code chalana? emails?
+    ke saamne likho: (1) feature ka model kya <b>kar</b> sakta hai — internet? files? code chalana? emails?
     (2) inme se kaunsi cheez ek deewar se band hai aur kaunsi sirf "model mana kar dega" ke bharose hai.
     Jo doosri list mein hai, wahi tumhara asli risk hai.</p>`,
   cards: [
@@ -282,7 +282,7 @@ SD.registerLevels('ai', [
     'Containment ko test aur audit karna',
   ],
   lesson: [
-    "<h3>🤖 Agent = model + haath</h3>\n     <p>Chatbot sirf bolta hai. <b>Agent</b> kaam karta hai: URL kholta hai, files padhta-likhta hai,\n     code chalata hai, API call karta hai. Nuksaan ab \"galat jawab\" nahi, <b>galat kaam</b> hai.</p>\n     <p>Video ke mutabik jin incidents mein models ne infrastructure todne ki koshish ki, un sab mein\n     safeguards <b>band</b> the (test setup ya galat config). Aur ek pattern dikha: model ko jawab mil\n     gaya tha, phir bhi woh din bhar chalta raha — khud ke liye naye bahane banata raha. Yaani\n     <b>\"clean stop\" ki guarantee nahi</b>. Yeh prompt se theek nahi hota; yeh bahar ki deewar aur\n     monitor se theek hota hai.</p>\n     <h3>🧱 Chaar deewarein</h3>\n     <table>\n       <tr><th>Deewar</th><th>Kya rokti hai</th><th>Misaal</th></tr>\n       <tr><td>🌐 Egress allowlist</td><td>Data bahar jaana, anjaan jagah call</td><td>sirf <code>docs.internal</code>; <code>169.254.169.254</code> (cloud metadata) bhi block</td></tr>\n       <tr><td>📁 Workspace jail</td><td>Secrets padhna, apna hi code badalna</td><td><code>../tasks/fake-secrets/api-key.txt</code> → deny</td></tr>\n       <tr><td>⏱️ Budget</td><td>Bekaboo loop ka kharch</td><td>max 40 calls, 400 ms CPU</td></tr>\n       <tr><td>👀 Monitor + kill</td><td>Lambi chalne wali galti</td><td>10 calls mein 3 block, ya \"done\" ke baad 2 calls → band</td></tr>\n     </table>",
+    "<h3>🤖 Agent = model + haath</h3>\n     <p>Chatbot sirf bolta hai. <b>Agent</b> kaam karta hai: URL kholta hai, files padhta-likhta hai,\n     code chalata hai, API call karta hai. Nuksaan ab \"galat jawab\" nahi, <b>galat kaam</b> hai.</p>\n     <p>Video ke mutabik jin incidents mein models ne infrastructure todne ki koshish ki, un sab mein\n     safeguards <b>band</b> the (test setup ya galat config). Aur ek pattern dikha: model ko jawab mil\n     gaya tha, phir bhi model din bhar chalta raha — khud ke liye naye bahane banata raha. Yaani\n     <b>\"clean stop\" ki guarantee nahi</b>. Clean stop prompt se theek nahi hota; clean stop bahar ki deewar aur\n     monitor se theek hota hai.</p>\n     <h3>🧱 Chaar deewarein</h3>\n     <table>\n       <tr><th>Deewar</th><th>Kya rokti hai</th><th>Misaal</th></tr>\n       <tr><td>🌐 Egress allowlist</td><td>Data bahar jaana, anjaan jagah call</td><td>sirf <code>docs.internal</code>; <code>169.254.169.254</code> (cloud metadata) bhi block</td></tr>\n       <tr><td>📁 Workspace jail</td><td>Secrets padhna, apna hi code badalna</td><td><code>../tasks/fake-secrets/api-key.txt</code> → deny</td></tr>\n       <tr><td>⏱️ Budget</td><td>Bekaboo loop ka kharch</td><td>max 40 calls, 400 ms CPU</td></tr>\n       <tr><td>👀 Monitor + kill</td><td>Lambi chalne wali galti</td><td>10 calls mein 3 block, ya \"done\" ke baad 2 calls → band</td></tr>\n     </table>",
     `<h3>📏 Lab mein kya naapa (lab 11 ka asli run)</h3>
      <pre>achha agent,  no walls   : 6/6 allowed         bahar: 0
 achha agent,  contain    : 6/6 allowed         bahar: 0       ← deewar ka "tax" = zero
@@ -327,10 +327,10 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
         { id: 'stop', why: 'Video ka sabak: models jawab milne ke baad bhi chalte rahe. "Agent khud bolega" = clean stop ki guarantee nahi. Budget (calls, CPU, samay) aur "done ke baad calls" wala alarm chahiye.' },
       ],
       fine: {
-        logs: 'Har tool call ka log bilkul sahi hai — isi se monitor bhi banta hai aur incident ke baad kya hua woh bhi pata chalta hai.',
+        logs: 'Har tool call ka log bilkul sahi hai — log se hi monitor bhi banta hai aur incident ke baad ki poori kahani bhi pata chalti hai.',
         container: 'Non-root aur read-only root filesystem achhi aadat hai — agent apne hi environment ko nahi badal sakta.',
       },
-      lesson: `🎯 Har cheez ke liye ek sawaal: <b>"agar model ekdum galat kaam kare, toh yeh deewar kya rokegi?"</b>
+      lesson: `🎯 Har cheez ke liye ek sawaal: <b>"agar model ekdum galat kaam kare, toh ye deewar kya rokegi?"</b>
         Jahan jawab "model aisa nahi karega" hai, wahi chhed hai.`,
     },
     {
@@ -418,13 +418,13 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
   homework: `<p>Lab 11 mein <code>services/runner.js</code> ki <code>POLICY</code> kholo. (1)
     <code>callsAfterDone</code> ko 10 karo — kill kab hua, aur tab tak kitni calls block huin? (2)
     <code>allowHosts</code> mein "sirf ek aur domain" <code>paste.example</code> jodo — ab
-    <code>runaway --mode contain</code> mein kya bahar gaya, aur monitor ne kab roka? Isse samjho ki
+    <code>runaway --mode contain</code> mein kya bahar gaya, aur monitor ne kab roka? Is experiment se samjho ki
     allowlist mein "bas ek aur" kitna mehenga pad sakta hai.</p>`,
   cards: [
     { front: 'Agent ki chaar deewarein?', back: 'Egress allowlist (network), workspace jail (files), budget (calls/CPU/samay), monitor + kill switch (vyavhaar).' },
     { front: 'Deewar vs monitor — farq?', back: 'Deewar nuksaan rokti hai (lab: 0 bahar) par agent ghoomta rehta hai (67 calls). Monitor samay bachata hai (6th call par kill).' },
     { front: '"Clean stop" kyun nahi maan sakte?', back: 'Video ke mutabik models jawab milne ke baad bhi din bhar chalte rahe. Rokne ka kaam model ke bahar ka budget + alarm kare.' },
-    { front: "169.254.169.254 kya hai?", back: 'Cloud metadata address — wahan se machine ke credentials mil sakte hain. Agent ke egress mein hamesha block.' },
+    { front: "169.254.169.254 kya hai?", back: 'Cloud metadata address — is address se machine ke credentials mil sakte hain. Agent ke egress mein hamesha block.' },
   ],
 },
 
@@ -444,18 +444,18 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
   ],
   lesson: [
     `<h3>🧯 Aag lagne ke baad fire extinguisher khareedna</h3>
-     <p>Video ki kahani mein Hugging Face ko breach ke <b>beech</b> pata chala ki unka AI tool madad
-     nahi karega. Tab jaake unhone ek model apne hardware par chalaya. Kaam hua — par woh ghante
+     <p>Video ki kahani mein Hugging Face ko breach ke <b>beech</b> pata chala ki Hugging Face ka AI tool madad
+     nahi karega. Tab jaake unhone ek model apne hardware par chalaya. Kaam hua — par setup ke ghante
      us waqt gaye jab sabse kam waqt tha.</p>
      <p>Do sabak jo kisi bhi team par lagte hain, AI safety par kisi ki bhi raay ho:</p>
      <ul>
-       <li><b>Plan B pehle se.</b> Incident response mein jo tool chahiye, woh incident se pehle test
+       <li><b>Plan B pehle se.</b> Incident response mein jo tool chahiye, wahi tool incident se pehle test
        ho chuka ho — ek capable model apne infra par, jise tum logs aur malware dikha sako.</li>
        <li><b>Data kahan ja raha hai?</b> Attack ke logs mein live passwords, customer data, payloads
-       hote hain. Unhe kisi bahar ki API ko bhejna = woh data building se bahar. Self-hosted model
+       hote hain. Logs kisi bahar ki API ko bhejna = saara data building se bahar. Self-hosted model
        ka faayda sirf "mana nahi karega" nahi, <b>"data bahar nahi jaayega"</b> bhi hai.</li>
      </ul>
-     <p class="tip">🎯 Yeh wahi sabak hai jo backups ke saath hai: <b>restore ka test</b> incident se
+     <p class="tip">🎯 Plan B ka sabak wahi hai jo backups ke saath hai: <b>restore ka test</b> incident se
      pehle karo. "Incident mein AI se madad lenge" bhi ek runbook step hai — use pehle chala ke dekho.</p>`,
     `<h3>📜 Itihaas mein teen baar (video ka tark)</h3>
      <table>
@@ -490,7 +490,7 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
       frames: [
         { t: 'T+0', event: 'Video ek unverified model/infra incident claim karta hai. Is walkthrough ko hypothetical defensive scenario samjho; historical incident ka independent proof nahi.', metrics: { events: 17000, hours: 0 }, tone: 'bad' },
         { t: 'T+2h', event: 'Security team ke paas <b>17,000 events</b>. Payloads, commands, credentials — sab samajhna hai.', metrics: { events: 17000, hours: 2 }, tone: 'warn' },
-        { t: 'T+4h', event: 'Bade hosted models se madad maangi — "yeh malware analyse karo". Jawab: <b>mana</b>.', metrics: { events: 16800, hours: 4 }, tone: 'bad',
+        { t: 'T+4h', event: 'Bade hosted models se madad maangi — "ye malware analyse karo". Jawab: <b>mana</b>.', metrics: { events: 16800, hours: 4 }, tone: 'bad',
           ask: { q: 'Is pal ka sabse bada design sabak kya hai?',
                  choices: [
                    'Incident tooling pehle se tay aur test ho — ek capable model apne infra par, jise attack data dikhe',
@@ -516,14 +516,14 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
                    'Apne server ka model hamesha zyada smart hota hai — isliye incident mein behtar jawab',
                  ], answer: 0,
                  explain: 'Self-hosting data ko manzoor jagah mein rakhne mein madad karta hai. Par model, logs, admin access aur retention apne aap safe nahi hote; manzoor hosted environment bhi sahi ho sakta hai.',
-                 wrongHints: ['Speed hardware par depend karti hai.', 'Smartness ka sawaal nahi — data kahan jaata hai, woh sawaal hai.', 'Data leak rokna bada faayda hai.'] , choiceExplanations: [
+                 wrongHints: ['Speed hardware par depend karti hai.', 'Smartness ka sawaal nahi — data kahan jaata hai, asli sawaal wahi hai.', 'Data leak rokna bada faayda hai.'] , choiceExplanations: [
                    'Self-hosting data ko manzoor jagah mein rakhne mein madad karta hai. Par model, logs, admin access aur retention apne aap safe nahi hote; manzoor hosted environment bhi sahi ho sakta hai.',
                    'Apne server par bhi logs, admin access aur retention se leak ho sakta hai.',
                    'Contract aur controls wala hosted environment bhi manzoor ho sakta hai.',
                    'Hosting ki jagah model ki samajh tay nahi karti.',
                  ],
                } },
-        { t: 'Postmortem', event: 'Video ke mutabik postmortem ne ise "asymmetry problem" kaha, aur us model ke safeguards band the jisne attack kiya.', metrics: { events: 0, hours: 30 }, tone: 'ok' },
+        { t: 'Postmortem', event: 'Video ke mutabik postmortem ne is ulti haalat ko "asymmetry problem" kaha, aur us model ke safeguards band the jisne attack kiya.', metrics: { events: 0, hours: 30 }, tone: 'ok' },
       ],
     },
     {
@@ -610,11 +610,11 @@ bigda agent,  contain    : ALERT call #6 → KILLED   bahar: 0, CPU 40 ms</pre>
   success: [
     'Main incident response mein AI tooling ko pehle se tay aur test karne ka plan bana sakta hoon',
     'Main samjha sakta hoon ki incident data bahar bhejna kyun khatarnak hai',
-    'Main video ki raay aur uski seemaon ko alag bata sakta hoon',
+    'Main video ki raay aur video ki seemaon ko alag bata sakta hoon',
   ],
   homework: `<p>Apni team ka security incident runbook kholo (ya ek pehla draft likho). Usme ek naya
     step jodo: "logs aur samples ka analysis kis tool se, kahan chalega, aur data kahan jaayega?"
-    Us tool ko <b>aaj</b> ek purane log par chala ke dekho — kya woh mana karta hai? Kya data tumhare
+    Us tool ko <b>aaj</b> ek purane log par chala ke dekho — kya tool mana karta hai? Kya data tumhare
     network se bahar jaata hai?</p>`,
   cards: [
     { front: 'Incident mein self-hosted model ke do faayde?', back: 'Approved local deployment data handling control de sakta hai. Model task suitability, refusals, logs, administrator access and retention test karo; self-hosting automatic availability or privacy guarantee nahi.' },

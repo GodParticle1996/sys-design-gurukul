@@ -43,7 +43,7 @@ VISUALS['maps-crp'] = {
 
 VISUALS['maps-traffic'] = {
   t: 'Phones hi sensor hain — aur traffic ka bhavishya',
-  html: "\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📱 ~2 arab phones (anonymous position + speed)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">🧲 map matching (HMM)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill\">🌊 streaming aggregation per segment</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill gold\">🔮 history curve + GNN forecast</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">🗓️ time-dependent routing</span>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-cap\">Sadak ka weight ek number nahi, <b>waqt ka function</b> hai: pehli sadak nikalne ke waqt ki speed par, agli sadak\n      us waqt ki speed par jab tum wahan pahunchoge. Lab: \"abhi wali speed\" ki galti 18: 30 par <b>24.6 min</b> (33%); time-dependent ~8 min.</div>",
+  html: "\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📱 ~2 arab phones (anonymous position + speed)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">🧲 map matching (HMM)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill\">🌊 streaming aggregation per segment</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill gold\">🔮 history curve + GNN forecast</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">🗓️ time-dependent routing</span>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-cap\">Sadak ka weight ek number nahi, <b>waqt ka function</b> hai: pehli sadak nikalne ke waqt ki speed par, agli sadak\n      us waqt ki speed par jab tum agli sadak par pahunchoge. Lab: \"abhi wali speed\" ki galti 18: 30 par <b>24.6 min</b> (33%); time-dependent ~8 min.</div>",
 };
 
 VISUALS['maps-tiles-s2'] = {
@@ -78,7 +78,7 @@ SD.registerLevels('planet', [
   ],
   lesson: [
     `<h3>🔮 "23 minute" mein bhavishya chhupa hai</h3>
-     <p>Maps jo "23 minute" dikhata hai, usme woh jam bhi shaamil hai jisme tum 20 minute baad us sadak par fasoge jahan
+     <p>Maps jo "23 minute" dikhata hai, us ETA mein wo jam bhi shaamil hai jisme tum 20 minute baad us sadak par fasoge jahan
      abhi pahunche hi nahi. Maps <b>bhavishya</b> ke khilaaf raasta nikaalta hai — 2 arab+ users, 250+ desh, saikdon
      crore sadak ke tukde, ek second mein.</p>
      <p>Ek line: <b>naksha lagbhag nahi badalta, traffic har second badalta hai</b> → do alag problems. Tika hua naksha =
@@ -121,7 +121,7 @@ SD.registerLevels('planet', [
           'Heuristic seedhi doori hai — admissible hi raha.',
         ],
       },
-      lesson: 'Sab algorithms same jawab dete hain — design ka kaam hai "kitna kaam", aur woh query se pehle le jaana.',
+      lesson: 'Sab algorithms same jawab dete hain — design ka kaam hai "kitna kaam", aur kaam ko query se pehle le jaana.',
     },
     {
       type: 'quiz',
@@ -234,7 +234,7 @@ SD.registerLevels('planet', [
   ],
   lesson: [
     "<h3>🧱 Dhaancha shakal se, numbers aakhir mein</h3>\n     <p><b>CRP</b> (Customizable Route Planning) do cheezein alag karta hai:</p>\n     <ul>\n       <li><b>Topology</b> — kaunsi sadak kisse judi. Lagbhag kabhi nahi badalta → bhaari preprocessing <b>ek baar</b>.</li>\n       <li><b>Cost</b> — abhi ka travel time. Har kuch minute → <b>sasta</b> pass.</li>\n     </ul>\n     <p>Naksha ko kuch levels par <b>cells</b> mein baanto. Har cell ke liye har entry border se har exit border tak ki cost\n     pehle se nikaalo — cell ek <b>summary</b> ban jaata hai. Desh ke aar-paar raasta: apni gali se cell border → cell-to-cell\n     border crossings par kood → manzil ki gali. Cells alag machines par bhi ho sakte hain.</p>\n     <p>Traffic badla? <b>Sirf asar wale cells</b> ke border costs dobara (bade, kai-level index mein upar ke levels bhi).</p>\n     <pre>lab 24 — manzil ke aas-paas jam (676 sadkein 12× dheemi):\njam se pehle ETA 15.31 min\npurane overlay se ETA 19.17 min   ← galat, shortcuts purane\nasli (Dijkstra, live) 20.25 min\nsirf wo cell dobara:   56 border nodes,    13 ms → ETA 20.25\npoora naksha dobara: 22,400 border nodes, 1,226 ms → ETA 20.25   (94× mehenga, jawab same)</pre>",
-    "<h3>⚖️ \"Sabse tez\" ek chunaav hai</h3>\n     <p>Wahi structure, alag cost function:</p>\n     <ul>\n       <li><b>Eco-friendly routing</b> — har edge ke liye ML andaaza: kitna fuel/energy (chadhaai, traffic, engine: petrol /\n       hybrid / EV).</li>\n       <li><b>Tolls avoid</b>, <b>highways avoid</b>, <b>kam turns</b> — sab alag cost functions, <b>same</b> cells par.</li>\n     </ul>\n     <p>Sabse tez ≠ sabse efficient → multi-objective. Maps eco raasta tab offer karta hai jab uska extra time lagbhag zero ho.</p>\n     <p class=\"tip\">🎯 <b>Jo dheere badalta hai use jo tezi se badalta hai us se alag karo.</b> Tab tezi wala hissa sasta ho\n     jaata hai — yahan 1.2 sec se 13 ms.</p>",
+    "<h3>⚖️ \"Sabse tez\" ek chunaav hai</h3>\n     <p>Wahi structure, alag cost function:</p>\n     <ul>\n       <li><b>Eco-friendly routing</b> — har edge ke liye ML andaaza: kitna fuel/energy (chadhaai, traffic, engine: petrol /\n       hybrid / EV).</li>\n       <li><b>Tolls avoid</b>, <b>highways avoid</b>, <b>kam turns</b> — sab alag cost functions, <b>same</b> cells par.</li>\n     </ul>\n     <p>Sabse tez ≠ sabse efficient → multi-objective. Maps eco raasta tab offer karta hai jab eco raaste ka extra time lagbhag zero ho.</p>\n     <p class=\"tip\">🎯 <b>Jo dheere badalta hai use jo tezi se badalta hai us se alag karo.</b> Tab tezi wala hissa sasta ho\n     jaata hai — yahan 1.2 sec se 13 ms.</p>",
   ],
   stages: [
     {
@@ -349,8 +349,8 @@ SD.registerLevels('planet', [
     'Time-dependent routing — lab mein ETA ki galti',
   ],
   lesson: [
-    "<h3>📱 Sadak par sensor nahi, jeb mein</h3>\n     <p>Traffic numbers <b>phones</b> se aate hain: anonymous position + speed. Ek sadak par saikdon phones 10 km/h par = jam.\n     Bheed hi sensor hai. 2020 mein Berlin ke artist Simon Weckert ne 99 phones ek laal gaadi mein bhar ke khaali sadak par\n     ghumaye — Maps ne wahan jam dikha diya.</p>\n     <h3>🧲 Map matching</h3>\n     <p>GPS kuch metre galat hota hai — galat sadak, building, nadi. Ek point anishchit hai, par <b>points ki lakeer</b> nahi.\n     <b>Hidden Markov Model</b> sabse sambhav sadkon ka kram chunta hai → blue dot sadak se chipka, aur speed sahi segment ko\n     milti hai (teen sadkon mein bikhri nahi).</p>\n     <h3>🔮 40 minute ki drive mein \"abhi\" kam maayne rakhta hai</h3>\n     <p><b>History</b>: har segment laakhon baar chala hai → roz ka speed curve (weekdays 5: 30 dheema, Sunday subah khaali) =\n     baseline. Kamzori: aaj aam din nahi, aur ek highway ka jam feeders mein phailta hai → DeepMind ke <b>supersegments + graph\n     neural network</b>: node aur uske padosi dekho → phailte jam jaldi pakdo; history baseline ko aaj ke area-wide flow se modo.</p>",
-    "<h3>🗓️ Time-dependent routing</h3>\n     <p>Raaste ko <b>samay mein aage</b> chalo: pehli sadak nikalne ke waqt ki speed par, uska time jodo, agli sadak <b>us</b>\n     waqt ki speed par jab tum wahan pahunchoge… Edges numbers nahi, <b>arrival time ke functions</b> hain. ETA = predicted\n     segment times ka jod, predicted palon par. Chalte-chalte lagatar recheck; crash → segment cost ucchla → reroute. Closures,\n     construction, crash reports — kai Waze (Google ka) se. Aur alternatives sach mein alag hon, ek hi sadak ke 10 roop nahi.</p>\n     <pre>lab 24 (ex2) — shaam ka rush, seekha hua curve vs aaj ka asli (peak 9 min late):\nnikalne ka time   \"abhi wali speed\"   time-dependent   asli     static ki galti   TD ki galti\n     17: 00             52.3 min          70.0 min      69.9      -17.6 min        +0.1\n     18: 30             99.4 min          66.8 min      74.7      +24.6 min        -7.9</pre>\n     <h3>🌊 Pipeline</h3>\n     <p>Arabon anonymous pings → edge → map matching → per-segment <b>streaming</b> aggregation (rolling windows, raat ka batch\n     nahi) → har segment ki abhi ki speed → sirf badle cells ka customization → serving fleet → edge cache. Query ko milta hai:\n     pakka structure + ≤ do minute purani cost layer. Hot path turant, update path ko thoda peeche rehne ki chhoot — dono alag.</p>\n     <p class=\"tip\">⚖️ Keemat: bina history wali ghatna (taaza crash, toofan) par forecast aatmavishwas se galat; aur ~2 arab\n     phones ki location — anonymization hi tay karta hai ki yeh manzoor hai bhi ya nahi.</p>",
+    "<h3>📱 Sadak par sensor nahi, jeb mein</h3>\n     <p>Traffic numbers <b>phones</b> se aate hain: anonymous position + speed. Ek sadak par saikdon phones 10 km/h par = jam.\n     Bheed hi sensor hai. 2020 mein Berlin ke artist Simon Weckert ne 99 phones ek laal gaadi mein bhar ke khaali sadak par\n     ghumaye — Maps ne khaali sadak par jam dikha diya.</p>\n     <h3>🧲 Map matching</h3>\n     <p>GPS kuch metre galat hota hai — galat sadak, building, nadi. Ek point anishchit hai, par <b>points ki lakeer</b> nahi.\n     <b>Hidden Markov Model</b> sabse sambhav sadkon ka kram chunta hai → blue dot sadak se chipka, aur speed sahi segment ko\n     milti hai (teen sadkon mein bikhri nahi).</p>\n     <h3>🔮 40 minute ki drive mein \"abhi\" kam maayne rakhta hai</h3>\n     <p><b>History</b>: har segment laakhon baar chala hai → roz ka speed curve (weekdays 5: 30 dheema, Sunday subah khaali) =\n     baseline. Kamzori: aaj aam din nahi, aur ek highway ka jam feeders mein phailta hai → DeepMind ke <b>supersegments + graph\n     neural network</b>: node aur node ke padosi dekho → phailte jam jaldi pakdo; history baseline ko aaj ke area-wide flow se modo.</p>",
+    "<h3>🗓️ Time-dependent routing</h3>\n     <p>Raaste ko <b>samay mein aage</b> chalo: pehli sadak nikalne ke waqt ki speed par, pehli sadak ka time jodo, agli sadak <b>us</b>\n     waqt ki speed par jab tum agli sadak par pahunchoge… Edges numbers nahi, <b>arrival time ke functions</b> hain. ETA = predicted\n     segment times ka jod, predicted palon par. Chalte-chalte lagatar recheck; crash → segment cost ucchla → reroute. Closures,\n     construction, crash reports — kai Waze (Google ka) se. Aur alternatives sach mein alag hon, ek hi sadak ke 10 roop nahi.</p>\n     <pre>lab 24 (ex2) — shaam ka rush, seekha hua curve vs aaj ka asli (peak 9 min late):\nnikalne ka time   \"abhi wali speed\"   time-dependent   asli     static ki galti   TD ki galti\n     17: 00             52.3 min          70.0 min      69.9      -17.6 min        +0.1\n     18: 30             99.4 min          66.8 min      74.7      +24.6 min        -7.9</pre>\n     <h3>🌊 Pipeline</h3>\n     <p>Arabon anonymous pings → edge → map matching → per-segment <b>streaming</b> aggregation (rolling windows, raat ka batch\n     nahi) → har segment ki abhi ki speed → sirf badle cells ka customization → serving fleet → edge cache. Query ko milta hai:\n     pakka structure + ≤ do minute purani cost layer. Hot path turant, update path ko thoda peeche rehne ki chhoot — dono alag.</p>\n     <p class=\"tip\">⚖️ Keemat: bina history wali ghatna (taaza crash, toofan) par forecast aatmavishwas se galat; aur ~2 arab\n     phones ki location — anonymization hi tay karta hai ki location lena manzoor hai bhi ya nahi.</p>",
   ],
   stages: [
     {
@@ -381,7 +381,7 @@ SD.registerLevels('planet', [
           'Shaam ko traffic khul bhi sakta hai.',
         ],
       },
-      lesson: 'ETA "abhi" se nahi, "jab tum wahan pahunchoge" se nikalti hai.',
+      lesson: 'ETA "abhi" se nahi, "jab tum us sadak par pahunchoge" se nikalti hai.',
     },
     {
       type: 'order',
@@ -443,7 +443,7 @@ SD.registerLevels('planet', [
     'Main lab se static vs time-dependent ETA ki galti dikha sakta hoon',
   ],
   homework: `<p>Apne system mein koi "abhi ke number" par bana andaaza dhoondho (ETA, queue wait, delivery slot, capacity forecast).
-    Kya woh maanta hai ki abhi ki haalat poore waqt rahegi? History curve se usko kaise sudhaar sakte ho?</p>`,
+    Kya andaaza maanta hai ki abhi ki haalat poore waqt rahegi? History curve se usko kaise sudhaar sakte ho?</p>`,
   cards: [
     { front: 'Traffic data kahan se?', back: 'Phones — anonymous position + speed; bheed hi sensor. (Simon Weckert: 99 phones laal gaadi mein → fake jam.)' },
     { front: 'Map matching?', back: 'GPS metres galat; points ki trail par Hidden Markov Model sabse sambhav sadak sequence chunta hai → speed sahi segment ko.' },
@@ -461,12 +461,12 @@ SD.registerLevels('planet', [
   badge: 'Hilbert Hakim',
   objectives: [
     'Quadtree tiles; raster se vector tiles',
-    'Kaam wahan jahan sasta — phone naksha banata hai',
+    'Kaam sasti jagah par — phone naksha banata hai',
     'S2: 2-D ko 1-D key banao, range scan karo',
     'Geocoding aur machine-built map; paanch sabak',
   ],
   lesson: [
-    "<h3>🧩 Tiles — quadtree</h3>\n     <p>Duniya ko squares mein kaato; har zoom level par ek tile 4 mein toot-ta hai = <b>quadtree</b>. Sirf woh kuch tiles\n     (~9) bhejo jo screen par hain, tumhare paas cache.</p>\n     <table>\n       <tr><th></th><th>🖼️ Raster tiles</th><th>✏️ Vector tiles</th></tr>\n       <tr><td>Kya</td><td>Tayyar images</td><td>Instructions: line, park, building</td></tr>\n       <tr><td>Kaun banata hai</td><td>Server</td><td>Phone ka GPU</td></tr>\n       <tr><td>Ghumana / 3D / smooth zoom</td><td>Nahi</td><td>Haan</td></tr>\n       <tr><td>Style badla</td><td>Duniya ki har image dobara</td><td>Bas naye rules</td></tr>\n       <tr><td>Size</td><td>Bada</td><td>Chhota (kamzor network ke liye achha)</td></tr>\n     </table>\n     <p class=\"tip\">🎯 <b>Kaam wahan karo jahan sasta ho</b> — device rendering server work shift karti hai; battery, data, compatibility aur client compute free nahi.</p>",
+    "<h3>🧩 Tiles — quadtree</h3>\n     <p>Duniya ko squares mein kaato; har zoom level par ek tile 4 mein toot-ta hai = <b>quadtree</b>. Sirf wo kuch tiles\n     (~9) bhejo jo screen par hain, tumhare paas cache.</p>\n     <table>\n       <tr><th></th><th>🖼️ Raster tiles</th><th>✏️ Vector tiles</th></tr>\n       <tr><td>Kya</td><td>Tayyar images</td><td>Instructions: line, park, building</td></tr>\n       <tr><td>Kaun banata hai</td><td>Server</td><td>Phone ka GPU</td></tr>\n       <tr><td>Ghumana / 3D / smooth zoom</td><td>Nahi</td><td>Haan</td></tr>\n       <tr><td>Style badla</td><td>Duniya ki har image dobara</td><td>Bas naye rules</td></tr>\n       <tr><td>Size</td><td>Bada</td><td>Chhota (kamzor network ke liye achha)</td></tr>\n     </table>\n     <p class=\"tip\">🎯 <b>Kaam sasti jagah par karo</b> — device rendering server work shift karti hai; battery, data, compatibility aur client compute free nahi.</p>",
     `<h3>📍 "Mere paas coffee"</h3>
      <p>Lat/long 2 dimensions hain — aam DB index (B-tree) ek dimension mein sort karta hai. <b>S2</b>: ek space-filling
      (Hilbert-style) ordering hierarchy ke descendant cells ko contiguous ID ranges deti hai. Region covering se
@@ -487,7 +487,7 @@ Hilbert key         264 rows    113 mile   3 ms   (16 cells) — 3,788× kam row
        <li>React mat karo, predict karo.</li>
        <li>Users sensor ho sakte hain.</li>
        <li>Kai dimensions ko ek key mein chapta karo.</li>
-       <li>Kaam wahan karo jahan sasta ho (phones naksha banate hain).</li>
+       <li>Kaam sasti jagah par karo (phones naksha banate hain).</li>
      </ol>`,
   ],
   stages: [
@@ -590,7 +590,7 @@ Hilbert key         264 rows    113 mile   3 ms   (16 cells) — 3,788× kam row
   cards: [
     { front: 'Vector vs raster tiles?', back: 'Raster = tayyar images (no rotate, style badla toh sab dobara). Vector = instructions, phone GPU draw kare: rotate/tilt/zoom, chhote, restyle aasaan.' },
     { front: 'S2 ka jaadu?', back: 'Hierarchical cells ke descendant IDs contiguous ranges banate hain. Region ko cells se cover karo, candidate ranges scan karo aur exact geometry filter lagao. Nearby points ke ID difference par universal bound nahi. Lab: 10 lakh → 264 rows.' },
-    { front: 'Maps ke paanch sabak?', back: 'Dheema vs tez badlaav alag; react nahi predict; users sensor; kai dimensions ek key; kaam wahan jahan sasta.' },
+    { front: 'Maps ke paanch sabak?', back: 'Dheema vs tez badlaav alag; react nahi predict; users sensor; kai dimensions ek key; kaam sasti jagah par.' },
   ],
 },
 ]);

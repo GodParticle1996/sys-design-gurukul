@@ -48,13 +48,13 @@ SD.registerLevels('planet', [
   title: 'Gmail — email ek zinda database hai',
   badge: 'Label Lagane Wala',
   objectives: [
-    '2004 ka vaada aur uske teen mushkil kaam',
+    '2004 ka vaada aur vaade ke teen mushkil kaam',
     'Email = state machine: mail kholna bhi ek write hai',
     'Folders vs labels — "Inbox" ek query hai',
     'Lab: folder-move vs label ka kharcha',
   ],
   lesson: [
-    "<h3>🎁 1 April 2004 — mazaak jaisa vaada</h3>\n     <p>Gmail ne 1 GB muft diya (us waqt Hotmail se ~500× zyada) — log April Fool samjhe. Vaada: har mail hamesha\n     rakho, kabhi delete/sort na karna pade, kuch bhi turant dhoondh lo — 1.8 arab logon ke liye, exabytes mein,\n     ek byte bhi na khoye, do devices kabhi alag sach na dikhayein.</p>\n     <p>Pehla version ek engineer ne ek din mein banaya tha: Google Groups ka search code ek mailbox par laga diya.\n     Yaani Gmail \"email jisme search jodi gayi\" nahi, <b>\"tumhare email par lagi search\"</b> tha. Isse teen mushkil\n     kaam nikle:</p>\n     <ul>\n       <li>Hamesha badhta storage</li>\n       <li>Har user ka apna private index, real time mein taaza</li>\n       <li>Mailbox ek zinda database — state kabhi na khoye, kabhi alag na dikhe</li>\n     </ul>\n     <h3>🔄 Text rakhna aasaan, STATE mushkil</h3>\n     <p>Read/unread, starred, archived, labels, thread, draft. Mail <b>kholna</b> bhi ek write hai (unread flag). Aur\n     yeh writes laptop, phone, tablet, browser se ek saath aati hain — sab jagah wahi sach dikhna chahiye. Video:\n     <b>\"files passive hain, email active hai.\"</b> Har mail ek record, har action ek transaction. Do cheezein par\n     koi samjhauta nahi: <b>durability</b> (log dheemapan maaf karte hain, gayab mail nahi) aur <b>consistency</b>.</p>",
+    "<h3>🎁 1 April 2004 — mazaak jaisa vaada</h3>\n     <p>Gmail ne 1 GB muft diya (us waqt Hotmail se ~500× zyada) — log April Fool samjhe. Vaada: har mail hamesha\n     rakho, kabhi delete/sort na karna pade, kuch bhi turant dhoondh lo — 1.8 arab logon ke liye, exabytes mein,\n     ek byte bhi na khoye, do devices kabhi alag sach na dikhayein.</p>\n     <p>Pehla version ek engineer ne ek din mein banaya tha: Google Groups ka search code ek mailbox par laga diya.\n     Yaani Gmail \"email jisme search jodi gayi\" nahi, <b>\"tumhare email par lagi search\"</b> tha. Search-first soch se teen mushkil\n     kaam nikle:</p>\n     <ul>\n       <li>Hamesha badhta storage</li>\n       <li>Har user ka apna private index, real time mein taaza</li>\n       <li>Mailbox ek zinda database — state kabhi na khoye, kabhi alag na dikhe</li>\n     </ul>\n     <h3>🔄 Text rakhna aasaan, STATE mushkil</h3>\n     <p>Read/unread, starred, archived, labels, thread, draft. Mail <b>kholna</b> bhi ek write hai (unread flag). Aur\n     ye writes laptop, phone, tablet, browser se ek saath aati hain — sab jagah wahi sach dikhna chahiye. Video:\n     <b>\"files passive hain, email active hai.\"</b> Har mail ek record, har action ek transaction. Do cheezein par\n     koi samjhauta nahi: <b>durability</b> (log dheemapan maaf karte hain, gayab mail nahi) aur <b>consistency</b>.</p>",
     `<h3>🏷️ Folders nahi, labels</h3>
      <p>Folder ek jagah hai — ek mail ek folder mein; do mein chahiye toh copy. Label <b>metadata</b> hai — ek hi record
      par work + important + receipts + travel. Many-to-many.</p>
@@ -62,7 +62,7 @@ SD.registerLevels('planet', [
        <li><b>Archive kuch hilata nahi</b> — sirf "inbox" label hat-ta hai.</li>
        <li><b>Inbox ek QUERY hai</b>: "inbox label wale mails, naye pehle". Har screen usi ek collection par ek query.</li>
      </ul>
-     <p>Isse storage aur organization alag ho gaye.</p>
+     <p>Labels se storage aur organization alag ho gaye.</p>
      <pre>lab 22 — 5,000 mails, sab archive:
 tareeka        rows likhe   bytes likhe
 folder-move       5000      10,757,786
@@ -193,9 +193,9 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
     "<h3>✉️ \"Delivered\" bol diya, phir mail gaya</h3>\n     <p>Laakhon disks — kuch har ghante marti hain. Replication toh chahiye, par sawaal: <b>write kab poora maana\n     jaaye?</b> Agar ek copy likh ke \"delivered\" bol diya aur doosri copy background mein bhej rahe ho, toh beech mein ek\n     pal hai jab sirf ek copy hai. Us pal site giri → bhejne wale ko \"pahunch gaya\" dikha, aur mail <b>kabhi nahi\n     milega</b>. Email ka sabse bura failure.</p>\n     <p>Durable raasta: kai machines (behtar ho alag jagah) par commit, <b>phir</b> ack. Keemat: latency.</p>\n     <pre>lab 22 (ex1-ack) — 200 mails, mail #120 ke baad site A giri:\nack mode   \"delivered\" bola   site B par   KHO GAYE   ack latency\nbefore          120               100          20       4.85 ms\nafter           120               120           0       6.09 ms</pre>\n     <h3>🔁 Eventual consistency yahan kyun nahi?</h3>\n     <p>Phone par padha → 2 sec baad laptop par bhi \"read\" dikhna chahiye. Desktop par label lagaya → phone par. Eventual\n     consistency ka matlab: delete kiya mail 30 sec ke liye wapas dikhe, unread count ooper-neeche. Mail ke liye\n     manzoor nahi → <b>strong consistency</b>.</p>",
     `<h3>🌍 Spanner — "teen mein se do" ko toda</h3>
      <p>Purani kahawat: strong consistency, global distribution, scale — teen mein se do chuno. <b>Spanner</b> (Gmail
-     isi par, exabytes) ne teeno diye: globally distributed, strongly consistent, poore ACID transactions. Order ke liye
+     Spanner par hi, exabytes) ne teeno diye: globally distributed, strongly consistent, poore ACID transactions. Order ke liye
      ghadiyan chahiye → DCs mein atomic clocks + GPS → <b>TrueTime</b> interval (kuch ms) → <b>commit wait</b>: timestamp
-     har jagah "beet" chuka ho tab visible → bina central referee ke external consistency. (YouTube level mein iska lab.)</p>
+     har jagah "beet" chuka ho tab visible → bina central referee ke external consistency. (YouTube level mein TrueTime ka lab.)</p>
      <h3>👤 Partition by user</h3>
      <p>Tumhara mailbox ek band potli hai jise zyadatar sirf tum chhoote ho → ek chunk. Logical mailbox physical jagah
      se alag (bade hon toh move — Instagram jaisa). Instagram feed ko 200 shards chhoone padte hain; tumhare mailbox ki
@@ -323,8 +323,8 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
     'Main strong consistency, Spanner aur partition by user ka tark de sakta hoon',
     'Main CAP mein Gmail ka faisla bata sakta hoon',
   ],
-  homework: `<p>Apne system mein "success" kab bheja jaata hai, woh dhoondho (API response, event publish). Us pal data kitni
-    jagah durable hota hai? Agar jawab "ek jagah" hai, toh likho: woh machine usi pal gire toh user ko kya pata chalega?</p>`,
+  homework: `<p>Apne system mein "success" kab bheja jaata hai, wo pal dhoondho (API response, event publish). Us pal data kitni
+    jagah durable hota hai? Agar jawab "ek jagah" hai, toh likho: wo machine usi pal gire toh user ko kya pata chalega?</p>`,
   cards: [
     { front: 'Ack-before ka khatra?', back: 'Ek copy likh ke "delivered" → background replication se pehle site giri → mail gaya, sender ko lagta hai pahunch gaya. Lab: 20 khoye.' },
     { front: 'Gmail strong consistency kyun?', back: 'Eventual = delete kiya mail wapas dikhe, unread count flicker. Mail mein manzoor nahi. Spanner + TrueTime se global strong consistency.' },
@@ -363,14 +363,14 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
        <tr><td>Kahan</td><td>Tez, mehenga, strongly consistent DB (ms)</td><td>Sasta, ghana bulk storage</td></tr>
      </table>`,
     `<h3>🦥 Lazy fetch</h3>
-     <p>Gmail kholo → sirf hot metadata ki query (haal ka ek tukda). Body tab laao jab <b>woh</b> mail kholo. Active
-     mailboxes serving layer ke paas cache. Yahi Dropbox ka tiering bhi hai: jo baar-baar chahiye woh mehenge tez tier
+     <p>Gmail kholo → sirf hot metadata ki query (haal ka ek tukda). Body tab laao jab <b>wo</b> mail kholo. Active
+     mailboxes serving layer ke paas cache. Yahi Dropbox ka tiering bhi hai: jo data baar-baar chahiye, wo data mehenge tez tier
      mein, baaki sasta.</p>
      <p>Kyun zaroori? Gmail "sab hamesha rakho" ka vaada karta hai — duniya ke email ka ek bada hissa, zyadatar kabhi
      dobara nahi khula. Agar sab tez storage mein rakha toh kharcha pahaad. Agar sab sasta storage mein toh har screen
      dheemi.</p>
      <p class="tip">🎯 <b>Storage ko use se milao.</b> Ek hi cheez ke do hisse ho sakte hain jinka use bilkul alag hai —
-     unhe alag jagah rakho.</p>`,
+     dono hisse alag jagah rakho.</p>`,
   ],
   stages: [
     {
@@ -382,7 +382,7 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
       knobs: [
         { id: 'hotpct', label: 'Data ka kitna % tez tier mein', min: 1, max: 100, step: 1, value: 100, unit: '%', note: '1% = sirf metadata; 100% = sab kuch.' },
         { id: 'lazy', label: 'Body kab laao (0 = inbox ke saath, 1 = mail kholne par)', min: 0, max: 1, step: 1, value: 0, unit: '', note: 'Lazy fetch.' },
-        { id: 'recent', label: 'Haal ke mails ki bodies bhi tez tier mein (din)', min: 0, max: 90, step: 15, value: 0, unit: ' din', note: 'Jo abhi aaye, woh zyada khule jaate hain.' },
+        { id: 'recent', label: 'Haal ke mails ki bodies bhi tez tier mein (din)', min: 0, max: 90, step: 15, value: 0, unit: ' din', note: 'Abhi aaye mails zyada khule jaate hain.' },
       ],
       readouts: k => {
         const m = gmailModel(k);
@@ -514,11 +514,11 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
     'Main storage ko use ke hisaab se baant sakta hoon',
   ],
   homework: `<p>Apne sabse bade table ke columns do list mein baanto: har screen par chahiye (hot) vs kabhi-kabhi (cold). Cold
-    columns ka size kitna %? Unhe alag storage mein bhejne se primary DB kitna chhota hoga?</p>`,
+    columns ka size kitna %? Cold columns alag storage mein bhejne se primary DB kitna chhota hoga?</p>`,
   cards: [
     { front: 'Gmail search ki mushkil?', back: '~2 arab private indexes, har ek hamesha badhta, mail aate hi searchable. Ek bada index nahi — arabon chhote, sasta chalana.' },
     { front: 'Hot vs cold (Gmail)?', back: 'Hot: subject, sender, labels, flags, thread, index — tez consistent DB. Cold: bodies, attachments — sasta bulk storage, kholne par lazy fetch.' },
-    { front: '"Storage ko use se milao"?', back: 'Jo har screen par chahiye woh tez tier; jo kabhi-kabhi woh sasta. Ek cheez ke do hisse alag jagah ho sakte hain.' },
+    { front: '"Storage ko use se milao"?', back: 'Har screen wala data tez tier mein; kabhi-kabhi wala data saste tier mein. Ek cheez ke do hisse alag jagah ho sakte hain.' },
   ],
 },
 
@@ -539,7 +539,7 @@ ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
   lesson: [
     `<h3>📥 "250 OK" se pehle</h3>
      <p>Doosra mail server SMTP se mail bhejta hai. Gmail "OK" bolne se pehle: durable replicated write, spam/security
-     checks, filters aur labels, index update, devices ko push. Sender ko saaf "OK" nahi mila → woh <b>dobara</b> poora
+     checks, filters aur labels, index update, devices ko push. Sender ko saaf "OK" nahi mila → sender <b>dobara</b> poora
      mail bhejta hai (SMTP ka niyam). Scale par ACK raaste mein khote rehte hain → <b>duplicates lagatar</b>.</p>
      <p>Ilaaj: <b>idempotent delivery</b> — har mail ka <code>Message-ID</code> yaad rakho; dobara aaya toh "ye toh pehle
      hi aa chuka" → mailbox mein dobara nahi.</p>
@@ -548,7 +548,7 @@ Message-ID check   retry hue   inbox mein   DUPLICATE
 nahi                  114         614          114
 haan                  146         500            0</pre>
      <p class="tip">🎯 SMTP mein uncertain acknowledgement ke baad retry duplicates la sakti hai; retries finite hote hain, universal delivery guarantee nahi. Receiver ka dedup/effect atomic contract repeated processing ko control karta hai.</p>`,
-    "<h3>📎 5 MB PDF, 10,000 logon ko</h3>\n     <p>HR ne 10,000 employees ko 5 MB PDF bheja; newsletter crore logon ko. Content ka <b>fingerprint</b> (hash) lo,\n     ek baar store karo, har mailbox usi saajhi copy ka reference rakhe (WhatsApp videos jaisa). \"Sab hamesha rakho\" ke\n     vaade ke saath yeh zaroorat hai, luxury nahi.</p>\n     <pre>lab 22 (ex3-attachments):\ndedup   10,000 logon ke baad   1 delete → chhoota   baaki 9,999 delete → chhoota\nnahi         48.83 GB                5 MB               48.82 GB\nhaan          5 MB                   0 MB                5 MB</pre>\n     <p>Isi liye bada mail delete karne par storage turant nahi chhoot-ta — jagah <b>aakhri reference</b> jaane par hi\n     khaali hoti hai.</p>\n     <h3>⚖️ Gmail vs WhatsApp — mushkil hissa kahan?</h3>\n     <p>WhatsApp lagbhag kuch nahi rakhta → chhote sasta simple servers, mushkil hissa arab phones par. Gmail sab rakhta\n     hai → hamesha chadhta data pahaad (zyadatar kabhi nahi khulta), strong consistency ki latency, aur hamesha ki\n     complexity (global DB, atomic clocks, per-user real-time indexes, failover). Video ka sawaal: <b>\"mushkil hissa\n     kahan rehna chahiye?\"</b></p>\n     <h3>📋 Paanch sabak</h3>\n     <ol>\n       <li>Product faisla = bhes badla architecture faisla.</li>\n       <li>\"Sab rakho\" ya \"kuch mat rakho\" — jaldi tay karo.</li>\n       <li>Storage ko use se milao (hot/cold).</li>\n       <li>Galat hona maaf nahi → strong consistency ki keemat do.</li>\n       <li>Boring guarantees sabse zaroori — sirf tootne par dikhti hain.</li>\n     </ol>",
+    "<h3>📎 5 MB PDF, 10,000 logon ko</h3>\n     <p>HR ne 10,000 employees ko 5 MB PDF bheja; newsletter crore logon ko. Content ka <b>fingerprint</b> (hash) lo,\n     ek baar store karo, har mailbox usi saajhi copy ka reference rakhe (WhatsApp videos jaisa). \"Sab hamesha rakho\" ke\n     vaade ke saath dedup zaroorat hai, luxury nahi.</p>\n     <pre>lab 22 (ex3-attachments):\ndedup   10,000 logon ke baad   1 delete → chhoota   baaki 9,999 delete → chhoota\nnahi         48.83 GB                5 MB               48.82 GB\nhaan          5 MB                   0 MB                5 MB</pre>\n     <p>Isi liye bada mail delete karne par storage turant nahi chhoot-ta — jagah <b>aakhri reference</b> jaane par hi\n     khaali hoti hai.</p>\n     <h3>⚖️ Gmail vs WhatsApp — mushkil hissa kahan?</h3>\n     <p>WhatsApp lagbhag kuch nahi rakhta → chhote sasta simple servers, mushkil hissa arab phones par. Gmail sab rakhta\n     hai → hamesha chadhta data pahaad (zyadatar kabhi nahi khulta), strong consistency ki latency, aur hamesha ki\n     complexity (global DB, atomic clocks, per-user real-time indexes, failover). Video ka sawaal: <b>\"mushkil hissa\n     kahan rehna chahiye?\"</b></p>\n     <h3>📋 Paanch sabak</h3>\n     <ol>\n       <li>Product faisla = bhes badla architecture faisla.</li>\n       <li>\"Sab rakho\" ya \"kuch mat rakho\" — jaldi tay karo.</li>\n       <li>Storage ko use se milao (hot/cold).</li>\n       <li>Galat hona maaf nahi → strong consistency ki keemat do.</li>\n       <li>Boring guarantees sabse zaroori — sirf tootne par dikhti hain.</li>\n     </ol>",
   ],
   stages: [
     {

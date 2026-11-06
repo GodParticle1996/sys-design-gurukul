@@ -53,7 +53,7 @@ VISUALS['gs-rank'] = {
   t: 'Sab par sasta, kuch par mehenga',
   html: `
     <div class="dg-ladder">
-      <div class="dg-rung"><span class="lv">arabon</span><span class="cmd">Retrieval — BM25 + WAND</span><span class="q">shards par, sasta aur mota-mota; jo top-k tak pahunch hi nahi sakte unhe skip</span></div>
+      <div class="dg-rung"><span class="lv">arabon</span><span class="cmd">Retrieval — BM25 + WAND</span><span class="q">shards par, sasta aur mota-mota; jo top-k tak pahunch hi nahi sakte, un chunks ko skip</span></div>
       <div class="dg-rung g"><span class="lv">~saikdon</span><span class="cmd">Ranking — saikdon signals + ML</span><span class="q">PageRank, intent, freshness, speed, language, BERT…</span></div>
     </div>
     <div class="dg-rule"></div>
@@ -85,14 +85,14 @@ SD.registerLevels('planet', [
   lesson: [
     `<h3>⏳ 200 ms mein 100 PB nahi padh sakte</h3>
      <p>Index mein 100 arab+ pages, 100+ PB. Query ke waqt itna padhna tuning nahi, <b>physics</b> ka sawaal hai. Toh
-     search asal mein <b>din/hafte pehle</b> ho chuki hai. Ek line: <b>saara bhaari kaam query se pehle, kabhi uske
+     search asal mein <b>din/hafte pehle</b> ho chuki hai. Ek line: <b>saara bhaari kaam query se pehle, kabhi query ke
      dauraan nahi.</b></p>
      <h3>📚 Kitaab ke peeche ki index</h3>
-     <p><b>Forward index</b> (page → uske words) "kin pages mein coffee hai?" ke liye bekaar — sab pages kholne padenge.
+     <p><b>Forward index</b> (page → page ke words) "kin pages mein coffee hai?" ke liye bekaar — sab pages kholne padenge.
      <b>Inverted index</b> (word → pages) wahi hai jo kitaab ke peeche hota hai:</p>
      <ul>
        <li><b>Tokenize</b> — terms, lowercase, normalize/stem (running/ran/run).</li>
-       <li><b>Lexicon</b> — term → uski list disk par kahan.</li>
+       <li><b>Lexicon</b> — term → term ki list disk par kahan.</li>
        <li><b>Posting list</b> — doc IDs + positions + field (title, heading). Positions se "coffee grinder" phrase aur
        bikhre hue words mein farq.</li>
      </ul>`,
@@ -189,7 +189,7 @@ SD.registerLevels('planet', [
     'Main inverted index ke hisse aur delta+varint compression bata sakta hoon',
     'Main skip pointers kab kaam aate hain, lab se dikha sakta hoon',
   ],
-  homework: `<p>Apne DB mein ek column jiske saath LIKE/IN wali queries chalti hain (tags, keywords) — woh asal mein ek inverted
+  homework: `<p>Apne DB mein ek column jiske saath LIKE/IN wali queries chalti hain (tags, keywords) — wo column asal mein ek inverted
     index maang raha hai. Likho: forward (row → tags) aur inverted (tag → rows) mein se abhi kaunsa hai, aur doosra banane se
     kaunsi query kitni tez hogi?</p>`,
   cards: [
@@ -270,7 +270,7 @@ SD.registerLevels('planet', [
           unit: 'pages/sec', given: ['5 × 10^11 pages', '30 din = 25,92,000 sec'],
           answer: 192901, tol: 0.3,
           steps: ["5e11 / 2.592e6 ≈ 1.93 lakh pages/sec"],
-          lesson: 'Aur yeh sirf ek baar/mahina — news jaisi jagah har kuch minute. Isi liye change-rate se priority.',
+          lesson: 'Aur 1.93 lakh/sec sirf ek baar/mahina wale crawl ke liye — news jaisi jagah har kuch minute. Isi liye change-rate se priority.',
         },
         {
           q: 'Agar 1% pages (fast movers) har 10 minute recrawl hon, 500 arab mein se — sirf fast movers kitne pages/sec?',
@@ -327,7 +327,7 @@ SD.registerLevels('planet', [
     'Main canonicalization aur "index ≠ rakhna" ka tark de sakta hoon',
     'Main batch se incremental indexing ka faayda bata sakta hoon',
   ],
-  homework: `<p>Apne product mein koi "crawler" dhoondho — sync job, scraper, webhook poller, recon script. Kya woh sab kuch ek hi
+  homework: `<p>Apne product mein koi "crawler" dhoondho — sync job, scraper, webhook poller, recon script. Kya crawler sab kuch ek hi
     raftaar se dobara padhta hai? Change-rate ke hisaab se priority lagao toh kitna kaam bachega?</p>`,
   cards: [
     { front: 'Prioritized frontier?', back: 'FIFO nahi — zaroori aur jaldi badalne wale URLs pehle; har host ka crawl budget; change-rate ka andaaza se recrawl.' },
@@ -506,7 +506,7 @@ SD.registerLevels('planet', [
     'AI Overviews = grounding / RAG planet scale par',
   ],
   lesson: [
-    "<h3>🪜 Do phase</h3>\n     <ol>\n       <li><b>Retrieval</b> — shards par, sasta aur mota-mota. BM25: shabd kitni baar aur kahan aaya. Dynamic pruning\n       (<b>WAND</b> / Block-Max WAND): jo chunks top-k tak pahunch hi nahi sakte unhe skip.</li>\n       <li><b>Ranking</b> — bache kuch saikdon par mehenga aur saavdhan.</li>\n     </ol>\n     <p><b>\"Sab par sasta, kuch par mehenga.\"</b></p>\n     <h3>🚶 PageRank — random surfer</h3>\n     <p>Link = vote; important pages ke vote zyada bhaari. Socho ek surfer hamesha links par click karta hai, aur kabhi-kabhi\n     (<b>damping</b>, ~15%) bore hoke kisi bhi random page par kood jaata hai. PageRank = surfer kitni baar us page par\n     pahunchta hai. Web graph par baar-baar ghumao jab tak numbers tik na jaayein. Faisla web khud karta hai — fake karna\n     mushkil (par namumkin nahi).</p>\n     <pre>lab 26 (ex3) — 10,000 asli pages + 300 page ka link farm + \"cheap-pills.biz\":\nd = 0.99                      farm ke paas 5.2% rank   target #1\nd = 0.85 (paper wala)         3.0%                     target #2\nd = 0.85 + TrustRank seeds    0.1%                     target #1646</pre>\n     <p>Damping farm ke jaal ko chhota karta hai, par 300 nakli pages phir bhi junk ko top 2 mein le aaye. Teleport sirf\n     bharosemand seeds par → farm tak rank pahunchti hi nahi.</p>",
+    "<h3>🪜 Do phase</h3>\n     <ol>\n       <li><b>Retrieval</b> — shards par, sasta aur mota-mota. BM25: shabd kitni baar aur kahan aaya. Dynamic pruning\n       (<b>WAND</b> / Block-Max WAND): jo chunks top-k tak pahunch hi nahi sakte, un chunks ko skip.</li>\n       <li><b>Ranking</b> — bache kuch saikdon par mehenga aur saavdhan.</li>\n     </ol>\n     <p><b>\"Sab par sasta, kuch par mehenga.\"</b></p>\n     <h3>🚶 PageRank — random surfer</h3>\n     <p>Link = vote; important pages ke vote zyada bhaari. Socho ek surfer hamesha links par click karta hai, aur kabhi-kabhi\n     (<b>damping</b>, ~15%) bore hoke kisi bhi random page par kood jaata hai. PageRank = surfer kitni baar us page par\n     pahunchta hai. Web graph par baar-baar ghumao jab tak numbers tik na jaayein. Faisla web khud karta hai — fake karna\n     mushkil (par namumkin nahi).</p>\n     <pre>lab 26 (ex3) — 10,000 asli pages + 300 page ka link farm + \"cheap-pills.biz\":\nd = 0.99                      farm ke paas 5.2% rank   target #1\nd = 0.85 (paper wala)         3.0%                     target #2\nd = 0.85 + TrustRank seeds    0.1%                     target #1646</pre>\n     <p>Damping farm ke jaal ko chhota karta hai, par 300 nakli pages phir bhi junk ko top 2 mein le aaye. Teleport sirf\n     bharosemand seeds par → farm tak rank pahunchti hi nahi.</p>",
     `<h3>🧠 Aaj: saikdon signals</h3>
      <p>PageRank ab <b>saikdon</b> signals mein se ek hai: intent match, freshness, speed, location, language, device… aur ML:
      RankBrain (2015, pehla ML signal), neural matching, BERT (2019 — query ko bhasha ki tarah: "change a tire" ↔ "replacing a
@@ -523,7 +523,7 @@ SD.registerLevels('planet', [
        <li>Dohraaya kaam dhoondho, ek baar karo (cache index jitna zaroori).</li>
        <li>Precomputed = purana → freshness apna hamesha ka system.</li>
      </ol>
-     <p class="tip">🎯 Har design par sawaal: <b>"kya yeh kaam pehle se karke request ko ek lookup bana sakta hoon?"</b></p>`,
+     <p class="tip">🎯 Har design par sawaal: <b>"kya ye kaam pehle se karke request ko ek lookup bana sakta hoon?"</b></p>`,
   ],
   stages: [
     {

@@ -73,7 +73,7 @@ SD.registerLevels('planet', [
   ],
   lesson: [
     "<h3>🧭 Internet maanta hai ki router hilte nahi</h3>\n     <p>Zameen ke internet mein routers ek jagah hain; OSPF/BGP kabhi-kabhi ke, anjaane badlaav dhoondh lete hain.\n     Starlink mein 7,000+ satellites ~27,000 km/h (7.5 km/s) par bhaag rahe hain, har ~95 min mein ek chakkar —\n     topology <b>kabhi tikti hi nahi</b>. Par ek raahat: orbital mechanics <b>deterministic</b> hai. Agle hafte\n     kaunsa satellite kahan hoga, kuch metre tak pata hai. Toh badlaav ko surprise ki jagah <b>schedule</b> bana do.</p>\n     <h3>🛰️ GEO vs LEO</h3>\n     <table>\n       <tr><th></th><th>GEO (35,786 km)</th><th>LEO (~550 km)</th></tr>\n       <tr><td>Aasmaan mein</td><td>Ek jagah ruka dikhta hai</td><td>Minutes mein paar</td></tr>\n       <tr><td>Coverage</td><td>1 satellite ≈ 1/3 duniya</td><td>Hazaron chahiye, har user ke liye ek \"train\"</td></tr>\n       <tr><td>Roshni (ek taraf)</td><td>~120 ms (video mein \"12 ms\" — galat)</td><td>&lt; 2 ms</td></tr>\n       <tr><td>RTT</td><td>physics ~477 ms, asli ~600 ms</td><td>measured 20–40 ms</td></tr>\n     </table>\n     <p class=\"tip\">🎯 Starlink ne <b>doori ke badle raftaar</b> li, aur <b>latency ke badle complexity</b>.</p>",
-    "<h3>📡 Dish jo kabhi dhoondhti nahi</h3>\n     <p>Dish ek <b>phased array</b> hai — saikdon chhote antenna, unke signals mein timing ka farq daal ke beam\n     electronically milliseconds mein ghumaya jaata hai. Koi tracking motor nahi (ek motor sirf install ke waqt\n     jhukane ke liye).</p>\n     <p>Aur dish satellite <b>dhoondhti</b> nahi. Uske paas <b>ephemeris</b> hai (saare satellites ki aane wali jagah)\n     aur apna GPS → kahan point karna hai, yeh <b>hisaab</b> hai. Satellite ki raftaar se frequency khisakti hai\n     (Doppler, saikdon kHz, lagatar badalta) — woh bhi pehle se nikaal ke bhejne se pehle theek kar diya jaata hai.</p>\n     <h3>📏 Lab 19 (ex2) — physics pehle</h3>\n     <pre>GEO 35,786 km: 239 ms ek taraf  → round trip 477 ms (asli ~600 ms)\nLEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>",
+    "<h3>📡 Dish jo kabhi dhoondhti nahi</h3>\n     <p>Dish ek <b>phased array</b> hai — saikdon chhote antenna, antennas ke signals mein timing ka farq daal ke beam\n     electronically milliseconds mein ghumaya jaata hai. Koi tracking motor nahi (ek motor sirf install ke waqt\n     jhukane ke liye).</p>\n     <p>Aur dish satellite <b>dhoondhti</b> nahi. Dish ke paas <b>ephemeris</b> hai (saare satellites ki aane wali jagah)\n     aur apna GPS → kahan point karna hai, ye <b>hisaab</b> hai. Satellite ki raftaar se frequency khisakti hai\n     (Doppler, saikdon kHz, lagatar badalta) — Doppler bhi pehle se nikaal ke bhejne se pehle theek kar diya jaata hai.</p>\n     <h3>📏 Lab 19 (ex2) — physics pehle</h3>\n     <pre>GEO 35,786 km: 239 ms ek taraf  → round trip 477 ms (asli ~600 ms)\nLEO    550 km: 3.7 ms ek taraf  → round trip 7.3 ms (asli 20–40 ms)</pre>",
   ],
   stages: [
     {
@@ -192,7 +192,7 @@ SD.registerLevels('planet', [
   badge: 'Epoch Engineer',
   objectives: [
     'Hexagon cells aur beams — "sold out" ka matlab',
-    '15-second global replan aur uske niyam (GEO exclusion bhi)',
+    '15-second global replan aur replan ke niyam (GEO exclusion bhi)',
     'Epoch-based reconfiguration vs reactive routing',
     'Lab: reactive vs scheduled handover',
   ],
@@ -211,7 +211,7 @@ SD.registerLevels('planet', [
        <li>Power budget aur beams ki ginti</li>
        <li>Gateway dikh raha ho</li>
        <li>Desh ke licence — kaunse raaste kanooni hain</li>
-       <li><b>GEO exclusion zone</b> — GEO belt ki line-of-sight par aane se pehle transmit band (regulation ki "no-transmit line" pehle se nikaal ke uske aas-paas raasta)</li>
+       <li><b>GEO exclusion zone</b> — GEO belt ki line-of-sight par aane se pehle transmit band (regulation ki "no-transmit line" pehle se nikaal ke line ke aas-paas raasta)</li>
      </ul>`,
     "<h3>🎼 Surprise nahi, symphony</h3>\n     <p>Control plane zameen par, data plane aasmaan mein. Plan <b>pehle</b> baant diya jaata hai, lagu baad mein\n     hota hai → \"convergence\" ki jagah <b>schedule</b>. 15-second ke <b>epoch</b> par satellites, dishes, gateways\n     <b>ek saath</b> palatte hain — koi router aadha-purana, aadha-naya nahi rehta.</p>\n     <p class=\"tip\">🎯 Video ka contrast: Datadog 2023 mein sab kuch ek saath badla — <b>surprise</b> ki tarah.\n     Starlink sab kuch ek saath badalta hai — <b>jaan-boojh ke</b>. Asli surprise (mara satellite, fail laser) →\n     pakdo → <b>agle</b> plan se bahar (≤15 sec).</p>\n     <h3>📏 Lab 19 — 6 satellites, epoch 3 sec (asli 15), 20 sec ki SSH-jaisi session</h3>\n     <pre>mode        jawab   server sessions   har handover par ruka\nreactive     99%         1            ~0.9–1.0 sec (dead-interval + satellite search, 21 tries)\nscheduled   100%         1            0  (p99 3 ms, 0 search, 0 resend)\nscheduled + SURPRISE=1: 100%, 1 session, 2 baar ~1 sec (reactive fallback ne bachaya)</pre>",
   ],
@@ -354,7 +354,7 @@ SD.registerLevels('planet', [
     `<h3>⚡ Vacuum vs glass</h3>
      <p>Roshni glass mein ~2 lakh km/s, vacuum mein ~3 lakh — ~50% tez. Space raaste ka fixed ~1,100 km upar-neeche ka
      kharcha hai, isliye chhote raaston par fiber jeet-ta hai. ~3,000 km se lambe raaston par space aage (Mark Handley,
-     UCL ke simulations: London–Singapore, New York–Tokyo par das ms se zyada). High-frequency traders isi ke liye
+     UCL ke simulations: London–Singapore, New York–Tokyo par das ms se zyada). High-frequency traders in bache hue milliseconds ke liye
      paisa dete hain.</p>
      <h3>🚢 Ek packet — Atlantic ke beech jahaaz se</h3>
      <pre>dish (pehle se point) → satellite ~2 ms
@@ -373,7 +373,7 @@ SD.registerLevels('planet', [
           q: 'London → Singapore 10,880 km. Seedhe fiber (2,00,000 km/s) mein ek taraf kitne ms?',
           unit: 'ms', given: ['10,880 km', '2,00,000 km/s'],
           answer: 54.4, tol: 0.2,
-          steps: ["10,880 / 2,00,000 = 0.0544 s", "= 54.4 ms (asli fiber isse bhi lamba bichha hota hai)"],
+          steps: ["10,880 / 2,00,000 = 0.0544 s", "= 54.4 ms (asli fiber seedhi doori se bhi lamba bichha hota hai)"],
           lesson: 'Glass mein roshni 1/3 dheemi.',
         },
         {
@@ -381,7 +381,7 @@ SD.registerLevels('planet', [
           unit: 'ms', given: ['fixed 1,100 km', 'raasta 10% lamba', '3,00,000 km/s'],
           answer: 43.6, tol: 0.2,
           steps: ['1,100 + 11,968 = 13,068 km', "13,068 / 3,00,000 ≈ 0.0436 s = 43.6 ms"],
-          lesson: "~11 ms aage — aur fiber 1.3× lamba ho toh ~27 ms. Trading ke liye yeh sona hai.",
+          lesson: "~11 ms aage — aur fiber 1.3× lamba ho toh ~27 ms. Trading ke liye 11 ms sona hai.",
         },
         {
           q: '9,000 laser links × 100 Gbps — kul kitne Tbps capacity (sab ek saath full ho toh)?',
@@ -501,7 +501,7 @@ SD.registerLevels('planet', [
     'Hamesha badalta fleet aur Starlink ke saath sabak',
   ],
   lesson: [
-    "<h3>⚓ Tumhara IP zameen par rehta hai</h3>\n     <p>Agar har satellite badalne par tumhara public IP badalta, har TCP connection toot-ta — SSH, video call, sab.\n     Starlink mein tumhara IP ek zameen ke <b>PoP</b> (Seattle, Frankfurt, London…) par rehta hai. Dish ↔ PoP ek\n     private tunnel hai; tunnel ke <b>andar</b> ka raasta schedule par badalta hai, dono sire <b>fixed</b>.</p>\n     <p>Isi liye geolocation tumhe PoP ke sheher mein dikhata hai (Montana ke gaon mein ho toh \"Seattle\"). BGP ko wahi\n     prefixes wahi PoPs se dikhte hain. Yeh wahi idea hai jo mobile network ka packet gateway karta hai.</p>\n     <h3>📏 Lab 19 — direct vs anchor</h3>\n     <pre>mode        jawab   server sessions   har handover par\ndirect       50%         7            ~1.7 sec + naya login (SSH 6 baar toota)\nreactive     99%         1            ~1 sec ruka\nscheduled   100%         1            0</pre>\n     <p class=\"tip\">🎯 <b>Pehchaan (identity) ko churn ke upar rakho.</b> Kubernetes Service pods ke upar, load balancer\n     backends ke upar, cellular gateway towers ke upar — sab wahi pattern.</p>",
+    "<h3>⚓ Tumhara IP zameen par rehta hai</h3>\n     <p>Agar har satellite badalne par tumhara public IP badalta, har TCP connection toot-ta — SSH, video call, sab.\n     Starlink mein tumhara IP ek zameen ke <b>PoP</b> (Seattle, Frankfurt, London…) par rehta hai. Dish ↔ PoP ek\n     private tunnel hai; tunnel ke <b>andar</b> ka raasta schedule par badalta hai, dono sire <b>fixed</b>.</p>\n     <p>Isi liye geolocation tumhe PoP ke sheher mein dikhata hai (Montana ke gaon mein ho toh \"Seattle\"). BGP ko wahi\n     prefixes wahi PoPs se dikhte hain. PoP anchor wahi idea hai jo mobile network ka packet gateway karta hai.</p>\n     <h3>📏 Lab 19 — direct vs anchor</h3>\n     <pre>mode        jawab   server sessions   har handover par\ndirect       50%         7            ~1.7 sec + naya login (SSH 6 baar toota)\nreactive     99%         1            ~1 sec ruka\nscheduled   100%         1            0</pre>\n     <p class=\"tip\">🎯 <b>Pehchaan (identity) ko churn ke upar rakho.</b> Kubernetes Service pods ke upar, load balancer\n     backends ke upar, cellular gateway towers ke upar — sab wahi pattern.</p>",
     "<h3>🪚 Sawtooth latency</h3>\n     <p>Latency trace ek repeat hone wala <b>sawtooth</b> hai: 20–60 ms, har 15 sec kadam, handover par kuch packets\n     loss. TCP ke liye dikkat:</p>\n     <ul>\n       <li><b>CUBIC</b> handover ke loss ko congestion samajh ke speed kaat deta hai.</li>\n       <li><b>BBR</b> ka min-RTT andaaza har 15 sec khisak jaata hai.</li>\n     </ul>\n     <p>Jahaaz, hawai jahaaz, mines jaise users ke liye: link <b>\"periodically changing\"</b> hai, \"unreliable\" nahi →\n     buffers, timeouts, congestion control usi hisaab se tune karo.</p>\n     <h3>🔄 Hardware badlo, software OTA</h3>\n     <p>Satellite ki umar ~5 saal; 550 km par hawa ka khinchaav mare satellites ko khud jala deta hai (self-cleaning).\n     v1.5 mein lasers, v2 mini mein zyada capacity → fleet hamesha <b>milajula</b>; scheduler har satellite ki\n     capability jaanta hai. 6 mahine mein ~50,000 automatic collision-avoidance maneuvers — har ek orbit badalta hai →\n     prediction update → pointing/Doppler/lasers/schedule dobara.</p>\n     <h3>📋 Paanch sabak</h3>\n     <ol>\n       <li>Predictable ko anjaane se alag karo — traffic pattern, maintenance, cert expiry, planned failover: pehle se compute.</li>\n       <li>Jab badlaav lagatar ho, use <b>synchronize</b> karo (epochs).</li>\n       <li>Identity churn ke upar rakho.</li>\n       <li>Future computable ho toh central planner; nahi toh distributed protocols.</li>\n       <li>Physics se shuru karo, aur <b>replacement ke liye</b> design karo.</li>\n     </ol>",
   ],
   stages: [
@@ -533,16 +533,16 @@ SD.registerLevels('planet', [
           'Pings ki ginti session nahi banati.',
         ],
       },
-      lesson: 'Jo cheez badalti rehti hai, uske upar ek stable anchor rakho — clients ko sirf anchor dikhe.',
+      lesson: 'Jo cheez badalti rehti hai, us cheez ke upar ek stable anchor rakho — clients ko sirf anchor dikhe.',
     },
     {
       type: 'match',
       title: 'Wahi pattern, alag jagah',
-      instructions: 'Har churn ko uske anchor se jodo.',
+      instructions: 'Har churn ko sahi anchor se jodo.',
       pairs: [
-        { left: '🛰️ Starlink satellites har 15 sec badalte', right: 'Ground PoP — public IP aur TCP wahan', explain: 'Tunnel andar badalta, sire fixed.' },
+        { left: '🛰️ Starlink satellites har 15 sec badalte', right: 'Ground PoP — public IP aur TCP PoP par', explain: 'Tunnel andar badalta, sire fixed.' },
         { left: '📦 Kubernetes pods aate-jaate rehte', right: 'Service ka stable virtual IP / DNS', explain: 'Clients pod IPs nahi, Service dekhte hain.' },
-        { left: '📱 Phone ek tower se doosre par', right: 'Cellular packet gateway (IP wahan anchor)', explain: 'Starlink ne yahi idea udhaar liya.' },
+        { left: '📱 Phone ek tower se doosre par', right: 'Cellular packet gateway (IP gateway par anchor)', explain: 'Starlink ne yahi idea udhaar liya.' },
         { left: '🖥️ Backend servers deploy mein badalte', right: 'Load balancer ka stable address', explain: 'Deploy ke beech bhi clients ka pata wahi.' },
       ],
     },
@@ -588,12 +588,12 @@ SD.registerLevels('planet', [
     ],
   },
   success: [
-    'Main PoP anchor ka design aur uska faayda samjha sakta hoon',
+    'Main PoP anchor ka design aur anchor ka faayda samjha sakta hoon',
     'Main sawtooth latency ka TCP par asar bata sakta hoon',
     'Main Starlink ke paanch sabak apne system par laga sakta hoon',
   ],
   homework: `<p>Apne system mein ek jagah dhoondho jahan client ek badalti cheez ka pata yaad rakhta hai (pod IP, server
-    hostname, leader ka address). Likho: kya uske upar ek stable anchor rakh sakte ho, aur tab failover/deploy par
+    hostname, leader ka address). Likho: kya badalte pate ke upar ek stable anchor rakh sakte ho, aur tab failover/deploy par
     client ko kya dikhna band ho jaayega?</p>`,
   cards: [
     { front: 'Starlink mein SSH kyun nahi toot-ta?', back: 'Public IP zameen ke PoP par anchor hai; dish ↔ PoP tunnel ke andar ka raasta badalta hai, sire fixed. Lab: direct 7 sessions, anchor 1.' },

@@ -73,7 +73,7 @@ SD.registerLevels('ai', [
      chalao. Replit Agent khaana banata hai: ek prompt ("calorie tracker bana do") → code likhta hai,
      packages install karta hai, database khada karta hai, chalata hai, test karta hai, deploy karta hai
      → <b>public URL</b>.</p>
-     <p>Iske liye use chahiye <b>apna poora environment</b> — asli Linux box, shell, file system, DB,
+     <p>Itna kaam karne ke liye agent ko chahiye <b>apna poora environment</b> — asli Linux box, shell, file system, DB,
      network. Har user ke liye ek, roz hazaron, alag-alag, poori tarah recoverable, aur kaam khatam hote
      hi gayab.</p>
      <table>
@@ -100,7 +100,7 @@ SD.registerLevels('ai', [
      <ul>
        <li>Model insaanon ke shell/FS/package manager istemaal par train hua hai — naye custom primitives
        usne kabhi dekhe hi nahi.</li>
-       <li>Wahi infra jo saalon se insaan use kar rahe hain — uske failure modes pata hain.</li>
+       <li>Wahi infra jo saalon se insaan use kar rahe hain — is infra ke failure modes pata hain.</li>
        <li>Har action UI mein dikhta hai ("X install kiya, Y banaya, Z chalaya") → user beech mein rok sakta hai.</li>
      </ul>
      <p>Loop: <b>ReAct</b> — socho → tool chalao → nateeja dekho → dohrao. Baad mein multi-agent (planning,
@@ -239,14 +239,14 @@ SD.registerLevels('ai', [
      phaile. Replit ka threat model: agent ajeeb commands chalayega, aur user bhi use <b>jaan-boojh ke</b>
      breakout, host scan, pivot karne ko keh sakta hai. Isliye <b>defense in depth</b>: har environment ek
      Linux container — apna file system, process tree, network namespace, resource limits — plus kernel
-     features, hypervisor-level boundaries, hardened syscall boundary. Video: "yeh sirf table stakes hain."</p>
+     features, hypervisor-level boundaries, hardened syscall boundary. Video: "ye sab sirf table stakes hain."</p>
      <h3>☁️ Managed policy boundaries ka sauda</h3>
      <p>Case study separate customer projects describe karti hai. Project IAM, quota aur billing ka scope deta hai;
      identity, networking, runtime isolation aur tenant authorization phir bhi correctly configure karne hain.
      Project count ka provisioning, lifecycle aur cleanup operational cost bhi hai.</p>
      <p class="tip">🎯 Boundary ko threat model se chuno aur actual denied operations test karo.
      Cloud resource label ko complete sandbox proof mat maano.</p>`,
-    "<h3>🚧 Dev = aazaadi, Prod = guarantee</h3>\n     <p>Dev environment flexible hai — agent packages install kare, DB fork kare, galti kare, rollback kare.\n     Prod bandh hai — Cloud Run, per-customer project, Google DDoS protection + WAF, autoscale. Beech ki\n     deewar hi woh jagah hai jahan <b>AI ki aazaadi khatam hoti hai aur platform ki guarantee shuru</b>.\n     Agent ka dev ka kachra prod tak nahi pahunchta → isi liye agent ko itni aazaadi di ja sakti hai.</p>\n     <p>Aur database: <b>dev DB production se architecture se alag</b>. Agent kabhi prod data ko chhoota hi\n     nahi. Dev mein bhi DB ek <b>fork</b> hai — lab 29 ka ex3 yahi dikhata hai:</p>\n     <pre>production users table: 500,000 rows\nfork banaya: 0.005 ms, overlay mein 0 rows (kuch copy nahi hua)\nagent (fork mein): DROP TABLE users\n  fork mein users: 0      production mein users: 500,000  ✅</pre>",
+    "<h3>🚧 Dev = aazaadi, Prod = guarantee</h3>\n     <p>Dev environment flexible hai — agent packages install kare, DB fork kare, galti kare, rollback kare.\n     Prod bandh hai — Cloud Run, per-customer project, Google DDoS protection + WAF, autoscale. Beech ki\n     deewar hi asli jagah hai jahan <b>AI ki aazaadi khatam hoti hai aur platform ki guarantee shuru</b>.\n     Agent ka dev ka kachra prod tak nahi pahunchta → isi liye agent ko itni aazaadi di ja sakti hai.</p>\n     <p>Aur database: <b>dev DB production se architecture se alag</b>. Agent kabhi prod data ko chhoota hi\n     nahi. Dev mein bhi DB ek <b>fork</b> hai — lab 29 ka ex3 yahi dikhata hai:</p>\n     <pre>production users table: 500,000 rows\nfork banaya: 0.005 ms, overlay mein 0 rows (kuch copy nahi hua)\nagent (fork mein): DROP TABLE users\n  fork mein users: 0      production mein users: 500,000  ✅</pre>",
   ],
   stages: [
     {
@@ -355,7 +355,7 @@ SD.registerLevels('ai', [
     'Main dev/prod boundary aur forkable DB ka faayda samjha sakta hoon',
   ],
   homework: `<p>Apne system mein koi jagah dhoondho jahan "dev" wala kaam "prod" ki cheez chhoo sakta hai
-    (shared DB user, shared bucket, shared secrets). Likho: uske beech ki deewar kya hai, aur kya use
+    (shared DB user, shared bucket, shared secrets). Likho: dev aur prod ke beech ki deewar kya hai, aur kya is deewar ko
     kisi mazboot, pehle se tested boundary (alag account/project) se badal sakte ho?</p>`,
   cards: [
     { front: 'Replit ka threat model?', back: 'Hostile: agent ajeeb commands chalayega, user breakout/scan/pivot maang sakta hai. Isliye defense in depth: container + kernel features + hypervisor + hardened syscalls.' },
@@ -379,8 +379,8 @@ SD.registerLevels('ai', [
     'Rollback + retry aur parallel sampling ki keemat',
   ],
   lesson: [
-    "<h3>📉 Galtiyan jud-ti hain</h3>\n     <p>Agent ka ek kadam 95% baar sahi hai. Achha lagta hai. Par 30 kadam ka task? Kahin na kahin kuch\n     tootega — file mitegi, schema bigdega, dependency takrayegi. Bina undo ke, agent us tooti haalat ke\n     upar kaam karta rehta hai: galti ke upar galti. Lab 29 (ex2) mein:</p>\n     <pre>har kadam ka risk   tareeka        poore sahi bane\n      5%           no-undo          38.9%\n      5%           rollback         71.0%\n     15%           no-undo           6.8%\n     15%           rollback         32.0%</pre>\n     <p>Rollback: test fail → saaf haalat par wapas → wahi kadam dobara. Same compute, <b>dugne</b> sahi\n     projects. Jo bachte hain woh wo galtiyan hain jo tests ne pakdi hi nahi — isliye rollback utna hi achha\n     jitna \"kuch toota?\" batane wala test.</p>\n     <h3>🧩 Teen parton ka snapshot</h3>\n     <ul>\n       <li><b>File system — copy-on-write</b>: snapshot = ek marker; aage ke writes naye blocks mein, purane\n       blocks wahi. Snapshot sasta, kyunki sirf marker banta hai (is lab mein pehla snapshot sab hash karta hai, baad wale ~6 ms) → har kadam par snapshot.</li>\n       <li><b>Code — auto git commit</b> har kaam ke kadam par (user ko git chhoona bhi nahi padta), aur ek\n       <b>immutable backup remote</b> — poora FS mit jaaye tab bhi history.</li>\n       <li><b>Database — forkable Postgres</b>: chalte DB ko CoW karna seedha nahi (live connections, WAL);\n       isliye snapshot = fork jo parent se data share karta hai jab tak likha na jaaye. Rollback = fork phenko.</li>\n     </ul>",
-    "<h3>📏 Lab 29: asli disk par snapshots</h3>\n     <pre>project   mode   pehla snapshot   10 snapshots ke baad disk   baad ke snapshots (avg)   rollback\n 200 MB  full       324 ms      1973.1 MB                676.4 ms               478 ms, 200 files\n 200 MB  cow     1541.6 ms       202.2 MB                  5.7 ms               187 ms,   5 files</pre>\n     <p>Full copy: har snapshot poora project (676 ms, 10 snapshots = ~2 GB). CoW: pehla mehenga (sab hash),\n     uske baad <b>5.7 ms</b> aur sirf badle blocks. Snapshot itna sasta ho tabhi agent <b>har</b> kadam se\n     pehle le sakta hai.</p>\n     <h3>🍴 Parallel sampling</h3>\n     <p>Fork sasta hai → ek mushkil kadam ke liye 3 alag tareeke ek saath try karo, jo kaam kare woh rakho.\n     Model ka non-determinism faayda ban jaata hai. Lab: retry ka intezaar nahi (rounds kam), par compute\n     <b>~3×</b> — aur chhupi galtiyan wahi ki wahi, kyunki forks bhi tests se behtar nahi dekh sakte.</p>\n     <p class=\"tip\">🎯 Video ki sabse zaroori line: <b>reversibility hi autonomy ko mumkin banati hai.</b>\n     User agent ko tabhi aazaadi deta hai jab use pata ho ki ek button se sab wapas.</p>",
+    "<h3>📉 Galtiyan jud-ti hain</h3>\n     <p>Agent ka ek kadam 95% baar sahi hai. Achha lagta hai. Par 30 kadam ka task? Kahin na kahin kuch\n     tootega — file mitegi, schema bigdega, dependency takrayegi. Bina undo ke, agent us tooti haalat ke\n     upar kaam karta rehta hai: galti ke upar galti. Lab 29 (ex2) mein:</p>\n     <pre>har kadam ka risk   tareeka        poore sahi bane\n      5%           no-undo          38.9%\n      5%           rollback         71.0%\n     15%           no-undo           6.8%\n     15%           rollback         32.0%</pre>\n     <p>Rollback: test fail → saaf haalat par wapas → wahi kadam dobara. Same compute, <b>dugne</b> sahi\n     projects. Jo galtiyan bachti hain, ve galtiyan jo tests ne pakdi hi nahi — isliye rollback utna hi achha\n     jitna \"kuch toota?\" batane wala test.</p>\n     <h3>🧩 Teen parton ka snapshot</h3>\n     <ul>\n       <li><b>File system — copy-on-write</b>: snapshot = ek marker; aage ke writes naye blocks mein, purane\n       blocks wahi. Snapshot sasta, kyunki sirf marker banta hai (is lab mein pehla snapshot sab hash karta hai, baad wale ~6 ms) → har kadam par snapshot.</li>\n       <li><b>Code — auto git commit</b> har kaam ke kadam par (user ko git chhoona bhi nahi padta), aur ek\n       <b>immutable backup remote</b> — poora FS mit jaaye tab bhi history.</li>\n       <li><b>Database — forkable Postgres</b>: chalte DB ko CoW karna seedha nahi (live connections, WAL);\n       isliye snapshot = fork jo parent se data share karta hai jab tak likha na jaaye. Rollback = fork phenko.</li>\n     </ul>",
+    "<h3>📏 Lab 29: asli disk par snapshots</h3>\n     <pre>project   mode   pehla snapshot   10 snapshots ke baad disk   baad ke snapshots (avg)   rollback\n 200 MB  full       324 ms      1973.1 MB                676.4 ms               478 ms, 200 files\n 200 MB  cow     1541.6 ms       202.2 MB                  5.7 ms               187 ms,   5 files</pre>\n     <p>Full copy: har snapshot poora project (676 ms, 10 snapshots = ~2 GB). CoW: pehla mehenga (sab hash),\n     pehle ke baad <b>5.7 ms</b> aur sirf badle blocks. Snapshot itna sasta ho tabhi agent <b>har</b> kadam se\n     pehle le sakta hai.</p>\n     <h3>🍴 Parallel sampling</h3>\n     <p>Fork sasta hai → ek mushkil kadam ke liye 3 alag tareeke ek saath try karo, jo kaam kare wahi rakho.\n     Model ka non-determinism faayda ban jaata hai. Lab: retry ka intezaar nahi (rounds kam), par compute\n     <b>~3×</b> — aur chhupi galtiyan wahi ki wahi, kyunki forks bhi tests se behtar nahi dekh sakte.</p>\n     <p class=\"tip\">🎯 Video ki sabse zaroori line: <b>reversibility hi autonomy ko mumkin banati hai.</b>\n     User agent ko tabhi aazaadi deta hai jab use pata ho ki ek button se sab wapas.</p>",
   ],
   stages: [
     {
@@ -413,7 +413,7 @@ SD.registerLevels('ai', [
           'Lab ne hi dikhaya ki pehla CoW snapshot dheema tha.',
         ],
       },
-      lesson: 'Snapshot ki keemat tay karti hai ki woh kitni baar liya ja sakta hai — aur wahi tay karta hai ki undo kitna kaam ka hai.',
+      lesson: 'Snapshot ki keemat tay karti hai ki snapshot kitni baar liya ja sakta hai — aur snapshot ki ginti tay karti hai ki undo kitna kaam ka hai.',
     },
     {
       type: 'docker',
@@ -445,7 +445,7 @@ SD.registerLevels('ai', [
           'Compute se gayab assertion nahi aata.',
         ],
       },
-      lesson: 'Undo galtiyon ko "jama" hone se rokta hai. Par kaunsi galti hai, yeh test batata hai.',
+      lesson: 'Undo galtiyon ko "jama" hone se rokta hai. Par galti kaunsi hai, ye baat test batata hai.',
     },
   ],
   interview: {

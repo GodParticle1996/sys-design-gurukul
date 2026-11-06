@@ -69,7 +69,7 @@ SD.registerLevels('ai', [
     `<h3>🍳 → 🏏 Ek session, do taste</h3>
      <p>Tum 20 cooking videos dekhte ho. Phir galti se ek cricket highlight aata hai, tum poora dekh lete
      ho, phir ek aur. Tumhara taste <b>isi session mein</b> badal gaya. Agar model raat ko retrain hota
-     hai, woh kal tak tumhe cooking dikhata rahega — aur tum tab tak app band kar chuke hoge.</p>
+     hai, toh model kal tak tumhe cooking dikhata rahega — aur tum tab tak app band kar chuke hoge.</p>
      <p>Video ka dawa: TikTok naye user ka taste ~30–40 minute scroll mein samajh leta hai; Netflix ko
      din, Spotify ko hafte lagte hain. Wajah smart data scientists nahi, ek <b>architectural bet</b>:
      batch retraining ki jagah <b>real-time online learning</b>.</p>
@@ -80,7 +80,7 @@ SD.registerLevels('ai', [
        <tr><td>Video ki umar</td><td>saalon</td><td>4 ghante pehle hot, ab mari hui</td></tr>
        <tr><td>Taste badalta hai</td><td>hafton mein</td><td>session ke andar</td></tr>
      </table>`,
-    "<h3>🏗️ \"Batch ko zyada baar chala do\" kaam kyun nahi karta</h3>\n     <p>Batch pipeline: din bhar ka data jama karo → raat ko poora model train → subah deploy. Isko har\n     ghante chalao toh bhi har baar poora data, poori training, poora deploy — mehenga aur phir bhi\n     ghante bhar peeche.</p>\n     <p>Online learning alag architecture hai: har action (dekha/skip kiya) ek chhota training example\n     ban ke <b>turant</b> model ke parameters thode se hilata hai, aur naye parameters kuch minute mein\n     serving tak pahunchte hain. Yeh wahi pattern hai jo fraud detection, ad ranking, dynamic pricing\n     mein kaam aata hai — jahan bhi data <b>non-stationary</b> ho (sach badalta rehta ho).</p>\n     <h3>📏 Lab 28 mein naapa</h3>\n     <pre>model              agle 20 videos mein poore dekhe   model kab samjha\nnightly batch         0.3 / 20                     aaj kabhi nahi\nonline (lr 0.05)      2.6 / 20                     video #17.9\nonline (lr 0.2)      11.2 / 20                     video #6.4</pre>\n     <p class=\"tip\">🎯 Video ka pehla sabak: <b>feedback loop ki speed, model ki sophistication se zyada\n     maayne rakhti hai.</b> Seedha model jo har minute seekhe, us fancy model ko hara deta hai jo raat\n     ko seekhe.</p>",
+    "<h3>🏗️ \"Batch ko zyada baar chala do\" kaam kyun nahi karta</h3>\n     <p>Batch pipeline: din bhar ka data jama karo → raat ko poora model train → subah deploy. Isko har\n     ghante chalao toh bhi har baar poora data, poori training, poora deploy — mehenga aur phir bhi\n     ghante bhar peeche.</p>\n     <p>Online learning alag architecture hai: har action (dekha/skip kiya) ek chhota training example\n     ban ke <b>turant</b> model ke parameters thode se hilata hai, aur naye parameters kuch minute mein\n     serving tak pahunchte hain. Turant seekhna wahi pattern hai jo fraud detection, ad ranking, dynamic pricing\n     mein kaam aata hai — jahan bhi data <b>non-stationary</b> ho (sach badalta rehta ho).</p>\n     <h3>📏 Lab 28 mein naapa</h3>\n     <pre>model              agle 20 videos mein poore dekhe   model kab samjha\nnightly batch         0.3 / 20                     aaj kabhi nahi\nonline (lr 0.05)      2.6 / 20                     video #17.9\nonline (lr 0.2)      11.2 / 20                     video #6.4</pre>\n     <p class=\"tip\">🎯 Video ka pehla sabak: <b>feedback loop ki speed, model ki sophistication se zyada\n     maayne rakhti hai.</b> Seedha model jo har minute seekhe, us fancy model ko hara deta hai jo raat\n     ko seekhe.</p>",
   ],
   stages: [
     {
@@ -203,14 +203,14 @@ SD.registerLevels('ai', [
     'Expiry aur frequency filter se memory bounded',
   ],
   lesson: [
-    "<h3>🧭 Embedding = taste ka pata</h3>\n     <p>Har user aur har video ek <b>vector</b> hai — kuch sau numbers — jo \"is bande ko kya pasand hai\"\n     ya \"yeh video kis tarah ki hai\" batata hai. Paas-paas ke vectors = milta-julta taste.</p>\n     <p>1 arab+ users, arabon videos → table ki arabon rows. Ek machine mein fit nahi, aur har second\n     <b>badhti</b> hai (naye users, nayi videos). Isliye yeh parameter servers mein bikhri hoti hai.</p>\n     <h3>🔀 Fixed-size table ka chupa dhokha</h3>\n     <p>Aam TensorFlow embedding tables fixed-size hoti hain: <code>row = hash(user) % size</code>.\n     Table bhari → do alag users (video ki misaal: Akhil aur Yuki) <b>ek hi row</b> share karte hain →\n     model dono ko ek hi insaan samajhta hai → dono ko ek hi feed. Koi error nahi aata — bas quality\n     chupchaap girti hai, aur log chale jaate hain.</p>\n     <p>Lab 28 mein 10 lakh users:</p>\n     <pre>table   500000 rows:  86.5% users kisi aur ke saath row share karte hain\ntable  1000000 rows:  63.2%   ← users jitni rows, phir bhi!\ntable  4000000 rows:  22.2%   ← 4× memory, phir bhi 1 mein se 5</pre>",
-    "<h3>🐦 Cuckoo hashing — koyal ki tarah dhakelo</h3>\n     <p>Koyal apna anda doosri chidiya ke ghonsle mein daalti hai aur uska anda bahar dhakel deti hai.\n     Cuckoo hashing yahi karta hai:</p>\n     <ol>\n       <li>Har key ki <b>do sambhav jagah</b> (do hash functions).</li>\n       <li>Pehli jagah khaali → baith jao. Bhari → wahan baithe ko <b>dhakelo</b>.</li>\n       <li>Dhakela hua apni <b>dusri</b> jagah jaata hai; wahan bhi koi hai toh use dhakelta hai… jab tak\n       sabko ghar na mil jaaye.</li>\n     </ol>\n     <p>Nateeja: <b>koi do users ek row share nahi karte</b>, aur is toy two-choice variant mein do candidate positions dekhna.\n     Lab: 20 lakh rows (load 50%), 0% sharing, average 0.27 dhakke — par is classical two-choice single-slot setup ke high load par kabhi-kabhi\n     lambi chain (366), isliye table ko isse zyada nahi bharte.</p>\n     <h3>⌛ Memory bounded rakhne ke do jugaad</h3>\n     <ul>\n       <li><b>Expiry</b> — har row par \"last seen\". 30 din se nahi aaya → row hatao; wapas aaya toh dobara\n       seekh lo (hamesha rakhne se sasta). Lab: 10 lakh mein se 3.7 lakh hi active → <b>63% memory bachi</b>.</li>\n       <li><b>Frequency filter</b> — bahut kam interactions wale ko table mein daalo hi mat jab tak ek\n       threshold paar na ho. Ek baar aaya, kabhi nahi lauta — uske liye row kyun?</li>\n     </ul>",
+    "<h3>🧭 Embedding = taste ka pata</h3>\n     <p>Har user aur har video ek <b>vector</b> hai — kuch sau numbers — jo \"is bande ko kya pasand hai\"\n     ya \"ye video kis tarah ki hai\" batata hai. Paas-paas ke vectors = milta-julta taste.</p>\n     <p>1 arab+ users, arabon videos → table ki arabon rows. Ek machine mein fit nahi, aur har second\n     <b>badhti</b> hai (naye users, nayi videos). Isliye embedding table parameter servers mein bikhri hoti hai.</p>\n     <h3>🔀 Fixed-size table ka chupa dhokha</h3>\n     <p>Aam TensorFlow embedding tables fixed-size hoti hain: <code>row = hash(user) % size</code>.\n     Table bhari → do alag users (video ki misaal: Akhil aur Yuki) <b>ek hi row</b> share karte hain →\n     model dono ko ek hi insaan samajhta hai → dono ko ek hi feed. Koi error nahi aata — bas quality\n     chupchaap girti hai, aur log chale jaate hain.</p>\n     <p>Lab 28 mein 10 lakh users:</p>\n     <pre>table   500000 rows:  86.5% users kisi aur ke saath row share karte hain\ntable  1000000 rows:  63.2%   ← users jitni rows, phir bhi!\ntable  4000000 rows:  22.2%   ← 4× memory, phir bhi 1 mein se 5</pre>",
+    "<h3>🐦 Cuckoo hashing — koyal ki tarah dhakelo</h3>\n     <p>Koyal apna anda doosri chidiya ke ghonsle mein daalti hai aur doosri chidiya ka anda bahar dhakel deti hai.\n     Cuckoo hashing yahi karta hai:</p>\n     <ol>\n       <li>Har key ki <b>do sambhav jagah</b> (do hash functions).</li>\n       <li>Pehli jagah khaali → baith jao. Bhari → us jagah baithi key ko <b>dhakelo</b>.</li>\n       <li>Dhakela hua apni <b>dusri</b> jagah jaata hai; dusri jagah par bhi koi hai toh us key ko dhakelta hai… jab tak\n       sabko ghar na mil jaaye.</li>\n     </ol>\n     <p>Nateeja: <b>koi do users ek row share nahi karte</b>, aur is toy two-choice variant mein do candidate positions dekhna.\n     Lab: 20 lakh rows (load 50%), 0% sharing, average 0.27 dhakke — par is classical two-choice single-slot setup ke high load par kabhi-kabhi\n     lambi chain (366), isliye table ko ek hadd se zyada nahi bharte.</p>\n     <h3>⌛ Memory bounded rakhne ke do jugaad</h3>\n     <ul>\n       <li><b>Expiry</b> — har row par \"last seen\". 30 din se nahi aaya → row hatao; wapas aaya toh dobara\n       seekh lo (hamesha rakhne se sasta). Lab: 10 lakh mein se 3.7 lakh hi active → <b>63% memory bachi</b>.</li>\n       <li><b>Frequency filter</b> — bahut kam interactions wale ko table mein daalo hi mat jab tak ek\n       threshold paar na ho. Ek baar aaya, kabhi nahi lauta — aise user ke liye row kyun?</li>\n     </ul>",
   ],
   stages: [
     {
       type: 'order',
       title: 'Cuckoo insert — kadam sahi order mein',
-      instructions: 'Naya user "riya" table mein daalna hai. Uski pehli jagah par "aman" baitha hai.',
+      instructions: 'Naya user "riya" table mein daalna hai. Riya ki pehli jagah par "aman" baitha hai.',
       steps: [
         { text: 'h1(riya) nikaalo — pehli jagah', explain: 'Har key ki do sambhav jagah hain; pehle pehli dekho.' },
         { text: 'Jagah par aman baitha hai → riya ko aman ki jagah baithao, aman ko nikaalo', explain: 'Yahi "dhakka" hai — naya andar, purana bahar.' },
@@ -298,10 +298,10 @@ SD.registerLevels('ai', [
   ],
   homework: `<p>Apne system mein koi bhi "hash karke fixed buckets" wali cheez dhoondho — rate limiter
     buckets, feature hashing, cache shards. Poochho: agar do alag cheezein ek bucket mein gir gayin toh
-    kya chupchaap galat hoga? Wahan collision ka nuksaan likho.</p>`,
+    kya chupchaap galat hoga? Aisi har jagah collision ka nuksaan likho.</p>`,
   cards: [
     { front: 'Fixed-size embedding table ka nuksaan?', back: "Hash collisions: do users ek row share → model dono ko ek insaan samajhta hai → quality chupchaap girti hai. Lab: 1: 1 rows par bhi 63% share." },
-    { front: 'Cuckoo hashing?', back: 'Har key ki do jagah; bhari ho toh purane ko uski dusri jagah dhakelo. Collision-free, lookup 2 jagah. Load ~50% ke paas chains lambi.' },
+    { front: 'Cuckoo hashing?', back: 'Har key ki do jagah; bhari ho toh purani key ko apni dusri jagah dhakelo. Collision-free, lookup 2 jagah. Load ~50% ke paas chains lambi.' },
     { front: 'Expiry + frequency filter?', back: 'Expiry: N din inactive → row hatao, wapas aane par dobara seekho (lab: 63% memory bachi). Frequency filter: kam interactions wale ko table mein daalo hi mat.' },
   ],
 },
@@ -470,7 +470,7 @@ SD.registerLevels('ai', [
     'Main training/serving split aur relaxed consistency ka tark de sakta hoon',
   ],
   homework: `<p>Apne system mein koi aisi jagah dhoondho jahan "event A" aur "event B" alag waqt par aate
-    hain aur unhe jodna padta hai (order + payment, click + conversion, request + response log). Likho:
+    hain aur dono events ko jodna padta hai (order + payment, click + conversion, request + response log). Likho:
     window kitni hai, late event par kya hota hai, aur galat join ka nuksaan kise hota hai.</p>`,
   cards: [
     { front: 'TikTok training example ke do hisse?', back: 'Features (dikhate waqt, turant) + action (1–30 sec baad). Do Kafka topics, Flink join recommendation id se.' },

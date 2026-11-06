@@ -57,7 +57,7 @@ SD.registerLevels('planet', [
   ],
   lesson: [
     "<h3>🍛 Shaadi ka khaana</h3>\n     <p>Shaadi mein khaana ek baar, subah se, bade bartano mein banta hai — taaki 500 mehmaan aayein toh bas parosna ho.\n     YouTube bhi yahi karta hai: roz ~1 arab ghante dekhe jaate hain, ~500 ghante video <b>har minute</b> upload hota\n     hai. Mushkil kaam delivery nahi, <b>upload ke baad</b> ka hai. Siddhant: <b>compute once, serve forever</b> —\n     saara bhaari kaam upload par, taaki \"play\" dabana lagbhag muft ho (bytes pehle se bane, pehle se paas).</p>\n     <h3>📱 Kamzor link, badi file</h3>\n     <p>Client file ko ~10–50 MB ke <b>chunks</b> mein kaatta hai → <b>resumable</b> upload (toota sirf wahi chunk\n     dobara) → sabse paas ka Google edge → storage mein jodo → queue mein message → worker pool job uthata hai.</p>\n     <pre>lab 21 (link average 30 MB par toot-ta hai, 5 trials):\n64 MB:  blob     link par average 209 MB (3.3× file), kabhi 1.2×, kabhi 6.5×\n        chunked  link par 67 MB (1.0×), hamesha\n256 MB: blob     40 koshish, 1,032 MB bheje — PHIR BHI poora nahi ❌\n        chunked  275 MB (1.1×), 7.6 s ✅</pre>",
-    "<h3>🪜 Transcode ladder</h3>\n     <p>Ek upload, ek format. Dekhne wale: 4K TV gigabit par … 6 saal purana Android 3G par … laptop … smart fridge.\n     Isliye ek 8K upload se:</p>\n     <ul>\n       <li><b>~9 resolutions</b>: 144p, 240p, 360p, 480p, 720p, 1080p, 1440p, 2160p (4K), 4320p (8K)</li>\n       <li><b>× codecs</b>: H. 264 (purane devices), VP9, AV1</li>\n       <li><b>+ audio tracks</b> → darjanon files</li>\n     </ul>\n     <p>Codec ka sauda: behtar compression = zyada compute. Video ke mutabik VP9 encode ~5× H. 264 ka compute, aur AV1\n     VP9 se ~30% aur chhota par encode aur bhi bhaari. Bandwidth (har view par) bachane ke liye compute (ek baar)\n     kharch karo — kyunki view karodon baar hote hain.</p>\n     <p class=\"tip\">🎯 <b>Asymmetry</b>: mehenga kaam ek baar, sasta kaam karodon baar. Jahan \"ek baar\" aur \"karodon\n     baar\" ka farq ho, wahan kaam pehle karo.</p>",
+    "<h3>🪜 Transcode ladder</h3>\n     <p>Ek upload, ek format. Dekhne wale: 4K TV gigabit par … 6 saal purana Android 3G par … laptop … smart fridge.\n     Isliye ek 8K upload se:</p>\n     <ul>\n       <li><b>~9 resolutions</b>: 144p, 240p, 360p, 480p, 720p, 1080p, 1440p, 2160p (4K), 4320p (8K)</li>\n       <li><b>× codecs</b>: H. 264 (purane devices), VP9, AV1</li>\n       <li><b>+ audio tracks</b> → darjanon files</li>\n     </ul>\n     <p>Codec ka sauda: behtar compression = zyada compute. Video ke mutabik VP9 encode ~5× H. 264 ka compute, aur AV1\n     VP9 se ~30% aur chhota par encode aur bhi bhaari. Bandwidth (har view par) bachane ke liye compute (ek baar)\n     kharch karo — kyunki view karodon baar hote hain.</p>\n     <p class=\"tip\">🎯 <b>Asymmetry</b>: mehenga kaam ek baar, sasta kaam karodon baar. Jahan \"ek baar\" aur \"karodon\n     baar\" ka farq ho, us data ka kaam pehle karo.</p>",
   ],
   stages: [
     {
@@ -109,7 +109,7 @@ SD.registerLevels('planet', [
           unit: 'ghante', given: ['7,20,000 ghante/din', '27 versions'],
           answer: 19440000, tol: 0.3,
           steps: ["7,20,000 × 27 ≈ 1.94 crore", 'Roz ~2 crore ghante ka encode'],
-          lesson: 'CPU se yeh mehenga — isi liye Google ne apna video chip (Argos VCU) banaya.',
+          lesson: 'CPU se itna encode mehenga — isi liye Google ne apna video chip (Argos VCU) banaya.',
         },
       ],
     },
@@ -160,7 +160,7 @@ SD.registerLevels('planet', [
     'Main transcode ladder aur codec ka compute/bandwidth sauda bata sakta hoon',
   ],
   homework: `<p>Apne system mein ek "karodon baar padha, ek baar likha" wala data dhoondho (product page, report, thumbnail,
-    config). Kya uska bhaari kaam har read par hota hai? Likho: agar use likhte waqt pehle se bana diya jaaye toh
+    config). Kya data ka bhaari kaam har read par hota hai? Likho: agar data likhte waqt pehle se bana diya jaaye toh
     har read par kitna bachega.</p>`,
   cards: [
     { front: 'YouTube ka siddhant?', back: 'Compute once, serve forever — saara bhaari kaam upload par (chunks, transcode, placement), taaki play dabana lagbhag muft ho.' },
@@ -184,14 +184,14 @@ SD.registerLevels('planet', [
     'Argos VCU aur long-tail ka hisaab',
   ],
   lesson: [
-    "<h3>🧵 Ek darzi vs 12 darzi</h3>\n     <p>2 ghante ki movie ek machine par encode karo toh ghanton. Isliye: movie ko ~10-min <b>chunks</b> mein kaato,\n     12 machines par ek saath, phir <b>order mein jodo</b>.</p>\n     <p>Dikkat: encoder ko <b>pados ke frames</b> chahiye (rate control, lookahead). Chunk ki shuruaat mein woh \"thanda\"\n     hota hai → seams par quality girti hai. Ilaaj: chunks thoda <b>overlap</b> karo — pichhle chunk ke kuch frames bhi\n     encode karo taaki encoder garam ho, phir stitch par woh frames kaat do.</p>\n     <pre>lab 21 (ex2) — 7,200 units (1 unit = 1 sec video), asli CPU burn, 14-core laptop:\nH. 264   1 machine                 2.20 s     kharab units    5\nH. 264  12 machines, no overlap    0.25 s     kharab units   60   ← har seam par 5\nH. 264  12 machines, overlap 5     0.24 s     kharab units    5   (+55 units extra = +0.8%)\nVP9     1 machine                10.84 s\nVP9    12 machines, overlap 5     1.09 s</pre>",
+    "<h3>🧵 Ek darzi vs 12 darzi</h3>\n     <p>2 ghante ki movie ek machine par encode karo toh ghanton. Isliye: movie ko ~10-min <b>chunks</b> mein kaato,\n     12 machines par ek saath, phir <b>order mein jodo</b>.</p>\n     <p>Dikkat: encoder ko <b>pados ke frames</b> chahiye (rate control, lookahead). Chunk ki shuruaat mein encoder \"thanda\"\n     hota hai → seams par quality girti hai. Ilaaj: chunks thoda <b>overlap</b> karo — pichhle chunk ke kuch frames bhi\n     encode karo taaki encoder garam ho, phir stitch par extra frames kaat do.</p>\n     <pre>lab 21 (ex2) — 7,200 units (1 unit = 1 sec video), asli CPU burn, 14-core laptop:\nH. 264   1 machine                 2.20 s     kharab units    5\nH. 264  12 machines, no overlap    0.25 s     kharab units   60   ← har seam par 5\nH. 264  12 machines, overlap 5     0.24 s     kharab units    5   (+55 units extra = +0.8%)\nVP9     1 machine                10.84 s\nVP9    12 machines, overlap 5     1.09 s</pre>",
     `<h3>🔩 Jab CPU bhi kam pade — apna chip</h3>
      <p>~2015 ke baad Google ne <b>Argos VCU</b> (video coding unit) banaya: video ke mutabik ~20–33× zyada
      compute-efficient (design aur banane ka kharcha jod ke); ek chip mein ~10 encoder cores, har ek 4K real-time;
      ek card par 2 chips (GPU jaisa). Ek analysis ke mutabik ~1 crore CPUs jitna kaam. 4K ab ghanton mein, dinon
      mein nahi. (Dropbox ne storage ke liye yahi kiya — jab problem badi aur khaas ho, stack khud banao.)</p>
      <h3>📉 Long tail</h3>
-     <p>Zyadatar videos bahut kam dekhe jaate hain. Mehenga kaam wahan karo jahan maang hai: popular videos ko zyada
+     <p>Zyadatar videos bahut kam dekhe jaate hain. Mehenga kaam sirf maang wali videos par karo: popular videos ko zyada
      formats, zyada jagah, zyada optimization; kam dekhe videos ke liye conservative.</p>
      <p class="tip">🎯 Parallelism ka niyam: <b>tukde karo, par seams ki keemat pehchaano</b> aur use thode se extra
      kaam se chuka do.</p>`,
@@ -230,8 +230,8 @@ SD.registerLevels('planet', [
     },
     {
       type: 'match',
-      title: 'Faisla aur uski wajah',
-      instructions: 'Har faisle ko uski wajah se jodo.',
+      title: 'Faisla aur faisle ki wajah',
+      instructions: 'Har faisle ko sahi wajah se jodo.',
       pairs: [
         { left: '✂️ Movie ko 10-min chunks mein', right: '12 machines ek saath — ghanton ki jagah minute', explain: "Lab: 8.8× tez." },
         { left: '🔁 Chunks mein thoda overlap', right: 'Seams par encoder garam — glitch nahi', explain: "Lab: 60 → 5 kharab units, +0.8% kaam." },
@@ -320,9 +320,9 @@ SD.registerLevels('planet', [
        <li><b>Sharding ka dard</b> — app ko pata hona chahiye kaunsa shard.</li>
        <li><b>Failover</b> — detect, promote, reroute, data na khoye, raat 3 baje page na aaye.</li>
      </ul>
-     <p>YouTube ne MySQL ko nahi chhoda — uske chaaron taraf <b>Vitess</b> (Go) banaya: poora fleet app ko ek DB
+     <p>YouTube ne MySQL ko nahi chhoda — MySQL ke chaaron taraf <b>Vitess</b> (Go) banaya: poora fleet app ko ek DB
      jaisa dikhe. Open source; Slack, Square, GitHub jaise log use karte hain.</p>`,
-    "<h3>🚪 vtgate + 🛡️ vttablet</h3>\n     <p><b>vtgate</b> = front door/router: query dekh ke batata hai kaunsa shard. <b>vttablet</b> = har MySQL ke saath\n     baitha bodyguard:</p>\n     <ol>\n       <li><b>Pooling</b> — 10,000 app connections → ~100 asli.</li>\n       <li><b>Query safety</b> — LIMIT jodna, jaane-maane bure patterns block, lambi query kill.</li>\n       <li><b>Consolidation (dedup)</b> — ek jaisi SELECT pehle se chal rahi hai → nayi DB tak mat bhejo, usi ka jawab\n       baanto (1,000 → 1).</li>\n     </ol>\n     <pre>lab 21 (ex3) — DB max_connections=500, 2,000 clients × 5 same SELECT (viral video):\nseedha DB     2,400 ok, 7,600 error (too many connections), DB RSS 570 MB\nvttablet     10,000 ok, 0 error, DB par sirf 20 connections aur 6 queries, RSS 69 MB\nvttablet (consolidation band)  10,000 queries, 10.3 s, p50 2,048 ms\nintern ki SELECT * bina LIMIT: seedha 2,001 ms DB block; vttablet ne LIMIT joda → 21 ms</pre>\n     <p><b>Live resharding</b> (automated): naye shards → copy + sync rakho → verify → <b>pehle reads</b> switch →\n     <b>phir writes</b> → kisi bhi kadam par wapas. (Wahi anushasan jo Dropbox ki migration mein.)</p>",
+    "<h3>🚪 vtgate + 🛡️ vttablet</h3>\n     <p><b>vtgate</b> = front door/router: query dekh ke batata hai kaunsa shard. <b>vttablet</b> = har MySQL ke saath\n     baitha bodyguard:</p>\n     <ol>\n       <li><b>Pooling</b> — 10,000 app connections → ~100 asli.</li>\n       <li><b>Query safety</b> — LIMIT jodna, jaane-maane bure patterns block, lambi query kill.</li>\n       <li><b>Consolidation (dedup)</b> — ek jaisi SELECT pehle se chal rahi hai → nayi DB tak mat bhejo, chalti query ka jawab\n       baanto (1,000 → 1).</li>\n     </ol>\n     <pre>lab 21 (ex3) — DB max_connections=500, 2,000 clients × 5 same SELECT (viral video):\nseedha DB     2,400 ok, 7,600 error (too many connections), DB RSS 570 MB\nvttablet     10,000 ok, 0 error, DB par sirf 20 connections aur 6 queries, RSS 69 MB\nvttablet (consolidation band)  10,000 queries, 10.3 s, p50 2,048 ms\nintern ki SELECT * bina LIMIT: seedha 2,001 ms DB block; vttablet ne LIMIT joda → 21 ms</pre>\n     <p><b>Live resharding</b> (automated): naye shards → copy + sync rakho → verify → <b>pehle reads</b> switch →\n     <b>phir writes</b> → kisi bhi kadam par wapas. (Wahi anushasan jo Dropbox ki migration mein.)</p>",
   ],
   stages: [
     {
@@ -418,7 +418,7 @@ SD.registerLevels('planet', [
     'Main live resharding ke kadam sahi order mein bata sakta hoon',
   ],
   homework: `<p>Apne DB ke top 5 queries (by count) nikaalo. Kya koi ek hi query same parameters ke saath ek second mein
-    sainkdon baar aati hai? Wahan consolidation ya cache kitna bachayega? Aur kya koi query bina LIMIT ke chal sakti hai?</p>`,
+    sainkdon baar aati hai? Aisi query par consolidation ya cache kitna bachayega? Aur kya koi query bina LIMIT ke chal sakti hai?</p>`,
   cards: [
     { front: 'vtgate vs vttablet?', back: 'vtgate = router (kaunsa shard). vttablet = har MySQL ka bodyguard: pooling, query safety (LIMIT, kill), consolidation.' },
     { front: 'Lab 21: 2,000 clients seedha vs vttablet?', back: 'Seedha: 7,600 errors, 570 MB. vttablet: 0 errors, DB par 20 connections, 10,000 requests → 6 queries, 69 MB.' },
@@ -453,7 +453,7 @@ SD.registerLevels('planet', [
      <h3>📋 Paanch sabak</h3>
      <ol>
        <li>Mehenga kaam ek baar — common path sasta.</li>
-       <li>Boring tools scale karte hain agar tum unke chaaron taraf banao (MySQL + Vitess).</li>
+       <li>Boring tools scale karte hain agar tum boring tools ke chaaron taraf banao (MySQL + Vitess).</li>
        <li>Pooling, query safety, duplicate kaam jodo.</li>
        <li>Problem badi aur khaas ho toh stack khud banao (VCU, atomic clocks).</li>
        <li>Planet scale ka sabse mushkil kaam: <b>order par sehmati</b> — hardware + latency se chukao, ya consistency chhodo.</li>
