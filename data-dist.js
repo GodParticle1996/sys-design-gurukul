@@ -1342,7 +1342,7 @@ COMMIT;</pre>
     { front: 'Asli formula?', back: '<b>at-least-once delivery + idempotent processing = effectively-once.</b> Duplicates aayenge — bas duplicates ka koi asar nahi hoga.' },
     { front: 'Idempotent consumer ke 3 kadam?', back: '<b>1.</b> Message mein unique id <b>2.</b> <code>processed_ids</code> par UNIQUE constraint <b>3.</b> side-effect + id <b>ek hi transaction</b> mein (warna dual write dobara).' },
     { front: 'Sabse sasti idempotency?', back: 'Design se: <b>"value SET karo"</b> (<code>SET status = shipped</code>), "value BADHAO" nahi. Koi extra table, koi constraint nahi lagti.' },
-    { front: '"Broker exactly-once deta hai"?', back: 'Kafka transactions supported Kafka read-process-write boundary protect karti hain.External sink/payment/email ko cooperating transaction,idempotency ya reconciliation contract chahiye.' },
+    { front: '"Broker exactly-once deta hai"?', back: 'Kafka transactions supported Kafka read-process-write boundary ko bachati hain. External sink/payment/email ke liye cooperating transaction, idempotency ya reconciliation ka contract chahiye.' },
   ],
 },
 

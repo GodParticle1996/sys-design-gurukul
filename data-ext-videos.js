@@ -272,7 +272,7 @@ leader mara → 30 s baad lock expire → standbys race karte hain → ek jeet-t
     'Main lease TTL, renew aur watchdog timeout ko saath mein tune kar sakta hoon',
   ],
   cards: [
-    { front: 'Scheduler ke teen failure modes?', back: '(1) dead scheduler → leader election, (2) slow job overlap → job lock + heartbeat, (3) lost job (shuru karke mara) → complete sirf completion signal par + watchdog.' },
+    { front: 'Scheduler ke teen failure modes?', back: '(1) Scheduler mar gaya → leader election. (2) Dheemi jobs overlap karein → job lock + heartbeat. (3) Job shuru karke chalane wala mar gaya → completion signal par hi complete maano + watchdog rakho.' },
     { front: 'Leader election ka failover time?', back: 'Lock ka TTL. Leader 30 s TTL rakh kar har 10 s renew karta hai; mara toh 30 s baad standby lock le leta hai. Renewal fail hote hi purana leader turant ruk jaaye.' },
     { front: 'Scheduled job ki idempotency key?', back: 'hash(job_id + schedule window) — execution record par unique constraint; duplicate ON CONFLICT DO NOTHING se gir jaata hai. Window ke andar dedupe, hamesha ke liye nahi.' },
     { front: 'Watchdog kaise kaam karta hai?', back: 'Worker har 10 s heartbeat likhta hai; watchdog har minute running + heartbeat > 60 s wali rows ko pending karta hai aur attempt_count badhata hai. max_attempts par dead letter.' },
@@ -442,7 +442,7 @@ T2: B padha (lock B) ... ab A likhna hai → A par T1 ka lock → ruka
     },
   ],
   cards: [
-    { front: 'Optimistic concurrency ka flow?', back: 'Row + version padho → kaam karo → UPDATE ... WHERE id=? AND version=? (version+1). 0 rows affected = kisi aur ne likh diya → rollback + retry. Deadlock nahi, par conflict par wasted work.' },
+    { front: 'Optimistic concurrency ka flow?', back: 'Row + version padho → kaam karo → UPDATE ... WHERE id=? AND version=? (version+1). 0 rows affected = kisi aur ne likh diya → rollback + retry. Deadlock nahi, par conflict par kiya hua kaam bekaar jaata hai.' },
     { front: 'Pessimistic mein deadlock kaise banta hai?', back: 'T1 ne A lock kiya aur B chahiye; T2 ne B lock kiya aur A chahiye. Dono ruke. Engine ek ko rollback karta hai. Ilaaj: locks hamesha ek hi kram mein.' },
   ],
 });
@@ -914,7 +914,7 @@ SD.registerLevelsAfter('dist', 'clocks', [
     { front: 'Random election timeout kyun?', back: 'Sab ka timeout ek jaisa ho toh sab ek saath candidate bante hain aur vote bant jaate hain. Random start times split-vote risk reduce karte hain; majority election phir bhi chahiye. 150–300 ms paper ka example hai, universal setting nahi.' },
     { front: 'Term kya hai?', back: 'Logical time / election ka saal. Apne se bada term dikhe toh tum purane ho → follower ban jao. Higher term observe hone par step down hota hai; quorum ke bina old leader new writes commit nahi kar sakta.' },
     { front: 'Majority quorum kyun?', back: 'Koi bhi do majorities kam se kam ek node par overlap karti hain — ek term mein do leader ya do alag committed values namumkin.' },
-    { front: 'Raft write path?', back: 'Current-term entry: leader durable append → follower durable replication → majority → commit prefix → apply/client success. Older-term entries directly replica-count se commit nahi; committed prefix ke through hoti hain.' },
+    { front: 'Raft write path?', back: 'Current-term entry: leader par durable append → followers par durable replication → majority → prefix commit → apply/client ko success. Older-term entries sirf replica-count se seedhe commit nahi hoti; committed prefix ke saath hoti hain.' },
   ],
 },
 {
@@ -1181,9 +1181,9 @@ NETWORK THEEK:
     (leader kaun, config, feature flag). Likho ki aaj chaabiyan kahan rehti hain — aur kya chaabiyon ki jagah
     partition mein do alag jawab de sakti hai?</p>`,
   cards: [
-    { front: 'Leader marne par Raft kitni der mein theek hota hai?', back: 'Configured timeout, RPC/fsync delay, vote splits aur majority reachability determine recovery. 150–300 ms paper example hai; production guarantee nahi. Detection + successful election + catch-up/client routing measure karo.' },
+    { front: 'Leader marne par Raft kitni der mein theek hota hai?', back: 'Recovery ka samay configured timeout, RPC/fsync ki der, vote splits aur majority tak pahunch par nirbhar hai. 150–300 ms paper ka example hai; production guarantee nahi. Detection + successful election + catch-up/client routing ka samay naapo.' },
     { front: 'Partition mein minority side ka leader?', back: 'Without configured majority no new commit. Timeout outcome ambiguous ho sakta hai. Higher term par step down; AppendEntries conflicting suffix replace karta hai. Har uncommitted entry universally erase nahi hoti.' },
-    { front: '4 nodes kyun nahi?', back: '4 voters need 3 votes; 3 voters need 2. Dono one unavailable voter tolerate karte hain. Extra voter same failure tolerance par cost badha sakta hai; latency actual placement/implementation se assess karo.' },
+    { front: '4 nodes kyun nahi?', back: '4 voters ko 3 votes chahiye; 3 voters ko 2. Har voter group ek unavailable voter jhel sakta hai. Barabar failure tolerance par extra voter cost badha sakta hai. Latency actual placement/implementation dekhkar aanko.' },
     { front: 'Consensus kiske liye?', back: 'Metadata aur user data dono. CockroachDB ranges independent Raft groups use karti hain. One global group bottleneck ho sakta hai; shards capacity distribute karte hain. API/data model aur consistency need fit karo.' },
     { front: 'etcd, ZooKeeper, KRaft, Spanner?', back: 'etcd = Kubernetes ka Raft store; ZooKeeper (ZAB) = purana Kafka coordinator; Kafka 4.0 (2025) ne apna Raft-based KRaft liya; Spanner = har shard ek Paxos group.' },
   ],

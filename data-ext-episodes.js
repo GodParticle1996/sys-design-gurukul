@@ -163,7 +163,7 @@ SD.extendLevel('caching', {
      agle level "Cache Invalidation" mein, lab ke saath.)</p>`,
   ],
   cards: [
-    { front: 'CDC cache invalidation?', back: 'DB WAL → CDC → retained stream → invalidator → relevant cache layers. Lag, retention recovery aur refill race test karo. Async invalidation instantaneous consistency guarantee nahi.' },
+    { front: 'CDC cache invalidation?', back: 'DB WAL → CDC → retained stream → invalidator → data se judi cache layers. Lag, retention se judi recovery aur refill race test karo. Async invalidation se turant consistency ki guarantee nahi milti.' },
   ],
 });
 
@@ -374,7 +374,7 @@ pool=64   502 tx/s     pool=256   186 tx/s  ← 8× kam
     },
   ],
   cards: [
-    { front: 'PgBouncer modes?', back: 'Session preserves session semantics. Transaction shares connection after COMMIT; session features audit karo. Configured protocol prepared plans supported ho sakti hain. Statement disallows multi-statement transactions; simple autocommit use case.' },
+    { front: 'PgBouncer modes?', back: 'Session mein session semantics bachi rehti hain. Transaction mein COMMIT ke baad connection share hota hai; session features audit karo. Protocol prepared plans configure hon toh support mil sakta hai. Statement mein multi-statement transactions mana hain; simple autocommit ke liye hai.' },
     { front: 'Pool size formula?', back: '≈ cores × 2 + 1 (16 cores → 33). Lab 35: pool 16 → 1490 tx/s, 256 → 186 tx/s.' },
     { front: 'Pooler ka ek alert?', back: 'cl_waiting > 0 for > 30 s. (sv_active/pool_size > 90% saturated; avg_xact_time > 500 ms slow queries.)' },
   ],
@@ -625,7 +625,7 @@ PROPAGATE=1  A ne  9,374 bheje → 2,979 poore (3.1 tries/success)    C ne 0 thu
   homework: `<p>Apne system ki har queue/buffer (Kafka topic, in-memory channel, thread pool, HTTP client pool) list karo. Har ek: bounded hai? Bhar
     gayi toh kya hota hai (block/drop/error)? Kiska kaam girega — kya ye faisla likha hua hai?</p>`,
   cards: [
-    { front: 'Backpressure ke chaar layers?', back: 'Problem (producer > consumer), detection (growth rate, tail, utilization), response (absorb/drop/propagate), propagation (429 + Retry-After source tak).' },
+    { front: 'Backpressure ke chaar layers?', back: 'Problem: producer > consumer. Pata kaise chale: growth rate, tail, utilization. Kya karo: absorb/drop/propagate. Khabar source tak pahunchao: 429 + Retry-After.' },
     { front: 'Bounded queue ki 4 policies?', back: 'Block (batch), drop-new (retry-safe), drop-oldest (taazgi), error (caller tay kare). Product ka faisla, pehle se.' },
     { front: 'Lab 15: propagation?', back: 'Bina: A 72,166 bheje, 2,757 poore, C ne 69,409 thukraye. Saath: 9,374 bheje, 2,979 poore, 0 thukraye.' },
   ],
@@ -803,7 +803,7 @@ sab replicated, LB ek            lb mara   → 25.0%</pre>
     copies, kahan (AZ/region), aur failover kaun karta hai kitni der mein? Jahan "1" likha hai, wahi tumhara SPOF.</p>`,
   cards: [
     { front: 'SPOF?', back: 'Critical path ki koi bhi dependency jiska backup nahi — DB, LB, broker, cache (agar dependency), gateway, region. Lab: LB ek → 25%.' },
-    { front: 'Active-active vs passive?', back: 'Active-active: sab kaam, turant shift, par sync/conflicts (stateless). Active-passive: standby khaali, takeover der (lab 1.1 s), simple (stateful primary).' },
+    { front: 'Active-active vs passive?', back: 'Active-active: sab nodes kaam karte hain, turant shift hota hai, par sync/conflicts sambhalo (stateless). Active-passive: standby khaali rehta hai, takeover mein der (lab 1.1 s), saral hai (stateful primary).' },
     { front: 'Replicate karne ke teen sawaal?', back: 'Gira toh kya? Kitni sambhavna? Keemat kya? Maqsad: koi ek failure poora system na giraye.' },
   ],
 },
@@ -1250,7 +1250,7 @@ queue (line mein agla)      100 wake-ups · 0 bekaar</pre>
     Agar lock sach mein chahiye — fencing token ya storage-level check hai? Aur TTL/renew/pause budget measured hai? Resource stale token atomically reject karta hai?</p>`,
   cards: [
     { front: 'ZooKeeper lock?', back: 'Ephemeral sequential waiter nodes; predecessor watch unnecessary herd reduce karta hai. Session expiry par ephemeral removal; temporary disconnect immediate expiry nahi. Recoverable errors/watch races handle karo; latency measure karo.' },
-    { front: 'Postgres advisory lock?', back: 'pg_advisory_lock / pg_advisory_xact_lock (COMMIT par khud chhoote); naya infra nahi, crash-safe, deadlock detection, ~1 ms. Critical section usi DB mein ho toh best shuruaat.' },
+    { front: 'Postgres advisory lock?', back: 'pg_advisory_lock / pg_advisory_xact_lock (COMMIT par khud chhoote); naya infra nahi chahiye, crash-safe hai, deadlock detection milti hai, ~1 ms. Critical section lock wali DB mein ho toh sabse achhi shuruaat.' },
     { front: 'Lock kab chahiye hi nahi?', back: 'Single-DB invariant atomic constraint/update/OCC se solve ho sakta hai. External effect ke liye provider idempotency/reconciliation inspect karo. Locks shared coordination mein valid ho sakte hain; resource fencing alone payment dedupe nahi.' },
   ],
 },

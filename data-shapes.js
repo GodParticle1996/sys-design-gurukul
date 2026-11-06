@@ -635,7 +635,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     Aur ek test: ek naya item banao aur ginti karo ki search mein aane mein kitne second lage.`,
   cards: [
     { front: "LIKE '%x%' par index kyun nahi chalta?", back: 'B-tree <b>sorted</b> hai — navigate shuruaat se hota hai. Beech ka match unknown shuruaat hai, isliye har row dekhni padti hai. <code>LIKE \'x%\'</code> chalta hai.' },
-    { front: 'Inverted index kya hai?', back: 'Table ka ulta: <b>shabd → document ids ki sorted list</b>. Multi-word search = lists ka intersection. Lucene/Elasticsearch/GIN sab yahi hain.' },
+    { front: 'Inverted index kya hai?', back: 'Table ka ulta: <b>shabd → document ids ki sorted list</b>. Kai shabdon ki search mein lists ka intersection lo. Lucene/Elasticsearch/GIN mein bhi inverted index hai.' },
     { front: 'Analysis pipeline ke kadam?', back: 'lowercase → tokenize → punctuation/stopwords → stemming → synonyms → postings. <b>Query bhi isi pipeline se</b> guzarni chahiye.' },
     { front: 'Indexing lag ka ilaaj?', back: 'Bug nahi, design hai. Ilaaj UX mein: apne items DB se dikhao (read-your-own-writes) + "indexing" signal + lag par SLI/alert.' },
     { front: 'Search index source of truth?', back: '<b>Kabhi nahi.</b> Search index reindex hoga hi (mapping/version/corruption). Sirf search index mein rakha data ek din chala jaayega.' },
@@ -900,7 +900,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
     (2) upload ke doraan ek DB connection pakda rehta hai? (3) lifecycle rule hai?
     (4) failed uploads ke orphan objects kaun saaf karta hai?`,
   cards: [
-    { front: 'Upload app server se kyun na guzre?', back: 'Har upload poore duration ke liye ek <b>concurrency slot</b> (thread + aksar DB connection) pakadta hai. 50 slow uploads = pool khatam = poori API timeout. Wahi pool-exhaustion shape.' },
+    { front: 'Upload app server se kyun na guzre?', back: 'Har upload poore duration ke liye ek <b>concurrency slot</b> (thread + aksar DB connection) pakadta hai. 50 slow uploads = pool khatam = poori API timeout. Pool exhaustion ka pattern hai.' },
     { front: 'Presigned URL flow?', back: 'client poochhe → app permission check kare → signed URL de (chhoti expiry, ek key, content-type; size cap ke liye POST policy) → client SEEDHA storage par PUT → <b>storage ka event</b> → metadata row → async processing.' },
     { front: '"File aa gaya" kaun batayega?', back: '<b>Object storage ka event</b> — client nahi. Client jhooth bol sakta hai ya beech mein mar sakta hai.' },
     { front: 'Bytes vs metadata?', back: 'Bytes → object storage (sasta, CDN-ready). Metadata → DB (query, permission, transaction). DB mein BLOB = buffer pool khatam + backup 100x.' },
@@ -1422,7 +1422,7 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
     kaunsi precision sahi hai — aur peak par us cell mein kitne log honge?`,
   cards: [
     { front: 'lat/lng dono par BETWEEN — kya hota hai?', back: 'Composite index <b>pehli range ke baad ruk jaata hai</b>. Poori latitude patti padhni padti hai. B-tree 1D hai, jagah 2D.' },
-    { front: 'Geohash ka kamaal?', back: 'Common prefix same coarse cell dikhata hai;nearby points across boundaries different prefixes rakh sakte hain. Isliye "nearby" = <code>LIKE \'te7ud%\'</code> = B-tree prefix scan. 2D problem 1D ban gaya.' },
+    { front: 'Geohash ka kamaal?', back: 'Common prefix ek hi coarse cell dikhata hai. Paas ke points cell boundaries ke aar-paar hon toh prefixes alag ho sakte hain. Isliye "nearby" = <code>LIKE \'te7ud%\'</code> = B-tree prefix scan. 2D problem 1D ban gaya.' },
     { front: 'Geo query ka do-kadam design?', back: '1. Index se <b>mota chhanna</b> (cell + 8 padosi → ~900 candidates). 2. Un par <b>asli doori</b> (haversine) nikaal ke sort. Index ka kaam sirf candidates dena hai.' },
     { front: 'Hot cell?', back: 'Geo data uniformly nahi bikhra — airport 8 PM par jalta hai. Hot cell <b>wahi hot key</b> problem hai: cell ko finer resolution par split karo ya replicate karo. Fixed grid size lagbhag hamesha galti hai.' },
     { front: 'Driver locations kahan store karein?', back: '<b>In-memory geo store</b> (Redis) — driver locations current state hai, history nahi. 1 lakh drivers × 15 ping/min DB par bhejna write storm hai.' },
@@ -1951,7 +1951,7 @@ geo (PostGIS), pub/sub (LISTEN/NOTIFY), queues (SKIP LOCKED)</pre>
   cards: [
     { front: 'Pattern samajhne ka test?', back: 'Tum bata sako ki pattern kya <b>bigadta</b> hai. Sirf faayde bata paana = naam yaad hai, samajh nahi.' },
     { front: 'Technology chunav se pehle ka sawaal?', back: '<b>"Chuni gayi technology kis cheez ko theek kar rahi hai, jo abhi sach mein toota hua hai?"</b> Jawab mein "aage chal ke" aaye toh abhi zaroorat nahi.' },
-    { front: 'Ek Postgres kitna kar leta hai?', back: "Capacity fixed universal number nahi:query mix,hardware,durability aurSLO benchmark karo.Postgres JSONB,full-text,PostGIS aur SKIP LOCKED useful tools hain if requirements fit." },
+    { front: 'Ek Postgres kitna kar leta hai?', back: "Capacity ka koi fixed universal number nahi. Query mix, hardware, durability aur SLO ke saath benchmark karo. Requirements se mel khaayein toh Postgres ke JSONB, full-text, PostGIS aur SKIP LOCKED kaam aate hain." },
     { front: 'Microservices ki asli keemat?', back: 'Har method call ab ek <b>network call</b> hai — fail, dheemi, ya duplicate ho sakti hai. Ek stack trace ab distributed trace hai. Faayda organizational hai, technical nahi.' },
     { front: '8-second query par cache?', back: 'Pehle poochho <b>kyun</b> 8 second. Aksar missing index ya N+1. Cache slow query ko chhupata hai, hataata nahi — aur miss par query ke 8 second sabse bure waqt par wapas aate hain.' },
     { front: 'Sharding se pehle?', back: '20 GB RAM mein aa jaata hai. Sharding cross-shard queries, rebalancing aur hot shards laati hai. Shard key badalna <b>bahut mehenga</b> hai — poora data dobara baantna padta hai.' },

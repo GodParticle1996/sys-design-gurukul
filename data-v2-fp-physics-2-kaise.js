@@ -651,7 +651,7 @@ SD.registerLevels('fp-core', [
       "back": "Time-average occupancy. Peak ya har instant ka count nahi."
     },
     {
-      "front": "More bandwidth har latency mita degi?",
+      "front": "Zyada bandwidth har latency mita degi?",
       "back": "Serialization/queue time ghatt sakta hai. Fixed propagation/path wait apne aap nahi mitta."
     }
   ]

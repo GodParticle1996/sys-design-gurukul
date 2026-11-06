@@ -1511,7 +1511,7 @@ NON-FUNCTIONAL
     aur online hote hi kya hota hai? Wahi client-side queue + retry hai.`,
   cards: [
     { front: 'Chat ka neev wala niyam?', back: '<b>Pehle durable store (id ke saath), phir push.</b> Push ek optimization hai, source of truth nahi. Ye kram offline + reconnect + multi-device + "message kho gaya" — chaaron hal karta hai.' },
-    { front: 'Multi-device sync?', back: 'Har device ka apna <b>last_seen_id</b>. Bas. Koi alag sync system nahi — wahi gap-fill query jo har reconnect chalata hai.' },
+    { front: 'Multi-device sync?', back: 'Har device ka apna <b>last_seen_id</b>. Bas. Alag sync system nahi chahiye. Har reconnect par chalne wali gap-fill query se hi sync hoti hai.' },
     { front: 'Read receipts?', back: 'Per-user <b>cursor</b> (last_read_message_id), per-message row nahi. "Kitno ne padha" = <code>COUNT(cursor &gt;= message_id)</code>.' },
     { front: 'Group fanout — read ya write?', back: '<b>Read par</b> — chat mein ek message 20 log padhte hain (ratio kam). Feed mein <b>write par</b> — ek tweet crore log padhte hain. Ratio hi faisla hai.' },
     { front: 'Connection layer?', back: '10 crore ÷ 50k = <b>2,000 gateway nodes</b> sirf sockets ke liye, chahe koi kuch bhej na raha ho. Logic peechhe, beech mein pub/sub, aage L4 LB.' },
@@ -1780,7 +1780,7 @@ alag quality se maang sakta hai — beech mein, bina ruke.</pre>
     { front: 'Teen alag systems?', back: '<b>Upload</b> (bandwidth-bound, presigned URL) · <b>Transcode</b> (CPU-bound, queue + worker fleet) · <b>Deliver</b> (egress-bound, CDN). Teenon alag scale karte hain.' },
     { front: 'Playback 2 second mein kaise?', back: "<b>Chunks + adaptive bitrate.</b> Player initial bitrate/device/network policy se chunk choose karta hai, buffer aur throughput se adapt karta hai. Playback whole file download se pehle shuru ho sakti hai; full watch mein poora selected rendition stream ho sakta hai." },
     { front: 'CDN hit rate 95% → 90%?', back: "Same volume aur byte-hit/shield boundary par origin bytes <b>dugna</b> (5% → 10%). Request hit ratio alone bytes prove nahi karti. Origin capacity, delivery latency aur egress cost bhi monitor karo." },
-    { front: 'View count (100 crore/din)?', back: "Stream → windowed aggregate → periodic update. 100 crore/day ≈ 11,574 events/sec platform-wide; per-video skew hot row decide karta hai. UI freshness/approximation policy explicit rakho; billing metrics separate hain." },
+    { front: 'View count (100 crore/din)?', back: "Stream → windowed aggregate → periodic update. Poore platform par 100 crore/day ≈ 11,574 events/sec. Videos ke beech traffic ka tedha bantwaara tay karta hai ki hot row banegi ya nahi. UI ki freshness/approximation policy saaf tay karo; billing metrics alag hain." },
     { front: 'Video viral ho gaya?', back: 'CDN sambhaalega — par pehle minute mein har edge par miss, aur saare miss origin par ek saath. Ilaaj: <b>origin shield</b> = CDN ke paimane par request coalescing.' },
   ],
 },

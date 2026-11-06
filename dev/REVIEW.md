@@ -467,3 +467,7 @@ stories (505 pairs) drafted by Codex as fix lists, reviewed in context and appli
 ai and planet (~190) by Claude. Only verbatim lab code/output keeps a pronoun (15 in sdd-resil, 1 Airtable
 capture). Same pass: Concurrency's 24 flashcards and 6 clipped steps, and 11 mixed-English audit leftovers
 (bitly, Bloom filter quiz, fencing card, consumer-group lesson, Colab/AI cards) rewritten in plain Hinglish.
+
+**Flashcard wording pass (2026-11-06).** 381 card backs scored low on Hinglish; most are fine lists/formulas.
+Rewritten where they read as clipped English: 36 core-track cards by Codex (reviewed, all applied), 12 Stories/AI/
+Planet cards by Claude, plus "18: 30"-style time spacing in Maps. Caveats unchanged.

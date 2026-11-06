@@ -1931,7 +1931,7 @@ W  =  har request ka time (seconds)</pre>
     pool se badi hai, tumhare paas ek chhupi hui queue hai — aur ek din chhupi queue
     "CPU 10% par timeout" bankar saamne aayegi.`,
   cards: [
-    { front: 'Roz ka volume se QPS ka shortcut?', back: '<b>1 din lagbhag 100,000 second.</b> Roz ka volume 1 lakh se divide karo. 1M/din ≈ 12/sec · 10M/din ≈ 120/sec · 1B/din ≈ 12,000/sec.' },
+    { front: 'Roz ke volume se QPS ka shortcut?', back: '<b>1 din lagbhag 100,000 second.</b> Roz ka volume 1 lakh se divide karo. 1M/din ≈ 12/sec · 10M/din ≈ 120/sec · 1B/din ≈ 12,000/sec.' },
     { front: 'Estimation 2x galat — kitna bura?', back: 'Bilkul theek. Maqsad <b>paimana</b> hai. 40 vs 4,000 vs 400,000 writes/sec teen alag systems hain — un beech 100x ka farak hai. 2x tumhein usi bucket mein rakhta hai.' },
     { front: 'Cross-region RTT ka minimum?', back: '<code>2 × doori ÷ 200,000 km/s</code>. Mumbai↔Virginia (13,000 km) = <b>130 ms minimum</b>. Ilaaj sirf teen: call mat karo (cache), data paas laao (replicate), ya async kar do.' },
     { front: 'Chaar latency paimane?', back: '<b>&lt;1 ms</b>: memory (100 ns), SSD random (100 µs), same-AZ RTT (0.5 ms) · <b>1-10 ms</b>: cross-AZ, indexed row, 1 MB SSD sequential, 1 MB @ 1 Gbps (8 ms) · <b>10-100 ms</b>: disk seek, Mumbai↔Singapore · <b>100 ms+</b>: cross-continent RTT, cold start, naya TLS handshake.' },

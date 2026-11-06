@@ -315,7 +315,7 @@ SD.registerLevelsAfter('feed', 'pm-spiral', [
   homework: `<p>Apne system mein ek "fuel" dhoondho — rules, feature flags, ML model, config — jo "engine" (code) se alag, tez raaste se jaata
     hai. Engine us fuel se kya maanta hai (fields, ranges, size)? Kya koi validator engine ki <b>asli</b> seemaon se check karta hai?</p>`,
   cards: [
-    { front: 'CrowdStrike 2024 ka root cause?', back: 'IPC template type ka contract 21 inputs, sensor code 20 deta tha. Rule mein pehli baar field 21 mein asli value → input[20] (21vi value) out-of-bounds → kernel BSOD.' },
+    { front: 'CrowdStrike 2024 ka root cause?', back: 'IPC template type ka contract 21 inputs ka tha; sensor code 20 deta tha. Rule mein pehli baar field 21 mein asli value → input[20] (21vi value) out-of-bounds → kernel BSOD.' },
     { front: 'Bug 5 mahine kyun chhupa?', back: 'Feb–July har rule mein field 21 wildcard — interpreter use padhta hi nahi. Validator spec se check karta tha, sensor code se nahi.' },
     { front: 'Engine vs fuel?', back: 'Engine: csagent.sys (WHQL signed, slow lane). Fuel: channel files (template instances, fast lane). Industry ka aam pattern.' },
   ],
@@ -758,7 +758,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
   cards: [
     { front: 'Mac par zero crashes kyun?', back: '2019 se Endpoint Security framework — agent user space mein; crash = process mara, machine nahi. Lab 17 user mode: 7,163 restarts, 0 machines down.' },
     { front: 'eBPF verifier?', back: 'Kernel program load se pehle sabit karta hai: no out-of-bounds, no infinite loop, no paraya memory. Test nahi, prove.' },
-    { front: 'CrowdStrike takeaways?', back: 'Config is code; deployment radius = blast radius; contracts validate karo; tests sirf maujooda inputs; recovery us din ke liye jab machines madad na karein.' },
+    { front: 'CrowdStrike takeaways?', back: 'Config bhi code hai; deployment radius hi blast radius hai. Contracts validate karo. Tests sirf maujooda inputs jaanchte hain. Recovery ki taiyaari tab ke liye karo jab machines madad na karein.' },
   ],
 },
 
@@ -1075,7 +1075,7 @@ MANAGE_FOREIGN=0 (setting)           → 0 saaf → 100/100</pre>
   homework: `<p>Apni machines par "saajhi, bina maalik" cheezein dhoondho: iptables/nftables, <code>/etc/hosts</code>, crontab, sysctl, systemd
     units, shared config dirs. Kaunse do programs ek hi cheez edit karte hain? Kya kisi ke paas "cleanup" logic hai?</p>`,
   cards: [
-    { front: 'Datadog ka mechanism?', back: 'Cilium fwmark rules daalta; systemd-networkd reapply par paraye rules mitata (ManageForeignRoutingPolicyRules default on) → pod traffic main table mein → node dark.' },
+    { front: 'Datadog ka mechanism?', back: 'Cilium fwmark rules daalti hai. systemd-networkd reapply par paraye rules mitaati hai (ManageForeignRoutingPolicyRules default on) → pod traffic main table mein → node dark.' },
     { front: '27 mahine kyun chhupa?', back: 'Boot par networkd Cilium se pehle — mitane ko kuch nahi. Sirf in-place upgrade (purani machine, rules pehle se) par trigger. Lab: reboot 100/100, in-place 0/100.' },
     { front: 'Fixes?', back: 'Shallow: ManageForeign=no. Convention: rules par protocol tag (Cilium). Deep: saajhe resource ka ek maalik / arbitration layer.' },
   ],
@@ -1209,7 +1209,7 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
   homework: `<p>Apne system ke liye "sab kuch ek saath gira" wala runbook likho (5 kadam). Har kadam: kaunsa tool, kahan chalta hai, kya tool bhi gira
     hoga? Aur clients ke reconnect par backoff/jitter hai ya nahi — code mein dekho.</p>`,
   cards: [
-    { front: 'Datadog recovery ki dikkatein?', back: 'Andhe (Datadog hi tool tha); nodes ↔ control plane dono taraf band (self-healing galat taraf); kram: control planes → workers → services; thundering herd.' },
+    { front: 'Datadog recovery ki dikkatein?', back: 'Haal dikh nahi raha tha (Datadog hi tool tha). Nodes ↔ control plane dono taraf raasta band tha (self-healing galat taraf thi). Kram: control planes → workers → services. Thundering herd bhi thi.' },
     { front: 'Lab 23: 5,000 nodes wapas?', back: 'Herd: 30.2 s, 35,548 bekaar koshishein. Backoff: 6.6 s. Waves: 7.5 s, 0 bekaar.' },
     { front: 'Recovery ka niyam?', back: 'Recovery kabhi us cheez par mat banao jo gir sakti hai — alag observability + out-of-band access; runbook ke har kadam par "kya kadam band cheez maanta hai?"' },
   ],
@@ -1371,7 +1371,7 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
     mein kaise badloge, cheez ka canary kaisa hoga (prod jaisa!), aur agar cheez sab jagah gire toh recovery ka raasta kya hai jo us cheez par nirbhar na ho.</p>`,
   cards: [
     { front: 'Two-pass blast radius review?', back: '1) Geographic: zones, regions, failover. 2) Stack: har fleet-jaisi cheez — kahan se aati hai, kaunsa event badalta hai, kya sab jagah ek saath?' },
-    { front: 'Auto-update dilemma?', back: 'Band = breach risk; synchronized = outage risk. Jawab: staged waves, pehle prod jaisi purani machines par.' },
+    { front: 'Auto-update dilemma?', back: 'Auto-update band = breach ka risk; sab ek saath = outage ka risk. Jawab: updates waves mein karo, pehle prod jaisi purani machines par.' },
     { front: 'Datadog takeaways?', back: 'Dependencies audit karo; chhupe bugs ka fuse lamba; prod ki STATE test karo; saajha resource bina maalik = fault line; recovery gir sakne wali cheez par nahi.' },
   ],
 },

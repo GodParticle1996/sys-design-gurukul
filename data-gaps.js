@@ -566,7 +566,7 @@ Warm connection:                                             request</pre>
     din lagenge?`,
   cards: [
     { front: 'Crawler ka asli bottleneck?', back: 'Bandwidth ya CPU nahi — <b>politeness aur DNS</b>. 10 arab pages sirf ~8 machines par ho jaate hain; poora design <b>coordination</b> ka hai, capacity ka nahi.' },
-    { front: 'Politeness kahan lagti hai?', back: 'Aggregate per-domain dispatch coordinate karo: partition owner/shared atomic rate budget ek option hai. 500 independent local 1/s budgets 500/s bhej sakte hain. Durable claiming, retries aur scheduler races test karo.' },
+    { front: 'Politeness kahan lagti hai?', back: 'Domain par hone wale kul dispatch ko coordinate karo: partition owner/shared atomic rate budget ek option hai. 500 independent local 1/s budgets milkar 500/s bhej sakte hain. Durable claiming, retries aur scheduler races test karo.' },
     { front: 'Do dedup kaunse?', back: '<b>URL dedup</b> — queue mein daalne se pehle (normalize + hash). <b>Content dedup</b> — fetch ke baad (content hash / simhash). Ek hi content darjan URLs par milta hai: tracking params, session ids, mirrors.' },
     { front: 'DNS ka kharcha kitna?', back: 'Universal percentage nahi. DNS lookup latency/cache misses aur resolver QPS trace karo; TTL-aware resolver cache, capacity/redundancy aur connection reuse evaluate karo. Arbitrary TTL overrun safe assumption nahi.' },
     { front: 'Crawler traps ka sasta ilaaj?', back: '<b>Max depth</b> (seed se 15-20 hop) + <b>per-domain page budget</b>. robots.txt ijazat ke baare mein hai, anantata ke baare mein nahi — calendar page allowed bhi ho sakta hai aur anant bhi.' },
@@ -860,8 +860,8 @@ Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
     nahi, sirf <b>cell-dar-cell deploy</b> hota hai.`,
   cards: [
     { front: 'Cell-based architecture ka faayda?', back: 'Sirf <b>blast radius</b> — ek failure 1/N customers ko chhooti hai, aur har <b>release</b> ka blast radius bhi 1/N ho jaata hai. Cells zyada operational kaam hain, kam nahi; tez ya saste bhi nahi.' },
-    { front: 'Shuffle sharding kya hai?', back: 'Uniform two-cell assignment mein exact pair overlap <b>1/C(8,2)=3.6%</b>. Poison tenant dono assigned cells ko unhealthy kare toh identical pair full lose karti hai. Single-cell loss par 2/8=25% tenants exposed hain; alternate capacity/retries determine degradation.' },
-    { front: 'Single-cell exposure aur exact pair overlap?', back: 'Uniform one-cell assignment ka share <b>1/N</b>; pair assignment mein named cell exposure <b>2/N</b>, exact pair overlap <b>1/C(N,2)</b>. Alag fault scenarios ko same blast-radius number mat bolo.' },
+    { front: 'Shuffle sharding kya hai?', back: 'Uniform two-cell assignment mein exact pair overlap <b>1/C(8,2)=3.6%</b>. Poison tenant dono assigned cells ko unhealthy kare toh bilkul same pair wale tenants dono cells kho dete hain. Single-cell loss par 2/8=25% tenants par asar pad sakta hai. Kitni degradation hogi, alternate capacity/retries tay karte hain.' },
+    { front: 'Single-cell exposure aur exact pair overlap?', back: 'Uniform one-cell assignment mein hissa <b>1/N</b> hai. Pair assignment mein kisi tay cell se jude tenants ka hissa <b>2/N</b>, exact pair overlap <b>1/C(N,2)</b> hai. Alag fault scenarios ko ek hi blast-radius number mat bolo.' },
     { front: 'Cell gira — cell ka load kahan?', back: 'Do hi imaandar jawab: <b>spare</b> (8 cells par ~14% extra per cell) ya <b>shed</b> (saaf 503 + Retry-After). "Dekh lenge" ka matlab hai baaki cells bhi girenge.' },
     { front: 'Cells ke baad sabse zaroori kaam?', back: '<b>Shared cheezein dhoondhna</b> — config store, auth service, global router, deploy pipeline. Har component par ek sawaal: "cell ke ANDAR hai ya cells ke BEECH mein?"' },
   ],

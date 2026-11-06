@@ -624,7 +624,7 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
     { front: '429 vs 503?', back: '<b>429</b> = "tumne bahut maara" (client ki galti). <b>503</b> = "main bhara hoon" (meri halat). Overload par 429 bhejna client ko galat sandesh deta hai.' },
     { front: 'Rate limit vs Quota vs Backpressure?', back: 'Rate limit = burst rokna, <i>fairness</i>. Quota = total rokna, <i>business</i>. Backpressure = khud ko bachana, <i>capacity</i>.' },
     { front: 'Check-then-act kyun toota hua hai?', back: '"SELECT karke dekho, phir INSERT" — do concurrent requests dono pass ho jaayengi. Uniqueness sirf <b>DB unique constraint</b> guarantee kar sakta hai.' },
-    { front: 'Validation 4 jagah — duplicate?', back: 'Nahi, <b>defence in depth</b>. Client → UX. Gateway → kachra. Service → business rules. DB → concurrency. Har ek alag khatre se bacha rahi hai.' },
+    { front: '4 jagah validation karna duplicate kaam hai?', back: 'Nahi, <b>defence in depth</b>. Client → UX. Gateway → kachra. Service → business rules. DB → concurrency. Har ek alag khatre se bacha rahi hai.' },
   ],
 },
 /* =====================================================================
@@ -830,7 +830,7 @@ P(koi ek slow) = 1 − 0.99⁵ =  4.9%   ← 1% se 4.9% ho gaya!
     Phir poochho: endpoint <b>kitni downstream calls</b> karta hai? Kya sabhi zaroori hain?`,
   cards: [
     { front: 'Average kyun jhooth bolta hai?', back: '99 requests 10ms + 1 request 5000ms = average 59ms 😊 par p99 = 5000ms 😡. Average ka kaam hi outliers ko <b>ghol dena</b> hai — user apni request anubhav karta hai, average nahi.' },
-    { front: 'Tail amplification formula?', back: "<code>P(any slow) = 1 − (1−p)ⁿ</code> independent equal-p events ke liye. n=5, p=1% → 4.9%; n=100 → 63%. Exact page p99 correlation, deadlines aur wait-for-all behavior par depend hai." },
+    { front: 'Tail amplification formula?', back: "<code>P(any slow) = 1 − (1−p)ⁿ</code> jab events independent hon aur har event ka p barabar ho. n=5, p=1% → 4.9%; n=100 → 63%. Page ka exact p99 correlation, deadlines aur wait-for-all behavior par nirbhar hai." },
     { front: 'p99 theek karne ka pehla kadam?', back: 'Aksar <b>fan-out kam karo</b> — calls ghatao ya optional calls ko async karo. Har service ko 2x tez karne se zyada asar hota hai.' },
     { front: 'Bade customers aur p99?', back: 'Bade customers ke paas 10x data hai, isliye bade customers ki har query tail mein baithti hai. <b>Bade customers ka p50 tumhara p99 hai.</b> Per-tenant percentiles rakho.' },
     { front: 'Latency numbers?', back: 'L1 1ns · RAM 100ns · SSD 0.1ms · same-DC RTT 0.5ms · indexed query 1-5ms · India→US 150ms. Yaad rakhne ki cheez: <b>RAM disk se ~1000x tez hai</b>.' },

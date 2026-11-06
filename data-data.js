@@ -1528,7 +1528,7 @@ WRITE-BEHIND
   cards: [
     { front: 'Cache ki 3 shartein?', back: '<b>Mehenga</b> + <b>baar-baar maanga jaaye</b> + <b>kam badle</b>. Teenon chahiye — sirf "slow hai" kaafi wajah nahi.' },
     { front: 'Layer kaise chunein?', back: '<b>Data ke maalik se</b>, speed se nahi. Public+immutable → CDN. Per-user → app cache. Computed aggregate → materialized view. <b>Personalized shared reuse ko explicit policy aur authorization-aware key isolation chahiye.</b>' },
-    { front: '3 cache patterns?', back: "<b>Cache-aside:</b> miss par DB; invalidation race/TTL policy chahiye. <b>Write-through:</b> cache+store write path, atomicity/failure policy explicit. <b>Write-behind:</b> async persistence; acknowledged durability queue/log/recovery contract par depend hai." },
+    { front: '3 cache patterns?', back: "<b>Cache-aside:</b> miss par DB; invalidation race/TTL policy chahiye. <b>Write-through:</b> cache+store write path mein; atomicity/failure policy saaf tay karo. <b>Write-behind:</b> async persistence; acknowledged data kitna durable hai, queue/log/recovery contract tay karta hai." },
     { front: 'Invalidation?', back: 'Do tareeke: <b>TTL</b> (aasan, apne aap theek) aur <b>explicit delete</b> (fresh, par ek bhool = stale, jab tak TTL ya agla write na hataaye). Practical: <b>dono</b> — delete + chhota TTL safety net.' },
     { front: 'Cache key ka shape?', back: '<code>user:5:orders:page:1:<b>v2</b></code> — namespace : id : kis cheez ka : variant : <b>version</b>. Version badlo aur poora cache ek constant se invalid ho jaata hai.' },
   ],

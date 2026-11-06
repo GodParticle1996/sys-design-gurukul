@@ -463,7 +463,7 @@ process ki memory chadhi: 129 MB   — ek download par</pre>
   cards: [
     { front: 'Node ka write() false lautaye toh?', back: 'Tukda le liya gaya hai; false sirf "ab aur mat bhejo" hai. Reader ko pause() karo aur writer ke \'drain\' par resume() — ya pipeline() lagao. Lab: nazarandaaz karne par 120 MB jama, sunne par 1 MB.' },
     { front: '\'drain\' kab aata hai?', back: 'Jab writer ki line poori khaali ho jaaye (slow motion: andar 0/4) — nishaan se zara neeche aane par nahi.' },
-    { front: 'Backpressure se kaam dheema hota hai?', back: 'Is measured lab mein total samay lagbhag same: slow motion 3.75 s, file run 8.0 s. Memory buffering ghati; general workloads mein batching/overhead throughput bhi badal sakte hain.' },
+    { front: 'Backpressure se kaam dheema hota hai?', back: 'Lab mein naapa gaya total samay lagbhag same tha: slow motion 3.75 s, file run 8.0 s. Memory buffering ghati. Aam workloads mein batching/overhead se throughput bhi badal sakta hai.' },
     { front: 'pipe() ya pipeline()?', back: 'pipeline(). Dono backpressure sambhalte hain, par galti par pipe() reader ko khula chhod deta hai (lab: reader.destroyed = false); pipeline() dono band karta hai.' },
     { front: 'RabbitMQ aur Kafka ke default? (docs)', back: 'RabbitMQ: queue par koi hadd nahi; hadd lagao toh overflow default drop-head (sabse purana chupchaap gira). Prefetch 0 = koi hadd nahi. Kafka: max.poll.records 500, max.poll.interval.ms 5 minute; producer buffer 32 MB, bharne par send() 60 s rukta hai phir error.' },
   ],
