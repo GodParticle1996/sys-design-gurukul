@@ -36,7 +36,7 @@ VISUALS['st-cf-anycast'] = {
           <span class="dg-pill good" data-hs="dubai">🏜️ Dubai DC</span>
         </div>
         <div class="dg-cap">Wahi IP har sheher se BGP par announce hoti hai. Har infected
-          machine ka packet uske <b>apne nazdeeki</b> sheher mein girta hai —
+          machine ka packet machine ke <b>apne nazdeeki</b> sheher mein girta hai —
           traffic multiple ingress sites mein split ho sakta hai; local concentration, peering aur capacity phir bhi limits hain.</div></div>
     </div>
 
@@ -96,14 +96,14 @@ VISUALS['st-cf-defense'] = {
       <span class="dg-pill" data-hs="app">🧠 application</span>
     </div>
     <div class="dg-cap">XDP par drop = kernel ne abhi memory allocate bhi nahi ki thi.
-      Cloudflare ke hisaab se yeh iptables par drop karne se lagbhag <b>10× sasta</b> hai.
-      Falsafa: <b>sabse sasta packet woh hai jise process karna hi na pade</b>.</div>
+      Cloudflare ke hisaab se XDP par drop iptables par drop karne se lagbhag <b>10× sasta</b> hai.
+      Falsafa: <b>sabse sasta packet — jise process karna hi na pade</b>.</div>
 
     <div class="dg-rule"></div>
     <div class="dg-ladder">
       <div class="dg-rung"><span class="lv">dosd</span><span class="cmd">har server par ek daemon</span><span class="q">apne hi NIC ke packets sample karta hai, statistical fingerprint banata hai</span></div>
       <div class="dg-rung"><span class="lv">local rule</span><span class="cmd">wahin drop rule install</span><span class="q">kisi central brain tak round trip nahi — warna latency</span></div>
-      <div class="dg-rung"><span class="lv">global view</span><span class="cmd">poore network ka pattern</span><span class="q">jo sirf sab sheher milakar dikhta hai, woh yahan pakda jaata hai</span></div>
+      <div class="dg-rung"><span class="lv">global view</span><span class="cmd">poore network ka pattern</span><span class="q">Sirf sab sheher milakar dikhne wala pattern yahan pakda jaata hai</span></div>
       <div class="dg-rung g"><span class="lv">Quicksilver</span><span class="cmd">fingerprint sab jagah</span><span class="q">seconds mein har server us attack ko pehchanne lagta hai</span></div>
     </div>
 
@@ -117,7 +117,7 @@ VISUALS['st-cf-defense'] = {
 };
 
 VISUALS['st-cf-edge'] = {
-  t: 'Edge par doosron ka code chalana — aur uske teen faisle',
+  t: 'Edge par doosron ka code chalana — aur code chalane ke teen faisle',
   html: `
     <div class="dg-grid">
       <div class="dg-box is-bad"><span class="bx-label">🐘 VM</span>
@@ -166,17 +166,17 @@ SD.registerLevels('stories', [
     'Anycast: ek hi IP prefix har data center se BGP par announce',
     'Traffic slicing — bada attack apne aap chhote tukdon mein bant jaata hai',
     'Scrubbing center model ki teen keemat: deri, detour, aur capacity ki chhat',
-    'Jo layer neeche pehle se kaam kar rahi hai, usse kaam karwana',
+    'Neeche pehle se kaam kar rahi layer se kaam karwana',
   ],
   lesson: [
     `<h3>🧭 Purana tareeka: ek IP = ek jagah</h3>
      <p>Traditional CDN har data center ko apni IP deta tha aur DNS se decide karta tha
-     ki user ko kaunsi IP milegi. Uske liye ek <b>mapping system</b> chahiye tha — user
-     kahan hai, kaunsa POP nazdeek hai, kaunsa healthy hai. Woh mapping system ek bada
-     engineering project hota hai: banao, chalao, aur woh fail bhi ho sakta hai.</p>
+     ki user ko kaunsi IP milegi. User ko IP dene ke liye ek <b>mapping system</b> chahiye tha — user
+     kahan hai, kaunsa POP nazdeek hai, kaunsa healthy hai. Mapping system ek bada
+     engineering project hota hai: banao, chalao, aur mapping system fail bhi ho sakta hai.</p>
      <h3>📡 Cloudflare ka faisla: anycast</h3>
      <p>Cloudflare ek hi IP prefix ko <b>har data center se</b> BGP par announce karta
-     hai. Internet ke routers ko lagta hai ki yeh ek hi destination hai jo har taraf se
+     hai. Internet ke routers ko lagta hai ki IP prefix ek hi destination hai jo har taraf se
      pahunchne layak hai, aur har router use <b>sabse nazdeek route</b> par bhej deta
      hai. Tokyo ka user Tokyo pahunchta hai, Dubai ka user Dubai — bina kisi steering
      brain ke.</p>
@@ -189,7 +189,7 @@ SD.registerLevels('stories', [
     `<h3>🔪 Traffic slicing — defense jo routing se aati hai</h3>
      <p>Botnet duniya bhar ki hazaron infected machines hoti hain. Har machine ke packets
      usi niyam ko maante hain: <b>apne nazdeeki Cloudflare sheher mein jao</b>. Isliye
-     31.4 Tbps ka attack Cloudflare ke liye ek jagah nahi girta — woh 330 sheharon mein
+     31.4 Tbps ka attack Cloudflare ke liye ek jagah nahi girta — attack 330 sheharon mein
      bat kar chhoti-chhoti spikes ban jaata hai.</p>
      <pre>Attack:        31.4 Tbps   (record, late 2025 — sirf 35 second chala)
 Network:      550+ Tbps capacity, 330+ sheher
@@ -200,11 +200,11 @@ Per-site traffic uneven ho sakta hai; local link, peering aur filtering capacity
      <h3>🤔 Purani soch: "anycast lambi TCP connections ke liye theek nahi"</h3>
      <p>Maana jaata tha ki anycast DNS ke liye theek hai (ek packet — sawaal, jawab,
      khatam) par HTTP ke liye nahi, kyunki TCP connection ki state ek hi machine ki
-     memory mein hoti hai. Dar yeh tha ki beech mein route badal gaya toh packet kisi
+     memory mein hoti hai. Dar tha ki beech mein route badal gaya toh packet kisi
      aur sheher mein chala jaayega jise us conversation ka pata hi nahi.</p>
      <p>Cloudflare ne asal mein naap kar dekha: internet ke routes un kuch second ke liye
      <b>kaafi sthir</b> rehte hain jitne ek connection ko chahiye. Jis dar par poori
-     industry ruki hui thi, woh practice mein lagbhag hota hi nahi tha. Isiliye aaj
+     industry ruki hui thi, aisa route change practice mein lagbhag hota hi nahi tha. Isiliye aaj
      1.1.1.1 se lekar HTTPS tak sab anycast par chalta hai.</p>`,
   ],
   stages: [
@@ -278,7 +278,7 @@ Per-site traffic uneven ho sakta hai; local link, peering aur filtering capacity
       },
       check: k => { const m = cfEdgeModel(k); return m.absorbed && m.mitigateS <= 1 && m.extraMs <= 5; },
       lesson: `Anycast ka asli faayda sirf latency nahi hai — attack ka <b>apne aap bant
-        jaana</b> hai. Aur yeh bantwara kisi code ne nahi, <b>internet ki routing</b> ne
+        jaana</b> hai. Aur attack ka bantwara kisi code ne nahi, <b>internet ki routing</b> ne
         kiya. Jab neeche ki layer pehle se kuch kar rahi hai, us par kaam daalo.`,
       quiz: {
         q: 'Scrubbing center model mein "defense ki chhat" kya hai?',
@@ -301,7 +301,7 @@ Per-site traffic uneven ho sakta hai; local link, peering aur filtering capacity
     {
       type: 'bins',
       title: 'Kaun sa kaam kisne kiya?',
-      instructions: 'Har cheez ko us layer mein daalo jo usse sach mein karti hai.',
+      instructions: 'Har kaam ko sach mein karne wali layer mein daalo.',
       bins: [
         { id: 'bgp', label: '🌐 Internet ki routing (BGP/anycast)' },
         { id: 'cf', label: '🏢 Cloudflare ka apna code' },
@@ -396,8 +396,8 @@ Per-site traffic uneven ho sakta hai; local link, peering aur filtering capacity
     'Main scrubbing model ki teen keemat (deri, detour, chhat) bata sakta hoon',
   ],
   homework: `<p>Apne system ka koi ek "global" component chuno (load balancer, DNS,
-    CDN). Ab poochho: agar woh component ek din puri tarah fail ho jaaye toh kya hoga?
-    Agar jawab "sab band" hai, toh dekho ki uska kaam neeche ki kisi layer se ho sakta
+    CDN). Ab poochho: agar chuna hua component ek din puri tarah fail ho jaaye toh kya hoga?
+    Agar jawab "sab band" hai, toh dekho ki component ka kaam neeche ki kisi layer se ho sakta
     hai ya nahi.</p>`,
   cards: [
     { front: 'Anycast kya hai?', back: 'Ek hi IP prefix har data center se BGP par announce karna. Router har packet ko sabse nazdeeki route par bhej deta hai — koi mapping system, koi steering brain nahi.' },
@@ -430,15 +430,15 @@ SD.registerLevels('stories', [
     'Product-wise fleets ka chhupa hua kharcha: stranded headroom',
     'Homogeneous fleet — capacity planning ka sawaal ek hi bachta hai',
     'Quicksilver: poora global dataset har server par, LMDB par',
-    'Write par keemat do, read muft karo — aur uski ulti keemat (blast radius)',
+    'Write par keemat do, read muft karo — aur global config ki ulti keemat (blast radius)',
   ],
   lesson: [
     `<h3>🏗️ Sabse aam tareeka: har product ka apna fleet</h3>
      <p>Zyadatar companies infra ko product se baantti hain — search ka cluster, storage
      ka cluster, API ka cluster. Har cluster ka apna forecasting, apna provisioning aur
-     apna khaali headroom hota hai. Jab ek product achanak popular hota hai, uska cluster
-     dab jaata hai jabki padosi clusters khaali baithe rehte hain — unka hardware madad
-     nahi kar sakta kyunki us par woh software chalta hi nahi.</p>
+     apna khaali headroom hota hai. Jab ek product achanak popular hota hai, product ka cluster
+     dab jaata hai jabki padosi clusters khaali baithe rehte hain — padosi clusters ka hardware madad
+     nahi kar sakta kyunki padosi clusters par popular product ka software chalta hi nahi.</p>
      <h3>🧱 Cloudflare ka ulta faisla</h3>
      <p>Cloudflare ke kisi bhi data center mein saare racks lagbhag ek jaise hain. Koi
      DNS fleet nahi, koi WAF fleet nahi, koi Workers fleet nahi. <b>Har server poora
@@ -459,8 +459,8 @@ SD.registerLevels('stories', [
      firewall rules, redirects, feature flags. Request handle karte waqt server ruk kar
      kisi doosri machine se nahi poochh sakta.</p>
      <p>Isi liye Cloudflare ne <b>Quicksilver</b> banaya (pehle off-the-shelf Kyoto
-     Tycoon tha, jise unhone uski design limits se bahut aage dhakel diya tha). Do
-     faisle ise alag banate hain:</p>
+     Tycoon tha, jise Cloudflare ne Kyoto Tycoon ki design limits se bahut aage dhakel diya tha). Do
+     faisle Quicksilver ko alag banate hain:</p>
      <pre>1. Har server POORA global dataset rakhta hai — koi partitioning nahi,
    koi hot-key cache nahi. Sau GB ka data har machine par.
 2. Storage engine LMDB — memory-mapped B-tree, bahut tez concurrent reads.</pre>
@@ -468,18 +468,18 @@ SD.registerLevels('stories', [
      certificate? kaunse firewall rules? kaunsa origin? kaunse features on hain? Har
      sawaal ek <b>local memory read</b> hai — microseconds. Agar har sawaal ek network
      call hota, toh request apna zyadatar waqt config laane mein hi bita deti.</p>
-     <p class="tip">🎯 Jira ka ulta model: wahan har tenant ka apna database hai, isliye
-     har request pehle poochhti hai "yeh tenant rehta kahan hai?" (TCS). Cloudflare ne
+     <p class="tip">🎯 Jira ka ulta model: Jira mein har tenant ka apna database hai, isliye
+     har request pehle poochhti hai "tenant rehta kahan hai?" (TCS). Cloudflare ne
      sawaal hi mita diya — jawab pehle se har server par maujood hai.</p>`,
     `<h3>⚖️ Keemat: wahi teji, ulti taraf</h3>
      <p>Quicksilver ka poora design "write par kharcha karo, read muft karo" hai. Jab
-     koi dashboard par Save dabata hai, woh badlav duniya ke har server tak seconds mein
+     koi dashboard par Save dabata hai, dashboard ka badlav duniya ke har server tak seconds mein
      pahunchta hai.</p>
      <p>Wahi teji DDoS ke waqt Cloudflare ki sabse badi taakat hai (naya attack
      fingerprint seconds mein har server par). Aur wahi teji sabse bada khatra bhi hai —
      ek galat config bhi seconds mein har server par pahunch jaata hai. Isi blast radius
      ka asli roop tumne Feed track ke 18 November 2025 wale postmortem mein dekha tha.</p>
-     <p class="tip">🎯 Yeh tradeoff chhupa nahi hai, chuna hua hai: <b>ek jaisa fleet +
+     <p class="tip">🎯 Global config ka tradeoff chhupa nahi hai, chuna hua hai: <b>ek jaisa fleet +
      tez global config = fungible capacity aur day-one global launch, par bad rollout
      bhi utni hi tezi se phailega</b>. Isiliye config ko bhi staged rollout chahiye.</p>`,
   ],
@@ -489,7 +489,7 @@ SD.registerLevels('stories', [
       title: 'Capacity plan review — teen galtiyan',
       brief: `Ek CDN startup ne apna infra plan banaya hai. Traffic har product mein
         alag-alag badhta hai. Teen aisi jagah pakdo jo aage jaake mehengi padengi.`,
-      goal: 'Teen flaws dhoondho. Sahi boxes par click karoge toh unka tark bhi milega.',
+      goal: 'Teen flaws dhoondho. Sahi boxes par click karoge toh boxes ka tark bhi milega.',
       nodes: [
         { id: 'dns', label: 'DNS fleet', sub: '40 servers · peak par 30% use', row: 0 },
         { id: 'waf', label: 'WAF fleet', sub: '40 servers · peak par 110% — 5xx', row: 0 },
@@ -504,12 +504,12 @@ SD.registerLevels('stories', [
         { id: 'cfg', why: 'Har request par central config lookup = har request ke andar ek network round trip, aur config service down hone par poora edge bekaar. Config ko read-side par local kar do (Quicksilver model).' },
       ],
       fine: {
-        dns: 'DNS fleet ka 30% par hona apne aap mein galti nahi — galti yeh hai ki us khaali capacity ko koi aur product use nahi kar sakta.',
+        dns: 'DNS fleet ka 30% par hona apne aap mein galti nahi — galti hai ki DNS ki khaali capacity ko koi aur product use nahi kar sakta.',
         lb: 'Data center ke andar healthy servers par spread karna bilkul sahi hai — Cloudflare wahi Unimog se karta hai.',
-        store: 'Config ka ek source of truth hona sahi hai. Sawaal sirf yeh hai ki READ kahan se ho — source se ya har server ki local copy se.',
+        store: 'Config ka ek source of truth hona sahi hai. Sawaal sirf hai ki READ kahan se ho — source se ya har server ki local copy se.',
       },
       lesson: `Homogeneous fleet ka faayda ek hi line mein: <b>capacity fungible ho jaati
-        hai</b>. Aur uski shart bhi ek hi line mein: <b>har server ko har customer ki
+        hai</b>. Aur homogeneous fleet ki shart bhi ek hi line mein: <b>har server ko har customer ki
         config locally chahiye</b>.`,
     },
     {
@@ -648,7 +648,7 @@ SD.registerLevels('stories', [
     ],
   },
   success: [
-    'Main homogeneous fleet ka faayda aur uski shart dono bata sakta hoon',
+    'Main homogeneous fleet ka faayda aur shart dono bata sakta hoon',
     'Main config ko read path se hata kar latency aur availability sudhar sakta hoon',
     'Main tez global propagation ka blast radius pehchaan sakta hoon',
   ],
@@ -660,7 +660,7 @@ SD.registerLevels('stories', [
     { front: 'Homogeneous fleet ka faayda?', back: 'Capacity fungible ho jaati hai — koi bhi server koi bhi product serve kar sakta hai. Planning ka sawaal ek hi bachta hai: "is sheher ko kitna compute chahiye?"' },
     { front: 'Quicksilver ke do radical faisle?', back: '(1) har server poora global dataset rakhta hai — koi partitioning nahi, (2) engine LMDB (memory-mapped B-tree) — taaki har config lookup local memory read ho.' },
     { front: 'Cloudflare vs Jira config model?', back: 'Cloudflare: config har server par replicate, lookup ka sawaal hi nahi. Jira: per-tenant DB, isliye har request pehle poochhti hai "tenant kahan rehta hai" (TCS + sidecars).' },
-    { front: 'Tez global config ka ulta pehlu?', back: 'Jo cheez seconds mein sabko theek karti hai woh seconds mein sabko tod bhi sakti hai. Isliye config ko bhi staged rollout (1% → 10% → 100%) chahiye.' },
+    { front: 'Tez global config ka ulta pehlu?', back: 'Seconds mein sabko theek karne wali config seconds mein sabko tod bhi sakti hai. Isliye config ko bhi staged rollout (1% → 10% → 100%) chahiye.' },
   ],
 },
 ]);
@@ -698,30 +698,30 @@ SD.registerLevels('stories', [
      <h3>🐕 dosd — detection wahin jahan packet giray</h3>
      <p>Har Cloudflare server par ek chhota daemon chalta hai: <b>dosd</b> (denial of
      service daemon). dosd apne hi network card se guzarte packets ko sample karta hai,
-     unke characteristics se ek <b>statistical fingerprint</b> banata hai, aur us
+     Packets ke characteristics se ek <b>statistical fingerprint</b> banata hai, aur us
      fingerprint se milte packets ke liye wahin drop rule laga deta hai.</p>
      <p>Dhyan do — koi central brain nahi poochha gaya. Central brain se poochhne ka
      matlab hota round trip, aur round trip ka matlab latency. Saath hi ek global
      detection layer poore network ka traffic dekhti hai (kuch patterns sirf tabhi
-     dikhte hain jab sab sheher milakar dekhe jaayein), aur jab woh koi bharosemand
+     dikhte hain jab sab sheher milakar dekhe jaayein), aur jab detection layer koi bharosemand
      fingerprint banati hai toh <b>Quicksilver</b> use seconds mein har server tak
      pahuncha deta hai.</p>`,
     `<h3>⚡ XDP — packet ko sabse sasti jagah par maaro</h3>
      <p>Linux mein eBPF se tum chhote verified programs kernel ke andar chala sakte ho.
-     XDP (express data path) woh point hai jahan packet <b>sabse pehle</b> milta hai —
-     network card se abhi aaya hai, kernel ne uske liye memory allocate bhi nahi ki,
+     XDP (express data path) aisa point hai jahan packet <b>sabse pehle</b> milta hai —
+     network card se abhi aaya hai, kernel ne packet ke liye memory allocate bhi nahi ki,
      TCP/IP stack tak pahuncha hi nahi.</p>
      <p>Agar packet DDoS fingerprint se match karta hai toh Cloudflare use wahin gira
-     deta hai. Na uska processing, na uski buffering. Cloudflare ke apne experience ke
-     hisaab se yeh usi packet ko baad mein iptables se drop karne se lagbhag <b>10×
+     deta hai. Na packet ki processing, na packet ki buffering. Cloudflare ke apne experience ke
+     hisaab se XDP par drop karna packet ko baad mein iptables se drop karne se lagbhag <b>10×
      sasta</b> hai.</p>
-     <p class="tip">🎯 Falsafa: <b>sabse sasta packet woh nahi hai jise tum efficiently
-     process karte ho — sabse sasta packet woh hai jise tumhe process karna hi na
+     <p class="tip">🎯 Falsafa: <b>Efficiently process kiya gaya packet sabse sasta nahi
+     hota — sabse sasta packet aisa hai jise tumhe process karna hi na
      pade.</b> Yahi tark application-level rate limiting par bhi lagta hai: request
      jitni gehrai mein jaayegi, use rokna utna hi mehenga hoga.</p>`,
     `<h3>🎁 Free tier — kharcha nahi, sensor network</h3>
      <p>2017 se Cloudflare har plan par, free plan par bhi, <b>unmetered DDoS
-     mitigation</b> deta hai. Competitors gigabit ke hisaab se bill karte hain. Yeh
+     mitigation</b> deta hai. Competitors gigabit ke hisaab se bill karte hain. Unmetered DDoS mitigation
      charity nahi hai, architecture ka natija hai:</p>
      <table>
        <tr><th>Kyun mumkin hai</th><th>Matlab</th></tr>
@@ -731,7 +731,7 @@ SD.registerLevels('stories', [
      </table>
      <p>Yahi chaal 2014 mein bhi chali thi: Universal SSL ne har customer ko muft TLS
      certificate diya — Let's Encrypt se ek saal se zyada pehle. Cloudflare ka andaza
-     hai ki isse internet par encrypted websites lagbhag <b>dogni</b> ho gayin. Mumkin
+     hai ki free SSL se internet par encrypted websites lagbhag <b>dogni</b> ho gayin. Mumkin
      isliye tha kyunki har server pehle se HTTPS handle karta tha — naya infra nahi
      lagana pada, bas config badli.</p>
      <p class="tip">🎯 Ek pattern teen baar: anycast ne routing ko load balancer bana
@@ -759,7 +759,7 @@ SD.registerLevels('stories', [
       type: 'tradeoff',
       title: 'Drop point lab — kahan roko',
       instructions: 'Attack ka size aur drop ki jagah badlo. CPU aur acche users dono dekho.',
-      goal: "Kam se kam <b>20 lakh attack packets/s</b> par CPU <b>70% ya kam</b> aur good-user p99 <b>50 ms ya kam</b> rakho. Filtering stage ka resource cost compare karo; yeh classifier accuracy ka benchmark nahi.",
+      goal: "Kam se kam <b>20 lakh attack packets/s</b> par CPU <b>70% ya kam</b> aur good-user p99 <b>50 ms ya kam</b> rakho. Filtering stage ka resource cost compare karo; filtering stage ka comparison classifier accuracy ka benchmark nahi.",
       scenario: `Ek server par <b>acche</b> users ke saath-saath attack traffic bhi aa
         raha hai. Tum tay karoge ki malicious packet kahan pakda jaaye: NIC par (XDP),
         firewall par (iptables), ya application ke andar.`,
@@ -792,7 +792,7 @@ SD.registerLevels('stories', [
         if (k.where === 0) return { ok: false, text: `Application ke andar drop karne ka matlab hai har malicious packet ka poora safar: memory, TCP stack, parsing. CPU <b>${m.cpu}%</b>, acche users ka p99 <b>${m.p99} ms</b>.` };
         if (k.where === 1 && m.cpu > 70) return { ok: false, text: `iptables application se kaafi sasta hai, par is traffic (<b>${(k.pps / 1e6).toFixed(1)}M pps</b>) par bhi CPU <b>${m.cpu}%</b> hai. XDP par packet NIC se aage badhta hi nahi.` };
         if (m.cpu > 70 || m.p99 > 50) return { ok: false, text: `Abhi bhi bhaari: CPU <b>${m.cpu}%</b>, p99 <b>${m.p99} ms</b>. Traffic kam karo ya aur pehle drop karo.` };
-        return { ok: true, text: `Sahi. <b>${(k.pps / 1e6).toFixed(1)}M pps</b> XDP par rukta hai — CPU <b>${m.cpu}%</b>, acche users ka p99 <b>${m.p99} ms</b>. Jo packet kabhi process hi nahi hua, uska kharcha lagbhag zero hai.` };
+        return { ok: true, text: `Sahi. <b>${(k.pps / 1e6).toFixed(1)}M pps</b> XDP par rukta hai — CPU <b>${m.cpu}%</b>, acche users ka p99 <b>${m.p99} ms</b>. Kabhi process hi na hue packet ka kharcha lagbhag zero hai.` };
       },
       check: k => { const m = dropModel(k); return m.cpu <= 70 && m.p99 <= 50; },
       lesson: `Rate limiting ka ek hi asli sawaal hai: <b>request ko kis layer par roka
@@ -905,7 +905,7 @@ SD.registerLevels('stories', [
           'Lab sirf rokne ki gehrai naapta hai; writes ki baat hi nahi.',
         ],
       },
-      lesson: 'Har defense ke saath ek sawaal poochho: "yeh request ko kis layer par rok raha hai?" Answer jitna neeche hoga, defense utni sasti hogi.',
+      lesson: 'Har defense ke saath ek sawaal poochho: "defense request ko kis layer par rok raha hai?" Answer jitna neeche hoga, defense utni sasti hogi.',
     },
   ],
   interview: {
@@ -954,11 +954,11 @@ SD.registerLevels('stories', [
     'Main free tier jaise "byproduct se product" wale pattern pehchaan sakta hoon',
   ],
   homework: `<p>Apni service ka koi abusive traffic pattern socho (scraping, credential
-    stuffing, spam signups). Ab likho ki aaj woh request kitne layers paar karti hai
+    stuffing, spam signups). Ab likho ki aaj abusive request kitne layers paar karti hai
     pakde jaane se pehle. Har layer ke saamne likho: "kya yahan pakda ja sakta tha?"</p>`,
   cards: [
     { front: 'dosd kya karta hai?', back: 'Har Cloudflare server par chalne wala daemon: apne hi NIC ke packets sample karta hai, attack ka statistical fingerprint banata hai, aur wahin drop rule lagata hai — bina kisi central brain se poochhe.' },
-    { front: 'XDP par drop kyun sasta hai?', back: 'XDP woh jagah hai jahan packet NIC se abhi aaya hai — kernel ne memory allocate nahi ki, TCP/IP stack shuru nahi hua. Cloudflare ke hisaab se iptables se ~10× sasta.' },
+    { front: 'XDP par drop kyun sasta hai?', back: 'XDP par packet NIC se abhi aaya hai — kernel ne memory allocate nahi ki, TCP/IP stack shuru nahi hua. Cloudflare ke hisaab se iptables se ~10× sasta.' },
     { front: 'Defense mein insaan kyun nahi?', back: '9/10 network attacks 10 minute se kam chalte hain; record 31.4 Tbps attack sirf 35 second. Insaan keyboard tak pahunchne se pehle attack khatam.' },
     { front: 'Free tier ka flywheel?', back: 'Ek aur site = config push (setup reuse, nonzero traffic/resource cost) → lakhon sites = global sensor network → zyada traffic = settlement-free peering = sasta network = free tier affordable.' },
   ],
@@ -1004,22 +1004,22 @@ SD.registerLevels('stories', [
      <p>Cloudflare ke apne numbers: isolate container se lagbhag <b>100× tez</b> start
      hota hai aur <b>1/10 memory</b> leta hai. Asli wajah <b>density</b> hai — agar har
      worker sau MB khaaye toh ek server par kuch hi aayenge; kuch MB par hazaron rah
-     sakte hain. Isi liye worker publish karne par woh <b>poore fleet</b> par chala
+     sakte hain. Isi liye worker publish karne par worker <b>poore fleet</b> par chala
      jaata hai — "kaunse region mein chalayein" wala sawaal hi khatam.</p>
      <h3>🔥 Cold start ko chhupana</h3>
-     <p>Jab browser TLS connection kholta hai, uska pehla message (ClientHello) mein
+     <p>Jab browser TLS connection kholta hai, browser ke pehle message (ClientHello) mein
      <b>SNI</b> hota hai — yaani hostname. Handshake abhi poora nahi hua, HTTP request
      abhi bani hi nahi, par Cloudflare ko pata chal chuka hai ki kaunsa worker chahiye.
-     Toh woh handshake ke dauraan hi isolate load karna shuru kar deta hai. Jab tak
+     Toh Cloudflare handshake ke dauraan hi isolate load karna shuru kar deta hai. Jab tak
      pehli HTTP request aati hai, worker garam hai.</p>
-     <p class="tip">🎯 Cold start gayab nahi hua — woh us latency ke <b>andar chhup
-     gaya</b> jo connection pehle se de raha tha. Yeh chaal sirf usi ko milti hai jo
+     <p class="tip">🎯 Cold start gayab nahi hua — cold start handshake ki latency ke <b>andar chhup
+     gaya</b> jo connection pehle se de raha tha. Cold start chhupane ki chaal sirf aise platform ko milti hai jo
      internet ke edge par baitha ho.</p>`,
     `<h3>🕰️ Spectre — restricted clocks ek layer hain</h3>
-     <p>2018 mein Spectre aaya: yeh JavaScript ka bug nahi tha, <b>CPU</b> ka tha. Modern
+     <p>2018 mein Spectre aaya: Spectre JavaScript ka bug nahi tha, <b>CPU</b> ka tha. Modern
      processor speculative execution karte hain — agla kaam andaze se pehle hi shuru kar
      dete hain. Andaza galat nikla toh result phenk diya jaata hai, par kuch nishaan CPU
-     cache mein reh jaate hain. Attacker bahut chhote timing differences naap kar woh
+     cache mein reh jaate hain. Attacker bahut chhote timing differences naap kar CPU cache ke
      nishaan padh sakta hai.</p>
      <p>Industry ka jawab tha: har tenant ko alag process/VM do. Cloudflare Workers ka
      poora design ulta hai — hazaron isolates jaan-boojh kar ek hi process share karte
@@ -1033,20 +1033,20 @@ Har timing attack ko ek GHADI chahiye.
        <tr><td>Counter thread se apni ghadi banana</td><td>Na threads, na shared memory, na SharedArrayBuffer</td></tr>
        <tr><td>Remote server se time</td><td>Network noise attack mushkil kar sakta hai, par remote clocks/amplification se leakage possible hai</td></tr>
      </table>
-     <p>Yeh complete protection nahi. Cloudflare ki <a href="https://blog.cloudflare.com/revisiting-spectre-attacks-on-workers/" target="_blank" rel="noopener">August 2026 research</a> ne restricted timers ke bawajood production remote Spectre leakage dikhayi, aur improved DyPrIs, V8 Sandbox aur MPK-based in-process isolation describe ki. Upar se safety net: koi worker Spectre jaisa
-     vyavhaar dikhaye toh usse uske apne OS process mein alag kar diya jaata hai. Aur
+     <p>Restricted clocks complete protection nahi. Cloudflare ki <a href="https://blog.cloudflare.com/revisiting-spectre-attacks-on-workers/" target="_blank" rel="noopener">August 2026 research</a> ne restricted timers ke bawajood production remote Spectre leakage dikhayi, aur improved DyPrIs, V8 Sandbox aur MPK-based in-process isolation describe ki. Upar se safety net: koi worker Spectre jaisa
+     vyavhaar dikhaye toh worker ko worker ke apne OS process mein alag kar diya jaata hai. Aur
      kyunki engine Google ka V8 hai, V8 security fixes controlled rollout se fleet par
      chala jaata hai.</p>`,
     `<h3>🩸 Cloudbleed — shared-everything ka sabse bura din</h3>
      <p>Feb 2017: Google Project Zero ke Tavis Ormandy ne bataya ki Cloudflare ke edge
      software se server memory ke tukde HTTP responses mein leak ho rahe hain. Bug ek
      <b>C</b> HTML parser mein tha jo pages rewrite karne wale features use karte the;
-     kuch kharab pages par woh apne buffer se aage padh jaata tha.</p>
-     <p>Shared-everything architecture mein iska matlab bhayanak tha: jo memory ek
-     customer ki request ke bagal mein padi thi, woh <b>kisi aur customer</b> ki ho
+     kuch kharab pages par C HTML parser apne buffer se aage padh jaata tha.</p>
+     <p>Shared-everything architecture mein buffer se aage padhne ka matlab bhayanak tha: jo memory ek
+     customer ki request ke bagal mein padi memory <b>kisi aur customer</b> ki ho
      sakti thi — cookies, auth tokens, POST body ke tukde. Aur kuch responses search
      engines ne cache kar liye, yaani leak hua data public ho gaya.</p>
-     <p>Uske baad Cloudflare ne request path ka naya code <b>Rust</b> mein likhna shuru
+     <p>Cloudbleed ke baad Cloudflare ne request path ka naya code <b>Rust</b> mein likhna shuru
      kiya. Sabse bada example <b>Pingora</b> hai — origin ki taraf nginx ki jagah
      (production 2022, open source 2024).</p>
      <pre>nginx:   kai independent worker processes, HAR EK ka apna connection pool
@@ -1057,30 +1057,30 @@ Pingora: ek multi-threaded process, EK shared connection pool
          → 8 trillion requests/din · ~70% kam CPU · ~2/3 kam memory</pre>
      <h3>🗺️ Argo aur keyless SSL — do aur ulte faisle</h3>
      <p><b>Argo:</b> BGP <b>valid</b> raasta dhoondhta hai, <b>tez</b> raasta nahi —
-     usse latency aur congestion dikhte hi nahi. Cloudflare ke paas har second arabon
+     BGP ko latency aur congestion dikhte hi nahi. Cloudflare ke paas har second arabon
      requests ka live data hai, yaani internet ka asli latency map. Argo us map se abhi
-     ka sabse tez raasta chunta hai, chahe iske liye request ko pehle Cloudflare ke
+     ka sabse tez raasta chunta hai, chahe tez raaste ke liye request ko pehle Cloudflare ke
      kisi doosre sheher se guzarna pade. Beta ke 50,000 customers par average latency
      <b>~35% kam</b> aur connection timeouts <b>~27% kam</b>; OkCupid ko ek line code
      badle bina <b>36%</b> kam latency mili.</p>
-     <p><b>Keyless SSL:</b> bank apni TLS private key kisi ko nahi de sakta. Insight yeh
+     <p><b>Keyless SSL:</b> bank apni TLS private key kisi ko nahi de sakta. Keyless SSL ki insight
      thi ki private key sirf handshake ke <b>ek</b> cryptographic operation mein chahiye.
-     Toh Cloudflare poora handshake edge par karta hai aur sirf woh ek operation customer
+     Toh Cloudflare poora handshake edge par karta hai aur sirf private key wala ek operation customer
      ke key server par bhejta hai (mTLS ke andar). Keemat: har naye handshake par ek
      extra round trip (session resumption par nahi), aur key server critical path par —
      isliye use stateless banaya gaya taaki kai instances load balancer ke peechhe chal
      sakein.</p>
      <p class="tip">🎯 Keyless SSL poori video ka apna pattern todta hai: har cheez "sab
-     jagah copy karo" thi, yeh "ek hi jagah rakho aur round trip ki keemat do" hai.</p>
+     jagah copy karo" thi, Keyless SSL "ek hi jagah rakho aur round trip ki keemat do" hai.</p>
      <h3>📍 Durable objects — jab copy karna galat jawab ho</h3>
      <p>Workers KV duniya bhar replicate hota hai aur eventually consistent hai — read
      heavy cheezon ke liye badhiya. Par chat room, game lobby ya collaborative document
-     mein hazaron log <b>ek hi state</b> badalte hain. Wahan copies nahi, <b>ek maalik</b>
+     mein hazaron log <b>ek hi state</b> badalte hain. Chat room, game lobby ya collaborative document mein copies nahi, <b>ek maalik</b>
      chahiye.</p>
-     <p>Durable object = code + uski apni private storage, aur poori duniya mein uske
+     <p>Durable object = code + code ki apni private storage, aur poori duniya mein object ke
      ek hi instance ka hona. Us object id ki har request wahin jaati hai aur requests
      ek ke baad ek chalti hain. Na consensus, na quorum, na conflict resolution —
-     reconcile karne ke liye doosri copy hai hi nahi. (Yeh Erlang wala actor model hi
+     reconcile karne ke liye doosri copy hai hi nahi. (Durable object Erlang wala actor model hi
      hai, JavaScript mein.)</p>`,
   ],
   stages: [
@@ -1149,7 +1149,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
     {
       type: 'bins',
       title: 'Sab jagah copy karo — ya ek hi jagah rakho?',
-      instructions: 'Har cheez ko us model mein daalo jo Cloudflare ne uske liye chuna.',
+      instructions: 'Har cheez ko Cloudflare ke chune model mein daalo.',
       bins: [
         { id: 'copy', label: '🌍 Sab jagah copy (read local)' },
         { id: 'one', label: '📍 Ek hi jagah (ek maalik)' },
@@ -1263,7 +1263,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
     'Main connection pooling ka asli kharcha (handshakes) naap sakta hoon',
   ],
   homework: `<p>Apne system ki ek aisi state dhoondho jise kai log ek saath badalte hain
-    (counter, seat map, inventory, document). Ab poochho: aaj uska <b>ek maalik</b> hai
+    (counter, seat map, inventory, document). Ab poochho: aaj state ka <b>ek maalik</b> hai
     ya kai copies? Agar kai copies hain, toh likho ki do log ek saath badlein toh kya
     hoga.</p>`,
   cards: [
@@ -1271,7 +1271,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
     { front: 'Cold start kahan chhupa?', back: 'TLS ClientHello ke SNI se pata chal jaata hai kaunsa worker chahiye, isliye handshake ke dauraan hi isolate load hona shuru — pehli HTTP request tak worker garam.' },
     { front: 'Spectre ka Cloudflare wala jawab?', back: 'Restricted clocks attack surface kam karti hain, complete defense nahi: Date.now() sirf I/O par badalta hai, na threads, na SharedArrayBuffer, remote clocks aur amplification ko bhi threat model mein rakho. Shaq ho toh worker ko apne process mein alag kar do.' },
     { front: 'Pingora ne nginx se kya theek kiya?', back: 'nginx ke har worker process ka apna connection pool tha — ek ka garam connection doosra use nahi kar sakta tha. Pingora: ek multi-threaded process, ek shared pool → 8 trillion req/din, ~70% kam CPU.' },
-    { front: 'Keyless SSL ka core insight?', back: 'Private key sirf handshake ke EK crypto operation mein chahiye. Woh operation customer ke HSM par bhejo, baaki handshake edge par — key kabhi customer ka infra nahi chhodti.' },
+    { front: 'Keyless SSL ka core insight?', back: 'Private key sirf handshake ke EK crypto operation mein chahiye. Private key wala operation customer ke HSM par bhejo, baaki handshake edge par — key kabhi customer ka infra nahi chhodti.' },
     { front: 'Durable object kya hai?', back: 'Code + us code ki apni storage, poori duniya mein ek hi instance. Us id ki har request usi instance par jaati hai, aur writes ka kram instance khud rakhta hai — regions ke beech vote (consensus) nahi chahiye. Par storage andar se copies rakhta hai, aur await ke beech doosri request aa sakti hai.' },
   ],
 },

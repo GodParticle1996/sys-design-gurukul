@@ -24,7 +24,7 @@ VISUALS['st-jira-tenant'] = {
         <div class="dg-node is-good" data-hs="perdb"><span class="ni">🏠</span><span class="nl">acme_db</span><span class="ns">apni tables</span></div>
         <div class="dg-node is-good"><span class="ni">🏠</span><span class="nl">globex_db</span><span class="ns">apni tables</span></div>
         <div class="dg-cap">Isolation <b>database boundary</b> par. Galti se doosre tenant ka
-          data query karna mumkin hi nahi — woh usi database mein hai hi nahi.</div></div>
+          data query karna mumkin hi nahi — doosre tenant ka data pehle tenant ke database mein hai hi nahi.</div></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -34,7 +34,7 @@ VISUALS['st-jira-tenant'] = {
       <span class="dg-pill" data-hs="shard">📦 shard (web + workers + Postgres)</span><span class="dg-arrow">→</span>
       <span class="dg-pill good">🏠 tenant ka apna database</span>
     </div>
-    <div class="dg-cap">Shard sirf ek database server nahi hai — woh platform ka ek
+    <div class="dg-cap">Shard sirf ek database server nahi hai — shard platform ka ek
       <b>slice</b> hai: web servers, worker nodes aur ek Postgres instance jisme us shard
       ke tenant databases rehte hain.</div>
 
@@ -61,7 +61,7 @@ VISUALS['st-jira-index'] = {
       <span class="dg-pill" data-hs="index">🔎 Search index (copy)</span>
     </div>
     <div class="dg-cap">Network fail ho sakta hai, message gir sakta hai, machine restart ho
-      sakti hai. Database mein write safal hone ka matlab yeh nahi ki index mein bhi pahuncha.</div>
+      sakti hai. Database mein write safal hone ka matlab nahi ki index mein bhi pahuncha.</div>
 
     <div class="dg-rule"></div>
     <div class="dg-split">
@@ -72,7 +72,7 @@ VISUALS['st-jira-index'] = {
       <div class="dg-box is-good"><span class="bx-label">✅ Naya jawab: RECONCILIATION</span>
         <div class="dg-cap">Har change ke saath database mein <b>document + version</b> ka
           record likho. Ek background job har minute poochhta hai: jo documents hone chahiye,
-          woh hain? sahi version par hain? Nahi → dobara index karo.</div></div>
+          documents hain? sahi version par hain? Nahi → dobara index karo.</div></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -109,9 +109,9 @@ VISUALS['st-jira-query'] = {
     </div>
 
     <div class="dg-rule"></div>
-    <div class="dg-cap">Index ek bada pool nahi hai — woh <b>tenant aur project</b> se
+    <div class="dg-cap">Index ek bada pool nahi hai — index <b>tenant aur project</b> se
       partitioned hai. "payments ke open bugs" jaisi query sirf un shards par jaati hai
-      jinme us project ke issues hain. <b>Jo saath mein query hota hai, woh saath mein rehna
+      jinme us project ke issues hain. <b>Saath mein query hone wala data saath mein rehna
       chahiye.</b></div>`,
 };
 
@@ -128,23 +128,23 @@ SD.registerLevels('stories', [
     'Shared table vs schema vs database-per-tenant — isolation kis level par hai',
     'Millions of databases chalane ki keemat: noisy neighbour aur connection limits',
     'Shard = platform ka slice (web + workers + Postgres), sirf DB server nahi',
-    'TCS: "yeh tenant kahan rehta hai" ek critical infrastructure sawaal hai',
+    'TCS: "tenant kahan rehta hai" ek critical infrastructure sawaal hai',
   ],
   lesson: [
     `<h3>🏢 Jira cloud se pehle server product tha</h3>
      <p>Jira zyadatar apni zindagi ek <b>self-hosted Java app</b> ke roop mein rahi:
      ek company, ek install, apna database. Isolation muft mein mil jaati thi — do
      customers ka data ek dusre ke paas tha hi nahi.</p>
-     <p>Cloud mein woh muft isolation khatam ho gayi. Ab ek hi infrastructure par
+     <p>Cloud mein alag installation wali muft isolation khatam ho gayi. Ab ek hi infrastructure par
      <b>laakhon companies</b> chalti hain, aur har issue, attachment, workflow aur
      permission ko sahi customer ka hona chahiye — phir bhi har customer ko lagna chahiye
-     ki Jira sirf uski hai. Is cheez ka naam hai <b>tenant</b> (yourcompany.atlassian.net).</p>
+     ki Jira sirf apne customer ki hai. Is cheez ka naam hai <b>tenant</b> (yourcompany.atlassian.net).</p>
      <h3>🗄️ Sabse bada faisla: tenant ka data kahan rahega</h3>
      <p>Zyadatar SaaS shared tables chunte hain: ek hi schema, har row mein
      <code>tenant_id</code>, har query mein filter. Jira ne ulta kiya — <b>har tenant ka
      apna database</b>. Laakhon tenant databases, jo shared Postgres instances par packed
      hain (lagbhag laakh-bhar database servers par). Ek Fortune 500 company aur ek 10
-     logon ka startup ek hi machine par ho sakte hain, par unka data alag-alag databases
+     logon ka startup ek hi machine par ho sakte hain, par company aur startup ka data alag-alag databases
      mein.</p>
      <table>
        <tr><th></th><th>Shared tables</th><th>Database per tenant</th></tr>
@@ -161,17 +161,17 @@ SD.registerLevels('stories', [
     `<h3>📦 Shard ka matlab yahan alag hai</h3>
      <p>Jira ka AWS par jaana ek multi-year project tha (Project Vertigo). Usi dauraan
      platform ko <b>shards</b> mein baanta gaya. Yahan shard sirf ek database server nahi
-     hai — woh platform ka poora slice hai:</p>
+     hai — shard platform ka poora slice hai:</p>
      <pre>shard = web servers (requests)  +  worker nodes (background jobs)
          +  ek Postgres instance (us shard ke tenant databases)</pre>
      <p>Naya customer sign up karta hai toh use kisi region ke kisi shard par rakh diya
-     jaata hai, aur wahi uska ghar ban jaata hai.</p>
-     <h3>🧭 Isi se ek naya sawaal paida hota hai</h3>
+     jaata hai, aur wahi customer ka ghar ban jaata hai.</p>
+     <h3>🧭 Tenant ke database ki jagah se ek naya sawaal paida hota hai</h3>
      <p>Agar har tenant ka database duniya bhar ke hazaron servers mein kahin bhi ho sakta
      hai, toh <b>request ko pata kaise chale ki jaana kahan hai?</b> London se request
      aayi, par data Frankfurt, Sydney ya Virginia mein ho sakta hai. Ek bhi issue padhne
-     se pehle yeh sawaal hal karna padta hai.</p>
-     <p>Iska jawab hai <b>TCS — Tenant Context Service</b>: platform ki directory. Tenant
+     se pehle database ki jagah ka sawaal hal karna padta hai.</p>
+     <p>Database ki jagah ka jawab hai <b>TCS — Tenant Context Service</b>: platform ki directory. Tenant
      id do, aur TCS batata hai — data kis region aur shard mein hai, kaun se features on
      hain, kaunsa licence hai.</p>
      <pre>TCS ke numbers: har region mein dasiyon hazaar requests/second
@@ -188,16 +188,16 @@ SD.registerLevels('stories', [
      <p>Bade enterprise aur regulators poochhte hain: mera data <b>physically</b> kahan
      rakha hai? European customer chahta hai Europe, Australian customer chahta hai
      Australia. Atlassian isko <b>realm</b> se model karta hai — un regions ka set jahan
-     tenant ka data reh sakta hai, centrally store kiya gaya taaki har service usse maan
+     tenant ka data reh sakta hai, centrally store kiya gaya taaki har service realm ko maan
      sake.</p>
      <p>Isliye routing sirf performance ka sawaal nahi raha: TCS batata hai tenant kahan
-     hai, par <b>realm</b> tay karta hai woh kahan ho sakta hai. Aur realms badalte bhi
+     hai, par <b>realm</b> tay karta hai tenant kahan ho sakta hai. Aur realms badalte bhi
      hain (company naye market mein jaati hai, regulation badalti hai), isliye tenants ko
      ek realm se doosre realm mein migrate karne ki suvidha bhi banani padi.</p>
      <h3>🧰 Micros — platform ke neeche ka platform</h3>
      <p>Jira, Confluence aur Bitbucket ke neeche Atlassian ka apna internal platform hai:
      <b>Micros</b>, jo AWS regions mein services deploy aur operate karta hai. Aisa
-     platform tab nahi dikhta jab sab sthir ho — woh tab dikhta hai jab tumhe <b>failna
+     platform tab nahi dikhta jab sab sthir ho — platform tab dikhta hai jab tumhe <b>failna
      ya phailna</b> ho. Deployment, networking, service discovery aur tooling standard
      hone ki wajah se naye region mein sab kuch khada karna infrastructure project se
      zyada <b>configuration</b> ka kaam ban gaya — engineers ne ek naya region ek hackathon
@@ -295,13 +295,13 @@ SD.registerLevels('stories', [
       },
       verdict: k => {
         const m = tenantModel(k);
-        if (m.monsterConns > 40) return { ok: false, text: `Monster tenant <b>${m.monsterConns}</b> connections le gaya — baaki sab uske peechhe queue mein hain (p99 <b>${m.p99} ms</b>). Per-tenant cap lagao.` };
+        if (m.monsterConns > 40) return { ok: false, text: `Monster tenant <b>${m.monsterConns}</b> connections le gaya — baaki sab monster tenant ke peechhe queue mein hain (p99 <b>${m.p99} ms</b>). Per-tenant cap lagao.` };
         if (m.p99 > 200) return { ok: false, text: `Cap laga hai par host par <b>${k.per}</b> tenants hain — pool ab bhi tang hai, p99 <b>${m.p99} ms</b>. Density thodi kam karo.` };
         if (m.cost > 60) return { ok: false, text: `Isolation acchi hai par sirf <b>${k.per}</b> tenants per host = cost <b>${m.cost}</b> units. Thodi density wapas laao.` };
         return { ok: true, text: `Balance mil gaya: <b>${k.per}</b> tenants per host, cap <b>${k.cap}</b> connections — baaki tenants ka p99 <b>${m.p99} ms</b>, cost <b>${m.cost}</b> units.` };
       },
       check: k => { const m = tenantModel(k); return m.p99 <= 200 && m.cost <= 60 && m.monsterConns <= 40; },
-      lesson: `Database-per-tenant apne aap noisy neighbour nahi rokta — woh sirf
+      lesson: `Database-per-tenant apne aap noisy neighbour nahi rokta — database-per-tenant sirf
         <b>data</b> alag karta hai. Resources (connections, CPU, I/O) tab bhi shared hain,
         isliye per-tenant limits zaroori hain.`,
       quiz: {
@@ -456,26 +456,26 @@ SD.registerLevels('stories', [
   badge: 'Reconcile Rakshak',
   objectives: [
     'Search index source of truth nahi — ek copy hai',
-    'Full re-index kyun paida hua, aur woh itna mehenga kyun tha',
+    'Full re-index kyun paida hua, aur full re-index itna mehenga kyun tha',
     'Reconciliation loop: database hi index ka checklist ban jaata hai',
     'Zero-downtime reindex: alag banao → replay karo → atomic switch',
   ],
   lesson: [
     `<h3>🔎 Search database par nahi chalti</h3>
-     <p>Jira ki search database par nahi chalti — woh bahut dheemi hoti. Jira ek alag
+     <p>Jira ki search database par nahi chalti — database par search bahut dheemi hoti. Jira ek alag
      search index rakhti hai (historically Lucene par bana, aaj OpenSearch). Har issue
      ek searchable document ban jaata hai, aur user ki query index par chalti hai,
      tables par nahi.</p>
-     <p>Isme sabse zaroori baat yeh hai: <b>index source of truth nahi hai — woh ek copy
+     <p>Search index mein sabse zaroori baat hai: <b>index source of truth nahi hai — index ek copy
      hai</b>. Aur jab bhi tum kisi data ki copy rakhte ho, tumhe ek nayi problem mil
      jaati hai: <b>copy ko original ke saath sync rakhna</b>.</p>
      <h3>😱 Aur phir "full re-index" paida hota hai</h3>
-     <p>Chhote changes aasan hain: issue badla, uska document update kar do. Par kuch
+     <p>Chhote changes aasan hain: issue badla, issue ka document update kar do. Par kuch
      changes chaude hote hain — naya calculated custom field, field configuration ka
      badlav, visibility rule ka badlav. Ab ek issue galat nahi hua — <b>hazaron ya
      laakhon documents</b> galat ho sakte hain.</p>
      <p>Aur sawaal aata hai: <b>inme se kaun se documents dobara banane hain?</b>
-     Historically iska jawab saaf nahi tha. Galat search results dene se behtar safe
+     Historically dobara banane wale documents ka jawab saaf nahi tha. Galat search results dene se behtar safe
      option yahi laga: <b>poora index dobara bana do</b>.</p>
      <pre>Bade Jira instance par full re-index:
    ghanton chalta tha
@@ -487,33 +487,33 @@ SD.registerLevels('stories', [
      koi sasta tareeka nahi tha.</p>`,
     `<h3>✅ Naya soch: index khud ko VERIFY karta rahe</h3>
      <p>Jira ne index ko "kabhi-kabhi dobara banane wali cheez" maanna band kar diya aur
-     usse aisa system maan liya jo <b>lagatar apne aap ko database se milaata rehta hai</b>.</p>
+     index ko aisa system maan liya jo <b>lagatar apne aap ko database se milaata rehta hai</b>.</p>
      <pre>1. Issue badla  →  change search cluster ko push karo
-2. Uske SAATH database mein likho: "document X, version N index mein hona chahiye"
+2. Change push karne ke SAATH database mein likho: "document X, version N index mein hona chahiye"
 3. Har minute ek reconciliation job poochhta hai:
-      jo documents hone chahiye, woh hain?
+      jo documents hone chahiye, saare hain?
       aur sahi VERSION par hain?
    → missing  →  index karo
    → purana version  →  update karo
    → beech mein kho gaya  →  agli baar pakda jaayega</pre>
      <p>Is tarah <b>database hi index ka checklist ban jaata hai</b>. Index ko sahi
-     <b>maan</b>-ne ke bajaye Jira lagatar <b>check</b> karta hai ki woh sahi hai.</p>
+     <b>maan</b>-ne ke bajaye Jira lagatar <b>check</b> karta hai ki index sahi hai.</p>
      <h3>🔁 Aur reindex bhi ab disruptive nahi</h3>
      <p>Purana tareeka: live index ko replace karo (isliye dard). Naya tareeka:</p>
      <pre>1. Naya index PURANE KE SAATH banao — searches purane par chalti rehti hain
-2. Build ke dauraan jo changes hue, unhe replay karo — naya index "abhi" tak aa jaata hai
+2. Build ke dauraan hue changes replay karo — naya index "abhi" tak aa jaata hai
 3. Ek ATOMIC operation mein search traffic naye index par switch kar do</pre>
      <p>User ko kuch pata nahi chalta.</p>
-     <p class="tip">🎯 Yeh sabak Jira se bahut aage jaata hai: <b>koi bhi</b> search
-     index, cache, replica ya derived view banana mushkil nahi hai — usse <b>sahi rakhna</b>
-     mushkil hai. Jo systems tikte hain woh yeh maan kar chalte hain ki <b>drift hogi
+     <p class="tip">🎯 Index sahi rakhne ka sabak Jira se bahut aage jaata hai: <b>koi bhi</b> search
+     index, cache, replica ya derived view banana mushkil nahi hai — copy ko <b>sahi rakhna</b>
+     mushkil hai. Tikne wale systems maan kar chalte hain ki <b>drift hogi
      hi</b>, aur lagatar reconcile karte rehte hain.</p>`,
   ],
   stages: [
     {
       type: 'replay',
       title: 'Replay — "search results galat aa rahe hain"',
-      instructions: 'Timeline chalao. Jahan sawaal aaye, wahan rukega.',
+      instructions: 'Timeline chalao. Sawaal aane par timeline rukegi.',
       incident: 'Jira jaisa search index — drift se outage tak',
       goal: 'Drift ko pakdo aur sahi kadam chuno — bina poora index dobara banaye.',
       speedMs: 1800,
@@ -535,7 +535,7 @@ SD.registerLevels('stories', [
                  ], answer: 0,
                  explain: 'Database mein har document ka expected version likha hai. Backlog ka size aur ghatne ki raftaar asli sawaal ka jawab dete hain: "kitna galat hai aur kab tak theek hoga?"',
                  wrongHints: [
-                   'CPU high hoga hi — par woh batata nahi ki kitne documents galat hain.',
+                   'CPU high hoga hi — par high CPU batata nahi ki kitne documents galat hain.',
                    'Tickets aane mein deri hoti hai; tab tak drift kaafi badh chuki hoti hai.',
                    'Database theek hai — sach wahin hai. Copy peechhe reh gayi hai.',
                  ] , choiceExplanations: [
@@ -578,7 +578,7 @@ SD.registerLevels('stories', [
                  explain: 'Drift ko rokna mumkin nahi, pakadna aasan banao: expected version ko asli index se milao aur sirf farq theek karo. Write ko index par rokna write ko index ki availability se jod deta hai; durable change capture aur retries bhi chahiye.',
                  wrongHints: [
                    'Synchronous karne se search cluster har write ka dependency ban jaata hai — availability girti hai.',
-                   'Custom fields product ka feature hain, unhe rokna jawab nahi.',
+                   'Custom fields product ka feature hain, custom fields ko rokna jawab nahi.',
                    'Bada cluster drift theek nahi karta, sirf tezi se galat jawab deta hai.',
                  ] , choiceExplanations: [
                    'Drift ko rokna mumkin nahi, pakadna aasan banao: expected version ko asli index se milao aur sirf farq theek karo. Write ko index par rokna write ko index ki availability se jod deta hai; durable change capture aur retries bhi chahiye.',
@@ -589,7 +589,7 @@ SD.registerLevels('stories', [
                } },
       ],
       lesson: `Har derived copy (index, cache, replica, materialized view) drift karegi.
-        Sawaal yeh nahi ki drift roki kaise jaaye — sawaal yeh hai ki <b>drift pakadna aur
+        Sawaal nahi ki drift roki kaise jaaye — sawaal hai ki <b>drift pakadna aur
         theek karna kitna sasta hai</b>.`,
     },
     {
@@ -670,7 +670,7 @@ SD.registerLevels('stories', [
       title: '🐳 Lab — drift banao, phir reconcile karo',
       project: '03-jira',
       exercise: 'ex2-index-reconcile',
-      goal: 'Index mein jaan-boojh kar drift paida karo, reconciliation loop se usse theek karo, aur alag-index-swap wala reindex chala kar dekho.',
+      goal: 'Index mein jaan-boojh kar drift paida karo, reconciliation loop se drift theek karo, aur alag-index-swap wala reindex chala kar dekho.',
       why: `Lab mein ek chhota "search index" hai jo database se alag rehta hai. Tum
         <code>DROP_RATE</code> se index writes girwa sakte ho aur reconciliation loop
         ko on/off kar sakte ho.`,
@@ -748,10 +748,10 @@ SD.registerLevels('stories', [
   ],
   homework: `<p>Apne system ki har derived copy likho (search index, cache, read replica,
     materialized view, analytics table). Har endpoint ke saamne likho: "agar endpoint chupchap galat
-    ho jaaye toh kitni der mein pata chalega?" Jiske saamne "pata nahi" ho, wahan pehle
+    ho jaaye toh kitni der mein pata chalega?" Jis endpoint ke saamne "pata nahi" ho, endpoint ke liye pehle
     ek reconciliation check likho.</p>`,
   cards: [
-    { front: 'Jira ka search index source of truth hai?', back: 'Nahi — woh ek COPY hai. Isi wajah se drift hoti hai, aur isi wajah se "full re-index" ka dard paida hua tha.' },
+    { front: 'Jira ka search index source of truth hai?', back: 'Nahi — search index ek COPY hai. Isi wajah se drift hoti hai, aur isi wajah se "full re-index" ka dard paida hua tha.' },
     { front: 'Reconciliation loop kaise kaam karta hai?', back: 'Har change ke saath database mein expected document + version likho. Background job har minute poochhta hai: documents maujood hain? sahi version par? Nahi → dobara index karo. Database index ka checklist ban jaata hai.' },
     { front: 'Zero-downtime reindex ke teen kadam?', back: '(1) naya index purane ke saath banao, (2) build ke dauraan hue changes replay karo, (3) ek atomic switch. Purana index rollback ke liye kuch der rakho.' },
     { front: 'Synchronous indexing kyun nahi?', back: 'Independent DB aur index calls sync hon tab bhi atomicity free nahi. Index response par ACK gated ho toh latency/availability couple hoti hai; durable change capture, retry aur reconciliation socho.' },
@@ -789,8 +789,8 @@ SD.registerLevels('stories', [
      <p>Tum likhte ho:</p>
      <pre>project = payments AND assignee = currentUser() ORDER BY created</pre>
      <p>Search engine is text ko waise chala hi nahi sakta. Index insaan ke naam nahi
-     jaanta — woh <b>internal ids</b> jaanta hai. Isliye Jira query ko chalane se pehle
-     usse <b>compile</b> karta hai:</p>
+     jaanta — index <b>internal ids</b> jaanta hai. Isliye Jira query ko chalane se pehle
+     query ko <b>compile</b> karta hai:</p>
      <pre>1. PARSE     — JQL ka structure samjho
 2. RESOLVE   — project naam → project id · user naam → user id · group → user ids ka set
 3. EXPAND    — currentUser() kaun hai? membersOf(developers) mein abhi kaun hai?
@@ -799,16 +799,16 @@ SD.registerLevels('stories', [
      <code>currentUser()</code> is baat par nirbhar hai ki request kisne bheji;
      <code>membersOf(developers)</code> is baat par ki abhi us group mein kaun hai.</p>
      <p class="tip">🎯 Soch badlo: JQL ek search string nahi, ek <b>chhoti programming
-     language</b> hai. Jira usse parse karta hai, identifiers resolve karta hai, dynamic
+     language</b> hai. Jira JQL ko parse karta hai, identifiers resolve karta hai, dynamic
      functions expand karta hai, validate karta hai aur execution plan banata hai —
      <b>Jira text execute nahi karta, query compile karta hai</b>.</p>`,
     `<h3>🔐 Aur ab sabse mushkil hissa — permissions</h3>
-     <p>Matching issues dhoondhna aasan hai. <b>Aise matching issues dhoondhna jo yeh
+     <p>Matching issues dhoondhna aasan hai. <b>Aise matching issues dhoondhna jo
      user dekh sakta ho</b> mushkil hai. Jira ka permission model chhota nahi hai: project,
      role, group membership, issue-level security, aur kuch rules to issue ke content par
      hi depend karte hain (reporter apna issue dekh sakta hai, assignee dekh sakta hai).</p>
-     <p>Seedha tareeka yeh hai: search chalao, saare matching issues lo, phir har ek par
-     permission check karo. Jira ke paimane par yeh aafat hai:</p>
+     <p>Seedha tareeka hai: search chalao, saare matching issues lo, phir har ek par
+     permission check karo. Jira ke paimane par har issue par permission check aafat hai:</p>
      <pre>query 10,00,000 issues match karti hai
 user ko chahiye  →  pehle 20
 naive tareeka    →  10,00,000 permission checks, sirf 20 rows dikhane ke liye</pre>
@@ -816,20 +816,20 @@ naive tareeka    →  10,00,000 permission checks, sirf 20 rows dikhane ke liye<
      <ul>
        <li>Project-level permissions <b>index mein hi</b> baithi hain — engine poore
        sets ko scoring se pehle hi hata deta hai.</li>
-       <li>Dynamic rules (current user, uske groups, uske grants) search ke waqt gather
+       <li>Dynamic rules (current user, current user ke groups, current user ke grants) search ke waqt gather
        karke <b>query ke andar</b> daal di jaati hain.</li>
      </ul>
      <p>Jab query index tak pahunchti hai, engine ko pehle se pata hai ki user kya dekh
-     sakta hai. <b>Permissions results par filter nahi hain — woh query ka hissa hain.</b>
-     Sabse tez permission check woh hai jo karna hi na pade.</p>
+     sakta hai. <b>Permissions results par filter nahi hain — permissions query ka hissa hain.</b>
+     Sabse tez permission check — jo karna hi na pade.</p>
      <h3>📦 Ek aur chaal: index bhi partitioned hai</h3>
-     <p>Index ek bada pool nahi hai — woh <b>tenant aur project</b> se partitioned hai,
+     <p>Index ek bada pool nahi hai — index <b>tenant aur project</b> se partitioned hai,
      aur ek project ke issues ek hi shard par rehte hain. Zyadatar searches poore org ke
      baare mein nahi hoti: "payments ke open bugs", "mobile ke high priority issues",
      "infrastructure mein mere assigned issues". Isliye query sirf un shards par jaati
-     hai jinme woh projects hain.</p>
-     <p class="tip">🎯 Ek line mein: <b>jo saath mein query hota hai, woh saath mein
-     rehna chahiye.</b> Physical layout ko query pattern se milane se woh kaam hi khatam
+     hai jinme maange gaye projects hain.</p>
+     <p class="tip">🎯 Ek line mein: <b>saath mein query hone wala data saath mein
+     rehna chahiye.</b> Physical layout ko query pattern se milane se aisa kaam hi khatam
      ho jaata hai jo kabhi zaroori nahi tha.</p>
      <h3>🏷️ ARI — ek primitive jo sab jagah chalta hai</h3>
      <p>Permissions Jira mein bhi hain, Confluence mein bhi, Bitbucket mein bhi. Comments,
@@ -837,8 +837,8 @@ naive tareeka    →  10,00,000 permission checks, sirf 20 rows dikhane ke liye<
      problem baar-baar solve karna. Isliye Atlassian ne ek common primitive banaya —
      <b>ARI (Atlassian Resource Identifier)</b>. Har important object ko ek ARI milti hai:
      Jira issue, Confluence page, Bitbucket pull request.</p>
-     <p>Ab shared services ko yeh jaanne ki zaroorat hi nahi ki woh kis product ke saath
-     kaam kar rahe hain. Permission service sirf itna poochhta hai: <b>"kya yeh user is
+     <p>Ab shared services ko jaanne ki zaroorat hi nahi ki services kis product ke saath
+     kaam kar rahe hain. Permission service sirf itna poochhta hai: <b>"kya user is
      resource ko padh sakta hai?"</b> — aur resource ek ARI hai. <b>Primitive standard
      karo, shared services apne aap simple ho jaate hain.</b></p>`,
   ],
@@ -907,7 +907,7 @@ naive tareeka    →  10,00,000 permission checks, sirf 20 rows dikhane ke liye<
       fine: {
         parse: 'Query ko parse karke ids resolve karna bilkul sahi hai — yahi "compile, execute nahi" wala tark hai.',
         recon: 'Reconciliation job sahi hai: index ek copy hai, isliye lagatar verify karna hi behtar hai.',
-        db: 'Index se ids aur tenant DB se poore rows — yeh standard pattern hai, kyunki index par poora document rakhna aur usse sync rakhna aur mehenga padta hai.',
+        db: 'Index se ids aur tenant DB se poore rows — ids se rows laana standard pattern hai, kyunki index par poora document rakhna aur document ko sync rakhna aur mehenga padta hai.',
       },
       lesson: `Search design ke teen sawaal: <b>permissions kahan lagti hain</b>,
         <b>index kis hisaab se bata hua hai</b>, aur <b>gehre pages kaise handle hote
@@ -1000,7 +1000,7 @@ naive tareeka    →  10,00,000 permission checks, sirf 20 rows dikhane ke liye<
   cards: [
     { front: 'JQL execute hoti hai ya compile?', back: 'Compile — parse → naam se internal ids → dynamic functions (currentUser, membersOf) expand → execution plan. Index ko naam nahi, ids pata hoti hain.' },
     { front: 'Permissions search ke baad lagane ki keemat?', back: 'Kaam result-set ke size par nirbhar ho jaata hai: 10 lakh match, 20 chahiye = 10 lakh checks. Jira permissions ko query ke andar daalta hai.' },
-    { front: 'Jira ka index kis hisaab se bata hai?', back: 'Tenant + project se; ek project ke issues ek shard par. "Payments ke open bugs" jaisi query sirf kuch shards par jaati hai — jo saath query hota hai woh saath rehta hai.' },
+    { front: 'Jira ka index kis hisaab se bata hai?', back: 'Tenant + project se; ek project ke issues ek shard par. "Payments ke open bugs" jaisi query sirf kuch shards par jaati hai — saath query hone wala data saath rehta hai.' },
     { front: 'ARI kya hai?', back: 'Atlassian Resource Identifier — har object (Jira issue, Confluence page, Bitbucket PR) ka ek jaisa id. Shared services (permissions, comments, mentions) product-specific logic ke bina kaam kar paate hain.' },
   ],
 },

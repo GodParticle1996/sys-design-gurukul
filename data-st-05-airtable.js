@@ -20,7 +20,7 @@ VISUALS['st-air-memory'] = {
       <span class="dg-pill acc" data-hs="sup">🎛️ supervisor (kaunsa worker?)</span><span class="dg-arrow">→</span>
       <span class="dg-pill good" data-hs="worker">🧠 worker — poora base RAM mein</span>
     </div>
-    <div class="dg-cap">Yeh database ke saamne laga cache nahi hai — <b>base khud memory
+    <div class="dg-cap">In-memory base database ke saamne laga cache nahi hai — <b>base khud memory
       mein rehta hai</b> aur wahin par kaam hota hai. Har base ka apna worker (single
       tenant), isliye ek customer ka bhaari kaam doosre ko nahi kha sakta.</div>
 
@@ -31,13 +31,13 @@ VISUALS['st-air-memory'] = {
           column recompute karna, linked tables par rollup — sab <b>RAM mein</b>.</div></div>
       <div class="dg-box is-bad"><span class="bx-label">🧱 Keemat — ek machine ki chhat</span>
         <div class="dg-cap">Base ko <b>ek hi machine</b> mein aana chahiye. Isi liye record
-          limits hain — woh product ka nakhra nahi, ek machine ki RAM hai.</div></div>
+          limits hain — record limits product ka nakhra nahi, ek machine ki RAM hai.</div></div>
     </div>
 
     <div class="dg-rule"></div>
     <div class="dg-ladder">
       <div class="dg-rung"><span class="lv">aam backend</span><span class="cmd">I/O-bound</span><span class="q">DB, cache, network ka intezaar — CPU zyadatar khaali</span></div>
-      <div class="dg-rung g"><span class="lv">Airtable worker</span><span class="cmd">CPU-bound</span><span class="q">intezaar kuch hai hi nahi — jo khatam hota hai woh CPU hai</span></div>
+      <div class="dg-rung g"><span class="lv">Airtable worker</span><span class="cmd">CPU-bound</span><span class="q">intezaar kuch hai hi nahi — sabse pehle CPU khatam hota hai</span></div>
     </div>`,
 };
 
@@ -47,7 +47,7 @@ VISUALS['st-air-live'] = {
     <div class="dg-split">
       <div class="dg-box is-bad"><span class="bx-label">❌ Har view dobara chalao</span>
         <div class="dg-cap">1 write × 40 open views = 40 queries. 100 log dekh rahe hon
-          toh 100. Yeh model bhaar ke saath phat jaata hai.</div></div>
+          toh 100. Har view dobara chalane ka model bhaar ke saath phat jaata hai.</div></div>
       <div class="dg-box is-good"><span class="bx-label">✅ Incremental view maintenance</span>
         <div class="dg-cap">Poochho: <b>is ek write se har live query ka jawab kaise
           badla?</b> Har view ke liye ek chhota diff banao aur wahi bhejo.</div></div>
@@ -58,20 +58,20 @@ VISUALS['st-air-live'] = {
       <span class="dg-pill">✏️ cell badla</span><span class="dg-arrow">→</span>
       <span class="dg-pill acc" data-hs="graph">🕸️ dependency graph</span><span class="dg-arrow">→</span>
       <span class="dg-pill">🧮 formulas · rollups · lookups</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good" data-hs="diff">📨 har view ko uska apna diff</span>
+      <span class="dg-pill good" data-hs="diff">📨 har view ko alag diff</span>
     </div>
     <div class="dg-cap">Records ek doosre par nirbhar hain (link, lookup, rollup, formula) —
-      woh nirbharta ek <b>graph</b> hai. Graph memory mein hai, kyunki yeh pointer-chasing
+      Records ki nirbharta ek <b>graph</b> hai. Graph memory mein hai, kyunki pointer-chasing ka
       kaam database round trips ke saath bahut mehenga ho jaata.</div>
 
     <div class="dg-rule"></div>
     <div class="dg-grid">
       <div class="dg-box is-accent"><span class="bx-label">🔢 Fractional index</span>
-        <div class="dg-cap">Row ko 2 aur 3 ke beech daalo → uski position <b>2.5</b>.
+        <div class="dg-cap">Row ko 2 aur 3 ke beech daalo → row ki position <b>2.5</b>.
           Neeche wali saari rows ko dobara number nahi karna padta.</div></div>
       <div class="dg-box is-gold"><span class="bx-label">🧱 Batch primitives</span>
         <div class="dg-cap">Column ka type badla ya formula mein <code>NOW()</code> hai —
-          ab poora column badalta hai, ek row nahi. Uske liye alag bulk operations chahiye.</div></div>
+          ab poora column badalta hai, ek row nahi. Poora column badalne ke liye alag bulk operations chahiye.</div></div>
     </div>`,
 };
 
@@ -99,7 +99,7 @@ VISUALS['st-air-rust'] = {
 
     <div class="dg-rule"></div>
     <div class="dg-cap">Aur ek faisla: <b>embeddings</b> (ek vector row se lagbhag 10×
-      bada) core memory database mein nahi, alag vector store mein — aur unhe thoda
+      bada) core memory database mein nahi, alag vector store mein — aur embeddings ko thoda
       <b>peechhe</b> rehne ki ijazat hai.</div>`,
 };
 
@@ -120,18 +120,18 @@ SD.registerLevels('stories', [
   ],
   lesson: [
     `<h3>📦 Airtable ka poora design ek cheez ke aas-paas hai: BASE</h3>
-     <p>Base ek Airtable document hai — uski tables, fields, linked records aur views.
-     Sabse mushkil baat yeh hai ki <b>base ka schema user runtime par banata hai</b>:
-     table jodo, field jodo, uska type chuno, doosri table se link karo, formula likho.
-     Aur phir bhi sab kuch aisa chale jaise woh schema pehle se socha gaya tha.</p>
-     <p>Base kholte hi Airtable uske liye ek dedicated server deta hai — ek <b>worker</b>
+     <p>Base ek Airtable document hai — document ki tables, fields, linked records aur views.
+     Sabse mushkil baat hai ki <b>base ka schema user runtime par banata hai</b>:
+     table jodo, field jodo, field ka type chuno, doosri table se link karo, formula likho.
+     Aur phir bhi sab kuch aisa chale jaise base ka schema pehle se socha gaya tha.</p>
+     <p>Base kholte hi Airtable base ke liye ek dedicated server deta hai — ek <b>worker</b>
      — aur worker <b>poora base memory mein</b> load kar leta hai aur wahin se sab serve
-     karta hai. Dhyan do: yeh database ke saamne laga cache nahi hai. In-memory copy hi
-     woh cheez hai jis par kaam hota hai.</p>
+     karta hai. Dhyan do: in-memory copy database ke saamne laga cache nahi hai. In-memory copy hi
+     kaam karne ki jagah hai.</p>
      <p>Ek chhota control service — <b>supervisor</b> — tay karta hai ki kaunsa worker
      kaunsa base rakhega, request sahi worker tak bhejta hai, aur workers ka lifecycle
      sambhalta hai.</p>
-     <p class="tip">🎯 Yeh sirf speed ka faisla nahi hai — <b>noisy neighbour</b> ka bhi
+     <p class="tip">🎯 In-memory base sirf speed ka faisla nahi hai — <b>noisy neighbour</b> ka bhi
      hai. Har base ka apna worker aur apni memory hai, isliye kisi ek enterprise ka
      monster base baaki sab ko nahi kha sakta.</p>`,
     `<h3>🧱 Aur yahin se ek chhat aa jaati hai</h3>
@@ -141,28 +141,28 @@ SD.registerLevels('stories', [
      base ek jagah chahiye.</p>
      <p>Isliye Airtable ke record limits product ka nakhra nahi hain. Performance lagbhag
      8 lakh records ke aas-paas girne lagti hai, aur top plans par bhi ceiling laakh ke
-     order mein hi hai — <b>yeh woh number hai jo ek machine memory mein rakh kar bhi tez
+     order mein hi hai — <b>itne records ek machine memory mein rakh kar bhi tez
      reh sakti hai</b>.</p>
-     <p>Slack wali kahani yaad karo: wahan ek bahut bada workspace ek shard par atak gaya
-     tha (hot shard) — woh <b>haadsa</b> tha. Airtable mein yeh haadsa nahi hai, yeh
+     <p>Slack wali kahani yaad karo: Slack mein ek bahut bada workspace ek shard par atak gaya
+     tha (hot shard) — hot shard <b>haadsa</b> tha. Airtable mein ek machine ki seema haadsa nahi hai, balki
      <b>chuna hua sauda</b> hai: in-memory speed ke badle ek machine ki seema.</p>
      <h3>🔥 Aur ek ulta-pulta natija: worker CPU-bound hai</h3>
      <p>Aam backend apni zindagi <b>intezaar</b> mein bitata hai — database se rows,
      cache se jawab, network se response. CPU beech mein khaali baitha rehta hai.</p>
      <p>Airtable mein intezaar hai hi nahi. 1 lakh records filter karna, formula column
      recompute karna, linked tables par rollup — sab <b>raw computation</b> hai. Isliye
-     jo cheez pehle khatam hoti hai woh I/O nahi, <b>CPU</b> hai.</p>
+     pehle khatam hone wala resource I/O nahi, <b>CPU</b> hai.</p>
      <table>
        <tr><th>I/O-bound system</th><th>CPU-bound system</th></tr>
        <tr><td>Scale karne ke liye zyada "intezaar karne ki jagah" chahiye — zyada connections, zyada (zyadatar khaali) machines</td><td>Scale karne ke liye asli processing chahiye — aur har core ka istemaal hona chahiye</td></tr>
      </table>
-     <p>Yahi ek baat aage jaake Airtable ki sabse badi engineering decision bani — woh
+     <p>Yahi ek baat aage jaake Airtable ki sabse badi engineering decision bani — programming model badalne ka faisla
      teesre level mein hai.</p>`,
   ],
   stages: [
     {
       type: 'bins',
-      title: 'Yeh system I/O-bound hai ya CPU-bound?',
+      title: 'Diya hua system I/O-bound hai ya CPU-bound?',
       instructions: 'Har lakshan ko sahi dabbe mein daalo.',
       bins: [
         { id: 'io', label: '⏳ I/O-bound ke lakshan' },
@@ -188,7 +188,7 @@ SD.registerLevels('stories', [
         hai.`,
       knobs: [
         { id: 'records', label: 'Accepted base ka record cap', min: 50000, max: 2000000, step: 50000, value: 1500000, unit: '',
-          note: 'Toy CPU/RAM model ka admission cap. Bada base reject/migrate karo; records delete mat karo. Yeh current Airtable product limit nahi.' },
+          note: 'Toy CPU/RAM model ka admission cap. Bada base reject/migrate karo; records delete mat karo. Toy model ka admission cap current Airtable product limit nahi.' },
         { id: 'ram', label: 'Worker machine ki RAM', min: 2, max: 64, step: 2, value: 8, unit: ' GB',
           note: 'Base poora ismein aana chahiye.' },
         { id: 'shape', label: 'Architecture (0 = ek worker par kai bases · 1 = ek base = ek worker)', min: 0, max: 1, step: 1, value: 0, unit: '',
@@ -212,14 +212,14 @@ SD.registerLevels('stories', [
       },
       verdict: k => {
         const m = airMemModel(k);
-        if (!m.fits) return { ok: false, text: `Base <b>${m.sizeGB} GB</b> ka hai par machine mein <b>${k.ram} GB</b> hai — base machine mein aata hi nahi. Yahi woh jagah hai jahan product mein "record limit" likhni padti hai.` };
+        if (!m.fits) return { ok: false, text: `Base <b>${m.sizeGB} GB</b> ka hai par machine mein <b>${k.ram} GB</b> hai — base machine mein aata hi nahi. Machine ki RAM hi product mein "record limit" likhne ki wajah hai.` };
         if (m.queryMs > 300) return { ok: false, text: `Base fit ho gaya par <b>${(k.records / 100000).toFixed(1)} lakh</b> records par filter <b>${m.queryMs} ms</b> le raha hai. In-memory hone ke baad bhi CPU ka kaam records ke saath badhta hai.` };
         if (m.noisy) return { ok: false, text: `Speed theek hai par ek worker par kai bases hain — ek bhaari base ne padosiyon ko dheema kar diya. Airtable ne isi liye ek base = ek worker rakha.` };
         return { ok: true, text: `Sahi: base <b>${m.sizeGB} GB</b> machine mein aa gaya, filter <b>${m.queryMs} ms</b>, aur har base apne worker par hai — koi padosi prabhavit nahi.` };
       },
       check: k => { const m = airMemModel(k); return m.fits && m.queryMs <= 300 && !m.noisy; },
       lesson: `In-memory architecture do cheezein ek saath deti hai: <b>speed</b> aur ek
-        <b>sakht seema</b>. Agar tumhara data ek machine mein aata hai, yeh sauda shandaar
+        <b>sakht seema</b>. Agar tumhara data ek machine mein aata hai, in-memory ka sauda shandaar
         hai; jis din nahi aata, us din poora model badalna padta hai.`,
       quiz: {
         q: 'Airtable ka record limit product ka faisla hai ya architecture ka?',
@@ -241,7 +241,7 @@ SD.registerLevels('stories', [
     },
     {
       type: 'docker',
-      title: '🐳 Lab — in-memory worker aur uski chhat',
+      title: '🐳 Lab — in-memory worker aur worker ki chhat',
       project: '05-airtable',
       exercise: 'ex1-in-memory-base',
       goal: 'Ek base ko do tareeke se serve karo — har request par store se padh kar, aur poora base memory mein rakh kar — aur latency + memory dono naapo.',
@@ -316,10 +316,10 @@ SD.registerLevels('stories', [
   },
   success: [
     'Main bata sakta hoon ki system I/O-bound hai ya CPU-bound',
-    'Main in-memory architecture ka faayda aur uski seema dono samjha sakta hoon',
+    'Main in-memory architecture ka faayda aur seema dono samjha sakta hoon',
     'Main per-tenant worker se noisy neighbour rokna samajh gaya hoon',
   ],
-  homework: `<p>Apne sabse bhaari endpoint par ek trace dekho. Uske total time mein se
+  homework: `<p>Apne sabse bhaari endpoint par ek trace dekho. Endpoint ke total time mein se
     kitna hissa "waiting" hai (DB, cache, HTTP) aur kitna "computing"? Jo bada hai, wahi
     tumhara asli bottleneck hai — aur dono ka ilaaj bilkul alag hai.</p>`,
   cards: [
@@ -346,7 +346,7 @@ SD.registerLevels('stories', [
 {
   id: 'st-air-live',
   icon: '📡',
-  title: 'Airtable — ek write, sabko sirf uska diff',
+  title: 'Airtable — ek write, sabko sirf write ka diff',
   badge: 'Diff Doot',
   objectives: [
     'Har open view ek live query hai',
@@ -359,30 +359,30 @@ SD.registerLevels('stories', [
      <p>Ek hi base ko dus log dekh rahe hain: kisi ki view filtered hai, kisi ki sorted,
      koi kanban mein hai, koi grouped. In sab ka matlab hai ki base par <b>kai live
      queries</b> chal rahi hain.</p>
-     <p>Seedha jawab yeh hoga: jab koi cell badle, har affected query dobara chala do.
-     Airtable ke paimane par yeh aapda hai — ek write par darjanon (ya saikdon) queries
+     <p>Seedha jawab hoga: jab koi cell badle, har affected query dobara chala do.
+     Airtable ke paimane par har query dobara chalana aapda hai — ek write par darjanon (ya saikdon) queries
      dobara chalengi.</p>
-     <p>Isliye Airtable ka engine woh karta hai jo aam databases nahi karte:
+     <p>Isliye Airtable ka engine aam databases se alag kaam karta hai:
      <b>incremental view maintenance</b>. Sawaal badal jaata hai:</p>
      <pre>❌ "is view ka jawab kya hai?"        (poori query dobara)
 ✅ "is ek write se is view ka jawab KAISE BADLA?"   (sirf farq)</pre>
-     <p>Naya record aaya: engine nikalta hai ki woh <b>tumhari</b> filtered view mein
-     aayega (aur kis sorted position par), par <b>meri</b> view mein nahi. Phir woh ek
-     chhota <b>diff</b> banata hai — "yeh row yahan daalo" — aur wahi bhejta hai.</p>
+     <p>Naya record aaya: engine nikalta hai ki record <b>tumhari</b> filtered view mein
+     aayega (aur kis sorted position par), par <b>meri</b> view mein nahi. Phir engine ek
+     chhota <b>diff</b> banata hai — "nayi row yahan daalo" — aur wahi bhejta hai.</p>
      <p class="tip">🎯 Real-time collaboration mehenga isliye nahi hoti ki data bada hai —
      mehenga tab hoti hai jab har change par poora jawab dobara banaya jaaye.</p>`,
     `<h3>🕸️ Dependency graph — ek cell sirf ek cell nahi hoti</h3>
-     <p>Airtable sirf data store nahi karta, woh data se naya data <b>nikalta</b> hai:
+     <p>Airtable sirf data store nahi karta, Airtable data se naya data <b>nikalta</b> hai:
      linked records, lookup fields, rollups, formulas. Matlab records ek doosre par
-     nirbhar hain, aksar kai tables ke paar. Yeh nirbhartaayein ek <b>graph</b> banati hain.</p>
+     nirbhar hain, aksar kai tables ke paar. Records ki nirbhartaayein ek <b>graph</b> banati hain.</p>
      <p>Ek value badli toh engine ko us graph par chal kar sab downstream cheezein dobara
-     calculate karni padti hain: formulas, rollups, lookups, aur woh views jo un values ko
-     dikha rahi hain. Isiliye graph memory mein rehta hai — yeh pointer-chasing kaam hai,
-     aur database round trips ke saath yeh bahut mehenga ho jaata.</p>
+     calculate karni padti hain: formulas, rollups, lookups, aur aisi views jo badli hui values ko
+     dikha rahi hain. Isiliye graph memory mein rehta hai — graph par chalna pointer-chasing kaam hai,
+     aur database round trips ke saath graph par chalna bahut mehenga ho jaata.</p>
      <pre>store karo → jo us par nirbhar hai sab recompute karo → clients ko diff bhejo</pre>
      <h3>🔢 Do chhoti par kaam ki cheezein</h3>
-     <p><b>Fractional indexing:</b> row ko 2 aur 3 ke beech drag kiya? Uski position
-     <b>2.5</b> ho jaati hai; agli baar 2.75. Sirf woh row likhi jaati hai jo hili —
+     <p><b>Fractional indexing:</b> row ko 2 aur 3 ke beech drag kiya? Row ki position
+     <b>2.5</b> ho jaati hai; agli baar 2.75. Sirf hili hui row likhi jaati hai —
      neeche ki hazaron rows dobara number nahi hoti.</p>
      <p><b>Batch primitives:</b> kuch changes ek row ko nahi, <b>poore column</b> ko
      chhoote hain — jaise formula jisme <code>NOW()</code> hai, ya column ka type badalna.
@@ -469,15 +469,15 @@ SD.registerLevels('stories', [
       },
       verdict: k => {
         const m = liveViewModel(k);
-        if (k.model === 0) return { ok: false, text: `"Har view dobara chalao" mein kaam = viewers × writes = <b>${m.work} units/s</b>. Viewers badhte hi yeh model phat jaata hai — jabki data utna hi hai.` };
+        if (k.model === 0) return { ok: false, text: `"Har view dobara chalao" mein kaam = viewers × writes = <b>${m.work} units/s</b>. Viewers badhte hi har view dobara chalane ka model phat jaata hai — jabki data utna hi hai.` };
         if (m.work > 40) return { ok: false, text: `Diff model mein bhi <b>${k.writes}/s</b> writes × <b>${k.viewers}</b> viewers ka thoda kaam hai: <b>${m.work} units/s</b>. Write rate ya viewers thode kam karo.` };
         if (m.updateMs > 200) return { ok: false, text: `Kaam theek hai par client ko update <b>${m.updateMs} ms</b> mein mil raha hai — 200 ms se zyada.` };
         return { ok: true, text: `Sahi: diffs ke saath kaam lagbhag writes ke saath badhta hai, viewers ke saath nahi — <b>${m.work} units/s</b>, update <b>${m.updateMs} ms</b>.` };
       },
       check: k => { const m = liveViewModel(k); return k.model === 1 && m.work <= 40 && m.updateMs <= 200; },
       lesson: `Real-time UI ka asli sawaal hai: <b>kaam kis cheez ke saath badhta hai?</b>
-        Agar woh "viewers × writes" hai toh system viewers ke saath marega. Diff bhejne se
-        woh lagbhag sirf "writes" par aa jaata hai.`,
+        Agar kaam "viewers × writes" hai toh system viewers ke saath marega. Diff bhejne se
+        kaam lagbhag sirf "writes" par aa jaata hai.`,
       quiz: {
         q: 'Incremental view maintenance ka core sawaal kya hai?',
         choices: [
@@ -580,7 +580,7 @@ SD.registerLevels('stories', [
     kitna kaam karta hai — <b>ek baar</b>, ya <b>har viewer ke liye ek baar</b>? Agar
     doosra jawab hai, toh socho ki us screen ka diff kaisa dikhega.</p>`,
   cards: [
-    { front: 'Incremental view maintenance kya hai?', back: 'Write aane par har live query ko dobara chalane ke bajaye yeh nikalna ki us write se har query ka jawab kaise badla, aur sirf woh diff bhejna.' },
+    { front: 'Incremental view maintenance kya hai?', back: 'Write aane par har live query ko dobara chalane ke bajaye nikalna ki us write se har query ka jawab kaise badla, aur sirf nikla hua diff bhejna.' },
     { front: 'Dependency graph kyun memory mein?', back: 'Formula → rollup → lookup ka chain pointer-chasing kaam hai; har hop par database round trip mehenga padta. Graph RAM mein ho toh recompute seedha chal jaata hai.' },
     { front: 'Fractional indexing?', back: 'Row ko 2 aur 3 ke beech daalo → position 2.5, phir 2.75. Sirf hili hui row likhi jaati hai — neeche ki rows dobara number nahi hoti.' },
     { front: 'Batch primitives kab chahiye?', back: 'Jab change poore column ko chhooye — NOW() wala formula, column type change. Row-by-row update bahut dheema hoga, isliye bulk rewrite operations chahiye.' },
@@ -617,7 +617,7 @@ SD.registerLevels('stories', [
      <p>Airtable ka engine TypeScript mein tha aur Node.js par chalta tha — yaani
      <b>ek main thread</b>. Kaam CPU-bound tha. Matlab ek core 100% par aur baaki cores
      lagbhag khaali.</p>
-     <p>Node mein parallelism ke tareeke hain (alag process/worker), par yahan woh kaam
+     <p>Node mein parallelism ke tareeke hain (alag process/worker), par yahan parallelism ke tareeke kaam
      nahi karte:</p>
      <pre>Shart 1: poora base memory mein hona chahiye (speed ke liye)
 Shart 2: kai cores ko usi memory par kaam karna chahiye
@@ -628,7 +628,7 @@ Original JS object graph worker isolates mein direct share nahi hota
    enterprise base kabhi dasiyon GB ka
    aur har edit ab har copy mein bhejni padegi</pre>
      <p class="tip">🎯 Airtable ki apni line: <b>bottleneck hardware nahi tha, programming
-     model tha.</b> Jab yeh halat aaye toh bade machine lene se kuch nahi milta.</p>
+     model tha.</b> Jab programming model bottleneck bane toh bade machine lene se kuch nahi milta.</p>
      <h3>🦀 Rust rewrite — aur engine mein asli database guarantees</h3>
      <p>Airtable ne apne backend ka dil — poora in-memory database — <b>Rust</b> mein
      dobara likha (lagbhag teen saal ka kaam; pehle se chhote Rust hisse production mein
@@ -637,20 +637,20 @@ Original JS object graph worker isolates mein direct share nahi hota
 1 write thread      — saare writes ek kram mein
 N read threads      — queries parallel
 1 dispatcher        — request ko sahi jagah bhejta hai</pre>
-     <p>Aur kyunki ab woh sach mein ek database bana rahe the, unhone asli database
+     <p>Aur kyunki ab Airtable ke engineers sach mein ek database bana rahe the, engineers ne asli database
      guarantees bhi daalin: <b>transactions with MVCC</b> (readers aur writers ek doosre
      ko block na karein), indexes, foreign key aur uniqueness constraints, aur triggers.</p>
      <h3>✍️ Ek writer, kai readers</h3>
      <p>Do log ek hi cell ek saath badlein toh? Har base ka <b>ek hi write thread</b> hai.
      Har write usi lane se guzarti hai, ek-ek karke. Do edits sach mein ek saath ho hi
-     nahi sakte — woh line mein lag jaate hain, aur baad wali jeet jaati hai. Base kabhi
+     nahi sakte — edits line mein lag jaate hain, aur baad wali jeet jaati hai. Base kabhi
      aadhe-adhoore state mein nahi jaata.</p>
-     <p>Aur readers? Woh rukte nahi. MVCC ki wajah se read threads ek <b>consistent
+     <p>Aur readers? Readers rukte nahi. MVCC ki wajah se read threads ek <b>consistent
      snapshot</b> par kaam karte rehte hain jabki write chal raha hota hai. Jaan-boojh kar
      chuna gaya batwara: <b>writes serialize (consistency), reads parallel
      (responsiveness)</b>.</p>`,
     `<h3>🔁 Live product ke neeche database badalna</h3>
-     <p>Yeh sabse khatarnaak kaam hai jo koi software company kar sakti hai. Naya system
+     <p>Live product ke neeche database badalna sabse khatarnaak kaam hai jo koi software company kar sakti hai. Naya system
      thoda sa bhi alag vyavhaar kare toh tumhe performance bug nahi milta — tumhe
      <b>corrupt customer data</b> milta hai.</p>
      <pre>1. BOUNDARY   — product aur database ke beech ek layer daalo
@@ -659,33 +659,33 @@ N read threads      — queries parallel
 
 2. DUAL RUN   — lambe samay tak har operation DONO engines par chala
                 dono ke jawab apne aap compare hue
-                mismatch mila toh usse samjha gaya
+                mismatch mila toh mismatch samjha gaya
 
 3. FULL DIFF  — tooling ne poore datasets ko lagatar compare kiya
 
 4. CUTOVER    — jab farq bacha hi nahi, tab production traffic</pre>
-     <p class="tip">🎯 Yeh wahi pattern hai jo Discord ke migration mein bhi tha aur
+     <p class="tip">🎯 Purana aur naya saath chalana wahi pattern hai jo Discord ke migration mein bhi tha aur
      50 TB wale migration mein bhi: <b>purana aur naya saath chalao, jawab compare karo,
      aur tabhi switch karo jab difference zero ho jaaye.</b></p>
      <h3>💾 RAM serving layer hai, durability alag</h3>
      <p>RAM volatile hai — bijli gayi toh sab gaya. Isliye durable copy disk par rehti
-     hai; worker ko base ka maalik banne se pehle usse <b>load</b> karna padta hai. Aur
+     hai; worker ko base ka maalik banne se pehle base ko <b>load</b> karna padta hai. Aur
      yahin ek naya bottleneck paida hota hai: base memory mein aane ke baad bahut tez hai,
-     par <b>usse memory mein laana</b> mehenga hai. Isliye Airtable ne replication,
+     par <b>base ko memory mein laana</b> mehenga hai. Isliye Airtable ne replication,
      durable logs, snapshots aur faster recovery par kaam kiya — taaki "disk par hai" se
      "serve karne layak hai" ka waqt chhota rahe.</p>
      <h3>🤖 Aur ek naya dabaav: AI agents</h3>
      <p>Purana system insaanon ke hisaab se bana tha: insaan dheere type karta hai, kuch
-     edits karta hai, kabhi-kabhi automation chalata hai. Ek agent aisa nahi karta — woh
+     edits karta hai, kabhi-kabhi automation chalata hai. Ek agent aisa nahi karta — agent
      hazaron records padhta hai, bahut saare updates karta hai, ghanton chalta hai, aur
      akela nahi aata (organizations agents ka poora bedha chalate hain). <b>Human-scale
      interaction ko machine-scale interaction jhelna pada.</b></p>
      <h3>🧮 Embeddings alag store mein — aur peechhe rehne ki ijazat</h3>
      <p>AI search ke liye har row ka embedding chahiye. Par ek vector row se lagbhag
      <b>10× bada</b> ho sakta hai, aur memory Airtable ka sabse mehenga resource hai —
-     yaani har base ki har row par woh keemat lag jaati.</p>
+     yaani har base ki har row par embeddings ki keemat lag jaati.</p>
      <p>Isliye: operational data core database mein, embeddings ek alag <b>vector
-     database</b> mein (Milvus, kyunki woh self-host ho sakta tha aur data Airtable ke
+     database</b> mein (Milvus, kyunki Milvus self-host ho sakta tha aur data Airtable ke
      apne infra mein rehta). Aur embeddings ko thoda <b>peechhe rehne ki ijazat</b> hai —
      embedding banane ke liye model call chahiye, jo user-facing transaction ke andar
      bahut dheema hai. Core DB strongly consistent, vector store eventually consistent.</p>`,
@@ -699,7 +699,7 @@ N read threads      — queries parallel
         24×7 chal raha hai aur usme customers ka asli data hai. Tumhe engine badalna hai
         <b>bina data kharab kiye</b> aur <b>bina feature delivery roke</b>.`,
       requirements: [
-        'Zero data loss — yeh sabse upar hai',
+        'Zero data loss — data loss rokna sabse upar hai',
         'Feature delivery rukni nahi chahiye',
         'Har kadam rollback ho sake',
         'Naye engine ko saare cores use karne chahiye',
@@ -747,7 +747,7 @@ N read threads      — queries parallel
     },
     {
       type: 'match',
-      title: 'Faisla aur uski wajah',
+      title: 'Faisla aur wajah',
       pairs: [
         { left: '🦀 Rust engine', right: 'CPU-bound kaam ko saare cores par chalana, bina base ki dusri copy banaye', explain: 'Original object graph ka shareable layout bottleneck tha; Node workers/processes parallelism support karte hain.' },
         { left: '✍️ Ek write thread', right: 'Saare writes ek kram mein — base kabhi aadhe state mein nahi', explain: 'Single writer ordering simplify karta hai; transactions, snapshot semantics aur async interleaving correctness alag design chahiye.' },

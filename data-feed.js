@@ -2878,7 +2878,7 @@ Udaharan:  $258,000/mahina  ÷  1,200 crore requests
      <table>
        <tr><th>Rakshas</th><th>Kaise chhupta hai</th><th>Ilaaj</th></tr>
        <tr><td><b>Egress</b> (data bahar bhejna)</td><td>compute ke bill mein nahi dikhta, alag line item hai — aur cloud se BAHAR jaane par sabse mehenga</td><td>CDN (origin se egress lagbhag khatam), compression, aur data ko wahin rakho jahan compute hai</td></tr>
-       <tr><td><b>NAT Gateway</b></td><td>har GB par charge — aur private subnet ki har outbound call NAT se jaati hai</td><td>VPC endpoints (S3, DynamoDB) — woh NAT ko bypass karte hain</td></tr>
+       <tr><td><b>NAT Gateway</b></td><td>har GB par charge — aur private subnet ki har outbound call NAT se jaati hai</td><td>VPC endpoints (S3, DynamoDB) — endpoints NAT ko bypass karte hain</td></tr>
        <tr><td><b>Cross-AZ traffic</b></td><td>DONO taraf charge hota hai, aur microservices ke beech ki chatter aksar random AZ mein jaati hai</td><td>zone-aware routing — jahan tak ho sake usi AZ mein rakho</td></tr>
      </table>
      <p class="tip">🎯 Teenon rakshason mein ek baat samaan hai: teenon

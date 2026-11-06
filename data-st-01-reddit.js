@@ -113,7 +113,7 @@ VISUALS['st-reddit-cache'] = {
     <div class="dg-grid">
       <div class="dg-box is-good"><span class="bx-label">🚫 Negative cache</span>
         <div class="dg-cap">"Kya is user ne vote kiya?" ka <b>NAHI</b> bhi cache hota hai.
-          Isse "nahi" utna hi sasta ho jaata hai jitna "haan".</div></div>
+          Negative caching se "nahi" utna hi sasta ho jaata hai jitna "haan".</div></div>
       <div class="dg-box is-gold"><span class="bx-label">🕰️ Stale on purpose</span>
         <div class="dg-cap">Downstream slow hai? Purani copy do.
           <b>Purana par turant</b> &gt; <b>taza par band</b>.</div></div>
@@ -176,7 +176,7 @@ SD.registerLevels('stories', [
     '<b>1% rule</b> — kaun likhta hai, kaun vote karta hai, kaun sirf padhta hai',
     'Ek <b>fact</b> aur ek <b>answer</b> mein farq, aur dono ka alag standard',
     '<b>Record now, repair later</b> — user ka intezaar kitna chhota rakha jaaye',
-    'thing + data model: schema badle bina naya feature, aur uski keemat',
+    'thing + data model: schema badle bina naya feature, aur schemaless model ki keemat',
   ],
   lesson: [
     `<h3>🏢 Jan 2011 — 12 engineers, 1 arab se zyada page views ek mahine mein</h3>
@@ -185,7 +185,7 @@ SD.registerLevels('stories', [
      triangle jaisa tha:</p>
      <pre>~1%   log post/comment likhte hain      ← naye FACTS yahan bante hain
 ~9%   log vote karte hain                ← yahan bhi FACTS bante hain
-~90%  log sirf padhte hain               ← inko ANSWERS chahiye, turant</pre>
+~90%  log sirf padhte hain               ← padhne walon ko ANSWERS chahiye, turant</pre>
      <p>Is triangle se Reddit ne ek batwara nikala jise poori architecture follow
      karti hai:</p>
      <table>
@@ -200,23 +200,23 @@ SD.registerLevels('stories', [
      theek hai, <b>reader ka waqt barbaad karna nahi</b>.</p>`,
     `<h3>📮 Record now, repair later</h3>
      <p>Jab tum upvote dabate ho, Reddit sirf ek kaam <b>tumhare saamne</b> karta hai:
-     vote ka fact likh deta hai. Uske baad ek job RabbitMQ par chala jaata hai aur
+     vote ka fact likh deta hai. Fact likhne ke baad ek job RabbitMQ par chala jaata hai aur
      control turant browser ko wapas mil jaata hai.</p>
      <p>Background worker phir un sab answers ko theek karta hai jo us vote se badle:
-     post ka score, hot listing mein uski jagah, top-of-week, controversial,
+     post ka score, hot listing mein post ki jagah, top-of-week, controversial,
      author ka karma, aur kai cached pages. Steve Huffman ka andaza tha —
      <b>ek vote se lagbhag 20 updates</b>.</p>
      <p>Ek detail jo log miss karte hain: Reddit ne <b>ek badi queue nahi</b> banayi.
      Alag-alag kaam ki alag queues banayin — votes, listings, karma+cache. Jab
      queues alag hain, do workers ek hi popular post par kam takrate hain, yaani
      lock contention kam.</p>
-     <h3>⚖️ Yeh sauda kab kaam karta hai, kab ulta padta hai</h3>
+     <h3>⚖️ Precompute ka sauda kab kaam karta hai, kab ulta padta hai</h3>
      <pre>reads &gt;&gt;&gt; writes   →  1 vote ka 20 writes ban jaana SASTA hai
-                     (kyunki uske baad lakhon reads lagbhag muft ho jaate hain)
+                     (kyunki extra writes ke baad lakhon reads lagbhag muft ho jaate hain)
 
 writes ≈ reads     →  har user action 20 database writes mein phatta hai
                      aur yahi architecture tumhare khilaf kaam karne lagti hai</pre>
-     <p class="tip">🎯 Precompute koi "best practice" nahi hai — yeh ek <b>ratio ka
+     <p class="tip">🎯 Precompute koi "best practice" nahi hai — precompute ek <b>ratio ka
      faisla</b> hai. Pehle read/write ratio nikalo, phir tay karo.</p>`,
     `<h3>🧱 thing + data — schema jise kabhi badalna hi na pade</h3>
      <p>Reddit ke har object ke liye do tables the:</p>
@@ -226,9 +226,9 @@ data  table   (thing_id, key, value)                     ← title, url, author,
      Reddit ne aisa model banaya jisme naya attribute jodna = <b>data table mein
      ek nayi key likhna</b>, migration bilkul nahi.</p>
      <p>Keemat turant dikhi: id se uthana aasan raha, par kisi attribute par
-     <b>filter ya sort</b> karna mehenga ho gaya — woh value ek row ke andar
+     <b>filter ya sort</b> karna mehenga ho gaya — attribute ki value ek row ke andar
      chhupi hai, column nahi hai. Isliye Reddit ne samjhauta kiya: <b>jin fields
-     par sort hota hai (score, hot, controversy, created) unhe wapas thing table
+     par sort hota hai (score, hot, controversy, created), aise fields ko wapas thing table
      ke indexed columns bana diya</b>. Baaki sab schemaless rehne diya.</p>
      <h3>🔪 "Types ke beech koi JOIN nahi"</h3>
      <p>Reddit ne shuru mein hi ek niyam le liya: application kabhi database se
@@ -236,7 +236,7 @@ data  table   (thing_id, key, value)                     ← title, url, author,
      har type apne alag cluster par ja sakta hai — links ek jagah, comments doosri
      jagah, aur <b>votes</b> (sabse zyada volume) apne cluster par.</p>
      <p class="tip">🎯 Zyadatar companies user ya tenant se shard karti hain (Jira,
-     Slack). Reddit ne <b>type</b> se shard kiya — aur woh sirf isliye mumkin tha
+     Slack). Reddit ne <b>type</b> se shard kiya — aur type se sharding sirf isliye mumkin tha
      kyunki no-join niyam pehle se tha.</p>`,
   ],
   stages: [
@@ -282,7 +282,7 @@ data  table   (thing_id, key, value)                     ← title, url, author,
         <b>read ke waqt</b> (on-read)?`,
       knobs: [
         { id: 'reads', label: 'Har vote par kitne reads', min: 1, max: 100, step: 1, value: 40, unit: '×',
-          note: 'Reddit par yeh number bahut bada tha — 90% log sirf padhte hain.' },
+          note: 'Reddit par reads-per-vote ka number bahut bada tha — 90% log sirf padhte hain.' },
         { id: 'fanout', label: 'Ek vote se kitne answers bigadte hain', min: 4, max: 40, step: 4, value: 20, unit: '',
           note: 'Steve Huffman ka andaza: lagbhag 20.' },
         { id: 'mode', label: 'Tareeka (0 = read par banao · 1 = pehle se banao)', min: 0, max: 1, step: 1, value: 0, unit: '',
@@ -307,14 +307,14 @@ data  table   (thing_id, key, value)                     ← title, url, author,
       },
       verdict: k => {
         const m = redditWorkModel(k);
-        if (k.mode === 0 && m.p99 > 50) return { ok: false, text: `On-read mode mein har reader khud listing banata hai — read p99 <b>${m.p99} ms</b>. Reddit ka 90% traffic yahi reader hai, isliye yeh raasta bandh hai.` };
+        if (k.mode === 0 && m.p99 > 50) return { ok: false, text: `On-read mode mein har reader khud listing banata hai — read p99 <b>${m.p99} ms</b>. Reddit ka 90% traffic yahi reader hai, isliye on-read ka raasta bandh hai.` };
         if (m.cpu > 100000 && k.mode === 1) return { ok: false, text: `Precompute on hai, par kharcha <b>${Math.round(m.cpu).toLocaleString('en-IN')} CPU-second</b> hai. Ya to fan-out ${k.fanout} bahut bada hai, ya reads (${k.reads}×) itne kam hain ki har vote par 20 writes karna ghaate ka sauda ban gaya.` };
         if (m.cpu > 100000) return { ok: false, text: `Kharcha bahut zyada: <b>${Math.round(m.cpu).toLocaleString('en-IN')} CPU-second</b> roz.` };
         return { ok: true, text: `Ho gaya. Reads <b>${k.reads}×</b> hain, fan-out <b>${k.fanout}</b>, aur answers pehle se bane hue hain — read p99 <b>${m.p99} ms</b>, kharcha <b>${Math.round(m.cpu).toLocaleString('en-IN')} CPU-second</b>. Yahi Reddit ka sauda hai: rare write par thoda zyada kaam, taaki lakhon reads lagbhag muft ho jaayein.` };
       },
       check: k => { const m = redditWorkModel(k); return m.p99 <= 50 && m.cpu <= 100000; },
       lesson: `Precompute tab jeetta hai jab <b>reads writes se bahut zyada</b> hon.
-        Jahan writes reads ke barabar aa jaayein, wahan 1 vote = 20 writes wala
+        Jab writes reads ke barabar aa jaayein, tab 1 vote = 20 writes wala
         model ulta pad jaata hai. Isiliye faisla "best practice" se nahi,
         <b>apne ratio</b> se lo.`,
       quiz: {
@@ -505,19 +505,19 @@ data  table   (thing_id, key, value)                     ← title, url, author,
   success: [
     'Main kisi bhi feature ko fact aur answer mein todd sakta hoon',
     'Main read/write ratio dekh kar bata sakta hoon ki precompute faayde ka hai ya ghaate ka',
-    'Main schemaless model ki flexibility aur uski query cost dono samjha sakta hoon',
+    'Main schemaless model ki flexibility aur query cost dono samjha sakta hoon',
   ],
   homework: `<p>Apne kisi bhi ek screen ko utha lo (dashboard, feed, profile page) aur
     ek kaagaz par do column banao: <b>FACT</b> aur <b>ANSWER</b>. Har cheez ko ek column
-    mein daalo. Phir har ANSWER ke saamne likho: "yeh kitna purana ho sakta hai?" —
-    1 second, 10 second, ya 5 minute. Jiske saamne "5 minute" likha hai, woh aaj se
+    mein daalo. Phir har ANSWER ke saamne likho: "ANSWER kitna purana ho sakta hai?" —
+    1 second, 10 second, ya 5 minute. Jis ANSWER ke saamne "5 minute" likha hai, aisa ANSWER aaj se
     precompute hone layak hai.</p>`,
   cards: [
     { front: 'Fact aur Answer mein farq?', back: '<b>Fact</b> = user ne jo kiya (chhota, exact, sync). <b>Answer</b> = site jo dikhati hai (mehenga, baar-baar padha jaata, taza se zyada <b>taiyar</b> hona zaroori).' },
     { front: 'Reddit ka "record now, repair later" kya hai?', back: 'Vote aate hi sirf fact likho aur job queue par daalo; score, listings, karma aur caches background worker theek karta hai. Ek vote ≈ 20 updates.' },
-    { front: 'Precompute kab ghaate ka sauda hai?', back: 'Jab writes reads ke barabar (ya zyada) hon. Precompute write par extra kaam karke read sasta karta hai — reads kam hon toh woh kaam wasool nahi hota.' },
+    { front: 'Precompute kab ghaate ka sauda hai?', back: 'Jab writes reads ke barabar (ya zyada) hon. Precompute write par extra kaam karke read sasta karta hai — reads kam hon toh extra kaam wasool nahi hota.' },
     { front: 'thing + data model kyun bana?', back: 'Naye attribute ke liye migration na karni pade (2010 ka ALTER TABLE bade table ko lock karta tha). Keemat: attribute par filter/sort mehenga — isliye sort wale fields wapas indexed columns bane.' },
-    { front: 'Reddit kis cheez se shard karta hai?', back: '<b>Type</b> se — links, comments aur votes alag clusters par. Yeh sirf isliye mumkin hua kyunki "types ke beech koi JOIN nahi" ka niyam pehle se tha.' },
+    { front: 'Reddit kis cheez se shard karta hai?', back: '<b>Type</b> se — links, comments aur votes alag clusters par. Type se sharding sirf isliye mumkin hui kyunki "types ke beech koi JOIN nahi" ka niyam pehle se tha.' },
   ],
 },
 ]);
@@ -552,7 +552,7 @@ SD.registerLevels('stories', [
     'Kab tumhara stored answer apne aap purana ho jaata hai',
   ],
   lesson: [
-    `<h3>🧮 Historical open-source hot formula ka positive-score example</h3><p>Yeh archived Reddit implementation ka simplified positive net-score case hai, current proprietary ranking ka claim nahi. Full version zero/negative score ke liye absolute value, minimum aur sign handle karti hai.</p>
+    `<h3>🧮 Historical open-source hot formula ka positive-score example</h3><p>Hot formula ka example archived Reddit implementation ka simplified positive net-score case hai, current proprietary ranking ka claim nahi. Full version zero/negative score ke liye absolute value, minimum aur sign handle karti hai.</p>
      <pre>rank = log10(score) + t_submitted / 45000</pre>
      <p>Do hisse hain. Pehla hissa <b>popularity</b> hai (log10 par), doosra hissa
      <b>post kab submit hua</b> (Reddit ke apne epoch se seconds, 45,000 se bhaag).</p>
@@ -567,7 +567,7 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
      <b>shuruaati votes post ki disha tay karte hain</b>, baad ke votes lagbhag
      kuch nahi karte.</p>`,
     `<h3>⏰ Asli chaal: <code>t_submitted</code>, <code>now()</code> nahi</h3>
-     <p>Formula mein jo waqt hai woh <b>post ka janam-samay</b> hai — aaj ka samay
+     <p>Formula ka waqt <b>post ka janam-samay</b> hai — aaj ka samay
      nahi. Is ek choice ka natija bahut bada hai:</p>
      <table>
        <tr><th>Reddit (submission time)</th><th>Agar current time hota</th></tr>
@@ -576,12 +576,12 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
        <tr><td>Relevant inputs aur listing membership same hon toh order stable</td><td>Lab ke age-decay example mein stored ordering stale ho sakti</td></tr>
      </table>
      <p class="tip">🎯 Yahi is video ka sabse bada system-design sabak hai:
-     <b>apna derived data aisa design karo ki woh pade-pade galat na ho jaaye</b>.
+     <b>apna derived data aisa design karo ki data pade-pade galat na ho jaaye</b>.
      Hacker News ka rank waqt ke saath decay karta hai — isiliye HN ko rebuild karna
      padta hai. Reddit ka nahi karta — isiliye Reddit maintain karta hai.</p>
-     <p><b>Contract pehle:</b> har now() term relative order nahi badalti; sab scores mein common additive offset cancel ho sakta hai. Required time decay ko sirf compute bachane ke liye remove mat karo. Yeh lab ek age-dependent formula compare karta hai, mathematical equivalence prove nahi karta.</p><h3>🆕 Naya post aaye toh?</h3>
+     <p><b>Contract pehle:</b> har now() term relative order nahi badalti; sab scores mein common additive offset cancel ho sakta hai. Required time decay ko sirf compute bachane ke liye remove mat karo. Hot-ranking lab ek age-dependent formula compare karta hai, mathematical equivalence prove nahi karta.</p><h3>🆕 Naya post aaye toh?</h3>
      <p>Reddit intezaar nahi karta ki koi subreddit khole. Submit hote hi post ko
-     har relevant listing mein uski jagah par daal diya jaata hai — hot, new, top,
+     har relevant listing mein post ki jagah par daal diya jaata hai — hot, new, top,
      top-of-week, top-of-year, controversial… lagbhag <b>15 sort orders</b>.</p>`,
   ],
   stages: [
@@ -595,7 +595,7 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
           unit: 'ghante', given: ['45,000 second', '1 ghanta = 3,600 second'],
           answer: 12.5, tol: 0.3,
           steps: ['45,000 / 3,600 = 12.5', 'Yaani score ka ×10 hona = post ka 12.5 ghante naya hona'],
-          lesson: 'Yeh ek "exchange rate" hai: ek taraf votes, doosri taraf ghante.',
+          lesson: 'Votes aur ghanton ka rishta ek "exchange rate" hai: ek taraf votes, doosri taraf ghante.',
         },
         {
           q: 'Ek post ka score 100 se 1,000 ho gaya. Rank mein score ki badhotri kitne SECOND ki freshness ke barabar hai?',
@@ -667,7 +667,7 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
         return { ok: true, text: `Sahi. Submission time par rank tikta hai (listing <b>${m.correct}%</b> waqt sahi), freshness weight <b>${k.fresh}</b> nayi posts ko mauka deta hai, aur <b>${k.cap}</b> ka cap har repair ka kharcha bandha rakhta hai.` };
       },
       check: k => { const m = rankModel(k); return m.work <= 100000 && m.correct >= 90 && k.fresh > 0; },
-      lesson: `Do niyam yaad rakho: (1) derived data ko aise design karo ki woh
+      lesson: `Do niyam yaad rakho: (1) derived data ko aise design karo ki data
         <b>pade-pade galat na ho</b> — warna tum use maintain nahi, rebuild karoge;
         (2) har stored answer ko ek <b>size cap</b> do, warna repair ka kharcha
         bina limit ke badhta jaayega.`,
@@ -770,9 +770,9 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
     'Main stored answer par size cap lagane ka kaaran bata sakta hoon',
   ],
   homework: `<p>Apne system ki koi ek derived value chuno (ranking, score, counter,
-    leaderboard). Uske saare inputs likho. Ab har input ke saamne likho:
-    "yeh kis EVENT par badalta hai?" Agar kisi input ke saamne "apne aap, waqt ke
-    saath" likha hai — woh value store karne layak nahi hai jab tak formula badla
+    leaderboard). Derived value ke saare inputs likho. Ab har input ke saamne likho:
+    "input kis EVENT par badalta hai?" Agar kisi input ke saamne "apne aap, waqt ke
+    saath" likha hai — aisi value store karne layak nahi hai jab tak formula badla
     na jaaye.</p>`,
   cards: [
     { front: 'Reddit ka hot rank formula?', back: '<code>log10(score) + t_submitted / 45000</code> — popularity log scale par, aur freshness seconds-since-epoch ke roop mein.' },
@@ -818,21 +818,21 @@ SD.registerLevels('stories', [
      rahi. Listing pehle se bani hui hai. Aur listing hai kya?</p>
      <pre>❌ rendered HTML nahi
 ❌ database query ka result nahi
-✅ thing-ids ki ek SORTED LIST, har id ke saath uski sort value</pre>
+✅ thing-ids ki ek SORTED LIST, har id ke saath thing ki sort value</pre>
      <p>Jab vote aata hai toh background worker Postgres se listing dobara nahi banwata.
      Worker stored list kholta hai, us post ko nayi jagah par le jaata hai, aur list
      wapas likh deta hai. Reddit listing ko <b>rebuild</b> nahi karta — <b>maintain</b>
      karta hai.</p>
-     <p>Naya post aate hi Reddit har relevant listing mein uski jagah tay kar deta hai —
+     <p>Naya post aate hi Reddit har relevant listing mein post ki jagah tay kar deta hai —
      hot, new, top, top-of-week, top-of-year, controversial… lagbhag <b>15 sort orders</b>
      har subreddit ke liye. In sab ki collection ko Reddit <b>permacache</b> kehta hai
-     aur woh Cassandra mein rehti hai (denormalized data, lagbhag hamesha key se access).</p>
+     aur permacache Cassandra mein rehti hai (denormalized data, lagbhag hamesha key se access).</p>
      <h3>📏 Bounded answer</h3>
      <p>Purane Reddit par tum kisi listing mein lagbhag <b>1000 posts</b> se aage
-     page nahi kar sakte the. Kaaran pagination ka code nahi tha — kaaran yeh tha ki
+     page nahi kar sakte the. Kaaran pagination ka code nahi tha — kaaran tha ki
      <b>stored jawab wahin khatam ho jaata tha</b>. Cap lagane se storage predictable
      rehti hai aur har repair ka kharcha bhi predictable rehta hai.</p>
-     <p class="tip">🎯 Niyam: har derived answer ko ek <b>spec</b> do — "yeh kitna bada
+     <p class="tip">🎯 Niyam: har derived answer ko ek <b>spec</b> do — "answer kitna bada
      ho sakta hai". Bina cap wala jawab dheere-dheere ek aisa job ban jaata hai jo kabhi
      khatam nahi hota.</p>`,
     `<h3>🌳 Comment tree — same problem, alag ganit</h3>
@@ -853,16 +853,16 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
      jabki B ko 400 logon ne dekha aur 3 mein se 4 ne approve kiya. Asli sawaal
      percentage nahi hai — asli sawaal <b>sample size</b> hai.</p>
      <p>Reddit ka jawab 1927 ke ek statistic se aaya: <b>Wilson score confidence
-     interval</b> (Reddit mein isse Randall Munroe, xkcd wale, laaye the). Har comment
-     ko ek poll maano. Comments ko unke dikhe hue approval rate se nahi, balki
+     interval</b> (Reddit mein Wilson score confidence interval ko Randall Munroe, xkcd wale, laaye the). Har comment
+     ko ek poll maano. Comments ko comments ke dikhe hue approval rate se nahi, balki
      <b>us sabse kam approval rate se rank karo jise data confidently support karta
      hai</b> (lower confidence bound).</p>
      <table>
-       <tr><th>Comment</th><th>Dikhta hua rate</th><th>Lower bound (rank isi par)</th></tr>
+       <tr><th>Comment</th><th>Dikhta hua rate</th><th>Lower bound (rank lower bound par)</th></tr>
        <tr><td>1 up / 0 down</td><td>100%</td><td>bahut neeche — sample chhota hai</td></tr>
        <tr><td>300 up / 100 down</td><td>75%</td><td>75% ke kareeb — sample bada hai</td></tr>
      </table>
-     <p>Aur ek khoobsurti: agar ek accha comment galti se neeche shuru hua, toh uska
+     <p>Aur ek khoobsurti: agar ek accha comment galti se neeche shuru hua, toh comment ka
      interval chauda hai — do-chaar upvote aate hi lower bound tezi se upar chadhta hai.
      System <b>khud ko theek</b> karta jaata hai.</p>
      <p class="tip">🎯 Posts ka sawaal hai "abhi kya interesting hai" (waqt maayne rakhta
@@ -880,15 +880,15 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
      </table>
      <h3>🚫 Negative caching</h3>
      <p>"Kya is user ne is post par vote kiya?" — agar jawab HAAN hai toh cache karna
-     zahir hai. Reddit <b>NAHI</b> ko bhi cache karta tha. Socho mat ki yeh chhoti baat
-     hai: yeh sawaal har page load par har post ke liye poochha jaata hai. "Nahi" ko
+     zahir hai. Reddit <b>NAHI</b> ko bhi cache karta tha. Socho mat ki negative caching chhoti baat
+     hai: vote-check ka sawaal har page load par har post ke liye poochha jaata hai. "Nahi" ko
      cache karne se lakhon database lookups gayab ho gaye.</p>
      <h3>🕰️ Stale on purpose · 🔒 stampede lock</h3>
      <p>Downstream slow ya down hai? Reddit jaan-boojh kar purani copy serve karta tha —
      <b>purana par turant</b> Reddit ke liye <b>taza par unavailable</b> se behtar hai.</p>
      <p>Aur jab koi popular listing expire hoti hai aur 10,000 requests ek saath aati
      hain? Bina coordination ke 10,000 requests wahi listing dobara banane lagengi aur
-     database gir jaayega — yeh <b>cache stampede</b> hai. Reddit distributed lock
+     database gir jaayega — ek saath rebuild karna <b>cache stampede</b> hai. Reddit distributed lock
      lagata tha: <b>ek request rebuild karti hai, baaki ya thoda rukti hain ya stale
      copy le jaati hain</b>. Database ne rebuild ka kharcha sirf ek baar diya.</p>`,
   ],
@@ -899,11 +899,11 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
       brief: `Ek team ne Reddit jaisa read path banaya hai. Traffic 90% logged-out
         readers ka hai. Diagram par click karke <b>teen</b> aisi jagah pakdo jahan
         design ulta padega.`,
-      goal: 'Teen flaws pakdo. Sahi boxes par click karoge toh woh kyun sahi hain, woh bhi milega.',
+      goal: 'Teen flaws pakdo. Sahi boxes par click karoge toh boxes ke sahi hone ki wajah bhi milegi.',
       nodes: [
         { id: 'cdn', label: 'CDN', sub: 'sirf images aur CSS · HTML hamesha origin se', row: 0 },
         { id: 'app', label: 'App servers', sub: 'har request par listing rank karte hain', row: 0 },
-        { id: 'mc', label: 'memcached', sub: 'ek hi pool, sab kuch usi mein', row: 1 },
+        { id: 'mc', label: 'memcached', sub: 'ek hi pool, sab kuch ek pool mein', row: 1 },
         { id: 'neg', label: 'Vote-check', sub: '"haan" cache hota hai, "nahi" har baar DB se', row: 1 },
         { id: 'expire', label: 'Listing expiry', sub: 'expire hote hi har request rebuild karti hai', row: 1 },
         { id: 'pg', label: 'Postgres', sub: 'facts ka ghar — links, comments, votes', row: 2 },
@@ -915,7 +915,7 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
       ],
       fine: {
         cdn: 'CDN se static assets dena theek hai — par asli jeet tab hai jab logged-out users ka poora HTML page bhi edge se jaaye, jaisa Reddit karta tha.',
-        mc: 'Ek memcached pool galat nahi hai. Reddit ne bade hone par pools alag kiye (permacache, stale, locks) taaki ek pool ka pressure doosre ko na khaye — par yeh tuning hai, flaw nahi.',
+        mc: 'Ek memcached pool galat nahi hai. Reddit ne bade hone par pools alag kiye (permacache, stale, locks) taaki ek pool ka pressure doosre ko na khaye — par pools alag karna tuning hai, flaw nahi.',
         pg: 'Postgres ko facts ka ghar rakhna bilkul sahi hai. Reddit ne bhi wahi kiya — Postgres last resort tha, source of truth ke roop mein.',
       },
       lesson: `Read path ki teen sabse aam galtiyan yahi hain: <b>read ke waqt calculate
@@ -924,11 +924,11 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
     },
     {
       type: 'match',
-      title: 'Cache layer aur uska kaam',
+      title: 'Cache layer aur cache layer ka kaam',
       pairs: [
         { left: '🌍 CDN', right: 'Logged-out user ko poora page edge se — origin tak request aati hi nahi', explain: 'Reddit ke sabse bade group ko wahi ek copy di ja sakti thi, isliye logged-out page CDN par ruk jaata tha.' },
         { left: '🔀 mcrouter', right: 'Tay karta hai request kaunse memcache pool mein jaayegi', explain: 'Facebook ka routing proxy. Reddit ke paas ek nahi, kai memcache pools the.' },
-        { left: '🚫 Negative cache', right: '"Nahi" ko bhi store karo taaki woh "haan" jitna sasta ho', explain: '"Kya is user ne vote kiya?" par lakhon bekaar DB lookups is cache se bachte hain.' },
+        { left: '🚫 Negative cache', right: '"Nahi" ko bhi store karo taaki "nahi" ka jawab "haan" jitna sasta ho', explain: '"Kya is user ne vote kiya?" par lakhon bekaar DB lookups is cache se bachte hain.' },
         { left: '🕰️ Stale pool', right: 'Downstream slow ho toh jaan-boojh kar purani copy do', explain: 'Reddit ke liye purana-par-turant, taza-par-unavailable se behtar tha.' },
         { left: '🔒 Lock cache', right: 'Ek request rebuild kare, baaki rukein ya stale lein', explain: 'Cache stampede ka ilaaj — database rebuild ka kharcha sirf ek baar deta hai.' },
         { left: '🐘 Postgres', right: 'Facts ka ghar — last resort', explain: 'Answers cache mein rehte the; Postgres tak sirf aisi request jaati thi jo har layer se bach nikli ho.' },
@@ -944,7 +944,7 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
         aati hain. Ek rebuild database par lagbhag <b>800 ms</b> leta hai.`,
       knobs: [
         { id: 'reqs', label: 'Ek saath aane wali requests', min: 1000, max: 20000, step: 1000, value: 10000, unit: '',
-          note: 'Popular listing par yeh number bada hi hoga.' },
+          note: 'Popular listing par ek saath aane wali requests ka number bada hi hoga.' },
         { id: 'lock', label: 'Distributed lock (0 = nahi · 1 = haan)', min: 0, max: 1, step: 1, value: 0, unit: '',
           note: 'Lock hone par sirf ek request rebuild karti hai.' },
         { id: 'stale', label: 'Lock na milne par kya karein (0 = intezaar · 1 = stale do)', min: 0, max: 1, step: 1, value: 0, unit: '',
@@ -969,7 +969,7 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
       },
       verdict: k => {
         const m = stampedeModel(k);
-        if (!k.lock) return { ok: false, text: `Lock nahi hai — <b>${m.rebuilds.toLocaleString('en-IN')}</b> requests ek saath wahi listing bana rahi hain. Database ke liye yeh ek self-inflicted DDoS hai.` };
+        if (!k.lock) return { ok: false, text: `Lock nahi hai — <b>${m.rebuilds.toLocaleString('en-IN')}</b> requests ek saath wahi listing bana rahi hain. Database ke liye ek saath rebuild karna ek self-inflicted DDoS hai.` };
         if (!k.stale) return { ok: false, text: `Lock hai (rebuild sirf 1), par baaki <b>${(k.reqs - 1).toLocaleString('en-IN')}</b> requests rebuild khatam hone ka intezaar kar rahi hain — p99 <b>${m.p99} ms</b>. Reddit un requests ko stale copy de deta tha.` };
         return { ok: true, text: `Yahi Reddit ka combo hai: lock se ek rebuild, aur baaki sabko <b>stale copy turant</b>. p99 <b>${m.p99} ms</b>, database par sirf <b>${m.rebuilds}</b> rebuild.` };
       },
@@ -1167,12 +1167,12 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
     'Main sample size wale ranking problem ko pehchaan sakta hoon',
   ],
   homework: `<p>Apne system ka sabse popular cache key dhoondho. Ab poochho: "jis second
-    yeh key expire hogi, us second kitni requests aayengi?" Agar jawab "bahut" hai toh
+    cache key expire hogi, us second kitni requests aayengi?" Agar jawab "bahut" hai toh
     aaj hi do cheezein likho — ek single-flight lock, aur ek stale fallback.</p>`,
   cards: [
     { front: 'Reddit ki listing kya hai?', back: 'Thing-ids ki ek stored sorted list (na HTML, na query result). Vote par worker list kholta hai, post ki jagah badalta hai, list wapas likhta hai — rebuild nahi, <b>maintain</b>.' },
     { front: 'Cache stampede ka ilaaj?', back: 'Do cheezein saath: <b>single-flight lock</b> (ek hi rebuild DB tak jaaye) aur <b>stale serving</b> (baaki sabko turant purani copy).' },
-    { front: 'Negative caching kya hai?', back: '"Nahi / exist nahi karta" jaise jawab bhi cache karna. Reddit "kya is user ne vote kiya?" ka NAHI bhi cache karta tha — isse lakhon DB lookups bache.' },
+    { front: 'Negative caching kya hai?', back: '"Nahi / exist nahi karta" jaise jawab bhi cache karna. Reddit "kya is user ne vote kiya?" ka NAHI bhi cache karta tha — NAHI cache karne se lakhon DB lookups bache.' },
     { front: 'Wilson lower bound kyun?', back: 'Ranking dikhte hue percentage par nahi, us sabse kam approval rate par jise data support karta hai. 1 up/0 down (100%) 300 up/100 down (75%) se neeche rehta hai — sample chhota hai.' },
     { front: 'Posts vs comments ranking?', back: 'Posts = waqt-weighted popularity (kya interesting hai abhi). Comments = statistical confidence (kaunsa reply bharosemand hai). Alag sawaal, alag ganit.' },
   ],
@@ -1226,12 +1226,12 @@ SD.registerLevels('stories', [
     `<h3>🚦 Do problem jo har migration mein aati hain</h3>
      <p><b>Pehli: traffic shifting.</b> GraphQL federation ke spec mein traffic
      dheere-dheere shift karne ka koi tareeka tha hi nahi — na 1% bhejne ka, na error
-     rate dekh kar rollback karne ka. Reddit ko woh layer <b>khud</b> banani padi.</p>
-     <p class="tip">🎯 Sabak: koi bhi migration tool utna hi accha hai jitna uska
+     rate dekh kar rollback karne ka. Reddit ko traffic shift aur rollback ki layer <b>khud</b> banani padi.</p>
+     <p class="tip">🎯 Sabak: koi bhi migration tool utna hi accha hai jitna migration tool ka
      <b>rollback</b>. Agar 1% par nahi bhej sakte aur seconds mein wapas nahi aa sakte,
-     toh woh migration plan nahi, ummeed hai.</p>
+     toh aisa plan migration plan nahi, ummeed hai.</p>
      <p><b>Doosri (aur badi): data ka maalik kaun hai.</b> Socho tumne shandaar naya Go
-     service bana liya — par woh wahi Postgres aur wahi Cassandra padh raha hai jo
+     service bana liya — par Go service wahi Postgres aur wahi Cassandra padh raha hai jo
      monolith padhta hai. Tumne kuch alag nahi kiya. Coupling khatam nahi hui —
      coupling sirf <b>application layer se database layer par</b> chali gayi.</p>
      <pre>Request move karna     =  hafte ka kaam
@@ -1313,7 +1313,7 @@ Data ka owner badalna  =  saalon ka kaam
     {
       type: 'bins',
       title: 'Aasan kaam vs saalon ka kaam',
-      instructions: 'Migration ke har kaam ko uske asli aakaar ke hisaab se baanto.',
+      instructions: 'Migration ke har kaam ko kaam ke asli aakaar ke hisaab se baanto.',
       bins: [
         { id: 'weeks', label: '🟢 Hafton ka kaam' },
         { id: 'years', label: '🔴 Saalon ka kaam' },
@@ -1428,10 +1428,10 @@ Data ka owner badalna  =  saalon ka kaam
   ],
   homework: `<p>Apne system ka ek endpoint chuno jise tum alag karna chahte ho. Ab
     do list likho: "is endpoint ki tables par aur kaun likhta hai?" aur "kaun padhta hai?"
-    Jab tak dono list khaali nahi hoti, woh endpoint alag nahi hua — sirf naye ghar mein
+    Jab tak dono list khaali nahi hoti, endpoint alag nahi hua — sirf naye ghar mein
     shift hua hai.</p>`,
   cards: [
-    { front: 'Strangler fig pattern kya hai?', back: 'Purane system ko todne ke bajaye uske aas-paas naya system ugao aur ek-ek raasta shift karo. Purana hissa ghatta jaata hai, naya badhta jaata hai — har kadam reversible.' },
+    { front: 'Strangler fig pattern kya hai?', back: 'Purane system ko todne ke bajaye purane system ke aas-paas naya system ugao aur ek-ek raasta shift karo. Purana hissa ghatta jaata hai, naya badhta jaata hai — har kadam reversible.' },
     { front: 'GraphQL federation migration mein kaise madad karta hai?', back: 'Ek supergraph aage, kai subgraphs peechhe. Field ka owner badal do — client ko ek hi API dikhti hai, migration invisible.' },
     { front: 'Reddit ko federation ke saath khud kya banana pada?', back: 'Traffic shifting layer — spec mein 1% bhejne, error rate dekhne aur instant rollback ka koi tareeka tha hi nahi.' },
     { front: 'Migration ka asli mushkil hissa?', back: 'Data ownership. Request move karna hafton ka kaam hai; "is table ka maalik kaun hai, kaun likh sakta hai, purane readers ka kya" saalon ka.' },

@@ -32,7 +32,7 @@ VISUALS['st-slack-boot'] = {
           <span class="dg-pill">🔌 events + missing data injected</span>
         </div>
         <div class="dg-cap">Client lagbhag khaali boot hota hai. Flannel har event ke
-          saath woh metadata <b>jod deta hai</b> jo client ke paas nahi hai.</div></div>
+          saath aisa metadata <b>jod deta hai</b> jo client ke paas nahi hai.</div></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -64,9 +64,9 @@ VISUALS['st-slack-fanout'] = {
           par hai. Busy channel sirf apne sunne walon ka kaam banata hai.</div></div>
       <div class="dg-box is-accent"><span class="bx-label">🌍 Edge fan-out</span>
         <div class="dg-cap">Ek sheher mein 100 log? Lambi doori par <b>ek</b> copy, aur
-          copies wahan banti hain jahan bandwidth sasti hai.</div></div>
+          copies sasti bandwidth wali edge location par banti hain.</div></div>
       <div class="dg-box is-gold"><span class="bx-label">🧯 Replay buffer</span>
-        <div class="dg-cap">Fan-out ke beech crash? Jo bheja nahi gaya woh buffer mein hai —
+        <div class="dg-cap">Fan-out ke beech crash? Bhejne ka bacha hua kaam buffer mein hai —
           restart par adhoora kaam dobara chalta hai. Message der se aayega, gayab nahi hoga.</div></div>
     </div>
 
@@ -85,7 +85,7 @@ VISUALS['st-slack-shard'] = {
       <span class="dg-pill" data-hs="shard">🗄️ us workspace ka shard (MySQL)</span>
     </div>
     <div class="dg-cap">Ek company ka poora data ek shard par — isliye lagbhag har query
-      ka pehla sawaal ek hi hai: "yeh company kis database par hai?"</div>
+      ka pehla sawaal ek hi hai: "company kis database par hai?"</div>
 
     <div class="dg-rule"></div>
     <div class="dg-split">
@@ -113,8 +113,8 @@ VISUALS['st-slack-queue'] = {
       <div class="dg-rung"><span class="lv">1</span><span class="cmd">database dheema hua</span><span class="q">background jobs ko DB chahiye — workers dheeme ho gaye</span></div>
       <div class="dg-rung"><span class="lv">2</span><span class="cmd">aane wale &gt; jaane wale</span><span class="q">backlog banna shuru</span></div>
       <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">3</span><span class="cmd">backlog RAM mein hai</span><span class="q">Redis in-memory — backlog badha toh memory bhari</span></div>
-      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">4</span><span class="cmd">memory khatam</span><span class="q">naye jobs accept nahi — yeh apne aap mein data loss hai</span></div>
-      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">5</span><span class="cmd">exit bhi jam</span><span class="q">job NIKALNE ke liye bhi thodi memory chahiye thi — aur woh bachi hi nahi</span></div>
+      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">4</span><span class="cmd">memory khatam</span><span class="q">naye jobs accept nahi — jobs reject hona apne aap mein data loss hai</span></div>
+      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">5</span><span class="cmd">exit bhi jam</span><span class="q">job NIKALNE ke liye bhi thodi memory chahiye thi — aur memory bachi hi nahi</span></div>
       <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">6</span><span class="cmd">dequeue O(n)</span><span class="q">queue jitni lambi, nikalna utna dheema — theek us waqt jab lambi thi</span></div>
     </div>
 
@@ -127,7 +127,7 @@ VISUALS['st-slack-queue'] = {
     </div>
     <div class="dg-cap">Kafka ko Redis ki jagah nahi — <b>Redis ke aage</b> lagaya gaya.
       Kafka log ka kaam achha karta hai (ordered stream, disk), Redis task scheduling ka.
-      Job Kafka mein "done" tabhi hota hai jab woh Redis mein pahunch chuka ho.</div>`,
+      Job Kafka mein "done" tabhi hota hai jab job Redis mein pahunch chuka ho.</div>`,
 };
 
 /* =====================================================================
@@ -137,56 +137,56 @@ SD.registerLevels('stories', [
 {
   id: 'st-slack-boot',
   icon: '🧣',
-  title: 'Slack — 100 MB ka boot, aur uska ilaaj',
+  title: 'Slack — 100 MB ka boot, aur bade boot ka ilaaj',
   badge: 'Boot Bachao',
   objectives: [
-    'Snapshot + stream ka classic model aur uski seema',
+    'Snapshot + stream ka classic model aur snapshot ki seema',
     'Reconnect storm — sabse bada response, sabse bure waqt par',
     'Flannel: cache jo stream mein missing data inject karta hai',
     'Backend aur client ko alag-alag migrate karna',
   ],
   lesson: [
     `<h3>🔌 5 lakh nahi — 50 lakh live connections</h3>
-     <p>Slack ek simple chat app dikhta hai, par weekday peak par uske paas <b>50 lakh se
-     zyada WebSocket connections</b> ek saath khule rehte hain. Har client ko sirf uske
+     <p>Slack ek simple chat app dikhta hai, par weekday peak par Slack ke paas <b>50 lakh se
+     zyada WebSocket connections</b> ek saath khule rehte hain. Har client ko sirf apne
      kaam ke events chahiye, turant.</p>
      <p>Do problem hain: <b>delivery</b> (message aaya toh kin connections tak jaana hai)
      aur <b>boot</b> (subah Slack kholte hi poora workspace kaise load ho).</p>
      <h3>📦 Boot ka classic model</h3>
      <p>Client ko do cheezein chahiye: abhi ki state (users, channels, memberships, unread
-     counts) aur uske baad ka live stream. Slack ne wahi kiya jo kitaab kehti hai:
+     counts) aur snapshot ke baad ka live stream. Slack ne wahi kiya jo kitaab kehti hai:
      <code>rtm.start</code> se ek snapshot, phir WebSocket par updates.</p>
-     <p>Chhoti team ke liye yeh shandaar tha. Par snapshot company ke saath badhta gaya:
+     <p>Chhoti team ke liye snapshot + stream shandaar tha. Par snapshot company ke saath badhta gaya:
      har naya employee ek profile, har naya channel metadata, har membership aur unread
      count. Ek 10,000 logon ki company mein payload dasiyon MB — aur sabse badi
-     organizations mein client lagbhag <b>100 MB</b> download karta tha, phir usse parse
+     organizations mein client lagbhag <b>100 MB</b> download karta tha, phir snapshot parse
      karke local state banata tha.</p>
-     <h3>⚡ Aur uska sabse bura din: reconnect storm</h3>
+     <h3>⚡ Aur snapshot ka sabse bura din: reconnect storm</h3>
      <p>Socho 9 baje subah — poori company ek saath kaam shuru karti hai. Ya ek network
      blip se hazaron clients ek saath disconnect hote hain aur ek saath wapas aate hain.
      Har client wahi <b>sabse bada response</b> maangta hai, theek us waqt jab system
      pehle se dabaav mein hai.</p>
      <p class="tip">🎯 Soch galat nahi thi (snapshot + stream aaj bhi sahi hai). Problem
-     yeh thi ki <b>snapshot itna bada ho gaya ki use ek object ke roop mein banana hi
+     thi ki <b>snapshot itna bada ho gaya ki use ek object ke roop mein banana hi
      mehenga tha</b>.</p>`,
     `<h3>🧣 Flannel — cache jo jawab dena hi nahi, stream badalna jaanti hai</h3>
      <p>Slack ne ek edge cache banaya: <b>Flannel</b> (naam? jis din naam chahiye tha, ek
-     engineer flannel shirt pehne tha). Woh users ke nazdeek data centers mein chalta hai
+     engineer flannel shirt pehne tha). Flannel users ke nazdeek data centers mein chalta hai
      aur workspace metadata ki in-memory copy rakhta hai — users, channels, bots.</p>
-     <p>Ab client lagbhag <b>khaali</b> boot hota hai aur jo chahiye woh Flannel se maangta
+     <p>Ab client lagbhag <b>khaali</b> boot hota hai aur zaroori data Flannel se maangta
      hai — nazdeek cache se kuch milliseconds mein.</p>
      <p>Par asli chaal aage hai: <b>Flannel real-time connection ke raaste mein baitha
      hai</b>. Har event Flannel se hokar client tak jaata hai. Maan lo ek message aata hai
      jisme aise user ka mention hai jise client ne kabhi load hi nahi kiya. Purane model
-     mein woh profile snapshot mein pehle se hoti. Naye model mein nahi hai — toh Flannel
-     event ko dekhta hai, cache se woh profile nikalta hai, aur <b>event ke saath chipka
+     mein mentioned user ki profile snapshot mein pehle se hoti. Naye model mein nahi hai — toh Flannel
+     event ko dekhta hai, cache se mentioned user ki profile nikalta hai, aur <b>event ke saath chipka
      kar</b> aage bhejta hai. Client ko sab kuch pehle se mil jaata hai.</p>
      <h3>🎁 Bonus jo asal mein sabse badi jeet thi</h3>
-     <p>Purane clients yeh maan kar likhe gaye the ki "mere paas sab kuch pehle se hai".
+     <p>Purane clients maan kar likhe gaye the ki "mere paas sab kuch pehle se hai".
      Naye model mein data lazily aata hai — matlab har platform ka client dobara likhna
      padta, coordinated releases ke saath.</p>
      <p>Par Flannel ke rehte <b>client badalna zaroori hi nahi tha</b>: jab client ko
-     kisi cheez ki zaroorat hoti, Flannel usse pehle hi de deta tha. Purane clients waise
+     kisi cheez ki zaroorat hoti, Flannel zaroorat se pehle hi data de deta tha. Purane clients waise
      hi chalte rahe jaise purana architecture zinda ho, jabki backend poori tarah naye
      model par chala gaya. Infra team aur client team <b>alag-alag</b> migrate kar sake —
      koi risky "sab ek saath" release nahi.</p>
@@ -203,22 +203,22 @@ SD.registerLevels('stories', [
           q: 'Ek workspace mein 10,000 users hain aur har user ka metadata lagbhag 2 KB hai. Sirf users ka snapshot kitne MB ka hua?',
           unit: 'MB', given: ['10,000 users', '2 KB per user'],
           answer: 20, tol: 0.3,
-          steps: ['10,000 × 2 KB = 20,000 KB', '≈ 20 MB — aur yeh sirf users hain, channels/memberships alag'],
+          steps: ['10,000 × 2 KB = 20,000 KB', '≈ 20 MB — aur size sirf users ka hai, channels/memberships alag'],
           lesson: 'Snapshot linear badhta hai org ke saath, chahe user ko us data ka 1% hi chahiye.',
         },
         {
           q: '9 baje 8,000 clients ek saath boot karte hain aur har snapshot 20 MB ka hai. Total kitna GB banana aur bhejna padega?',
           unit: 'GB', given: ['8,000 clients', '20 MB each'],
           answer: 160, tol: 0.3,
-          steps: ['8,000 × 20 MB = 1,60,000 MB = 160 GB', 'Aur yeh sab kuch minuton mein'],
+          steps: ['8,000 × 20 MB = 1,60,000 MB = 160 GB', 'Aur poora download kuch minuton mein'],
           lesson: 'Reconnect storm ka matlab: sabse bada response, sabse zyada baar, sabse bure waqt par.',
         },
         {
           q: 'Flannel ke baad payload 44× chhota ho gaya. Wahi 8,000 clients ab kitna GB maangenge?',
           unit: 'GB', given: ['160 GB', '44× chhota'],
           answer: 3.6, tol: 0.4,
-          steps: ['160 / 44 ≈ 3.6 GB', 'Aur woh bhi edge caches se, core se nahi'],
-          lesson: 'Do faayde ek saath: kam data, aur woh bhi users ke paas se.',
+          steps: ['160 / 44 ≈ 3.6 GB', 'Aur download bhi edge caches se, core se nahi'],
+          lesson: 'Do faayde ek saath: kam data, aur data bhi users ke paas se.',
         },
       ],
     },
@@ -232,9 +232,9 @@ SD.registerLevels('stories', [
         Tumhe boot ka model chunna hai.`,
       knobs: [
         { id: 'users', label: 'Org mein users', min: 1000, max: 60000, step: 1000, value: 40000, unit: '',
-          note: 'Snapshot ka size seedha isse juda hai.' },
+          note: 'Snapshot ka size seedha org mein users ki ginti se juda hai.' },
         { id: 'model', label: 'Boot model (0 = poora snapshot · 1 = lazy · 2 = lazy + stream injection)', min: 0, max: 2, step: 1, value: 0, unit: '',
-          note: 'Lazy = jo chahiye woh maango. Injection = Flannel event ke saath hi bhej de.' },
+          note: 'Lazy = zaroori data maango. Injection = Flannel event ke saath hi bhej de.' },
         { id: 'edge', label: 'Edge cache locations', min: 1, max: 12, step: 1, value: 1, unit: '',
           note: 'Storm ka bhaar kitni jagah bat sakta hai.' },
       ],
@@ -257,8 +257,8 @@ SD.registerLevels('stories', [
       },
       verdict: k => {
         const m = bootModel(k);
-        if (k.model === 0) return { ok: false, text: `Poora snapshot: <b>${m.payloadMB} MB</b> per client, aur storm mein core par <b>${m.corePct}%</b> load. Yeh model org ke saath phoolta hai.` };
-        if (k.model === 1 && m.extraTrips !== 'nahi') return { ok: false, text: `Lazy boot se payload <b>${m.payloadMB} MB</b> ho gaya, par ab client ko har naye user/channel ke liye alag request karni padti hai — event aur uska data do alag raaston se aate hain.` };
+        if (k.model === 0) return { ok: false, text: `Poora snapshot: <b>${m.payloadMB} MB</b> per client, aur storm mein core par <b>${m.corePct}%</b> load. Poore snapshot ka model org ke saath phoolta hai.` };
+        if (k.model === 1 && m.extraTrips !== 'nahi') return { ok: false, text: `Lazy boot se payload <b>${m.payloadMB} MB</b> ho gaya, par ab client ko har naye user/channel ke liye alag request karni padti hai — event aur event ka data do alag raaston se aate hain.` };
         if (m.corePct > 30) return { ok: false, text: `Model theek hai par sirf <b>${k.edge}</b> edge location hai — storm ka bhaar phir bhi core par (<b>${m.corePct}%</b>) aa raha hai.` };
         return { ok: true, text: `Yahi Flannel ka model hai: lazy boot (<b>${m.payloadMB} MB</b>), missing data event ke saath inject, aur storm <b>${k.edge}</b> edge locations mein bat gaya — core par sirf <b>${m.corePct}%</b>.` };
       },
@@ -317,7 +317,7 @@ SD.registerLevels('stories', [
           'Org ke objects utne hi the. Badla sirf data pahunchane ka tareeka.',
         ],
       },
-      lesson: 'Lazy loading akeli adhoori hai — usse "zaroorat se pehle bhej do" ke saath milao, warna tum ek bada request ko kai chhote requests mein badal dete ho.',
+      lesson: 'Lazy loading akeli adhoori hai — lazy loading ko "zaroorat se pehle bhej do" ke saath milao, warna tum ek bada request ko kai chhote requests mein badal dete ho.',
     },
   ],
   interview: {
@@ -366,12 +366,12 @@ SD.registerLevels('stories', [
     'Main client aur backend ki migration alag-alag chala sakta hoon',
   ],
   homework: `<p>Apne app ka pehla load dekho: kitne KB aate hain aur usme se kitna user ko
-    pehli screen par chahiye? Jo baaki hai, uske saamne likho — "yeh kab chahiye hoga?"
+    pehli screen par chahiye? Bache hue data ke saamne likho — "data kab chahiye hoga?"
     Har aisi cheez lazy ho sakti hai, <b>agar</b> tum use zaroorat ke waqt bina extra
     round trip ke bhej sako.</p>`,
   cards: [
     { front: 'Slack ka boot model?', back: 'Pehle: snapshot (rtm.start) + WebSocket stream. Snapshot org ke saath badhta gaya — badi orgs mein ~100 MB. 9 baje sab ek saath maangein = reconnect storm.' },
-    { front: 'Flannel kya karta hai?', back: 'Edge cache jo real-time stream ke RAASTE MEIN baitha hai: client lagbhag khaali boot hota hai, aur Flannel har event ke saath woh metadata inject kar deta hai jo client ke paas nahi hai.' },
+    { front: 'Flannel kya karta hai?', back: 'Edge cache jo real-time stream ke RAASTE MEIN baitha hai: client lagbhag khaali boot hota hai, aur Flannel har event ke saath aisa metadata inject kar deta hai jo client ke paas nahi hai.' },
     { front: 'Flannel ka chhupa hua faayda?', back: 'Purane clients bina badle naye backend par chal gaye — infra aur client teams alag-alag migrate kar sake, koi "sab ek saath" release nahi.' },
     { front: 'Reconnect storm kya hai?', back: 'Hazaron clients ek saath (9 baje ya network blip ke baad) sabse bada response maangte hain — theek us waqt jab system pehle se dabaav mein hai.' },
   ],
@@ -405,36 +405,36 @@ SD.registerLevels('stories', [
   lesson: [
     `<h3>💾 Pehla niyam: message kho mat jaana</h3>
      <p>Tum enter dabate ho. Slack ka web app sabse pehle ek hi cheez sochta hai:
-     <b>yeh message kho na jaaye</b>. Isliye woh pehle message ko tumhare workspace ke
+     <b>message kho na jaaye</b>. Isliye web app pehle message ko tumhare workspace ke
      database mein likhta hai. Likhne ke <b>baad</b> hi distribution shuru hoti hai.</p>
      <p>Agar Slack pehle bhej deta aur write fail ho jaata, toh logon ki screen par ek
      aisa message hota jo <b>officially hua hi nahi</b>. Isliye niyam hai: <b>store, phir
      send</b>.</p>
      <h3>📡 Ab ek message ko kai messages banna hai</h3>
      <p>Channel ke har online member ko ek copy chahiye, aksar kai devices par, duniya ke
-     alag-alag kono mein. Yeh kaam <b>channel server</b> ka hai, jiske paas ek live map
+     alag-alag kono mein. Har member ko copy dene ka kaam <b>channel server</b> ka hai, jiske paas ek live map
      hota hai: kaunsa client kaunse channel par subscribe hai.</p>
-     <p>Message aaya toh woh har connected user ko broadcast nahi hota — sirf us channel
+     <p>Message aaya toh message har connected user ko broadcast nahi hota — sirf us channel
      ke subscribers ko jaata hai. Classic pub/sub. Faayda: <b>busy channel sirf apne
      sunne walon ka kaam banata hai</b>, poore system ka nahi.</p>
      <h3>🌍 Doosra scaling trap: ek hi sheher mein 100 copies</h3>
      <p>Maan lo ek sheher mein 100 log us channel par hain. Channel server 100 copies
-     lambi doori par nahi bhejta — woh <b>ek</b> copy us edge location tak bhejta hai, aur
+     lambi doori par nahi bhejta — channel server <b>ek</b> copy us edge location tak bhejta hai, aur
      final fan-out edge par hota hai, jahan bandwidth sasti hai.</p>
      <h3>🧯 Aur agar beech mein crash ho jaaye?</h3>
      <p>Channel server un messages ka buffer rakhta hai jo usne le liye hain par abhi
-     poori tarah deliver nahi kiye. Fan-out ke beech crash hua toh restart par woh adhoora
+     poori tarah deliver nahi kiye. Fan-out ke beech crash hua toh restart par bacha hua adhoora
      kaam <b>replay</b> hota hai. Buffer ki seema ke andar server failure message ko <b>der</b> karti hai,
      <b>gayab</b> nahi. Buffer se purana kaam ho toh client ko history se catch up karna padta hai.</p>`,
     `<h3>🟢 Presence — sabse chhota data, sabse bada traffic</h3>
      <p>Naam ke aage hara dot. Chhoti si cheez, par din bhar badalti rehti hai: laptop
-     khola — hara, band kiya — khaali. Poori company mein yeh hazaron logon ka
+     khola — hara, band kiya — khaali. Poori company mein presence badalna hazaron logon ka
      jhilmilana hai, aur har jhilmilahat ek announcement hai.</p>
      <p>Seedha tareeka — "sabko sab batao" — system ko un messages se bhar deta hai jo
      asal mein messages hain hi nahi.</p>
      <p>Slack ne broadcast band kar diya. Tumhari screen par ek waqt mein kuch hi log
      dikhte hain: current channel, recent DMs. Teen channel door kisi ka idle hona
-     tumhe dikh hi nahi raha, aur usse tumhe farq bhi nahi padta. Isliye client sirf
+     tumhe dikh hi nahi raha, aur door ke channel mein kisi ke idle hone se tumhe farq bhi nahi padta. Isliye client sirf
      <b>screen par dikhne walon</b> ki presence subscribe karta hai, aur scroll karte hi
      purani subscriptions chhod kar nayi le leta hai.</p>
      <p>Ek hi badlav se clients tak pahunchne wale presence events lagbhag <b>5×</b> kam
@@ -490,7 +490,7 @@ SD.registerLevels('stories', [
       },
       verdict: k => {
         const m = fanoutModel(k);
-        if (k.model === 0) return { ok: false, text: `Har client ko origin se bhejne par <b>${m.longHaul.toLocaleString('en-IN')}</b> copies lambi doori par ja rahi hain, aur p99 <b>${m.p99} ms</b> hai. Bandwidth wahan kharch ho rahi hai jahan sabse mehengi hai.` };
+        if (k.model === 0) return { ok: false, text: `Har client ko origin se bhejne par <b>${m.longHaul.toLocaleString('en-IN')}</b> copies lambi doori par ja rahi hain, aur p99 <b>${m.p99} ms</b> hai. Bandwidth lambi doori par kharch ho rahi hai, jahan sabse mehengi hai.` };
         if (m.longHaul > 15) return { ok: false, text: `Edge fan-out on hai par <b>${k.edges}</b> edges ke saath long-haul <b>${m.longHaul}</b> hai — thoda kam edges chuno ya members ka batwara dekho.` };
         if (m.p99 > 250) return { ok: false, text: `Long-haul sirf <b>${m.longHaul}</b>, par ek-ek edge par ~<b>${Math.round(k.members / k.edges).toLocaleString('en-IN')}</b> members — edge khud bottleneck hai, p99 <b>${m.p99} ms</b>. Aur edges jodo.` };
         return { ok: true, text: `Sahi: origin se sirf <b>${m.longHaul}</b> copies (har edge ko ek), aur <b>${m.edgeCopies.toLocaleString('en-IN')}</b> copies wahin banin jahan bandwidth sasti hai — p99 <b>${m.p99} ms</b>.` };
@@ -599,7 +599,7 @@ SD.registerLevels('stories', [
   ],
   homework: `<p>Apne system ka koi "sabko batao" wala event dhoondho (typing indicator,
     online status, counter update). Gino: ek badlav par kitne clients ko message jaata
-    hai? Ab poochho: unme se kitno ki screen par woh cheez abhi dikh rahi hai?</p>`,
+    hai? Ab poochho: unme se kitno ki screen par badli hui cheez abhi dikh rahi hai?</p>`,
   cards: [
     { front: 'Store-then-send kyun?', back: 'Pehle durable write, phir delivery. Warna write fail hone par logon ki screen par aisa message reh jaata hai jo officially hua hi nahi.' },
     { front: 'Channel server ka kaam?', back: 'Live map rakhna ki kaunsa client kis channel par subscribe hai, aur message sirf un subscribers ko bhejna (pub/sub) — broadcast nahi.' },
@@ -624,10 +624,10 @@ SD.registerLevels('stories', [
 {
   id: 'st-slack-shard',
   icon: '🗄️',
-  title: 'Slack — jis boundary ne bachaya, usi ne pakda',
+  title: 'Slack — workspace boundary ne bachaya aur pakda',
   badge: 'Shard Sipahi',
   objectives: [
-    'Workspace se sharding — sabse simple model aur uski seema',
+    'Workspace se sharding — sabse simple model aur workspace boundary ki seema',
     'Hot shard: ek customer, ek shard, aur do kharab raaste',
     'Vitess: routing app ke code se nikaal kar ek layer mein',
     'Enterprise Grid aur shared channels — boundary ka tax',
@@ -638,17 +638,17 @@ SD.registerLevels('stories', [
      isliye sharded hai. Sawaal sirf ek tha: <b>kaat-ne ka tareeka kya ho?</b></p>
      <p>Slack ne workspace chuna. Poori company ka data ek shard par, aur ek chhoti lookup
      table yaad rakhti hai ki kaunsa workspace kis shard par hai. Isliye lagbhag har query
-     ek hi sawaal se shuru hoti hai: <b>"yeh company kis database par hai?"</b> — aur wahan
+     ek hi sawaal se shuru hoti hai: <b>"company kis database par hai?"</b> — aur workspace ke shard par
      pahunchte hi sab kuch ek jagah mil jaata hai.</p>
-     <p>Yeh saalon shandaar chala. Phir bahut badi companies aayin — ek hi workspace mein
+     <p>Workspace se sharding saalon shandaar chali. Phir bahut badi companies aayin — ek hi workspace mein
      laakh log, sab ek saath messages bhejte hue.</p>
      <h3>🔥 Hot shard</h3>
      <p>"Ek workspace = ek shard" ka matlab hai ki us bade customer ka poora bhaar ek hi
-     shard par hai, jabki uske bagal wala shard do chhoti teams ke saath aaram se baitha
+     shard par hai, jabki bade customer ke shard ke bagal wala shard do chhoti teams ke saath aaram se baitha
      hai. Aur us company ko do machines par nahi baant sakte — poora design hi is baat par
      khada hai ki workspace ek shard par rehta hai.</p>
      <pre>Raasta 1: workspaces ko haath se idhar-udhar karte raho
-          →  yeh kaam kabhi khatam nahi hota
+          →  haath se workspaces hilaane ka kaam kabhi khatam nahi hota
 
 Raasta 2: hamesha bada machine kharido
           →  ek din chhat aa hi jaayegi</pre>
@@ -663,7 +663,7 @@ Raasta 2: hamesha bada machine kharido
      <table>
        <tr><th>Pehle</th><th>Vitess ke saath</th></tr>
        <tr><td>App ko pata hona chahiye ki data kahan hai</td><td>App query karta hai, Vitess dhoondhta hai ki kis shard par jaana hai</td></tr>
-       <tr><td>Sharding logic application code mein</td><td>Sharding logic us layer mein jo isi ke liye bani hai</td></tr>
+       <tr><td>Sharding logic application code mein</td><td>Sharding logic sharding ke liye bani layer mein</td></tr>
        <tr><td>Ek workspace = ek database (sakht)</td><td>Ek bade customer ka data kai shards par bat sakta hai</td></tr>
        <tr><td>Rebalance = code + data dono badlo</td><td>Rebalance bina application ka sharding logic badle</td></tr>
      </table>
@@ -672,19 +672,19 @@ Raasta 2: hamesha bada machine kharido
      sharding par chala gaya.</p>
      <h3>🕸️ Aur phir product ne boundary hi tod di</h3>
      <p>Abhi tak sab kuch ek maanyata par tika tha: <b>workspace ek band dabba hai</b> —
-     uske log aur uske channels sirf apne se matlab rakhte hain. Isi se storage, caching
+     Workspace ke log aur workspace ke channels sirf apne se matlab rakhte hain. Band workspace se storage, caching
      aur fan-out sab aasan the.</p>
      <p>Do features jaan-boojh kar us maanyata ko todte hain:</p>
      <ul>
        <li><b>Enterprise Grid</b> — kai workspaces ko ek organization mein jodna.</li>
        <li><b>Shared channels</b> — ek channel do workspaces ke andar ek saath, aur kabhi
-       woh do workspaces do alag companies ke.</li>
+       dono workspaces do alag companies ke.</li>
      </ul>
      <p>Ab har simplification sawaal ban jaati hai: channel ka <b>maalik</b> kaun hai?
-     Uska data kiske keyspace mein file hoga? Message aaye toh kiska real-time tier
+     Channel ka data kiske keyspace mein file hoga? Message aaye toh kiska real-time tier
      fan-out karega, jab members do alag edge caches ke peechhe hain?</p>
      <p>Slack ka baad ka bahut saara kaam edge cache aur real-time tier ko us duniya ke
-     liye dobara banana tha jahan channel aur uske log <b>ek workspace se bade</b> ho
+     liye dobara banana tha jahan channel aur channel ke log <b>ek workspace se bade</b> ho
      sakte hain. <b>Saaf boundary tohfa bhi thi aur tax bhi.</b></p>`,
   ],
   stages: [
@@ -709,7 +709,7 @@ Raasta 2: hamesha bada machine kharido
         { id: 'shared', why: 'Shared channel ka koi maalik tay nahi hai — kis shard par likhega, kiska fan-out chalega, kiske permissions lagenge? Boundary todne wale features ko design mein pehle se jagah chahiye.' },
       ],
       fine: {
-        map: 'Shard map ek table mein rakhna bilkul sahi hai — isi se workspace move ho sakta hai bina code badle.',
+        map: 'Shard map ek table mein rakhna bilkul sahi hai — shard map se workspace move ho sakta hai bina code badle.',
         cache: 'Workspace ke hisaab se edge cache rakhna theek hai; dard tab shuru hota hai jab ek channel do workspaces mein aa jaata hai.',
         mysql: 'Boring MySQL galat nahi hai — Slack ne bhi wahi rakha. Badlav sirf upar ki routing layer mein aaya (Vitess).',
       },
@@ -719,7 +719,7 @@ Raasta 2: hamesha bada machine kharido
     {
       type: 'bins',
       title: 'Boundary ka tohfa aur boundary ka tax',
-      instructions: 'Har cheez ko sahi dabbe mein daalo — kya yeh workspace boundary ka faayda hai ya uski keemat?',
+      instructions: 'Har cheez ko sahi dabbe mein daalo — kya di hui cheez workspace boundary ka faayda hai ya workspace boundary ki keemat?',
       bins: [
         { id: 'gift', label: '🎁 Boundary ka faayda' },
         { id: 'tax', label: '🧾 Boundary ka tax' },
@@ -738,7 +738,7 @@ Raasta 2: hamesha bada machine kharido
       title: '🐳 Lab — hot shard aur routing layer',
       project: '06-slack',
       exercise: 'ex3-hot-shard',
-      goal: 'Workspace-sharded store par ek monster tenant daalo, phir routing layer se usse kai shards par baanto — bina application code badle.',
+      goal: 'Workspace-sharded store par ek monster tenant daalo, phir routing layer se monster tenant ko kai shards par baanto — bina application code badle.',
       why: `Lab mein 8 shards hain aur ek routing layer. <code>ROUTING=code</code> mein
         shard number application mein calculate hota hai; <code>ROUTING=layer</code> mein
         ek mapping service tay karti hai, aur bade tenant ke liye range-based split kar
@@ -811,15 +811,15 @@ Raasta 2: hamesha bada machine kharido
     ],
   },
   success: [
-    'Main shard key ke faayde aur uske tax dono likh sakta hoon',
+    'Main shard key ke faayde aur shard key ke tax dono likh sakta hoon',
     'Main routing ko application se hata kar layer mein daal sakta hoon',
-    'Main hot shard ko pehchaan kar uske do kharab raaste bata sakta hoon',
+    'Main hot shard ko pehchaan kar hot shard ke do kharab raaste bata sakta hoon',
   ],
   homework: `<p>Apne system ka shard key likho. Ab do sawaal: (1) sabse bada tenant kitna
-    bada ho sakta hai, aur kya woh ek shard mein samaayega? (2) agar kal product do
+    bada ho sakta hai, aur kya sabse bada tenant ek shard mein samaayega? (2) agar kal product do
     tenants ko ek saath kaam karne de, toh kaunsi cheez pehle tootegi?</p>`,
   cards: [
-    { front: 'Slack ka shard key?', back: 'Workspace. Poori company ka data ek shard par, aur ek lookup table batati hai kaunsa workspace kahan hai — isliye har query ka pehla sawaal "yeh company kis DB par hai?"' },
+    { front: 'Slack ka shard key?', back: 'Workspace. Poori company ka data ek shard par, aur ek lookup table batati hai kaunsa workspace kahan hai — isliye har query ka pehla sawaal "company kis DB par hai?"' },
     { front: 'Hot shard kya hai?', back: 'Ek bahut bada tenant jiska poora bhaar ek shard par aa jaata hai, aur jise design ke hisaab se baanta nahi ja sakta. Do kharab raaste: hamesha manual rebalancing, ya hamesha bada machine.' },
     { front: 'Vitess ne kya badla?', back: 'MySQL wahi raha, par routing aur sharding upar ki layer mein chali gayi — ab ek workspace ka data kai shards par bat sakta hai aur rebalancing ke liye application code badalna nahi padta.' },
     { front: 'Boundary ka tax?', back: 'Enterprise Grid aur shared channels ne "workspace ek band dabba hai" wali maanyata todi — ownership, keyspace aur fan-out sab dobara design karne pade.' },
@@ -838,15 +838,15 @@ SD.registerLevels('stories', [
   badge: 'Queue Qaatil',
   objectives: [
     'Backlog + in-memory queue = memory exhaustion',
-    'Woh do galtiyan jinhone slow-down ko outage banaya',
+    'Queue ki do galtiyan jinhone slow-down ko outage banaya',
     'Kafka ko Redis ki jagah nahi, Redis ke AAGE lagana',
     'Cells, edge drain aur Nebula — blast radius aur connectivity',
   ],
   lesson: [
     `<h3>🧵 Message dikhne ke baad ka kaam</h3>
-     <p>Tum message bhejte ho aur woh turant dikhta hai. Par uske peechhe kaafi dheema
-     kaam bachta hai: link ka preview laana, kise notification bhejni hai yeh tay karna,
-     message ko search index mein daalna, security checks chalana. Agar Slack tumhe yeh
+     <p>Tum message bhejte ho aur message turant dikhta hai. Par message dikhne ke peechhe kaafi dheema
+     kaam bachta hai: link ka preview laana, kise notification bhejni hai tay karna,
+     message ko search index mein daalna, security checks chalana. Agar Slack tumhe bacha hua
      sab hone tak rukwata, app sust lagti.</p>
      <p>Isliye Slack turant result dikhata hai aur dheema kaam <b>background job queue</b>
      par daal deta hai. Pehla version Redis par tha — in-memory, isliye bahut tez, jo ek
@@ -857,7 +857,7 @@ SD.registerLevels('stories', [
 3. Jobs aane ki raftaar > khatam hone ki raftaar → BACKLOG
 4. Backlog RAM mein hai (Redis) → memory bharne lagi
 5. Memory khatam → naye jobs accept nahi ho paaye
-   (yeh apne aap mein DATA LOSS hai — asli kaam floor par gir raha tha)</pre>
+   (Jobs reject hona apne aap mein DATA LOSS hai — asli kaam floor par gir raha tha)</pre>
      <p>Aur outage yahan se shuru hua. Jis data structure par queue bani thi, usme
      <b>job nikaalne ke liye bhi thodi memory</b> chahiye thi — aur memory bachi hi nahi
      thi. Queue <b>dono taraf se jam</b> ho gayi: na andar aa sakta tha, na bahar ja
@@ -874,15 +874,15 @@ SD.registerLevels('stories', [
      (backlog ka memory mein hona), Kafka disk par bade backlog ke liye hi bana hai.</p>
      <p>Aasan raasta hota: Redis hata do, sab Kafka par. Slack ne aisa <b>nahi</b> kiya.
      Kafka ek log hai — ordered stream rakhne mein achha, par ek queue ka asli kaam
-     (individual tasks schedule karna aur yeh pakka karna ki ek task do baar na chale)
-     usse achha nahi hota. Redis woh pehle se achha kar raha tha.</p>
+     (individual tasks schedule karna aur pakka karna ki ek task do baar na chale)
+     Kafka se achha nahi hota. Redis tasks schedule karna pehle se achha kar raha tha.</p>
      <pre>Kafka  →  har job ka durable record (disk par, bada backlog aaram se)
-Redis  →  jo jobs abhi chal rahe hain, unki scheduling
+Redis  →  abhi chal rahe jobs ki scheduling
 Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
           padh kar Redis ko deti hai — aur job Kafka mein "done" tabhi hota hai
-          jab woh Redis mein SAFE pahunch chuka ho</pre>
+          jab job Redis mein SAFE pahunch chuka ho</pre>
      <p>Ab 2016 dobara nahi ho sakta: Redis bhar jaaye ya bigad jaaye, toh jobs floor par
-     nahi girte — woh disk par Kafka mein aaram se intezaar karte hain.</p>
+     nahi girte — jobs disk par Kafka mein aaram se intezaar karte hain.</p>
      <p class="tip">🎯 Sabak: har cheez ko ek hi tool se mat karwao. Log ko log ka kaam
      do, queue ko queue ka. Beech mein ek chhota bridge likho jo handoff ko safe banaye.</p>`,
     `<h3>🧱 Aur do cheezein jo Slack ne apne liye banayin</h3>
@@ -899,12 +899,12 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
      <ul>
        <li>Har host ko ek <b>certificate</b> milta hai jo naam + ek flat overlay IP +
        group ko jodta hai. Ek hi address se machine kahin bhi mil jaati hai — na routing
-       tables, na "yeh kis cloud mein hai".</li>
+       tables, na "machine kis cloud mein hai".</li>
        <li><b>Lighthouse</b> ek halka discovery node hai jo jaanta hai kaun abhi kahan
-       hai (torrent ke seed nodes jaisa). Woh traffic nahi uthata — sirf do hosts ka
+       hai (torrent ke seed nodes jaisa). Lighthouse traffic nahi uthata — sirf do hosts ka
        parichay karwa deta hai, NAT ke peechhe wale hosts ka bhi.</li>
        <li>Handshake <b>Noise protocol framework</b> par (wahi design jo Signal ke
-       peechhe hai — unhone apni crypto nahi likhi), aur uske baad traffic seedha
+       peechhe hai — unhone apni crypto nahi likhi), aur handshake ke baad traffic seedha
        peer-to-peer encrypted UDP tunnel par.</li>
      </ul>
      <p>Aur ek chhoti si baat jo bahut logon ko chaunkati hai: Slack ka core web app ek
@@ -936,9 +936,9 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
                  ], answer: 0,
                  explain: 'Queue ka poora khel aane aur khatam hone ki rate ke farq ka hai. Jab tak farq positive hai, backlog badhta hi rahega.',
                  wrongHints: [
-                   'Job latency badhegi zaroor, par woh batati nahi ki backlog kitni tezi se bhar raha hai.',
+                   'Job latency badhegi zaroor, par job latency batati nahi ki backlog kitni tezi se bhar raha hai.',
                    'CPU kam ho sakta hai — workers DB ka intezaar kar rahe hain.',
-                   'Redis abhi theek hai; problem uski memory ki taraf badh rahi hai.',
+                   'Redis abhi theek hai; problem Redis ki memory ki taraf badh rahi hai.',
                  ] , choiceExplanations: [
                    'Queue ka poora khel aane aur khatam hone ki rate ke farq ka hai. Jab tak farq positive hai, backlog badhta hi rahega.',
                    'Khatam hue jobs ka waqt atke hue jobs ko nahi ginta.',
@@ -957,7 +957,7 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
                  ], answer: 0,
                  explain: 'Manzoor hue kaam ko pakke, replicated buffer mein bachao, saath mein andar aane ki hadd (backpressure) aur recovery ka budget. Disk-backed buffer bhi anant nahi; producer ka ACK kab pakka hai, jaancho.',
                  wrongHints: [
-                   'Restart matlab jo backlog RAM mein hai woh bhi gaya — loss aur bada.',
+                   'Restart matlab RAM mein pada backlog bhi gaya — loss aur bada.',
                    'Workers badhane se DB par aur dabaav padega, aur DB pehle se dheema hai.',
                    'Flush karna jaan-boojh kar data phenkna hai.',
                  ] , choiceExplanations: [
@@ -978,7 +978,7 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
                  ], answer: 0,
                  explain: 'Redis galat nahi tha — Redis ke saamne pakka buffer na hona aur us data structure ka vyavhaar galat tha.',
                  wrongHints: [
-                   'Slack ne Redis rakha — usne sirf Kafka usse pehle laga diya.',
+                   'Slack ne Redis rakha — Slack ne sirf Kafka Redis se pehle laga diya.',
                    'Database dheema hoga hi kabhi na kabhi; system ko us din survive karna aana chahiye.',
                    'Background jobs ke bina UI sust ho jaati.',
                  ] , choiceExplanations: [
@@ -996,7 +996,7 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
     },
     {
       type: 'match',
-      title: 'Tool aur uska sahi kaam',
+      title: 'Tool aur tool ka sahi kaam',
       pairs: [
         { left: '🪵 Kafka', right: 'Durable ordered log — bada backlog disk par sambhalna', explain: 'Jo cheez Redis ko le doobi (backlog memory mein), Kafka disk par bade backlog ke liye hi bana hai.' },
         { left: '⚡ Redis', right: 'Individual tasks ki scheduling aur execution', explain: 'Task scheduling mein Redis pehle se achha tha, isliye Redis ko hataya nahi gaya.' },
@@ -1038,7 +1038,7 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
           'Durable log traffic nahi rokta. Sab jobs aaye aur disk par ruke.',
         ],
       },
-      lesson: 'Queue design mein pehla sawaal yeh nahi ki "kitni tez hai" — pehla sawaal yeh hai ki <b>bhar jaane par kya hoga</b>.',
+      lesson: 'Queue design mein pehla sawaal nahi ki "kitni tez hai" — pehla sawaal hai ki <b>bhar jaane par kya hoga</b>.',
     },
   ],
   interview: {

@@ -15,7 +15,7 @@ VISUALS['dropbox-rent-own'] = {
   html: `
     <div class="dg-split">
       <div class="dg-box is-good"><span class="bx-label">☁️ Cloud sasta jab…</span>
-        <div class="dg-cap">Chhota, anishchit, upar-neeche hota load. Cloud <b>elasticity</b> bechta hai — aur uska margin har GB,
+        <div class="dg-cap">Chhota, anishchit, upar-neeche hota load. Cloud <b>elasticity</b> bechta hai — aur cloud ka margin har GB,
           har CPU-ghante mein chhupa hai.</div></div>
       <div class="dg-box is-gold"><span class="bx-label">🏗️ Apna sasta jab…</span>
         <div class="dg-cap">Bahut bada + steady + khaas: capacity pata, growth predictable, access pattern pata. Tab tum us
@@ -67,25 +67,25 @@ SD.registerLevels('stories', [
 {
   id: 'dropbox-rent-own',
   icon: '📦',
-  title: 'Dropbox — jab sab cloud ki taraf, woh ghar ki taraf',
+  title: 'Dropbox — jab sab cloud ki taraf, Dropbox ghar ki taraf',
   badge: 'Kiraya Hisaabi',
   objectives: [
     'Cloud elasticity bechta hai — margin har GB mein',
     'Size nahi, workload ki SHAKAL faisla karti hai',
     'Fixed kharcha aur break-even — lab ke numbers',
-    'Asli sawaal: kya hum yeh team bana ke rakh sakte hain?',
+    'Asli sawaal: kya hum storage ki team bana ke rakh sakte hain?',
   ],
   lesson: [
     `<h3>🏠 Kiraye ka ghar vs apna ghar</h3>
      <p>Kuch mahino ke liye naye sheher mein ho, pata nahi kab tak rukoge — kiraya samajhdaari hai. 30 saal ek hi jagah, family
      badi, pata hai kitne kamre chahiye — tab kiraya har mahine us "kabhi bhi chhod sakte ho" ki keemat hai jo tumhe chahiye hi
      nahi.</p>
-     <p>2015 mein sab AWS ki taraf ja rahe the. Dropbox ulta chala. AWS fail nahi hua tha — <b>hisaab</b> tha: unke paimane aur
-     unke workload ki <b>shakal</b> par apna metal har saal das-das million dollar bachata hai (aaj ke andaaze $100M+/saal).
+     <p>2015 mein sab AWS ki taraf ja rahe the. Dropbox ulta chala. AWS fail nahi hua tha — <b>hisaab</b> tha: Dropbox ke paimane aur
+     Dropbox ke workload ki <b>shakal</b> par apna metal har saal das-das million dollar bachata hai (aaj ke andaaze $100M+/saal).
      (AWS phir bhi dusri cheezon ke liye; 2022 mein naye regions ke liye AWS badhaya — ek region ke liye Europe mein DC banana
      bekaar.)</p>
      <h3>☁️ Cloud kya bechta hai</h3>
-     <p><b>Elasticity</b> — kal 10× chahiye toh mil jaayega. Iska margin har GB aur har CPU-ghante mein pakka hai. Chhota /
+     <p><b>Elasticity</b> — kal 10× chahiye toh mil jaayega. Cloud ka margin har GB aur har CPU-ghante mein pakka hai. Chhota /
      anishchit / upar-neeche → cloud sasta. Bahut bada + steady + khaas (capacity pata, growth predictable, access pattern
      pata) → tum elasticity ka paisa de rahe ho jo use nahi karte.</p>`,
     `<h3>🧮 Hisaab (video ke mutabik)</h3>
@@ -100,7 +100,7 @@ SD.registerLevels('stories', [
  10 PB  → cloud $2.8M   · apna $41.0M  → CLOUD sasta
 100 PB  → cloud $28.2M  · apna $50.0M  → CLOUD sasta
 500 PB  → cloud $141.0M · apna $90.1M  → APNA sasta: $50.9M/saal bachat</pre>
-     <h3>👷 Asli sawaal: kya tum yeh kar sakte ho?</h3>
+     <h3>👷 Asli sawaal: kya tum apna storage bana sakte ho?</h3>
      <p>Magic Pocket ek peedhi ka project tha: kai jagah DCs (bijli, redundant fiber), custom hardware, naya storage stack (jo
      S3 karta tha — erasure coding, durability, ops), aadha exabyte live migrate (zero downtime/loss), aur hamesha ki ops team.
      Bachat tabhi jab <b>poora karo</b>; 3 saal baad chhoda = khazana gaya. Unhone Google/Facebook/Microsoft/AWS ki storage teams
@@ -240,11 +240,11 @@ disks mare | replication | EC
 repair (ek disk gayi): replication 6.0 MB padha | EC 20.0 MB padha</pre>`,
     `<h3>🔥🧊 Tiering</h3>
      <p>EC ki keemat: repair mein 6 chunks laao + GF(256) ka hisaab (lab: 6 MB vs 20 MB padha). Isliye <b>garam</b> data (abhi
-     likha, baar-baar padha) replication par, <b>thanda</b> (zyadatar) EC par. Aur yeh tabhi mumkin hai jab <b>stack tumhara</b>
+     likha, baar-baar padha) replication par, <b>thanda</b> (zyadatar) EC par. Aur replication aur EC ka bantwara tabhi mumkin hai jab <b>stack tumhara</b>
      ho — apne K, M, apne zones.</p>
      <h3>🏠 SMR — khaprail wali disk</h3>
      <p>Spinning disks sasti per GB — "likho ek baar, kabhi-kabhi padho" ke liye. <b>SMR</b> (shingled magnetic recording)
-     tracks ko chhat ki khaprail ki tarah ek-doosre par chadha deta hai → zyada capacity. Par beech ki track badlo toh uske upar
+     tracks ko chhat ki khaprail ki tarah ek-doosre par chadha deta hai → zyada capacity. Par beech ki track badlo toh badli hui track ke upar
      ki sab dobara likhni padti hain.</p>
      <pre>lab 14 (ex2-smr) — band 256 tracks, 10,000 writes:
 sequential → 1.0 tracks likhi per badlaav
@@ -399,7 +399,7 @@ random     → 127.5 tracks likhi per badlaav</pre>
      📺 YouTube ki live resharding mein.)</p>`,
     `<h3>🧭 Build vs buy — har workload, baar-baar</h3>
      <p>Dropbox ne sab kuch ghar nahi laaya: storage <b>build</b>; naye regions <b>buy</b>; metadata/search/pipelines/ML mix.
-     Niyam: <b>"jo competitive advantage de use own karo, baaki sab rent karo"</b> — aur yeh faisla samay ke saath dobara karo.</p>
+     Niyam: <b>"jo competitive advantage de use own karo, baaki sab rent karo"</b> — aur build-vs-buy ka faisla samay ke saath dobara karo.</p>
      <h3>📋 Paanch sabak</h3>
      <ol>
        <li>Size se zyada <b>shakal</b> maayne rakhti hai.</li>

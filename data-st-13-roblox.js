@@ -62,7 +62,7 @@ SD.registerLevels('stories', [
        <tr><td>Instance mara toh</td><td>Gaya — aur yahi sahi</td><td>Kabhi nahi khona</td></tr>
      </table>
      <p>Instance kabhi inventory apne paas nahi rakhta — platform layer se poochhta hai. Ek game mein hat kamaaya, doosre mein bhi hai.
-     <b>Sirf woh bachao jo bachna chahiye, ek layer mein jo usi ke liye bani hai; baaki sasta aur phenkne layak.</b></p>
+     <b>Sirf zaroori state bachao, state bachane ke liye bani ek layer mein; baaki sasta aur phenkne layak.</b></p>
      <pre>lab 27 (ex2-crash) — 120 players, ek server SIGKILL:
 3 instances × 40 → prabhavit 40, score gaya 40, hats bache 120/120
 1 shard × 120    → prabhavit 120, score gaya 120, hats bache 120/120</pre>`,
@@ -166,7 +166,7 @@ SD.registerLevels('stories', [
     sakte ho? Us ikaai ka kaunsa data marne diya ja sakta hai, aur kaunsa ek alag, durable layer mein jaana chahiye?</p>`,
   cards: [
     { front: 'Roblox ka core faisla?', back: 'Game server ko bada mat karo — upar ki layer (matchmaking) ko. Har session ek chhota instance (10–200 players), session ke baad band.' },
-    { front: 'Game state vs platform state?', back: 'Game state (position, score) instance memory mein, uske saath mare — sahi. Platform state (inventory, Robux, friends) core DCs mein, kabhi nahi khona.' },
+    { front: 'Game state vs platform state?', back: 'Game state (position, score) instance memory mein, instance ke saath mare — sahi. Platform state (inventory, Robux, friends) core DCs mein, kabhi nahi khona.' },
     { front: 'Lab 27: crash?', back: '3 × 40: 40 prabhavit; 1 × 120: 120 prabhavit. Dono mein hats 120/120 bache.' },
   ],
 },
@@ -199,7 +199,7 @@ SD.registerLevels('stories', [
     {
       type: 'match',
       title: 'Kaunsa jugaad kis khatre ke liye?',
-      instructions: 'Har Luau feature ko uske kaam se jodo.',
+      instructions: 'Har Luau feature ko sahi kaam se jodo.',
       pairs: [
         { left: '🧱 Har script ka apna global table', right: 'Ek developer ka script doosre ka data/functions na chhed sake', explain: 'Isolation bhasha ke andar.' },
         { left: '✂️ Stdlib se system/IO hisse hataye', right: 'Script server ki files/network tak na pahunche', explain: 'Jo cheez hai hi nahi, use chura nahi sakte.' },
@@ -295,7 +295,7 @@ SD.registerLevels('stories', [
     'Main gradual types ka dohra faayda samjha sakta hoon',
   ],
   homework: `<p>Apne product mein jahan bhi user ka diya "code" ya "expression" chalta hai (formulas, templates, filters, webhooks transforms),
-    likho: woh kya-kya chhoo sakta hai? Kaunsi cheezein uske "stdlib" se hata sakte ho?</p>`,
+    likho: user ka code kya-kya chhoo sakta hai? Kaunsi cheezein user ke code ki "stdlib" se hata sakte ho?</p>`,
   cards: [
     { front: 'Luau sandbox ke teen hisse?', back: 'Har script ka apna global table; stdlib se system/escape hisse hataye; memory-safe VM (memory bug se native code nahi).' },
     { front: 'Luau performance?', back: 'C++ interpreter (~LuaJIT speed, consoles par bhi); 2024 native codegen — numeric 2–3× tez; type annotations compiler ko hints.' },
@@ -318,7 +318,7 @@ SD.registerLevels('stories', [
     'Metal par cloud jaisa ops: Nomad, Consul, Vault, MAAS',
   ],
   lesson: [
-    "<h3>🎟️ \"Play\" dabaya — ab?</h3>\n     <p>Kisi instance mein daalo jismein jagah hai, ya naya kholo — aur yeh faisla &lt; 100 ms mein, popular game par saikdon per second,\n     hazaron games ke liye. Paanch cheezein tolni hain:</p>\n     <ol>\n       <li><b>Latency</b> — 24 edge DCs mein sabse paas.</li>\n       <li><b>Dost</b> — jahan dost pehle se khel rahe.</li>\n       <li><b>Load</b> — bhara bahar; lagbhag-bhara bhi bura agar dost aane wale hain.</li>\n       <li><b>Developer rules</b> — region se group karo ya mix.</li>\n       <li><b>Naya vs purana</b> — naya server paisa; hazaron aadhe-khaali servers mat kholo.</li>\n     </ol>\n     <p>Galat faisla = lag, ya dost se alag → player chala gaya.</p>\n     <pre>lab 27 (ex1-matchmaker) — 20,000 players, 6 regions, 40% dosto ke group:\npolicy       instances   avg fill   avg ping   dost ek saath\nfill-first      500       100%      152 ms     14%\nnearest         502      99.6%       21 ms     70%\nsmart           502      99.6%       38 ms    100%</pre>\n     <p>Smart = latency limit + <b>party ke liye seats rok ke rakho</b> + pehle bhare instance bharo. Nearest se ping thoda zyada\n     (kabhi paas ke khaali server ki jagah thoda door ka aadha-bhara) — yahi roz ka trade-off.</p>",
+    "<h3>🎟️ \"Play\" dabaya — ab?</h3>\n     <p>Kisi instance mein daalo jismein jagah hai, ya naya kholo — aur placement ka faisla &lt; 100 ms mein, popular game par saikdon per second,\n     hazaron games ke liye. Paanch cheezein tolni hain:</p>\n     <ol>\n       <li><b>Latency</b> — 24 edge DCs mein sabse paas.</li>\n       <li><b>Dost</b> — jahan dost pehle se khel rahe.</li>\n       <li><b>Load</b> — bhara bahar; lagbhag-bhara bhi bura agar dost aane wale hain.</li>\n       <li><b>Developer rules</b> — region se group karo ya mix.</li>\n       <li><b>Naya vs purana</b> — naya server paisa; hazaron aadhe-khaali servers mat kholo.</li>\n     </ol>\n     <p>Galat faisla = lag, ya dost se alag → player chala gaya.</p>\n     <pre>lab 27 (ex1-matchmaker) — 20,000 players, 6 regions, 40% dosto ke group:\npolicy       instances   avg fill   avg ping   dost ek saath\nfill-first      500       100%      152 ms     14%\nnearest         502      99.6%       21 ms     70%\nsmart           502      99.6%       38 ms    100%</pre>\n     <p>Smart = latency limit + <b>party ke liye seats rok ke rakho</b> + pehle bhare instance bharo. Nearest se ping thoda zyada\n     (kabhi paas ke khaali server ki jagah thoda door ka aadha-bhara) — yahi roz ka trade-off.</p>",
     "<h3>🏗️ Apna cloud</h3>\n     <p>800,000+ apne servers; <b>24 edge DCs</b> players ke paas instances chalate hain; <b>2 core DCs</b> (website, recommendations,\n     economy, safety filters); apna global private network; edges core ke liye firewall bhi. Kyun? <b>Network ka kharcha</b> — is\n     workload ke liye public cloud networking apne hardware se ~10× tak mehenga. 2021 outage ke baad Virginia mein $400M ka naya DC.\n     Public cloud sirf <b>burst</b> ke liye.</p>\n     <p>Metal par cloud jaisa ops: HashiCorp <b>Nomad</b> (containers schedule), <b>Consul</b> (service discovery), <b>Vault</b>\n     (secrets), aur MAAS (metal as a service) ka apna Terraform provider → physical servers bhi infrastructure-as-code.</p>\n     <h3>🛡️ Safety bhi scale par</h3>\n     <p>Bachche + sab kuch user-generated (games, chat, images, sounds). Text filter ~2.5 lakh requests/sec — har message par bade model\n     ka inference, word list nahi; 300+ AI inference pipelines; GPU/CPU ka batwara kharche ke liye; apne hardware par (latency, privacy).</p>",
   ],
   stages: [
@@ -351,7 +351,7 @@ SD.registerLevels('stories', [
           'Server ka size dono modes mein same tha.',
         ],
       },
-      lesson: 'Matchmaker ek real-time scheduler hai — har factor ka apna dukh, aur unka balance hi product.',
+      lesson: 'Matchmaker ek real-time scheduler hai — har factor ka apna dukh, aur factors ka balance hi product.',
     },
     {
       type: 'tradeoff',
@@ -360,7 +360,7 @@ SD.registerLevels('stories', [
       goal: 'Avg ping <b>50 ms se kam</b>, dost saath <b>95%+</b>, aur servers <b>520 se kam</b> (paisa).',
       scenario: `20,000 players, har instance 40 ka. Tum matchmaker ke weights tay karte ho.`,
       knobs: [
-        { id: 'lat', label: 'Max latency (ms)', min: 20, max: 300, step: 10, value: 300, unit: ' ms', note: 'Isse door ke instance mein mat daalo.' },
+        { id: 'lat', label: 'Max latency (ms)', min: 20, max: 300, step: 10, value: 300, unit: ' ms', note: 'Latency limit se zyada deri wale instance mein mat daalo.' },
         { id: 'reserve', label: 'Party ke liye seats rokna (0 = nahi, 1 = haan)', min: 0, max: 1, step: 1, value: 0, unit: '', note: 'Pehla dost aaya toh group size ki seats rok lo.' },
         { id: 'packing', label: 'Bhare instance ko pehle bharne ka zor (0–10)', min: 0, max: 10, step: 1, value: 10, unit: '', note: 'Zyada = kam servers, par kabhi thoda door.' },
       ],
@@ -450,7 +450,7 @@ SD.registerLevels('stories', [
     ],
   },
   success: [
-    'Main matchmaker ke paanch factors aur unka trade-off bata sakta hoon',
+    'Main matchmaker ke paanch factors aur factors ka trade-off bata sakta hoon',
     'Main lab se smart placement ka faayda dikha sakta hoon',
     'Main Roblox ke apne cloud ka tark de sakta hoon',
   ],
@@ -503,7 +503,7 @@ SD.registerLevels('stories', [
      </ul>
      <h3>📋 Paanch sabak</h3>
      <ol>
-       <li>Kaam kaise baant-te ho, woh ek tukda kitna bada hota hai us se zyada maayne rakhta hai (unit chhoti, bahut chalao).</li>
+       <li>Kaam baantne ka tareeka ek tukde ke size se zyada maayne rakhta hai (unit chhoti, bahut chalao).</li>
        <li>Untrusted code → sandbox bhasha ki problem hai.</li>
        <li>Cloud default hai, kanoon nahi — sabse badi cost line kahan palatti hai, jaano.</li>
        <li>Chhota blast radius jaan-boojh ke (instances, cells) — aur sabke neeche ki <b>ek</b> saajhi cheez dhoondho.</li>
@@ -624,8 +624,8 @@ SD.registerLevels('stories', [
     'Main viral surge ke liye capacity plan bana sakta hoon',
     'Main Roblox ke paanch sabak bata sakta hoon',
   ],
-  homework: `<p>Apne system ki woh <b>ek</b> saajhi cheez dhoondho jiske neeche sab kuch hai (service discovery, config store, auth, DNS). Agar
-    woh 3 din band rahe toh kya hoga? Usse cells mein kaise tod sakte ho, aur use chaos test kaise karoge?</p>`,
+  homework: `<p>Apne system ki <b>ek</b> saajhi cheez dhoondho jiske neeche sab kuch hai (service discovery, config store, auth, DNS). Agar
+    saajhi cheez 3 din band rahe toh kya hoga? Saajhi cheez ko cells mein kaise tod sakte ho, aur use chaos test kaise karoge?</p>`,
   cards: [
     { front: 'Roblox 2021 ke baad?', back: 'Backend bhi cells mein (failure cell ke andar) — aur cells se public cloud mein burst saaf. (Outage detail: Feed → death spiral.)' },
     { front: 'Roblox ka hafta?', back: 'Mon review, Tue capacity, roz chaos testing, Fri weekend ke liye extra. Time pata hai, size nahi (viral games).' },

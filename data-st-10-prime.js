@@ -55,7 +55,7 @@ VISUALS['prime-when-split'] = {
     </div>
     <div class="dg-rule"></div>
     <div class="dg-cap">Prime Video ki pipeline: <b>ek team</b>, sab saath scale — boundaries ne kuch nahi khareeda, sirf kharcha. Vogels:
-      "goal monolith ya microservices nahi — woh architecture jo workload ko fit kare."</div>`,
+      "goal monolith ya microservices nahi — workload ko fit karne wala architecture."</div>`,
 };
 
 SD.registerLevels('stories', [
@@ -86,7 +86,7 @@ SD.registerLevels('stories', [
        <li><b>Orchestration</b> — AWS <b>Step Functions</b> (managed state machine).</li>
      </ol>
      <p>Har 1 second video: converter decode → frames S3 mein upload → state machine tick → har detector S3 se frames download →
-     analyse → report → tick → agla second. Sab managed, chhoti team hafton mein ship. March 2023 ke blog mein: isse
+     analyse → report → tick → agla second. Sab managed, chhoti team hafton mein ship. March 2023 ke blog mein: managed pipeline se
      monolith par gaye, infra bill <b>90% se zyada kam</b>.</p>`,
     `<h3>💥 Kya toota — do jagah</h3>
      <p><b>1. Step Functions</b> — keemat per state transition (~$25 per million — sasta dikhta hai). Har stream ke har second
@@ -145,14 +145,14 @@ SD.registerLevels('stories', [
           unit: 'transitions', given: ['3,600 sec', '4 per sec'],
           answer: 14400, tol: 0.2,
           steps: ['3,600 × 4 = 14,400 per stream-ghanta'],
-          lesson: 'Checkout ki poori zindagi ~20 transitions. Yeh ek ghante mein 720 checkouts jitna.',
+          lesson: 'Checkout ki poori zindagi ~20 transitions. Ek stream ke transitions ek ghante mein 720 checkouts jitne.',
         },
         {
           q: '1,000 live streams, 3 ghante ka match. ~$25 per million transitions par kitne DOLLAR?',
           unit: '$', given: ['14,400 per stream-ghanta', '1,000 streams × 3 ghante', '$25 / 10 lakh'],
           answer: 1080, tol: 0.3,
           steps: ['14,400 × 3,000 = 4.32 crore transitions', '43.2 × $25 = $1,080 — sirf orchestration, har match'],
-          lesson: 'Aur yeh tab jab limits pehle hi rok na dein. S3 PUT/GET alag.',
+          lesson: 'Aur orchestration ka kharcha tab jab limits pehle hi rok na dein. S3 PUT/GET alag.',
         },
       ],
     },
@@ -393,12 +393,12 @@ copy-type 2: av-sync (2.5), freeze (2), caption-sync (2), audio-clipping (1.5)</
   lesson: [
     `<h3>🔥 Flame war aur Vogels</h3>
      <p>Blog ~6 hafte chupchaap raha, phir internet par jung: "Amazon ne bhi microservices chhod diye!" Amazon CTO Werner Vogels ka
-     jawab: maqsad <b>na monolith, na microservices</b> — maqsad woh architecture jo <b>workload ko fit</b> kare.</p>
+     jawab: maqsad <b>na monolith, na microservices</b> — maqsad <b>workload ko fit</b> karne wala architecture.</p>
      <h3>🧾 Boundary kya khareedti hai?</h3>
      <p>Microservices <b>ownership</b> ke baare mein hain: ek team apna build, deploy, operate kare; alag scaling; chhota blast
      radius. Performance ke baare mein nahi. Prime Video ki pipeline: <b>ek team</b>, sab saath scale → boundaries ne kuch nahi
      khareeda, sirf kharcha kiya.</p>
-     <p><b>Har boundary ke liye do sawaal:</b> kitna data paar karta hai, aur kitni baar? Aur teesra: yeh boundary kaunsi ownership
+     <p><b>Har boundary ke liye do sawaal:</b> kitna data paar karta hai, aur kitni baar? Aur teesra: boundary kaunsi ownership
      ya independence khareed rahi hai?</p>`,
     `<h3>⚖️ Merge ki keemat (imaandari se)</h3>
      <ul>
@@ -412,7 +412,7 @@ copy-type 2: av-sync (2.5), freeze (2), caption-sync (2), audio-clipping (1.5)</
        <li>Har boundary ki keemat hai: size × frequency.</li>
        <li>Cloud bill ko architecture diagram par rakho — bill ki sabse badi lines = sabse zaroori data flows.</li>
        <li>Serverless seekhne ke liye, dedicated infra jab load predictable ho.</li>
-       <li>Wahan todo jahan teams ko independence chahiye.</li>
+       <li>Teams ki independence ke liye boundary par todo.</li>
        <li>Units independent hon toh monolith replication se scale karta hai.</li>
      </ol>`,
   ],
@@ -456,7 +456,7 @@ copy-type 2: av-sync (2.5), freeze (2), caption-sync (2), audio-clipping (1.5)</
       ],
       fine: {
         upload: 'Upload API ka alag rehna theek — auth/quota/public surface alag concern hai aur payload ek hi baar aata hai.',
-        cdn: 'CDN bilkul sahi — final output ko users ke paas cache karna. Yeh boundary asli kaam khareedti hai (latency, offload).',
+        cdn: 'CDN bilkul sahi — final output ko users ke paas cache karna. CDN ki boundary asli kaam khareedti hai (latency, offload).',
       },
       lesson: `🎯 Har arrow par likho: <b>payload × per second</b> aur <b>kaunsi ownership khareedi</b>. Bada guna-phal + koi ownership nahi = merge karo.`,
     },
@@ -511,7 +511,7 @@ copy-type 2: av-sync (2.5), freeze (2), caption-sync (2), audio-clipping (1.5)</
   cards: [
     { front: 'Microservices kis liye?', back: 'Ownership — team ka independent build/deploy/operate, alag scaling, chhota blast radius. Performance ke liye nahi.' },
     { front: 'Merge ki keemat?', back: 'Coupled deploys, bada blast radius, capacity planning khud, kamzor isolation, config galtiyan.' },
-    { front: 'Vogels ka jawab?', back: 'Goal na monolith, na microservices — woh architecture jo workload ko fit kare.' },
+    { front: 'Vogels ka jawab?', back: 'Goal na monolith, na microservices — workload ko fit karne wala architecture.' },
   ],
 },
 ]);

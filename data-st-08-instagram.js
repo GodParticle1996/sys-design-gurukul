@@ -53,7 +53,7 @@ SD.registerLevels('stories', [
   badge: 'Boring Tech Baba',
   objectives: [
     'Connection ka chhupa hua bill aur pooler ka kaam',
-    '"Switch mat karo, shard karo" — aur uska tark',
+    '"Switch mat karo, shard karo" — aur sharding chunne ka tark',
     'Logical shards vs physical nodes: mapping hi architecture hai',
     'Complexity budget — naya infra kab lena chahiye',
   ],
@@ -64,7 +64,7 @@ SD.registerLevels('stories', [
      likes, follow graph — <b>ek Postgres</b> mein. Na microservices, na Kafka, na kuch
      fancy.</p>
      <p>2011 mein 1 crore users, phir bhi infra simple. 2012 mein jab Facebook ne kharida,
-     woh <b>2.7 crore users</b> par the, ek <b>2 TB</b> Postgres ke saath, aur team abhi
+     Instagram <b>2.7 crore users</b> par tha, ek <b>2 TB</b> Postgres ke saath, aur team abhi
      bhi chhoti thi.</p>
      <p>Phir single-database setup chatakne laga: 2 TB us waqt ke sabse bade rentable
      instance ki memory ke kareeb tha aur disk I/O saturated tha. Vertical scaling ka
@@ -76,25 +76,25 @@ SD.registerLevels('stories', [
      kaam kiya hi nahi tha.</p>
      <p>Ilaaj chhota tha: ek <b>connection pooler</b> (PgBouncer) jo app aur Postgres ke
      beech baith kar 1,500 aane wale connections ko <b>~30 asli connections</b> par
-     multiplex kar de. Ab woh memory wahi kare jo usse karna chahiye — pages cache karna,
+     multiplex kar de. Ab bachi hui memory apna kaam kare — pages cache karna,
      sort karna, query plan banana.</p>
      <p class="tip">🎯 Video ki salaah: agar tum aaj meaningful load par Postgres chala
      rahe ho aur saamne pooler nahi hai, toh <b>is hafte ka sabse zyada faayde ka kaam
      wahi hai</b>.</p>`,
-    `<h3>🧭 Deewar 2 — aur wahan sabse bada faisla</h3>
+    `<h3>🧭 Deewar 2 — aur sharding ka sabse bada faisla</h3>
      <p>Ab standard salaah aati hai: "relational databases horizontally scale nahi karte,
      NoSQL par jao." Instagram ne Cassandra aur MongoDB ko sach mein evaluate kiya, aur
-     phir bhi Postgres par ruke. Unka tark:</p>
+     phir bhi Postgres par ruke. Instagram ka tark:</p>
      <ul>
-       <li>Jo deewarein woh dekh rahe the, woh <b>Postgres ki</b> nahi thin — us
+       <li>Instagram ko dikh rahi deewarein <b>Postgres ki</b> nahi thin — us
        <b>paimane ki</b> thin. Koi bhi database us workload par wahi deewarein deta.</li>
-       <li>Cassandra par jaane se <b>horizontal partitioning gayab nahi hota</b> — woh bas
+       <li>Cassandra par jaane se <b>horizontal partitioning gayab nahi hota</b> — partitioning bas
        ek doosri abstraction ke peechhe chala jaata hai.</li>
        <li>Aur switch karne ke baad wapas aana lagbhag namumkin hai — kashti jalane wali
        baat.</li>
      </ul>
      <p>Isliye unhone database badalne ke bajaye <b>Postgres ko horizontal banaya</b>:
-     sharding. Par sharding ka <b>tareeka</b> hi woh cheez hai jo pichhle dashak ke sabse
+     sharding. Par sharding ka <b>tareeka</b> hi pichhle dashak ke sabse
      zyada copy kiye gaye patterns mein se ek ban gaya.</p>
      <h3>🧮 Logical shards ≠ physical machines</h3>
      <p>2010 ke aam sharding mein log seedha machines ke baare mein sochte the: 16 servers,
@@ -104,7 +104,7 @@ SD.registerLevels('stories', [
      ↓  mapping table
 kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</pre>
      <p>Application sirf itna poochhta hai: "is user ka logical shard kaunsa hai?" aur us
-     schema par query karta hai. Use pata bhi nahi hota ki woh schema kis machine par hai.</p>
+     schema par query karta hai. Application ko pata bhi nahi hota ki logical shard ka schema kis machine par hai.</p>
      <p>Ab growth ka matlab badal jaata hai: node 7 95% bhar gaya? Naya node 16 khada
      karo, node 7 ke <b>aadhe logical shards</b> streaming replication se copy karo, aur
      phir <b>mapping table update</b> kar do — "shard 1920-2047 ab node 16 par". Data
@@ -113,28 +113,28 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
      <p class="tip">🎯 Ek line yaad rakho: <b>data ka batwara aur data ka thikana alag
      cheezein hain.</b> Batwara hamesha ke liye tay karo (hazaron logical shards), thikane
      ko data banao (mapping table) — phir growth ek config change ban jaata hai.</p>
-     <p>(Shard key user id tha — ek user ka sab kuch ek shard par. Uski keemat: "jinhe
-     main follow karta hoon unki photos" jaisi query 50 shards se data laakar app mein
-     merge karti hai. Har sharded system yeh sauda kisi na kisi shakal mein karta hai.
+     <p>(Shard key user id tha — ek user ka sab kuch ek shard par. User id se sharding ki keemat: "main jin users ko
+     follow karta hoon, aise users ki photos" jaisi query 50 shards se data laakar app mein
+     merge karti hai. Har sharded system co-location ka sauda kisi na kisi shakal mein karta hai.
      Aur snowflake-style ids, partial/functional indexes aur logical replication —
-     woh sab SQL Gurukul ke 🔬 Database Internals track mein asli Postgres par hain.)</p>`,
+     ids, indexes aur replication sab SQL Gurukul ke 🔬 Database Internals track mein asli Postgres par hain.)</p>`,
     `<h3>🧰 Complexity budget — "boring" ka asli matlab</h3>
      <p>Har team ke paas <b>complexity ka ek budget</b> hota hai. Har naya infrastructure
-     us budget se kaat-ta hai: uske nakhre seekhne padte hain, operational expertise
+     complexity budget se kaat-ta hai: naye infrastructure ke nakhre seekhne padte hain, operational expertise
      banani padti hai, team ko train karna padta hai, us cheez ke liye hire karna padta
-     hai. Yeh kharche balance sheet par nahi dikhte, par asli hote hain.</p>
+     hai. Infrastructure ke kharche balance sheet par nahi dikhte, par asli hote hain.</p>
      <p>Boring technology — Postgres, Linux, memcached, nginx — lagbhag muft mein aati
      hai: team pehle se jaanti hai, internet par har sawaal ka jawab hai, failure modes
      kitaabon mein likhe hain, aur tooling 15+ saal purani hai.</p>
      <table>
        <tr><th>Naya infra lo jab…</th><th>Naya infra mat lo jab…</th></tr>
-       <tr><td>Problem sach mein nayi ho — planet-scale graph traversal, vector search, real-time time-series</td><td>Problem sirf "bahut saare users" ho — yeh nayi problem nahi hai</td></tr>
+       <tr><td>Problem sach mein nayi ho — planet-scale graph traversal, vector search, real-time time-series</td><td>Problem sirf "bahut saare users" ho — bahut saare users nayi problem nahi hai</td></tr>
      </table>
      <p class="tip">🎯 Video ki sabse teekhi line: <b>zyadatar teams galat database nahi
-     chunti — woh database bahut jaldi badal deti hain, jabki asli fix apne maujooda
+     chunti — teams database bahut jaldi badal deti hain, jabki asli fix apne maujooda
      database ko behtar samajhna tha.</b></p>
      <p>Aakhri baat, imaandaari se: aaj ka Instagram Postgres par nahi chalta. Facebook
-     acquisition ke baad Meta ne usse apne internal infra mein jod liya, aur social graph
+     acquisition ke baad Meta ne Instagram ko apne internal infra mein jod liya, aur social graph
      ab TAO se serve hota hai. Par jo <b>architecture pattern</b> unhone banaya — logical
      shards + mapping, aur database ke andar snowflake ids — aaj bhi copy hota hai.</p>`,
   ],
@@ -142,7 +142,7 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
     {
       type: 'bins',
       title: 'Nayi problem ya bas "bahut saare users"?',
-      instructions: 'Har sthiti ko sahi dabbe mein daalo — kya iske liye naya infra chahiye?',
+      instructions: 'Har sthiti ko sahi dabbe mein daalo — kya di hui sthiti ke liye naya infra chahiye?',
       bins: [
         { id: 'new', label: '🆕 Sach mein nayi problem (naya tool jayaz)' },
         { id: 'scale', label: '📈 Bas paimana bada hai (maujooda tool samjho)' },
@@ -167,7 +167,7 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
         { id: 'logical', label: 'Logical shards', min: 4, max: 4096, step: 4, value: 4, unit: '',
           note: 'Batwara hamesha ke liye tay hota hai — isliye shuruaat mein hi bada rakho.' },
         { id: 'nodes', label: 'Physical nodes', min: 1, max: 24, step: 1, value: 4, unit: '',
-          note: 'Aaj kitni machines par woh logical shards baithe hain.' },
+          note: 'Aaj kitni machines par logical shards baithe hain.' },
         { id: 'style', label: 'Mapping (0 = formula, jaise hash % nodes · 1 = mapping table)', min: 0, max: 1, step: 1, value: 0, unit: '',
           note: 'Formula badla toh sabka thikana badal jaata hai.' },
       ],
@@ -189,13 +189,13 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
       },
       verdict: k => {
         const m = shardMapModel(k);
-        if (k.style === 0) return { ok: false, text: `Formula-based mapping: node jodte hi <b>${m.movedPct}%</b> rows ka thikana badal jaata hai aur sharding logic application code mein hai. Yahi woh raasta hai jo har growth par migration bana deta hai.` };
+        if (k.style === 0) return { ok: false, text: `Formula-based mapping: node jodte hi <b>${m.movedPct}%</b> rows ka thikana badal jaata hai aur sharding logic application code mein hai. Formula-based mapping hi har growth ko migration bana deti hai.` };
         if (m.movedPct > 15) return { ok: false, text: `Mapping table hai par sirf <b>${k.logical}</b> logical shards — har node par <b>${m.perNode}</b>. Move karne ke liye itne bade tukde bachte hain ki rebalancing mein <b>${m.movedPct}%</b> data hilta hai. Logical shards bahut zyada banao.` };
         if (m.hotPct > 70) return { ok: false, text: `Load <b>${m.hotPct}%</b> hai — nodes badhao ya shards ka batwara dekho.` };
         return { ok: true, text: `Yahi Instagram ka model hai: <b>${k.logical}</b> logical shards <b>${k.nodes}</b> nodes par, mapping ek table mein — naya node jodne par sirf <b>${m.movedPct}%</b> rows hilti hain aur application code bilkul nahi badalta.` };
       },
       check: k => { const m = shardMapModel(k); return m.movedPct <= 15 && m.hotPct <= 70 && !m.codeChange; },
-      lesson: `Sharding ka sabse bada faisla shard key ke baad yeh hai: <b>thikana formula
+      lesson: `Sharding ka sabse bada faisla shard key ke baad hai: <b>thikana formula
         hai ya data?</b> Formula sabko hila deta hai; mapping table sirf utna hilata hai
         jitna tum chaho.`,
       quiz: {
@@ -325,9 +325,9 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
     'Main complexity budget ke hisaab se naya infra lene ka faisla kar sakta hoon',
   ],
   homework: `<p>Apne database par teen numbers nikaalo: (1) kitne connections khule rehte
-    hain aur woh kitni RAM le rahe hain, (2) sabse badi table ka size, (3) peak par CPU.
+    hain aur connections kitni RAM le rahe hain, (2) sabse badi table ka size, (3) peak par CPU.
     Ab likho — agla kadam pooler hai, index hai, partitioning hai ya sharding? Aur jo bhi
-    chuno, uske saamne likho ki uske baad kaunsi deewar aayegi.</p>
+    chuno, chune hue kadam ke saamne likho ki kadam ke baad kaunsi deewar aayegi.</p>
     <p>Hands-on chahiye? SQL Gurukul ke 🔬 <b>Database Internals</b> track mein yahi
     cheezein asli Postgres par hain — connection storm, logical shards ko ek machine se
     doosri par le jaana, aur snowflake-style ids.</p>`,

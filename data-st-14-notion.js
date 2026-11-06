@@ -70,7 +70,7 @@ SD.registerLevels('stories', [
   title: 'Notion — sab kuch ek block, jaan-boojh ke',
   badge: 'Block Brahma',
   objectives: [
-    'Ek hi data type: block — aur uske paanch hisse',
+    'Ek hi data type: block — aur block ke paanch hisse',
     'Composability, chaar operations ki API, bina migration naye types',
     'Data model ke faisle sabse lambe jeete hain',
     'Tree ki keemat — har layer par',
@@ -81,7 +81,7 @@ SD.registerLevels('stories', [
      paragraph, checkbox, image, DB row, page, workspace — <b>sab ek hi cheez: block</b>. Sirf <code>type</code> field batata hai ki
      kaise dikhana hai. 2016 ka soch-samajh ke liya faisla, karz nahi. Aaj 200 arab+ blocks.</p>
      <pre>block = { id (UUID), type, properties (JSON), content: [child ids], parent, metadata (created/edited/owner) }</pre>
-     <h3>🎁 Isse kya milta hai</h3>
+     <h3>🎁 Block model se kya milta hai</h3>
      <ul>
        <li><b>Composability</b> — kuch bhi kisi ke bhi andar: page mein DB, toggle ke andar to-do, table cell ke andar, DB row ke
        andar. Har parent-child rishta ek hi operation.</li>
@@ -110,7 +110,7 @@ SD.registerLevels('stories', [
       pairs: [
         { left: '🅱️ Text bold kiya', right: 'update — properties badli', explain: 'Style bhi properties ka hissa.' },
         { left: '➡️ Bullet ko indent kiya', right: 'move — naya parent (re-parent)', explain: 'Indent = tree mein ek level neeche.' },
-        { left: '🗑️ Poora page delete', right: 'delete — ek block (children uske saath)', explain: 'Page bhi bas ek block.' },
+        { left: '🗑️ Poora page delete', right: 'delete — ek block (children block ke saath)', explain: 'Page bhi bas ek block.' },
         { left: '➕ Page mein naya database', right: 'create — type=database block', explain: 'DB bhi block, page ke andar.' },
         { left: '🧮 Naya "math equation" type launch', right: 'Sirf type + renderer — schema migration nahi', explain: 'Extensibility bina backend badle.' },
       ],
@@ -215,8 +215,8 @@ memo (page ke andar yaad rakho)   DB lookups  4,003    84 ms</pre>
        <li><b>Render tree</b> — page ke <code>content[]</code> ke saath <b>neeche</b>, order mein.</li>
        <li><b>Permission tree</b> — <code>parent</code> pointers ke saath <b>upar</b>.</li>
      </ul>
-     <p>Hamesha same nahi: kisi aur page ka inline mention render tree mein ek jagah dikhta hai, par uski permissions wahan se aati
-     hain jahan woh <b>rehta</b> hai. Isliye do pointer systems — <code>content[]</code> (neeche, rendering) aur <code>parent_id</code>
+     <p>Hamesha same nahi: kisi aur page ka inline mention render tree mein ek jagah dikhta hai, par mentioned page ki permissions asli jagah se aati
+     hain jahan mentioned page <b>rehta</b> hai. Isliye do pointer systems — <code>content[]</code> (neeche, rendering) aur <code>parent_id</code>
      (upar, permissions/ownership) — alag index, alag cache.</p>`,
     `<h3>🚚 Move ke do matlab</h3>
      <ul>
@@ -228,7 +228,7 @@ HR → Salaries page: aman ko 0 blocks; Team Wiki mein aman ko 2001
 riya ne ek toggle (salaries-b0 + andar ka sab) Salaries se Team Wiki mein drag kiya
 ab aman ko Team Wiki mein 4001 blocks → 2000 salary wale blocks aman ko dikh rahe hain!</pre>
      <p>Content ek byte nahi badla — sirf parent. Isliye move ek <b>permission event</b> hai: UI warning, audit log, cache invalidation.</p>
-     <p class="tip">🎯 <b>Jo cheezein alag hain unhe alag rakho, chahe dikhne mein ek jaisi lagein</b> — do traversal directions = do pointer systems.</p>`,
+     <p class="tip">🎯 <b>Alag cheezein alag rakho, chahe dikhne mein ek jaisi lagein</b> — do traversal directions = do pointer systems.</p>`,
   ],
   stages: [
     {
@@ -344,7 +344,7 @@ ab aman ko Team Wiki mein 4001 blocks → 2000 salary wale blocks aman ko dikh r
     ],
   },
   success: [
-    'Main inherited permissions ki ancestor walk aur uska kharcha samjha sakta hoon',
+    'Main inherited permissions ki ancestor walk aur ancestor walk ka kharcha samjha sakta hoon',
     'Main render tree aur permission tree ka farq bata sakta hoon',
     'Main move ko permission event ki tarah design kar sakta hoon',
   ],
@@ -382,7 +382,7 @@ ab aman ko Team Wiki mein 4001 blocks → 2000 salary wale blocks aman ko dikh r
      <p>Tum ek workspace mein kaam karte ho; permission checks, search — sab workspace ke andar. Toh <b>workspace</b> ke saare blocks ek
      shard par: <code>hash(workspace_id) → shard</code> → ek request, ek shard. 2023: <b>96 Postgres instances × 5 = 480 logical
      shards</b> (Instagram jaisa logical/physical alag — hosts jodo/rebalance bina rehash).</p>
-     <p>Shart: cross-workspace query ("Bitcoin mention karne wale saare pages") = 480 shards par scatter. Shard key yeh maanta hai ki
+     <p>Shart: cross-workspace query ("Bitcoin mention karne wale saare pages") = 480 shards par scatter. Shard key ka chunaav maan kar chalta hai ki
      aisi queries kam hain. (Instagram ne user chuna, Notion ne workspace — dono ne apna access pattern encode kiya.)</p>
      <pre>lab 31 — 32 shards, ek page load:
 shard by block id  → 22 / 32 shards chhuye
@@ -390,7 +390,7 @@ shard by workspace →  1 / 32</pre>`,
     `<h3>🏞️ Production queries serve karta hai, lake sawaalon ka jawab deta hai</h3>
      <p>Postgres sach hai; har block change Postgres <b>logical replication (CDC)</b> se pakda jaata hai → pipeline → <b>Apache Hudi</b>
      (object storage par transactional layer, incremental upserts) → <b>columnar</b> format → AI embeddings, search index, analytics
-     dashboards wahan se padhte hain.</p>
+     dashboards data lake se padhte hain.</p>
      <pre>lab 31 (ex2-lake) — live reads ~1 ms CPU, analytics scan 3 sec CPU:
 koi analytics nahi           p50  6 ms   p99 14 ms
 scan PRIMARY par             p50 20 ms   p99 27 ms
@@ -497,10 +497,10 @@ scan LAKE (CDC copy) par     p50  6 ms   p99 16 ms</pre>
   success: [
     'Main operational aur analytics problems alag kar sakta hoon',
     'Main access pattern se shard key chun sakta hoon',
-    'Main CDC → data lake ka design aur uska faayda lab se dikha sakta hoon',
+    'Main CDC → data lake ka design aur data lake ka faayda lab se dikha sakta hoon',
   ],
   homework: `<p>Apne sabse bade table ke liye likho: sabse aam query kis "ikaai" ke andar rehti hai (user, tenant, workspace, order)? Wahi
-    shard key ka pehla ummeedwar hai. Aur kaunsi queries us ikaai ke paar jaati hain — woh scatter karegi ya lake mein jaani chahiye?</p>`,
+    shard key ka pehla ummeedwar hai. Aur kaunsi queries us ikaai ke paar jaati hain — queries scatter karengi ya lake mein jaani chahiye?</p>`,
   cards: [
     { front: 'Notion shard key?', back: 'Workspace — hash(workspace_id) → shard; 2023: 96 Postgres × 5 = 480 logical shards. Cross-workspace query = scatter.' },
     { front: 'Notion data lake?', back: 'Postgres logical replication (CDC) → pipeline → Apache Hudi (columnar, object storage) → AI, search, dashboards.' },

@@ -1262,7 +1262,7 @@ staged    5000/5000 wapas  7.5 s  | attempts  5,000 (bekaar      0)  p50  3.8 s<
         lagta hai koi single point of failure nahi.`,
       goal: 'Chaar aisi cheezein pakdo jo region ke UPAR hain aur sab jagah ek saath badal sakti hain.',
       nodes: [
-        { id: 'image', label: '🖼️ Golden base image', sub: 'har node isi se, har hafte naya — sab regions ek saath roll', row: 0 },
+        { id: 'image', label: '🖼️ Golden base image', sub: 'har node isi image se, har hafte naya — sab regions ek saath roll', row: 0 },
         { id: 'cron', label: '⏰ unattended-upgrades', sub: 'har node par 03:00 UTC', row: 0 },
         { id: 'regions', label: '🗺️ 5 regional clusters', sub: 'har ek ka apna LB, DB replica, compute', row: 1 },
         { id: 'flags', label: '🚩 Feature flag service', sub: 'ek global service, har request par flags live padhta hai', row: 1 },

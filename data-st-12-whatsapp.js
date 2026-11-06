@@ -46,7 +46,7 @@ SD.registerLevels('stories', [
   ],
   lesson: [
     "<h3>📉 50 log, 45 crore users</h3>\n     <p>2014 mein Facebook ne WhatsApp $19B mein khareeda: ~45 crore users, ~50 log, ~30 engineers. Aaj 2 arab+ users, roz 100 arab+\n     messages — wahi buniyaad. Ek server par ~20 lakh log ek saath. Server message aage deta hai aur <b>mita deta hai</b>. E2E\n     encrypted. Siddhant: <b>kam se kam kaam</b> — server utna hi kare jitna zaroori, ek machine ko jitna ho sake kheencho, naye\n     parts tabhi jab koi raasta na bache.</p>\n     <h3>🔌 Chat server web server nahi hai</h3>\n     <p>Web server: request aayi, jawab diya, connection gaya. Chat server: har online user ka <b>zinda connection</b>, zyadatar\n     <b>chup</b> (phone jeb mein). Thread-per-connection ka stack/runtime budget large ho sakta hai; default stack reservation aur committed RSS alag hain. C10K historical challenge tha, modern OS ka fixed10k limit nahi\n     (C10K). Chahiye tha: per-connection kharcha ≈ 0.</p>\n     <pre>lab 25 (ex1): 20,000 idle connections, ek Node process, ek event loop\n  server RSS 47 MB → 109 MB = 3.2 KB per connection\nlab 25: 200 asli worker threads → 5,427 KB per thread → 20,000 ke liye ~100 GB</pre>\n     <p>(Imaandari: Node worker thread apna V8 isolate leta hai. Native/Java thread memory version, configured stack, virtual reservation and committed pages par depend karti hai; is Node RSS result ko every OS thread ka fixed cost mat banao.)</p>",
-    "<h3>☎️ Erlang — telephone exchange ki bhasha</h3>\n     <p>Erlang Ericsson ne 1980s mein telephone switches ke liye banaya tha — laakhon calls, kabhi band nahi. Uska VM (<b>BEAM</b>):</p>\n     <ul>\n       <li><b>Process</b> = version-dependent small heap/process state → laakhon ek machine par. Har user connection = ek process.</li>\n       <li><b>Normal schedulers</b> typically online logical CPU configuration se map karte hain; count runtime options se change ho sakta hai. Dirty CPU/IO scheduler pools separate hain.</li>\n       <li><b>Reductions</b> runtime work accounting se ordinary BEAM processes schedule/preempt hote hain. Exact budget version-dependent hai; work stealing balance help karta hai. Long blocking native NIF ya shared resource other users ko phir bhi affect kar sakta hai.</li>\n       <li>Ordinary process heaps isolated hote hain aur messages se communicate karte hain. ETS tables, off-heap binaries aur native resources shared state la sakte hain; har path private heap nahi.</li>\n     </ul>\n     <p>Shuruaat open-source <b>ejabberd</b> (XMPP) se. XMPP = XML: angle brackets, dohraaye tags. India, Brazil, Indonesia mein 2G/3G par\n     log → <b>FunXMPP</b>: binary codes, kahin kam bytes. <b>Chhota protocol dheeme network par ek feature hai.</b></p>",
+    "<h3>☎️ Erlang — telephone exchange ki bhasha</h3>\n     <p>Erlang Ericsson ne 1980s mein telephone switches ke liye banaya tha — laakhon calls, kabhi band nahi. Erlang ka VM (<b>BEAM</b>):</p>\n     <ul>\n       <li><b>Process</b> = version-dependent small heap/process state → laakhon ek machine par. Har user connection = ek process.</li>\n       <li><b>Normal schedulers</b> typically online logical CPU configuration se map karte hain; count runtime options se change ho sakta hai. Dirty CPU/IO scheduler pools separate hain.</li>\n       <li><b>Reductions</b> runtime work accounting se ordinary BEAM processes schedule/preempt hote hain. Exact budget version-dependent hai; work stealing balance help karta hai. Long blocking native NIF ya shared resource other users ko phir bhi affect kar sakta hai.</li>\n       <li>Ordinary process heaps isolated hote hain aur messages se communicate karte hain. ETS tables, off-heap binaries aur native resources shared state la sakte hain; har path private heap nahi.</li>\n     </ul>\n     <p>Shuruaat open-source <b>ejabberd</b> (XMPP) se. XMPP = XML: angle brackets, dohraaye tags. India, Brazil, Indonesia mein 2G/3G par\n     log → <b>FunXMPP</b>: binary codes, kahin kam bytes. <b>Chhota protocol dheeme network par ek feature hai.</b></p>",
   ],
   stages: [
     {
@@ -290,7 +290,7 @@ SD.registerLevels('stories', [
     'Main registry-based routing samjha sakta hoon',
   ],
   homework: `<p>Apne service ke code mein saajhi cheezein dhoondho: global mutex, singleton cache, ek hi DB row jise har request update
-    kare (counter), ek hi queue. Har ek ke saamne likho: kya ise user/tenant/hash se baanta ja sakta hai?</p>`,
+    kare (counter), ek hi queue. Har ek ke saamne likho: kya saajhi cheez ko user/tenant/hash se baanta ja sakta hai?</p>`,
   cards: [
     { front: 'WhatsApp ke do dushman?', back: 'Multiplication (per-connection kharcha × laakhon) aur sharing (saajha lock/counter/table = bheed).' },
     { front: 'Grungy fixes ki misaal?', back: 'CPU TSC se time, badi kernel hash table, huge pages, spinning band, global-lock linking → monitors, ETS partitioned, per-table replication.' },
@@ -313,15 +313,15 @@ SD.registerLevels('stories', [
     'Persistent connection + push notification backup',
   ],
   lesson: [
-    "<h3>📮 Dakghar, filing cabinet nahi</h3>\n     <p>Recipient online → push karo aur <b>bhool jao</b>. Offline → Erlang ke apne DB (Mnesia) mein queue → wapas aaya → deliver →\n     <b>delete</b>. Storage chhota rehta hai kyunki server sirf \"raaste mein\" wale messages rakhta hai.</p>\n     <pre>lab 25 (ex3-store-forward) — Riya chat1 par, Aman chat2 par:\n1) dono online: 3 messages live, \"OK via chat2\", registry mein stored 0\n2) Aman offline: 5 messages → \"OK queued\", stored 5\n3) Aman wapas (is baar chat1 par): 5 mile, stored 0 (5 store, 5 deliver hoke mitaaye)</pre>\n     <h3>🖼️ Media chat ke raaste se nahi</h3>\n     <p>Phone image <b>encrypt</b> karta hai → alag blob storage par upload → chat mein sirf ek chhota <b>pointer</b> (URL + decryption\n     key + content fingerprint). Same encrypted object reference reuse se forwarding bytes share ho sakti hain. Har fresh encryption ka ciphertext/fingerprint same hoga yeh guarantee nahi; scope, key distribution aur authorized access explicit hon.</p>\n     <p><b>Ticks</b>: 1 grey = server ke paas; 2 grey = phone tak pahuncha; 2 blue = padh liya. Server utna hi rakhta hai jitna \"deliver\n     hua? retry?\" ke liye chahiye, phir chhod deta hai.</p>",
+    "<h3>📮 Dakghar, filing cabinet nahi</h3>\n     <p>Recipient online → push karo aur <b>bhool jao</b>. Offline → Erlang ke apne DB (Mnesia) mein queue → wapas aaya → deliver →\n     <b>delete</b>. Storage chhota rehta hai kyunki server sirf \"raaste mein\" wale messages rakhta hai.</p>\n     <pre>lab 25 (ex3-store-forward) — Riya chat1 par, Aman chat2 par:\n1) dono online: 3 messages live, \"OK via chat2\", registry mein stored 0\n2) Aman offline: 5 messages → \"OK queued\", stored 5\n3) Aman wapas (is baar chat1 par): 5 mile, stored 0 (5 store, 5 deliver hoke mitaaye)</pre>\n     <h3>🖼️ Media chat ke raaste se nahi</h3>\n     <p>Phone image <b>encrypt</b> karta hai → alag blob storage par upload → chat mein sirf ek chhota <b>pointer</b> (URL + decryption\n     key + content fingerprint). Same encrypted object reference reuse se forwarding bytes share ho sakti hain. Har fresh encryption ka ciphertext/fingerprint same hone ki guarantee nahi; scope, key distribution aur authorized access explicit hon.</p>\n     <p><b>Ticks</b>: 1 grey = server ke paas; 2 grey = phone tak pahuncha; 2 blue = padh liya. Server utna hi rakhta hai jitna \"deliver\n     hua? retry?\" ke liye chahiye, phir chhod deta hai.</p>",
     `<h3>💥 Let it crash</h3>
      <p>Anjaani error → process mar jaata hai → <b>supervisor</b> (supervisor trees) use milliseconds mein dobara shuru karta hai. Ek user
-     ke liye second ka ek tukda. Self-healing = chhoti team isse chala paayi.</p>
+     ke liye second ka ek tukda. Self-healing = chhoti team WhatsApp chala paayi.</p>
      <h3>🔥 Hot code loading</h3>
      <p>Restart = laakhon connections tootein + reconnect storm. BEAM <b>chalte hue</b> module ka code badal deta hai.</p>
      <h3>🏋️ Scale up pehle</h3>
      <p>Har machine = raat 3 baje tootne wali ek aur cheez. Apna bare metal, FreeBSD (performance + poora stack tune). Coordination ke
-     liye jo Erlang pehle se deta hai, woh — services ka minaar nahi.</p>
+     liye Erlang ke pehle se diye tareeke — services ka minaar nahi.</p>
      <h3>📱 Phone ki taraf</h3>
      <p>Ek persistent connection + heartbeats, kamzor mobile par; toota toh reconnect aur chhoote messages kheencho. OS background app
      maar deta hai → Apple/Google <b>push</b> app ko jagata hai → reconnect. Khula connection = turant; push = backup.</p>`,
@@ -356,12 +356,12 @@ SD.registerLevels('stories', [
           'Message mitana aur metadata mitana alag cheezein hain.',
         ],
       },
-      lesson: 'Dakiya sirf pahunchata hai, rakhta nahi — isse server chhote aur sasta.',
+      lesson: 'Dakiya sirf pahunchata hai, rakhta nahi — messages mitaane se server chhota aur sasta.',
     },
     {
       type: 'match',
       title: 'Kaunsa mechanism kya bachata hai?',
-      instructions: 'Har mechanism ko uske kaam se jodo.',
+      instructions: 'Har mechanism ko sahi kaam se jodo.',
       pairs: [
         { left: '🧯 Supervisor tree', right: 'Crash hua process ms mein dobara — ek user ka hiccup, sabka nahi', explain: 'Let it crash.' },
         { left: '🔥 Hot code loading', right: 'Deploy bina restart — laakhon connections nahi toot-te', explain: 'Reconnect storm se bachav.' },
@@ -412,7 +412,7 @@ SD.registerLevels('stories', [
     ],
   },
   success: [
-    'Main store-and-forward aur uska storage faayda samjha sakta hoon',
+    'Main store-and-forward aur store-and-forward ka storage faayda samjha sakta hoon',
     'Main media pointer, fingerprint dedup aur ticks bata sakta hoon',
     'Main let-it-crash aur hot code loading ka kaam samjha sakta hoon',
   ],
@@ -455,8 +455,8 @@ SD.registerLevels('stories', [
        <li>Scale-up ki chhat, aur ek server = 20 lakh log ek saath gire → tez failover zaroori.</li>
        <li>Server history search/restore nahi kar sakta → complexity <b>arab phones</b> par (isi liye multi-device sync dard tha).</li>
      </ul>
-     <p class="tip">🎯 Paanch sabak: sabse sasta scaling = kam karo; core runtime problem ke hisaab se; scale up pehle; complexity wahan
-     jahan sasti (devices); failure ke liye banao (let it crash).</p>`,
+     <p class="tip">🎯 Paanch sabak: sabse sasta scaling = kam karo; core runtime problem ke hisaab se; scale up pehle; complexity sasti jagah par
+     (devices); failure ke liye banao (let it crash).</p>`,
   ],
   stages: [
     {
@@ -576,7 +576,7 @@ SD.registerLevels('stories', [
     'Main multi-device aur E2E ke trade-offs bata sakta hoon',
   ],
   homework: `<p>Apne product mein ek feature socho jo "server ko data dikhe" par tika hai (search, spam filter, backup). Agar data E2E ho
-    jaaye, toh woh feature kahan chalega — client par? Kitna mushkil hoga?</p>`,
+    jaaye, toh chuna hua feature kahan chalega — client par? Kitna mushkil hoga?</p>`,
   cards: [
      { front: 'Double ratchet / forward secrecy?', back: 'Forward secrecy past keys protect karti hai jab old keys securely delete hui hon. Future recovery alag property hai: fresh DH entropy, uncompromised endpoint aur protocol assumptions matter karte hain.' },
     { front: 'Sender keys (lab 25)?', back: "Key ek baar baanto, message ek baar encrypt. 1,000 members: 199,800 → 1,199 encryptions, 200 MB → 0.26 MB. Keemat: leave par rotation." },

@@ -27,7 +27,7 @@ VISUALS['st-snow-split'] = {
       <div class="dg-box is-good"><span class="bx-label">☁️ Snowflake — alag-alag</span>
         <div class="dg-node is-good" data-hs="s3"><span class="ni">🪣</span><span class="nl">object storage</span><span class="ns">har table yahin, ek hi copy</span></div>
         <div class="dg-node is-accent" data-hs="wh"><span class="ni">⚙️</span><span class="nl">virtual warehouse</span><span class="ns">stateless compute, seconds mein on/off</span></div>
-        <div class="dg-cap">Compute ke paas koi data nahi hai. Isi liye woh aa-ja sakta
+        <div class="dg-cap">Compute ke paas koi data nahi hai. Isi liye compute aa-ja sakta
           hai, bada-chhota ho sakta hai, aur per-second bill ho sakta hai.</div></div>
     </div>
 
@@ -59,7 +59,7 @@ VISUALS['st-snow-warehouse'] = {
           badalti hai aur <b>data baad mein</b>, jab queries naturally padhti hain.</div></div>
       <div class="dg-box is-good"><span class="bx-label">🏃 Work stealing</span>
         <div class="dg-cap">Koi node slow (noisy neighbour, dheemi SSD)? Jo node pehle
-          khatam kare, woh uski baaki files utha leta hai — query khud ko balance kar leti hai.</div></div>
+          khatam karne wala node slow node ki baaki files utha leta hai — query khud ko balance kar leti hai.</div></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -71,7 +71,7 @@ VISUALS['st-snow-warehouse'] = {
       <span class="dg-pill good" data-hs="same">🪣 wahi ek data</span>
     </div>
     <div class="dg-cap">Ek hi data, alag-alag compute. Isi liye bhaari ETL dashboards ko
-      dheema nahi karta — woh dono ek hi CPU par hain hi nahi.</div>`,
+      dheema nahi karta — ETL aur dashboards ek hi CPU par hain hi nahi.</div>`,
 };
 
 /* =====================================================================
@@ -86,17 +86,17 @@ SD.registerLevels('stories', [
   objectives: [
     'Shared-nothing ke teen permanent dard: rebalancing, contention, over-provisioning',
     '2012 mein kya badla jisse purana niyam expire ho gaya',
-    'Compute stateless kar dena — elasticity uska natija hai',
+    'Compute stateless kar dena — elasticity statelessness ka natija hai',
     'Architecture economics ke peechhe chalti hai, fashion ke peechhe nahi',
   ],
   lesson: [
     `<h3>🏛️ Bees saal ka standard: shared-nothing</h3>
      <p>Snowflake se pehle lagbhag har data warehouse ek hi tarah bana tha. 20 machines
      ka cluster, data un sab mein bata hua, har machine apni <b>local disk</b> par apna
-     hissa rakhe aur apne CPU se usse padhe. Query aayi toh kaam 20 hisson mein bat gaya,
+     hissa rakhe aur apne CPU se data padhe. Query aayi toh kaam 20 hisson mein bat gaya,
      sab apna-apna scan karte hain, aur aakhir mein result jud jaata hai. Teradata,
      Vertica, Netezza, pehla Redshift, Hadoop — sab isi soch par bane the.</p>
-     <p>Yeh soch us waqt bilkul sahi thi: <b>network dheema tha aur disk local thi</b>.
+     <p>Shared-nothing ki soch us waqt bilkul sahi thi: <b>network dheema tha aur disk local thi</b>.
      Isliye industry ka niyam tha — <b>"data ko compute ke paas mat le jao, compute ko
      data ke paas le jao."</b></p>
      <h3>💔 Par is niyam ke saath teen dard hamesha ke liye aa jaate hain</h3>
@@ -104,40 +104,40 @@ SD.registerLevels('stories', [
        <tr><th>Dard</th><th>Kyun</th></tr>
        <tr><td><b>Rebalancing</b></td><td>20 machines mein 5 aur jodo — ab data barabar nahi hai. Terabytes redistribute karna padta hai, jisme din lag sakte hain, aur us dauraan performance kharab rehti hai.</td></tr>
        <tr><td><b>Contention</b></td><td>ETL pipelines, BI dashboards, scheduled reports aur ad-hoc SQL — sab ek hi compute pool par ladte hain. Ek bhaari job sabko dheema kar deta hai.</td></tr>
-       <tr><td><b>Over-provisioning</b></td><td>Cluster quarter-end ke peak ke hisaab se size hota hai. Baaki saal woh mehenga compute khaali baitha rehta hai — aur chhota karna matlab phir se data shuffle, isliye koi karta hi nahi.</td></tr>
+       <tr><td><b>Over-provisioning</b></td><td>Cluster quarter-end ke peak ke hisaab se size hota hai. Baaki saal peak ke liye rakha mehenga compute khaali baitha rehta hai — aur chhota karna matlab phir se data shuffle, isliye koi karta hi nahi.</td></tr>
      </table>
      <p class="tip">🎯 Teenon ka ek hi root cause hai: <b>storage aur compute ek doosre
      se welded hain</b>. Data machine se chipka hai, isliye machine badalna matlab data
      hilana.</p>`,
     `<h3>📅 2012 — teen cheezein badlin</h3>
-     <p>Toh yeh sabko dikhta tha; alag kyun nahi kiya gaya? Kyunki pehle yeh
+     <p>Toh shared-nothing ka dard sabko dikhta tha; alag kyun nahi kiya gaya? Kyunki pehle storage aur compute ko alag karna
      <b>practical hi nahi</b> tha. 2012 ke aas-paas teen cheezein badlin:</p>
      <pre>1. Cloud object storage pakka ho gaya — S3: 11 nines durability,
-   lagbhag unlimited capacity, aur itna sasta ki uske upar database banaya ja sake
+   lagbhag unlimited capacity, aur itna sasta ki object storage par database banaya ja sake
 2. Data center networks itne tez ho gaye ki network se padhna
    local disk se padhne ke kareeb aa gaya
 3. Compute elastic ho gaya — servers kharido mat, minuton ke liye kiraye par lo
    aur phenk do</pre>
-     <p>Zyadatar logon ko yeh "behtar infrastructure" lagi. Snowflake ke teen founders —
+     <p>Zyadatar logon ko teenon badlav "behtar infrastructure" lage. Snowflake ke teen founders —
      Benoit Dageville aur Thierry Cruanes (dono Oracle mein ek dashak se zyada) aur
      Marcin Zukowski (Amsterdam mein sabse tez analytical query engines mein se ek bana
-     chuke the) — ne isme kuch aur dekha. Unhe pata tha ki purana architecture <b>kyun</b>
-     bana tha, aur ab woh kaaran zinda nahi the.</p>
-     <p>Unka faisla seedha tha: <b>har byte object storage mein rakho, ek hi copy, aur
+     chuke the) — ne isme kuch aur dekha. Founders ko pata tha ki purana architecture <b>kyun</b>
+     bana tha, aur ab purane architecture ke kaaran zinda nahi the.</p>
+     <p>Founders ka faisla seedha tha: <b>har byte object storage mein rakho, ek hi copy, aur
      compute ko poori tarah stateless bana do</b>. Jis cluster ke paas data hai hi nahi,
-     woh seconds mein khada ho sakta hai, query chala sakta hai, aur gayab ho sakta hai.</p>
+     aisa cluster seconds mein khada ho sakta hai, query chala sakta hai, aur gayab ho sakta hai.</p>
      <h3>🧱 Teen layers</h3>
      <pre>Storage  — S3 / Azure Blob / GCS. Har table yahin, aur sirf yahin.
 Compute  — virtual warehouses: stateless machines, per-second kiraya (har start/resume par kam se kam 60 second ka).
 Brain    — cloud services layer: metadata, query planning, transactions, security.</pre>
-     <p>Aur turant sabne ek hi aitraz kiya: <b>"S3 slow hai, uske upar database kaise
-     chalega?"</b> Uska jawab agle level mein hai — chaar tareeke, ek saath.</p>`,
+     <p>Aur turant sabne ek hi aitraz kiya: <b>"S3 slow hai, S3 par database kaise
+     chalega?"</b> S3 slow hone ke aitraz ka jawab agle level mein hai — chaar tareeke, ek saath.</p>`,
   ],
   stages: [
     {
       type: 'bins',
       title: 'Kaunsa dard kis architecture ka hai?',
-      instructions: 'Har dard ko us architecture mein daalo jisme woh hota hai.',
+      instructions: 'Har dard ko dard wale architecture mein daalo.',
       bins: [
         { id: 'shared', label: '🔗 Shared-nothing (storage + compute welded)' },
         { id: 'split', label: '☁️ Storage aur compute alag' },
@@ -165,7 +165,7 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
         { id: 'model', label: 'Model (0 = ek bada cluster · 1 = alag warehouses, elastic)', min: 0, max: 1, step: 1, value: 0, unit: '',
           note: 'Ek cluster = sab workloads saath; elastic = har workload ka apna compute.' },
         { id: 'hours', label: 'Peak roz kitne ghante rehta hai', min: 1, max: 24, step: 1, value: 2, unit: ' h',
-          note: 'Peak chhota ho toh hamesha uske liye provision karna sabse mehenga hai.' },
+          note: 'Peak chhota ho toh hamesha peak ke liye provision karna sabse mehenga hai.' },
       ],
       readouts: k => {
         const m = snowCostModel(k);
@@ -244,7 +244,7 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
           'Query ka dobara chalna pakke storage ki jagah nahi le sakta.',
         ],
       },
-      lesson: 'Elasticity koi feature nahi hai — woh <b>statelessness ka natija</b> hai.',
+      lesson: 'Elasticity koi feature nahi hai — elasticity <b>statelessness ka natija</b> hai.',
     },
   ],
   interview: {
@@ -288,19 +288,19 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
     ],
   },
   success: [
-    'Main shared-nothing ke teen dard aur unka root cause bata sakta hoon',
+    'Main shared-nothing ke teen dard aur har dard ka root cause bata sakta hoon',
     'Main stateless compute se milne wali elasticity samjha sakta hoon',
-    'Main kisi bhi "best practice" ko uski original constraints se jod kar dekh sakta hoon',
+    'Main kisi bhi "best practice" ko practice ki original constraints se jod kar dekh sakta hoon',
   ],
   homework: `<p>Apne system ka koi ek "aisa hi hota hai" wala niyam chuno (jaise
     "database ke paas hi cache rakho", "worker aur storage ek hi machine par"). Ab likho:
-    <b>woh niyam kis constraint ke liye bana tha?</b> Aur kya woh constraint aaj bhi
+    <b>chuna hua niyam kis constraint ke liye bana tha?</b> Aur kya niyam ka constraint aaj bhi
     sach hai?</p>`,
   cards: [
     { front: 'Shared-nothing ke teen dard?', back: '(1) node jodne par terabytes rebalancing, (2) sab workloads ek hi cluster par contention, (3) peak ke hisaab se over-provisioning (shrink karna bhi mehenga).' },
     { front: '2012 mein kya badla?', back: 'S3 pakka + sasta, datacenter network itna tez ki remote read ≈ local read, aur compute minuton ke liye kiraye par. Purane niyam ki shart hi khatam ho gayi.' },
     { front: 'Snowflake ki teen layers?', back: 'Storage (S3/Blob/GCS — har table yahin), virtual warehouses (stateless compute, per-second), cloud services layer (metadata, planning, transactions, security).' },
-    { front: 'Standard warehouse billing aur stateless compute ka sambandh?', back: 'Durable source shared storage mein hai; compute par query/cache state ho sakti hai. Isliye woh seconds mein start/stop ho sakta hai. Elasticity statelessness ka natija hai.' },
+    { front: 'Standard warehouse billing aur stateless compute ka sambandh?', back: 'Durable source shared storage mein hai; compute par query/cache state ho sakti hai. Isliye compute seconds mein start/stop ho sakta hai. Elasticity statelessness ka natija hai.' },
   ],
 },
 ]);
@@ -336,10 +336,10 @@ SD.registerLevels('stories', [
      <p>Virtual warehouse stateless machines ka ek cluster hai jo tumhari queries chalata
      hai. T-shirt sizes (XS se 6XL), seconds mein khada hota hai, idle hone par
      <b>auto-suspend</b>, query aate hi <b>auto-resume</b>, aur bill <b>per second</b> (har start/resume par kam se kam 60 second).</p>
-     <p>Yeh sab isliye mumkin hai kyunki warehouse ke paas kuch rakha hi nahi hai. Tum
+     <p>Warehouse ka start/stop isliye mumkin hai kyunki warehouse ke paas kuch rakha hi nahi hai. Tum
      chalti hui query ke beech warehouse maar do — query jaayegi, <b>data ka ek byte bhi
-     nahi</b>, kyunki data kabhi wahan tha hi nahi.</p>
-     <p>Isse data warehousing ka sabse purana dard mit gaya: ETL ek warehouse par, BI
+     nahi</b>, kyunki data kabhi warehouse par tha hi nahi.</p>
+     <p>Alag compute se data warehousing ka sabse purana dard mit gaya: ETL ek warehouse par, BI
      dashboards doosre par, data science teesre par — <b>ek hi data</b>, par alag CPUs.
      Monday morning ko sau analysts ek saath query chalayein toh warehouse apne aap aur
      clusters jod leta hai aur baad mein simat jaata hai.</p>`,
@@ -347,29 +347,29 @@ SD.registerLevels('stories', [
      <table>
        <tr><th>#</th><th>Tareeka</th><th>Kya karta hai</th></tr>
        <tr><td>1</td><td><b>Kam padho</b></td><td>Har file (micro-partition) ke har column ka min/max metadata. Query se pehle hi 50,000 files mein se sirf ~200 bachte hain — <b>storage ko chhue bina</b>.</td></tr>
-       <tr><td>2</td><td><b>Patla padho</b></td><td>File ke andar data columnar hai. Query 300 mein se 3 columns maangti hai toh bache hue 200 files se bhi sirf woh 3 columns padhe jaate hain.</td></tr>
+       <tr><td>2</td><td><b>Patla padho</b></td><td>File ke andar data columnar hai. Query 300 mein se 3 columns maangti hai toh bache hue 200 files se bhi sirf maange gaye 3 columns padhe jaate hain.</td></tr>
        <tr><td>3</td><td><b>Paas se padho</b></td><td>Har warehouse node ki local SSD cache. Files consistent hashing se baanti jaati hain — har file ka ek maalik node, duplicate nahi. Warm hone ke baad zyadatar reads local, S3 sirf misses ke liye.</td></tr>
        <tr><td>4</td><td><b>Kuch mat padho</b></td><td>Result cache. Wahi query, data nahi badla → jawab seedha cache se, warehouse ko jagaana bhi nahi padta.</td></tr>
      </table>
      <p class="tip">🎯 Ek bhi tareeka akela kaafi nahi hota. Chaaron ek saath lagte hain,
-     tabhi "door ka data" local jaisa lagta hai. (Yeh SQL Gurukul ke 🔬 Database Internals
-     track mein hands-on chalta hai — pruning aur columnar reads asli Postgres par.)</p>`,
+     tabhi "door ka data" local jaisa lagta hai. (Chaaron tareeke SQL Gurukul ke 🔬 Database Internals
+     track mein hands-on chalte hain — pruning aur columnar reads asli Postgres par.)</p>`,
     `<h3>🔄 Resize par cache ka kya hota hai</h3>
      <p>Warehouse 4 node se 8 node ho gaya. Seedha jawab hoga: cache rebalance karo, har
-     node ko uske hisse ki files do. Par socho — resize <b>tab</b> hota hai jab warehouse
+     node ko node ke hisse ki files do. Par socho — resize <b>tab</b> hota hai jab warehouse
      pehle se busy hai. Yani terabytes network par ghumane ka <b>sabse galat waqt</b>.</p>
      <p>Isliye Snowflake rebalance karta hi nahi. Resize par sirf <b>ownership turant</b>
      badalti hai; cached data <b>baad mein</b>, apne aap khiskta hai — jaise-jaise queries
-     naye assignment ke hisaab se files padhti aur cache karti hain. Unke NSDI 2020 paper
-     mein isse <b>lazy consistent hashing</b> kaha gaya hai.</p>
+     naye assignment ke hisaab se files padhti aur cache karti hain. Snowflake ke NSDI 2020 paper
+     mein ownership turant aur cache baad mein badalne ko <b>lazy consistent hashing</b> kaha gaya hai.</p>
      <h3>🏃 Aur agar ek node peechhe reh jaaye?</h3>
      <p>Data barabar bat jaane par bhi <b>kaam</b> barabar nahi hota — koi node noisy
-     neighbour ki wajah se slow ho sakta hai, ya uski SSD dheemi ho sakti hai. Snowflake
-     us node ka intezaar nahi karta: jo node apna kaam pehle khatam karta hai, woh slow
+     neighbour ki wajah se slow ho sakta hai, ya node ki SSD dheemi ho sakti hai. Snowflake
+     us node ka intezaar nahi karta: apna kaam pehle khatam karne wala node slow
      node ki baaki files utha leta hai. Query <b>khud ko balance</b> kar leti hai —
      har query, har baar.</p>
-     <p class="tip">🎯 Yeh do ideas kahin bhi kaam aate hain: (1) rebalancing ko
-     <b>lazy</b> banao taaki woh peak par na ho, (2) kaam ko <b>steal</b> karne do taaki
+     <p class="tip">🎯 Lazy rebalancing aur work stealing ke do ideas kahin bhi kaam aate hain: (1) rebalancing ko
+     <b>lazy</b> banao taaki rebalancing peak par na ho, (2) kaam ko <b>steal</b> karne do taaki
      ek slow worker poori job ko na roke.</p>`,
   ],
   stages: [
@@ -383,14 +383,14 @@ SD.registerLevels('stories', [
           unit: '%', given: ['50,000 files', '200 bache'],
           answer: 0.4, tol: 0.4,
           steps: ['200 / 50,000 = 0.004 = 0.4%', 'Yaani 99.6% table execution shuru hone se pehle hi hat gayi'],
-          lesson: 'Sabse tez read woh hai jo karni hi na pade.',
+          lesson: 'Sabse tez read — jo karni hi na pade.',
         },
         {
           q: 'Bache hue files mein 300 columns hain par query sirf 3 maangti hai. Ab kitne PERCENT data padha jaayega (columnar storage)?',
           unit: '%', given: ['300 columns', '3 chahiye'],
           answer: 1, tol: 0.4,
-          steps: ['3 / 300 = 1%', 'Pruning ke 0.4% ke upar yeh aur 1%'],
-          lesson: 'Row storage mein tum poori row padhte ho chahe ek column chahiye — columnar mein sirf woh column.',
+          steps: ['3 / 300 = 1%', 'Pruning ke 0.4% ke upar columnar reads se aur 1%'],
+          lesson: 'Row storage mein tum poori row padhte ho chahe ek column chahiye — columnar mein sirf zaroori column.',
         },
         {
           q: 'Dono milakar: 50,000 files × 300 columns ke mukable, kitne guna kam data padha gaya? (0.4% ka 1%)',
@@ -436,11 +436,11 @@ SD.registerLevels('stories', [
       verdict: k => {
         const m = warehouseModel(k);
         if (k.resize === 0) return { ok: false, text: `Turant rebalance karne se <b>${m.movedGB} GB</b> network par ghoom raha hai — bilkul us waqt jab warehouse pehle se busy hai. Query time <b>${m.queryMs.toLocaleString('en-IN')} ms</b>.` };
-        if (m.blocked) return { ok: false, text: `Lazy resize se traffic bach gaya, par ek node <b>${k.slow}×</b> slow hai aur baaki uska intezaar kar rahe hain — query <b>${m.queryMs.toLocaleString('en-IN')} ms</b>. Work stealing on karo.` };
+        if (m.blocked) return { ok: false, text: `Lazy resize se traffic bach gaya, par ek node <b>${k.slow}×</b> slow hai aur baaki slow node ka intezaar kar rahe hain — query <b>${m.queryMs.toLocaleString('en-IN')} ms</b>. Work stealing on karo.` };
         return { ok: true, text: `Dono cheezein sahi: ownership turant badli (network par sirf <b>${m.movedGB} GB</b>), aur fast nodes ne slow node ka kaam utha liya — query <b>${m.queryMs.toLocaleString('en-IN')} ms</b>.` };
       },
       check: k => { const m = warehouseModel(k); return m.queryMs <= 2000 && m.movedGB <= 50; },
-      lesson: `Do niyam: rebalancing ko <b>lazy</b> karo (woh hamesha sabse bure waqt par
+      lesson: `Do niyam: rebalancing ko <b>lazy</b> karo (rebalancing hamesha sabse bure waqt par
         trigger hoti hai), aur kaam ko <b>steal</b> karne do (warna poori job sabse slow
         worker ki speed par chalti hai).`,
       quiz: {
@@ -543,14 +543,14 @@ SD.registerLevels('stories', [
     'Main per-workload compute isolation ka faayda samjha sakta hoon',
   ],
   homework: `<p>Apne system mein ek aisi jagah dhoondho jahan koi "rebalance" hota hai
-    (shard move, cache warm-up, partition reassignment). Ab poochho: <b>woh rebalance kab
-    trigger hota hai?</b> Agar jawab "jab load badhta hai" hai, toh woh sabse galat waqt
+    (shard move, cache warm-up, partition reassignment). Ab poochho: <b>system ka rebalance kab
+    trigger hota hai?</b> Agar jawab "jab load badhta hai" hai, toh load badhne ka waqt sabse galat waqt
     hai — dekho ki use lazy kiya ja sakta hai ya nahi.</p>`,
   cards: [
     { front: 'Virtual warehouse kya hai?', back: 'Stateless machines ka cluster: t-shirt sizes, seconds mein start, idle par auto-suspend, query par auto-resume, standard warehouse compute ki per-second billing, start/resume par 60-second minimum ke saath. Node loss par running query fail/retry ho sakti hai; durable source storage alag rehta hai.' },
     { front: 'Remote storage par latency chhupane ke 4 tareeke?', back: '(1) kam padho — min/max pruning, (2) patla padho — columnar, (3) paas se padho — local SSD cache + consistent hashing, (4) kuch mat padho — result cache.' },
     { front: 'Lazy consistent hashing kya hai?', back: 'Resize par ownership turant badalta hai par cached data baad mein khiskta hai — queries jab naye assignment ke hisaab se padhti hain tab. Rebalancing peak par network nahi kha jaati.' },
-    { front: 'Work stealing kyun?', back: 'Data barabar bat sakta hai, speed nahi. Slow node (noisy neighbour, dheemi SSD) poori query ko rok deta — isliye jo node khali ho jaaye woh uski baaki files utha leta hai.' },
+    { front: 'Work stealing kyun?', back: 'Data barabar bat sakta hai, speed nahi. Slow node (noisy neighbour, dheemi SSD) poori query ko rok deta — isliye khali hua node slow node ki baaki files utha leta hai.' },
   ],
 },
 ]);

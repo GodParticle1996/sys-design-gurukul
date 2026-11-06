@@ -44,7 +44,7 @@ VISUALS['st-discord-model'] = {
 };
 
 VISUALS['st-discord-hot'] = {
-  t: 'Hot partition aur uske do ilaaj',
+  t: 'Hot partition aur hot partition ke do ilaaj',
   html: `
     <div class="dg-ladder">
       <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">1</span><span class="cmd">ek channel viral</span><span class="q">us channel ki poori partition ek node par hai</span></div>
@@ -63,7 +63,7 @@ VISUALS['st-discord-hot'] = {
           <span class="dg-pill good" data-hs="one">1 query</span>
         </div>
         <div class="dg-cap">Consistent hashing se ek channel ki saari requests ek hi
-          instance par — tabhi unhe <b>merge</b> kiya ja sakta hai.</div></div>
+          instance par — tabhi requests ko <b>merge</b> kiya ja sakta hai.</div></div>
       <div class="dg-box is-good"><span class="bx-label">⚙️ Ilaaj 2 — engine badlo</span>
         <div class="dg-cap">ScyllaDB: wahi query language, par C++ (GC nahi) aur
           <b>shard-per-core</b> — har core ka apna data aur memory.</div></div>
@@ -91,7 +91,7 @@ VISUALS['st-discord-migrate'] = {
       <div class="dg-box is-bad"><span class="bx-label">🧾 Keemat</span>
         <div class="dg-cap">Storage hamesha badhta rahega · data model 2017 se
           <b>tay</b> ho chuka tha (isliye Cassandra-compatible engine hi chun sakte the) ·
-          aur coalescing layer ab hamesha ke liye unki zimmedari hai.</div></div>
+          aur coalescing layer ab hamesha ke liye Discord ki zimmedari hai.</div></div>
     </div>`,
 };
 
@@ -106,7 +106,7 @@ SD.registerLevels('stories', [
   badge: 'Partition Pandit',
   objectives: [
     'Ek product faisla jo har technical faisle ka baap ban gaya',
-    'Partition key = woh sawaal jo tum baar-baar poochhte ho',
+    'Partition key = baar-baar poochha jaane wala sawaal',
     'Co-location, append-friendly writes, linear scaling — teen faayde',
     'Har data model ke andar ek chhupi maanyata hoti hai',
   ],
@@ -116,8 +116,8 @@ SD.registerLevels('stories', [
      archive ho jaate hain ya chupchap hat jaate hain. Discord ne ulta chuna: tumne jo
      bhi bheja, har server aur har channel mein, <b>sab abhi bhi wahin hai</b>, turant
      searchable, aur pehle message tak scroll karne layak.</p>
-     <p>Yeh chhota product detail nahi hai. Iska matlab hai ki Discord ek messaging system
-     nahi chala raha — woh <b>duniya ke sabse tezi se badhte databases mein se ek</b>
+     <p>Long-lived history chhota product detail nahi hai. Long-lived history ka matlab hai ki Discord ek messaging system
+     nahi chala raha — Discord <b>duniya ke sabse tezi se badhte databases mein se ek</b>
      chala raha hai: ek trillion messages paar, roz arabon naye, aur history ko product policy ke mutabiq retain kiya jaata hai; users messages edit/delete bhi kar sakte hain.</p>
      <h3>📜 Do migrations — aur kahani ka spine</h3>
      <pre>2015: MongoDB, ek replica set — chhoti team ke liye bilkul sahi
@@ -130,12 +130,12 @@ SD.registerLevels('stories', [
 
 … 12 → dozens → ~100 → 177 nodes, aur team ki zindagi firefighting</pre>
      <p class="tip">🎯 Video ki spine line: <b>jo database tumhe ek arab rows tak le
-     jaata hai, woh lagbhag kabhi wahi nahi hota jo ek trillion par tikta hai.</b>
+     jaane wala database lagbhag kabhi ek trillion par nahi tikta.</b>
      MongoDB shuruaat ke liye sahi tha, Cassandra scaling ke liye sahi tha — aur dono
      hamesha ke liye sahi nahi the.</p>`,
     `<h3>🗂️ Model ko ek hi sawaal ke liye banao</h3>
      <p>Discord se sabse zyada poochha jaane wala sawaal ek hi hai:
-     <b>"is channel ke sabse naye messages do."</b> Isliye storage usi ke aas-paas bana:</p>
+     <b>"is channel ke sabse naye messages do."</b> Isliye storage latest-messages sawaal ke aas-paas bana:</p>
      <pre>PARTITION KEY   =  channel   (aur waqt ke buckets mein bata hua)
 CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
      <p>Matlab: common query ke liye bounded channel/time partitions; replication policy ke mutabiq nodes — aur naye messages seedha upar se.</p>
@@ -152,14 +152,14 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
      <p>Asli Discord aisa nahi chalta. Zyadatar channels chup rehte hain, aur kuch
      channels — game launch ke waqt ka public server, kisi celebrity ki community, koi
      viral moment — par <b>laakhon log ek saath</b> padhte aur likhte hain.</p>
-     <p class="tip">🎯 Jab bhi koi data model dekho, poochho: <b>iske kaam karne ke liye
+     <p class="tip">🎯 Jab bhi koi data model dekho, poochho: <b>data model ke kaam karne ke liye
      kya sach hona chahiye?</b> Wahi vaakya tumhara agla outage hai.</p>`,
   ],
   stages: [
     {
       type: 'bins',
-      title: 'Yeh model kis cheez ke liye bana hai?',
-      instructions: 'Har operation ko sahi dabbe mein daalo — is model par woh sasta hai ya mehenga?',
+      title: 'Discord ka model kis cheez ke liye bana hai?',
+      instructions: 'Har operation ko sahi dabbe mein daalo — is model par operation sasta hai ya mehenga?',
       bins: [
         { id: 'cheap', label: '✅ Is model par sasta' },
         { id: 'costly', label: '❌ Is model par mehenga' },
@@ -178,7 +178,7 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
       type: 'tradeoff',
       title: 'Partition key lab',
       instructions: 'Partition key aur traffic skew badlo. Dekho kaunsa model kab tootta hai.',
-      goal: "Hot channel traffic share kam se kam <b>45%</b> rahe. Busiest-node load <b>25% ya kam</b> aur channel page ke liye <b>2 ya kam partitions</b> padho. Toy read workload multiple time buckets mein spread hai; ek current hot bucket ki writes isse automatically split nahi hoti.",
+      goal: "Hot channel traffic share kam se kam <b>45%</b> rahe. Busiest-node load <b>25% ya kam</b> aur channel page ke liye <b>2 ya kam partitions</b> padho. Toy read workload multiple time buckets mein spread hai; ek current hot bucket ki writes time buckets se automatically split nahi hoti.",
       scenario: `10,000 channels, ek node par lagbhag 1,000 partitions. Traffic bahut
         uneven hai — kuch channels par bhaari bheed.`,
       knobs: [
@@ -315,10 +315,10 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
     'Main load balance aur read cost ke beech ka trade samajh gaya hoon',
   ],
   homework: `<p>Apne sabse bade table ka partition/shard key likho. Ab ek vaakya likho jo
-    is roop mein ho: "yeh model tab tak theek hai jab tak ______ sach rahe." Phir poochho:
-    aaj woh vaakya kitna sach hai?</p>`,
+    is roop mein ho: "partition/shard model tab tak theek hai jab tak ______ sach rahe." Phir poochho:
+    aaj likha hua vaakya kitna sach hai?</p>`,
   cards: [
-    { front: 'Discord ka core product faisla?', back: 'Long-lived history ko low-latency read dena; edit/delete behavior phir bhi support karna. Isi se woh ek trillion+ messages wala, roz arabon badhta database chalate hain.' },
+    { front: 'Discord ka core product faisla?', back: 'Long-lived history ko low-latency read dena; edit/delete behavior phir bhi support karna. Isi product faisle se Discord ek trillion+ messages wala, roz arabon badhta database chalate hain.' },
     { front: 'Discord ka partition/clustering key?', back: 'Partition = channel (time buckets ke saath), clustering = message id jisme waqt encoded hai. Isliye "latest messages" = common query ke liye bounded channel/time partitions; replication policy ke mutabiq nodes.' },
     { front: 'Is model ke teen faayde?', back: 'Co-location (sabse aam kaam sabse sasta), append-friendly writes (koi in-place rewrite nahi), aur linear scaling (node jodo, data redistribute).' },
     { front: 'Us model ki chhupi maanyata?', back: 'Ki traffic channels par lagbhag barabar bata hoga. Asli duniya mein zyadatar channels chup aur kuch par laakhon log — yahi hot partition banata hai.' },
@@ -352,11 +352,11 @@ SD.registerLevels('stories', [
     `<h3>🔥 Ek channel ka bada din, poore cluster ka bura din</h3>
      <p>Model kehta tha: ek channel ka sab kuch ek partition mein, aur us partition ki copies kuch gine-chune
      nodes par. Jab koi channel viral hota hai, channel ka poora bhaar <b>unhi gine-chune</b> nodes par aa
-     jaata hai, jabki baaki nodes lagbhag khaali baithe hain. Isi ka naam hot partition
+     jaata hai, jabki baaki nodes lagbhag khaali baithe hain. Viral channel ke bhaar ka naam hot partition
      hai.</p>
      <p>Aur hot partition chupchap fail nahi hota:</p>
      <pre>node dheema  →  requests jama  →  timeouts  →  clients RETRY
-            →  doob-te node par AUR load  →  latency uske padosi resources tak
+            →  doob-te node par AUR load  →  latency doob-te node ke padosi resources tak
             →  poore system mein spikes</pre>
      <p>Engineers ko system-wide slowdown ka page milta tha, aur jaanch ke baad kaaran
      nikalta tha: <b>ek channel ka bada moment</b>.</p>
@@ -365,18 +365,18 @@ SD.registerLevels('stories', [
      node ko <b>rok</b> deta tha. Ab do alag-alag, unpredictable stalls ek doosre ke upar
      baith gaye: hot partition wale spikes aur GC wale pauses.</p>
      <p>Is dard ke saath Discord 177 Cassandra nodes tak pahunch gaya, aur team ka bada
-     hissa sirf firefighting kar raha tha. Jo cheez "linear scale" karne wali thi, woh
+     hissa sirf firefighting kar raha tha. "Linear scale" karne wala database
      rozana ki emergency ban chuki thi.</p>
      <p class="tip">🎯 Yaad rakho: <b>average case nahi, worst case tumhari architecture
      tay karta hai</b> — kyunki is paimane par rare event kahin na kahin har waqt ho raha
      hota hai.</p>`,
     `<h3>🧲 Sabse zaroori insight: sirf database problem nahi thi</h3>
      <p>Pehla reflex hota hai — database badlo. Discord ne rukk kar socha: <b>traffic
-     database se takra kaise raha hai</b>, woh bhi to problem hai. Duniya ka sabse achha
+     database se takra kaise raha hai</b>, traffic ka tareeka bhi to problem hai. Duniya ka sabse achha
      database bhi tab dabega jab 10 lakh log ek hi channel ka data ek hi pal mein
      maangein.</p>
      <p>Isliye storage engine chhune se <b>pehle</b> unhone database ke aage ek layer
-     lagayi — <b>data services layer</b> — aur uska sabse bada hathiyaar hai
+     lagayi — <b>data services layer</b> — aur data services layer ka sabse bada hathiyaar hai
      <b>request coalescing</b>:</p>
      <pre>Bina coalescing: 10,000 log ek popular channel kholte hain
                  →  10,000 ek jaisi queries, ek hi hot partition par
@@ -384,18 +384,18 @@ SD.registerLevels('stories', [
 Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
                  →  DATABASE par 1 query
                  →  jawab aane par 10,000 waiting requests ko wahi jawab</pre>
-     <p>Par yeh tabhi mumkin hai jab ek channel ki saari requests <b>ek hi jagah</b>
+     <p>Par request coalescing tabhi mumkin hai jab ek channel ki saari requests <b>ek hi jagah</b>
      pahunchein. Isliye routing <b>consistent hashing</b> par channel id se hoti hai —
-     har channel ki request hamesha usi data-service instance par, jahan unhe merge kiya
+     Har channel ki requests hamesha ek hi data-service instance par, jahan requests ko merge kiya
      ja sake.</p>
-     <h3>🦀 Aur yeh layer Rust mein kyun</h3>
-     <p>Java nahi, Go bhi nahi — <b>Rust</b>. Wajah seedhi thi: Java ke GC pauses se woh
-     itna jal chuke the ki unhe aisi language chahiye thi jisme garbage collector hai hi
+     <h3>🦀 Aur data services layer Rust mein kyun</h3>
+     <p>Java nahi, Go bhi nahi — <b>Rust</b>. Wajah seedhi thi: Java ke GC pauses se Discord ke engineers
+     itna jal chuke the ki engineers ko aisi language chahiye thi jisme garbage collector hai hi
      nahi, jahan concurrency par poora control ho, aur hot path ke beech mein koi random
      pause na aaye.</p>
      <p>Natija: viral channel ab database par hazaar guna spike nahi banata — lagbhag
      <b>ek</b> query banata hai, chahe kitne log dekh rahe hon.</p>
-     <p class="tip">🎯 Yeh "dabaav mein achhi engineering" ka udaharan hai: unhone database
+     <p class="tip">🎯 Request coalescing "dabaav mein achhi engineering" ka udaharan hai: unhone database
      ko doshi nahi thehraya, balki <b>do alag sawaal</b> alag kiye — "data kaise store
      karein" aur "traffic storage tak kaise pahunche" — aur doosre ka ilaaj alag se
      kiya.</p>`,
@@ -418,7 +418,7 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
           unit: 'queries', given: ['1 second', '100 ms ka window', 'har window mein 1 query'],
           answer: 10, tol: 0.4,
           steps: ['1 second / 100 ms = 10 windows', 'Har window mein 1 query → 10 queries'],
-          lesson: '10,000 se 10 — aur woh bhi bina kuch cache kiye, sirf duplicate demand merge karke.',
+          lesson: '10,000 se 10 — aur queries bhi bina kuch cache kiye, sirf duplicate demand merge karke.',
         },
         {
           q: 'Discord ne 177 Cassandra nodes se 72 ScyllaDB nodes par jaakar kitne PERCENT nodes kam kiye?',
@@ -439,7 +439,7 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
         database par lagbhag <b>80 ms</b> leti hai.`,
       knobs: [
         { id: 'conc', label: 'Ek second mein requests', min: 100, max: 10000, step: 100, value: 6000, unit: '',
-          note: 'Viral moment par yeh number bada hi hoga.' },
+          note: 'Viral moment par requests-per-second ka number bada hi hoga.' },
         { id: 'route', label: 'Routing (0 = random instance · 1 = consistent hash per channel)', min: 0, max: 1, step: 1, value: 0, unit: '',
           note: 'Coalescing tabhi kaam karti hai jab ek channel ki requests ek jagah pahunchein.' },
         { id: 'merge', label: 'Coalescing (0 = off · 1 = on)', min: 0, max: 1, step: 1, value: 0, unit: '',
@@ -522,7 +522,7 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
           'DB wahi tha. Sirf us tak pahunchne wali duplicate queries kam hui.',
         ],
       },
-      lesson: 'Thundering herd ke do hathiyaar: <b>wahan duplicate ko merge karo</b> (coalescing) aur <b>duplicate ko ek jagah laao</b> (consistent-hash routing) — jitne zyada instances, doosra utna zaroori.',
+      lesson: 'Thundering herd ke do hathiyaar: <b>data-service instance par duplicate ko merge karo</b> (coalescing) aur <b>duplicate ko ek jagah laao</b> (consistent-hash routing) — jitne zyada instances, doosra utna zaroori.',
     },
   ],
   interview: {
@@ -615,10 +615,10 @@ SD.registerLevels('stories', [
      <p>Coalescing layer ne bahut dard kam kiya, par neeche 177 Cassandra nodes wahi the —
      wahi GC pauses, wahi hot partitions jab coalescing kaafi na pade, aur data roz
      badhta jaata tha. Bada cluster matlab zyada nodes sambhalna, zyada partitions jo
-     garam ho sakti hain. <b>Woh problem ko scale kar rahe the, solve nahi.</b></p>
-     <p>Isliye unhone woh faisla liya jo unke paimane par darawna hai: <b>database hi
+     garam ho sakti hain. <b>Discord ke engineers problem ko scale kar rahe the, solve nahi.</b></p>
+     <p>Isliye Discord ne apne paimane par darawna faisla liya: <b>database hi
      badal do</b> — trillions live messages, aur ek second ka downtime bhi manzoor nahi.</p>
-     <p>Chuna gaya <b>ScyllaDB</b>, aur uski teen baatein exactly unke do dardon par fit
+     <p>Chuna gaya <b>ScyllaDB</b>, aur ScyllaDB ki teen baatein exactly Discord ke do dardon par fit
      baithti thin:</p>
      <table>
        <tr><th>Feature</th><th>Kyun maayne rakhta hai</th></tr>
@@ -638,9 +638,9 @@ PEHLE ka data:
    trillions historical messages backfill karne hain
    off-the-shelf (Spark-based) migrator: stable tha, par dheema
    → poora backfill ~3 MAHINE
-   → yaani 3 mahine aur us cluster ko chalana jise woh hataana chahte the
+   → yaani 3 mahine aur us cluster ko chalana jise Discord ke engineers hataana chahte the
 
-Unka jawab:
+Discord ka jawab:
    apna migrator, Rust mein, usi data-services framework par
    - Cassandra se BADE contiguous ranges padho
    - Scylla mein high concurrency ke saath likho
@@ -657,18 +657,18 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
     `<h3>🧾 Ab keemat — kyunki senior engineer trade-offs nahi chhodta</h3>
      <p><b>1. Storage hamesha badhega.</b> "Kabhi delete nahi" ka matlab hai ki tum us
      data ko bhi hamesha rakhte ho jise sankhya ke hisaab se lagbhag koi nahi padhta —
-     zyadatar reads haal ke messages ke hote hain. Par woh itihaas hi product ka vaada
+     zyadatar reads haal ke messages ke hote hain. Par purane messages ka itihaas hi product ka vaada
      hai.</p>
      <p><b>2. Data model lock ho gaya.</b> Jab trillions messages channel se partitioned
-     ho chuke hon, toh woh partitioning hi tumhari haqeeqat hai. Isi liye naya database
+     ho chuke hon, toh channel se partitioning hi tumhari haqeeqat hai. Isi liye naya database
      <b>Cassandra-compatible</b> hi ho sakta tha — model dobara sochne ka option tha hi
      nahi. <b>2017 ke faisle ki parchhai saalon baad tak padti rahi.</b></p>
      <p><b>3. Layers ab hamesha ki zimmedari hain.</b> Data services layer, coalescing,
-     consistent-hash routing, custom Rust tooling — yeh sab ab unka apna infrastructure
+     consistent-hash routing, custom Rust tooling — data services, routing aur tooling ab Discord ka apna infrastructure
      hai jise hamesha maintain karna hai. Har taakatwar infra ka ek permanent tax hota
      hai.</p>
      <p class="tip">🎯 Video ka closing sabak: <b>scale par access pattern hi architecture
-     hai</b> — aur khaas kar yeh baat ki data kitni <b>uneven</b> tarah padha aur likha
+     hai</b> — aur khaas kar baat ki data kitni <b>uneven</b> tarah padha aur likha
      jaata hai. Isliye design karte waqt sirf "average request kaisa dikhta hai" mat
      poochho, <b>"sabse extreme request kaisa dikhega"</b> bhi poochho.</p>`,
   ],
@@ -692,7 +692,7 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
       instructions: 'Concurrency, range size aur checkpointing badlo. Time aur risk dono dekho.',
       goal: "Backfill <b>15 days ya kam</b>, source load <b>60% ya kam</b>, aur failure ke baad checkpoint se resume hona chahiye.",
       scenario: `Backfill karna hai <b>1 trillion</b> messages. Source cluster live traffic
-        bhi serve kar raha hai — usse marna nahi hai.`,
+        bhi serve kar raha hai — source cluster ko marna nahi hai.`,
       knobs: [
         { id: 'conc', label: 'Migrator concurrency', min: 1, max: 60, step: 1, value: 4, unit: '',
           note: 'Zyada concurrency = tez, par source par zyada load.' },
@@ -721,8 +721,8 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
       verdict: k => {
         const m = backfillModel(k);
         if (!k.ckpt) return { ok: false, text: `Checkpointing nahi hai — beech mein kuch fail hua toh <b>${m.redoDays} din</b> ka kaam dobara. Multi-day migration mein failure hoga hi, sawaal sirf kab ka hai.` };
-        if (m.load > 60) return { ok: false, text: `Concurrency <b>${k.conc}</b> ke saath source par <b>${m.load}%</b> load hai — woh cluster live traffic bhi serve kar raha hai. Thoda dheere chalo.` };
-        if (m.days > 15) return { ok: false, text: `<b>${m.days} din</b> lag rahe hain. Bade ranges (sequential reads) aur thodi zyada concurrency se yeh tezi se girta hai.` };
+        if (m.load > 60) return { ok: false, text: `Concurrency <b>${k.conc}</b> ke saath source par <b>${m.load}%</b> load hai — source cluster live traffic bhi serve kar raha hai. Thoda dheere chalo.` };
+        if (m.days > 15) return { ok: false, text: `<b>${m.days} din</b> lag rahe hain. Bade ranges (sequential reads) aur thodi zyada concurrency se migration ka waqt tezi se girta hai.` };
         return { ok: true, text: `Achha plan: <b>${m.days} din</b>, rate <b>${m.rate} lakh msg/s</b>, source par sirf <b>${m.load}%</b> load, aur failure par sirf <b>${m.redoDays} din</b> ka kaam dobara.` };
       },
       check: k => { const m = backfillModel(k); return k.ckpt === 1 && m.days <= 15 && m.load <= 60; },
@@ -836,7 +836,7 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
     { front: 'ScyllaDB kyun chuna?', back: 'Wahi query language (data model bina redesign ke aa gaya), C++ mein (koi GC pause nahi), aur shard-per-core (har core ka apna data/memory — uneven load par zyada sthir).' },
     { front: 'Migration ka plan?', back: 'Dual writes se "abhi" ka data dono jagah; trillions historical messages ke liye custom Rust migrator — bade contiguous ranges, high concurrency, aur progress ka checkpoint. 3 mahine ka anumaan → ~9 din, ~32 lakh msg/s.' },
     { front: 'Migration ke baad ke numbers?', back: '177 Cassandra → 72 Scylla nodes (har node par dogune se zyada data), tail read latency 40–125 ms se sthir ~50 ms, worst-case write ~5 ms, aur rozana ki firefighting khatam.' },
-    { front: '"Kabhi delete nahi" ki teen keematein?', back: 'Storage hamesha badhta hai (aur woh data bhi rakhna padta hai jise koi nahi padhta); data model lock ho jaata hai (isliye compatible engine hi chun sakte the); aur coalescing/routing/tooling hamesha ke liye apni zimmedari ban jaate hain.' },
+    { front: '"Kabhi delete nahi" ki teen keematein?', back: 'Storage hamesha badhta hai (aur na padhe jaane wala data bhi rakhna padta hai); data model lock ho jaata hai (isliye compatible engine hi chun sakte the); aur coalescing/routing/tooling hamesha ke liye apni zimmedari ban jaate hain.' },
   ],
 },
 ]);

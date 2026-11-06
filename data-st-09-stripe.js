@@ -30,7 +30,7 @@ VISUALS['stripe-tooling'] = {
   html: `
     <div class="dg-ladder">
       <div class="dg-rung"><span class="lv">1</span><span class="cmd">Sorbet (gradual types, C++)</span><span class="q">5 crore lines seconds mein check; types jahan faayda</span></div>
-      <div class="dg-rung a"><span class="lv">2</span><span class="cmd">Selective test execution</span><span class="q">badla function → callers → unke callers → sirf woh tests (~5%)</span></div>
+      <div class="dg-rung a"><span class="lv">2</span><span class="cmd">Selective test execution</span><span class="q">badla function → callers → callers ke callers → sirf jude hue tests (~5%)</span></div>
       <div class="dg-rung a"><span class="lv">3</span><span class="cmd">Fearless refactor</span><span class="q">ek Sunday: 37 lakh lines ek PR mein, agli subah sab chal raha tha</span></div>
       <div class="dg-rung g"><span class="lv">4</span><span class="cmd">Minions (in-house AI agents)</span><span class="q">Ruby + Sorbet par commercial agents se behtar</span></div>
     </div>
@@ -75,8 +75,8 @@ SD.registerLevels('stories', [
      <p>2025 mein Stripe ke through <b>$1.9T</b> gaye (2024: $1.4T) — ek saajhe <b>Ruby monolith</b> se, ~5 crore lines (sabse
      bada jaana-maana Ruby codebase), saikdon log roz commit karte hain, peak 27,000 requests/sec.</p>
      <p>2010s ka playbook ulta tha: Twitter Ruby se Scala par gaya aur microservices mein toda. Stripe ne ~2017 mein kaha:
-     <b>bottleneck language nahi, codebase hai — aur codebase ko tooling se theek karte hain, rewrite se nahi.</b> Jo budget
-     migration mein jaata, woh tooling mein gaya.</p>
+     <b>bottleneck language nahi, codebase hai — aur codebase ko tooling se theek karte hain, rewrite se nahi.</b> Budget
+     migration ke bajaye tooling mein gaya.</p>
      <h3>🤔 Ruby ki sach mein kya dikkatein hain</h3>
      <ul>
        <li><b>GIL</b> — ek process mein ek waqt ek thread Ruby chalata hai.</li>
@@ -178,7 +178,7 @@ SD.registerLevels('stories', [
     'Main rewrite ki keemat ka andaaza laga sakta hoon',
   ],
   homework: `<p>Apni team se ek sawaal poochho: "codebase mein sabse zyada waqt kahan jaata hai?" Top 3 jawab likho. Har ek ke
-    saamne likho: kya yeh rewrite se theek hoga, ya ek tool (types, search, selective CI, formatter) se?</p>`,
+    saamne likho: kya dikkat rewrite se theek hogi, ya ek tool (types, search, selective CI, formatter) se?</p>`,
   cards: [
     { front: 'Stripe ka ~2017 ka faisla?', back: 'Bottleneck language nahi, codebase hai — tooling se theek karo, rewrite se nahi. 5 crore lines Ruby monolith, $1.9T (2025).' },
     { front: 'Stripe ki teen asli takleefein?', back: 'Onboarding (types nahi), refactoring (static analysis nahi), slow tests (sab chalte the). Koi rewrite nahi maangti.' },
@@ -202,11 +202,11 @@ SD.registerLevels('stories', [
   ],
   lesson: [
     `<h3>🔎 Sorbet</h3>
-     <p>Gradual static type checker (C++ mein): types wahan jahan faayda, baaki untyped chalega. Cores ke saath linearly scale —
+     <p>Gradual static type checker (C++ mein): types faayde wali jagah par, baaki untyped chalega. Cores ke saath linearly scale —
      <b>5 crore lines seconds mein</b>. Edit karte waqt hi cross-module mismatch pakadta hai. March ke ek Sunday: <b>37 lakh
-     lines ek PR mein</b> convert, agli subah sab chal raha tha. Types ke bina woh refactor sochne layak bhi nahi tha.</p>
+     lines ek PR mein</b> convert, agli subah sab chal raha tha. Types ke bina bade PR ka refactor sochne layak bhi nahi tha.</p>
      <h3>🎯 Selective test execution</h3>
-     <p>Static analysis se call graph: badla hua function → use kaun bulata hai → unhe kaun… → <b>sirf woh tests</b> jo us
+     <p>Static analysis se call graph: badla hua function → function ke callers → callers ke callers… → <b>sirf aise tests</b> jo us
      subgraph ko chhoote hain. Stripe par ~5% suite, same safety. Microservices ke CI jaisa faayda ("sirf apne tests"),
      bina network boundaries, deploys aur distributed debugging ke.</p>
      <pre>lab 13 (3,000 functions, 1,500 tests):
@@ -215,7 +215,7 @@ change fn 1234 | selective | tests   10 (0.7%) |   42 ms | failed 10/10 | missed
 change fn 57 (shared core) | selective | 452 tests (30.1%)</pre>`,
     `<h3>🕳️ Dynamic calls — graph ke andhe kone</h3>
      <p>Ruby ka <code>send</code> / metaprogramming: function ka naam string se banta hai — static analysis ko dikhta hi nahi.
-     Selective runner ko woh raasta nahi dikhega, toh woh test nahi chalayega.</p>
+     Selective runner ko dynamic call ka raasta nahi dikhega, toh runner test nahi chalayega.</p>
      <pre>300 random changes:
 dynamic edges 60 (static ka ~1%) → 91 changes mein failing test chhoota
 dynamic edges  5                  →  4 changes
@@ -262,7 +262,7 @@ dynamic edges  0                  →  0</pre>
           'Ek tooti kadi upar ke saare callers chhupa deti hai — asar 1% se kahin bada.',
         ],
       },
-      lesson: 'Selective testing ki taakat graph ki sachchai jitni hai. Dynamic calls kam karo, ya unhe graph mein declare karo.',
+      lesson: 'Selective testing ki taakat graph ki sachchai jitni hai. Dynamic calls kam karo, ya dynamic calls ko graph mein declare karo.',
     },
     {
       type: 'quiz',
@@ -393,7 +393,7 @@ WORKERS=8 EXTRAS=queue  420 charges/s | p50  30 ms | p99 142 ms   (14-core lapto
      <p>Ek process ki chhat: 1000 ms ÷ (12 + 8) ms ≈ 50/s — 14 cores hone se koi farak nahi. Pehla kadam: jo charge ke liye
      zaroori nahi use bahar (46 → 73). Doosra: processes badhao (73 → 420). Code ki ek line nahi badli.</p>
      <p class="tip">🎯 GIL ke saath jeena "hamesha ka" hai: process-level concurrency, har gem typed ya untyped mark, aur
-     dependency graph saaf. Par yeh <b>jaana-pehchaana</b> kharcha hai — rewrite ka nahi.</p>`,
+     dependency graph saaf. Par GIL ke saath jeena <b>jaana-pehchaana</b> kharcha hai — rewrite ka nahi.</p>`,
   ],
   stages: [
     {
@@ -492,7 +492,7 @@ WORKERS=8 EXTRAS=queue  420 charges/s | p50  30 ms | p99 142 ms   (14-core lapto
     'Main Stripe ke paanch sabak bata sakta hoon',
   ],
   homework: `<p>Apne sabse busy endpoint ke handler ke har kadam ko likho aur har ek ke saamne: "user ko jawab dene ke liye zaroori?"
-    Jo zaroori nahi, unka time jodo — itna tum request path se hata sakte ho. Phir dekho tumhare process kitne cores use kar rahe hain.</p>`,
+    Gair-zaroori kadmon ka time jodo — itna tum request path se hata sakte ho. Phir dekho tumhare process kitne cores use kar rahe hain.</p>`,
   cards: [
     { front: 'GIL ka asar?', back: 'Ek process mein ek waqt ek thread Ruby — 16 cores par bhi ~1 core. (Node mein bhi ek event loop par CPU wala JavaScript ek-ek karke chalta hai; worker threads alag chal sakte hain.)' },
     { front: 'Stripe GIL ke saath kaise?', back: 'Bahut saare Ruby processes + load balancer; parallel/background kaam request path se bahar, non-Ruby systems par.' },

@@ -460,3 +460,10 @@ bulkhead isolation).
 
 **User decision (2026-11-04): fix all three kinds, including the simulator** (make it really model what the
 lessons claim), and **keep commits local** for now. Codex implements in its worktree; Claude reviews and merges.
+
+**Lesson stand-in sweep finished (2026-11-05/06).** Every track's lesson text now names the noun instead of
+woh/yeh/uska…: flow, api, resil, builds, feed and the playlists by Claude; data, dist, shapes (679 pairs) and
+stories (505 pairs) drafted by Codex as fix lists, reviewed in context and applied by Claude (5 rewordings);
+ai and planet (~190) by Claude. Only verbatim lab code/output keeps a pronoun (15 in sdd-resil, 1 Airtable
+capture). Same pass: Concurrency's 24 flashcards and 6 clipped steps, and 11 mixed-English audit leftovers
+(bitly, Bloom filter quiz, fencing card, consumer-group lesson, Colab/AI cards) rewritten in plain Hinglish.
