@@ -284,8 +284,8 @@ Sixth round (cc-*, the language pass on Codex's own track):
   tests it; the question now tests only "both accounts need locks", and the ordering rule moved to the explanation
   as a pointer to cc-stuck. Codex's cc-start distractor "processes cannot reach the same row" contradicted its own
   stem; replaced with "separate connections don't touch each other's work".
-- **Open:** cc-race teaches six ideas; Codex independently recommends the same split (race + mutex + atomic / lock
-  size + reentrant + immutable). Waiting for the user. The track's step text was English-heavy; done 2026-11-05: all 24 flashcards and 6 clipped lesson/step lines
+- **Done (fd0c4ec):** cc-race taught six ideas; split as the user chose into cc-race (race + mutex + atomic) and
+  cc-locks (lock size + reentrant + immutable), with progress migration. The track's step text was English-heavy; done 2026-11-05: all 24 flashcards and 6 clipped lesson/step lines
   rewritten in plain Hinglish (facts unchanged).
 
 Seventh round (hc-*) — the first batch Codex *wrote* and Claude reviewed:
@@ -448,7 +448,7 @@ Codex wrote the other 46. A coverage script checked that hint 3 equals the solut
 a `{level, path, hints}` form. `validate.js` now skips the HTML-tag check for terminal hints, which perfsim prints
 with `textContent`, so placeholders such as `<ms>` show as written (checked in Chromium).
 
-**Open (Phase 4): mission text vs checks vs simulator.** While writing hints Codex replayed all 49 solutions and
+**Done (Phase 4, merged 2026-11-05): mission text vs checks vs simulator.** While writing hints Codex replayed all 49 solutions and
 listed ~40 places where a mission's goal, task text or successText disagrees with its task checks, its final
 verify or the simulator's real numbers. Full list: `sdg-codex-xp/jobs/hints/NOTES-mission-discrepancies.md`.
 Three kinds: (a) wrong facts in successText (retries says 3 attempts for `--max 3`, which is 4; pool says
