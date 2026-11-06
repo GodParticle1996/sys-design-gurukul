@@ -359,7 +359,7 @@ SD.registerLevels('ai', [
     kisi mazboot, pehle se tested boundary (alag account/project) se badal sakte ho?</p>`,
   cards: [
     { front: 'Replit ka threat model?', back: 'Hostile: agent ajeeb commands chalayega, user breakout/scan/pivot maang sakta hai. Isliye defense in depth: container + kernel features + hypervisor + hardened syscalls.' },
-    { front: 'Managed project boundary ka tradeoff?', back: 'IAM, quota aur billing scope plus project lifecycle cost. Workload/network/identity isolation separately configure aur test karo; project name alone complete tenant security guarantee nahi.' },
+    { front: 'Managed project boundary ka tradeoff?', back: 'IAM, quota aur billing ka scope, plus project banane-chalane ka kharcha. Workload, network aur identity ki isolation alag se set karo aur test karo; sirf alag project naam poori tenant security ki guarantee nahi.' },
     { front: 'Dev/prod boundary kyun?', back: 'Dev mein AI ki aazaadi (install, fork, galti, rollback); prod bandh (Cloud Run, WAF, autoscale). Dev DB prod se alag — agent prod data chhoota hi nahi.' },
   ],
 },

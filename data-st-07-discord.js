@@ -575,7 +575,7 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
     par kitni queries jaayengi? Agar jawab 10,000 hai, tumhe coalescing chahiye.</p>`,
   cards: [
     { front: 'Hot partition ka chain?', back: 'Ek partition ek node par → viral channel → node dheema → timeouts → clients retry → aur load → padosi resources tak latency → system-wide slowdown.' },
-    { front: 'Discord ne pehla ilaaj kahan kiya?', back: 'Database ke AAGE — data services layer with request coalescing. "Data kaise store karein" aur "traffic storage tak kaise pahunche" do alag sawaal hain.' },
+    { front: 'Discord ne pehla ilaaj kahan kiya?', back: 'Database ke AAGE — ek data services layer, jo ek jaisi requests ko jod deti hai (request coalescing). "Data kaise store karein" aur "traffic storage tak kaise pahunche" do alag sawaal hain.' },
     { front: 'Coalescing ki shart?', back: 'Consistent hashing se ek channel ki saari requests ek hi instance par pahunchein — tabhi duplicate requests merge ho sakti hain.' },
     { front: 'Rust kyun chuna?', back: 'Java ke GC pauses se bachne ke liye — koi garbage collector nahi, concurrency par poora control, aur JVM GC pause nahi, lekin allocator, scheduler aur I/O stalls phir bhi assess karo.' },
   ],

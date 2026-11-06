@@ -183,7 +183,7 @@ SD.registerLevels('stories', [
   cards: [
     { front: 'Notion ka block?', back: '{ id, type, properties (JSON), content[] (children), parent, metadata }. Paragraph se workspace tak sab block.' },
     { front: 'Block model ke teen faayde?', back: 'Composability (kuch bhi kisi ke andar), chaar operations ki API, bina schema migration naye types.' },
-    { front: 'Block model ki keemat?', back: 'Permissions (ancestor walks), search (tree flatten), server-side plaintext features E2E mein client/search design maangti hain, migration hamesha ka vaada, onboarding bojh.' },
+    { front: 'Block model ki keemat?', back: 'Permissions (upar ke blocks tak chalna), search (tree ko flat karna), E2E mein server-side plaintext features ke liye client/search ka naya design, migration ka hamesha ka vaada, aur naye logon ke liye seekhne ka bojh.' },
   ],
 },
 

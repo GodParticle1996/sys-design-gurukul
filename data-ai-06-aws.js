@@ -497,7 +497,7 @@ cells        storm ke dauraan: AZ-A 32%, AZ-B 100%, AZ-C 100% ← dard sirf usi 
     cache invalidation, feature flags). Likho: bure din barista ka kaam kitna badhta hai, aur ek message kho jaaye toh
     kya hota hai? Kya barista ko "har N second poori state" mein badal sakte ho?</p>`,
   cards: [
-    { front: 'Constant work?', back: "Bounded state ko version/checksum ke saath periodic full snapshot se reconcile karo. Lost updates next valid newer authoritative snapshot repair kar sakti hai; corrupt source or failed delivery nahi. Route53 course example historical bounded design hai." },
+    { front: 'Constant work?', back: "Bounded state ko version/checksum ke saath, har kuch der mein poore snapshot se milao. Kho gaya update agla sahi, naya, pakka snapshot theek kar deta hai; par kharab source ya na pahuncha snapshot nahi. Route53 wala course example ek purana bounded design hai." },
     { front: 'EBS 2011 root cause?', back: 'Network change → replicas chhoote → sab volumes ne ek saath re-mirror → sab ek shared control-plane DB se poochh rahe the → DB gira → dinon ka recovery.' },
     { front: 'Physalia?', back: 'Har EBS volume ka apna chhota 7-node Paxos cell, volume ke paas. Ek bada saajha DB ki jagah laakhon chhote — blast radius ek volume.' },
   ],
@@ -646,7 +646,7 @@ Zelkova-proved bucket policy   → "public?" ka math wala jawab
     "koi bucket public nahi"). Phir likho: abhi use kaun check karta hai — test, review, ya kuch nahi? Aur
     kya "saari mumkin haalaton" par check karne ka koi tareeka hai?</p>`,
   cards: [
-    { front: 'TLA+ model checking?', back: "Design ko states/transitions mein likho; finite configured model ka completed search reachable states explore karta hai. Unbounded system/actual source code automatically proved nahi. DynamoDB replication bug: sabse chhota failing trace 35 kadam." },
+    { front: 'TLA+ model checking?', back: "Design ko states aur transitions mein likho; ek seemit, configured model ki poori search pahunch sakne wali har state dekh leti hai. Bina seema wala system ya asli source code apne aap prove nahi hota. DynamoDB replication bug: sabse chhota failing trace 35 kadam." },
     { front: 'Zelkova?', back: 'Supported IAM/S3 policy semantics ka solver analysis possible access classify karta hai. Identity/configuration context aur unmodeled behavior separately verify karo; solver answer complete system proof nahi.' },
     { front: 'Test vs proof?', back: 'Test: "ye request kya karti hai?" Proof: "koi bhi request kya kar sakti hai?" Scale par rare raaste roz chalte hain.' },
   ],

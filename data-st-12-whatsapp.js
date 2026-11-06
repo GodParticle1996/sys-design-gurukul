@@ -171,7 +171,7 @@ SD.registerLevels('stories', [
     aur kitne idle hain. 10× connections par kya tootega pehle — memory, file descriptors, ya CPU?</p>`,
   cards: [
     { front: 'WhatsApp ka siddhant?', back: '"Do more with less" — server kam se kam kare, ek machine ko jitna ho sake kheencho, naye parts tabhi jab raasta na bache. 2014: ~45 crore users, ~50 log.' },
-    { front: 'Erlang process kyun?', back: "Erlang lightweight processes OS threads se chhote hote hain. Official 64-bit example 327 words=2616 bytes (heap 233 words included); mailboxes/binaries/socket buffers extra hain. Reductions ordinary BEAM work ko schedule karti hain; long unsafe NIFs alag risk hain." },
+    { front: 'Erlang process kyun?', back: "Erlang ke halke processes OS threads se bahut chhote hote hain. Official 64-bit misaal: 327 words = 2,616 bytes (233 words ka heap shaamil); mailbox, binaries aur socket buffers alag se. Aam BEAM kaam reductions se baari-baari chalta hai; lambe, unsafe NIFs ek alag khatra hain." },
     { front: 'Lab 25: idle connection ka kharcha?', back: "Event loop par ~3.2 KB; Node worker thread ~5.4 MB → 20,000 = ~100 GB." },
   ],
 },
@@ -420,7 +420,7 @@ SD.registerLevels('stories', [
     purane notifications, temp uploads). Kya use deliver/ack par mitane se storage ghatega? Kaunsi cheez sach mein history chahiye?</p>`,
   cards: [
     { front: 'Store and forward?', back: 'Online → push, bhool jao. Offline → queue → deliver → delete. Lab: stored 5 → 0 after delivery. Server storage "raaste mein" wale messages jitni.' },
-    { front: 'WhatsApp media flow?', back: "Phone encrypt → blob storage → scoped pointer/key/integrity metadata. Existing encrypted object reference reuse possible; fresh randomized ciphertext par global plaintext dedup infer nahi." },
+    { front: 'WhatsApp media flow?', back: "Phone encrypt karta hai → blob storage → server ke paas sirf pointer, key aur integrity ki jaankari. Pehle se encrypted object ka reference dobara use ho sakta hai; par har baar naye random ciphertext se poore system mein ek jaisi files pehchaanna (dedup) nahi ho sakta." },
     { front: 'Let it crash?', back: 'Anjaani error par process mare, supervisor ms mein restart kare — self-healing, isliye chhoti team.' },
   ],
 },
@@ -578,7 +578,7 @@ SD.registerLevels('stories', [
   homework: `<p>Apne product mein ek feature socho jo "server ko data dikhe" par tika hai (search, spam filter, backup). Agar data E2E ho
     jaaye, toh chuna hua feature kahan chalega — client par? Kitna mushkil hoga?</p>`,
   cards: [
-     { front: 'Double ratchet / forward secrecy?', back: 'Forward secrecy past keys protect karti hai jab old keys securely delete hui hon. Future recovery alag property hai: fresh DH entropy, uncompromised endpoint aur protocol assumptions matter karte hain.' },
+     { front: 'Double ratchet / forward secrecy?', back: 'Forward secrecy purani keys ko bachati hai — bas purani keys theek se delete hui hon. Aage ki recovery alag guarantee hai: naya DH randomness, bina hack hua device, aur protocol ki shartein — teeno chahiye.' },
     { front: 'Sender keys (lab 25)?', back: "Key ek baar baanto, message ek baar encrypt. 1,000 members: 199,800 → 1,199 encryptions, 200 MB → 0.26 MB. Keemat: leave par rotation." },
     { front: 'Multi-device (2021)?', back: 'Har device ki apni identity key; user = devices ka set; har device ke liye alag encrypt; history E2E sync, server andha.' },
   ],

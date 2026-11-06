@@ -842,7 +842,7 @@ N read threads      — queries parallel
     pata chalega? Agar jawab "shayad kabhi nahi", toh pehle <b>compare</b> ka raasta
     banao, phir switch ka.</p>`,
   cards: [
-    { front: 'Airtable ka asli bottleneck kya tha?', back: 'Hardware nahi — programming model. CPU-bound kaam single-threaded Node par tha, Original large JS object graph multiple isolates mein directly shared nahi tha. Rust-backed shared layout aur Node worker threads ne design badla; workers universally extra full copies require nahi karte.' },
+    { front: 'Airtable ka asli bottleneck kya tha?', back: 'Hardware nahi — programming model. CPU wala kaam single-threaded Node par tha, aur bada JS object graph kai isolates mein seedha share nahi ho sakta tha. Rust-backed shared layout aur Node worker threads ne design badla; har worker ko poori extra copy chahiye, aisa zaroori nahi.' },
     { front: 'Naye Rust engine ka concurrency model?', back: 'Shared memory + 1 write thread (saare writes ek kram mein) + N read threads (MVCC snapshot par, rukte nahi) + ek dispatcher. Saath mein indexes, constraints aur triggers.' },
     { front: 'Live database migration ke 4 kadam?', back: '(1) abstraction boundary, (2) dual run — har operation dono engines par + apne aap compare, (3) poore dataset ka lagatar diff, (4) cutover jab farq zero ho.' },
     { front: 'Embeddings alag store mein kyun?', back: 'Ek vector row se ~10× bada hota hai aur memory sabse mehenga resource hai. Alag vector DB (self-hosted), aur eventually consistent — kyunki embedding ke liye model call user-facing transaction mein nahi aa sakti.' },

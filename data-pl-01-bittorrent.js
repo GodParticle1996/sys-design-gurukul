@@ -651,7 +651,7 @@ titfortat BINA optimistic unchoke (koi free-rider nahi): 400 sec mein 0/200 poor
   cards: [
     { front: 'Kademlia DHT?', back: "Random IDs, XOR distance; key ke sabse paas nodes value rakhte hain; har node har distance-range mein k nodes jaanta hai. Lookup ~log N rounds (lab: 1k→100k nodes, 4.0→5.3)." },
     { front: 'Magnet link?', back: 'Sirf info hash (40 chars). DHT se peers, metadata exchange se .torrent — info hash se verify. URL = jagah; magnet = content.' },
-    { front: 'uTP / LEDBAT?', back: "LEDBAT delay-based background congestion control competing traffic ko yield karne ke liye design hua. Target/deployment implementation-specific; RFC 6817 Experimental hai. Universal bufferbloat cure nahi." },
+    { front: 'uTP / LEDBAT?', back: "LEDBAT delay dekh ke chalne wala background congestion control hai, jo doosre traffic ko raasta dene ke liye bana. Target aur deployment har implementation mein alag; RFC 6817 Experimental hai. Bufferbloat ka har jagah ilaaj nahi." },
   ],
 },
 ]);

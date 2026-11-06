@@ -328,7 +328,7 @@ SD.registerLevels('planet', [
   homework: `<p>Apne system mein koi precomputed cheez dhoondho jo "thodi si" badli par poori dobara banti hai (search index, report,
     recommendations). Kya usme "dhaancha" aur "numbers" alag ho sakte hain, taaki sirf badla hissa dobara bane?</p>`,
   cards: [
-    { front: 'CRP ka idea?', back: "Metric-independent partition/topology reuse; traffic/cost metric separately customize. Course ka one-level overlay affected cell recompute dikhata hai. Real multilevel indexes mein affected higher-level shortcuts bhi refresh ho sakte hain." },
+    { front: 'CRP ka idea?', back: "Naksha (partition aur topology) ek baar banao aur dobara use karo; traffic ya cost ka hisaab alag se customize karo. Course ka one-level overlay sirf affected cell dobara nikaalta dikhata hai. Asli multilevel indexes mein upar ke affected shortcuts bhi refresh ho sakte hain." },
     { front: 'Lab 24: jam ke baad?', back: "Ek cell dobara: 13 ms; poora naksha: 1,226 ms (94×) — jawab bilkul same (ETA 20.25)." },
     { front: 'Cost function ek chunaav?', back: 'Wahi structure par fastest, eco (fuel model), toll-free, no-highway — sab alag customizations.' },
   ],
@@ -447,7 +447,7 @@ SD.registerLevels('planet', [
   cards: [
     { front: 'Traffic data kahan se?', back: 'Phones — anonymous position + speed; bheed hi sensor. (Simon Weckert: 99 phones laal gaadi mein → fake jam.)' },
     { front: 'Map matching?', back: 'GPS metres galat; points ki trail par Hidden Markov Model sabse sambhav sadak sequence chunta hai → speed sahi segment ko.' },
-    { front: 'Time-dependent routing?', back: "Edge weight = arrival time ka function. Lab: static ETA 18: 30 par 24.6 min galat (33%); time-dependent ~8 min." },
+    { front: 'Time-dependent routing?', back: "Edge weight = arrival time ka function. Lab: static ETA 18:30 par 24.6 min galat (33%); time-dependent ~8 min." },
   ],
 },
 
