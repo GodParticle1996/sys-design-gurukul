@@ -1,0 +1,11 @@
+mode=fat | fixed; all delays artificial; shared lib model, no HTTP in this tool
+  0 ms | Owner saved #42 v1 | reads=0 pending=0/0/0 | saw=null
+ 10 ms | Published fat v1; three queued copies | reads=0 pending=1/1/1 | saw=null
+ 20 ms | Owner saved #42 v2 before consumers ran | reads=0 pending=1/1/1 | saw=null
+ 30 ms | Published fat v2; six queued copies | reads=0 pending=2/2/2 | saw=null
+100 ms | delivery completed event v1 + ack | reads=0 pending=1/2/2 | saw={"id":42,"eventVersion":1,"stateVersion":1,"address":"12 Neem Road"}
+110 ms | notify completed event v1 + ack | reads=0 pending=1/1/2 | saw={"id":42,"eventVersion":1,"stateVersion":1,"phone":"+1-555-0100"}
+120 ms | kitchen completed event v1 + ack | reads=0 pending=1/1/1 | saw={"id":42,"eventVersion":1,"stateVersion":1,"items":["dal","roti"]}
+200 ms | delivery completed event v2 + ack | reads=0 pending=0/1/1 | saw={"id":42,"eventVersion":2,"stateVersion":2,"address":"99 Mango Lane"}
+210 ms | notify completed event v2 + ack | reads=0 pending=0/0/1 | saw={"id":42,"eventVersion":2,"stateVersion":2,"phone":"+1-555-0199"}
+220 ms | kitchen completed event v2 + ack | reads=0 pending=0/0/0 | saw={"id":42,"eventVersion":2,"stateVersion":2,"items":["idli"]}

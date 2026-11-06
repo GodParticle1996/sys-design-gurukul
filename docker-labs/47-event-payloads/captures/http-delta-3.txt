@@ -1,0 +1,83 @@
+{
+  "transport": "HTTP between child processes",
+  "results": [
+    {
+      "guard": false,
+      "deliveredVersions": [
+        1,
+        3
+      ],
+      "droppedVersion": 2,
+      "wrongFinalCopies": 3,
+      "reads": 0,
+      "resyncsByConsumer": {
+        "delivery": 0,
+        "notify": 0,
+        "kitchen": 0
+      },
+      "exampleFinalCopy": {
+        "id": 42,
+        "address": "12 Neem Road",
+        "phone": "+1-555-0199",
+        "items": [
+          "dal",
+          "roti"
+        ],
+        "version": 3
+      },
+      "deliveryObservations": [
+        {
+          "id": 42,
+          "eventVersion": 1,
+          "stateVersion": 1,
+          "address": "12 Neem Road"
+        },
+        {
+          "id": 42,
+          "eventVersion": 3,
+          "stateVersion": 3,
+          "address": "12 Neem Road"
+        }
+      ]
+    },
+    {
+      "guard": true,
+      "deliveredVersions": [
+        1,
+        3
+      ],
+      "droppedVersion": 2,
+      "wrongFinalCopies": 0,
+      "reads": 3,
+      "resyncsByConsumer": {
+        "delivery": 1,
+        "notify": 1,
+        "kitchen": 1
+      },
+      "exampleFinalCopy": {
+        "id": 42,
+        "version": 3,
+        "address": "99 Mango Lane",
+        "phone": "+1-555-0199",
+        "items": [
+          "dal",
+          "roti"
+        ]
+      },
+      "deliveryObservations": [
+        {
+          "id": 42,
+          "eventVersion": 1,
+          "stateVersion": 1,
+          "address": "12 Neem Road"
+        },
+        {
+          "id": 42,
+          "eventVersion": 3,
+          "stateVersion": 3,
+          "address": "99 Mango Lane"
+        }
+      ]
+    }
+  ]
+}

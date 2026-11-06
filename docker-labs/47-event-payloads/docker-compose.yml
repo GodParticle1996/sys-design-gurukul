@@ -1,0 +1,31 @@
+# Docker unavailable here: compose is untested. Each experiment owns its five child processes.
+# Runs inside one container; HTTP still crosses separate Node processes.
+services:
+  slowmo:
+    build: .
+    profiles: [ex0-slowmo]
+    command: node start.js ex0-slowmo --mode thin --fast
+  load:
+    build: .
+    profiles: [ex1-load]
+    command: node start.js ex1-load
+  owner-down:
+    build: .
+    profiles: [ex2-owner-down]
+    command: node start.js ex2-owner-down
+  now-then:
+    build: .
+    profiles: [ex3-now-then]
+    command: node start.js ex3-now-then
+  order-duplicates:
+    build: .
+    profiles: [ex4-order-duplicates]
+    command: node start.js ex4-order-duplicates
+  delta:
+    build: .
+    profiles: [ex5-delta]
+    command: node start.js ex5-delta
+  size-spread:
+    build: .
+    profiles: [ex6-size-spread]
+    command: node start.js ex6-size-spread

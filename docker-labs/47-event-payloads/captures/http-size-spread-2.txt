@@ -1,0 +1,128 @@
+{
+  "transport": "HTTP between child processes",
+  "results": [
+    {
+      "mode": "thin",
+      "orders": 4,
+      "consumers": 3,
+      "publishedEvents": 12,
+      "deliveredEvents": 36,
+      "eventBytesByOrderAndVersion": [
+        [
+          43,
+          43,
+          43
+        ],
+        [
+          43,
+          43,
+          43
+        ],
+        [
+          43,
+          43,
+          43
+        ],
+        [
+          43,
+          43,
+          43
+        ]
+      ],
+      "publishedBytes": 516,
+      "fanoutBytes": 1548,
+      "reads": 36,
+      "consumersReceivingUnusedEventFields": 0,
+      "unusedEventFieldDeliveries": 0,
+      "consumersReceivingUnusedEventPhone": 0,
+      "unusedEventPhoneDeliveries": 0,
+      "kitchenUnusedEventPhoneDeliveries": 0,
+      "unusedCallbackFieldDeliveries": 72,
+      "unusedCallbackPhoneDeliveries": 24,
+      "kitchenUnusedCallbackPhoneDeliveries": 12,
+      "consumersReceivingUnusedFieldsViaEitherPath": 3
+    },
+    {
+      "mode": "fat",
+      "orders": 4,
+      "consumers": 3,
+      "publishedEvents": 12,
+      "deliveredEvents": 36,
+      "eventBytesByOrderAndVersion": [
+        [
+          143,
+          144,
+          144
+        ],
+        [
+          143,
+          144,
+          144
+        ],
+        [
+          143,
+          144,
+          144
+        ],
+        [
+          143,
+          144,
+          144
+        ]
+      ],
+      "publishedBytes": 1724,
+      "fanoutBytes": 5172,
+      "reads": 0,
+      "consumersReceivingUnusedEventFields": 3,
+      "unusedEventFieldDeliveries": 72,
+      "consumersReceivingUnusedEventPhone": 2,
+      "unusedEventPhoneDeliveries": 24,
+      "kitchenUnusedEventPhoneDeliveries": 12,
+      "unusedCallbackFieldDeliveries": 0,
+      "unusedCallbackPhoneDeliveries": 0,
+      "kitchenUnusedCallbackPhoneDeliveries": 0,
+      "consumersReceivingUnusedFieldsViaEitherPath": 3
+    },
+    {
+      "mode": "delta",
+      "orders": 4,
+      "consumers": 3,
+      "publishedEvents": 12,
+      "deliveredEvents": 36,
+      "eventBytesByOrderAndVersion": [
+        [
+          133,
+          81,
+          77
+        ],
+        [
+          133,
+          81,
+          77
+        ],
+        [
+          133,
+          81,
+          77
+        ],
+        [
+          133,
+          81,
+          77
+        ]
+      ],
+      "publishedBytes": 1164,
+      "fanoutBytes": 3492,
+      "reads": 0,
+      "consumersReceivingUnusedEventFields": 3,
+      "unusedEventFieldDeliveries": 40,
+      "consumersReceivingUnusedEventPhone": 2,
+      "unusedEventPhoneDeliveries": 16,
+      "kitchenUnusedEventPhoneDeliveries": 8,
+      "unusedCallbackFieldDeliveries": 0,
+      "unusedCallbackPhoneDeliveries": 0,
+      "kitchenUnusedCallbackPhoneDeliveries": 0,
+      "consumersReceivingUnusedFieldsViaEitherPath": 3
+    }
+  ]
+}

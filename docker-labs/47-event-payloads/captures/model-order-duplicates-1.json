@@ -1,0 +1,51 @@
+{
+  "transport": "IN-PROCESS MODEL; no sockets or child exit",
+  "results": [
+    {
+      "guard": false,
+      "orders": 4,
+      "consumers": 3,
+      "deliveryVersionsPerOrder": [
+        2,
+        1,
+        1
+      ],
+      "wrongFinalCopies": 12,
+      "completed": 36,
+      "ignored": 0,
+      "exampleFinalCopy": {
+        "id": 42,
+        "version": 1,
+        "address": "12 Neem Road",
+        "phone": "+1-555-0100",
+        "items": [
+          "dal",
+          "roti"
+        ]
+      }
+    },
+    {
+      "guard": true,
+      "orders": 4,
+      "consumers": 3,
+      "deliveryVersionsPerOrder": [
+        2,
+        1,
+        1
+      ],
+      "wrongFinalCopies": 0,
+      "completed": 12,
+      "ignored": 24,
+      "exampleFinalCopy": {
+        "id": 42,
+        "version": 2,
+        "address": "99 Mango Lane",
+        "phone": "+1-555-0100",
+        "items": [
+          "dal",
+          "roti"
+        ]
+      }
+    }
+  ]
+}

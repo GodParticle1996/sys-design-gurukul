@@ -1,0 +1,20 @@
+✔ callback load is N*M, full copies remove those reads (selected transport) (13.267454ms)
+✔ owner unavailable leaves thin work queued through retry, fat finishes (selected transport) (4.00283ms)
+✔ delayed thin reads show v2 twice; full event snapshots preserve v1 then v2 (4.800653ms)
+✔ v2/v1/duplicate v1 corrupt unguarded copies; version guard ignores all stale entries (8.727259ms)
+✔ dropped delta silently keeps old address; gap detection fetches once per consumer (2.589475ms)
+✔ UTF8 event bytes and actual consumer field exposure are counted separately (8.105467ms)
+✔ fixed-clock model uses the same consumer rules and drains all six copies (1.532508ms)
+✔ version guard is per order, ignores equal version and isolates snapshot copies (0.231103ms)
+✔ failed or behind-owner gap repair keeps the old copy; newer snapshot subsumes late deltas (0.66558ms)
+✔ a first delta above v1 requires bootstrap fetch (0.302078ms)
+✔ read retains a queue entry; failed thin callback can retry that same entry after recovery (0.395051ms)
+✔ byte count is UTF8, including non-ASCII values (0.092725ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67.68601

@@ -1,0 +1,29 @@
+{
+  "transport": "HTTP between child processes",
+  "results": [
+    {
+      "mode": "thin",
+      "orders": 4,
+      "consumers": 3,
+      "reads": 12,
+      "completed": 12,
+      "pending": {
+        "delivery": 0,
+        "notify": 0,
+        "kitchen": 0
+      }
+    },
+    {
+      "mode": "fat",
+      "orders": 4,
+      "consumers": 3,
+      "reads": 0,
+      "completed": 12,
+      "pending": {
+        "delivery": 0,
+        "notify": 0,
+        "kitchen": 0
+      }
+    }
+  ]
+}

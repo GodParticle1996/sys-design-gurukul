@@ -1,0 +1,112 @@
+{
+  "transport": "HTTP between child processes",
+  "results": [
+    {
+      "mode": "thin",
+      "ownerVersionBeforeConsumption": 2,
+      "reads": 6,
+      "observations": {
+        "delivery": [
+          {
+            "id": 42,
+            "eventVersion": 1,
+            "stateVersion": 2,
+            "address": "99 Mango Lane"
+          },
+          {
+            "id": 42,
+            "eventVersion": 2,
+            "stateVersion": 2,
+            "address": "99 Mango Lane"
+          }
+        ],
+        "notify": [
+          {
+            "id": 42,
+            "eventVersion": 1,
+            "stateVersion": 2,
+            "phone": "+1-555-0199"
+          },
+          {
+            "id": 42,
+            "eventVersion": 2,
+            "stateVersion": 2,
+            "phone": "+1-555-0199"
+          }
+        ],
+        "kitchen": [
+          {
+            "id": 42,
+            "eventVersion": 1,
+            "stateVersion": 2,
+            "items": [
+              "idli"
+            ]
+          },
+          {
+            "id": 42,
+            "eventVersion": 2,
+            "stateVersion": 2,
+            "items": [
+              "idli"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "mode": "fat",
+      "ownerVersionBeforeConsumption": 2,
+      "reads": 0,
+      "observations": {
+        "delivery": [
+          {
+            "id": 42,
+            "eventVersion": 1,
+            "stateVersion": 1,
+            "address": "12 Neem Road"
+          },
+          {
+            "id": 42,
+            "eventVersion": 2,
+            "stateVersion": 2,
+            "address": "99 Mango Lane"
+          }
+        ],
+        "notify": [
+          {
+            "id": 42,
+            "eventVersion": 1,
+            "stateVersion": 1,
+            "phone": "+1-555-0100"
+          },
+          {
+            "id": 42,
+            "eventVersion": 2,
+            "stateVersion": 2,
+            "phone": "+1-555-0199"
+          }
+        ],
+        "kitchen": [
+          {
+            "id": 42,
+            "eventVersion": 1,
+            "stateVersion": 1,
+            "items": [
+              "dal",
+              "roti"
+            ]
+          },
+          {
+            "id": 42,
+            "eventVersion": 2,
+            "stateVersion": 2,
+            "items": [
+              "idli"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

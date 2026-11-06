@@ -1,0 +1,552 @@
+{
+  "node": "v24.18.0",
+  "successfulHttpRuns": 18,
+  "threeRunsByteIdentical": {
+    "load": true,
+    "owner-down": true,
+    "now-then": true,
+    "order-duplicates": true,
+    "delta": true,
+    "size-spread": true,
+    "slowmo-thin-text": true,
+    "slowmo-thin-json": true,
+    "slowmo-fat-text": true,
+    "slowmo-fat-json": true
+  },
+  "captures": [
+    {
+      "file": "http-load-1.txt",
+      "command": [
+        "node",
+        "tools/load.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "af448be5ec3307ff12f4cb743dacc2022798b0d9d2a07e7d75234ca6ffaa948e"
+    },
+    {
+      "file": "model-load-1.json",
+      "command": [
+        "node",
+        "tools/load.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "096258b7bd0b45d429a647e41a3d5c9562476c7e60c6dd03baef79a0562020cd"
+    },
+    {
+      "file": "http-load-2.txt",
+      "command": [
+        "node",
+        "tools/load.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "af448be5ec3307ff12f4cb743dacc2022798b0d9d2a07e7d75234ca6ffaa948e"
+    },
+    {
+      "file": "model-load-2.json",
+      "command": [
+        "node",
+        "tools/load.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "096258b7bd0b45d429a647e41a3d5c9562476c7e60c6dd03baef79a0562020cd"
+    },
+    {
+      "file": "http-load-3.txt",
+      "command": [
+        "node",
+        "tools/load.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "af448be5ec3307ff12f4cb743dacc2022798b0d9d2a07e7d75234ca6ffaa948e"
+    },
+    {
+      "file": "model-load-3.json",
+      "command": [
+        "node",
+        "tools/load.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "096258b7bd0b45d429a647e41a3d5c9562476c7e60c6dd03baef79a0562020cd"
+    },
+    {
+      "file": "http-owner-down-1.txt",
+      "command": [
+        "node",
+        "tools/owner-down.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "8b8872dc3e575e9822adadcee5df5a3b7984b7637087c88522cd4fa626cb059f"
+    },
+    {
+      "file": "model-owner-down-1.json",
+      "command": [
+        "node",
+        "tools/owner-down.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "da1656d2de1d63841c19297b12b5a0eed08a5f5c4a8bb436818bb147e004205e"
+    },
+    {
+      "file": "http-owner-down-2.txt",
+      "command": [
+        "node",
+        "tools/owner-down.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "8b8872dc3e575e9822adadcee5df5a3b7984b7637087c88522cd4fa626cb059f"
+    },
+    {
+      "file": "model-owner-down-2.json",
+      "command": [
+        "node",
+        "tools/owner-down.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "da1656d2de1d63841c19297b12b5a0eed08a5f5c4a8bb436818bb147e004205e"
+    },
+    {
+      "file": "http-owner-down-3.txt",
+      "command": [
+        "node",
+        "tools/owner-down.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "8b8872dc3e575e9822adadcee5df5a3b7984b7637087c88522cd4fa626cb059f"
+    },
+    {
+      "file": "model-owner-down-3.json",
+      "command": [
+        "node",
+        "tools/owner-down.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "da1656d2de1d63841c19297b12b5a0eed08a5f5c4a8bb436818bb147e004205e"
+    },
+    {
+      "file": "http-now-then-1.txt",
+      "command": [
+        "node",
+        "tools/now-then.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "7e516b3a03a411d3b201d99260ba8f517a368a502a68de6d875618a6c89bae9f"
+    },
+    {
+      "file": "model-now-then-1.json",
+      "command": [
+        "node",
+        "tools/now-then.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "d03bdd7d656a19889867d1f6f749f0e367a564b2d7becd26652c436fac70511a"
+    },
+    {
+      "file": "http-now-then-2.txt",
+      "command": [
+        "node",
+        "tools/now-then.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "7e516b3a03a411d3b201d99260ba8f517a368a502a68de6d875618a6c89bae9f"
+    },
+    {
+      "file": "model-now-then-2.json",
+      "command": [
+        "node",
+        "tools/now-then.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "d03bdd7d656a19889867d1f6f749f0e367a564b2d7becd26652c436fac70511a"
+    },
+    {
+      "file": "http-now-then-3.txt",
+      "command": [
+        "node",
+        "tools/now-then.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "7e516b3a03a411d3b201d99260ba8f517a368a502a68de6d875618a6c89bae9f"
+    },
+    {
+      "file": "model-now-then-3.json",
+      "command": [
+        "node",
+        "tools/now-then.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "d03bdd7d656a19889867d1f6f749f0e367a564b2d7becd26652c436fac70511a"
+    },
+    {
+      "file": "http-order-duplicates-1.txt",
+      "command": [
+        "node",
+        "tools/order-duplicates.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "91f3138f53c1493a5a8935422ce500b391be40243571ac1b7eb16dd25dec071e"
+    },
+    {
+      "file": "model-order-duplicates-1.json",
+      "command": [
+        "node",
+        "tools/order-duplicates.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "d391741930294506f156a8c416e06259794974363e7c945ec57d51624d799508"
+    },
+    {
+      "file": "http-order-duplicates-2.txt",
+      "command": [
+        "node",
+        "tools/order-duplicates.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "91f3138f53c1493a5a8935422ce500b391be40243571ac1b7eb16dd25dec071e"
+    },
+    {
+      "file": "model-order-duplicates-2.json",
+      "command": [
+        "node",
+        "tools/order-duplicates.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "d391741930294506f156a8c416e06259794974363e7c945ec57d51624d799508"
+    },
+    {
+      "file": "http-order-duplicates-3.txt",
+      "command": [
+        "node",
+        "tools/order-duplicates.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "91f3138f53c1493a5a8935422ce500b391be40243571ac1b7eb16dd25dec071e"
+    },
+    {
+      "file": "model-order-duplicates-3.json",
+      "command": [
+        "node",
+        "tools/order-duplicates.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "d391741930294506f156a8c416e06259794974363e7c945ec57d51624d799508"
+    },
+    {
+      "file": "http-delta-1.txt",
+      "command": [
+        "node",
+        "tools/delta.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "2c0a5c0cdb6d4c0e0fdaac6a34875b5f17fa1695229f0f2810b01ed48db7977a"
+    },
+    {
+      "file": "model-delta-1.json",
+      "command": [
+        "node",
+        "tools/delta.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "b9beb9dd4c16ea69d167efd01d69b5ef2d00dc033c92e22c3fbcbfc6963396ba"
+    },
+    {
+      "file": "http-delta-2.txt",
+      "command": [
+        "node",
+        "tools/delta.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "2c0a5c0cdb6d4c0e0fdaac6a34875b5f17fa1695229f0f2810b01ed48db7977a"
+    },
+    {
+      "file": "model-delta-2.json",
+      "command": [
+        "node",
+        "tools/delta.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "b9beb9dd4c16ea69d167efd01d69b5ef2d00dc033c92e22c3fbcbfc6963396ba"
+    },
+    {
+      "file": "http-delta-3.txt",
+      "command": [
+        "node",
+        "tools/delta.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "2c0a5c0cdb6d4c0e0fdaac6a34875b5f17fa1695229f0f2810b01ed48db7977a"
+    },
+    {
+      "file": "model-delta-3.json",
+      "command": [
+        "node",
+        "tools/delta.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "b9beb9dd4c16ea69d167efd01d69b5ef2d00dc033c92e22c3fbcbfc6963396ba"
+    },
+    {
+      "file": "http-size-spread-1.txt",
+      "command": [
+        "node",
+        "tools/size-spread.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "beed1a9d9e0b6441086d9ac8fda7090f3e08517ea9764c6d9c5e143a800f9847"
+    },
+    {
+      "file": "model-size-spread-1.json",
+      "command": [
+        "node",
+        "tools/size-spread.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "05ca9ef0af88a642af462da2f4b61a86172fa0afcffa07cbbf33d4dcb9643ac7"
+    },
+    {
+      "file": "http-size-spread-2.txt",
+      "command": [
+        "node",
+        "tools/size-spread.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "beed1a9d9e0b6441086d9ac8fda7090f3e08517ea9764c6d9c5e143a800f9847"
+    },
+    {
+      "file": "model-size-spread-2.json",
+      "command": [
+        "node",
+        "tools/size-spread.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "05ca9ef0af88a642af462da2f4b61a86172fa0afcffa07cbbf33d4dcb9643ac7"
+    },
+    {
+      "file": "http-size-spread-3.txt",
+      "command": [
+        "node",
+        "tools/size-spread.js"
+      ],
+      "transport": "http",
+      "exitCode": 0,
+      "sha256": "beed1a9d9e0b6441086d9ac8fda7090f3e08517ea9764c6d9c5e143a800f9847"
+    },
+    {
+      "file": "model-size-spread-3.json",
+      "command": [
+        "node",
+        "tools/size-spread.js",
+        "--model"
+      ],
+      "transport": "model",
+      "exitCode": 0,
+      "sha256": "05ca9ef0af88a642af462da2f4b61a86172fa0afcffa07cbbf33d4dcb9643ac7"
+    },
+    {
+      "file": "slowmo-thin-1.txt",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "thin",
+        "--fast"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "f8d59ea0c286a08c86fb30c170ae067d4b869a7cb614f5b3937625665778c7cf"
+    },
+    {
+      "file": "slowmo-thin-1.json",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "thin",
+        "--json"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "36a003e52d55fd14f6321c152c13eb186398c95640dc1495a7278e49e8d3aaf7"
+    },
+    {
+      "file": "slowmo-thin-2.txt",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "thin",
+        "--fast"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "f8d59ea0c286a08c86fb30c170ae067d4b869a7cb614f5b3937625665778c7cf"
+    },
+    {
+      "file": "slowmo-thin-2.json",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "thin",
+        "--json"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "36a003e52d55fd14f6321c152c13eb186398c95640dc1495a7278e49e8d3aaf7"
+    },
+    {
+      "file": "slowmo-thin-3.txt",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "thin",
+        "--fast"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "f8d59ea0c286a08c86fb30c170ae067d4b869a7cb614f5b3937625665778c7cf"
+    },
+    {
+      "file": "slowmo-thin-3.json",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "thin",
+        "--json"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "36a003e52d55fd14f6321c152c13eb186398c95640dc1495a7278e49e8d3aaf7"
+    },
+    {
+      "file": "slowmo-fat-1.txt",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "fat",
+        "--fast"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "ec4621e09effbcb083087a1c8ced40b920158930469101f26ccf1b704978c671"
+    },
+    {
+      "file": "slowmo-fat-1.json",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "fat",
+        "--json"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "2b4fe0fcd9c79ff5a015f60ceb2d31ed30648ce81c039f274adcdce11e9b9f2c"
+    },
+    {
+      "file": "slowmo-fat-2.txt",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "fat",
+        "--fast"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "ec4621e09effbcb083087a1c8ced40b920158930469101f26ccf1b704978c671"
+    },
+    {
+      "file": "slowmo-fat-2.json",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "fat",
+        "--json"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "2b4fe0fcd9c79ff5a015f60ceb2d31ed30648ce81c039f274adcdce11e9b9f2c"
+    },
+    {
+      "file": "slowmo-fat-3.txt",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "fat",
+        "--fast"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "ec4621e09effbcb083087a1c8ced40b920158930469101f26ccf1b704978c671"
+    },
+    {
+      "file": "slowmo-fat-3.json",
+      "command": [
+        "node",
+        "tools/slowmo.js",
+        "--mode",
+        "fat",
+        "--json"
+      ],
+      "transport": "fixed-clock model",
+      "exitCode": 0,
+      "sha256": "2b4fe0fcd9c79ff5a015f60ceb2d31ed30648ce81c039f274adcdce11e9b9f2c"
+    }
+  ]
+}

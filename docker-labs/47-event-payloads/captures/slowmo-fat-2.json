@@ -1,0 +1,147 @@
+{
+  "mode": "fat",
+  "clock": "fixed; all delays artificial; shared lib model, no HTTP in this tool",
+  "rows": [
+    {
+      "atMs": 0,
+      "action": "Owner saved #42 v1",
+      "reads": 0,
+      "pending": {
+        "delivery": 0,
+        "notify": 0,
+        "kitchen": 0
+      }
+    },
+    {
+      "atMs": 10,
+      "action": "Published fat v1; three queued copies",
+      "reads": 0,
+      "pending": {
+        "delivery": 1,
+        "notify": 1,
+        "kitchen": 1
+      }
+    },
+    {
+      "atMs": 20,
+      "action": "Owner saved #42 v2 before consumers ran",
+      "reads": 0,
+      "pending": {
+        "delivery": 1,
+        "notify": 1,
+        "kitchen": 1
+      }
+    },
+    {
+      "atMs": 30,
+      "action": "Published fat v2; six queued copies",
+      "reads": 0,
+      "pending": {
+        "delivery": 2,
+        "notify": 2,
+        "kitchen": 2
+      }
+    },
+    {
+      "atMs": 100,
+      "action": "delivery completed event v1 + ack",
+      "reads": 0,
+      "pending": {
+        "delivery": 1,
+        "notify": 2,
+        "kitchen": 2
+      },
+      "observation": {
+        "id": 42,
+        "eventVersion": 1,
+        "stateVersion": 1,
+        "address": "12 Neem Road"
+      }
+    },
+    {
+      "atMs": 110,
+      "action": "notify completed event v1 + ack",
+      "reads": 0,
+      "pending": {
+        "delivery": 1,
+        "notify": 1,
+        "kitchen": 2
+      },
+      "observation": {
+        "id": 42,
+        "eventVersion": 1,
+        "stateVersion": 1,
+        "phone": "+1-555-0100"
+      }
+    },
+    {
+      "atMs": 120,
+      "action": "kitchen completed event v1 + ack",
+      "reads": 0,
+      "pending": {
+        "delivery": 1,
+        "notify": 1,
+        "kitchen": 1
+      },
+      "observation": {
+        "id": 42,
+        "eventVersion": 1,
+        "stateVersion": 1,
+        "items": [
+          "dal",
+          "roti"
+        ]
+      }
+    },
+    {
+      "atMs": 200,
+      "action": "delivery completed event v2 + ack",
+      "reads": 0,
+      "pending": {
+        "delivery": 0,
+        "notify": 1,
+        "kitchen": 1
+      },
+      "observation": {
+        "id": 42,
+        "eventVersion": 2,
+        "stateVersion": 2,
+        "address": "99 Mango Lane"
+      }
+    },
+    {
+      "atMs": 210,
+      "action": "notify completed event v2 + ack",
+      "reads": 0,
+      "pending": {
+        "delivery": 0,
+        "notify": 0,
+        "kitchen": 1
+      },
+      "observation": {
+        "id": 42,
+        "eventVersion": 2,
+        "stateVersion": 2,
+        "phone": "+1-555-0199"
+      }
+    },
+    {
+      "atMs": 220,
+      "action": "kitchen completed event v2 + ack",
+      "reads": 0,
+      "pending": {
+        "delivery": 0,
+        "notify": 0,
+        "kitchen": 0
+      },
+      "observation": {
+        "id": 42,
+        "eventVersion": 2,
+        "stateVersion": 2,
+        "items": [
+          "idli"
+        ]
+      }
+    }
+  ]
+}
