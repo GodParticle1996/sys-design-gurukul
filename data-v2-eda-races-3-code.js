@@ -376,10 +376,10 @@ SD.registerLevels('sdd-eda', [
       {
         "q": "Kafka consumer group mein order events ki key order id hai. Ek consumer slow ho gaya aur rebalance hua. Kya kram ki guarantee ab bhi hai?",
         "choices": [
-          "Partition ka log kram mein rehta hai; DB writes ke liye purane owner ka kaam roko, kram mein process karo, dedupe bhi",
-          "Nahi — rebalance hote hi Kafka saare partitions ka kram mila deta hai",
+          "Log kram mein rehta hai; DB writes ke liye purana owner roko, kram mein process karo, dedupe bhi",
+          "Nahi — rebalance hote hi Kafka saare partitions ka kram aapas mein mila deta hai",
           "Haan, aur rebalance par koi event kabhi dobara nahi aata — Kafka exactly-once deta hai",
-          "Kram sirf tab tak hai jab tak consumer group mein ek hi consumer ho"
+          "Kram sirf tab tak hai jab tak consumer group mein ek hi consumer chal raha ho"
         ],
         "answer": 0,
         "explain": "Kafka partition ke records kram mein padhta hai, aur same key same partition mein jaati hai. Par rebalance purane consumer ka pehle se shuru DB write apne aap cancel nahi karta. Partition chhodte waqt pending kaam ka intezaam karo, purane owner ya purane sequence ke writes roko, aur sirf poore hue kaam ke offsets commit karo. Dobara mile event ko stable id se dedupe karo — sirf dedupe se alag event ids ke ulte DB writes nahi rukte.",

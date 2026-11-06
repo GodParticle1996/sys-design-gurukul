@@ -1,0 +1,30 @@
+{
+  "story": "dual",
+  "mode": "dual",
+  "rows": [
+    {
+      "t": 0,
+      "say": "a1 = 100; read model bhi 100 (checkpoint pos 2)",
+      "store": 100,
+      "read": 100
+    },
+    {
+      "t": 5,
+      "say": "handler ne Withdrawn 30 store mein likha (pos 3)",
+      "store": 70,
+      "read": 100
+    },
+    {
+      "t": 6,
+      "say": "handler crash — client ko error mila",
+      "store": 70,
+      "read": 100
+    },
+    {
+      "t": 50,
+      "say": "listener tak event kabhi nahi bheja gaya; listener store nahi padhta",
+      "store": 70,
+      "read": 100
+    }
+  ]
+}

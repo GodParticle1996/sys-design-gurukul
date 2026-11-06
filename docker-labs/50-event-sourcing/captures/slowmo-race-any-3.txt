@@ -1,0 +1,6 @@
+story=race mode=any | nakli ghadi; lab ke tay ms
+  0 ms  a1: Opened, Deposited 100 | store=100 version=2
+  0 ms  A ne padha: balance 100, v2 | store=100 version=2
+  0 ms  B ne padha: balance 100, v2 | store=100 version=2
+ 20 ms  A: 100 ≥ 80, Withdrawn 80 likha | store=20 version=3
+ 20 ms  B: 100 ≥ 80, Withdrawn 80 likha (bina version jaanch) | store=-60 version=4

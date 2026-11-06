@@ -1,0 +1,18 @@
+✔ append: purana version maango toh Conflict; any bina jaanch ke jodta hai (1.520482ms)
+✔ fold + upcast: purana schema padhte waqt badla, DB mein wahi (0.461338ms)
+✔ catchUp: together crash par dono wapas; split crash par dobara apply (1.080937ms)
+✔ withdraw: galat amount par koi event nahi (0.793104ms)
+✔ minPos tak read model na pahunche toh 503, purana balance nahi (2185.181541ms)
+✔ waitFor: shart poori na ho toh error, adhura result nahi (0.449408ms)
+✔ ex0-slowmo: teeno kahaniyan (146.51137ms)
+✔ ex3-replay: history, snapshot aur upcast (570.36691ms)
+✔ ex1-race (asli processes): bina version minus balance; expected version nahi (809.947692ms)
+✔ ex2-projection (asli crash): dual aur split galat; together sahi; minPos purana nahi (2082.701425ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5841.494119

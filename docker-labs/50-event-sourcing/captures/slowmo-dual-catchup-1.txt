@@ -1,0 +1,5 @@
+story=dual mode=catchup | nakli ghadi; lab ke tay ms
+  0 ms  a1 = 100; read model bhi 100 (checkpoint pos 2) | store=100 read=100
+  5 ms  handler ne Withdrawn 30 store mein likha (pos 3) | store=70 read=100
+  6 ms  handler crash — client ko error mila | store=70 read=100
+ 50 ms  projector ne store padha: checkpoint 2 ke baad pos 3 mila, apply kiya | store=70 read=70

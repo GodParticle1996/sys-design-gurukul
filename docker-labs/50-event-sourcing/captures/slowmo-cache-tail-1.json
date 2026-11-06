@@ -1,0 +1,30 @@
+{
+  "story": "cache",
+  "mode": "tail",
+  "rows": [
+    {
+      "t": 0,
+      "say": "A ke cache mein a1: balance 100, v2",
+      "store": 100,
+      "cache": 100
+    },
+    {
+      "t": 10,
+      "say": "B ne Withdrawn 80 likha (v3)",
+      "store": 20,
+      "cache": 100
+    },
+    {
+      "t": 20,
+      "say": "A: cache v2 + store se v2 ke baad 1 event → balance 20",
+      "store": 20,
+      "cache": 100
+    },
+    {
+      "t": 20,
+      "say": "A: 20 < 80 — command mana",
+      "store": 20,
+      "cache": 100
+    }
+  ]
+}

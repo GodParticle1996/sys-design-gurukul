@@ -1,0 +1,8 @@
+story=race mode=expected | nakli ghadi; lab ke tay ms
+  0 ms  a1: Opened, Deposited 100 | store=100 version=2
+  0 ms  A ne padha: balance 100, v2 | store=100 version=2
+  0 ms  B ne padha: balance 100, v2 | store=100 version=2
+ 20 ms  A: 100 ≥ 80, Withdrawn 80 likha | store=20 version=3
+ 20 ms  B ka likhna mana: expected v2, stream v3 par | store=20 version=3
+ 20 ms  B ne dobara padha: balance 20, v3 | store=20 version=3
+ 40 ms  B: 20 < 80 — command mana | store=20 version=3

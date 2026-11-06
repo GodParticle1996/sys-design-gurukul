@@ -1,0 +1,2 @@
+any      withdraw-ok=40/40 mana=0 dobara-padha=0 minus-balance=20/20 aakhri-balance=[-60] events=80
+expected withdraw-ok=20/40 mana=20 dobara-padha=20 minus-balance=0/20 aakhri-balance=[20] events=60

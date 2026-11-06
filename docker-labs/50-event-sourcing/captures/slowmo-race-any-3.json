@@ -1,0 +1,36 @@
+{
+  "story": "race",
+  "mode": "any",
+  "rows": [
+    {
+      "t": 0,
+      "say": "a1: Opened, Deposited 100",
+      "store": 100,
+      "version": 2
+    },
+    {
+      "t": 0,
+      "say": "A ne padha: balance 100, v2",
+      "store": 100,
+      "version": 2
+    },
+    {
+      "t": 0,
+      "say": "B ne padha: balance 100, v2",
+      "store": 100,
+      "version": 2
+    },
+    {
+      "t": 20,
+      "say": "A: 100 ≥ 80, Withdrawn 80 likha",
+      "store": 20,
+      "version": 3
+    },
+    {
+      "t": 20,
+      "say": "B: 100 ≥ 80, Withdrawn 80 likha (bina version jaanch)",
+      "store": -60,
+      "version": 4
+    }
+  ]
+}

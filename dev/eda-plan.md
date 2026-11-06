@@ -69,7 +69,28 @@ The playlist was refreshed through Video-Translate on 2026-10-20: 64 entries, in
 | Event Sourcing: Genius or Just Over-Engineering? | `wXg_aON4oj8` | Append events and reconstruct state; snapshots and read models separately |
 | 4 Event-Modeling Mistakes in Event-Driven Architectures | `m3mY3Ra-BcI` | Contracts, naming, payloads and schema evolution, each backed by a lab |
 
-Done: event payloads; EDA tradeoffs; EDA races (below). Next: event sourcing/CQRS, then event modeling.
+Done: event payloads; EDA tradeoffs; EDA races; event sourcing (below). Next: event modeling.
+
+## Ready: fifth topic, Event Sourcing (2026-11-07)
+
+`es-kyun` → `es-kaise` → `es-code` → `es-kab`, in `data-v2-eda-sourcing-1…4`, group "📒 Event Sourcing", guide `eda-sourcing`.
+Source: *Event Sourcing: Genius or Just Over-Engineering?* (`wXg_aON4oj8`), transcript `vu_output/sd5-eda-sourcing`.
+Level builders (Python, emit the .js files): `sdg-codex-xp/jobs/eda5/*.py`; fixtures via `dev/rewrite/fixtures.js`.
+Lab 50 (built by Claude, Node 24+ for node:sqlite): event store table with `UNIQUE (stream, version)` and
+`append(expected | 'any')`, fold + upcaster, catch-up projector (together / split), handler, video-style listener.
+ex1 race: `any` 20/20 accounts at −60, `expected` 0 minus with 20 re-reads. ex2: dual-write crash leaves a4 store 70 /
+read model 100 (client saw an error though the money moved); together 0 wrong; split double-applies (40); reads right
+after a command 10/10 stale, with `minPos` 0/10 after 31–48 ms. ex3: as-of history, 1,00,350-event replay 137–144 ms vs
+snapshot + 350 events 0.5 ms, upcaster 50 → 130 with the events table hash unchanged.
+Corrections taught: the video's check-then-append has no expected version; "save to the store and publish to RabbitMQ
+at the same time" is a dual write (catch-up from the store or outbox); a cache is returned without reading the tail;
+snapshots are an optimization, not a replacement; upcast on read, never update events; the Microsoft quote the video reads
+now says the pattern constrains design "in the parts of the system that use it"; event sourcing ≠ CQRS ≠ Kafka.
+Codex fact-check (17 findings, all verified and fixed): `minPos` now returns 503 instead of a stale success; invalid
+amounts append nothing; ex1 uses a lab-only read barrier so the 20/20 counts are guaranteed, not timing luck; the read
+mode fails on any read error; the upcast hash excludes `pos`; and lesson text on per-stream invariants, same-DB atomic
+writes, Postgres sequence gaps, crypto-shredding scope, what UNIQUE prevents, stream size before snapshots, dates/actors as
+recorded event fields, CRUD history tables, and naming stream/CQRS/saga at first use.
 
 ## Ready: fourth topic, EDA Races (2026-11-06)
 

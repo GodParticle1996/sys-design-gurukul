@@ -1,0 +1,30 @@
+{
+  "story": "cache",
+  "mode": "cache",
+  "rows": [
+    {
+      "t": 0,
+      "say": "A ke cache mein a1: balance 100, v2",
+      "store": 100,
+      "cache": 100
+    },
+    {
+      "t": 10,
+      "say": "B ne Withdrawn 80 likha (v3)",
+      "store": 20,
+      "cache": 100
+    },
+    {
+      "t": 20,
+      "say": "A: cache mila, wahi lauta diya — balance 100",
+      "store": 20,
+      "cache": 100
+    },
+    {
+      "t": 20,
+      "say": "A: 100 ≥ 80, Withdrawn 80 likha",
+      "store": -60,
+      "cache": 100
+    }
+  ]
+}

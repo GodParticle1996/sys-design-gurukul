@@ -1,0 +1,15 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har tool apne handler, listener aur projector processes ek hi container mein chalata hai (ports 5901–5913, bahar publish nahi).
+services:
+  race:
+    build: .
+    profiles: [ex1-race]
+    command: node start.js ex1-race
+  projection:
+    build: .
+    profiles: [ex2-projection]
+    command: node start.js ex2-projection
+  replay:
+    build: .
+    profiles: [ex3-replay]
+    command: node start.js ex3-replay

@@ -1,0 +1,4 @@
+dual     command-ok=9 client-ko-error=1 crash=1 store≠read-model=1 [a4 store=70 read=100]
+together command-ok=10 client-ko-error=0 crash=1 store≠read-model=0
+split    command-ok=10 client-ko-error=0 crash=1 store≠read-model=1 [a4 store=70 read=40]
+read     command-ok=10 turant-padha-purana=10/10 minPos-ke-saath-purana=0/10 intezaar=32–42 ms galat=0

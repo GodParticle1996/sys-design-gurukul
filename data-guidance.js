@@ -40,6 +40,8 @@
     sqsdlq: { title: 'Amazon SQS — dead-letter queues', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html' },
     rmqack: { title: 'RabbitMQ — consumer acknowledgements and publisher confirms', url: 'https://www.rabbitmq.com/docs/confirms' },
     kafkaintro: { title: 'Apache Kafka — introduction: partitions and ordering', url: 'https://kafka.apache.org/41/getting-started/introduction/' },
+    eventsourcing: { title: 'Azure — Event Sourcing pattern', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing' },
+    kurrentappend: { title: 'Kurrent (EventStoreDB) — appending events and expected revision', url: 'https://docs.kurrent.io/clients/node/v1.3/appending-events.html' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -203,6 +205,27 @@
     ],
     followup: 'Payment gateway par charge hua, apni DB mein key likhne se pehle crash. Dohra charge kaun rokega?',
     sources: ['rmqack', 'kafkaintro'],
+  });
+  add('eda-sourcing', 'es-kyun es-kaise es-code es-kab', {
+    title: 'Passbook ya slate: event sourcing kab, aur sahi kaise?',
+    misaal: 'Slate par sirf aakhri balance; passbook mein har jama-nikaasi ki line. Galti ho toh line nahi mitti, sudhaar ki nayi line judti hai. Do cashier ne ek hi purana panna dekha — doosre ka likhna mana.',
+    asli: 'Sach ka source events hain; haalat events jod ke banti hai, aur events kabhi badle nahi jaate.',
+    points: [
+      '<b>Likhna:</b> jo version padha, append mein wahi maango; mismatch par dobara padho.',
+      '<b>Read model:</b> projector store se checkpoint ke baad padhe; read model aur checkpoint ek transaction mein.',
+      '<b>Tez padhna:</b> replay ka kharcha maapo; zaroorat ho toh snapshot + baaki events. Snapshot events ki jagah nahi leta.',
+      '<b>Purana roop:</b> upcaster padhte waqt purane event ko naya roop deta hai, aur event ka data kabhi update nahi hota.',
+    ],
+    use: 'Jahan itihaas, audit ya purani tareekh ki haalat product ka hissa ho — ledger, claims, trading.',
+    avoid: 'Profile, settings, simple CRUD; ya jab team versioning aur projections ka kharcha na utha sake.',
+    mistake: 'Event sourcing, CQRS aur Kafka ko ek hi cheez maanna, ya poore system par ek saath laga dena.',
+    compare: [
+      { choice: 'Event sourcing', when: 'Itihaas hi product hai', tradeoff: 'Audit aur replay; versioning, projections, mitana mushkil' },
+      { choice: 'CRUD + audit table', when: 'Aakhri haalat kaafi hai, bas kabhi-kabhi jaanna hai ki kisne badla', tradeoff: 'Seedha rehta hai; itihaas utna hi jitna audit table mein likha gaya' },
+      { choice: 'CRUD + alag read model', when: 'Padhna dheema, likhna theek', tradeoff: 'Padhna tez ho jaata hai, par read model thoda peeche chalta hai' },
+    ],
+    followup: 'Transfer do accounts (do streams) badalta hai, aur expected version ek stream ka hai. Paisa beech mein na atke, kaise?',
+    sources: ['eventsourcing', 'kurrentappend'],
   });
   add('service-boundaries', 'decompose st-reddit-strangle prime-boundary-tax prime-replicate prime-when-split', {
     title: 'Har nayi service ka fayda kya hai?',
