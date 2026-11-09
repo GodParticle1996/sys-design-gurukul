@@ -1,0 +1,18 @@
+mode=state
+  1. BalanceUpdated   {"balance":15000,"previous":10000}
+  2. BalanceUpdated   {"balance":12500,"previous":15000}
+  3. BalanceUpdated   {"balance":12000,"previous":12500}
+  4. BalanceUpdated   {"balance":9000,"previous":12000}
+  5. BalanceUpdated   {"balance":9500,"previous":9000}
+  6. BalanceUpdated   {"balance":7300,"previous":9500}
+  7. BalanceUpdated   {"balance":7340,"previous":7300}
+state  events=7 ATM>2000=3 (sahi 2) · fee-net=pata nahi (sahi 0) · ₹500 kyun: pata nahi (sirf 12500 → 12000)
+mode=facts
+  1. SalaryCredited   {"amount":5000}
+  2. CashWithdrawn    {"amount":2500,"atm":"ATM-17"}
+  3. FeeCharged       {"amount":500,"reason":"card annual fee"}
+  4. CashWithdrawn    {"amount":3000,"atm":"ATM-04"}
+  5. FeeReversed      {"amount":500,"reason":"card annual fee"}
+  6. UpiPaid          {"amount":2200,"to":"kirana"}
+  7. InterestCredited {"amount":40}
+facts  events=7 ATM>2000=2 (sahi 2) · fee-net=0 (sahi 0) · ₹500 kyun: FeeCharged (card annual fee)

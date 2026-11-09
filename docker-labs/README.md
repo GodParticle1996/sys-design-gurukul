@@ -56,6 +56,7 @@ Har README measured output aur model ki boundary bataata hai.
 | [48-eda-tradeoffs](48-eda-tradeoffs/README.md) | Burst vs lagataar load, consumer offline + retention/dead-letter, sync chain vs events (asli HTTP) | EDA topic 3 · Tradeoffs |
 | [49-eda-races](49-eda-races/README.md) | Competing consumers ka ulta kram, do consumers ka khoya update (CAS/atomic), crash ke baad duplicate charge aur sahi idempotency key (asli processes + SQLite) | EDA topic 4 · Races |
 | [50-event-sourcing](50-event-sourcing/README.md) | Events se balance (fold), version ki shart bina minus balance, store-aur-publish crash vs catch-up projector, snapshot, upcasting (asli processes + SQLite) | EDA topic 5 · Event Sourcing |
+| [51-event-modeling](51-event-modeling/README.md) | Field events se mila-jula address, BalanceUpdated vs asli ghatna, "ek aur field" ke teen ilaaj (bytes, teams, kram), strict vs tolerant consumer par schema badlaav (asli processes) | EDA topic 6 · Event Modeling |
 
 ```bash
 cd docker-labs/09-raft

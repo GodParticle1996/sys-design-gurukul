@@ -1,0 +1,5 @@
+baseline     10,000 orders, 40,000 events, 6.18 MB · loyalty ke sahi points 2,55,519
+addfield-sab payload-schemas-badle=3 producer-teams-badli=2 bytes=+617 KB points-sahi=haan
+addfield     payload-schemas-badle=1 producer-teams-badli=1 bytes=+206 KB points-sahi=haan
+metadata     payload-schemas-badle=0 producer-teams-badli=1 bytes=+206 KB points-sahi=haan
+readmodel    payload-schemas-badle=0 producer-teams-badli=0 bytes=+0 KB · OrderPlaced se pehle aaye payments=369 · bina parking: 369 payments ke points gaye · parking ke saath: points-sahi=haan

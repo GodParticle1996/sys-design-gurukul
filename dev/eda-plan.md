@@ -69,7 +69,29 @@ The playlist was refreshed through Video-Translate on 2026-10-20: 64 entries, in
 | Event Sourcing: Genius or Just Over-Engineering? | `wXg_aON4oj8` | Append events and reconstruct state; snapshots and read models separately |
 | 4 Event-Modeling Mistakes in Event-Driven Architectures | `m3mY3Ra-BcI` | Contracts, naming, payloads and schema evolution, each backed by a lab |
 
-Done: event payloads; EDA tradeoffs; EDA races; event sourcing (below). Next: event modeling.
+Done: event payloads; EDA tradeoffs; EDA races; event sourcing; event modeling (below). The EDA Core source list is covered.
+
+## Ready: sixth topic, Event Modeling (2026-11-08)
+
+`em-kyun` → `em-kaise` → `em-code` → `em-kab`, in `data-v2-eda-modeling-1…4`, group "🧩 Event Modeling", guide `eda-modeling`.
+Source: *4 Event-Modeling Mistakes in Event-Driven Architectures* (`m3mY3Ra-BcI`), transcript `vu_output/sd5-eda-modeling`;
+anti-patterns from Oskar Dudycz (event-driven.io). Builders: `sdg-codex-xp/jobs/eda6/*.py`.
+Lab 51 (built by Claude; ex1–ex3 seeded single process, ex4 two consumer processes over HTTP): field events put a mixed
+address on 2/2 labels (generic and intent: 0; generic woke the email verifier 3× for 1 useful); BalanceUpdated with the
+previous balance still counts 3 ATM withdrawals (true 2) and cannot answer the fee or audit questions; loyalty's customerId —
+every downstream event 3 schemas/2 teams/+617 KB, PaymentCaptured only 1/1/+206 KB, metadata 0/1/+206 KB, read model 0/0/0
+with 369 of 10,000 payments arriving before OrderPlaced (park them); schema changes — an added field breaks only the strict
+reader, a rename breaks every reader that needs the field, expand keeps the tolerant reader working.
+Corrections taught: the video's generic "profile info updated" fixes the mixed address but hides intent (Dudycz: events
+follow business operations; field events sometimes make sense); its pragmatic balance advice is facts + balances, not
+BalanceUpdated alone; "exponential" callback growth is events × consumers (lab 47: 4 × 3 = 12); metadata keeps the payload
+clean but not the producer coupling. Codex reviewed lab 51 (6 findings, all fixed: minimal enrichment variants, 422-only
+rejection counting, strict-readers-first rollout, state control attribution, narrower rename claim, a stand-in).
+Codex reviewed the four levels and guide (17 findings, all verified and fixed): schema-registry answer now states the Avro
+assumptions (required field, no default/alias) and BACKWARD vs FORWARD; fee-net needs both FeeCharged and FeeReversed;
+account walkthrough line references corrected to lib/account.js 22–31; expand/contract protects any reader prepared first,
+not only tolerant ones; parking and SMS questions state the no-call condition and the joins; metadata is not a closed list;
+ATM question names the lab consumer's ₹2,000 assumption; the email dry run no longer claims mail delivery.
 
 ## Ready: fifth topic, Event Sourcing (2026-11-07)
 

@@ -1,0 +1,5 @@
+v1-purana      strict: theek 100/100 · tolerant: theek 100/100
+v2-naya-field  strict: mana 100/100 (anjaana field method) · tolerant: theek 100/100
+v3-naam-badla  strict: mana 100/100 (anjaana field total) · tolerant: mana 100/100 (amount nahi)
+v4-dono-field  strict: mana 100/100 (anjaana field total) · tolerant: theek 100/100
+kul            strict theek=100 mana=300 · tolerant theek=300 mana=100 · tolerant ka jod ₹45,150

@@ -1,0 +1,10 @@
+mode=field | bus ka kram (OrderPacked = alag service ka event)
+  StreetChanged        {"street":"Lake View 5"}                                     | label-service: Lake View 5, Pune, 411001
+  OrderPacked          {"order":"o1"}                                               | label-service: Lake View 5, Pune, 411001
+  CityChanged          {"city":"Bengaluru"}                                         | label-service: Lake View 5, Bengaluru, 411001
+  OrderPacked          {"order":"o2"}                                               | label-service: Lake View 5, Bengaluru, 411001
+  PinChanged           {"pin":"560001"}                                             | label-service: Lake View 5, Bengaluru, 560001
+  EmailChanged         {"email":"ravi@new.in"}                                      | label-service: Lake View 5, Bengaluru, 560001
+  NameChanged          {"name":"Ravi Kumar"}                                        | label-service: Lake View 5, Bengaluru, 560001
+  PhotoChanged         {"photo":"ravi2.jpg"}                                        | label-service: Lake View 5, Bengaluru, 560001
+field    profile-messages=6 mile-jule-labels=2/2 [o1: Lake View 5, Pune, 411001; o2: Lake View 5, Bengaluru, 411001] verifier-jaaga=1 (kaam ka 1)

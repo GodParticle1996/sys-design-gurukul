@@ -1,0 +1,8 @@
+mode=intent | bus ka kram (OrderPacked = alag service ka event)
+  AddressChanged       {"street":"Lake View 5","city":"Bengaluru","pin":"560001"}   | label-service: Lake View 5, Bengaluru, 560001
+  OrderPacked          {"order":"o1"}                                               | label-service: Lake View 5, Bengaluru, 560001
+  EmailChangeRequested {"email":"ravi@new.in"}                                      | label-service: Lake View 5, Bengaluru, 560001
+  OrderPacked          {"order":"o2"}                                               | label-service: Lake View 5, Bengaluru, 560001
+  NameChanged          {"name":"Ravi Kumar"}                                        | label-service: Lake View 5, Bengaluru, 560001
+  PhotoChanged         {"photo":"ravi2.jpg"}                                        | label-service: Lake View 5, Bengaluru, 560001
+intent   profile-messages=4 mile-jule-labels=0/2 verifier-jaaga=1 (kaam ka 1)

@@ -1,0 +1,1 @@
+{"name":"lab-51-event-modeling","version":"1.0.0","private":true,"scripts":{"start":"node start.js","test":"node --test test/*.test.js"},"engines":{"node":">=22"}}

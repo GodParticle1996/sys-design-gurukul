@@ -1,0 +1,16 @@
+ready :6009
+✔ profile: field = har field ek event; intent = ghar ek event, email alag (1.181001ms)
+✔ account: state events se fee aur ATM alag nahi dikhte; facts se dikhte (0.27151ms)
+✔ reader: strict anjaana field par mana; tolerant chhod deta hai; amount na ho toh dono mana (0.153852ms)
+✔ ex1-granular: field mode mein mile-jule labels, intent/generic mein nahi (21.495067ms)
+✔ ex2-facts aur ex3-bloat: nateeje (450.952716ms)
+✔ http: error ke saath status bhi aata hai (sirf 422 schema rejection gina jaata hai) (39.84801ms)
+✔ ex4-evolve (asli processes): strict naye field par toot-ta; rename dono ko todta; expand tolerant ko bachata (1593.506528ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2149.926077

@@ -42,6 +42,8 @@
     kafkaintro: { title: 'Apache Kafka — introduction: partitions and ordering', url: 'https://kafka.apache.org/41/getting-started/introduction/' },
     eventsourcing: { title: 'Azure — Event Sourcing pattern', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing' },
     kurrentappend: { title: 'Kurrent (EventStoreDB) — appending events and expected revision', url: 'https://docs.kurrent.io/clients/node/v1.3/appending-events.html' },
+    propertysourcing: { title: 'Oskar Dudycz — Anti-patterns in event modelling: Property Sourcing', url: 'https://event-driven.io/en/property-sourcing/' },
+    tolerantreader: { title: 'Martin Fowler — Tolerant Reader', url: 'https://martinfowler.com/bliki/TolerantReader.html' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -226,6 +228,27 @@
     ],
     followup: 'Transfer do accounts (do streams) badalta hai, aur expected version ek stream ka hai. Paisa beech mein na atke, kaise?',
     sources: ['eventsourcing', 'kurrentappend'],
+  });
+  add('eda-modeling', 'em-kyun em-kaise em-code em-kab', {
+    title: 'Event ka design: kaam ka naam, poora fact, aur roop badalna',
+    misaal: 'Naya pata teen postcards par bheja toh courier aadha naya pata le gaya; ek chitthi mein bheja toh poora. Passbook mein "balance badla" nahi, "ATM se nikaale" likho.',
+    asli: 'Event ek business kaam ki ghatna hai: naam, kaat aur data usi kaam se tay karo, consumer se nahi.',
+    points: [
+      '<b>Kaat:</b> ek kaam ke saare field ek event mein; apne workflow wale field ka alag event.',
+      '<b>Naam:</b> beete kaal mein ghatna (CashWithdrawn), haalat (BalanceUpdated) nahi.',
+      '<b>Data:</b> us fact ki poori baat ho; kisi ek consumer ke liye har event mein field mat jodo.',
+      '<b>Roop:</b> naya field jodo; naam badalna ho toh pehle readers taiyaar, phir dono field, phir purana hatao.',
+    ],
+    use: 'Har naye event ke review mein: kaunsa kaam hua, kaun-kaun padhega, aur roop kaise badlega.',
+    avoid: 'Bina business wajah har field ka event; workflow ko ghatna chahiye tab generic Updated; ek consumer ke liye har event mein field.',
+    mistake: 'Metadata mein field daal ke maan lena ki coupling gayi — producer ko phir bhi field bharna padta hai.',
+    compare: [
+      { choice: 'Har event mein field', when: 'Field sach mein us fact ka hissa ho', tradeoff: 'Seedha; par har producer badalta hai aur event bhari hota hai' },
+      { choice: 'Metadata mein field', when: 'Jab jaankari event ki pehchaan ho: id, source, waqt ya tracing', tradeoff: 'Payload saaf rehta hai; producer ki coupling wahi rehti hai' },
+      { choice: 'Consumer ki apni copy', when: 'Jaankari kisi aur event mein pehle se ho', tradeoff: 'Producer nahi badalta; consumer ko kram aur parking sambhaalni padti hai' },
+    ],
+    followup: 'Do teams ek hi event ka naam badalna chahti hain, aur ek consumer strict hai. Rollout ka kram kya hoga?',
+    sources: ['propertysourcing', 'tolerantreader'],
   });
   add('service-boundaries', 'decompose st-reddit-strangle prime-boundary-tax prime-replicate prime-when-split', {
     title: 'Har nayi service ka fayda kya hai?',

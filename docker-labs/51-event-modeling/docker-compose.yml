@@ -1,0 +1,19 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# ex4 apne do consumer processes ek hi container mein chalata hai (ports 6001–6002, bahar publish nahi). ex1–ex3 ek process.
+services:
+  granular:
+    build: .
+    profiles: [ex1-granular]
+    command: node start.js ex1-granular
+  facts:
+    build: .
+    profiles: [ex2-facts]
+    command: node start.js ex2-facts
+  bloat:
+    build: .
+    profiles: [ex3-bloat]
+    command: node start.js ex3-bloat
+  evolve:
+    build: .
+    profiles: [ex4-evolve]
+    command: node start.js ex4-evolve
