@@ -1,0 +1,7 @@
+REAL RUN: Node v24.18.0; 8 MB from one process to a receiver in the same process over loopback TCP
+client CPU = user + kernel (system) time of this whole process, so the receiver is included; median of 3 runs
+
+way                                  write() calls   wall      user + kernel CPU
+100-byte writes, wait for each               83887   64.9 ms         41 + 32 ms
+100-byte writes, no waiting                  83887   27.5 ms         35 + 12 ms
+one 8 MB write                                   1    3.2 ms           0 + 3 ms

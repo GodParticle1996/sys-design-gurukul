@@ -112,7 +112,43 @@ interview questions given explicit inputs (50-service page probability, not page
 single-worker M/M/1 model, not applied to DB pools or multi-core CPU; heavy-request and switch-path claims scoped; p99 and
 mean/median wording made exact; Amdahl no longer named before the Kab level; believable distractors in place of cartoon ones.
 
+## Video 3: Cost of Communication (2026-11-09)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-03-communication/`. Built by Claude; Codex fact-checked.
+Levels `fp-comm-kyun` → `fp-comm-kaise` → `fp-comm-code` → `fp-comm-kab` (`data-v2-fp-comm-1…4`, group "📡 Cost of Communication",
+guide `comm`, sources `protobufenc`, `tls13`, `http2spec`). Builders: `sdg-codex-xp/jobs/fp3/levels/*.py` (`check.js` = stand-in
+check incl. short spellings). Lab 53 (`docker-labs/53-communication-tax`): real HTTP/1.1, keep-alive and HTTP/2 (separate server
+process, CPU both sides), a TCP delay proxy model for 20 ms RTT, a hand-written Protobuf wire subset vs JSON (bytes, gzip,
+elapsed and CPU), small writes vs one write, and a great-circle distance model.
+
+The Flow track's `networking` level already teaches handshake basics, TCP vs QUIC and head-of-line blocking, so this topic takes
+the measured angle: one call's bill (round trips × RTT + work), why faster server code barely helps, chatty vs chunky, warm
+connections save handshakes but not the line, pooling ≠ multiplexing, 0-RTT replay, CDN edge as nearby handshakes plus a warm
+origin connection, bytes vs CPU in serialization, varint and decoder bounds, small writes and syscalls.
+
+Corrections taught: Protobuf integers are varints read byte by byte (only fixed32/fixed64 copy straight); field keys are varints
+too (fields 1–15 fit one byte); HTTP/2 multiplexing is not connection pooling; the video skips TCP + TLS 1.3 (3 RTT); 0-RTT data
+can be replayed; syscall ≠ context switch; DPDK and eBPF are different (eBPF runs inside the kernel); "JSON is a disaster, 30% CPU"
+has no source and V8's JSON beat the JavaScript Protobuf here; the Discord/gRPC claim is unverified; merging chatty services also
+depends on team, deploy and failure boundaries (Prime Video, lab 16).
+
+Codex's lab review (15 findings, all verified and fixed): encoder hung forever on an `Infinity` number; decoder accepted Orders
+longer than the buffer, varints crossing message bounds, over-long varints, values above 2^53 − 1, oversized or zero field keys
+and invalid UTF-8; the delay proxy could drop queued bytes when a client sent and closed at once; ex2 called wall time "CPU" and
+timed JSON and Protobuf over different work; ex1 A ran in a fixed order without warm-up; README fixes (reversed 13–17× sentence,
+keys are varints, HTTP/1.1 pipelining exists but the lab client does not use it, DPDK vs eBPF, handshake clock starts at accept,
+unprofiled "HTTP/2 framing in JavaScript" claim removed). New tests were mutation-checked against the old library and proxy.
+Codex's level review (16 findings, all verified and fixed): small writes were called syscalls (the lab counts JavaScript
+`write()` calls only); the gzip result was generalised (it depends on the response size: 1 order 62%, the whole list 98% —
+the serialize tool now prints that table); fields 16–2047 have two-byte keys, 2048+ more; QUIC is not "TCP + TLS"; 0-RTT is
+QUIC resumption with a ticket, and TLS 1.3 early data still pays TCP's round trip; "line never forms" in HTTP/2 was
+overclaimed; the guide's pool tradeoff ignored multi-socket pools; "870 ms ≈ 7 round trips" was unsupported (7 × 128.5 > 870);
+varint parsing was called cheaper than JSON; handshake CPU was called microseconds; Protobuf/schema terms were used before
+being taught (Code now opens with them); the Prime Video attribution was rewritten to what lab 16 shows; cold HTTP/2 42–44 ms;
+the gzip saving is ~11 MB, not 1.57 MB; the parser question's "Sirf …" distractors were replaced with believable mistakes;
+the proxy-order test now proves separate arrivals with hooks and cannot leave timers behind (reorder and drop mutations fail).
+
 ## Next
 
-Continue with numbered video 3, `YOR9hAFoe2o` (The Cost of Communication), after inspecting its transcript/frames and the
-existing network, fan-out and lab 41 material. Videos 1–2 are built; thirteen remain planned.
+Continue with numbered video 4, `kt1tW0El6Gg` (The Anatomy of a Request: DNS, BGP, and the Edge), after inspecting its
+transcript/frames and the existing Flow `lifecycle`/`networking` and Cloudflare anycast/edge material. Videos 1–3 are built; twelve remain planned.

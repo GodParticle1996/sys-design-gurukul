@@ -45,6 +45,9 @@
     kurrentappend: { title: 'Kurrent (EventStoreDB) — appending events and expected revision', url: 'https://docs.kurrent.io/clients/node/v1.3/appending-events.html' },
     propertysourcing: { title: 'Oskar Dudycz — Anti-patterns in event modelling: Property Sourcing', url: 'https://event-driven.io/en/property-sourcing/' },
     tolerantreader: { title: 'Martin Fowler — Tolerant Reader', url: 'https://martinfowler.com/bliki/TolerantReader.html' },
+    protobufenc: { title: 'Protocol Buffers — encoding (varint, keys, length-delimited)', url: 'https://protobuf.dev/programming-guides/encoding/' },
+    tls13: { title: 'RFC 8446 — TLS 1.3 (handshake, 0-RTT replay)', url: 'https://www.rfc-editor.org/rfc/rfc8446' },
+    http2spec: { title: 'RFC 9113 — HTTP/2 (streams and multiplexing)', url: 'https://www.rfc-editor.org/rfc/rfc9113' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -92,6 +95,27 @@
     ],
     followup: 'Load 70% se 90% hua: p99 kitna badhega, aur kis resource ka saturation pehle dekhoge?',
     sources: ['tailatscale', 'signals'],
+  });
+  add('comm', 'fp-comm-kyun fp-comm-kaise fp-comm-code fp-comm-kab', {
+    title: 'Har call ka bill: round trips, handshake, bytes aur CPU',
+    misaal: 'Raju paanch cheezein paanch chakkar mein laaya: dukaan ka kaam 10 second, raasta 50 minute. Dabbawala ek thaile mein 50 dabbe le jaaye toh ek chakkar. Card par poore pate ki jagah mehmaan ka number.',
+    asli: 'Network call ka bill round trips × RTT + kaam hai; code tez karne se pehle round trips aur connections gino.',
+    points: [
+      '<b>Bill:</b> poore TCP + TLS 1.3 handshake wale naye connection par teen round trips; khule connection par ek.',
+      '<b>Line:</b> garam HTTP/1.1 socket bina pipelining maangein ek-ek bhejta hai; HTTP/2 ek connection par kai streams chalata hai.',
+      '<b>Bytes vs CPU:</b> Protobuf bytes bachata hai; gzip ke baad farq response ke size par tika. CPU apne stack par naapo.',
+      '<b>Doori:</b> fiber mein har 1,000 km ka aana-jaana ≥ 10 ms; CDN edge handshakes user ke paas karta hai.',
+    ],
+    use: 'Server ka kaam chhota ho par call lambi, screen kai calls ek ke baad ek kare, ya har maang naya connection khole.',
+    avoid: 'Bina profile ke "JSON dheema hai" maan ke format badalna, aur payment jaisi maang 0-RTT data mein bhejna.',
+    mistake: 'Round trips mein samay ja raha ho tab server ka code tez karna, aur pooling ko multiplexing samajhna.',
+    compare: [
+      { choice: 'Connection pool / keep-alive', when: 'Har maang par naya connection; handshake ka samay aur CPU', tradeoff: 'Handshake bachta hai; pool ke kai sockets maangein saath chala sakte hain. Khule connections gino' },
+      { choice: 'HTTP/2 multiplexing', when: 'Ek host se kai maangein ek saath chahiye', tradeoff: 'Ek connection par streams saath; TCP par packet loss saari streams rokta hai' },
+      { choice: 'Chunky call / batch', when: 'Tiki hui calls, ya chhote writes ek ke baad ek', tradeoff: 'Round trips aur kernel ke safar ghatte; server par jodne ka kaam badhta hai' },
+    ],
+    followup: 'Mumbai ke users, server US-East, checkout mein 7 round trips. Kaunse teen badlaav sabse zyada samay bachayenge?',
+    sources: ['protobufenc', 'tls13', 'http2spec'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

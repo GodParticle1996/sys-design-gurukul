@@ -1,0 +1,22 @@
+REAL RUN: Node v24.18.0; 1,00,000 seeded orders; each time = median of 5; timings change run to run
+protobuf = hand-written Protobuf wire format (varint + length-delimited) in plain JavaScript, no library
+round trip: decode(encode(orders)) equals the original for both formats
+
+one order, JSON : {"id":1000000,"userId":32157,"amountPaise":124034,"city":"Bengaluru","items":["masala dosa","dal makhani","masala dosa","gulab jamun"],"paid":true}
+one order bytes: JSON 147, protobuf 77
+
+times = elapsed/CPU ms (CPU = user + system of the whole process); objects ↔ wire bytes for both formats
+format     bytes      gzip bytes   encode     decode
+JSON        12.57 MB     1.57 MB   30/30 ms   39/59 ms
+protobuf     5.77 MB     1.54 MB   37/46 ms  70/119 ms
+
+protobuf ÷ JSON bytes: 46%; after gzip: 98%
+gzip of the JSON: 122/123 ms to compress, 13/13 ms to decompress (elapsed/CPU)
+
+gzip depends on how much goes in ONE compressed response (bytes, same seeded orders):
+orders per response   JSON gzip   protobuf gzip   protobuf ÷ JSON
+                  1         138              86               62%
+                 10         379             351               93%
+                100       1,925           1,941              101%
+              1,000      16,270          15,992               98%
+           1,00,000   15,73,156       15,37,532               98%

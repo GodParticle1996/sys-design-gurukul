@@ -1,0 +1,24 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. ex1-reuse apna server alag process mein chalata hai (ports 6301–6302, proxies 6311–6312,
+# sab container ke andar, bahar publish nahi). ex3-writes port 6321 container ke andar.
+services:
+  slowmo:
+    build: .
+    profiles: [ex0-slowmo]
+    command: node start.js ex0-slowmo
+  reuse:
+    build: .
+    profiles: [ex1-reuse]
+    command: node start.js ex1-reuse
+  serialize:
+    build: .
+    profiles: [ex2-serialize]
+    command: node start.js ex2-serialize
+  writes:
+    build: .
+    profiles: [ex3-writes]
+    command: node start.js ex3-writes
+  geo:
+    build: .
+    profiles: [ex4-geo]
+    command: node start.js ex4-geo

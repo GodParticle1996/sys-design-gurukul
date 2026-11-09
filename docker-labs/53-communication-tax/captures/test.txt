@@ -1,0 +1,19 @@
+✔ varint matches the Protobuf spec example: field 1 = 150 → 08 96 01 (1.576986ms)
+✔ varint round trip at the edges; bad numbers refused (0.811534ms)
+✔ encoder refuses bad numbers before sizing (an Infinity id used to loop forever) (3.728705ms)
+✔ decoder refuses malformed input: nested lengths, long varints, bad keys, bad UTF-8 (0.469374ms)
+✔ order round trip, multi-byte text, false bool not written (0.295433ms)
+✔ decoder skips an unknown length-delimited field and refuses a truncated one (0.30943ms)
+✔ 1,000 orders: list round trip equals JSON, and protobuf is smaller (10.132554ms)
+✔ geo model: San Francisco → London ≈ 8,616 km, RTT = 2 × distance ÷ 200,000 km/s (0.253955ms)
+✔ delay proxy keeps distinct chunks in order and adds the modelled delays (175.285113ms)
+✔ delay proxy: a client that sends and closes at once still gets its whole reply (203.777625ms)
+✔ server counts connections: 3 requests without keep-alive = 3 new, with keep-alive = 0 new (48.913071ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 486.25673

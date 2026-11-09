@@ -1,0 +1,18 @@
+REAL RUN: Node v24.18.0; server is a separate process on 127.0.0.1; timings change run to run
+
+A) loopback, 2000 requests one after another (GET /order/:id, small JSON)
+   conns = TCP connections the server saw (HTTP/2: sessions); CPU in ms, user + kernel (system)
+   every way warmed up first (300 untimed requests); then 3 rounds in rotating order; each column = median
+   way                     wall      conns   client user+kernel   server user+kernel
+   new connection each       401 ms   2000         231 + 150 ms          139 + 78 ms
+   keep-alive (1 socket)     223 ms      1          119 + 55 ms           63 + 47 ms
+   HTTP/2 (1 connection)     246 ms      1          120 + 37 ms           85 + 47 ms
+
+B) through a delay proxy: RTT 20 ms; MODEL: TCP handshake = 1 extra RTT counted from accept (bytes sent at once wait for it); TLS not modelled
+   50 requests needed at the same moment; "warm" = the connection was opened before the clock started
+   an untimed burst of 50 connects to each proxy runs first (warm-up)
+   way                          wall      new connections
+   HTTP/1.1, 1 warm socket       1052 ms      0
+   HTTP/1.1, 50 new sockets        47 ms     50
+   HTTP/2, 1 cold connection       44 ms      1
+   HTTP/2, 1 warm connection       23 ms      0

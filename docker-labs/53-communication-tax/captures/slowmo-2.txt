@@ -1,0 +1,15 @@
+== bill: one call to a server 40 ms away (round trip), new connection, DNS cached ==
+  TCP handshake (SYN, SYN-ACK, ACK)  + 40 ms   total  40 ms
+  TLS 1.3 handshake                  + 40 ms   total  80 ms
+  request goes, response comes       + 40 ms   total 120 ms
+  server work                        +  5 ms   total 125 ms
+  same call on a reused connection:  40 + 5 = 45 ms (no handshakes)
+
+== chatty vs chunky: home screen needs name, avatar, bio, orders, offers (reused connection, 40 ms RTT) ==
+  chatty call 1 (name  ) after  45 ms
+  chatty call 2 (avatar) after  90 ms
+  chatty call 3 (bio   ) after 135 ms
+  chatty call 4 (orders) after 180 ms
+  chatty call 5 (offers) after 225 ms
+  chunky: one call, server gathers all 5 next to its data: 40 + 25 = 65 ms
+  chatty but parallel (5 calls at once): about 45 ms, but 5 requests of server work (and 5 connections for an HTTP/1.1 client that does not pipeline)
