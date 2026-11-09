@@ -1,0 +1,26 @@
+MODEL: per prefix, BGP picks the route with the highest LOCAL_PREF (policy), then the shortest AS path;
+       sending a packet then uses the longest matching installed prefix. Other BGP checks and tie-breakers are left out.
+
+A) DelhiNet ISP → KhanaKart 203.0.113.0/24: two routes it learned
+   PeerFast (peer)                LOCAL_PREF 100  AS path 2  measured RTT  50 ms  
+   TransitCheap (cheap contract)  LOCAL_PREF 150  AS path 3  measured RTT 200 ms  ← chosen
+   BGP never saw the 50 ms vs 200 ms: policy (LOCAL_PREF) decides before path length, and speed is not an input.
+
+B) anycast: KhanaKart announces 198.51.100.0/24 from Mumbai, Singapore and Frankfurt PoPs
+   user       BGP sends to   distance   RTT (min)   nearest PoP   distance   RTT (min)
+   Delhi      Mumbai          1,148 km       11 ms   Mumbai         1,148 km       11 ms
+   Chennai    Singapore       2,902 km       29 ms   Mumbai         1,033 km       10 ms   ← not the nearest
+   Dubai      Frankfurt       4,836 km       48 ms   Mumbai         1,935 km       19 ms   ← not the nearest
+   London     Frankfurt         638 km        6 ms   Frankfurt        638 km        6 ms
+   Sydney     Singapore       6,306 km       63 ms   Singapore      6,306 km       63 ms
+   anycast lands each user where its ISP's policy and AS path point — usually near, not always the nearest.
+
+C) route leak: KhanaKart announces 203.0.112.0/22; LeakyNet wrongly announces 203.0.113.0/24 inside it (like YouTube, 2008)
+   ASSUMED: KhanaKart has a valid covering ROA and SafeNet rejects RPKI-Invalid routes; LeakyNet is not an authorized origin
+   ISP                      203.0.113.10 before → after          203.0.112.10 after
+   DelhiNet                 KhanaKart (real) → LeakyNet (leak)    KhanaKart (real)
+   MumbaiFiber              KhanaKart (real) → LeakyNet (leak)    KhanaKart (real)
+   ChennaiNet               KhanaKart (real) → LeakyNet (leak)    KhanaKart (real)
+   SafeNet (RPKI filter)    KhanaKart (real) → KhanaKart (real)   KhanaKart (real)
+   both routes are installed; the /24 is the longer match, so 203.0.113.x follows it despite worse policy and a longer path.
+   without a covering ROA the leak is NotFound, not Invalid; a leak that keeps an authorized origin passes origin checks.

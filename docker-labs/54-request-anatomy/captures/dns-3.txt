@@ -1,0 +1,11 @@
+REAL RUN: Node v24.18.0; real UDP packets in DNS wire format; MODEL delays: you ↔ resolver 5 ms, root 20, TLD 30, authoritative 40 ms
+
+lookups through the resolver (as your laptop would):
+  api.khanakart.com     100 ms  resolver asked 3 server(s)  → 10.0.0.12 (TTL 300 s)   cold: root → TLD → authoritative
+  api.khanakart.com       7 ms  resolver asked 0 server(s)  → 10.0.0.12 (TTL 300 s)   warm: from the resolver cache
+  img.khanakart.com      47 ms  resolver asked 1 server(s)  → 10.0.0.13 (TTL 300 s)   sibling: .com and khanakart.com referrals cached
+  nope.khanakart.com     46 ms  resolver asked 1 server(s)  → NXDOMAIN   name does not exist (this lab does not cache NXDOMAIN)
+
+1,000 more lookups of api.khanakart.com within its TTL: resolver asked 0 upstream servers (root +0, authoritative +0)
+Node's own resolver (c-ares) via this resolver: khanakart.com → [{"address":"10.0.0.10","ttl":300}]
+queries seen: root 1, TLD 1, authoritative 4

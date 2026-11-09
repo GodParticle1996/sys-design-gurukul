@@ -1,0 +1,10 @@
+REAL RUN: Node v24.18.0; one request body scanned by N regex rules on one thread; elapsed/CPU ms per request
+bodies are clean (no rule matches), so every rule reads every byte; timings change run to run
+
+body                                 20 rules     100 rules     500 rules    2000 rules
+1 KB JSON order                      0.00/0.0      0.04/0.0      0.12/0.1      0.61/0.6
+100 KB JSON                          0.17/0.2      0.90/0.9      4.59/4.6    18.02/18.0
+1 MB image upload (base64)           5.56/5.6    27.87/27.9  133.57/133.6  545.18/545.2
+
+attack body {"q":"1 UNION SELECT password FROM users"} → caught by rule #1 (first match stops the scan)
+1 MB upload with only the 20 base rules on its URL and headers (body skipped): 0.00/0.0 ms

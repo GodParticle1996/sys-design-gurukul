@@ -48,6 +48,9 @@
     protobufenc: { title: 'Protocol Buffers — encoding (varint, keys, length-delimited)', url: 'https://protobuf.dev/programming-guides/encoding/' },
     tls13: { title: 'RFC 8446 — TLS 1.3 (handshake, 0-RTT replay)', url: 'https://www.rfc-editor.org/rfc/rfc8446' },
     http2spec: { title: 'RFC 9113 — HTTP/2 (streams and multiplexing)', url: 'https://www.rfc-editor.org/rfc/rfc9113' },
+    dnsspec: { title: 'RFC 1034 — DNS concepts (resolvers, delegation, TTL)', url: 'https://www.rfc-editor.org/rfc/rfc1034' },
+    ecs: { title: 'RFC 7871 — EDNS Client Subnet', url: 'https://www.rfc-editor.org/rfc/rfc7871' },
+    bgpspec: { title: 'RFC 4271 — BGP-4 (route selection)', url: 'https://www.rfc-editor.org/rfc/rfc4271' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -116,6 +119,27 @@
     ],
     followup: 'Mumbai ke users, server US-East, checkout mein 7 round trips. Kaunse teen badlaav sabse zyada samay bachayenge?',
     sources: ['protobufenc', 'tls13', 'http2spec'],
+  });
+  add('req', 'fp-req-kyun fp-req-kaise fp-req-code fp-req-kab', {
+    title: 'Request ka safar: DNS, packet, raasta aur darwaze',
+    misaal: 'Dost ko parcel bhejna: pehle pata dhoondo (DNS), lifaafe mein daalo (packet), courier apne contracts se raasta chune (BGP). Society ke gate par guard, lobby mein receptionist, aur flat ka maalik khud darwaza khole.',
+    asli: 'App ka code chalne se pehle DNS, raasta aur kai darwaze samay lete hain; har kadam ka bill alag naapo.',
+    points: [
+      '<b>DNS:</b> cold lookup mein root → TLD → authoritative ke round trips; valid copy upstream ko bachati hai (lab: 6–7 ms).',
+      '<b>Loss:</b> gira UDP sawaal poora timeout rukta hai; chhota loss median kam badalta hai, ausat aur tail badhte hain.',
+      '<b>Raasta:</b> BGP ek prefix mein policy, phir AS path chunta hai; forwarding sabse lamba prefix. Anycast hamesha paas nahi.',
+      '<b>Darwaze:</b> edge handshake paas karta hai; lab mein WAF ~rules × bytes; L4 connection par, L7 request par.',
+    ],
+    use: 'Pehli request dheemi ho par handler tez, users door ke PoP par pahunchein, ya bade uploads par edge/WAF dheema ho.',
+    avoid: 'Data center move ke din TTL badalna, upload format par bekaar text rules chalana, aur gateway ke bharose service checks hatana.',
+    mistake: 'Geo DNS ko user ka IP dikhta hai maan lena; asal mein aam taur par resolver ka IP dikhta hai (ECS na ho toh).',
+    compare: [
+      { choice: 'Lamba TTL', when: 'IP kam badalta hai, lookups ka bojh ghatana hai', tradeoff: 'Kam sawaal aur tez lookup; IP badalne par purana pata der tak' },
+      { choice: 'L4 load balancer', when: 'Lambe connections, path routing nahi chahiye', tradeoff: 'Sasta aur tez; path nahi dekhta, keep-alive par ek backend' },
+      { choice: 'L7 load balancer', when: 'Path ya header se route, retries, auth', tradeoff: 'Har request padhta hai; lab ke ek keep-alive connection par ~2.2–2.6× proxy CPU' },
+    ],
+    followup: 'Mumbai PoP paas hai, phir bhi Dubai ke users Frankfurt jaate hain. Kaunse do numbers maangoge aur kya badloge?',
+    sources: ['dnsspec', 'ecs', 'bgpspec'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

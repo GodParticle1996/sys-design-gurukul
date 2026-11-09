@@ -1,0 +1,10 @@
+REAL RUN: Node v24.18.0; 2,000 lookups of a cached name, 20 at a time; stub timeout 1000 ms, 2 tries
+MODEL: the resolver drops this share of incoming questions (seeded); timings change run to run
+
+loss   dropped   retried   answered after retry   failed     mean     p50      p95      p99    p99.9      max
+0%           0         0                      0        0    5.9 ms     6 ms     7 ms     8 ms    13 ms    13 ms
+1%          16        16                     16        0   13.7 ms     6 ms     7 ms     7 ms  1007 ms  1007 ms
+5%         107       104                    101        3   58.9 ms     5 ms  1004 ms  1006 ms  2000 ms  2001 ms
+
+percentiles include failed lookups at their full wait: the ~2,000 ms samples failed after two timeouts
+glibc resolv.conf defaults are timeout:5 and attempts:2; the actual wait per lost query depends on the nameserver list and resolver code, not a fixed 5 s

@@ -1,0 +1,23 @@
+npm notice run lab-54-request-anatomy@1.0.0 test
+npm notice run node --test test/*.test.js
+✔ DNS wire format: round trip of a reply with answer, referral and glue (1.757928ms)
+✔ DNS names: pointers followed; overlong, aliased or invalid names refused (0.444639ms)
+✔ DNS records: A and NS data lengths, class, IPv4 text are checked (0.462181ms)
+✔ authoritative logic: referral before data, NODATA vs NXDOMAIN, parent never answers for the child (0.215666ms)
+✔ a malformed or overlong query does not crash a server; normal queries still work (53.929483ms)
+✔ ask() accepts only the real reply: right source, QR, ID, name and type (22.065459ms)
+✔ resolver trusts only relevant records: unrelated answers and extra glue are not cached (74.074628ms)
+✔ real UDP chain: cold walks root → TLD → authoritative, warm is cached, NXDOMAIN, NODATA, c-ares agrees (221.264566ms)
+✔ TTL: the cached answer counts down and expires; then the resolver asks again (134.63382ms)
+✔ UDP loss: a retried lookup waits the timeout; total loss fails after the last try (1515.677082ms)
+✔ L4 proxy is path-blind (one connection → one backend); L7 routes each request by path (135.451039ms)
+✔ WAF: an attack is caught by its rule; a clean body passes all 2,000 rules (15.541769ms)
+✔ BGP model: per-prefix choice by LOCAL_PREF then AS path; forwarding by longest prefix; helpers (0.369562ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2216.944035

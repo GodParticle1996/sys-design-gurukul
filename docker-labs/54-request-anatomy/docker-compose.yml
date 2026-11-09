@@ -1,0 +1,32 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. DNS servers 127.0.0.2/.3/.4:6510 aur resolver 127.0.0.1:6511–6512 container ke loopback par
+# (Linux ka poora 127.0.0.0/8 loopback hai); ex4-lb ke backends aur proxies 6521–6524 container ke andar. Kuch bahar publish nahi.
+services:
+  slowmo:
+    build: .
+    profiles: [ex0-slowmo]
+    command: node start.js ex0-slowmo
+  dns:
+    build: .
+    profiles: [ex1-dns]
+    command: node start.js ex1-dns
+  loss:
+    build: .
+    profiles: [ex2-loss]
+    command: node start.js ex2-loss
+  ttl:
+    build: .
+    profiles: [ex3-ttl]
+    command: node start.js ex3-ttl
+  lb:
+    build: .
+    profiles: [ex4-lb]
+    command: node start.js ex4-lb
+  waf:
+    build: .
+    profiles: [ex5-waf]
+    command: node start.js ex5-waf
+  bgp:
+    build: .
+    profiles: [ex6-bgp]
+    command: node start.js ex6-bgp

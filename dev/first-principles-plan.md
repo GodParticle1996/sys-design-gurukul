@@ -148,7 +148,43 @@ being taught (Code now opens with them); the Prime Video attribution was rewritt
 the gzip saving is ~11 MB, not 1.57 MB; the parser question's "Sirf …" distractors were replaced with believable mistakes;
 the proxy-order test now proves separate arrivals with hooks and cannot leave timers behind (reorder and drop mutations fail).
 
+## Video 4: Anatomy of a Request (2026-11-09)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-04-request/`. Built by Claude; Codex fact-checked.
+Levels `fp-req-kyun` → `fp-req-kaise` → `fp-req-code` → `fp-req-kab` (`data-v2-fp-req-1…4`, group "🛣️ Anatomy of a Request",
+guide `req`, sources `dnsspec`, `ecs`, `bgpspec`). Builders: `sdg-codex-xp/jobs/fp4/levels/*.py`. Lab 54
+(`docker-labs/54-request-anatomy`): a real UDP DNS chain (root, .com and khanakart.com servers on 127.0.0.2/.3/.4:6510, a
+recursive resolver with TTL cache, checked against Node's c-ares), seeded packet loss with timeout/retry, a TTL model, real
+L4 vs L7 proxies (latency, proxy CPU, which backend), a WAF rules × bytes CPU run, and a BGP selection/forwarding model.
+
+The app already covered anycast/BGP (Cloudflare story), WAF regex blowups (Feed postmortem), L4 vs L7 (Flow) and TTL during
+failover (DR), so this topic measures: cold vs warm DNS (100 vs 6–7 ms), a lost UDP question costing the full timeout (5%
+loss → p95 1 s; 1% → p99.9 1 s), TTL's trade (queries vs stale share), geo DNS seeing the resolver (ECS), BGP choosing by
+policy not speed, anycast not always nearest, a /24-in-/22 leak (YouTube 2008) and RPKI's assumptions, edge TLS (470 → 166 ms),
+WAF cost (1 MB × 2,000 rules ~540 ms CPU), L4 path-blindness vs L7's ~2.2–2.6× CPU, and gateway vs service authorization.
+
+Corrections taught: connect() is a syscall, not a context switch, and gets an IP and port, not a URL; radio is not air
+vibration; TCP sequence numbers count bytes, not packets; 13 root identities each with many anycast instances; DNS is mostly
+UDP; geo DNS sees the resolver; anycast is not "physically nearest"; Sydney ↔ Virginia three round trips are at least 470 ms,
+not 450; a WAF reads HTTP after TLS, not DPI; services must keep their own authorization behind a gateway; Kong is OpenResty.
+
+Codex's lab review (21 findings, all verified and fixed): an overlong name could crash a server; ask() accepted replies from
+the wrong source or for the wrong type; unrelated answers and additional records were cached (cache poisoning); record data
+was read past its length; names were silently aliased; NODATA was reported as NXDOMAIN; the parent answered authoritatively
+for the child; a retry test swallowed its assertion; a failed child start could hang the tests; the loss table hid failed
+retries; BGP selection and forwarding were mixed; RPKI assumptions were unstated; plus README corrections. New guards are
+mutation-checked (name limit, source check, glue filter, zone-cut order, retry timing).
+
+Codex's levels review (17 findings, all verified and fixed): "small loss doesn't change the mean" was false; the loss tool
+now prints the mean (6.0 → 13.6 ms at 1% while the median stays 6 ms), and at 5% loss p95 sits on the edge (7–1,004 ms), so
+the question asks about p99; the WAF claims are scoped to the lab's linear rules on 1 MiB base64 text and the startup question
+states its profiling; a marked BGP answer again put longest-prefix "before policy"; 470 → 166 ms is time to first byte, not
+handshake savings; geo DNS and TTL questions now state their assumptions (ECS off, uniform cache ages); glibc's wait is not
+a fixed 5 s; the L4 question states the routing requirement; authorization enforcement vs where the decision is made; a
+short glossary (byte layout, A/NS/glue/AA/NODATA) now comes before the questions that need it; scoped test summary; source
+port vs destination port 53; packet-header accounting assumptions; standalone guide scope; and 18 back-references.
+
 ## Next
 
-Continue with numbered video 4, `kt1tW0El6Gg` (The Anatomy of a Request: DNS, BGP, and the Edge), after inspecting its
-transcript/frames and the existing Flow `lifecycle`/`networking` and Cloudflare anycast/edge material. Videos 1–3 are built; twelve remain planned.
+Continue with numbered video 5, `RAuIWs3ne9g` (The Physics of Persistence: B-Trees vs LSM-Trees), after inspecting its
+transcript/frames and the existing data/storage material (and SQL Gurukul internals). Videos 1–4 are built; eleven remain.

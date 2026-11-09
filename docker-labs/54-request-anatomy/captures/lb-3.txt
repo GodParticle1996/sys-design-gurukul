@@ -1,0 +1,15 @@
+REAL RUN: Node v24.18.0; separate processes on 127.0.0.1; 4,000 requests one after another, each /api or /img by a seeded coin toss
+L4 = TCP proxy, picks a backend per connection (round robin), never reads HTTP; L7 = HTTP proxy, routes each request by path
+every way warmed up (300 untimed requests), then 3 rounds in rotating order; numbers = median of the rounds
+
+A) client keeps ONE connection open (keep-alive)
+   way                    p50       p99    proxy CPU / 1,000 req    /api went to     /img went to
+   direct to backend A    0.08 ms   0.33 ms                —            A 100% · B 0%    A 100% · B 0%
+   through L4 proxy       0.14 ms   0.44 ms            61 ms            A 100% · B 0%    A 100% · B 0%
+   through L7 proxy       0.18 ms   0.72 ms           157 ms            A 100% · B 0%    A 0% · B 100%
+
+B) client opens a NEW connection per request
+   way                    p50       p99    proxy CPU / 1,000 req    /api went to     /img went to
+   direct to backend A    0.12 ms   0.42 ms                —            A 100% · B 0%    A 100% · B 0%
+   through L4 proxy       0.26 ms   0.71 ms           165 ms            A 50% · B 50%    A 50% · B 50%
+   through L7 proxy       0.33 ms   0.96 ms           248 ms            A 100% · B 0%    A 0% · B 100%
