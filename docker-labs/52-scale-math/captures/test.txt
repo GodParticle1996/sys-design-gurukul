@@ -1,0 +1,21 @@
+✔ percentile: nearest rank, and bad input is refused (1.330437ms)
+✔ same seed gives the same numbers; another seed differs (2.187035ms)
+✔ tail: mean lands far above the median when 1.5% are slow (12.215986ms)
+✔ fanout: independent slowness follows 1 − 0.99^N; shared slowness stays near 1% (119.716042ms)
+✔ knee: simulated mean matches queue theory at 50% and 80% load (156.903146ms)
+✔ hedge (seed 52 samples): helps independent stragglers at low load; not these heavy-request runs; runs away without a budget (449.573837ms)
+✔ hedge budget is never exceeded, even on tiny samples (1.027331ms)
+✔ cancel drops spare copies still in line, lets running ones finish, and beats budget-only when busy (301.284744ms)
+✔ heavy duplicates: extra service time counts milliseconds, not copies (122.641946ms)
+✔ amdahl pool: the locked share is the same at every worker count (445.083448ms)
+✔ heap pops in time order, ties by sequence (0.342954ms)
+✔ amdahl formula: 5% serial caps the speed-up at 20× (0.080079ms)
+✔ shared lock: 4 real worker threads start together; 1,00,000 unguarded increments each, final count exact (75.787901ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1741.627757

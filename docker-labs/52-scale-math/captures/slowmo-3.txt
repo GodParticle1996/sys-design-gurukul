@@ -1,0 +1,27 @@
+== tail: 10 requests (ms) ==
+as they came : 16, 12, 25, 15, 900, 14, 19, 15, 21, 18
+sorted       : 12, 14, 15, 15, 16, 18, 19, 21, 25, 900
+mean         : 1055 ÷ 10 = 105.5 ms
+p50 (rank 5) : 16 ms
+p90 (rank 9) : 25 ms
+p100 (max)   : 900 ms
+within ±20% of the mean (84–127 ms): 0 requests
+
+== fanout: each page calls 3 services in parallel and waits for all (ms) ==
+page A: calls 12, 14, 11 → page time 14 ms
+page B: calls 13, 1000, 12 → page time 1000 ms
+page C: calls 11, 15, 14 → page time 15 ms
+chance a page has no slow call, 1% slow per call:
+    1 calls: 0.99^1 = 0.990 → slow pages 1.0%
+    3 calls: 0.99^3 = 0.970 → slow pages 3.0%
+   10 calls: 0.99^10 = 0.904 → slow pages 9.6%
+  100 calls: 0.99^100 = 0.366 → slow pages 63.4%
+
+== queue: one worker, 10 ms per request; 6 × 10 = 60 ms of work, all inside 0–75 ms → busy 80% of that window ==
+#1: arrives  0  starts  0  ends 10  waited  0 ms
+#2: arrives  3  starts 10  ends 20  waited  7 ms
+#3: arrives  6  starts 20  ends 30  waited 14 ms
+#4: arrives  9  starts 30  ends 40  waited 21 ms
+#5: arrives 40  starts 40  ends 50  waited  0 ms
+#6: arrives 65  starts 65  ends 75  waited  0 ms
+total wait: 42 ms; evenly spread (every 12.5 ms) no request would wait

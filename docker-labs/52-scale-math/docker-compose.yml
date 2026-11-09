@@ -1,0 +1,27 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek process hai. ex4-amdahl worker threads chalata hai: container ko jitne CPU milenge, utni speed-up dikhegi.
+services:
+  slowmo:
+    build: .
+    profiles: [ex0-slowmo]
+    command: node start.js ex0-slowmo
+  tail:
+    build: .
+    profiles: [ex1-tail]
+    command: node start.js ex1-tail
+  fanout:
+    build: .
+    profiles: [ex2-fanout]
+    command: node start.js ex2-fanout
+  knee:
+    build: .
+    profiles: [ex3-knee]
+    command: node start.js ex3-knee
+  amdahl:
+    build: .
+    profiles: [ex4-amdahl]
+    command: node start.js ex4-amdahl
+  hedge:
+    build: .
+    profiles: [ex5-hedge]
+    command: node start.js ex5-hedge

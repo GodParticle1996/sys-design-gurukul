@@ -1,0 +1,16 @@
+MODEL: seeded simulation (seed 52), 1,00,000 requests; no real server
+fast requests: 30 ms + random (avg 15 ms); slow requests: 2–8 s, chance 1.5%
+
+slow requests      : 1,522 of 1,00,000
+mean (average)     : 121 ms
+p50 (median)       : 40.6 ms
+p95                : 80.0 ms
+p99                : 4143 ms
+p99.9              : 7619 ms
+max                : 7996 ms
+
+requests within ±20% of the mean : 1,064 (1.1%)
+mean of the fast requests only   : 45.0 ms
+p99 ÷ mean                        : 34.3×
+
+1.5% of 10 lakh requests a day   : 15,000 slow requests every day

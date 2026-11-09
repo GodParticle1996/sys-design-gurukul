@@ -14,6 +14,7 @@
     stream: { title: 'Node.js — streams and backpressure', url: 'https://nodejs.org/api/stream.html' },
     overload: { title: 'Google SRE — handling overload', url: 'https://sre.google/sre-book/handling-overload/' },
     signals: { title: 'Google SRE — monitoring', url: 'https://sre.google/sre-book/monitoring-distributed-systems/' },
+    tailatscale: { title: 'Dean & Barroso — The Tail at Scale (CACM 2013)', url: 'https://research.google/pubs/the-tail-at-scale/' },
     traces: { title: 'OpenTelemetry — traces', url: 'https://opentelemetry.io/docs/concepts/signals/traces/' },
     kafka: { title: 'Apache Kafka — design and delivery semantics', url: 'https://kafka.apache.org/41/design/design/' },
     eventtime: { title: 'Apache Flink — event time and watermarks', url: 'https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/' },
@@ -71,6 +72,26 @@
     ],
     followup: 'Tez version wahi values aur errors deta hai: kaise jaanchoge?',
     sources: ['stream', 'overload'],
+  });
+  add('scale', 'fp-scale-kyun fp-scale-kaise fp-scale-code fp-scale-kab', {
+    title: 'Ausat nahi, tail dekho; machines se pehle akela hissa',
+    misaal: 'Tapri par Ambani aaye toh ausat kamai karodon mein, par tapri par baithe logon ki kamai ausat ke aaspaas nahi. Thali sabse dheemi katori ka intezaar karti hai. 20 cooks bhi ek tandoor se roti tez nahi nikaal sakte.',
+    asli: 'Bade scale par rare dheemapan aam ho jaata hai: percentiles naapo, load mein jagah chhodo, akela hissa ghatao.',
+    points: [
+      '<b>Tail:</b> ausat ki jagah p50, p95, p99 alag dekho; fan-out mein alag-alag dheemapan 1 − 0.99^N se badhta hai.',
+      '<b>Knee:</b> lab ke ek-worker model mein mean response time kaam ÷ (1 − load); bhare system par har point mehenga.',
+      '<b>Chhat:</b> akela (serial) hissa s ho toh speed-up 1 ÷ s se upar nahi jaata.',
+      '<b>Hedge:</b> p95 ke baad doosri copy, budget aur cancel ke saath; sirf alag dheemapan aur safe request par.',
+    ],
+    use: 'Dashboard ka ausat theek ho par users atakte hon, ya machines badhane par bhi speed na badhe.',
+    avoid: 'Busy servers par bina budget ya cancel ke hedging, aur bina naape bhaari requests par doosri copy.',
+    mistake: 'Ausat latency par SLO rakhna, aur 1 − 0.99^N ko shared dheemapan par bhi laga dena.',
+    compare: [
+      { choice: 'Machines badhao', when: 'Kaam baant sakte ho aur akela hissa chhota ho', tradeoff: 'Chhat 1 ÷ s; lock wala hissa line banata hai' },
+      { choice: 'Hedged request', when: 'Dheemapan server ki alag dikkat ho, request safe ho', tradeoff: 'Baseline p95 se ~5% extra requests; pakki hadd rakho, extra ms alag naapo' },
+    ],
+    followup: 'Load 70% se 90% hua: p99 kitna badhega, aur kis resource ka saturation pehle dekhoge?',
+    sources: ['tailatscale', 'signals'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

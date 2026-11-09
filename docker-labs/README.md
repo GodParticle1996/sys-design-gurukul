@@ -57,6 +57,7 @@ Har README measured output aur model ki boundary bataata hai.
 | [49-eda-races](49-eda-races/README.md) | Competing consumers ka ulta kram, do consumers ka khoya update (CAS/atomic), crash ke baad duplicate charge aur sahi idempotency key (asli processes + SQLite) | EDA topic 4 · Races |
 | [50-event-sourcing](50-event-sourcing/README.md) | Events se balance (fold), version ki shart bina minus balance, store-aur-publish crash vs catch-up projector, snapshot, upcasting (asli processes + SQLite) | EDA topic 5 · Event Sourcing |
 | [51-event-modeling](51-event-modeling/README.md) | Field events se mila-jula address, BalanceUpdated vs asli ghatna, "ek aur field" ke teen ilaaj (bytes, teams, kram), strict vs tolerant consumer par schema badlaav (asli processes) | EDA topic 6 · Event Modeling |
+| [52-scale-math](52-scale-math/README.md) | Ausat vs percentiles, fan-out par tail (independent vs shared), load ka knee (M/M/1 vs M/D/1), Amdahl asli worker threads par (lock ka held time naapa), hedged requests: budget, cancel, bhaari request | Math of Scale 1–4 (First Principles) |
 
 ```bash
 cd docker-labs/09-raft

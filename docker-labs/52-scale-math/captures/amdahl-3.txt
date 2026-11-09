@@ -1,0 +1,32 @@
+REAL RUN: Node v24.18.0, 14 logical CPUs, worker_threads; 2000 CPU work units; timings change run to run
+phase = 5% of units run alone first on the main thread (the "foundation"), then 95% split across workers
+lock 5%  = all units split across workers; every 20th unit runs while holding one shared lock
+lock 20% = same, but every 5th unit runs under the lock
+each time = median of 3 runs; workers are started and warmed up before timing
+
+main thread alone, all 2000 units: 491 ms
+
+workers  amdahl 5%  phase 5%          lock 5%           amdahl 20%  lock 20%
+      1      1.00×  496 ms  0.99×     493 ms  1.00×          1.00×  505 ms  0.97×
+      2      1.90×  267 ms  1.84×     258 ms  1.90×          1.67×  262 ms  1.87×
+      4      3.48×  163 ms  3.02×     145 ms  3.39×          2.50×  157 ms  3.13×
+      8      5.93×   96 ms  5.12×      76 ms  6.45×          3.33×  129 ms  3.81×
+     12      7.74×   75 ms  6.53×      58 ms  8.48×          3.75×  131 ms  3.74×
+
+lock detail (median run): locked units, lock held ÷ wall time, average wait per lock
+workers  lock 5%: units  held    wait/lock   lock 20%: units  held    wait/lock
+      1             100     5%    0.00 ms              400    20%    0.00 ms
+      2             100    10%    0.01 ms              400    39%    0.02 ms
+      4             100    19%    0.07 ms              400    74%    0.14 ms
+      8             100    39%    0.10 ms              400    88%    1.08 ms
+     12             100    49%    0.23 ms              400    88%    2.16 ms
+
+MODEL: Amdahl speed-up = 1 ÷ (s + (1 − s) ÷ n), s = serial share
+n          s = 1%    s = 5%    s = 20%
+2             2.0×     1.9×      1.7×
+4             3.9×     3.5×      2.5×
+8             7.5×     5.9×      3.3×
+16           13.9×     9.1×      4.0×
+64           39.3×    15.4×      4.7×
+1024         91.2×    19.6×      5.0×
+infinite    100.0×    20.0×      5.0×

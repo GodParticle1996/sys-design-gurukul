@@ -1,0 +1,20 @@
+MODEL: seeded simulation (seed 52), two servers, one worker and one FIFO line each, 1,00,000 requests per row
+normal work: random, avg 8 ms
+stragglers: 1% of copies hit a 200 ms pause on that server only (independent)
+hedge wait = p95 of the no-hedge row at the same load; budget = at most 5% of requests get a spare copy
+cancel = a spare copy still waiting in line is dropped once the other copy answers (a running copy is not stopped)
+copies sent = spare copies sent; copies run = spare copies that started; extra ms = service time of extra copies ÷ first copies
+
+load  policy                 hedge wait  p50       p99       p99.9     copies sent  copies run  extra ms  busy
+ 30%  no hedge                         —    8.3 ms    201 ms    308 ms         0.0%        0.0%      0.0%  29.8%
+ 30%  hedge                       115 ms    8.5 ms    146 ms    211 ms         5.3%        5.3%      5.6%  31.5%
+ 30%  hedge + budget              115 ms    8.6 ms    150 ms    243 ms         4.9%        4.9%      4.9%  31.3%
+ 30%  hedge + budget + cancel     115 ms    8.3 ms    138 ms    199 ms         4.3%        1.5%      1.6%  30.3%
+ 60%  no hedge                         —   15.8 ms    361 ms    532 ms         0.0%        0.0%      0.0%  59.5%
+ 60%  hedge                       209 ms    59.2 s   143.5 s   144.4 s        89.3%       89.3%     90.1%  95.9%
+ 60%  hedge + budget              209 ms   18.2 ms    441 ms    766 ms         5.0%        5.0%      5.0%  62.7%
+ 60%  hedge + budget + cancel     209 ms   16.3 ms    254 ms    379 ms         4.2%        1.3%      1.3%  60.4%
+ 85%  no hedge                         —   73.9 ms    785 ms    968 ms         0.0%        0.0%      0.0%  84.3%
+ 85%  hedge                       540 ms   186.8 s   383.5 s   387.3 s        96.8%       96.8%     96.6%  99.1%
+ 85%  hedge + budget              540 ms    187 ms   2758 ms   3876 ms         5.0%        5.0%      5.0%  88.7%
+ 85%  hedge + budget + cancel     540 ms   73.4 ms    677 ms    948 ms         3.9%        0.4%      0.4%  84.6%

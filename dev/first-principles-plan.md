@@ -85,7 +85,34 @@ Manual UI measurement confirmed 272 px cells with labels and no horizontal overf
 Documentation-link colour is the readable accent (`rgb(110, 168, 254)`). Vertical diagrams show both endpoints on the phone.
 The earlier `/tmp/system-gurukul-physics-review/` run is superseded; it mixed the initial and fixed layouts.
 
+## Video 2: Math of Scale (2026-11-08)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-02-math/`. Built by Claude; Codex fact-checked.
+Levels `fp-scale-kyun` → `fp-scale-kaise` → `fp-scale-code` → `fp-scale-kab` (`data-v2-fp-scale-1…4`, group "📈 Math of Scale",
+guide `scale`). Builders: `sdg-codex-xp/jobs/fp2/levels/*.py`. Lab 52 (`docker-labs/52-scale-math`): seeded simulations for
+tail, fan-out, knee and hedging; real worker threads for Amdahl (lock held/wait time measured).
+
+The app already taught percentiles (Flow `latency`), 1 − 0.99^N (`fanout`) and hedging (Google Search story, lab 26), so this
+topic takes the first-principles angle: why averages hide the tail, when fan-out amplification needs independence, the
+1 ÷ (1 − load) knee and saturation, Amdahl's ceiling (a lock-based serial part beats the curve but keeps 1 ÷ s), and the
+three conditions for hedging (independent slowness, safe retries, budget + cancel when busy).
+
+Corrections taught: hedging maths 0.01 × 0.01 = 0.0001, not 0.1, and the delayed hedge needs P(T1 > t) × P(T2 > t − d);
+"100× tail" overclaims (paper: one benchmark, 1,800 → 74 ms at p99.9 with 2% more requests); queue wait grows like
+1 ÷ (1 − load), not "exponentially", and that comes from queueing theory, not Little's law; 60–70% is a thumb rule; the
+opening example (100 ms mean with 1% at 15 s) is arithmetically inconsistent for one request set; unchanged errors on lower
+traffic raise the error rate but do not prove requests are not arriving.
+
+Codex's lab review (14 findings, all verified and fixed): extra work now counted in service milliseconds (heavy duplicates
+1.2% of copies but 18.2% of work); globally numbered units so locked share is exact at every worker count (was 108/408);
+budget can no longer be exceeded on small samples; heavy-request claim scoped to the seed-52 runs; queue example's 80%-busy
+window made true (sixth arrival 65 ms); tests now catch the budget, cancel and numbering bugs (mutation-checked).
+Codex's level review (16 findings, all verified and fixed): lock held time now read before unlock (88–89%, was 91–95%);
+interview questions given explicit inputs (50-service page probability, not page p99); the lab's 1 ÷ (1 − load) named as the
+single-worker M/M/1 model, not applied to DB pools or multi-core CPU; heavy-request and switch-path claims scoped; p99 and
+mean/median wording made exact; Amdahl no longer named before the Kab level; believable distractors in place of cartoon ones.
+
 ## Next
 
-Continue with numbered video 2, `04ip8kPZXsM`, after inspecting its transcript/frames and existing estimation tools.
-Only video 1 has been extracted and implemented so far. The other fourteen lessons remain planned.
+Continue with numbered video 3, `YOR9hAFoe2o` (The Cost of Communication), after inspecting its transcript/frames and the
+existing network, fan-out and lab 41 material. Videos 1–2 are built; thirteen remain planned.
