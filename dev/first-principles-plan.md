@@ -220,8 +220,29 @@ conditions bloom's 0.81% on absent keys, scopes the SSD question to the FTL mode
 and moves the checkpoint observation out of Kyun. fsync captures were re-run (disk slower in runs 2–3), so the ranges above
 are the new runs. 14 lab tests; new guards mutation-checked except the unreachable group-mode "reject new commits" guard.
 
+## Video 6: The Taxonomy of Storage (2026-11-11)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-06-taxonomy/`. Built by Claude; Codex
+fact-checked. Levels `fp-tax-kyun` → `fp-tax-kaise` → `fp-tax-code` → `fp-tax-kab` (`data-v2-fp-tax-1…4`, group
+"🗂️ Taxonomy of Storage", guide `tax`, sources `dynamo`, `spanner`, `pgvector`). Builders: `sdg-codex-xp/jobs/fp6/levels/*.py`.
+Lab 56 (`docker-labs/56-storage-taxonomy`, Node 24 `node:sqlite`): REAL SQLite for three shapes on the same 1 lakh users
+(same Q1 object from join+assemble / JSON doc / JS Map), join with vs without an index from 10,000 to 10 lakh users,
+friend-of-friend SQL vs adjacency walk (exact-depth endpoints, checked against recursive SQL), schema on write vs read with
+partial readers and an idempotent migration, vectors exact vs IVF; MODELS for the six-copy address move and NewSQL
+commit waits (serial Postgres sync vs assumed-parallel Raft).
+
+Existing `modeling` and `storage` levels already teach access-pattern-first and polyglot; this topic adds the measured
+physics. Corrections taught: an indexed join barely grows with table size (7.7 → 14.2 µs); SQL "screams" on FoF only without
+an index (5.0–5.2 s), indexed 2-hop is 162–168 µs and the walk ~8–9× faster; Spanner uses Paxos, not Raft; single-node
+Postgres is faster only because it keeps no second copy; exact vector search here is a full scan but the speed comes from the
+approximate index, and pgvector does both in Postgres; MongoDB has `$lookup` and optional schema validation.
+
+Codex's lab review (9 findings, all fixed and re-checked, plus one P3 overflow): graph timing allocated an n-sized array
+per query (the earlier "SQL ≈ walk" result was this bug), deep walk mixed two definitions, Postgres sync was modeled as
+parallel, exact-search universality, the numeric pincode example, Q1 timed different work, k-means lists used stale
+assignments, IVF counts omitted centroids, no migration test; generation-stamp overflow.
+
 ## Next
 
-Continue with numbered video 6, `mhpinZnH7xI` (The Taxonomy of Storage); transcript is in
-`vu_output/first-principles-06-taxonomy/`. Inspect the existing Data/Shapes chooser material first. Videos 1–5 are built;
-ten remain.
+Continue with numbered video 7, `X72epD9Qn3U` (Sharding — When One Disk is Not Enough); check the existing sharding,
+consistent-hashing material and lab 34 first. Videos 1–6 are built; nine remain.

@@ -54,6 +54,9 @@
     gfs: { title: 'The Google File System (SOSP 2003)', url: 'https://research.google/pubs/the-google-file-system/' },
     fast08: { title: 'An Analysis of Data Corruption in the Storage Stack (FAST 2008)', url: 'https://www.usenix.org/conference/fast-08/analysis-data-corruption-storage-stack' },
     wiredtiger: { title: 'WiredTiger Architecture Guide — B-Trees', url: 'https://source.wiredtiger.com/develop/arch-btree.html' },
+    dynamo: { title: "Dynamo: Amazon's Highly Available Key-value Store (SOSP 2007)", url: 'https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf' },
+    spanner: { title: "Spanner: Google's Globally-Distributed Database (OSDI 2012)", url: 'https://research.google/pubs/spanner-googles-globally-distributed-database-2/' },
+    pgvector: { title: 'pgvector — exact and approximate vector search in Postgres', url: 'https://github.com/pgvector/pgvector' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -164,6 +167,27 @@
     ],
     followup: 'Payments service har commit par fsync karti hai aur 64 users par ~280 ms rukti hai. Kya naapoge aur kya badloge?',
     sources: ['gfs', 'fast08', 'wiredtiger'],
+  });
+  add('tax', 'fp-tax-kyun fp-tax-kaise fp-tax-code fp-tax-kab', {
+    title: 'Data ka shape: sawaal pehle, database baad mein',
+    misaal: 'Rishtedaaron ki har diary mein address likha toh shift hone par har diary badalni padti hai. Library mein catalogue ho toh kitaab turant milti hai, chahe library kitni bhi badi ho.',
+    asli: 'Har shape kisi ek sawaal ke liye tez hai; database ka naam nahi, access pattern aur index dekho.',
+    points: [
+      '<b>Copies:</b> document mein data copy karna padhna tez karta hai, par har copy badalne ka zimma app par; crash beech mein ho toh transaction chahiye.',
+      '<b>Join tax:</b> lab mein (har user ke 5 orders, garam cache) index wala join 10,000 se 10 lakh users par lagbhag same; bina index har query poori table padhti hai. Matching rows, sort aur thanda cache bhi kharcha badhate hain.',
+      '<b>Graph:</b> 2-hop par walk index wale SQL se ~8–9× tez, par index wala SQL bhi sub-millisecond; seconds sirf bina index. Gehre traversals graph ki asli jagah.',
+      '<b>Schema on read:</b> schema hamesha hai — table mein, ya har reader aur migration mein; galat reader chupchaap kam ginta hai.',
+    ],
+    use: 'Naya feature ya naya database chunna ho, query bade data par dheemi lage, ya data ki copies sync se bahar jaane lagen.',
+    avoid: 'Brand dekh ke database chunna, EXPLAIN dekhe bina migration, aur bina transaction ke kai copies badalna.',
+    mistake: '"SQL bade data par join se marta hai" maan lena. Lab 56 ex2, teen runs: indexed query 7.7–9.4 → 10.8–14.2 µs (10,000 → 10 lakh users), bina index 1.2–1.4 → 139.9–161.4 ms. Pehle plan aur matching rows naapo.',
+    compare: [
+      { choice: 'Relational', when: 'Transactions, join, group, sawaal pehle se pata na hon', tradeoff: 'Lachila aur sahi; index na ho toh scan' },
+      { choice: 'Document / key-value', when: 'Ek page ya ek key ka data ek saath, kam rishte', tradeoff: 'Us sawaal par tez; doosre sawaal ke liye field index ya secondary index chahiye, warna scan; copies ka zimma app par' },
+      { choice: 'Graph / vector', when: 'Gehre rishte (hops) ya matlab ki samaanta', tradeoff: 'Us sawaal ke liye bana index; baaki sawaal aur sync ka kaam alag' },
+    ],
+    followup: 'Team \'doston ke dost\' feature ke liye Neo4j lana chahti hai kyunki Postgres query 4 second leti hai. Kya naapoge aur kya badloge?',
+    sources: ['dynamo', 'spanner', 'pgvector'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

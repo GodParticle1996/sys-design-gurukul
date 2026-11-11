@@ -1,0 +1,21 @@
+== MODEL: relational — the address is one row; orders point at it by id ==
+step 1  UPDATE addresses SET pincode = 411038 WHERE id = 42      → 1 row changed
+step 2  profile page: users ⋈ addresses                          → 411038
+        order #5 page (still pending): orders ⋈ users ⋈ addresses  → 411038 (same row, read through the join)
+
+== MODEL: documents — the address is copied into 6 documents ==
+step 1  rewrite profile   → 411038
+step 2  rewrite order #1  → 411038
+step 3  rewrite order #2  → 411038
+step 4  💥 app crashes before rewriting order #3 (no transaction around the 6 writes)
+
+after the crash, what each page shows:
+  profile   411038
+  order #1  411038
+  order #2  411038
+  order #3  411004   ← old address; a courier would go here
+  order #4  411004   ← old address; a courier would go here
+  order #5  411004   ← old address; a courier would go here
+3 documents say 411038, 3 say 411004. Nothing in the database says which is true.
+
+Fixes: one transaction around all 6 writes (all or nothing), or keep the address in one place and look it up.

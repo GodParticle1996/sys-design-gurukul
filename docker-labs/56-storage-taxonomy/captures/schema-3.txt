@@ -1,0 +1,16 @@
+REAL RUN: Node v24.18.0, SQLite 3.53.1
+
+== A. schema on write: a STRICT table with rules ==
+good row                   → saved
+pincode 4110 (too short)   → refused: CHECK constraint failed: length(pincode) = 6 AND pincode GLOB '[1-9][0-9][0-9][0-9][0-9][0-9]'
+no pincode                 → refused: NOT NULL constraint failed: customers.pincode
+pincode 41100X (not digits) → refused: CHECK constraint failed: length(pincode) = 6 AND pincode GLOB '[1-9][0-9][0-9][0-9][0-9][0-9]'
+
+== B. schema on read: 1,00,000 customer documents from three app versions ==
+v1 {zip}: 49,935   v2 {postal_code}: 30,003   v3 {address:{pin}}: 20,062   — the database accepted all three
+Question: how many customers are in Pune (pincode 411xxx)? True answer: 14,928
+reader knows only v3         →  2,974  (20% of the truth, no error shown)
+reader knows v2 + v3         →  7,418  (50% of the truth, no error shown)
+reader knows v1 + v2 + v3    → 14,928  (100% of the truth, no error shown)
+migration: 79,938 documents rewritten to v3 in 133 ms → the v3-only reader now finds 14,928 (100%)
+The schema exists either way: in the table, or in every reader and every migration.

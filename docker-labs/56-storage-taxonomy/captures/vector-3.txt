@@ -1,0 +1,20 @@
+REAL RUN: Node v24.18.0; 128-number unit vectors in 200 clumps (noise per number 0.06); 100 held-out queries; top 10 by dot product
+
+== 10,000 vectors ==
+exact, JS scan of all 10,000       1.96 ms per query   recall 100%
+exact, same scan in SQLite (in memory)   20.96 ms per query   recall 100% (same answers)
+IVF, look in  1 of 256 groups       0.12 ms per query   recall 93%   (256 centres + ~52 candidates = ~308 dot products)
+IVF, look in  4 of 256 groups       0.16 ms per query   recall 100%   (256 centres + ~158 candidates = ~414 dot products)
+IVF, look in 16 of 256 groups       0.33 ms per query   recall 100%   (256 centres + ~637 candidates = ~893 dot products)
+(building the IVF groups took 3.6 s)
+
+== 1,00,000 vectors ==
+exact, JS scan of all 1,00,000    36.39 ms per query   recall 100%
+exact, same scan in SQLite (in memory)  281.06 ms per query   recall 100% (same answers)
+IVF, look in  1 of 256 groups       0.23 ms per query   recall 94%   (256 centres + ~484 candidates = ~740 dot products)
+IVF, look in  4 of 256 groups       0.60 ms per query   recall 100%   (256 centres + ~1,574 candidates = ~1,830 dot products)
+IVF, look in 16 of 256 groups       2.13 ms per query   recall 100%   (256 centres + ~6,170 candidates = ~6,426 dot products)
+(building the IVF groups took 24.3 s)
+
+Both exact baselines here compare the query with every vector (no filter). IVF compares far fewer candidates and
+returns approximate results. HNSW (in many vector stores and in pgvector) is another approximate index; not built here.

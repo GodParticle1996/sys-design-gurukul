@@ -1,0 +1,18 @@
+npm notice run lab-56-storage-taxonomy@1.0.0 test
+npm notice run node --test test/*.test.js
+✔ the three shapes give the same answers (user + orders; Pune biryani count) (69.246757ms)
+✔ the join uses the index when it exists and scans orders when it does not (27.181218ms)
+✔ friend-of-friend: SQL self-join and the adjacency walk agree (134.261631ms)
+✔ walk() matches a recursive SQL count at depths 1–4, with cycles, self-loops and duplicate edges; no per-query allocation (141.279239ms)
+✔ schema on write: the ex4 table refuses bad rows; schema on read: readers and the migration (real ex4 SQL) (1.350754ms)
+✔ moving house: a crash without a transaction leaves mixed copies; inside one transaction it leaves none changed (10.632801ms)
+✔ vectors: the SQL scan and the JS scan return the same top 10; IVF finds them when the data has clumps (368.775669ms)
+✔ commit-latency arithmetic: serial steps add, parallel steps take the slowest (ex6 model) (0.527396ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 810.338368

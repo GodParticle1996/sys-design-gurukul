@@ -1,0 +1,31 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. SQLite Node 24 ke andar hai (node:sqlite), koi package install nahi. Kuch bahar publish nahi.
+services:
+  slowmo:
+    build: .
+    profiles: [ex0-slowmo]
+    command: node start.js ex0-slowmo
+  shapes:
+    build: .
+    profiles: [ex1-shapes]
+    command: node start.js ex1-shapes
+  join:
+    build: .
+    profiles: [ex2-join]
+    command: node start.js ex2-join
+  graph:
+    build: .
+    profiles: [ex3-graph]
+    command: node start.js ex3-graph
+  schema:
+    build: .
+    profiles: [ex4-schema]
+    command: node start.js ex4-schema
+  vector:
+    build: .
+    profiles: [ex5-vector]
+    command: node start.js ex5-vector
+  newsql:
+    build: .
+    profiles: [ex6-newsql]
+    command: node start.js ex6-newsql

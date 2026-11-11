@@ -1,0 +1,7 @@
+REAL RUN: Node v24.18.0; each size built fresh in a temp SQLite file; 5 orders per user
+
+users        orders      with index on orders.user_id   without index           plan without index
+10,000       50,000                            7.7 µs          1.2 ms           SCAN o
+1,00,000     5,00,000                          9.8 µs         13.1 ms           SCAN o
+10,00,000    50,00,000                        10.8 µs        139.9 ms           SCAN o
+With the index, the join walks a few B-tree pages: the time barely moves. Without it, every query reads every order.

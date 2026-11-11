@@ -61,6 +61,7 @@ Har README measured output aur model ki boundary bataata hai.
 | [53-communication-tax](53-communication-tax/README.md) | Ek call ka bill (handshakes + RTT), chatty vs chunky, asli connection reuse (naya vs keep-alive vs HTTP/2, dono taraf CPU), pooling vs multiplexing (delay proxy model), JSON vs Protobuf wire format (bytes, gzip, samay/CPU), chhote writes, doori aur CDN edge | Cost of Communication 1–4 (First Principles) |
 | [54-request-anatomy](54-request-anatomy/README.md) | Packet aur headers, asli UDP DNS chain (root → TLD → authoritative, TTL cache, c-ares se jaanch), packet loss se p99/p99.9, TTL ka sauda, asli L4 vs L7 proxy (latency, CPU, path-blind), WAF rules × bytes, BGP policy / anycast / leak model | Anatomy of a Request 1–4 (First Principles) |
 | [55-persistence](55-persistence/README.md) | write() vs fsync (asli), group commit, SIGKILL ke baad kya bacha (asli), WAL + checkpoint + recovery, aadhe record ka cut, CRC32 se bit rot pakadna, B+tree oonchai/page writes/cold lookup, LSM compaction aur bloom filter, SSD FTL write amplification (models) | Physics of Persistence 1–4 (First Principles) |
+| [56-storage-taxonomy](56-storage-taxonomy/README.md) | Wahi data teen shapes mein (tables / JSON docs / key-value, asli SQLite), join index ke saath vs bina (10 lakh users tak), friend-of-friend SQL vs adjacency walk, schema on write vs read (partial readers), vector exact scan vs IVF recall, NewSQL commit latency (model) | Taxonomy of Storage 1–4 (First Principles) |
 
 ```bash
 cd docker-labs/09-raft

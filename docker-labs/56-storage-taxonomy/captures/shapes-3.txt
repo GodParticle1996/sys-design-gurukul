@@ -1,0 +1,19 @@
+REAL RUN: Node v24.18.0, SQLite 3.53.1; 1,00,000 users, 5 orders each, one file
+
+== Q1: user 4242 with address and last 5 orders, as one object (median of 2,000 runs; all three return the same object) ==
+relational: join + assemble    11.1 µs   plan: SEARCH u USING INTEGER PRIMARY KEY (rowid=?) │ SEARCH a USING INTEGER PRIMARY KEY (rowid=?) │ SEARCH o USING INDEX orders_user (user_id=?) │ USE TEMP B-TREE FOR ORDER BY
+document  : one JSON row         3.2 µs   plan: SEARCH user_docs USING INTEGER PRIMARY KEY (rowid=?)
+key-value : Map get + parse      1.3 µs   (no database call at all)
+
+== Q2: how many Pune users ordered biryani? (median of 5 runs) ==
+answer: 6,171 users (all three agree)
+relational: indexed join         12.2 ms   plan: SEARCH u USING COVERING INDEX users_city (city=?) │ SEARCH o USING INDEX orders_user (user_id=?)
+document  : JSON inside SQL     101.3 ms   plan: SCAN user_docs │ SCAN json_each EXISTS VIRTUAL TABLE INDEX 3:
+key-value : read every value    151.8 ms   (a KV store can only get by key; anything else = read all)
+
+== Q3: user 4242 moves house ==
+relational: 1 row changed (addresses.id = 4242); every query that joins sees the new address
+documents : the address is copied into 6 documents (the user doc + 5 invoice docs of pending orders) — the app must find and change all 6
+app crashes after 3 of 6 updates, no transaction: 3 documents say the new 411004, 3 still say the old 477579 — which one is true?
+same crash inside one transaction: 0 changed (ROLLBACK) — all old, consistent; the move must be redone
+no crash: 6 of 6 updated

@@ -1,0 +1,24 @@
+MODEL: commit latency = what the commit waits for (assumed RTTs; assumed fsync 1.3 ms, the fast run in lab 55)
+
+setup                                              waits for                                     commit    survives
+Postgres, one machine                              local fsync                                    1.3 ms    process crash, power cut
+Postgres + async replica (other zone)              local fsync (replica later)                    1.3 ms    machine dies (replica takes over)
+Postgres + sync replica (other zone)               fsync, then RTT + standby fsync                3.6 ms    a whole zone goes down
+Raft, 3 replicas in 3 zones                        max(fsync, RTT + follower fsync)               2.3 ms    a whole zone goes down
+Postgres + sync replica (Singapore)                fsync, then RTT + standby fsync               62.6 ms    the Mumbai region goes down
+Raft, 3 regions (Mumbai, Singapore, Frankfurt)     max(fsync, RTT to nearer follower + fsync)    61.3 ms    a whole region goes down
+
+what can still be lost:
+  Postgres, one machine                              disk or machine dies: acknowledged data gone until a backup is restored
+  Postgres + async replica (other zone)              the last few commits may not have reached the replica
+  Postgres + sync replica (other zone)               failover is a separate step; if the standby is down, commits wait
+  Raft, 3 replicas in 3 zones                        nothing acknowledged; the majority keeps serving
+  Postgres + sync replica (Singapore)                failover is a separate step; if the standby is down, commits wait
+  Raft, 3 regions (Mumbai, Singapore, Frankfurt)     nothing acknowledged; majority keeps serving
+
+The wait is set by the distance to the copies a commit must wait for, and by the order of the steps (serial vs
+parallel). Product names do not set it: the same placement gives waits within one fsync of each other here.
+Not modeled: the hop from the SQL gateway to the range leader, transactions that touch several ranges (extra
+coordination round trips), and clock-uncertainty waits (Spanner commit wait, which can partly overlap replication).
+Those can add time in distributed SQL, so a real multi-range write there is often slower than this table.
+Measure your own transactions.
