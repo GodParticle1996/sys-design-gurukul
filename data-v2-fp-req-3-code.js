@@ -224,9 +224,9 @@ SD.registerLevels('fp-core', [
           "ask": {
             "q": "Client ek keep-alive connection par 1,000 requests bhejta hai. Line 23 kitni baar chalegi?",
             "choices": [
-              "Ek baar — connection aane par; saari 1,000 requests connection ke liye chune gaye backend ko",
+              "Ek baar — connection aate hi; saari 1,000 requests chune hue backend ko",
               "1,000 baar — L4 har request par apna backend naye sire se chunta hai",
-              "Do baar — ek baar /api ke liye aur ek baar /img requests ke liye"
+              "Do baar — ek baar /api requests ke liye aur ek baar /img requests ke liye"
             ],
             "answer": 0,
             "hint": "Line 23 kis callback ke andar hai: connection ya request?",

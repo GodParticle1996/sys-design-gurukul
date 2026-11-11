@@ -184,7 +184,44 @@ a fixed 5 s; the L4 question states the routing requirement; authorization enfor
 short glossary (byte layout, A/NS/glue/AA/NODATA) now comes before the questions that need it; scoped test summary; source
 port vs destination port 53; packet-header accounting assumptions; standalone guide scope; and 18 back-references.
 
+## Video 5: The Physics of Persistence (2026-11-09)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-05-persistence/`. Built by Claude; Codex
+fact-checked. Levels `fp-per-kyun` → `fp-per-kaise` → `fp-per-code` → `fp-per-kab` (`data-v2-fp-per-1…4`, group
+"💾 Physics of Persistence", guide `per`, sources `gfs`, `fast08`, `wiredtiger`). Builders: `sdg-codex-xp/jobs/fp5/levels/*.py`.
+Lab 55 (`docker-labs/55-persistence`): REAL write() vs fsync and group commit (1/8/64 clients), REAL SIGKILL of a writer and
+restart, REAL bit flips with CRC32 + replica repair; MODELS for page cache vs power cut (same KV code on a ModelDisk), a
+B+tree with an LRU buffer pool, an LSM-tree with size-tiered compaction and bloom filters, and an SSD FTL with greedy GC.
+
+The Data track already teaches B-tree vs LSM amplification in its simulator, so this topic measures what was missing:
+fsync's real cost (207–806/s per-record on this WSL2 virtual disk) and group commit (27–98× at 64 clients), app crash vs
+power cut, WAL + checkpoint + recovery with the torn-tail rule, checksum vs replica, B-tree lookups with inner pages pinned
+(1.00 vs 3.00 reads), random vs sequential keys (UUIDv7), LSM 4.6× write amp and bloom filters, SSD WA 1.21× → 10.47×.
+
+Corrections taught: 100 fsync/s is a spinning-disk figure; FTLs write out of place (no read-erase-rewrite per write) and the
+SLC bit direction is reversed in the video; "4 disk trips" assumes a cold cache; MongoDB's WiredTiger stores tables as
+B-trees; WAL replay needs a valid base; storage layout does not decide consistency; Raft commits on a majority; GFS uses
+primary leases; S3 One Zone classes; RUM is a conjecture; prefix bloom filters can serve prefix range scans.
+
+Codex's lab review (18 findings, all verified and fixed): short writes could acknowledge torn records and a short checkpoint
+could destroy the only good copy; a new WAL's directory entry was not fsynced; mid-log checksum damage was cut away
+destructively; crash ACK counting raced stdout and could pass without a kill; the cold-lookup comparison changed buffer size;
+the torn-tail test did not protect the acknowledged prefix; "false positives" counted unfiltered misses; plus README
+corrections. Guards are mutation-checked (write loops, folder fsync, mid-log stop, cut position, commit fsync).
+
+Codex's second, full levels review (18 findings, all verified and fixed, 2026-11-11): a flipped length bit looked like a torn
+tail and recovery deleted acknowledged records, so the WAL header now carries its own CRC (12-byte header) and the lab states
+its crash-only assumption for auto-trim; group commit kept appending after an I/O error, so `lib/commit.js` is now fail-stop
+(failed batch + queued commits rejected, no new commits, close after I/O settles); the folder-fsync test only checked the
+open, so it now asserts an fsync on that fd. Level text now scopes power-cut loss as possible (not certain), separates
+PostgreSQL's WAL-fsync PANIC from `data_sync_retry`, calls PostgreSQL tables heaps, separates B-tree page-write accounting
+from LSM's WAL+flush+compaction total, scopes "key order makes no difference" to the size-tiered model, restates RUM,
+conditions bloom's 0.81% on absent keys, scopes the SSD question to the FTL model, gives durability bins a failure scope,
+and moves the checkpoint observation out of Kyun. fsync captures were re-run (disk slower in runs 2–3), so the ranges above
+are the new runs. 14 lab tests; new guards mutation-checked except the unreachable group-mode "reject new commits" guard.
+
 ## Next
 
-Continue with numbered video 5, `RAuIWs3ne9g` (The Physics of Persistence: B-Trees vs LSM-Trees), after inspecting its
-transcript/frames and the existing data/storage material (and SQL Gurukul internals). Videos 1–4 are built; eleven remain.
+Continue with numbered video 6, `mhpinZnH7xI` (The Taxonomy of Storage); transcript is in
+`vu_output/first-principles-06-taxonomy/`. Inspect the existing Data/Shapes chooser material first. Videos 1–5 are built;
+ten remain.

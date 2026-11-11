@@ -1,0 +1,19 @@
+REAL RUN: Node v24.18.0, linux 6.6.87.2-microsoft-standard-WSL2; temp folder /tmp
+record = 107 bytes (12-byte header + JSON order). Numbers are for THIS machine and disk; they change run to run.
+
+== A. one writer ==
+write() only, no fsync          20,000 records      34 ms    5,94,025 records/s
+fsync after every record         2,000 records    2481 ms         806 records/s
+fsync after every 10            20,000 records    3474 ms       5,758 records/s
+fsync after every 100           20,000 records     924 ms      21,638 records/s
+
+== B. clients waiting for "done" (each client: 100 commits, one after another) ==
+mode                    clients   commits/s    p50 wait    p99 wait   fsyncs   records per fsync
+own fsync per commit          1         211      4.1 ms     14.8 ms      100                 1.0
+group commit                  1         208      4.1 ms     14.7 ms      100                 1.0
+own fsync per commit          8         210     36.6 ms     52.0 ms      800                 1.0
+group commit                  8         809      9.4 ms     21.8 ms      200                 4.0
+own fsync per commit         64         265    284.6 ms    380.9 ms     6400                 1.0
+group commit                 64       7,124      8.5 ms     14.0 ms      200                32.0
+
+fsync waits for the device to say "stored". write() alone only reached the OS page cache (RAM).

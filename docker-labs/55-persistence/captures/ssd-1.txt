@@ -1,0 +1,9 @@
+== MODEL: overwrite 4× the stored data; flash writes counted, including garbage collection copies ==
+pattern      drive full   host writes   GC copies   flash writes ÷ host writes   block erases
+random              50%      2,62,144      53,877                         1.21×            981
+random              75%      3,93,216    4,46,459                         2.14×          3,154
+random              90%      4,71,856   19,70,678                         5.18×          9,492
+random              95%      4,98,072   47,17,548                        10.47×         20,350
+sequential          90%      4,71,856           0                         1.00×          1,794
+Flash cannot overwrite a page in place; GC copies the still-live pages of a block before erasing it.
+Fuller drive → fewer stale pages per block → more copying. Sequential overwrites leave whole blocks stale: no copying.

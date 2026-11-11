@@ -51,6 +51,9 @@
     dnsspec: { title: 'RFC 1034 — DNS concepts (resolvers, delegation, TTL)', url: 'https://www.rfc-editor.org/rfc/rfc1034' },
     ecs: { title: 'RFC 7871 — EDNS Client Subnet', url: 'https://www.rfc-editor.org/rfc/rfc7871' },
     bgpspec: { title: 'RFC 4271 — BGP-4 (route selection)', url: 'https://www.rfc-editor.org/rfc/rfc4271' },
+    gfs: { title: 'The Google File System (SOSP 2003)', url: 'https://research.google/pubs/the-google-file-system/' },
+    fast08: { title: 'An Analysis of Data Corruption in the Storage Stack (FAST 2008)', url: 'https://www.usenix.org/conference/fast-08/analysis-data-corruption-storage-stack' },
+    wiredtiger: { title: 'WiredTiger Architecture Guide — B-Trees', url: 'https://source.wiredtiger.com/develop/arch-btree.html' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -140,6 +143,27 @@
     ],
     followup: 'Mumbai PoP paas hai, phir bhi Dubai ke users Frankfurt jaate hain. Kaunse do numbers maangoge aur kya badloge?',
     sources: ['dnsspec', 'ecs', 'bgpspec'],
+  });
+  add('per', 'fp-per-kyun fp-per-kaise fp-per-code fp-per-kab', {
+    title: 'Pakkapan ki physics: page cache, WAL, B-tree aur LSM',
+    misaal: 'Cashier har bill notepad ki agli line mein likhta hai, raat ko register bharta hai. Whiteboard tez par bijli ke saath mit-ta hai. Godown maal seedha rack par rakhta hai, ya dher mein rakh ke baad mein chhaant-ta hai.',
+    asli: '"Done" tab sach hai jab poora write aur safal fsync ho chuka ho; har engine pakkepan ka bill alag jagah bharta hai.',
+    points: [
+      '<b>fsync:</b> write() sirf page cache (RAM) tak; app crash bachta hai, power cut ki guarantee nahi. Group commit fsync baant-ta hai.',
+      '<b>WAL:</b> pehle log mein append + fsync, table baad mein (checkpoint). Recovery: table, phir log; crash se adhoora aakhri record kaato, checksum fail par ruko.',
+      '<b>Checksum:</b> chupi kharabi pakadta hai, theek nahi karta; theek karne ke liye doosri copy chahiye.',
+      '<b>Engine:</b> random keys par B-tree ke page writes bikharte hain; LSM sasta likhta hai, bill compaction mein. Apna workload naapo.',
+    ],
+    use: 'API "saved" kahe par power cut ke baad data gayab ho, likhne ka bill samajh na aaye, ya engine aur key design chunna ho.',
+    avoid: 'fsync se pehle "done" bolna, har commit par akela fsync jab kai clients hon, aur bina doosri copy ke checksum par bharosa.',
+    mistake: '"B-tree mein 4 levels = har query 4 disk reads" maan lena. Lab ke clustered model mein inner pages pinned hon toh ~1 leaf read; PostgreSQL heap table mein heap page bhi lag sakta hai.',
+    compare: [
+      { choice: 'B-tree', when: 'Padhna zyada ho, range queries chahiye, keys badhti hon', tradeoff: 'Inner pages RAM mein hon toh lookup ~1 leaf read; random keys par writes bahut saare pages mein' },
+      { choice: 'LSM-tree', when: 'Likhna bahut zyada ho aur keys random hon', tradeoff: 'Append sasta; compaction ka bill, missing keys ke liye bloom filter chahiye' },
+      { choice: 'Group commit', when: 'Kai clients ek saath "done" ka intezaar', tradeoff: 'Har commit pakka, fsyncs kam; akele client ko faayda nahi' },
+    ],
+    followup: 'Payments service har commit par fsync karti hai aur 64 users par ~280 ms rukti hai. Kya naapoge aur kya badloge?',
+    sources: ['gfs', 'fast08', 'wiredtiger'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

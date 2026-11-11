@@ -1,0 +1,5 @@
+REAL FILES: 1000 names; "Andrew Fernandes" is name #500. Flipping bit 0 of the last letter in both files.
+plain text : read 1000 names, no error. Name #500 is now "Andrew Fernander". Changed names: 1 — the reader cannot tell.
+checksummed: 999 slots verify, 1 fails: #500 ("Andrew Fernander" does not match its CRC32)
+repair     : slot #500 copied from the replica → 1000/1000 verify, name #500 = "Andrew Fernandes"
+A checksum DETECTS damage; a second copy REPAIRS it. Neither alone does both.

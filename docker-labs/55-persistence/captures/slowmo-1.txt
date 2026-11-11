@@ -1,0 +1,20 @@
+== MODEL: sync=commit (fsync before saying "done") ==
+put order-41=250            → done │ wal.log: 1 on disk + 0 only in page cache │ table.snap: 0 rows
+put order-42=180            → done │ wal.log: 2 on disk + 0 only in page cache │ table.snap: 0 rows
+checkpoint (table + empty log)     │ wal.log: 0 on disk + 0 only in page cache │ table.snap: 2 rows
+put order-43=320            → done │ wal.log: 1 on disk + 0 only in page cache │ table.snap: 2 rows
+put order-44=90             → done │ wal.log: 2 on disk + 0 only in page cache │ table.snap: 2 rows
+  app crash (kill -9) → restart: 2 rows from table.snap + 2 replayed from log │ lost: nothing
+  power cut           → restart: 2 rows from table.snap + 2 replayed from log │ lost: nothing
+
+== MODEL: sync=none (say "done" right after write()) ==
+put order-41=250            → done │ wal.log: 0 on disk + 1 only in page cache │ table.snap: 0 rows
+put order-42=180            → done │ wal.log: 0 on disk + 2 only in page cache │ table.snap: 0 rows
+checkpoint (table + empty log)     │ wal.log: 0 on disk + 0 only in page cache │ table.snap: 2 rows
+put order-43=320            → done │ wal.log: 0 on disk + 1 only in page cache │ table.snap: 2 rows
+put order-44=90             → done │ wal.log: 0 on disk + 2 only in page cache │ table.snap: 2 rows
+  app crash (kill -9) → restart: 2 rows from table.snap + 2 replayed from log │ lost: nothing
+  power cut           → restart: 2 rows from table.snap + 0 replayed from log │ lost: order-43, order-44 (both said "done")
+
+MODEL timings on this machine (ex1): write() ~1 µs (RAM); fsync ~1–5 ms (the device). The "done" in sync=none is ~1,000× faster
+— and that speed is exactly the page cache, which a power cut erases.

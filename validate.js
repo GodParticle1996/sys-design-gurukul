@@ -89,7 +89,7 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-fp-scale-1-kyun.js',
   'data-v2-fp-scale-2-kaise.js',
   'data-v2-fp-scale-3-code.js',
-  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-guidance.js', 'data-v2-concurrency.js'];
+  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-guidance.js', 'data-v2-concurrency.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */

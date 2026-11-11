@@ -60,6 +60,7 @@ Har README measured output aur model ki boundary bataata hai.
 | [52-scale-math](52-scale-math/README.md) | Ausat vs percentiles, fan-out par tail (independent vs shared), load ka knee (M/M/1 vs M/D/1), Amdahl asli worker threads par (lock ka held time naapa), hedged requests: budget, cancel, bhaari request | Math of Scale 1–4 (First Principles) |
 | [53-communication-tax](53-communication-tax/README.md) | Ek call ka bill (handshakes + RTT), chatty vs chunky, asli connection reuse (naya vs keep-alive vs HTTP/2, dono taraf CPU), pooling vs multiplexing (delay proxy model), JSON vs Protobuf wire format (bytes, gzip, samay/CPU), chhote writes, doori aur CDN edge | Cost of Communication 1–4 (First Principles) |
 | [54-request-anatomy](54-request-anatomy/README.md) | Packet aur headers, asli UDP DNS chain (root → TLD → authoritative, TTL cache, c-ares se jaanch), packet loss se p99/p99.9, TTL ka sauda, asli L4 vs L7 proxy (latency, CPU, path-blind), WAF rules × bytes, BGP policy / anycast / leak model | Anatomy of a Request 1–4 (First Principles) |
+| [55-persistence](55-persistence/README.md) | write() vs fsync (asli), group commit, SIGKILL ke baad kya bacha (asli), WAL + checkpoint + recovery, aadhe record ka cut, CRC32 se bit rot pakadna, B+tree oonchai/page writes/cold lookup, LSM compaction aur bloom filter, SSD FTL write amplification (models) | Physics of Persistence 1–4 (First Principles) |
 
 ```bash
 cd docker-labs/09-raft

@@ -1,0 +1,15 @@
+== 10,00,000 random inserts; memtable 10,000 rows (1 MB); size-tiered compaction, 4 files per tier ==
+user rows 100 MB → WAL 100 MB + memtable flushes 100 MB + compaction 260 MB = 4.6× written
+files now: 4 (tiers: T0:0 T1:1 T2:2 T3:1)
+
+lookups (10,000 each)         files checked   bloom said "no"   4 KB block reads   wasted reads (key not in file)
+bloom 10 bits/key  key exists    3.40              2.38               1.02                             0.02
+bloom 10 bits/key  key missing   4.00              3.97               0.03                             0.03
+no bloom           key exists    3.40              0.00               3.40                             2.40
+no bloom           key missing   4.00              0.00               4.00                             4.00
+
+== bloom filter: false positives measured on 1 lakh keys, 2 lakh absent keys ==
+ 5 bits per key (3 hashes): 9.00% "maybe" for keys that are not there; never "no" for a key that is
+10 bits per key (7 hashes): 0.81% "maybe" for keys that are not there; never "no" for a key that is
+15 bits per key (10 hashes): 0.08% "maybe" for keys that are not there; never "no" for a key that is
+A full-key bloom filter cannot skip files for an arbitrary range scan; a prefix bloom filter can help scans within one prefix.

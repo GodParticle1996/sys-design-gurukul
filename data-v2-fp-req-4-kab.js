@@ -110,9 +110,9 @@ SD.registerLevels('fp-core', [
           "ask": {
             "q": "Image upload endpoint par p99 bahut dheema hai. Profiling: WAF ke 500 text rules har upload body poori padhte hain. Pehla ilaaj?",
             "choices": [
-              "Upload ke format par bekaar text rules hatao ya seemit karo — size, type, headers jaancho",
-              "Server ka CPU dugna karo — WAF ka kaam app server ke CPU par hi chalta hai",
-              "Rules ko 500 se 1,000 karo — zyada rules se attack jaldi pakda jaata hai"
+              "Upload format par bekaar text rules hatao ya seemit karo; size, type, headers jaancho",
+              "Server ka CPU dugna karo — WAF ka kaam app server ke apne CPU par hi chalta hai",
+              "Rules ko 500 se 1,000 karo — zyada rules se attacks jaldi aur zyada pakde jaate hain"
             ],
             "answer": 0,
             "hint": "Kharcha kis cheez se badhta hai: rules × kya?",
@@ -193,9 +193,9 @@ SD.registerLevels('fp-core', [
       "observe": {
         "q": "Requirement: A order API ke liye, B image service ke liye; /api → A, /img → B chahiye. B mein (har request naya connection) L4 par /api aur /img dono A 50% · B 50% gaye. L4 requirement poori karta hai?",
         "choices": [
-          "Nahi — load barabar bata, par path dekhe bina; /img aadhe samay A par gaya",
-          "Haan — L4 ne path padh ke dono backends par barabar kaam baanta",
-          "Haan — 50–50 ka matlab L4 ne har request sahi backend par bheji"
+          "Nahi — load barabar, par path dekhe bina; /img aadhe samay A par gaya",
+          "Haan — L4 ne har request ka path padh ke dono backends par kaam baanta",
+          "Haan — 50–50 ka matlab hai ki L4 ne har request sahi backend par bheji"
         ],
         "answer": 0,
         "hint": "L4 ne /img request ko kis aadhaar par backend diya?",

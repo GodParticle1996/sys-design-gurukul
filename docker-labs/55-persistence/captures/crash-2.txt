@@ -1,0 +1,13 @@
+REAL RUN: Node v24.18.0, linux; child process killed with SIGKILL after it reported 5,000 acks
+
+sync     killed by   acked to parent   records in wal.log after restart   acked but missing   log end
+none     SIGKILL               5,085                              5,085                   0   clean
+commit   SIGKILL               5,000                              5,000                   0   clean
+kill -9 ends the PROCESS, not the OS: bytes already handed to write() are in the page cache and reach the disk later.
+A power cut also ends the OS — see ex0 (model) for what sync=none loses then.
+
+== torn tail: the last record is cut in half (power failed mid-write) ==
+wal.log: 118 bytes; reader trusts 3 records, stops at byte 102: torn record
+if the torn bytes stay and order-5 is appended after them: reader finds 3 records — order-5 is invisible
+KV.open(): replayed 3, cut the log at byte 102 (torn record)
+after cutting, order-5 appended, reopened: order-5 = 50, keys = 4

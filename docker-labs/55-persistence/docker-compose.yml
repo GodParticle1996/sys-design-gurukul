@@ -1,0 +1,32 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. ex1 aur ex2 container ki apni filesystem (/tmp) par asli fsync naapte hain —
+# numbers host ke disk aur Docker ke storage driver par tike hain. Kuch bahar publish nahi.
+services:
+  slowmo:
+    build: .
+    profiles: [ex0-slowmo]
+    command: node start.js ex0-slowmo
+  fsync:
+    build: .
+    profiles: [ex1-fsync]
+    command: node start.js ex1-fsync
+  crash:
+    build: .
+    profiles: [ex2-crash]
+    command: node start.js ex2-crash
+  bitrot:
+    build: .
+    profiles: [ex3-bitrot]
+    command: node start.js ex3-bitrot
+  btree:
+    build: .
+    profiles: [ex4-btree]
+    command: node start.js ex4-btree
+  lsm:
+    build: .
+    profiles: [ex5-lsm]
+    command: node start.js ex5-lsm
+  ssd:
+    build: .
+    profiles: [ex6-ssd]
+    command: node start.js ex6-ssd

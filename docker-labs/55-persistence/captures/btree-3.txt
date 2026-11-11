@@ -1,0 +1,25 @@
+== A. height (MODEL arithmetic): 8 KB pages, 100-byte rows → 81 rows per leaf; inner entry 16 bytes → 512 children ==
+rows                   levels   leaf pages (full)   inner pages   inner pages in RAM   whole table
+1,00,000                   3               1,235             4               0.0 MB        9.6 MB
+1,00,00,000                3            1,23,457           243               1.9 MB      964.5 MB
+1,00,00,00,000             4         1,23,45,680        24,162             188.8 MB       94.2 GB
+62,50,00,00,000            5        77,16,04,939     15,09,992              11.5 GB     5886.9 GB
+Index holding only key + pointer (16 bytes, 512 per leaf): 62,50,00,00,000 keys → 4 levels.
+Keep the inner pages in RAM and a lookup reads ONE page from disk (the leaf), not one per level.
+
+== B. 10,00,000 inserts of 100-byte rows (MODEL, LRU buffer pool, dirty pages written on eviction or checkpoint) ==
+keys        pool            checkpoint every   page reads   page writes   bytes written ÷ row bytes   height   leaf fill
+random      1,000 pages               10,000     7,79,289      8,11,326                        66.5×        3         70%
+random      40,000 pages               1,000            0      9,16,711                        75.1×        3         70%
+random      40,000 pages              10,000            0      5,37,579                        44.0×        3         70%
+random      40,000 pages            1,00,000            0        97,789                         8.0×        3         70%
+sequential  1,000 pages               10,000            0        24,775                         2.0×        3         51%
+Pool 1,000 pages = 8 MB; 40,000 pages = 320 MB (the whole tree fits). Plus the WAL: ~1× more.
+
+== C. after a restart: 10,000 random lookups (MODEL; the pool starts empty except pinned pages) ==
+buffer pool                                   first lookup   average over 10,000
+1 page, nothing pinned                                   3                  3.00 page reads per lookup
+65 pages, plain LRU                                      3                  1.57 page reads per lookup
+64 inner pages pinned + 1 page for leaves                1                  1.00 page reads per lookup
+1,000 pages, plain LRU                                   3                  0.95 page reads per lookup
+One page cannot hold the root-to-leaf path. Same 65 pages: pinning the inner pages beats plain LRU.

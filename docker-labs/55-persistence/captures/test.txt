@@ -1,0 +1,24 @@
+npm notice run lab-55-persistence@1.0.0 test
+npm notice run node --test test/*.test.js
+✔ crc32 matches the standard check value, and catches every single-bit flip in the payload (1.237538ms)
+✔ WAL reader trusts records up to a torn tail or a damaged header, and nothing after (0.958486ms)
+✔ a flipped length bit in an acknowledged record stops recovery and changes no byte (0.704435ms)
+✔ only sync=none + power cut loses acknowledged puts (model disk) (4.910074ms)
+✔ open() cuts a torn tail, so records appended later can be read (36.484659ms)
+✔ checkpoint + replay: the table and the log together give every key back (real files) (362.249621ms)
+✔ SIGKILL of the writing process loses no acknowledged put, even without fsync (real process) (50.850523ms)
+✔ group commit shares fsyncs between waiting clients; every commit is written once (real file) (192.669776ms)
+✔ B+tree finds every key at any page size; a cold lookup reads one page per level, or one with inner pages pinned (330.860617ms)
+✔ LSM: newest value wins across flushes and compactions; bloom filters never hide a key (19.62366ms)
+✔ SSD model: sequential overwrites copy nothing; random overwrites copy more as the drive fills (6.204377ms)
+✔ recovery stops on a checksum mismatch anywhere, even in the last record, and leaves the file untouched (31.993968ms)
+✔ short writes: every byte is written before fsync and "done"; no progress is an error; a new log name is made durable (271.66698ms)
+✔ fail-stop: after a write error no later commit is acknowledged, and the file closes after I/O settles (9.578379ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1405.932696
