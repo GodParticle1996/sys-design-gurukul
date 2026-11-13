@@ -292,7 +292,28 @@ negative detection times, "1 leader" with a quorum ignored the stale leader's be
 "constructor" broke the helpers, tests missed four main claims, plus wording on copies vs consistency, crash timing, the
 Terry taxonomy and the 54.6% stale-read cause.
 
+## Video 9: Distributed Consensus & Raft (2026-11-13)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-09-raft/`. Built by Claude. Levels
+`fp-raft-kyun` → `fp-raft-kaise` → `fp-raft-code` → `fp-raft-kab` (`data-v2-fp-raft-1…4`, group "🗳️ Consensus & Raft",
+guide `raft`, sources `raft`, `lamport01`, `etcdtune`). Builders: `sdg-codex-xp/jobs/fp9/levels/*.py`.
+Lab 59 (`docker-labs/59-consensus`, Node 24, zero deps): exact quorum arithmetic (every subset; binomial availability), a
+commit-latency model, 10,000 seeded elections per timeout range, REAL fsync samples combined with modeled RTT for the
+price of consensus and batching, a seeded model of Raft's election restriction, and a read timeline for a cut-off leader
+(local read, ReadIndex, lease, slow clock).
+
+Lab 09 (real 5-process Raft: election, same timeouts, quorum, 3 | 2 partition) already existed; this topic adds what it does
+not measure. Corrections taught: Raft assumes crash-recovery with durable term/vote/log, not crash-stop; the "candidate is up
+to date" rule the video skipped prevents losing committed entries; 4 nodes are less available than 3, not equal; Raft gives
+linearizable reads only with ReadIndex or a lease plus client request ids; losing etcd's majority stops control-plane changes
+while running pods usually keep running.
+
+Review: Codex was offline, so Claude self-reviewed the claims, lab and levels (2026-11-13). Fixes: the lab 59 ex1 text
+claimed lab 09's SAME_TIMEOUT run elects a leader (lab 09's capture shows no leader in 10 s); the up-to-date lesson now
+names Raft §5.4.2 (a new leader does not count replicas of older-term entries); ReadIndex credits paper §8 and Ongaro's
+thesis §6.4 with the no-op-entry condition; two over-strong wrong-answer notes in kyun. Codex fact-check: still to do.
+
 ## Next
 
-Continue with numbered video 9, `xU-7JxwUpLo` (Distributed Consensus & Raft); check the existing consensus levels and
-lab 09 (Raft election, quorum partition) first. Videos 1–8 are built; seven remain.
+Continue with numbered video 10, `t9jtxlu7k4k` (Caching); check the existing cache, eviction and stampede levels and
+labs 01 and 33 first. Videos 1–9 are built; six remain.

@@ -1,0 +1,13 @@
+✔ quorum: majorities always overlap; N/2 groups can be disjoint; odd N beats the next even N (5.652821ms)
+✔ elections: identical timeouts never elect; a 150–300 ms range rarely splits (107.191474ms)
+✔ election restriction: without it a committed entry is lost about half the time; with it never (6.906776ms)
+✔ reads: a cut-off leader serving locally returns old data; ReadIndex refuses; a lease is safe only while clocks behave (0.304685ms)
+✔ price: a commit waits for the leader fsync AND the faster follower (RTT + fsync) (0.105664ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 161.489217

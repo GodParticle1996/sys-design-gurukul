@@ -1,0 +1,10 @@
+Asli fsync, 400 baar (128-byte entry): median 1.14 ms, p99 2.36 ms
+
+setup                         ek commit: median     p99       commits/sec (B = batch)
+single node (sirf fsync)              1.14 ms     2.36 ms   B=1: 879  B=16: 14,056  B=128: 1,12,451
+Raft 3 nodes, same AZ (RTT 0.5 ms)    1.60 ms     2.39 ms   B=1: 626  B=16: 10,019  B=128: 80,151
+Raft 3 nodes, regions (RTT 60 ms)    61.09 ms    61.45 ms   B=1: 16  B=16: 262  B=128: 2,095
+
+commits/sec = B ÷ ek round ka median (ek leader, ek ke baad ek round; pipelining aur CPU nahi gina).
+Consensus ki keemat: har commit par fsync + kam se kam ek network round trip. Regions mein RTT hi sab kuch.
+Batching ek fsync aur ek round trip ko kai entries mein baant'ti hai; Raft implementations (jaise etcd) bhi entries batch karte hain.

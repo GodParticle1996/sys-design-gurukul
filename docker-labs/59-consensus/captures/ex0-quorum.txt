@@ -1,0 +1,32 @@
+A. Quorum = majority. Kya do quorums hamesha kam se kam ek voter share karte hain? (har subset gina)
+
+N   majority   kitne down sah sakta   majority overlap   "aadha" (N/2) quorum overlap
+3      2              1                 haan, hamesha        NAHI — do alag 1-1 gut, do leader
+4      3              1                 haan, hamesha        NAHI — do alag 2-2 gut, do leader
+5      3              2                 haan, hamesha        NAHI — do alag 2-2 gut, do leader
+6      4              2                 haan, hamesha        NAHI — do alag 3-3 gut, do leader
+7      4              3                 haan, hamesha        NAHI — do alag 3-3 gut, do leader
+
+B. Har node alag-alag p waqt band ho (independent). Majority milne ka chance:
+
+N    p = 1%      p = 5%      p = 10%
+3   99.970%     99.275%     97.200%
+4   99.941%     98.598%     94.770%
+5   99.999%     99.884%     99.144%
+6   99.998%     99.777%     98.415%
+7  100.000%     99.981%     99.727%
+
+→ 4 nodes, 3 se KAM chalte hain (3 ki jagah 3 of 4 chahiye: zyada nodes, zyada cheezein toot sakti hain). 6 bhi 5 se kam.
+
+C. MODEL: commit kab? Leader + followers; har follower ka ack 0.5 ms + random (ausat 0.3 ms), 2% baar 20 ms ka
+   jhatka (GC, queue). Leader khud ek vote; commit = majority ke liye zaroori ack aate hi. 1 lakh commits per N.
+
+N   kitne follower acks chahiye   median     p99
+3   1 of 2                         0.61 ms    1.26 ms
+4   2 of 3                         0.71 ms    1.47 ms
+5   2 of 4                         0.65 ms    1.12 ms
+7   3 of 6                         0.67 ms    1.06 ms
+
+→ Commit sabse dheeme follower ka nahi, zaroori ginti wale ack ka intezaar karta hai. 4 nodes sabse dheema (2 of 3).
+  5 aur 7 ka p99 is model mein 3 se kam: zyada followers mein se tez wale mil jaate hain. Model leader ka zyada messages
+  bhejne ka kaam, bandwidth aur disk nahi ginta — asli cluster mein bade N ki keemat alag se naapo.

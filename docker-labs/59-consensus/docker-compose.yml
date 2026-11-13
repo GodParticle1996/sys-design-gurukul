@@ -1,0 +1,23 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. Zero dependency Node 24. Kuch bahar publish nahi.
+services:
+  quorum:
+    build: .
+    profiles: [ex0-quorum]
+    command: node start.js ex0-quorum
+  election:
+    build: .
+    profiles: [ex1-election]
+    command: node start.js ex1-election
+  price:
+    build: .
+    profiles: [ex2-price]
+    command: node start.js ex2-price
+  uptodate:
+    build: .
+    profiles: [ex3-up-to-date]
+    command: node start.js ex3-up-to-date
+  reads:
+    build: .
+    profiles: [ex4-reads]
+    command: node start.js ex4-reads

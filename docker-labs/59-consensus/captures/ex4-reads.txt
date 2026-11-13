@@ -1,0 +1,11 @@
+padhne ka niyam                                  jawab diye   purana version   mana
+local read (apni copy se)                         200          170             0
+ReadIndex (pehle majority se pucho)                 0            0           200
+lease 200 ms (election 300 ms se chhota)           20            0           180
+lease, par purane leader ki ghadi 2× dheemi        40           10           160
+
+local read: purana leader jaanta hi nahi ki naya leader aa gaya → 170 reads mein purana version (Raft log sahi hai, read galat).
+ReadIndex: har read se pehle majority se heartbeat ka jawab chahiye → chhoti taraf mana karti hai; sehatmand leader par
+  har read ki keemat ek round trip.
+Lease: majority ka aakhri ack + 200 ms tak bina pooche padho; naya leader 300 ms se pehle nahi ban sakta → safe, BASHARTE
+  ghadiyon ka farq seema mein ho. Ghadi 2× dheemi → lease 400 ms tak "valid" lagi → naye leader ke baad bhi purana jawab.

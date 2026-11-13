@@ -1,0 +1,11 @@
+5 nodes. Entry X leader 1 + 2 followers par (majority) → committed, client ko "ho gaya". Leader 1 mara.
+Nodes 2–5 mein se 2 ke paas X, 2 ke paas nahi. 10,000 baar, timers ka kram random.
+
+vote ka niyam                                   committed X kho gaya     extra election rounds
+koi bhi candidate, pehle aaye ko vote           5,007 (50.1%)           0
+candidate ka log mere jitna naya ho (§5.4.1)        0 (0.0%)           6,702
+
+Bina niyam: pehle timer wala node leader banta hai — aadhe baar bina X wala node. Naya leader followers se apna
+log copy karwata hai → X mit jaata hai, jabki client ko "ho gaya" bola ja chuka tha.
+Niyam ke saath: X wale nodes bina X wale candidate ko vote nahi dete; bina X wala 3 votes nahi jod sakta (khud + 1).
+Kyunki X majority par hai, har jeetne layak majority mein kam se kam ek X wala voter hota hai. Keemat: kuch extra rounds.

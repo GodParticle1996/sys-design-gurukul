@@ -66,6 +66,8 @@
     abadi: { title: 'Abadi — Consistency Tradeoffs in Modern Distributed Database System Design (PACELC, 2012)', url: 'https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf' },
     terry94: { title: 'Terry et al. — Session Guarantees for Weakly Consistent Replicated Data (1994)', url: 'https://www.cs.cornell.edu/courses/cs734/2000FA/cached%20papers/SessionGuaranteesPDIS_1.html' },
     crdt11: { title: 'Shapiro et al. — Conflict-free Replicated Data Types (2011)', url: 'https://asc.di.fct.unl.pt/~nmp/pubs/tr-inria-2011.pdf' },
+    lamport01: { title: 'Lamport — Paxos Made Simple (2001)', url: 'https://lamport.azurewebsites.net/pubs/paxos-simple.pdf' },
+    etcdtune: { title: 'etcd — tuning (heartbeat and election timeout)', url: 'https://etcd.io/docs/v3.5/tuning/' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -239,6 +241,27 @@
     ],
     followup: 'Food delivery app: restaurant menu, order placement aur rider location. Do regions ke beech link 2 minute ke liye toota. Har feature ke liye CP ya AP, aur merge ka niyam kya?',
     sources: ['brewer12', 'abadi', 'terry94', 'crdt11', 'dynamo', 'raft'],
+  });
+  add('raft', 'fp-raft-kyun fp-raft-kaise fp-raft-code fp-raft-kab', {
+    title: 'Raft: majority se ek leader, majority par commit, aur pakka read',
+    misaal: 'Gaon ka mukhiya har faisla bahi-khaate mein likhta hai; paanch mein se teen log apni copy mein likh lein tab faisla pakka. Mukhiya chup ho jaaye toh pehle intezaar khatam karne wala naya mukhiya banne khada hota hai — par jeet sirf pichhle pakke faisle wale khaate ke maalik ki hoti hai.',
+    asli: 'Do majorities hamesha milti hain: ek term mein ek leader, aur committed entry har agle leader tak pahunchti hai — basharte voters candidate ka log jaanchein. Read bhi tabhi pakka jab leader apni leadership pakki kare.',
+    points: [
+      '<b>Odd N:</b> lab 59 ex0 — majority = floor(N/2) + 1; 4 nodes 3 jitni failure sahte par kam chalte (5% failure par 98.6% vs 99.3%).',
+      '<b>Election:</b> ex1 (model) — bilkul same timeout par koi leader nahi; 150–300 ms par 2.2% split vote, median 181 ms.',
+      '<b>Up-to-date niyam:</b> ex3 (model) — voter log check na kare toh 50.1% baar committed entry gayi; niyam ke saath 0.',
+      '<b>Keemat aur reads:</b> ex2 — commit = fsync + round trip (same AZ ~1.6 ms, regions ~61 ms; batching madad karti hai). ex4 — kata hua leader local read se 170 purane jawab; ReadIndex ya safe lease se 0.',
+    ],
+    use: 'Leader chunna, config/metadata, locks aur leases, shard ka maalik tay karna — chhota data jiska galat hona sab tod de.',
+    avoid: 'Bhaari user data ek Raft group mein, even N nodes, timeout par bina request id ke retry, aur kisi follower ya purane leader ki copy ko pakka read maan lena.',
+    mistake: '"Raft hai toh sab consistent" maan lena. Log ka kram pakka hai, par read ke liye ReadIndex ya lease chahiye, aur client retry ko request id chahiye (lab 59 ex4: local read par 200 mein se 170 purane).',
+    compare: [
+      { choice: 'Raft/Paxos group', when: 'Chhota, zaroori metadata; linearizable reads', tradeoff: 'Har commit fsync + majority round trip; ek leader ki seema' },
+      { choice: 'Kai Raft groups (sharded)', when: 'Bada data jise strong consistency chahiye', tradeoff: 'Har shard alag group; cross-shard transactions mehnge' },
+      { choice: 'Eventual / CRDT', when: 'Likes, logs, clicks — purana jawab chalega', tradeoff: 'Tez aur available; copies kuch der alag' },
+    ],
+    followup: 'Tumhare 3-node etcd mein ek node baar-baar GC mein 2 s atakta hai aur leader badalta rehta hai. Kya naapoge aur kya badloge (timeouts, node, N)?',
+    sources: ['raft', 'lamport01', 'etcdtune'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',
