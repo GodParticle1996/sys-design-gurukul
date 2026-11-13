@@ -1,0 +1,13 @@
+A. Election ka niyam
+   no quorum        khud ko leader maanne wale 2   commit kar sakne wale 2   "ho gaya" bola 1,000   mana   0   jodne par gayab (bola tha "ho gaya") 395
+   majority quorum  khud ko leader maanne wale 2   commit kar sakne wale 1   "ho gaya" bola 605   mana 395   jodne par gayab (bola tha "ho gaya") 0
+
+B. Zombie leader — GC pause se jaaga, term 1 ke 50 purane writes storage ko bheje (naya leader term 2 par 100 likh chuka)
+   bina fencing                 storage ne mane 150   thukraaye  0   aakhri value old-49  ← PURANE leader ki
+   fencing token (term) check   storage ne mane 100   thukraaye 50   aakhri value new-99  
+
+C. Kitne nines, saal mein kitna downtime (365.25 din)
+   99     %   87 h 39 min 36.0 s
+   99.9   %   8 h 45 min 57.6 s
+   99.99  %   52 min 35.8 s
+   99.999 %   5 min 15.6 s

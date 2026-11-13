@@ -1,0 +1,13 @@
+A. Latency — 200 writes ek ke baad ek (har write ka "ho gaya" aane tak ka samay)
+  async        median   0.00 ms   p99   0.03 ms
+  sync-any-1   median   2.24 ms   p99   2.72 ms
+  sync-all     median  60.76 ms   p99  61.60 ms
+
+B. Primary mara — 300 writes (har 1 ms ka target), 300va write bhejte hi crash; "ho gaya" bole gaye writes mein se kitne kho gaye?
+   Mara primary kisi ko jawab nahi deta: crash ke baad aane wale acks ke writes ko "ho gaya" nahi milta (natija pata nahi).
+  async        crash t = 336 ms   "ho gaya" bola 300   naya primary = paas (1 ms)   naye primary mein nahi:  1   (agar door wala bane: 27)
+  sync-any-1   crash t = 342 ms   "ho gaya" bola 298   naya primary = paas (1 ms)   naye primary mein nahi:  0   (agar door wala bane: 23)
+  sync-all     crash t = 341 ms   "ho gaya" bola 247   naya primary = paas (1 ms)   naye primary mein nahi:  0   (agar door wala bane: 0)
+
+async: tez, par crash par aakhri writes (packet raaste mein the) gaye. sync-all: latency = sabse dheema replica (~60 ms).
+sync-any-1: latency ~ sabse tez replica; acked write kam se kam ek replica par — us replica ko primary banao.

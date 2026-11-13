@@ -1,0 +1,12 @@
+a) Likes counter — pehle 1,000; split mein A par 300, B par 200 (sach: 1,500)
+   LWW (har taraf ne GINTI likhi, baad wali jeeti)   1,200  → 300 likes gayab
+   G-Counter CRDT (har replica ka apna khaana)        1,500
+
+b) Naam — 1,000 users, har user ka naam dono taraf badla; B ki ghadi 5 s peeche
+   LWW                     har user ka ek write chupchaap gaya (1,000);  69 baar (6.9%) asal mein PEHLE wala write jeeta
+   version vectors         1,000 conflicts pakde — dono versions rakhe, app/user tay kare
+
+c) Cart — 500 carts {apple, bread}; split mein A ne apple hataya + chai joda, B ne dal joda. Iraada: {bread, chai, dal}
+   LWW (poora cart, baad wala jeeta)       joda hua item gayab: 500   hataya apple wapas: 254
+   dono versions ka union (Dynamo jaisa)   joda hua item gayab:   0   hataya apple wapas: 500
+   OR-Set CRDT (add jeetta hai)            joda hua item gayab:   0   hataya apple wapas:   0

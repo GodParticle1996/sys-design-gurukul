@@ -1,0 +1,14 @@
+✔ CRDT merges: order and repeats do not change the result (G-Counter, OR-Set); version vectors spot concurrency (5.753274ms)
+✔ bank split: CP refuses the small side and never overpays; LWW loses withdrawals from the books; offline limit bounds the loss (4.252657ms)
+✔ lag model: replicas apply in order; read-your-writes misses match the lag ranges; fixes remove the anomalies (38.246311ms)
+✔ conflicts: LWW loses likes and cart adds; the union brings back a removed item; CRDTs keep the intent (5.263998ms)
+✔ split brain: without a quorum the small side's acked writes are lost; fencing stops a woken old leader (0.524248ms)
+✔ PACELC: sync writes are on at least one replica when acked; async can lose acked writes in flight (238.155241ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 334.308432

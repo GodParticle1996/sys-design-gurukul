@@ -62,6 +62,10 @@
     twsnowflake: { title: 'Twitter Snowflake (2010) — README and IdWorker', url: 'https://github.com/twitter-archive/snowflake/tree/snowflake-2010' },
     rfc9562: { title: 'RFC 9562 — UUIDs, including time-ordered UUIDv7 (May 2024)', url: 'https://www.rfc-editor.org/rfc/rfc9562.html' },
     stripemig: { title: 'Stripe — Online migrations at scale', url: 'https://stripe.com/blog/online-migrations' },
+    brewer12: { title: 'Brewer — CAP Twelve Years Later (2012)', url: 'https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/' },
+    abadi: { title: 'Abadi — Consistency Tradeoffs in Modern Distributed Database System Design (PACELC, 2012)', url: 'https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf' },
+    terry94: { title: 'Terry et al. — Session Guarantees for Weakly Consistent Replicated Data (1994)', url: 'https://www.cs.cornell.edu/courses/cs734/2000FA/cached%20papers/SessionGuaranteesPDIS_1.html' },
+    crdt11: { title: 'Shapiro et al. — Conflict-free Replicated Data Types (2011)', url: 'https://asc.di.fct.unl.pt/~nmp/pubs/tr-inria-2011.pdf' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -214,6 +218,27 @@
     ],
     followup: 'Chat app: messages ko message_id ke hash se shard kiya. Ab "ek conversation ke aakhri 50 messages" har shard par jaata hai. Shard key kya karoge, aur purana data kaise le jaaoge?',
     sources: ['karger', 'dynamo', 'rediscluster', 'twsnowflake', 'rfc9562', 'stripemig'],
+  });
+  add('capelc', 'fp-cap-kyun fp-cap-kaise fp-cap-code fp-cap-kab', {
+    title: 'CAP aur PACELC: har operation ka faisla — mana karo, purana do, ya intezaar karo',
+    misaal: 'Dukaan ke do counters ke beech darwaza band. Grahak dono par udhaar maange toh har counter wala ya toh "pehle poochhunga" kahe (mana), ya apne khaate se de de (jawab) aur baad mein khaate milaaye. Darwaza khula ho tab bhi rasid ka intezaar (sync) ya turant "ho gaya" (async) chunna padta hai.',
+    asli: 'Partition mein ek operation ke liye linearizable sach aur har request ka jawab, dono ki guarantee nahi milti. Partition na ho tab bhi copies ka intezaar latency hai. Faisla data aur operation dekh kar.',
+    points: [
+      '<b>Partition:</b> lab 58 ex1 (model) — CP mein chhoti taraf ke 1,000 withdrawals mana, zyada paisa 0. AP + LWW ne ₹56,200 kitaab se gayab kiye; ledger ne galti dikhai (579 accounts minus); offline ₹20 ki seema ne nuksaan ₹530 tak rakha.',
+      '<b>Timeout = shak:</b> ex0 (asli) — 100 ms detector ne 2 s atke zinda node ko mara kaha; 3 s detector ne asli crash ~3 s baad pakda.',
+      '<b>PACELC:</b> ex2 — sync-all ~60.6 ms (sabse dheema replica), sync-any-1 ~2.2 ms, async ~0 par crash par acked writes gaye. Sync-any-1 mein failover sabse aage wale replica ko.',
+      '<b>Merge aur leaders:</b> ex4 — LWW ne 300 likes khoye, G-Counter ne sab rakhe; union ne hataya item wapas laaya, OR-Set ne nahi. ex5 — bina quorum 395 acked writes gayab; fencing ne zombie ke 50 writes roke.',
+    ],
+    use: 'Multi-region ya replicated database chunna ho, failover design karna ho, ya replica reads par users ko purana data dikhe.',
+    avoid: 'Poore system par ek CAP label lagana, ginti/balance ko LWW se milana, do-node failover bina witness/fencing, aur sirf time window se read-your-writes maan lena.',
+    mistake: '"Banks CP hote hain, social apps AP" jaisa label. Asli ATM networks seemit stand-in withdrawals dete hain; ek hi app mein seat hold CP aur seat map AP ho sakte hain. Har operation ke liye galat jawab ki keemat naapo.',
+    compare: [
+      { choice: 'CP (majority quorum)', when: 'Galat jawab mehnga: paisa, stock, seat hold, leader chunna', tradeoff: 'Partition mein chhoti taraf mana; har commit par quorum ka intezaar' },
+      { choice: 'AP + CRDT / ledger', when: 'Purana jawab chalega, writes kabhi rukne nahi chahiye: likes, cart, counters', tradeoff: 'Copies alag dikhti hain; merge ka niyam data ke hisaab se chunna padta hai' },
+      { choice: 'AP + seemit risk', when: 'Service chalni zaroori, par nuksaan ki ek seema chalegi', tradeoff: 'Seema tak galti mumkin; baad mein hisaab aur wasooli' },
+    ],
+    followup: 'Food delivery app: restaurant menu, order placement aur rider location. Do regions ke beech link 2 minute ke liye toota. Har feature ke liye CP ya AP, aur merge ka niyam kya?',
+    sources: ['brewer12', 'abadi', 'terry94', 'crdt11', 'dynamo', 'raft'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

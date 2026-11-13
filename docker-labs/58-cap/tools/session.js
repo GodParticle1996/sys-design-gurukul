@@ -1,0 +1,20 @@
+'use strict';
+// ex3-session — MODEL (seeded): primary + 3 replicas, lag 0–200 ms / 0–1 s / 0–5 s, reads random replica par. 10,000 baar.
+const { rng } = require('../lib/rng');
+const { ryw, monotonic, causal, MAXLAG } = require('../lib/session');
+const T = 10000, pct = n => `${(100 * n / T).toFixed(1)}%`, f = n => n.toLocaleString('en-IN');
+console.log(`Replica lag (har write par random): ${MAXLAG.map(m => `0–${m} ms`).join(', ')}. Har sawaal ${f(T)} baar.\n`);
+const a = ['none', 'sticky', 'token'].map(x => ryw(x, T, rng(31)));
+console.log('a) Read-your-writes — bio badla, 300 ms baad apni profile kholi');
+console.log(`   bina ilaaj                  purani bio dikhi: ${f(a[0].bad)} (${pct(a[0].bad)})`);
+console.log(`   5 s tak primary se padho    purani bio: 0      primary par reads: ${f(a[1].fromPrimary)} (${pct(a[1].fromPrimary)})`);
+console.log(`   version token               purani bio: 0      primary par reads: ${f(a[2].fromPrimary)} (${pct(a[2].fromPrimary)})  (baaki replica se)`);
+const b = ['none', 'sticky', 'token'].map(x => monotonic(x, T, rng(32)));
+console.log('\nb) Monotonic reads — score har 0.5 s badla, viewer ne 10 baar refresh kiya (har second)');
+console.log(`   random replica              kam se kam ek baar score PEECHE gaya: ${f(b[0].bad)} (${pct(b[0].bad)}) viewers`);
+console.log(`   ek hi replica se chipko     ${f(b[1].bad)}`);
+console.log(`   "dekhe hue version se naya" token${f(b[2].bad)}`);
+const c = ['none', 'deps'].map(x => causal(x, T, rng(33)));
+console.log('\nc) Causal — sawaal (shard Q, t = 0), jawab (shard A, t = 2 s); reader 2–6 s ke beech dono padhta hai');
+console.log(`   bina ilaaj                  jawab dikha, sawaal nahi: ${f(c[0].bad)} (${pct(c[0].bad)})`);
+console.log(`   jawab ke saath "sawaal v1 chahiye"   0 — ${f(c[1].hidden)} baar jawab thodi der chhupa raha`);

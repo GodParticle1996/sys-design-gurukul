@@ -269,7 +269,30 @@ unchanged after a rejected time), placements changed between ex2 rounds, "heap +
 had no test. The levels review added the stopped-traffic repair boundary, saga vs 2PC guarantees, per-mode ex5 counts,
 SQLite REPLACE semantics, and dry-run clock values shown as t − EPOCH.
 
+## Video 8: CAP Theorem & PACELC (2026-11-13)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-08-cap/`. Built by Claude; Codex fact-checked
+the video claims (`sdg-codex-xp/jobs/fp8/CLAIMS-REVIEW.md`) and the lab. Levels `fp-cap-kyun` → `fp-cap-kaise` →
+`fp-cap-code` → `fp-cap-kab` (`data-v2-fp-cap-1…4`, group "🔀 CAP & PACELC", guide `capelc`, sources `brewer12`, `abadi`,
+`terry94`, `crdt11`). Builders: `sdg-codex-xp/jobs/fp8/levels/*.py`.
+Lab 58 (`docker-labs/58-cap`, Node 24, zero deps): REAL worker-thread failure detectors (2 s pause vs a real stop, three
+timeouts); real timers with a modeled network for async / sync-any-1 / sync-all latency and a primary crash; seeded models
+for a 3 | 2 split with four ATM rules, replica lag with read-your-writes / monotonic / causal fixes, LWW vs version vectors vs
+CRDTs (G-Counter, OR-Set), and split brain with quorum and a fencing token.
+
+The `cap` and `eventual` levels (data-dist.js) and the clocks material (data-gaps.js) already teach the concepts; this topic
+adds measurements. Corrections taught: CP refuses the affected side, it does not shut nodes down; a 3 | 2 split keeps the
+majority writing; real ATM networks allow bounded stand-in withdrawals (the earlier CAP level's ATM rule assumes "never more
+than the balance"); PACELC is Abadi's and classified Dynamo, not today's DynamoDB; sync latency follows the ack threshold;
+single-node Postgres is not automatically linearizable; session guarantees are separate, not one ladder; Figma uses a central
+server and Google Docs uses OT; five nines is ~5 min 15 s a year.
+
+Codex's lab review (6 P2 + 4 P3, fixed): a dead primary still acknowledged sync writes, detector start-up could produce
+negative detection times, "1 leader" with a quorum ignored the stale leader's belief, OR-Set/counter keys like
+"constructor" broke the helpers, tests missed four main claims, plus wording on copies vs consistency, crash timing, the
+Terry taxonomy and the 54.6% stale-read cause.
+
 ## Next
 
-Continue with numbered video 8, `Ub9yZucpwC0` (CAP Theorem & PACELC); check the existing Distributed/Consistency
-levels (CAP/PACELC, clock skew, Raft lab 09) first. Videos 1–7 are built; eight remain.
+Continue with numbered video 9, `xU-7JxwUpLo` (Distributed Consensus & Raft); check the existing consensus levels and
+lab 09 (Raft election, quorum partition) first. Videos 1–8 are built; seven remain.

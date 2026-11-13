@@ -1,0 +1,11 @@
+niyam              withdraw OK (maj/min)   mana (maj/min)   balance check error   diya ₹      kitaab mein ₹   kitaab se gayab ₹   minus accounts   ₹100 se zyada diya ₹
+CP quorum          1,000 / 0               0 / 1,000          768 (min taraf)       56,200      56,200          0                   0                0
+AP + LWW           1,000 / 1,000           0 / 0                0 (min taraf)       1,11,620    55,420          56,200              0                22,840
+AP + ledger        1,000 / 1,000           0 / 0                0 (min taraf)       1,11,620    1,11,620        0                   579              22,840
+AP + offline ₹20   1,000 / 194             0 / 806              0 (min taraf)       59,170      59,170          0                   40               530
+
+CP: 2 nodes wali taraf quorum (3 of 5) nahi bana sakti → har withdrawal aur balance check mana. Paisa kabhi zyada nahi gaya.
+AP + LWW: dono taraf ne apna BALANCE likha; jodne par baad wala balance jeeta → ek withdrawal kitaab se gayab.
+AP + ledger: dono withdrawals kitaab mein (CRDT jaisa); account minus mein dikhta hai, bank wasool kar sakta hai.
+AP + offline ₹20: chhoti taraf sirf ₹20 tak deti hai → nuksaan ki seema tay. Asli ATM networks mein stand-in policy issuer se
+baat na ho tab withdrawals ki seema tay karti hai.

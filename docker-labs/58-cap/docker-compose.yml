@@ -1,0 +1,27 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. Zero dependency Node 24. Kuch bahar publish nahi.
+services:
+  slowdead:
+    build: .
+    profiles: [ex0-slow-vs-dead]
+    command: node start.js ex0-slow-vs-dead
+  partition:
+    build: .
+    profiles: [ex1-partition]
+    command: node start.js ex1-partition
+  pacelc:
+    build: .
+    profiles: [ex2-pacelc]
+    command: node start.js ex2-pacelc
+  session:
+    build: .
+    profiles: [ex3-session]
+    command: node start.js ex3-session
+  conflicts:
+    build: .
+    profiles: [ex4-conflicts]
+    command: node start.js ex4-conflicts
+  splitbrain:
+    build: .
+    profiles: [ex5-split-brain]
+    command: node start.js ex5-split-brain

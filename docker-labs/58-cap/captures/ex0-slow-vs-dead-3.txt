@@ -1,0 +1,9 @@
+Ping har 20 ms. Node t = 500 ms par atka; wapas jawab t = 2502 ms par.
+
+timeout    Kahani 1: 2 s ka pause (node ZINDA tha)          Kahani 2: node sach mein band
+  100 ms   "mara" kaha t = 583 ms par (JHOOTA alarm)       pakda 86 ms baad
+  500 ms   "mara" kaha t = 986 ms par (JHOOTA alarm)       pakda 488 ms baad
+ 3000 ms   koi alarm nahi (sahi)                           pakda 2989 ms baad
+
+Bahar se dono kahaniyan pehle ek jaisi dikhti hain: pong aana band. Chhota timeout = jaldi pakdo, par zinda
+node ko bhi "mara" bolo. Lamba timeout = jhoota alarm nahi, par sach mein mara node der se pakda.
