@@ -1,0 +1,20 @@
+
+A. Sirf race (dual write kabhi fail nahi)
+   20,000 rows · backfill ke dauraan live: 4,185 update, 1,212 delete, 603 naye
+   backfill kaise likhta hai     backfill ke baad: gayab  purani  zinda-hui    1000 ka sample   dobara backfill     + ulta sweep
+   overwrite                                   0     98      30        3 pakde ( 1%: 0)    30 galat            0 galat
+   if-absent                                   0      0      30        0 pakde (100%: 0)    30 galat            0 galat
+   version                                     0      0      30        0 pakde (100%: 0)    30 galat            0 galat
+   version+tombstone                           0      0       0        0 pakde (100%: 0)     0 galat            0 galat
+
+B. Race + dual write 1% baar fail (log hua, dobara nahi bheja)
+   20,000 rows · backfill ke dauraan live: 4,185 update, 1,212 delete, 603 naye · dual write fail: 55
+   backfill kaise likhta hai     backfill ke baad: gayab  purani  zinda-hui    1000 ka sample   dobara backfill     + ulta sweep
+   overwrite                                   5    120      34        4 pakde ( 0%: 0)    34 galat            0 galat
+   if-absent                                   5     22      34        1 pakde (25%: 0)    56 galat           22 galat
+   version                                     5     22      34        1 pakde (25%: 0)    34 galat            0 galat
+   version+tombstone                           5     22       7        1 pakde (25%: 0)     7 galat            0 galat
+
+gayab = purane mein hai, naye mein nahi · purani = naye mein purana version · zinda-hui = purane se delete, naye mein zinda
+"(x%: 0)" = itne % chance ki 1000 ka random sample ek bhi galti na pakde (gayab + purani rows ke hisaab se)
+sample sirf PURANE DB ke ids se chunta hai, isliye sample ko "zinda-hui" rows kabhi nahi dikhti. Zinda-hui rows ke liye ulta sweep chahiye.

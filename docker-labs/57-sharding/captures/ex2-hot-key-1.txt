@@ -1,0 +1,17 @@
+A. Writes — 3,00,000 votes per round, 3 round, 8 shards, 4000 votes ke batch, 8 batch tak ek saath hawa mein
+split   shards jinhe sub-keys mili   sabse bhara shard   writes/sec            router CPU %   shard op-samay % (aakhri round)
+    1    1 / 8                        1 sub-keys (100%)    11,78,284–12,01,651   2–3            [0, 0, 0, 0, 0, 99, 0, 0]
+   10    5 / 8                        4 sub-keys ( 40%)    22,13,719–25,24,318   15–18          [77, 0, 35, 39, 0, 0, 98, 36]
+   40    8 / 8                       10 sub-keys ( 25%)    27,09,896–32,55,640   29–30          [53, 40, 63, 50, 41, 62, 58, 96]
+router CPU % = main thread ka CPU / samay. ~100% ho toh rukawat router hai, shard nahi.
+shard op-samay % = worker ke andar op (SQL + loop) ka samay / kul samay; message kholna-bandh karna shaamil nahi.
+
+B. Total padhna — 300 baar, har baar saare sub-keys ka jod (aakhri round ke counters)
+split   tareeka                          shard calls   shards ka op-samay   median     p99      total sahi?
+    1   ek key, ek call                      1             5 µs             43 µs    179 µs   haan (3,00,000)
+   10   ek ek karke (serial)                10            69 µs            516 µs   1610 µs   haan (3,00,000)
+   10   sab ek saath (parallel)             10            95 µs            173 µs    393 µs   haan (3,00,000)
+   10   shard-wise ek call (parallel)        5            57 µs            119 µs    222 µs   haan (3,00,000)
+   40   ek ek karke (serial)                40           317 µs           2196 µs   5254 µs   haan (3,00,000)
+   40   sab ek saath (parallel)             40           346 µs            371 µs   1247 µs   haan (3,00,000)
+   40   shard-wise ek call (parallel)        8           124 µs            166 µs    258 µs   haan (3,00,000)

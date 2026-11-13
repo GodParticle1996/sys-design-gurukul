@@ -1,0 +1,27 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. SQLite Node 24 ke andar hai (node:sqlite), koi package install nahi. Kuch bahar publish nahi.
+services:
+  moves:
+    build: .
+    profiles: [ex0-moves]
+    command: node start.js ex0-moves
+  keys:
+    build: .
+    profiles: [ex1-shard-key]
+    command: node start.js ex1-shard-key
+  hotkey:
+    build: .
+    profiles: [ex2-hot-key]
+    command: node start.js ex2-hot-key
+  ids:
+    build: .
+    profiles: [ex3-ids]
+    command: node start.js ex3-ids
+  colocate:
+    build: .
+    profiles: [ex4-colocate]
+    command: node start.js ex4-colocate
+  backfill:
+    build: .
+    profiles: [ex5-backfill]
+    command: node start.js ex5-backfill

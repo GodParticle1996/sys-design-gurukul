@@ -1,0 +1,22 @@
+Itihaas: 3,00,000 events, 1 Jan – 31 Mar 2026 (dono layouts mein same rows)
+  range: rows per shard [103334, 93333, 103333, 0]   (shard 3 = April, abhi khaali)
+  hash:  rows per shard [74967, 74972, 74857, 75204]
+
+A. Live writes — 12 April, 2,00,000 events per round, 3 round, router 2000 ke batch bhejta hai, 8 batch tak ek saath hawa mein
+   router CPU = main thread ka CPU / samay (~100% = rukawat router). shard op-samay = worker ke andar SQL + loop ka samay.
+  range  1,47,945–2,86,084 writes/sec   router CPU 9–15%   aakhri round: rows per shard [0, 0, 0, 200000]   shard op-samay % [0, 0, 0, 97]
+  hash   4,59,653–5,53,552 writes/sec   router CPU 29–46%   aakhri round: rows per shard [49875, 50145, 49947, 50033]   shard op-samay % [93, 93, 91, 95]
+
+B. Range query — "Feb ke ek ghante ke saare events", 300 alag ghante
+  range  shards poochhe 1   rows 139 per query   shards ka op-samay  58 µs   median 159 µs   p99 504 µs
+  hash   shards poochhe 4   rows 139 per query   shards ka op-samay 164 µs   median 196 µs   p99 440 µs
+
+C. Ek event, event ke id se — 300 ids
+  range  shards poochhe 4   shards ka op-samay  43 µs   median 110 µs   p99 489 µs
+  hash   shards poochhe 1   shards ka op-samay   9 µs   median 52 µs   p99 130 µs
+
+range layout ko id se mahina pata nahi, isliye chaaron shards se poochta hai. hash layout ko ghante se shard pata nahi.
+
+D. Durable commits (har event ka alag commit + fsync), 1000 per shard, 3 round, saare shards is laptop ki EK disk par
+  1 shard   266–1,619 commits/sec kul
+  4 shards  847–2,653 commits/sec kul

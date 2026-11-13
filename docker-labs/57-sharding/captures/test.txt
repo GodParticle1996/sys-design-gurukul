@@ -1,0 +1,17 @@
+✔ hash % N: over one full period of N(N+1) hash values, adding a shard moves exactly N/(N+1), removing one moves (N-1)/N (0.569825ms)
+✔ ring: adding a shard moves keys only TO the new shard; removing one moves only that shard's keys (83.06977ms)
+✔ snowflake: layout, increasing IDs, clock guard, sequence overflow, machine id range (2.295887ms)
+✔ UUIDv7 starts with the 48-bit ms timestamp; v4 and v7 carry their version and variant bits (3.974493ms)
+✔ backfill race: overwrite brings back old versions and deleted rows; version + tombstone does not; repair + sweep fix the rest (1294.826826ms)
+✔ sample check: finds every draw when all rows are wrong, none when all are right, and is blind to rows only in new (0.761081ms)
+✔ cluster: one shard runs several statements in one transaction; an error rolls all of them back (44.783434ms)
+✔ split counter: the sub-key counts add up to every vote (48.208704ms)
+✔ B-tree pages (SQLite): increasing integer keys fill leaf pages ~full; UUID keys in a WITHOUT ROWID table do not, increasing or random (88.853554ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1622.830109

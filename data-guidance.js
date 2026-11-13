@@ -57,6 +57,11 @@
     dynamo: { title: "Dynamo: Amazon's Highly Available Key-value Store (SOSP 2007)", url: 'https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf' },
     spanner: { title: "Spanner: Google's Globally-Distributed Database (OSDI 2012)", url: 'https://research.google/pubs/spanner-googles-globally-distributed-database-2/' },
     pgvector: { title: 'pgvector — exact and approximate vector search in Postgres', url: 'https://github.com/pgvector/pgvector' },
+    karger: { title: 'Karger et al. — Consistent Hashing and Random Trees (STOC 1997)', url: 'https://people.csail.mit.edu/karger/Papers/web.pdf' },
+    rediscluster: { title: 'Redis Cluster specification — 16,384 hash slots', url: 'https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/' },
+    twsnowflake: { title: 'Twitter Snowflake (2010) — README and IdWorker', url: 'https://github.com/twitter-archive/snowflake/tree/snowflake-2010' },
+    rfc9562: { title: 'RFC 9562 — UUIDs, including time-ordered UUIDv7 (May 2024)', url: 'https://www.rfc-editor.org/rfc/rfc9562.html' },
+    stripemig: { title: 'Stripe — Online migrations at scale', url: 'https://stripe.com/blog/online-migrations' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -188,6 +193,27 @@
     ],
     followup: 'Team \'doston ke dost\' feature ke liye Neo4j lana chahti hai kyunki Postgres query 4 second leti hai. Kya naapoge aur kya badloge?',
     sources: ['dynamo', 'spanner', 'pgvector'],
+  });
+  add('shard', 'fp-shard-kyun fp-shard-kaise fp-shard-code fp-shard-kab', {
+    title: 'Sharding: shard key sawaalon se, aur shard karne se pehle ruko',
+    misaal: 'Station par 4 ticket counters. Board kahe "yatra ke mahine ke counter par jaao" toh aaj sab ek counter par. Board kahe "ticket number ke hisaab se" toh bheed bant\'ti hai, par "aaj ke saare tickets" ginne ke liye chaaron counters se poochna padta hai.',
+    asli: 'Shard key tay karti hai kaunsa sawaal ek shard par rukta hai aur kaunsa sab par jaata hai. Ek key ki bheed, cross-shard joins aur migrations sharding ka kharcha hain.',
+    points: [
+      '<b>Range vs hash:</b> lab 57 ex1 — samay se range sharding par aaj ke 200,000 / 200,000 writes ek shard par (97% busy, baaki 0%). Hash writes baant\'ta hai, par ek ghante ki report chaaron shards par (kaam ~3×). Shard jodne par <code>hash % N</code> N/(N+1) keys hilaata hai; ring ya slots sirf naye ka hissa.',
+      '<b>Hot key:</b> ek key ek shard par rehti hai, vnodes se nahi bant\'ti. Sub-keys (ex2: 10) writes ~1.5–2.2× badhaati hain — takraav ki wajah se 10× nahi — aur total ke liye k counters padhne padte hain (shard-wise batch mein calls kam).',
+      '<b>IDs:</b> UUIDv4 primary key se 10 lakh inserts ~10× dheeme (ex3). Snowflake / UUIDv7 naye rows ko latest samay ke paas jodte hain (lab ka UUIDv7 ek ms ke andar random). Snowflake unique tabhi: machine id exclusive, ghadi peeche na jaaye, restart par pichhle ms se aage, aur 41-bit khidki ke andar.',
+      '<b>Migration:</b> backfill ki purani copy naye data ko mita sakti hai; atomic version check + tombstone (ex5 A, dual writes fail na hon: 0 galat). Best-effort dual write + sample check galtiyan chhupa deta hai; lab mein 0 tak tabhi pahunche jab live writes rok kar poori row ka compare aur repair hua — asli cutover mein CDC/outbox catch-up.',
+    ],
+    use: 'Writes ya data ek machine ki had paar karein, ek tenant/user ka data saath rakhna ho, ya live system ko bina downtime naye storage par le jaana ho.',
+    avoid: 'Reads ki samasya ko sharding se theek karna (pehle index, cache, read replicas), samay ya auto-increment ko range shard key banana, aur bina version check ke backfill chalana.',
+    mistake: '"Vnodes se load perfectly barabar" ya "key ko 10 mein todo toh writes 10×" maan lena. Lab 57 ex2: 10 sub-keys 8 mein se sirf 5 shards par giri, ek shard par 40% votes; writes ~1.5–2.2×.',
+    compare: [
+      { choice: 'Range shard key', when: 'Range sawaal (samay, id ranges) zyada, key badhti nahi', tradeoff: 'Range query sirf un shards par jinke ranges chhooti hai; badhti key par hot tail' },
+      { choice: 'Hash shard key', when: 'Point lookups zyada, writes baantne hain', tradeoff: 'Alag keys lagbhag bant\'ti hain, par hot key ek shard bharti hai; range aur bina-key sawaal kai shards par' },
+      { choice: 'Abhi shard mat karo', when: 'Measured write load aur data ek machine ki capacity mein, reads index/cache/replicas se sambhal rahe', tradeoff: 'Sab simple (joins, transactions); ek machine ki had baad mein' },
+    ],
+    followup: 'Chat app: messages ko message_id ke hash se shard kiya. Ab "ek conversation ke aakhri 50 messages" har shard par jaata hai. Shard key kya karoge, aur purana data kaise le jaaoge?',
+    sources: ['karger', 'dynamo', 'rediscluster', 'twsnowflake', 'rfc9562', 'stripemig'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

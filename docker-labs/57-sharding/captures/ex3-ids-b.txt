@@ -1,0 +1,13 @@
+
+B. Snowflake: 1 bit khaali | 41 bit ms (custom epoch 2020-01-01) | 10 bit machine | 12 bit sequence
+  41 bit ms = 21,99,02,32,55,552 ms = 69.7 saal   10 bit = 1,024 machine ids   12 bit = 4,096 IDs per ms per machine
+  ek ID: 830955375820951552  →  2026-04-12T00:00:00.000Z  machine 37  seq 0
+
+  1. Do machines, 4,00,000 IDs: machine ids 1 aur 2 → duplicates 0;  galti se dono ko id 1 → duplicates 2,00,000
+  2. Clock 5 ms peeche (20,000 IDs, beech mein): guard band → duplicates 50;  guard chalu (Twitter jaisa: mana karo) → duplicates 0, 40 requests mana
+  3. Asli clock, 0.5 s tak jitni tez ho sake: 40,44,211 IDs/sec; 488 baar 4096 khatam → agle ms ka intezaar (seema 40,96,000/sec)
+  4. Machine B ki ghadi 30 ms peeche, A aur B baari baari (1 lakh events): 50,000 jagah agla event chhota ID paata hai;
+     ID ke order mein kuch events un events ke peeche aate hain jo asal mein 29 ms BAAD hue the
+     → Snowflake "lagbhag" time-order (k-sorted) hai; ek chalte generator ke andar pakka badhta hai.
+  5. Generator restart (same machine id 9, same ms): pehle 10 IDs, restart ke baad 10 → duplicates 10
+     → guard sirf EK chalte generator ko bachata hai. Restart par aakhri ms yaad rakho (disk par) ya us ms ke guzarne tak ruko.

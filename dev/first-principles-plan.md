@@ -242,7 +242,34 @@ per query (the earlier "SQL ≈ walk" result was this bug), deep walk mixed two 
 parallel, exact-search universality, the numeric pincode example, Q1 timed different work, k-means lists used stale
 assignments, IVF counts omitted centroids, no migration test; generation-stamp overflow.
 
+## Video 7: Sharding (2026-11-13)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-07-sharding/`. Built by Claude; Codex
+fact-checked the video claims (`sdg-codex-xp/jobs/fp7/CLAIMS-REVIEW.md`) and the lab. Levels `fp-shard-kyun` →
+`fp-shard-kaise` → `fp-shard-code` → `fp-shard-kab` (`data-v2-fp-shard-1…4`, group "🔪 Sharding", guide `shard`, sources
+`karger`, `rediscluster`, `twsnowflake`, `rfc9562`, `stripemig`). Builders: `sdg-codex-xp/jobs/fp7/levels/*.py`.
+Lab 57 (`docker-labs/57-sharding`, Node 24 `node:sqlite` + worker_threads; each shard is a worker thread with its own
+SQLite file): REAL range vs hash shard keys (hot tail, range and id queries with total shard work, fsync on one shared
+disk), key moves for `hash % N` vs a vnode ring, a viral vote key split into 1 / 10 / 40 sub-keys with three ways to read
+the total, 10 lakh inserts with six primary-key types plus Snowflake guards, co-location and a cross-shard transfer crash,
+and a seeded backfill race with four write rules, a sample check and repair.
+
+Lab 34 (ring, vnodes, cache misses) and lab 10 (dual write vs CDC, shadow cutover) already existed; this topic adds what
+they do not measure. Corrections taught: `hash % N` moves N/(N+1) on adding a shard ((N−1)/N is removal); with A 12, B 1,
+C 2 the long arc belongs to A; vnodes are near-even, not perfect; Redis Cluster uses 16,384 hash slots, not a ring; the ring
+is documented for Dynamo (2007), not the DynamoDB service; a hot key split 10 ways gave ~1.5–2.2× writes (sub-keys collide; the busiest shard is the limit)
+and reads cost k calls with latency set by how they are sent; Snowflake's 10 bits are generator ids (5 + 5), uniqueness
+needs distinct ids and a clock guard, order is only k-sorted; UUIDv7 (RFC 9562) is the time-ordered UUID; a version check
+alone cannot stop a deleted row coming back (tombstones), and a random sample is not proof of 100% consistency.
+
+Codex's lab review (4 P2 + 4 P3, all fixed and re-checked): the ex2 router was saturated (votes now go as typed arrays
+and both ex1/ex2 print router CPU %; ex1 also pipelines), backfill compare ignored the payload (whole-row compare,
+source-wins repair), UUIDv7 is random within one ms, Snowflake restart reuse and the 41-bit window (plus state left
+unchanged after a rejected time), placements changed between ex2 rounds, "heap + index" was a rowid table, and the sampler
+had no test. The levels review added the stopped-traffic repair boundary, saga vs 2PC guarantees, per-mode ex5 counts,
+SQLite REPLACE semantics, and dry-run clock values shown as t − EPOCH.
+
 ## Next
 
-Continue with numbered video 7, `X72epD9Qn3U` (Sharding — When One Disk is Not Enough); check the existing sharding,
-consistent-hashing material and lab 34 first. Videos 1–6 are built; nine remain.
+Continue with numbered video 8, `Ub9yZucpwC0` (CAP Theorem & PACELC); check the existing Distributed/Consistency
+levels (CAP/PACELC, clock skew, Raft lab 09) first. Videos 1–7 are built; eight remain.

@@ -1,0 +1,15 @@
+1,00,000 users, 5,00,000 orders, 4 shards. Users hamesha mix32(user_id) % 4 par.
+
+Q1. Ek user + user ke 5 orders, 500 users
+  layout A  shard calls 1   join shard ke andar (SQL)   shards ka op-samay  17 µs   median 70 µs   p99 212 µs
+  layout B  shard calls 5   join app mein (JS)          shards ka op-samay  78 µs   median 145 µs   p99 345 µs
+  user 777: dono layouts ka jawab ek jaisa? haan
+
+Q2. "Pune ke users ke kitne biryani orders?" — shard key sawaal mein nahi, dono layouts chaaron shards se poochte hain
+  layout A  19797 orders   shard calls 4   har shard apne andar join   bheje gaye ids 0        8.5 ms   shards ka op-samay 29.1 ms
+  layout B  19797 orders   shard calls 8   pehle Pune ids, phir har shard ko list   bheje gaye ids 79,872   28.6 ms   shards ka op-samay 82.3 ms
+
+Transfer: 2,000 baar ₹1 ek user se dusre ko; 2% baar app beech mein crash
+  ek hi shard par: 498 transfers, 9 crash → ek transaction, crash par dono steps wapas
+  do shards par:   1502 transfers, 38 crash → do alag commits, crash ke baad sirf debit hua
+  kul paisa pehle ₹1,00,00,000, baad mein ₹99,99,962 → ₹38 gayab
