@@ -243,7 +243,7 @@ dynamic edges  0                  →  0</pre>
         { text: 'CI server chalao.', cmd: 'cd docker-labs/13-stripe && npm start ex1-selective-tests', expect: 'ex1-selective-tests\nci → http://localhost:4821   (3000 functions, 1500 tests, DYNAMIC_EDGES=60)' },
         { text: 'Ek aam function badlo.', cmd: 'node tools/ci.js --changed 1234', expect: 'change fn 1234 | all       | tests 1500 (100.0%) |  6068 ms | failed 10/10 | missed 0\nchange fn 1234 | selective | tests   10 (0.7%) |    42 ms | failed 10/10 | missed 0' },
         { text: '300 random changes ka average.', cmd: 'node tools/ci.js --sample 300', expect: '300 random changes | selective avg 1.1% of suite | changes jahan failing test chhoota: 91 (2628 tests)   [dynamic edges: 60]' },
-        { text: 'Dynamic calls ghatao.', cmd: 'DYNAMIC_EDGES=5 npm start ex1-selective-tests\nnode tools/ci.js --sample 300', expect: '300 random changes | selective avg 1.1% of suite | changes jahan failing test chhoota: 4 (68 tests)     [dynamic edges: 5]' },
+        { text: 'Dynamic calls ghatao.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nDYNAMIC_EDGES=5 npm start ex1-selective-tests\n# Terminal 2:\nnode tools/ci.js --sample 300', expect: '300 random changes | selective avg 1.1% of suite | changes jahan failing test chhoota: 4 (68 tests)     [dynamic edges: 5]' },
       ],
       observe: {
         q: 'Sirf 60 dynamic calls (static ka ~1%) se 91/300 changes mein failing test kyun chhoota?',
@@ -405,9 +405,9 @@ WORKERS=8 EXTRAS=queue  420 charges/s | p50  30 ms | p99 142 ms   (14-core lapto
       why: `<code>services/charge.js</code>: har <code>/charge</code> ~12 ms CPU. <code>EXTRAS=sync</code> = receipt + analytics (8 ms)
         request ke andar; <code>queue</code> = alag <code>receipt-worker</code> process ko job. <code>WORKERS</code> = Node cluster processes.`,
       steps: [
-        { text: 'Ek process, extras sync.', cmd: 'cd docker-labs/13-stripe && WORKERS=1 EXTRAS=sync npm start ex2-gil\nnode tools/load.js --concurrency 16 --requests 800', expect: 'WORKERS=1 EXTRAS=sync   800 charges, concurrency 16:  46 charges/s | p50 296 ms | p99 682 ms' },
-        { text: 'Extras queue par.', cmd: 'WORKERS=1 EXTRAS=queue npm start ex2-gil\nnode tools/load.js --concurrency 16 --requests 800', expect: 'WORKERS=1 EXTRAS=queue  800 charges, concurrency 16:  73 charges/s | p50 189 ms | p99 399 ms' },
-        { text: '8 processes.', cmd: 'WORKERS=8 npm start ex2-gil\nnode tools/load.js --concurrency 16 --requests 800', expect: 'WORKERS=8 EXTRAS=queue  800 charges, concurrency 16: 420 charges/s | p50  30 ms | p99 142 ms' },
+        { text: 'Ek process, extras sync.', cmd: '# Terminal 1 (yeh chalta rahega):\ncd docker-labs/13-stripe && WORKERS=1 EXTRAS=sync npm start ex2-gil\n# Terminal 2 (naya terminal, isi lab folder mein):\nnode tools/load.js --concurrency 16 --requests 800', expect: 'WORKERS=1 EXTRAS=sync   800 charges, concurrency 16:  46 charges/s | p50 296 ms | p99 682 ms' },
+        { text: 'Extras queue par.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nWORKERS=1 EXTRAS=queue npm start ex2-gil\n# Terminal 2:\nnode tools/load.js --concurrency 16 --requests 800', expect: 'WORKERS=1 EXTRAS=queue  800 charges, concurrency 16:  73 charges/s | p50 189 ms | p99 399 ms' },
+        { text: '8 processes.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nWORKERS=8 npm start ex2-gil\n# Terminal 2:\nnode tools/load.js --concurrency 16 --requests 800', expect: 'WORKERS=8 EXTRAS=queue  800 charges, concurrency 16: 420 charges/s | p50  30 ms | p99 142 ms' },
       ],
       observe: {
         q: '14 cores ki machine par 1 process ~50 charges/s par kyun ruka?',

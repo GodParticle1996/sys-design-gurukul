@@ -251,8 +251,8 @@ SD.registerLevels('stories', [
       steps: [
         { text: 'Disk mode chalao (1 lakh records).', cmd: 'cd docker-labs/05-airtable && RECORDS=100000 npm start ex1-in-memory-base', expect: 'ex1-in-memory-base\n  worker → http://localhost:4501  (MODE=disk · 1,00,000 records)' },
         { text: 'Filter + rollup ka load chalao.', cmd: 'node tools/filter-load.js --queries 100', expect: 'MODE=disk   p50: 27 ms   p99: 474 ms   rss: 95 MB   (1,00,000 records)' },
-        { text: 'Ab memory mode.', cmd: 'RECORDS=100000 MODE=memory npm start ex1-in-memory-base && node tools/filter-load.js --queries 100', expect: 'MODE=memory p50: 3 ms   p99: 65 ms   rss: 110 MB   (1,00,000 records)' },
-        { text: 'Base ko bada karke chhat dekho.', cmd: 'RECORDS=1500000 MODE=memory npm start ex1-in-memory-base', expect: 'loading base…  15,00,000 records\n❌ worker refused: base ko ~5.1 GB chahiye, limit 4.0 GB (MAX_BASE_MB)\n   → yahi woh jagah hai jahan product mein "record limit" likhni padti hai' },
+        { text: 'Ab memory mode.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nRECORDS=100000 MODE=memory npm start ex1-in-memory-base\n# Terminal 2:\nnode tools/filter-load.js --queries 100', expect: 'MODE=memory p50: 3 ms   p99: 65 ms   rss: 110 MB   (1,00,000 records)' },
+        { text: 'Base ko bada karke chhat dekho.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nRECORDS=1500000 MODE=memory npm start ex1-in-memory-base', expect: 'loading base…  15,00,000 records\n❌ worker refused: base ko ~5.1 GB chahiye, limit 4.0 GB (MAX_BASE_MB)\n   → yahi woh jagah hai jahan product mein "record limit" likhni padti hai' },
       ],
       observe: {
         q: 'Memory mode mein p50 27 ms se 3 ms ho gaya, par RSS 95 MB se 110 MB — aur 15 lakh records par worker ne mana kar diya. Kis cheez ke badle kya mila?',
@@ -508,7 +508,7 @@ SD.registerLevels('stories', [
       steps: [
         { text: 'Rerun mode chalao.', cmd: 'cd docker-labs/05-airtable && npm start ex2-live-views', expect: 'ex2-live-views\n  base-worker → http://localhost:4502  (VIEWS=rerun · 20,000 rows)' },
         { text: 'Load chalao: 40 viewers, 20 writes/second, 5 second.', cmd: 'node tools/views.js --viewers 40 --wps 20 --for 5', expect: 'VIEWS=rerun viewers: 40   view queries run: 3,360   rows sent: 99,45,600   diffs sent: 0   write p99: 19 ms' },
-        { text: 'Ab diff mode.', cmd: 'VIEWS=diff npm start ex2-live-views && node tools/views.js --viewers 40 --wps 20 --for 5', expect: 'VIEWS=diff  viewers: 40   view queries run: 40   rows sent: 1,19,024   diffs sent: 624   write p99: 4 ms\n(1.19 lakh mein se lagbhag sab shuruaati view-load; writes ke dauraan sirf 624 diffs)' },
+        { text: 'Ab diff mode.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nVIEWS=diff npm start ex2-live-views\n# Terminal 2:\nnode tools/views.js --viewers 40 --wps 20 --for 5', expect: 'VIEWS=diff  viewers: 40   view queries run: 40   rows sent: 1,19,024   diffs sent: 624   write p99: 4 ms\n(1.19 lakh mein se lagbhag sab shuruaati view-load; writes ke dauraan sirf 624 diffs)' },
         { text: 'Dependency chain ka asar dekho: ek cell badlo jispar formula, rollup aur lookup nirbhar hain.', cmd: 'node tools/deps.js', expect: 'changed: rows[4].qty\n  → formula line_total      (1 record)\n  → rollup  order_total     (1 record)\n  → lookup  customer_spend  (1 record)\nrecomputed: 3 records · views touched: 1 · rows sent: 1' },
       ],
       observe: {

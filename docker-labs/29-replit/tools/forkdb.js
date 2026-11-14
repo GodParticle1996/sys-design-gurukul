@@ -18,7 +18,7 @@ console.log(`production users table: ${prod.count().toLocaleString('en-US')} row
 let t = process.hrtime.bigint(); const fork = new Table(prod); const forkMs = Number(process.hrtime.bigint() - t) / 1e6;
 console.log(`fork banaya: ${forkMs.toFixed(3)} ms, overlay mein ${fork.overlaySize()} rows (kuch copy nahi hua)`);
 fork.set(7, { name: 'user7', plan: 'pro' }); fork.del(8); fork.set(999999, { name: 'test-user', plan: 'free' });
-console.log(`agent ne fork mein 3 badlaav kiye → overlay ${fork.overlaySize()} rows | fork: user 7 = ${fork.get(7).plan}, user 8 = ${fork.get(8)}, prod: user 7 = ${prod.get(7).plan}, user 8 = ${prod.get(8).name}`);
+console.log(`agent ne fork mein 3 badlaav kiye → overlay ${fork.overlaySize()} rows | fork: user 7 = ${fork.get(7).plan}, user 8 = ${fork.get(8) ? fork.get(8).name : "(delete ho gaya)"}, prod: user 7 = ${prod.get(7).plan}, user 8 = ${prod.get(8).name}`);
 console.log('\nAb agent galti se: "DROP TABLE users" (fork mein)');
 fork.drop();
 console.log(`  fork mein users: ${fork.count()}      production mein users: ${prod.count().toLocaleString('en-US')}  ✅ asli data ko haath bhi nahi laga`);

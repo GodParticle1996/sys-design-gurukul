@@ -422,7 +422,7 @@ data  table   (thing_id, key, value)                     ← title, url, author,
         { text: 'Lab folder mein jao.', cmd: 'cd docker-labs/01-reddit' },
         { text: 'Sync mode chalao (Docker ho to compose profile, warna npm).', cmd: 'npm start ex1-facts-answers', expect: 'ex1-facts-answers\n  vote-service   → http://localhost:4101  (MODE=sync)' },
         { text: 'Doosre terminal mein load tool chalao aur p50/p99 note karo.', cmd: 'node tools/vote-load.js --votes 150 --rate 25 --readers 10', expect: 'MODE=sync   vote p99: 23 ms   vote p50: 22 ms   read p99: 50 ms   answers repaired: 3000   queue peak: 0' },
-        { text: 'Ab async mode chalao.', cmd: 'MODE=async npm start ex1-facts-answers', expect: 'ex1-facts-answers\n  vote-service   → http://localhost:4101  (MODE=async)' },
+        { text: 'Ab async mode chalao.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nMODE=async npm start ex1-facts-answers', expect: 'ex1-facts-answers\n  vote-service   → http://localhost:4101  (MODE=async)' },
         { text: 'Wahi load dobara chalao aur dono ke numbers compare karo.', cmd: 'node tools/vote-load.js --votes 150 --rate 25 --readers 10', expect: 'MODE=async  vote p99: 4 ms   vote p50: 2 ms   read p99: 37 ms   answers repaired: 3000   queue peak: 20   drain: 0.0 s' },
       ],
       observe: {
@@ -701,7 +701,7 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
       steps: [
         { text: 'Submission-time wala mode chalao (lab mein 1 second = 1 simulated ghanta).', cmd: 'npm start ex2-hot-rank', expect: 'ex2-hot-rank\n  rank-service   → http://localhost:4102  (CLOCK=submitted · 1 second = 1 simulated ghanta)' },
         { text: 'Checker chalao — stored listing ko har 3 second par live ranking se compare karta hai. Koi vote NAHI bheja ja raha.', cmd: 'node tools/rank-check.js --for 12 --every 3', expect: 'CLOCK=submitted drift checks: 4   listings wrong: 0   worst positions wrong (top 25): 0   rebuilds needed: 0' },
-        { text: 'Ab current-time wale mode par switch karo.', cmd: 'CLOCK=now npm start ex2-hot-rank', expect: 'ex2-hot-rank\n  rank-service   → http://localhost:4102  (CLOCK=now · 1 second = 1 simulated ghanta)' },
+        { text: 'Ab current-time wale mode par switch karo.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nCLOCK=now npm start ex2-hot-rank', expect: 'ex2-hot-rank\n  rank-service   → http://localhost:4102  (CLOCK=now · 1 second = 1 simulated ghanta)' },
         { text: 'Wahi checker dobara chalao.', cmd: 'node tools/rank-check.js --for 12 --every 3', expect: 'CLOCK=now       drift checks: 4   listings wrong: 4   worst positions wrong (top 25): 22   rebuilds needed: 4' },
       ],
       observe: {
@@ -1081,8 +1081,8 @@ B: 300 upvote, 100 downvote   →   75% positive  (sample = 400)</pre>
       steps: [
         { text: 'Bina lock ke chalao.', cmd: 'npm start ex3-cache-layers', expect: 'ex3-cache-layers\n  listing-service → http://localhost:4103  (LOCK=0 STALE=0 · rebuild 800 ms)' },
         { text: 'Stampede tool chalao — cache expire karke 500 requests ek saath.', cmd: 'node tools/stampede.js --concurrency 500', expect: 'LOCK=0 STALE=0   rebuilds: 177   p50: 1698 ms   p99: 2373 ms   db busy: 166.3 s' },
-        { text: 'Sirf lock on karke dobara chalao.', cmd: 'LOCK=1 npm start ex3-cache-layers && node tools/stampede.js --concurrency 500', expect: 'LOCK=1 STALE=0   rebuilds: 1   p50: 867 ms   p99: 869 ms   db busy: 0.8 s   served: {"rebuild":1,"waited":499}' },
-        { text: 'Ab lock + stale dono on.', cmd: 'LOCK=1 STALE=1 npm start ex3-cache-layers && node tools/stampede.js --concurrency 500', expect: 'LOCK=1 STALE=1   rebuilds: 1   p50: 256 ms   p99: 261 ms   db busy: 0.8 s   served: {"stale":499,"rebuild":1}' },
+        { text: 'Sirf lock on karke dobara chalao.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nLOCK=1 npm start ex3-cache-layers\n# Terminal 2:\nnode tools/stampede.js --concurrency 500', expect: 'LOCK=1 STALE=0   rebuilds: 1   p50: 867 ms   p99: 869 ms   db busy: 0.8 s   served: {"rebuild":1,"waited":499}' },
+        { text: 'Ab lock + stale dono on.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nLOCK=1 STALE=1 npm start ex3-cache-layers\n# Terminal 2:\nnode tools/stampede.js --concurrency 500', expect: 'LOCK=1 STALE=1   rebuilds: 1   p50: 256 ms   p99: 261 ms   db busy: 0.8 s   served: {"stale":499,"rebuild":1}' },
       ],
       observe: {
         q: 'README mein lock se 177 rebuilds 1 hue; stale on se p50 867 ms se 256 ms hua. Kyun?',

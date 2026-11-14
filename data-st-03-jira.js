@@ -334,9 +334,9 @@ SD.registerLevels('stories', [
       steps: [
         { text: 'Shared-table mode chalao.', cmd: 'cd docker-labs/03-jira && npm start ex1-tenant-isolation', expect: 'ex1-tenant-isolation\n  api → http://localhost:4301  (TENANCY=shared · pool 40)' },
         { text: 'Leak test chalao — ek tenant ke token se "salary" search karo.', cmd: 'node tools/leak-test.js', expect: 'TENANCY=shared  /search?q=salary → 200 rows   (150 rows DOOSRE tenants ke)   ❌ leak' },
-        { text: 'Per-tenant DB mode par jao aur leak test dobara.', cmd: 'TENANCY=perdb npm start ex1-tenant-isolation && node tools/leak-test.js', expect: 'TENANCY=perdb   /search?q=salary → 50 rows   (0 rows DOOSRE tenants ke)   ✅' },
+        { text: 'Per-tenant DB mode par jao aur leak test dobara.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nTENANCY=perdb npm start ex1-tenant-isolation\n# Terminal 2:\nnode tools/leak-test.js', expect: 'TENANCY=perdb   /search?q=salary → 50 rows   (0 rows DOOSRE tenants ke)   ✅' },
         { text: 'Ab monster tenant ke saath load daalo (abhi bina cap ke).', cmd: 'node tools/noisy.js --monster 25 --others 10 --for 3', expect: 'TENANCY=perdb            others p99: 992 ms   monster p99: 1020 ms   monster ne max 40/40 connections liye' },
-        { text: 'Per-tenant connection cap on karke wahi load dobara.', cmd: 'TENANCY=perdb CAP=8 npm start ex1-tenant-isolation && node tools/noisy.js --monster 25 --others 10 --for 3', expect: 'TENANCY=perdb   CAP=8  others p99: 64 ms   monster p99: 12442 ms   monster ne max 8/40 connections liye' },
+        { text: 'Per-tenant connection cap on karke wahi load dobara.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nTENANCY=perdb CAP=8 npm start ex1-tenant-isolation\n# Terminal 2:\nnode tools/noisy.js --monster 25 --others 10 --for 3', expect: 'TENANCY=perdb   CAP=8  others p99: 64 ms   monster p99: 12442 ms   monster ne max 8/40 connections liye' },
       ],
       observe: {
         q: 'Per-tenant database par jaane ke baad bhi doosre tenants ka p99 992 ms tha. Cap lagane par 64 ms (aur monster ka p99 12,442 ms). Kyun?',
@@ -925,7 +925,7 @@ naive tareeka    →  10,00,000 permission checks, sirf 20 rows dikhane ke liye<
       steps: [
         { text: 'Dataset load karo (3 lakh issues, 2,000 projects, 64 shards).', cmd: 'cd docker-labs/03-jira && npm start ex3-permission-search', expect: 'ex3-permission-search\n  search → http://localhost:4320  (3,00,000 issues · 2000 projects · 64 shards · PERM=after)' },
         { text: 'Filter-after mode mein search chalao.', cmd: 'node tools/search.js --user analyst', expect: 'PERM=after  matched: 2,00,000   permission checks: 2,00,000   scanned: 3,00,000   shards touched: 64/64   time: 699 ms   returned: 20' },
-        { text: 'Permissions ko query ke andar daal kar dobara.', cmd: 'PERM=inside npm start ex3-permission-search && node tools/search.js --user analyst', expect: 'PERM=inside matched: 8,000   permission checks: 20   scanned: 3,00,000   shards touched: 64/64   time: 63 ms   returned: 20' },
+        { text: 'Permissions ko query ke andar daal kar dobara.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nPERM=inside npm start ex3-permission-search\n# Terminal 2:\nnode tools/search.js --user analyst', expect: 'PERM=inside matched: 8,000   permission checks: 20   scanned: 3,00,000   shards touched: 64/64   time: 63 ms   returned: 20' },
         { text: 'Ab project-scoped query chalao aur dekho kitne shards chhue gaye.', cmd: 'node tools/search.js --user analyst --project 7', expect: 'PERM=inside matched: 100   permission checks: 0   scanned: 150   shards touched: 1/64   time: 41 ms   returned: 20' },
       ],
       observe: {

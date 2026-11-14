@@ -12,6 +12,9 @@ machine par thode alag aayenge — pattern wahi rahega.
 
 ---
 
+> 🖥️ **Do terminal chahiye.** `npm start <exercise>` server chalata rehta hai (Terminal 1). Tools Terminal 2 mein chalao.
+> Mode badalna ho (`MODE=... npm start ...`) toh pehle Terminal 1 mein **Ctrl+C**, phir naya `npm start`.
+
 ## ex1-facts-answers — user ka intezaar kitna chhota ho
 
 `services/vote-service.js` ek vote par **20 answers** theek karta hai (score, listings,
@@ -75,8 +78,10 @@ expire karke 500 requests ek saath bhejta hai.
 npm start ex3-cache-layers                        # LOCK=0 STALE=0
 node tools/stampede.js --concurrency 500
 
-LOCK=1 npm start ex3-cache-layers && node tools/stampede.js --concurrency 500
-LOCK=1 STALE=1 npm start ex3-cache-layers && node tools/stampede.js --concurrency 500
+LOCK=1 npm start ex3-cache-layers        # Terminal 1 (pehle Ctrl+C)
+node tools/stampede.js --concurrency 500        # Terminal 2
+LOCK=1 STALE=1 npm start ex3-cache-layers        # Terminal 1 (pehle Ctrl+C)
+node tools/stampede.js --concurrency 500        # Terminal 2
 ```
 
 Asli output:

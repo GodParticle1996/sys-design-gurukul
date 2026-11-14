@@ -246,8 +246,8 @@ CLUSTERING KEY  =  message id — jisme waqt encoded hai, naya pehle</pre>
       steps: [
         { text: 'Store chalao (8 nodes, 10,000 channels, KEY=channel).', cmd: 'cd docker-labs/07-discord && npm start ex1-partition-key', expect: 'ex1-partition-key\n  store → http://localhost:4701  (8 nodes · 10,000 channels · KEY=channel)' },
         { text: 'Skewed traffic chalao (ek channel par 45% load).', cmd: 'node tools/skew.js --hot-share 45 --requests 3000', expect: 'KEY=channel       hottest node: 52.4% of load   p99: 571 ms   partitions per read: 1' },
-        { text: 'Hash (message id) par switch karo.', cmd: 'KEY=hash npm start ex1-partition-key && node tools/skew.js --hot-share 45 --requests 3000', expect: 'KEY=hash          hottest node: 12.5% of load   p99: 3489 ms   partitions per read: 8' },
-        { text: 'Ab channel + time bucket.', cmd: 'KEY=channel-time BUCKETS=4 npm start ex1-partition-key && node tools/skew.js --hot-share 45 --requests 3000', expect: 'KEY=channel-time  hottest node: 18.5% of load   p99: 324 ms   partitions per read: 2' },
+        { text: 'Hash (message id) par switch karo.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nKEY=hash npm start ex1-partition-key\n# Terminal 2:\nnode tools/skew.js --hot-share 45 --requests 3000', expect: 'KEY=hash          hottest node: 12.5% of load   p99: 3489 ms   partitions per read: 8' },
+        { text: 'Ab channel + time bucket.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nKEY=channel-time BUCKETS=4 npm start ex1-partition-key\n# Terminal 2:\nnode tools/skew.js --hot-share 45 --requests 3000', expect: 'KEY=channel-time  hottest node: 18.5% of load   p99: 324 ms   partitions per read: 2' },
       ],
       observe: {
         q: 'Hash partitioning ne load sabse achha baanta, phir bhi hash sahi jawab kyun nahi hai?',
@@ -502,7 +502,7 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
         { text: 'Partition + teen data-service instances chalao (coalescing off).', cmd: 'cd docker-labs/07-discord && npm start ex2-coalescing', expect: 'ex2-coalescing\n  partition → http://localhost:4714  (8 concurrent · 80 ms per query)\n  data-service   → http://localhost:4711  (COALESCE=0)   … 4712, 4713' },
         { text: '3,000 clients ek hi channel ek saath kholte hain, bina retry ke.', cmd: 'node tools/herd.js --clients 3000 --retries 0', expect: 'ROUTE=random COALESCE=0   retries: 0   db queries: 2,417   p99: 1725 ms   failed: 2920' },
         { text: 'Ab client retries on karke amplification dekho.', cmd: 'node tools/herd.js --clients 3000 --retries 2', expect: 'ROUTE=random COALESCE=0   retries: 2   db queries: 7,505   p99: 9828 ms   failed: 2844   ← 3.1× queries' },
-        { text: 'Coalescing on karo (routing abhi random).', cmd: 'COALESCE=1 npm start ex2-coalescing && node tools/herd.js --clients 3000 --retries 2', expect: 'ROUTE=random COALESCE=1   retries: 2   db queries: 9   p99: 1223 ms   failed: 0   merged in data-service: 2,991' },
+        { text: 'Coalescing on karo (routing abhi random).', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nCOALESCE=1 npm start ex2-coalescing\n# Terminal 2:\nnode tools/herd.js --clients 3000 --retries 2', expect: 'ROUTE=random COALESCE=1   retries: 2   db queries: 9   p99: 1223 ms   failed: 0   merged in data-service: 2,991' },
         { text: 'Consistent hash routing bhi on karo.', cmd: 'ROUTE=hash node tools/herd.js --clients 3000 --retries 2', expect: 'ROUTE=hash   COALESCE=1   retries: 2   db queries: 8   p99: 2141 ms   failed: 0   merged in data-service: 4,179' },
       ],
       observe: {

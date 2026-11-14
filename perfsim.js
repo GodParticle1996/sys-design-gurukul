@@ -120,9 +120,10 @@ function bestIndex(t, whereCols, orderBy) {
   (t.indexes || []).forEach(def => {
     let n = 0;
     for (const col of def.cols) { if (used.includes(col.toLowerCase())) n++; else break; }
-    // ORDER BY bhi prefix ke turant baad aaye toh index sorted output de deta hai
-    const sorted = !!orderBy && def.cols.length > n &&
-      def.cols[n].toLowerCase() === String(orderBy).toLowerCase();
+    /* Index sorted output tab deta hai jab ORDER BY wala column (a) filter wale prefix ke turant baad ho —
+       (user_id, created_at) + WHERE user_id = ? ORDER BY created_at — ya (b) khud filter wale prefix mein ho —
+       (reminder_at) + WHERE reminder_at < ? ORDER BY reminder_at: range scan usi kram mein chalta hai. */
+    const sorted = !!orderBy && def.cols.slice(0, n + 1).some(c => c.toLowerCase() === String(orderBy).toLowerCase());
     const sortedOnly = !whereCols.length && !!orderBy &&
       def.cols[0].toLowerCase() === String(orderBy).toLowerCase();
     if (n > 0 || sortedOnly) {
@@ -192,20 +193,23 @@ SD.queryCost = function (sys, q) {
 
   if (best && (best.matched > 0 || best.sorted)) {
     const universe = best.matched > 0 ? narrowed(t.rows, best.matched) : t.rows;
-    const walked = Math.min(universe, need);
+    /* Index sirf filter karta hai, sort nahi deta → LIMIT se pehle rukna mumkin nahi: filter se mili SAARI rows
+       padhni padti hain, phir sort, phir upar ki `need` rows. Jaldi rukna tabhi hota hai jab index khud sorted de. */
+    const mustSort = !best.sorted && !!q.orderBy;
+    const walked = mustSort ? universe : Math.min(universe, need);
     const covering = (q.select || []).length > 0 &&
       q.select.every(c => c === '*' ? false : best.def.cols.some(dc => dc.toLowerCase() === c.toLowerCase()));
     let ms = COST.SEEK + walked * COST.IDX_ENTRY * cf;
     if (!covering) ms += walked * COST.PK_LOOKUP * cf;
-    if (!best.sorted && q.orderBy) { ms += walked * COST.SORT_ROW; notes.push('Index sort order nahi deta — ' + fmt(walked) + ' rows ko sort karna pada.'); }
+    if (mustSort) { ms += walked * COST.SORT_ROW; notes.push('Index sort order nahi deta — filter se mili ' + fmt(walked) + ' rows padhkar sort karni padi, tab jaakar ' + fmt(Math.min(limit, walked)) + ' mili. Sort wala column index mein filter ke turant baad jodo.'); }
     if (offset > 1000) {
       notes.push('OFFSET ' + fmt(offset) + ' → index par ' + fmt(walked) + ' entries WALK ki gayi aur PHENK di gayi. ' +
         'Index skip nahi kar sakta, sirf tez walk karta hai.');
     }
     return {
       ms: +ms.toFixed(2), rowsExamined: walked, rowsSent: Math.min(limit, Math.max(0, universe - offset)),
-      plan: covering ? 'Index Only Scan' : 'Index Scan', key: best.def.name,
-      extra: covering ? 'Using index' : 'Using index condition', notes,
+      plan: (covering ? 'Index Only Scan' : 'Index Scan') + (mustSort ? ' + Sort' : ''), key: best.def.name,
+      extra: mustSort ? 'Sort Method: top-N heapsort' : covering ? 'Using index' : 'Using index condition', notes,
     };
   }
 

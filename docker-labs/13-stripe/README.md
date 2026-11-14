@@ -8,6 +8,9 @@ WORKERS=4 npm start ex2-gil                      # charge API (4822) + receipt w
 docker compose --profile ex1-selective-tests up --build   # ya Docker se
 ```
 
+> 🖥️ **Do terminal chahiye.** `npm start <exercise>` server chalata rehta hai (Terminal 1). Tools Terminal 2 mein chalao.
+> Mode badalna ho (`MODE=... npm start ...`) toh pehle Terminal 1 mein **Ctrl+C**, phir naya `npm start`.
+
 ## ex1-selective-tests — 1,500 tests mein se sirf kaam ke
 
 `lib/repo.js` ek nakli monolith banata hai: **3,000 functions, 1,500 tests**, 30-30 functions ke modules, kuch shared "core"
@@ -57,10 +60,14 @@ thread par chalata hai — Ruby ke **GIL** jaisa: 14 cores hon, ek process ek wa
 ya toh request ke **andar** (`EXTRAS=sync`) ya **alag worker process** ko job (`EXTRAS=queue`).
 
 ```bash
-WORKERS=1 EXTRAS=sync  npm start ex2-gil   &&  node tools/load.js --concurrency 16 --requests 800
-WORKERS=1 EXTRAS=queue npm start ex2-gil   &&  node tools/load.js ...
-WORKERS=4 npm start ex2-gil                &&  node tools/load.js ...
-WORKERS=8 npm start ex2-gil                &&  node tools/load.js ...
+WORKERS=1 EXTRAS=sync npm start ex2-gil        # Terminal 1 (pehle Ctrl+C)
+node tools/load.js --concurrency 16 --requests 800        # Terminal 2
+WORKERS=1 EXTRAS=queue npm start ex2-gil        # Terminal 1 (pehle Ctrl+C)
+node tools/load.js --concurrency 16 --requests 800        # Terminal 2
+WORKERS=4 npm start ex2-gil        # Terminal 1 (pehle Ctrl+C)
+node tools/load.js --concurrency 16 --requests 800        # Terminal 2
+WORKERS=8 npm start ex2-gil        # Terminal 1 (pehle Ctrl+C)
+node tools/load.js --concurrency 16 --requests 800        # Terminal 2
 ```
 
 ```

@@ -84,20 +84,25 @@
     steps.forEach((s, idx) => {
       const li = el('li', 'dk-step');
       li.appendChild(el('div', 'dk-text', s.text));
-      if (s.cmd) {
+      /* cmd ki har line ek ALAG command hai, apne Copy button ke saath. "# " se shuru hone wali line
+         command nahi, agli command ka label hai ("# Terminal 2:"). Kyun: `npm start <exercise>` server
+         chalata REHTA hai — use aur tool ko ek hi line/terminal mein (`npm start x && node tools/y.js`)
+         likhne se tool kabhi chalta hi nahi. Server = Terminal 1, tool = Terminal 2, alag-alag copy. */
+      String(s.cmd || '').split('\n').map(line => line.trim()).filter(Boolean).forEach(line => {
+        if (line.startsWith('# ')) { li.appendChild(el('div', 'dk-note dk-cmdlabel', escapeHtml(line.slice(2)))); return; }
         const row = el('div', 'dk-cmdrow');
-        row.appendChild(el('pre', 'dk-cmd', escapeHtml(s.cmd)));
+        row.appendChild(el('pre', 'dk-cmd', escapeHtml(line)));
         const copy = el('button', 'btn ghost small dk-copy', '📋 Copy');
         copy.onclick = () => {
           try {
             if (typeof navigator !== 'undefined' && navigator.clipboard) {
-              Promise.resolve(navigator.clipboard.writeText(s.cmd)).then(() => { copy.textContent = '✅ Copied'; }, () => { copy.textContent = 'Select karke copy karo'; });
+              Promise.resolve(navigator.clipboard.writeText(line)).then(() => { copy.textContent = '✅ Copied'; }, () => { copy.textContent = 'Select karke copy karo'; });
             } else copy.textContent = 'Select karke copy karo';
           } catch (e) { copy.textContent = 'Select karke copy karo'; }
         };
         row.appendChild(copy);
         li.appendChild(row);
-      }
+      });
       if (s.expect) {
         const ex = el('details', 'dk-expect');
         ex.innerHTML = `<summary>👀 Kya dikhna chahiye?</summary><pre>${escapeHtml(s.expect)}</pre>`;

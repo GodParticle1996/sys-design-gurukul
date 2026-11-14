@@ -32,6 +32,12 @@ function serve(port, routes, onReady) {
       if (!res.writableEnded) json(res, 500, { error: String(e && e.message || e) });
     }
   });
+  /* Port busy = purana `npm start` abhi bhi kisi terminal mein chal raha hai. Stack trace ki jagah seedhi baat. */
+  server.on('error', e => {
+    if (e.code !== 'EADDRINUSE') throw e;
+    console.error(`\n❌ Port ${port} pehle se busy hai — purana "npm start" abhi bhi kisi terminal mein chal raha hai.\n   Us terminal mein Ctrl+C dabao, phir yeh command dobara chalao.\n`);
+    process.exit(1);
+  });
   server.listen(port, () => onReady && onReady(server));
   return server;
 }

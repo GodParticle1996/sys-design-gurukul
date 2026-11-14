@@ -9,6 +9,9 @@ Numbers asli run ke hain (Node 24, ek laptop) — tumhare machine par thode alag
 
 ---
 
+> 🖥️ **Do terminal chahiye.** `npm start <exercise>` server chalata rehta hai (Terminal 1). Tools Terminal 2 mein chalao.
+> Mode badalna ho (`MODE=... npm start ...`) toh pehle Terminal 1 mein **Ctrl+C**, phir naya `npm start`.
+
 ## ex1-partition-key — load ka batwara vs read ka kharcha
 
 8 nodes, 10,000 channels. Ek "viral" channel ko 45% traffic. Teen partition schemes:
@@ -17,8 +20,10 @@ Numbers asli run ke hain (Node 24, ek laptop) — tumhare machine par thode alag
 ```bash
 npm start ex1-partition-key                                   # KEY=channel
 node tools/skew.js --hot-share 45 --requests 3000
-KEY=hash npm start ex1-partition-key && node tools/skew.js --hot-share 45 --requests 3000
-KEY=channel-time BUCKETS=4 npm start ex1-partition-key && node tools/skew.js --hot-share 45 --requests 3000
+KEY=hash npm start ex1-partition-key        # Terminal 1 (pehle Ctrl+C)
+node tools/skew.js --hot-share 45 --requests 3000        # Terminal 2
+KEY=channel-time BUCKETS=4 npm start ex1-partition-key        # Terminal 1 (pehle Ctrl+C)
+node tools/skew.js --hot-share 45 --requests 3000        # Terminal 2
 ```
 
 ```

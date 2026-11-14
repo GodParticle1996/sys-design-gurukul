@@ -484,6 +484,59 @@ Niyam jo yahan seekhe gaye:
 - CPU "kaam" ke liye `Date.now()` loop mat lagao (1 ms ki rounding) — `process.hrtime.bigint()`.
 - Processes ko naam (`pkill -f`) se mat maaro — PID se.
 
+### 9.1 🧯 Lab review ke notes (2026-11-13) — yeh galtiyan `node validate.js` se nahi pakdi gayi thi
+
+Review mein har lab ka har README command sach mein chalaya gaya. Neeche ki har baat ek asli bug thi jo learner ko
+rok deti. Naya lab likhne ya purana badalne se pehle yeh padho.
+
+**(a) `npm start <exercise>` kabhi khatam nahi hota (labs 01–44) — use kisi command ke saath `&&` se mat jodo.**
+29 stage commands aur 18 README lines aise the: `npm start ex2-hot-rank && node tools/vote-load.js`. Server chalta rehta
+hai, isliye `&&` ke baad wala tool kabhi nahi chalta. Learner ko do terminal chahiye: Terminal 1 = server, Terminal 2 = tool.
+
+- Stage ke `cmd` mein har line ek alag command hai (apna Copy button). `# ` se shuru line label hai, command nahi:
+  ```js
+  cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nMODE=json npm start ex1-json-vs-binary\n# Terminal 2:\nnode tools/load.js --n 2000',
+  ```
+- README mein: `npm start ex2 …   # Terminal 1 (pehle Ctrl+C)` aur agli line `node tools/x.js   # Terminal 2`.
+- Labs 45+ alag hain: `npm start -- exN` chalkar khud khatam hota hai. Wahan do terminal ki zaroorat nahi.
+- Step ki ginti mat badlo (ek step ke `cmd` ko do steps mein mat todo): `exercise-solutions.json` har step ka index yaad rakhta hai.
+
+**(b) Env var us process par lagao jo use padhta hai.** `SANDBOX=heavy node tools/tenants.js` kuch nahi karta agar `SANDBOX`
+ko server padhta hai (lab 02 ex4, lab 21 ex3 mein yahi tha). Setting server ki hai → server ko us env ke saath **restart** karo,
+phir tool chalao. `node tools/lab-lint.js` ise `ENV-TOOL` naam se pakadta hai.
+
+**(c) Jo tool khud server chalata hai, woh `npm start` wale server se port par takrayega.** Lab 06 ka `crash-mid-fanout.js`
+port 4603 par apna channel-server chalata tha, jabki `npm start ex2-fanout-ack` usi port par pehle se baitha tha. Ab tool pehle
+chalte hue server se `POST /admin/exit` kehta hai, phir apna server chalata hai. Naya "crash/restart" tool likho toh yahi karo,
+ya tool ko alag port do. `lib/util.js` ka `serve()` ab busy port par stack trace ki jagah seedha bolta hai: "Port N pehle se busy hai … Ctrl+C dabao".
+
+**(d) Lab sirf `data/` ya `workspace/` mein likhe, aur woh file git mein kabhi na ho.** Do state files (`06-slack/data/pending.json`,
+`10-migration/data/cdc-offset.json`) tracked thi; ek mein purane run ka `{"offset":9600}` commit ho chuka tha. Ab dono untracked
+hain aur `.gitignore` mein `docker-labs/*/data/*` aur `docker-labs/*/workspace/*` hain (sirf `.gitkeep` bachta hai).
+Lab chalane ke baad `git status` saaf rehna chahiye. `git add -A` / `git add .` is repo mein mat chalao — doosre agent ka adhoora kaam
+aur runtime files saath chale jaate hain; hamesha naam lekar `git add <path>`.
+
+**(e) Do tools — commit se pehle dono chalao:**
+
+| Tool | Kya karta hai | Kitna waqt |
+|---|---|---|
+| `node tools/lab-lint.js [lab …]` | Bina kuch chalaye padhta hai: `&&` chain, galat process par env, na-maujood tool/flag/exercise, `...` wala command | ~2 s |
+| `node tools/run-labs.js [lab …]` | Lab ko temp folder mein copy karke README ka har command **sach mein** chalata hai; exit code, timeout aur "lab ne kahan likha" batata hai | 20 s – 3 min per lab |
+
+`run-labs.js` ka ✅ sirf itna kehta hai ki commands chalte hain. Numbers sahi kahani sunate hain ya nahi — yeh log
+(`<tmp>/sdg-lab-logs/<lab>.log`) ko README ke chhape output se milakar hi pata chalta hai. Absolute numbers machine se badalte hain;
+**pattern** (kaun tez, kaun fail, kitna guna) wahi rehna chahiye. `flags=NaN/undefined/stack-trace` dikhe toh log zaroor kholo.
+
+**(f) perfsim ka ek niyam jo galat tha: LIMIT tabhi jaldi rokta hai jab index sorted rows de.**
+`WHERE user_id = ? ORDER BY created_at LIMIT 50` par sirf `(user_id)` index ho toh database us user ki **saari** rows padhkar sort
+karta hai; simulator pehle sirf 50 rows ginta tha, yaani `(user_id)` aur `(user_id, created_at)` mein koi farak hi nahi dikhta tha.
+Ab `queryCost` filter ki saari rows + sort ginta hai (`Index Scan + Sort`), aur `bestIndex` us index ko sorted maanta hai jiska
+sort column filter wale prefix mein ya uske turant baad ho. `btree` mission ab yahi dikhata hai (pehle `(user_id)`, phir
+`(user_id, created_at)`). Test: `tools/replay-missions.js` ("Filter-only index with ORDER BY …").
+Sabak: simulator ka shortcut tab tak theek hai jab tak woh kisi lesson ka **natija ulta** na kar de. Cost model badlo toh
+`node validate.js` ke saath har mission ka solution dobara chalta hai — jo mission toote, use model ke saath hi theek karo
+(validator maangta hai ki solution ka har step kisi task ke liye zaroori ho).
+
 ---
 
 ## 10. 🔍 `dryrun` / `cards` stage + `SD.viz.svg` (`explain.js`)

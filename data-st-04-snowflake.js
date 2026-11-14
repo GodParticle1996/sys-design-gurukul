@@ -224,7 +224,7 @@ Brain    — cloud services layer: metadata, query planning, transactions, secur
       steps: [
         { text: 'Single pool mode chalao (storage alag, engine alag).', cmd: 'cd docker-labs/04-snowflake && npm start ex1-split-compute', expect: 'ex1-split-compute\n  storage → http://localhost:4400  (50,00,000 rows — compute se alag)\n  engine  → http://localhost:4401  (MODE=one · pool 4 workers)' },
         { text: 'Teenon workloads ek saath chalao.', cmd: 'node tools/workloads.js --for 4', expect: 'MODE=one   bi p99: 3122 ms   bi p50: 732 ms   ds p99: 5135 ms   etl queries: 69   (bi 414 queries)' },
-        { text: 'Ab har workload ka apna pool.', cmd: 'MODE=split npm start ex1-split-compute && node tools/workloads.js --for 4', expect: 'MODE=split bi p99: 1008 ms   bi p50: 252 ms   ds p99: 293 ms   etl queries: 79   (bi 474 queries)' },
+        { text: 'Ab har workload ka apna pool.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nMODE=split npm start ex1-split-compute\n# Terminal 2:\nnode tools/workloads.js --for 4', expect: 'MODE=split bi p99: 1008 ms   bi p50: 252 ms   ds p99: 293 ms   etl queries: 79   (bi 474 queries)' },
         { text: 'Chalti hui query ke beech warehouse maar do.', cmd: 'node tools/kill-warehouse.js', expect: 'warehouse killed mid-query → chalti query: LOST   engine up: nahi\nstorage mein rows: 50,00,000 (waisi ki waisi)  ✅ data compute mein tha hi nahi' },
       ],
       observe: {

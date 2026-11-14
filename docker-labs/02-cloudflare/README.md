@@ -9,6 +9,9 @@ Neeche ke saare numbers **asli run** ke hain (Node 24, ek laptop).
 
 ---
 
+> 🖥️ **Do terminal chahiye.** `npm start <exercise>` server chalata rehta hai (Terminal 1). Tools Terminal 2 mein chalao.
+> Mode badalna ho (`MODE=... npm start ...`) toh pehle Terminal 1 mein **Ctrl+C**, phir naya `npm start`.
+
 ## ex1-anycast-slicing — attack ka aakaar badalna
 
 6 "sheher", har ek **700 rps** sambhal sakta hai (token bucket; usse zyada = drop).
@@ -71,8 +74,10 @@ Ek hi flood (4,000 bad + 200 good per second), teen jagah drop:
 ```bash
 npm start ex3-early-drop                       # DROP=app
 node tools/flood.js --bad 4000 --good 200 --for 3
-DROP=middleware npm start ex3-early-drop && node tools/flood.js --bad 4000 --good 200 --for 3
-DROP=edge npm start ex3-early-drop && node tools/flood.js --bad 4000 --good 200 --for 3
+DROP=middleware npm start ex3-early-drop        # Terminal 1 (pehle Ctrl+C)
+node tools/flood.js --bad 4000 --good 200 --for 3        # Terminal 2
+DROP=edge npm start ex3-early-drop        # Terminal 1 (pehle Ctrl+C)
+node tools/flood.js --bad 4000 --good 200 --for 3        # Terminal 2
 ```
 
 ```
@@ -88,9 +93,10 @@ DROP=edge       good served: 600   blocked: 12000 (edge 12000 · app 0)   app ne
 ## ex4-isolates-pool — density, pool aur ek maalik
 
 ```bash
-npm start ex4-isolates-pool
-SANDBOX=heavy node tools/tenants.js --tenants 500     # ya SANDBOX=heavy npm start … phir tool
-SANDBOX=light node tools/tenants.js --tenants 500
+SANDBOX=heavy npm start ex4-isolates-pool             # Terminal 1 — SANDBOX runtime (server) ka setting hai, tool ka nahi
+node tools/tenants.js --tenants 500                   # Terminal 2
+SANDBOX=light npm start ex4-isolates-pool             # Terminal 1 (pehle Ctrl+C)
+node tools/tenants.js --tenants 500                   # Terminal 2
 node tools/pool.js --workers 4 --requests 2000
 node tools/counter.js --clients 200
 ```

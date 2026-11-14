@@ -965,7 +965,7 @@ MANAGE_FOREIGN=0 (setting)           → 0 saaf → 100/100</pre>
         { text: 'Kernel + cilium + networkd chalao.', cmd: 'cd docker-labs/23-datadog && npm start ex1-rules', expect: 'ex1-rules\n[kernel] :4991 — shared ip rule table, koi owner nahi\n[networkd] :4993 manageForeign=true known=kernel|static|cilium' },
         { text: 'CI ka test: reboot.', cmd: 'node tools/incident.js --case reboot-test', expect: '  pod packets: 100 / 100 pahunche\n\n✅ Test pass — reboot ke baad sab chalta hai. Isi liye ye bug 27 mahine chhupa raha.' },
         { text: 'Asli prod: in-place patch.', cmd: 'node tools/incident.js --case in-place', expect: '06:00 UTC — systemd patch → networkd reapply → 1 rule(s) saaf: fwmark 0x200 [koi tag nahi] jo cilium ne banaya tha\n  ip rule: from 10.0.0.0/8 → main [static]\n  pod packets: 0 / 100 pahunche  💀 node dark — control plane se bhi katt gaya' },
-        { text: 'Fix: rules par apna naam.', cmd: 'PROTO=cilium npm start ex1-rules\nnode tools/incident.js --case in-place', expect: '06:00 UTC — systemd patch → networkd reapply → 0 rule(s) saaf: koi nahi\n  pod packets: 100 / 100 pahunche  ✅ bach gaya' },
+        { text: 'Fix: rules par apna naam.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nPROTO=cilium npm start ex1-rules\n# Terminal 2:\nnode tools/incident.js --case in-place', expect: '06:00 UTC — systemd patch → networkd reapply → 0 rule(s) saaf: koi nahi\n  pod packets: 100 / 100 pahunche  ✅ bach gaya' },
       ],
       observe: {
         q: 'Reboot test mein networkd ne config reapply ki. Phir Cilium ka rule kyun nahi mita?',

@@ -60,6 +60,8 @@ serve(PORT, {
   'POST /send': async (req, res, url, p, body) => { await send({ id: body.id, channel: body.channel || 'general' }); return { ok: true }; },
   'GET /stats': () => ({ fanout: FANOUT, edge: EDGE, longHaul, deliveredCount, replayed }),
   'POST /reset': () => { longHaul = deliveredCount = replayed = 0; writePending([]); return { ok: true }; },
+  /* tools/crash-mid-fanout.js isi port par apna CRASH_AFTER wala channel-server chalata hai — pehle yeh wala hat jaaye */
+  'POST /admin/exit': () => { setTimeout(() => process.exit(0), 50); return { ok: true }; },
 }, async () => {
   console.log(`  channel-server → http://localhost:${PORT}  (FANOUT=${FANOUT} EDGE=${EDGE ? 1 : 0}${CRASH_AFTER ? ' CRASH_AFTER=' + CRASH_AFTER : ''})`);
   const pending = readPending();

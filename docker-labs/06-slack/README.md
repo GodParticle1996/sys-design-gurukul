@@ -9,6 +9,9 @@ Numbers asli run ke hain (Node 24, ek laptop) — tumhare machine par thode alag
 
 ---
 
+> 🖥️ **Do terminal chahiye.** `npm start <exercise>` server chalata rehta hai (Terminal 1). Tools Terminal 2 mein chalao.
+> Mode badalna ho (`MODE=... npm start ...`) toh pehle Terminal 1 mein **Ctrl+C**, phir naya `npm start`.
+
 ## ex1-boot-payload — snapshot, lazy, aur lazy + injection
 
 20,000 users ka workspace. Har client boot karke 30 recent messages padhta hai, har message
@@ -22,8 +25,10 @@ kisi user ko mention karta hai.
 npm start ex1-boot-payload                          # BOOT=full
 node tools/boot.js --clients 1
 node tools/boot.js --clients 200                    # reconnect storm
-BOOT=lazy npm start ex1-boot-payload   && node tools/boot.js --clients 200
-BOOT=inject npm start ex1-boot-payload && node tools/boot.js --clients 200
+BOOT=lazy npm start ex1-boot-payload        # Terminal 1 (pehle Ctrl+C)
+node tools/boot.js --clients 200        # Terminal 2
+BOOT=inject npm start ex1-boot-payload        # Terminal 1 (pehle Ctrl+C)
+node tools/boot.js --clients 200        # Terminal 2
 ```
 
 ```
@@ -46,7 +51,8 @@ Channel server message pehle `data/pending.json` mein likhta hai (store), phir b
 ```bash
 npm start ex2-fanout-presence                                  # FANOUT=broadcast EDGE=0
 node tools/fanout.js --messages 5
-FANOUT=subs EDGE=1 npm start ex2-fanout-presence && node tools/fanout.js --messages 5
+FANOUT=subs EDGE=1 npm start ex2-fanout-presence        # Terminal 1 (pehle Ctrl+C)
+node tools/fanout.js --messages 5        # Terminal 2
 node tools/crash-mid-fanout.js                                 # edge-sim chalu hona chahiye
 PRESENCE=all node tools/presence.js --users 2000
 PRESENCE=visible node tools/presence.js --users 2000
@@ -113,8 +119,10 @@ In-memory queue ki seema 4,000 jobs. Database 6× slow hai, jobs 400/s aa rahe h
 ```bash
 npm start ex4-queue-jam                                         # dono bugs on
 node tools/jam.js --rps 400 --for 20 --slow-db 6
-DEQUEUE_ON=0 DEQUEUE_COST=0 npm start ex4-queue-jam && node tools/jam.js --rps 400 --for 20 --slow-db 6
-DURABLE=1 npm start ex4-queue-jam && node tools/jam.js --rps 400 --for 20 --slow-db 6
+DEQUEUE_ON=0 DEQUEUE_COST=0 npm start ex4-queue-jam        # Terminal 1 (pehle Ctrl+C)
+node tools/jam.js --rps 400 --for 20 --slow-db 6        # Terminal 2
+DURABLE=1 npm start ex4-queue-jam        # Terminal 1 (pehle Ctrl+C)
+node tools/jam.js --rps 400 --for 20 --slow-db 6        # Terminal 2
 ```
 
 ```

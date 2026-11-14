@@ -149,7 +149,7 @@ SD.registerLevels('sdd-resil', [
       steps: [
         { text: 'Paanch nodes chalao (ek terminal mein).', cmd: 'cd docker-labs/09-raft && npm start ex1-election', expect: 'ex1-election\n  raft-node 1 → http://localhost:4901\n  raft-node 2 → http://localhost:4902\n  …' },
         { text: 'Doosre terminal mein: leader ko teen baar maaro. Har baar naya leader kitni der mein bana?', cmd: 'node tools/election.js', expect: "pehla leader: node 5 (term 1)\n  node 5 maara → node 4 leader  476 ms mein   (term +1)\n  node 4 maara → node 5 leader  439 ms mein   (term +1)\n  node 5 maara → node 3 leader  434 ms mein   (term +1)\nRANDOM timeouts → average failover: 450 ms" },
-        { text: 'Pehle terminal mein Ctrl+C, phir sab ka intezaar barabar karke dobara. Tool 10 second tak leader ka intezaar karega.', cmd: 'SAME_TIMEOUT=1 npm start ex1-election\nSAME_TIMEOUT=1 node tools/election.js', expect: "10 s mein KOI leader nahi bana — term 21 tak pahunch gaye, kul 104 elections (har baar vote bant gaye)\nSAME timeouts → sab ek saath candidate, sab khud ko vote, kisi ko majority nahi ❌" },
+        { text: 'Pehle terminal mein Ctrl+C, phir sab ka intezaar barabar karke dobara. Tool 10 second tak leader ka intezaar karega.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nSAME_TIMEOUT=1 npm start ex1-election\n# Terminal 2:\nSAME_TIMEOUT=1 node tools/election.js', expect: "10 s mein KOI leader nahi bana — term 21 tak pahunch gaye, kul 104 elections (har baar vote bant gaye)\nSAME timeouts → sab ek saath candidate, sab khud ko vote, kisi ko majority nahi ❌" },
       ],
       observe: {
         q: 'Barabar intezaar ke saath 10 second mein 104 elections hue aur koi leader nahi bana. Har election mein kya hua hoga?',

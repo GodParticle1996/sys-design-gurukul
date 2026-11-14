@@ -12,3 +12,10 @@ vu_output/
 *.mkv
 .DS_Store
 *.log
+
+# docker-labs runtime output — labs yahan likhte hain (WAL, offsets, snapshots). Kabhi commit mat karo.
+docker-labs/*/data/*
+!docker-labs/*/data/.gitkeep
+docker-labs/*/workspace/*
+!docker-labs/*/workspace/.gitkeep
+!docker-labs/*/workspace/today.md

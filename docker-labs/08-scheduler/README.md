@@ -11,6 +11,9 @@ Numbers asli run ke hain (Node 24, ek laptop).
 
 ---
 
+> 🖥️ **Do terminal chahiye.** `npm start <exercise>` server chalata rehta hai (Terminal 1). Tools Terminal 2 mein chalao.
+> Mode badalna ho (`MODE=... npm start ...`) toh pehle Terminal 1 mein **Ctrl+C**, phir naya `npm start`.
+
 ## ex1-leader-election — TTL lock, failover, aur zombie leader
 
 Teen scheduler nodes, ek lock server (Redis jaisa `SET NX PX`, **TTL 6 s**, renew har 2 s),
@@ -25,8 +28,10 @@ node tools/kill-leader.js                     # leader maaro, failover naapo
 
 STOP_ON_LOSS=0 npm start ex1-leader-election
 node tools/zombie.js                          # leader ko 9 s ka "GC pause"
-STOP_ON_LOSS=0 IDEMP=1 npm start ex1-leader-election && node tools/zombie.js
-STOP_ON_LOSS=1 npm start ex1-leader-election && node tools/zombie.js
+STOP_ON_LOSS=0 IDEMP=1 npm start ex1-leader-election        # Terminal 1 (pehle Ctrl+C)
+node tools/zombie.js        # Terminal 2
+STOP_ON_LOSS=1 npm start ex1-leader-election        # Terminal 1 (pehle Ctrl+C)
+node tools/zombie.js        # Terminal 2
 ```
 
 ```
@@ -59,7 +64,8 @@ wapas `pending` karta hai; 3 attempts ke baad dead letter.
 ```bash
 npm start ex2-heartbeat-watchdog                # QUEUE=priority
 node tools/watchdog-run.js
-QUEUE=fifo npm start ex2-heartbeat-watchdog && node tools/watchdog-run.js
+QUEUE=fifo npm start ex2-heartbeat-watchdog        # Terminal 1 (pehle Ctrl+C)
+node tools/watchdog-run.js        # Terminal 2
 ```
 
 ```

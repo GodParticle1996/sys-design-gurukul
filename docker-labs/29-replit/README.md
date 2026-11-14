@@ -54,7 +54,7 @@ ki wahi. Isliye asli limit tests ki hai: rollback utna hi achha jitna "kuch toot
 $ node tools/forkdb.js
 production users table: 500,000 rows
 fork banaya: 0.005 ms, overlay mein 0 rows (kuch copy nahi hua)
-agent ne fork mein 3 badlaav kiye → overlay 3 rows | fork: user 7 = pro, user 8 = undefined, prod: user 7 = free, user 8 = user8
+agent ne fork mein 3 badlaav kiye → overlay 3 rows | fork: user 7 = pro, user 8 = (delete ho gaya), prod: user 7 = free, user 8 = user8
 
 Ab agent galti se: "DROP TABLE users" (fork mein)
   fork mein users: 0      production mein users: 500,000  ✅ asli data ko haath bhi nahi laga

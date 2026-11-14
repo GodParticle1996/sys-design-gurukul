@@ -78,7 +78,8 @@ via=vttablet  2000 clients × 5 same SELECT = 10000 queries  (0.2 s)
   vttablet: consolidated 9994 (DB tak gaye hi nahi), pool 20
   intern ki query (bina LIMIT): jawab mila in 21 ms  → DB par slow queries 0 (vttablet ne LIMIT 10000 joda: 1)
 
-$ CONSOLIDATE=0 …   # sirf pool, dedup band
+$ CONSOLIDATE=0 npm start ex3-vttablet        # Terminal 1 (pehle Ctrl+C) — sirf pool, dedup band. CONSOLIDATE vttablet (server) ka setting hai
+$ node tools/clients.js --via vttablet        # Terminal 2
   10000 queries (10.3 s)   latency p50 2048 ms   DB queries 10000
 ```
 

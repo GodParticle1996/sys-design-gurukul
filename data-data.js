@@ -12,8 +12,10 @@ const T_BTREE = [
     check: s => s.records.some(r => r.kind === 'index' && r.op === 'create' && r.cols.includes('user_id')) },
   { text: 'Ab plan dobara dekho — index lagna chahiye',
     check: s => s.records.some(r => r.kind === 'explain' && r.indexUsed) },
-  { text: 'user_id index ke saath transactions dobara maango — 1,00,000 se kam rows padhi jaayein',
-    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.resource === 'transactions' && r.rowsExamined < 100000 && r.revision === s.revision && SD.mission.index(s, 'transactions', ['user_id'])) },
+  { text: 'Sirf user_id wale index ke saath GET se transactions maango — index lagega, phir bhi lakhon rows padhi jaayengi (GET list ko created_at se sort karta hai)',
+    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.resource === 'transactions' && !!r.indexUsed && r.rowsExamined > 100000) },
+  { text: 'Sort wala column index mein jodo — (user_id, created_at) — aur GET dobara chalao: 1,00,000 se kam rows padhi jaayein',
+    check: s => s.records.some(r => r.kind === 'http' && r.status === 200 && r.resource === 'transactions' && r.rowsExamined < 100000 && r.revision === s.revision && SD.mission.index(s, 'transactions', ['user_id', 'created_at'])) },
 ];
 
 const T_COMPOSITE = [
@@ -304,23 +306,26 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
     {
       type: 'terminal',
       title: '🌳 Index lagao aur plan padho',
-      goal: 'Ek 2.4 crore rows wali table par user ki transactions dhoondhni hain. Pehle plan dekho, phir index banao, phir plan dobara dekho — aur farak naapo.',
+      goal: 'Ek 2.4 crore rows wali table par user ki transactions dhoondhni hain. Pehle plan dekho, phir index banao, phir plan dobara dekho — aur farak naapo. Aakhir mein asli GET chalao: GET list ko <code>created_at</code> se sort karta hai, toh index ko sort bhi sambhalna hoga.',
       sys: SD.sys.txn({ api: { countTotal: false } }),
       tasks: T_BTREE,
       success: SD.allTasks(T_BTREE),
       successText: `<b>Seq Scan → Index Scan.</b> Rows examined 2.4 crore se seedha neeche.
+        <br><br><b>Sirf filter wala index kaafi nahi tha.</b> <code>(user_id)</code> index ke saath GET ne user 5 ki saari rows (simulator mein ~24 lakh) padhkar sort ki, kyunki list <code>created_at</code> se sort hoti hai aur LIMIT 50 sort ke baad lagta hai. <code>(user_id, created_at)</code> index sorted rows seedhi deta hai: 50 rows, koi sort nahi. Simulator ek user ki rows ko table ka 10% maanta hai; asli app mein ek user ki rows kam hoti hain, par niyam same hai.
         <br><br>Aur yaad rakho: index selection ka universal <b>90% cutoff nahi</b>. Statistics, selectivity, table size, ordering, covering aur storage cost se planner choose karta hai. Agar 99% rows match karein toh seq scan cheaper ho sakta hai; rare boolean value par index useful ho sakta hai. Real workload par EXPLAIN ANALYZE dekho.`,
       solution: [
         "EXPLAIN SELECT * FROM transactions WHERE user_id = 5",
         "CREATE INDEX ix_txn_user ON transactions(user_id)",
         "EXPLAIN SELECT * FROM transactions WHERE user_id = 5",
         "GET /api/v1/transactions?user_id=5&limit=50",
+        "CREATE INDEX ix_txn_user_time ON transactions(user_id, created_at)",
+        "GET /api/v1/transactions?user_id=5&limit=50",
       ],
-      verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['user_id']) && m.current(s, 'http', r => r.resource === 'transactions' && r.rowsExamined < 100000 && r.status === 200); },
+      verify: s => { const m = SD.mission; return m.index(s, 'transactions', ['user_id', 'created_at']) && m.current(s, 'http', r => r.resource === 'transactions' && r.rowsExamined < 100000 && r.status === 200); },
       hints: [
         'Pehle user filter wali query ka `EXPLAIN` padho. Index ke bina rows examined batayega ki chhota jawab nikaalne ke liye kitni table padhi gayi.',
-        '`CREATE INDEX <name> ON transactions(user_id)` ke baad same `EXPLAIN SELECT ... WHERE user_id = <user>` chalao. Phir `GET <path>?user_id=<user>&limit=<n>`; plan ke saath request ka cost bhi jaancho.',
-        'Poora raasta — har command alag Enter se chalao:\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nCREATE INDEX ix_txn_user ON transactions(user_id)\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nGET /api/v1/transactions?user_id=5&limit=50',
+        '`CREATE INDEX <name> ON transactions(user_id)` ke baad same `EXPLAIN SELECT ... WHERE user_id = <user>` chalao. Phir `GET <path>?user_id=<user>&limit=<n>`; plan ke saath request ka cost bhi jaancho. GET mein rows examined lakhon mein dikhe toh GET ke neeche ka 💡 note padho: sort wala column index mein jodna hai — `CREATE INDEX <name> ON transactions(user_id, created_at)` — phir GET dobara chalao.',
+        'Poora raasta — har command alag Enter se chalao:\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nCREATE INDEX ix_txn_user ON transactions(user_id)\nEXPLAIN SELECT * FROM transactions WHERE user_id = 5\nGET /api/v1/transactions?user_id=5&limit=50\nCREATE INDEX ix_txn_user_time ON transactions(user_id, created_at)\nGET /api/v1/transactions?user_id=5&limit=50',
       ],
     },
     {

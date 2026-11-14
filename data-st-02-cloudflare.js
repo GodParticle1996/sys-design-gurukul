@@ -584,7 +584,7 @@ SD.registerLevels('stories', [
         { text: 'Central config mode chalao.', cmd: 'npm start ex2-config-push', expect: 'ex2-config-push\n  config-service → http://localhost:4210\n  edge-1         → http://localhost:4211  (CONFIG=central)\n  edge-2, edge-3 → 4212, 4213' },
         { text: 'Load bhejo aur latency dekho.', cmd: 'node tools/edge-load.js --rps 300 --for 4', expect: 'CONFIG=central  p50: 1467 ms   p99: 2352 ms   config calls: 19940   errors: 0%' },
         { text: 'Config service band karke dekho edge chalta hai ya nahi.', cmd: 'node tools/kill-config.js', expect: 'config service DOWN → CONFIG=central: ok 0/60, fail 60/60' },
-        { text: 'Ab local config mode par jao aur load dobara bhejo.', cmd: 'CONFIG=local npm start ex2-config-push && node tools/edge-load.js --rps 300 --for 4', expect: 'edge-1: local copy ready (2000 sites)\nCONFIG=local    p50: 2 ms   p99: 4 ms   config calls: 0   errors: 0%' },
+        { text: 'Ab local config mode par jao aur load dobara bhejo.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nCONFIG=local npm start ex2-config-push\n# Terminal 2:\nnode tools/edge-load.js --rps 300 --for 4', expect: 'edge-1: local copy ready (2000 sites)\nCONFIG=local    p50: 2 ms   p99: 4 ms   config calls: 0   errors: 0%' },
         { text: 'Config service phir band karo.', cmd: 'node tools/kill-config.js', expect: 'config service DOWN → CONFIG=local: ok 60/60, fail 0/60' },
       ],
       observe: {
@@ -885,8 +885,8 @@ SD.registerLevels('stories', [
       steps: [
         { text: 'App-level drop se shuru karo.', cmd: 'npm start ex3-early-drop', expect: 'ex3-early-drop\n  guarded-service → http://localhost:4221  (DROP=app)\n  edge-filter     → tcp://localhost:4220  (FILTER=0)' },
         { text: 'Flood chalao.', cmd: 'node tools/flood.js --bad 4000 --good 200 --for 3', expect: 'DROP=app        good served: 600   blocked: 12000 (edge 0 · app 12000)   app ne poora kaam kiya: 12600 requests   throughput: 725/s' },
-        { text: 'Middleware par drop karke dobara.', cmd: 'DROP=middleware npm start ex3-early-drop && node tools/flood.js --bad 4000 --good 200 --for 3', expect: 'DROP=middleware good served: 600   blocked: 12000 (edge 0 · app 12000)   app ne poora kaam kiya: 600 requests   throughput: 2984/s' },
-        { text: 'Ab TCP filter par drop karo.', cmd: 'DROP=edge npm start ex3-early-drop && node tools/flood.js --bad 4000 --good 200 --for 3', expect: 'DROP=edge       good served: 600   blocked: 12000 (edge 12000 · app 0)   app ne poora kaam kiya: 600 requests   throughput: 2907/s' },
+        { text: 'Middleware par drop karke dobara.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nDROP=middleware npm start ex3-early-drop\n# Terminal 2:\nnode tools/flood.js --bad 4000 --good 200 --for 3', expect: 'DROP=middleware good served: 600   blocked: 12000 (edge 0 · app 12000)   app ne poora kaam kiya: 600 requests   throughput: 2984/s' },
+        { text: 'Ab TCP filter par drop karo.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nDROP=edge npm start ex3-early-drop\n# Terminal 2:\nnode tools/flood.js --bad 4000 --good 200 --for 3', expect: 'DROP=edge       good served: 600   blocked: 12000 (edge 12000 · app 0)   app ne poora kaam kiya: 600 requests   throughput: 2907/s' },
       ],
       observe: {
         q: 'Teeno modes wahi 12,000 requests reject kar rahe the. Phir throughput 725/s se ~2,900/s kaise ho gaya?',
@@ -1175,8 +1175,8 @@ Pingora: ek multi-threaded process, EK shared connection pool
         vs single-owner).`,
       steps: [
         { text: 'Runtime aur origin chalao.', cmd: 'cd docker-labs/02-cloudflare && npm start ex4-isolates-pool', expect: 'ex4-isolates-pool\n  origin   → http://localhost:4231  (har nayi connection par ~3 ms handshake)\n  runtime  → http://localhost:4230  (SANDBOX=light)' },
-        { text: 'Bhaari sandboxes ke saath 500 tenants load karo.', cmd: 'SANDBOX=heavy npm start ex4-isolates-pool && node tools/tenants.js --tenants 500', expect: 'SANDBOX=heavy → 500 tenants: rss 1113 MB   cold start p50: 10.3 ms' },
-        { text: 'Ab halke isolates ke saath wahi.', cmd: 'SANDBOX=light npm start ex4-isolates-pool && node tools/tenants.js --tenants 500', expect: 'SANDBOX=light → 500 tenants: rss 117 MB   cold start p50: 0.1 ms' },
+        { text: 'Bhaari sandboxes ke saath 500 tenants load karo.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nSANDBOX=heavy npm start ex4-isolates-pool\n# Terminal 2:\nnode tools/tenants.js --tenants 500', expect: 'SANDBOX=heavy → 500 tenants: rss 1113 MB   cold start p50: 10.3 ms' },
+        { text: 'Ab halke isolates ke saath wahi.', cmd: '# Terminal 1 — pehle Ctrl+C (purana server band), phir:\nSANDBOX=light npm start ex4-isolates-pool\n# Terminal 2:\nnode tools/tenants.js --tenants 500', expect: 'SANDBOX=light → 500 tenants: rss 117 MB   cold start p50: 0.1 ms' },
         { text: 'Origin connections gino (per-worker pool vs ek shared pool).', cmd: 'node tools/pool.js --workers 4 --requests 2000', expect: 'per-worker pools → tcp connects: 32   handshake time: 576 ms   reused: 1968\nshared pool      → tcp connects:  8   handshake time:  24 ms   reused: 1992' },
         { text: 'Counter test: 200 clients, dono models.', cmd: 'node tools/counter.js --clients 200', expect: 'replicated (eventual) → expected 200, got 26   replicas: [26,24,22]   ❌ lost updates\nsingle owner          → expected 200, got 200   ✅' },
       ],

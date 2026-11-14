@@ -372,6 +372,20 @@ function run(options = {}) {
     const fullJitter = app.SD.depCost(retrySys, 'ledger').ms;
     retrySys.deps.ledger.retry.jitter = 'equal';
     check(noJitter === 2700 && fullJitter === 2350 && app.SD.depCost(retrySys, 'ledger').ms === 2525, 'Retry jitter did not change deterministic backoff wait');
+
+    /* An index that only filters cannot stop at LIMIT when ORDER BY needs another column: every filtered row is read, then sorted. */
+    const sortSys = app.SD.defaultSys();
+    const sortQuery = { table: 'transactions', whereCols: ['user_id'], orderBy: 'created_at', limit: 50, offset: 0, select: ['*'] };
+    sortSys.db.tables.transactions.indexes.push({ name: 'i_user', cols: ['user_id'] });
+    const filterOnly = app.SD.queryCost(sortSys, sortQuery);
+    check(filterOnly.rowsExamined === 2428645 && filterOnly.plan === 'Index Scan + Sort', 'Filter-only index with ORDER BY on another column must read every filtered row and sort');
+    sortSys.db.tables.transactions.indexes.push({ name: 'i_user_time', cols: ['user_id', 'created_at'] });
+    const sortedIndex = app.SD.queryCost(sortSys, sortQuery);
+    check(sortedIndex.rowsExamined === 50 && sortedIndex.key === 'i_user_time' && sortedIndex.plan === 'Index Scan', '(filter, sort) index must stop after LIMIT rows without a sort');
+    const rangeSys = app.SD.defaultSys();
+    rangeSys.db.tables.transactions.indexes.push({ name: 'i_time', cols: ['created_at'] });
+    const rangeSorted = app.SD.queryCost(rangeSys, { table: 'transactions', whereCols: ['created_at'], orderBy: 'created_at', limit: 50, offset: 0, select: ['*'] });
+    check(rangeSorted.rowsExamined === 50 && rangeSorted.plan === 'Index Scan', 'Range filter and ORDER BY on the same indexed column must not sort');
     function breakerProbe(threshold, window) {
       const t = app.terminal(probe);
       [`sim add breaker ledger --threshold ${threshold} --window ${window}`, 'sim add timeout ledger 200', 'GET /api/v1/transactions?limit=5', 'GET /api/v1/transactions?limit=5', 'sim inject error ledger 1', 'GET /api/v1/transactions?limit=5', 'GET /api/v1/transactions?limit=5'].forEach(c => send(t, c, 'engine/breaker-window'));
