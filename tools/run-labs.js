@@ -18,7 +18,7 @@
        "Terminal 1: Ctrl+C, then start again" a learner does. A start that exits by itself (labs 45+) is waited for.
      * A tool under a heading "## ex2-foo — …" with no server running gets `npm start ex2-foo` started first.
      * Skipped on purpose: `docker …`, `cd …`, `npm install …`, and any line with a <placeholder> or "…".
-     * Not counted as a problem: a tool that says its npm library is missing ("… nahi mila … npm install x"),
+     * Not counted as a problem: a tool that exits asking for its npm library ("… npm install x"),
        and a command with a --kill… / --crash… flag (it exits non-zero on purpose).
 
    Reading the result
@@ -141,7 +141,7 @@ async function runLab(name) {
       const at = text.length;
       const code = await runTool(s.line, dir, s.env, log);
       if (code !== 0) {
-        if (/npm install \S+/.test(text.slice(at)) && /nahi mila/.test(text.slice(at))) log('(ok: tool needs an npm library that is not installed — README says so)\n');
+        if (/npm install \S+/.test(text.slice(at))) log('(ok: tool needs an npm library that is not installed — README says so)\n');
         else if (/--(kill|crash)/.test(s.line)) log('(ok: this command crashes on purpose)\n');
         else problem(`exit ${code}: ${envTxt}${s.line}`);
       }

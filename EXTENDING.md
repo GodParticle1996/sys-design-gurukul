@@ -526,6 +526,10 @@ aur runtime files saath chale jaate hain; hamesha naam lekar `git add <path>`.
 `run-labs.js` ka ✅ sirf itna kehta hai ki commands chalte hain. Numbers sahi kahani sunate hain ya nahi — yeh log
 (`<tmp>/sdg-lab-logs/<lab>.log`) ko README ke chhape output se milakar hi pata chalta hai. Absolute numbers machine se badalte hain;
 **pattern** (kaun tez, kaun fail, kitna guna) wahi rehna chahiye. `flags=NaN/undefined/stack-trace` dikhe toh log zaroor kholo.
+Runner do cheezon ko problem nahi ginta: jo tool apni npm library maangkar ruk jaata hai (`… npm install x` — labs 37, 38, 39, 43), aur
+`--kill…` / `--crash…` flag wala command (jaan-boojh kar exit 1). Naya tool likho toh inhi do roop mein rakho.
+README likhne ke do niyam jin par runner (aur learner) tike hain: exercise ka heading `## ex2-naam — …` se shuru ho, aur
+labs 47+ mein `npm start -- exN` (khud khatam hota hai), labs 01–46 mein `npm start exN` (server chalta rehta hai).
 
 **(f) perfsim ka ek niyam jo galat tha: LIMIT tabhi jaldi rokta hai jab index sorted rows de.**
 `WHERE user_id = ? ORDER BY created_at LIMIT 50` par sirf `(user_id)` index ho toh database us user ki **saari** rows padhkar sort
