@@ -23,8 +23,7 @@ VISUALS['st-jira-tenant'] = {
       <div class="dg-box is-good"><span class="bx-label">🏠 Database per tenant (Jira)</span>
         <div class="dg-node is-good" data-hs="perdb"><span class="ni">🏠</span><span class="nl">acme_db</span><span class="ns">apni tables</span></div>
         <div class="dg-node is-good"><span class="ni">🏠</span><span class="nl">globex_db</span><span class="ns">apni tables</span></div>
-        <div class="dg-cap">Isolation <b>database boundary</b> par. Galti se doosre tenant ka
-          data query karna mumkin hi nahi — doosre tenant ka data pehle tenant ke database mein hai hi nahi.</div></div>
+        <div class="dg-cap">Isolation <b>database boundary</b> par. Sahi tenant routing aur DB credentials se cross-tenant query rukti hai — doosre tenant ka data pehle tenant ke database mein hai hi nahi.</div></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -143,13 +142,13 @@ SD.registerLevels('stories', [
      <p>Zyadatar SaaS shared tables chunte hain: ek hi schema, har row mein
      <code>tenant_id</code>, har query mein filter. Jira ne ulta kiya — <b>har tenant ka
      apna database</b>. Laakhon tenant databases, jo shared Postgres instances par packed
-     hain (lagbhag laakh-bhar database servers par). Ek Fortune 500 company aur ek 10
+     hain (July 2025 ke post mein ~3,000 Postgres instances par). Ek Fortune 500 company aur ek 10
      logon ka startup ek hi machine par ho sakte hain, par company aur startup ka data alag-alag databases
      mein.</p>
      <table>
        <tr><th></th><th>Shared tables</th><th>Database per tenant</th></tr>
        <tr><td>Isolation kahan</td><td>Application logic mein (har query yaad rakhe)</td><td>Database boundary par</td></tr>
-       <tr><td>Ek kharab query</td><td>Sabko slow kar sakti hai</td><td>Ek customer tak</td></tr>
+       <tr><td>Ek kharab query</td><td>Sabko slow kar sakti hai</td><td>Shared host ke doosre tenants bhi slow ho sakte hain</td></tr>
        <tr><td>Migration</td><td>Ek saath sabki</td><td>Tenant-by-tenant</td></tr>
        <tr><td>Data residency</td><td>Bahut mushkil</td><td>Ek tenant ko doosre region mein le jao</td></tr>
        <tr><td>Operational bhaar</td><td>Kam</td><td>Bahut zyada — laakhon databases chalane padte hain</td></tr>
@@ -426,7 +425,7 @@ SD.registerLevels('stories', [
     mehsoos hoga? Dono ke jawab mein jo bhi "pata nahi" hai, wahi tumhara agla kaam hai.</p>`,
   cards: [
     { front: 'Jira ka tenancy model?', back: 'Database per tenant — laakhon tenant databases shared Postgres instances par. Isolation database boundary par, na ki application logic par.' },
-    { front: 'Per-tenant DB ke teen faayde?', back: 'Blast radius ek customer tak, migration tenant-by-tenant, aur data residency (ek tenant ko doosre region mein le jao).' },
+    { front: 'Per-tenant DB ke teen faayde?', back: 'Data ki alag boundary; shared host par noisy neighbour mumkin. Migration tenant-by-tenant, aur data residency (ek tenant ko doosre region mein le jao).' },
     { front: 'Jira mein "shard" kya hai?', back: 'Platform ka slice: web servers + worker nodes + ek Postgres instance jisme us shard ke tenant databases rehte hain. Naya customer kisi shard par rakha jaata hai.' },
     { front: 'TCS kya hai?', back: 'Tenant Context Service — directory jo batati hai tenant kis region/shard/DB mein hai, features aur licence kya hain. Dasiyon hazaar req/s per region, single-digit ms, read-optimised, aur hazaron sidecars local copy rakhte hain.' },
     { front: 'Realm kya hai?', back: 'Un regions ka set jahan tenant ka data reh sakta hai (data residency). Routing ka jawab "jo nazdeek ho" nahi, "jo realm allow kare" hota hai.' },

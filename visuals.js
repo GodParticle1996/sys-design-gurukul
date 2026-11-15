@@ -3160,7 +3160,7 @@ VISUALS['ids'] = {
           <br>→ woh page pehle se memory mein <b>garam</b> hai
           <br>→ locality behtar ho sakti hai; splits aur I/O phir bhi mumkin
           <br><br><code>page splits &nbsp;&nbsp;2,000</code>
-          <br><code>1L inserts &nbsp;6,000 ms</code>
+          <br><code>10L inserts &nbsp;6,000 ms</code>
           <br><code>cursor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ tie-breaker kaam karta hai</code></div>
       </div>
       <div class="dg-box is-bad"><span class="bx-label">❌ Random id (UUIDv4)</span>
@@ -3168,7 +3168,7 @@ VISUALS['ids'] = {
           <br>→ woh page shayad disk se laana pade
           <br>→ bhara hua ho toh <b>SPLIT</b>
           <br><br><code>page splits &nbsp;340,000 💥</code>
-          <br><code>1L inserts &nbsp;43,000 ms</code>
+          <br><code>10L inserts &nbsp;43,000 ms</code>
           <br><code>cursor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ stable unique tie-breaker; time order ke liye created_at bhi</code></div>
       </div>
     </div>

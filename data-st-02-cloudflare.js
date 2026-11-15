@@ -95,7 +95,7 @@ VISUALS['st-cf-defense'] = {
       <span class="dg-pill" data-hs="tcp">🔗 TCP/IP stack</span><span class="dg-arrow">→</span>
       <span class="dg-pill" data-hs="app">🧠 application</span>
     </div>
-    <div class="dg-cap">XDP par drop = kernel ne abhi memory allocate bhi nahi ki thi.
+    <div class="dg-cap">XDP par drop = native XDP par skbuff packet structure abhi allocate nahi hua tha.
       Cloudflare ke hisaab se XDP par drop iptables par drop karne se lagbhag <b>10× sasta</b> hai.
       Falsafa: <b>sabse sasta packet — jise process karna hi na pade</b>.</div>
 
@@ -146,10 +146,8 @@ VISUALS['st-cf-edge'] = {
       <div class="dg-box is-accent"><span class="bx-label">🕰️ Spectre defense: restricted timers plus isolation layers</span>
         <div class="dg-cap"><code>Date.now()</code> code chalte waqt aage nahi badhta ·
           na threads, na shared memory · remote timers phir bhi risk hain. Frozen clocks ke saath detection, process isolation aur runtime/hardware defenses chahiye.</div></div>
-      <div class="dg-box is-good"><span class="bx-label">📍 Durable object: ek hi copy</span>
-        <div class="dg-cap">Poori duniya mein ek instance, requests ek ke baad ek.
-          Na consensus, na quorum, na conflict resolution — reconcile karne ko kuch hai
-          hi nahi.</div></div>
+      <div class="dg-box is-good"><span class="bx-label">📍 Durable object: ek owner</span>
+        <div class="dg-cap">Ek active instance writes ka kram rakhta hai; await par requests interleave ho sakti hain. Storage ki durable copies alag hain; single owner ka matlab single stored copy nahi.</div></div>
     </div>`,
 };
 
@@ -709,10 +707,10 @@ SD.registerLevels('stories', [
     `<h3>⚡ XDP — packet ko sabse sasti jagah par maaro</h3>
      <p>Linux mein eBPF se tum chhote verified programs kernel ke andar chala sakte ho.
      XDP (express data path) aisa point hai jahan packet <b>sabse pehle</b> milta hai —
-     network card se abhi aaya hai, kernel ne packet ke liye memory allocate bhi nahi ki,
+     network card se abhi aaya hai, native XDP par skbuff packet structure abhi allocate nahi hua,
      TCP/IP stack tak pahuncha hi nahi.</p>
      <p>Agar packet DDoS fingerprint se match karta hai toh Cloudflare use wahin gira
-     deta hai. Na packet ki processing, na packet ki buffering. Cloudflare ke apne experience ke
+     deta hai. Aage ki TCP/IP processing aur skbuff allocation bachti hai; XDP parsing aur receive buffers ka kharcha rehta hai. Cloudflare ke apne experience ke
      hisaab se XDP par drop karna packet ko baad mein iptables se drop karne se lagbhag <b>10×
      sasta</b> hai.</p>
      <p class="tip">🎯 Falsafa: <b>Efficiently process kiya gaya packet sabse sasta nahi
@@ -958,7 +956,7 @@ SD.registerLevels('stories', [
     pakde jaane se pehle. Har layer ke saamne likho: "kya yahan pakda ja sakta tha?"</p>`,
   cards: [
     { front: 'dosd kya karta hai?', back: 'Har Cloudflare server par chalne wala daemon: apne hi NIC ke packets sample karta hai, attack ka statistical fingerprint banata hai, aur wahin drop rule lagata hai — bina kisi central brain se poochhe.' },
-    { front: 'XDP par drop kyun sasta hai?', back: 'XDP par packet NIC se abhi aaya hai — kernel ne memory allocate nahi ki, TCP/IP stack shuru nahi hua. Cloudflare ke hisaab se iptables se ~10× sasta.' },
+    { front: 'XDP par drop kyun sasta hai?', back: 'XDP par packet NIC se abhi aaya hai — native XDP par skbuff packet structure allocate nahi hua, TCP/IP stack shuru nahi hua. Cloudflare ke hisaab se iptables se ~10× sasta.' },
     { front: 'Defense mein insaan kyun nahi?', back: '9/10 network attacks 10 minute se kam chalte hain; record 31.4 Tbps attack sirf 35 second. Insaan keyboard tak pahunchne se pehle attack khatam.' },
     { front: 'Free tier ka flywheel?', back: 'Ek aur site = config push (setup reuse, nonzero traffic/resource cost) → lakhon sites = global sensor network → zyada traffic = settlement-free peering = sasta network = free tier affordable.' },
   ],
@@ -1079,8 +1077,7 @@ Pingora: ek multi-threaded process, EK shared connection pool
      chahiye.</p>
      <p>Durable object = code + code ki apni private storage, aur poori duniya mein object ke
      ek hi instance ka hona. Us object id ki har request wahin jaati hai aur requests
-     ek ke baad ek chalti hain. Na consensus, na quorum, na conflict resolution —
-     reconcile karne ke liye doosri copy hai hi nahi. (Durable object Erlang wala actor model hi
+     ek owner par aati hain; await ke beech doosri request chal sakti hai. Durable storage ki copies alag hain; object ka single owner un copies ko mitaata nahi. (Durable object Erlang wala actor model hi
      hai, JavaScript mein.)</p>`,
   ],
   stages: [
