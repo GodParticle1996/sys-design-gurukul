@@ -73,7 +73,11 @@
   function add(id, levels, guide) {
     const ids = levels.split(/\s+/).filter(Boolean);
     if (topics[id]) throw new Error('Duplicate guidance topic: ' + id);
-    topics[id] = { ...guide, levels: ids, sources: guide.sources.map(key => typeof key === 'string' ? sources[key] : key) };
+    topics[id] = { ...guide, levels: ids, sources: guide.sources.map(key => {
+      if (typeof key !== 'string') return key;
+      if (!sources[key]) throw new Error('Unknown guidance source key: ' + key + ' (topic ' + id + ')');
+      return sources[key];
+    }) };
     ids.forEach(level => { if (byLevel[level]) throw new Error('Duplicate guidance assignment: ' + level); byLevel[level] = id; });
   }
 
