@@ -269,7 +269,7 @@ function showHome() {
   } else {
     const step = nextStep();
     if (step && step.level) {
-      const card = el('section', 'resume-card next-card');
+      const card = el('section', 'next-card');   /* 'resume-card' nahi: wo class sirf asli checkpoint ke liye hai (dev/progress-test.js) */
       card.appendChild(el('p', null, `👉 <b>Agla kadam.</b> ${step.why}<br>Agla level: <b>${step.level.icon} ${step.level.title}</b>`));
       const go = el('button', 'btn', 'Yeh level kholo →');
       go.onclick = () => showIntro(step.level);

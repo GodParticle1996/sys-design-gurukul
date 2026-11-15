@@ -76,7 +76,7 @@
 }
 
 /* ============ Raasta: home ke group + "agla kadam" card (app.js) ============ */
-.next-card { border-color: #6ea8fe77; }
+.next-card { margin-top: 20px; padding: 14px 18px; background: var(--panel); border: 1px solid #6ea8fe77; border-radius: var(--radius); line-height: 1.5; }
 .tk-group { margin: 26px 0 10px; }
 .tk-group h3 { margin: 0 0 4px; font-size: 1.15rem; }
 .tk-group p { margin: 0; color: var(--muted); line-height: 1.5; font-size: .92rem; }
@@ -89,3 +89,10 @@
 .lp-nav .btn:disabled { opacity: .35; cursor: default; transform: none; filter: none; }
 .lp-all { background: none; border: 0; color: var(--muted); font: inherit; font-size: .82rem; text-decoration: underline; cursor: pointer; padding: 4px 0; }
 .lp-all:hover { color: var(--text); }
+
+/* ============ Terminal mein madad (perfsim.js): 👉 agla kaam, hint ki ginti, 🧭 agla command ============ */
+.term-tasks li.now { color: var(--text); font-weight: 700; }
+.term-tasks li.now::before { content: '👉 '; }
+.term-hint.pulse { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 3px #ffb34722; }
+.term-nextcmd { border-color: #6ea8fe88; color: var(--text); }
+.term-btns .btn:disabled { opacity: .45; cursor: default; transform: none; filter: none; }

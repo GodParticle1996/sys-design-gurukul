@@ -787,3 +787,36 @@ SD.registerScenarios([{
 - Progress `SD.state.soch` (id → stars) mein; XP sirf pehli baar. Renderer scenario data par kuch nahi likhta. Buttons: `so-opt` (`data-i`), `so-next`, `so-done`.
 - Nayi file: IIFE mein likho, `index.html` + `gallery.html` + `validate.js` ke `CONTENT` mein `data-guidance.js` se pehle jodo.
 - Jaanch: `node validate.js` ka "🧠 SOCH AKHADA" hissa har scenario ko sahi jawab se aur pehle-galat jawab se poora chalata hai.
+
+---
+
+## 12. 🧭 UX ke naye hisse (2026-11-15) — raasta, chhote lesson cards, terminal mein madad
+
+Owner ki chaar dikkatein thi: raasta saaf nahi · ek screen par bahut text · diagram saaf nahi · terminal mein atakna. Is pass mein pehli teen par kaam hua
+(diagrams ko kadam-dar-kadam banana abhi baaki hai — §12.4). Saari nayi CSS `extra.css` mein hai (`style.css` ke baad load hoti hai).
+
+### 12.1 Raasta (`app.js`)
+- **`TRACK_GROUPS`** — home par tracks teen group mein: `core` (jo `alwaysUnlocked` nahi; card par "Kadam N"), `course` (id `fp-` / `sdd-` / `sds-` / `concurrency` se shuru),
+  `side` (baaki). Naya track apne aap sahi group mein jaata hai; naya group chahiye toh is array mein ek entry jodo (pehla match jeetta hai).
+- **"👉 Agla kadam" card** (`nextStep()`) — aakhri poore kiye level ke track ka agla adhoora level; kuch poora nahi kiya toh pehla khula mukhya track.
+  Card ki class `next-card` hai, `resume-card` nahi: `resume-card` sirf asli checkpoint ke liye hai aur `dev/progress-test.js` usi class ko dhoondhta hai.
+- **`SD.nav`** — URL ka `#hash` = screen: `#track/<id>` · `#level/<id>` · `#soch` · `#soch/<id>` · `#dojo` · khaali = home. `SD.nav.set(hash)` har `show…` function
+  ke shuru mein; `SD.nav.route()` boot aur browser ke Back/Forward (`popstate`) par. Locked level ka link track ya home par girta hai. Nayi screen banao toh
+  `set()` + `route()` mein ek line jodo, warna Back button us screen ko chhod dega.
+
+### 12.2 Chhote lesson cards (`app.js` `lessonPager`)
+Level intro par `level.lesson` ek saath nahi, **ek card ek baar**. 160 shabd se lambi entry `<h3>` par toot-ti hai — sirf tab jab har tukde mein
+`div/table/ul/ol/details/pre/section` barabar khule-band hon (warna entry poori rehti hai). Isliye nayi lesson entry mein har vichaar ka apna `<h3>` rakho aur
+`<h3>` ko kisi `<div>` ke andar mat daalo. Saare cards DOM mein rehte hain (sirf `display` badalta hai), isliye validator ka render check sab par chalta hai.
+
+### 12.3 Terminal mein madad (`perfsim.js` `renderTerminal`)
+Madad ki seedhi: **👉** checklist ka pehla adhoora kaam (`li.now`) → **💡 Hint 1/3 … 3/3** → saare hints ke baad **🧭 Agla command dikhao**.
+- 🧭 button `stage.solution` ko history se **kram mein** milata hai (aakhri `sim reset` ke baad se) aur agla command input box mein bhar deta hai. Isliye `solution`
+  hamesha poora aur sahi kram mein rakho — ab learner use seedha dekhta hai. Saare command chal chuke par mission adhoora ho toh button `sim reset` sujhata hai.
+- 5 command tak checklist mein naya ✅ na aaye toh ek baar "Atak gaye?" wali line chhapti hai aur hint button chamakta hai.
+- Har madad (`sim.hintsUsed`) `HINT_COST` XP ghatati hai; mission ka XP 10 se neeche nahi jaata.
+
+### 12.4 Jo is pass mein nahi hua
+- Purane static diagrams (`VISUALS[...]`, 300+) ko kadam-dar-kadam banana. Playlist tracks (`fp-core`, `sdd-eda`, `sdd-resil`) pehle se `dryrun` use karte hain;
+  mukhya 7 tracks ke diagrams static hain.
+- Soch Akhada ke scenarios mein diagram nahi hai (owner ne budget ki wajah se "halke" scenarios chune).
