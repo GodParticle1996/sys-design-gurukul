@@ -25,7 +25,7 @@ SD.registerLevels('fp-core', [
     {
       "type": "dryrun",
       "title": "📜 Log, commit, aur ek niyam jo video ne chhod diya",
-      "goal": "Raft ka replicated log. Har badlaav log ki ek entry hai. Entry tab committed jab majority (5 mein 3) ke log mein ho; tab hi client ko \"ho gaya\". Lab 59 ex3 (model) up-to-date niyam ke saath aur bina 10,000 baar chalata hai.",
+      "goal": "Raft ka replicated log. Har badlaav log ki ek entry hai. Leader ke apne current term ki entry majority (5 mein 3) ke durable log mein ho toh committed; purane term ki entry ke liye apne term ki entry commit karni hoti hai (§5.4.2). Apply karne ke baad client ko \"ho gaya\". Lab 59 ex3 (model) up-to-date niyam ke saath aur bina 10,000 baar chalata hai.",
       "nodes": [
         {
           "id": "client",
@@ -231,15 +231,15 @@ SD.registerLevels('fp-core', [
           "ask": {
             "q": "Leader apni disk par likhte hi \"ho gaya\" kyun nahi bolta?",
             "choices": [
-              "Leader mare toh entry bhi jaati; majority par ho tab bachti",
+              "Akeli disk kho gayi toh entry gayi; copies bachaati hain",
               "Leader ki disk followers ki disk se dheemi hoti hai",
               "Client ko jawab dene ke liye followers ki ijaazat chahiye"
             ],
             "answer": 0,
             "hint": "Agar sirf leader ke paas entry ho aur leader mar jaaye?",
-            "explain": "Majority par likhi entry ko koi bhi agla majority wala election dekh lega (do majorities milti hain). Sirf leader ke paas ho toh leader ke saath entry bhi gayi. Isliye commit = majority ke log mein.",
+            "explain": "Is example ki entry leader ke apne term ki hai: majority ke durable log mein aate hi committed. Agla leader entry bachaata hai. Sirf leader ki copy par bharosa ho toh leader unavailable hone par entry nahi milti. Purane term ki entry ko sirf copies gin kar commit nahi karte (§5.4.2).",
             "choiceExplanations": [
-              "Majority par likhi entry ko koi bhi agla majority wala election dekh lega (do majorities milti hain). Sirf leader ke paas ho toh leader ke saath entry bhi gayi. Isliye commit = majority ke log mein.",
+              "Is example ki entry leader ke apne term ki hai: majority ke durable log mein aate hi committed. Agla leader entry bachaata hai. Sirf leader ki copy par bharosa ho toh leader unavailable hone par entry nahi milti. Purane term ki entry ko sirf copies gin kar commit nahi karte (§5.4.2).",
               "Disk ki raftaar ka sawaal nahi; sawaal entry kahan-kahan hai.",
               "Followers ijaazat nahi dete; followers copy rakh kar ack karte hain."
             ]
@@ -386,7 +386,7 @@ SD.registerLevels('fp-core', [
           }
         }
       ],
-      "lesson": "Commit = majority ke log mein. Naya leader banne ke liye majority ke votes chahiye, aur har voter tabhi vote deta hai jab candidate ka log voter ke log jitna naya ho. Up-to-date niyam ke saath committed entry naye leader tak pahunchti hai. (Raft ka ek aur niyam, §5.4.2: naya leader purane term ki entry ko sirf copies gin kar committed nahi maanta; apne term ki nayi entry majority par pahunche, tab purani entries bhi committed.)"
+      "lesson": "Leader ke apne term ki entry majority ke durable log mein aaye toh commit. Naya leader banne ke liye majority ke votes chahiye, aur har voter tabhi vote deta hai jab candidate ka log voter ke log jitna naya ho. Up-to-date niyam ke saath committed entry naye leader tak pahunchti hai. (Raft ka ek aur niyam, §5.4.2: naya leader purane term ki entry ko sirf copies gin kar committed nahi maanta; apne term ki nayi entry majority par pahunche, tab purani entries bhi committed.)"
     },
     {
       "type": "cards",
@@ -459,7 +459,7 @@ SD.registerLevels('fp-core', [
           "Commit ab bhi majority par hi hota hai."
         ]
       },
-      "lesson": "Commit majority par; leader sirf up-to-date log wala. Timeout ki range thodi chaudi, bahut nahi."
+      "lesson": "Apne term ki entry majority par commit; purani entries uske saath. Leader sirf up-to-date log wala. Timeout ki range thodi chaudi, bahut nahi."
     }
   ],
   "interview": {
@@ -510,7 +510,7 @@ SD.registerLevels('fp-core', [
   "cards": [
     {
       "front": "Raft entry committed kab?",
-      "back": "Jab majority ke log mein ho (5 mein 3, leader samet). Tab hi client ko \"ho gaya\"; followers ko agli heartbeat mein commit ki khabar."
+      "back": "Apne term ki entry majority ke durable log mein ho (5 mein 3, leader samet). Purane term ki entry apne term ki entry ke commit se pakki hoti hai. Apply karne ke baad client ko \"ho gaya\"; followers ko agli heartbeat mein commit ki khabar."
     },
     {
       "front": "Up-to-date niyam?",

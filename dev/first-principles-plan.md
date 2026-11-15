@@ -305,7 +305,7 @@ price of consensus and batching, a seeded model of Raft's election restriction, 
 Lab 09 (real 5-process Raft: election, same timeouts, quorum, 3 | 2 partition) already existed; this topic adds what it does
 not measure. Corrections taught: Raft assumes crash-recovery with durable term/vote/log, not crash-stop; the "candidate is up
 to date" rule the video skipped prevents losing committed entries; 4 nodes are less available than 3, not equal; Raft gives
-linearizable reads only with ReadIndex or a lease plus client request ids; losing etcd's majority stops control-plane changes
+linearizable reads with ReadIndex or a valid lease after applying through the read index; client request ids separately prevent duplicate commands on retries; losing etcd's majority stops control-plane changes
 while running pods usually keep running.
 
 Review: Codex was offline, so Claude self-reviewed the claims, lab and levels (2026-11-13). Fixes: the lab 59 ex1 text

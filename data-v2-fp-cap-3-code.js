@@ -275,7 +275,7 @@ SD.registerLevels('fp-core', [
         "explain": "G-Counter sirf badh sakta hai, toh withdrawal dikha hi nahi sakta. Saadharan PN-Counter ya ledger merge apne aap overdraft nahi rokta: do regions ek saath kharch karein toh jodne par minus (lab ex1 ledger: 579 accounts minus). Balance ki seema bachaani ho toh kharch ke haq (spending rights) pehle regions mein baanto — bounded-counter CRDT haq pehle se baant'ta hai, haq khatam toh withdrawal rukta hai — ya coordination (CP) karo. Lab ex1 spending-rights protocol nahi chalata.",
         "choiceExplanations": [
           "G-Counter sirf badh sakta hai, toh withdrawal dikha hi nahi sakta. Saadharan PN-Counter ya ledger merge apne aap overdraft nahi rokta: do regions ek saath kharch karein toh jodne par minus (lab ex1 ledger: 579 accounts minus). Balance ki seema bachaani ho toh kharch ke haq (spending rights) pehle regions mein baanto — bounded-counter CRDT haq pehle se baant'ta hai, haq khatam toh withdrawal rukta hai — ya coordination (CP) karo. Lab ex1 spending-rights protocol nahi chalata.",
-          "CRDT \"sab jod do\" karta hai; \"₹0 se neeche nahi\" ka niyam nahi.",
+          "G-Counter withdrawal nahi dikhaata. Saadharan PN-Counter merge overdraft nahi rokta; bounded-counter CRDT pehle se baante spending rights se seema bacha sakta hai.",
           "Saadharan PN-Counter minus balance nahi rokta; sirf ginti sahi jodta hai.",
           "CRDT counters, sets, maps, text sab ke liye hote hain."
         ]

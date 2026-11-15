@@ -144,7 +144,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "ReadIndex",
           "clock": "readindex",
-          "say": "Har read se pehle leader majority se heartbeat ka jawab maangta hai: \"kya main ab bhi leader hoon?\" Node 1 sirf node 2 tak pahunchta hai — majority nahi.",
+          "say": "Naya leader pehle apne term ki entry commit kare. Read ke liye current commit index yaad rakhe, majority se nayi heartbeat ka jawab le, phir us index tak entries state machine (jawab dene wali local state) par apply hone de. Tab read de. Leadership ki jaanch: \"kya main ab bhi leader hoon?\" Node 1 sirf node 2 tak pahunchta hai — majority nahi.",
           "nodes": {
             "client": {
               "tone": "bad",
@@ -180,7 +180,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "Lease",
           "clock": "lease",
-          "say": "Leader majority ke aakhri ack ke baad 200 ms tak bina pooche padhta hai. Naya leader 300 ms (election timeout) se pehle nahi ban sakta, toh lease khatam hone ke baad hi naya leader.",
+          "say": "Is timeline model mein t=1000 par lease ka safe start maana hai; lease 1200 tak, naya leader 1300 se. Asli protocol mein delayed ack milne se poori lease dobara shuru nahi hoti: heartbeat bhejne ke samay se conservative deadline rakho, minimum election timeout aur ghadiyon ki bounded drift gino. Majority ke acks milne par bachi hui valid lease mein hi padho.",
           "nodes": {
             "client": {
               "tone": "ok",
@@ -250,17 +250,17 @@ SD.registerLevels('fp-core', [
           }
         }
       ],
-      "lesson": "Raft ka log kram pakka karta hai; linearizable read ke liye leader ko apni leadership pakki karni padti hai — ReadIndex (har read par ek round trip) ya lease (ghadiyon par bharosa)."
+      "lesson": "Raft ka log kram pakka karta hai. Linearizable read ke liye apne term ki entry commit, leadership ki jaanch (ReadIndex ya valid lease), aur read index tak local state par apply hone ka intezaar chahiye."
     },
     {
       "type": "cards",
       "title": "🗝️ Consensus kahan lagaayein",
       "goal": "Video: consensus \"raaj ki chaabiyon\" ke liye, har cheez ke liye nahi. Lab 59 ex2 (asli fsync + model RTT) se keemat.",
-      "lesson": "Consensus har commit par fsync + round trip leta hai aur ek group ke saare writes ek leader se guzarte hain. Isliye chhota, zaroori metadata Raft mein; bada traffic sharding (kai groups) ya eventual patterns se.",
+      "lesson": "Consensus har commit par fsync + round trip leta hai aur ek group ke saare writes ek leader se guzarte hain. etcd mein chhota metadata rakho; bada application traffic sharding (kai Raft/Paxos groups bhi) ya zaroorat ke mutaabiq eventual patterns se.",
       "steps": [
         {
           "title": "1. Kaunsa data",
-          "say": "<b>Raft/Paxos ke liye:</b> kaun leader hai, kis shard ka maalik kaun, config, feature flags, locks/leases. <b>Nahi:</b> user comments, clicks, logs — inke liye CAP level ke AP patterns. Keemat (lab 59 ex2): ek commit same AZ ~1.6 ms, regions ~61 ms; batching se throughput badhta hai.",
+          "say": "<b>etcd jaise metadata store ke liye:</b> kaun leader hai, kis shard ka maalik kaun, config, feature flags, locks/leases. User comments, clicks aur logs ka bhaari traffic application DB ya sharded store mein rakho. Us store ke har shard ke andar bhi Raft/Paxos ho sakta hai; consistency business ke niyam se chuno. Keemat (lab 59 ex2): ek commit same AZ ~1.6 ms, regions ~61 ms; batching se throughput badhta hai.",
           "ask": {
             "q": "Team har user comment ko ek 5-node etcd cluster mein likhna chahti hai \"taaki kuch na khoye\". Tumhari salah?",
             "choices": [
@@ -270,11 +270,11 @@ SD.registerLevels('fp-core', [
             ],
             "answer": 0,
             "hint": "Ek Raft group ke saare writes kahan se guzarte hain?",
-            "explain": "Ek Raft group = ek leader, har write fsync + majority round trip. etcd chhote, zaroori data ke liye bana hai (default request size 1.5 MiB, storage quota 2 GB). Comments jaise bhaari traffic ke liye sharded store (kai groups) ya replicated DB. Nodes badhaane se har commit mein zyada acks.",
+            "explain": "Ek Raft group = ek leader, har write fsync + majority round trip. etcd chhote, zaroori data ke liye bana hai (default request size 1.5 MiB, storage quota 2 GB). Comments jaise bhaari traffic ke liye sharded store (kai groups) ya replicated DB. Nodes badhaane se replication messages badhte hain; required follower acks = floor(N/2), isliye 4 aur 5 nodes dono ko 2 follower acks chahiye.",
             "choiceExplanations": [
-              "Ek Raft group = ek leader, har write fsync + majority round trip. etcd chhote, zaroori data ke liye bana hai (default request size 1.5 MiB, storage quota 2 GB). Comments jaise bhaari traffic ke liye sharded store (kai groups) ya replicated DB. Nodes badhaane se har commit mein zyada acks.",
+              "Ek Raft group = ek leader, har write fsync + majority round trip. etcd chhote, zaroori data ke liye bana hai (default request size 1.5 MiB, storage quota 2 GB). Comments jaise bhaari traffic ke liye sharded store (kai groups) ya replicated DB. Nodes badhaane se replication messages badhte hain; required follower acks = floor(N/2), isliye 4 aur 5 nodes dono ko 2 follower acks chahiye.",
               "Strong consistency ki keemat har write par latency; comments ko itni zaroorat nahi.",
-              "Zyada nodes = zyada acks per commit; throughput nahi badhta."
+              "Zyada nodes par replication ka kaam badhta hai; required acks har added node par nahi badhte (4 aur 5 dono: 2 follower acks)."
             ]
           }
         },
@@ -316,14 +316,14 @@ SD.registerLevels('fp-core', [
         ],
         "answer": 0,
         "hint": "ReadIndex padhne se pehle kya pakka karta hai?",
-        "explain": "ReadIndex har read se pehle majority se \"kya main leader hoon?\" poochhta hai: ek round trip (same AZ ~0.5 ms, regions ~60 ms). Isliye lease ek sasta raasta hai — par ghadiyon ke bharose. Shart: naya leader pehle apne term ki ek khaali (no-op) entry commit karta hai. Kuch systems followers se bhi padhte hain, leader se commit index lekar.",
+        "explain": "ReadIndex har read se pehle majority se \"kya main leader hoon?\" poochhta hai: ek round trip (same AZ ~0.5 ms, regions ~60 ms). Isliye lease ek sasta raasta hai — par ghadiyon ke bharose. Shart: naya leader pehle apne term ki ek khaali (no-op) entry commit karta hai. Read dene se pehle read index tak committed entries local state par apply honi chahiye. Followers bhi leader se read index lekar aur us index tak apply hone ka intezaar karke padh sakte hain.",
         "choiceExplanations": [
-          "ReadIndex har read se pehle majority se \"kya main leader hoon?\" poochhta hai: ek round trip (same AZ ~0.5 ms, regions ~60 ms). Isliye lease ek sasta raasta hai — par ghadiyon ke bharose. Shart: naya leader pehle apne term ki ek khaali (no-op) entry commit karta hai. Kuch systems followers se bhi padhte hain, leader se commit index lekar.",
+          "ReadIndex har read se pehle majority se \"kya main leader hoon?\" poochhta hai: ek round trip (same AZ ~0.5 ms, regions ~60 ms). Isliye lease ek sasta raasta hai — par ghadiyon ke bharose. Shart: naya leader pehle apne term ki ek khaali (no-op) entry commit karta hai. Read dene se pehle read index tak committed entries local state par apply honi chahiye. Followers bhi leader se read index lekar aur us index tak apply hone ka intezaar karke padh sakte hain.",
           "Read ke liye log mein likhna nahi padta; fsync ki zaroorat nahi.",
           "Muft nahi: har read ek network round trip."
         ]
       },
-      "lesson": "Linearizable read: ReadIndex (round trip) ya lease (ghadi). Consensus chhote, zaroori data ke liye; scale ke liye kai groups."
+      "lesson": "Linearizable read: ReadIndex (round trip) ya lease (ghadi). etcd chhote metadata ke liye; application data bhi kai Raft/Paxos groups mein scale ho sakta hai."
     }
   ],
   "interview": {
@@ -374,7 +374,7 @@ SD.registerLevels('fp-core', [
   "cards": [
     {
       "front": "Raft linearizable read?",
-      "back": "ReadIndex: har read se pehle majority se leadership pakki (ek round trip). Lease: election timeout se chhoti lease, ghadiyon par bharosa. Lab 59 ex4: local read 170 purane; ReadIndex 0; lease 0; dheemi ghadi wala lease 10."
+      "back": "ReadIndex: apne term ki entry commit, read index yaad, majority se leadership pakki, phir us index tak local state par apply hone ka intezaar. Lease: safe deadline aur ghadiyon ki bounded drift par bharosa. Lab 59 ex4: local read 170 purane; ReadIndex 0; lease 0; dheemi ghadi wala lease 10."
     },
     {
       "front": "Consensus kis data ke liye?",
