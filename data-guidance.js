@@ -73,7 +73,7 @@
   function add(id, levels, guide) {
     const ids = levels.split(/\s+/).filter(Boolean);
     if (topics[id]) throw new Error('Duplicate guidance topic: ' + id);
-    topics[id] = { ...guide, levels: ids, sources: guide.sources.map(key => sources[key]) };
+    topics[id] = { ...guide, levels: ids, sources: guide.sources.map(key => typeof key === 'string' ? sources[key] : key) };
     ids.forEach(level => { if (byLevel[level]) throw new Error('Duplicate guidance assignment: ' + level); byLevel[level] = id; });
   }
 
@@ -1354,6 +1354,11 @@
     followup: 'Traffic aadha hua, par availability target wahi hai. Kaunsa design ab sasta padega?',
     sources: ['blobs', 'signals'],
   });
+
+  /* Naye track files (data-pro-*.js) apne guides yahan daalte hain, is file se PEHLE load hokar:
+     (SD.guidanceExtra = SD.guidanceExtra || []).push({ id, levels: 'id1 id2', guide: {..., sources: ['http', {title, url}]} })
+     sources mein upar ki key ya seedha { title, url } — dono chalte hain. */
+  (SD.guidanceExtra || []).forEach(g => add(g.id, g.levels, g.guide));
 
   const allLevels = Object.values(SD.levelSets).flat();
   const known = new Set(allLevels.map(level => level.id));

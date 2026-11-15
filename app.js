@@ -43,6 +43,8 @@ if (canNav && typeof window.addEventListener === 'function') window.addEventList
 const TRACK_GROUPS = [
   { id: 'core', title: '🧭 Mukhya raasta — kram se', note: 'System design ki buniyaad. Ek track poora karo, tab agla khulta hai. Naye ho toh yahin se shuru karo.',
     test: t => !t.alwaysUnlocked },
+  { id: 'pro', title: '🏭 Production aur interview — naukri ki taiyaari', note: 'Hamesha khule. Security, observability + cloud ka kharcha, aur interview ke classic designs. Mukhya raasta ke baad sabse kaam ke; har track mein terminal mission bhi.',
+    test: t => /^pro-/.test(t.id) },
   { id: 'course', title: '🎬 Courses — ek topic, samasya se code tak', note: 'Hamesha khule. Koi bhi topic chuno; har topic 4–5 chhote level ka hai, laptop wale lab ke saath.',
     test: t => /^(fp-|sdd-|sds-|concurrency)/.test(t.id) },
   { id: 'side', title: '📚 Asli kahaaniyan aur side tracks', note: 'Asli companies ke design aur outages. Hamesha khule; jab mann ho tab padho.', test: () => true },
