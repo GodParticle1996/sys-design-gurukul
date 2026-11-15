@@ -63,7 +63,11 @@
       if (s.from != null && s.from === s.to) out.push(`${w}: from aur to ek hi dabba hai — 'at' use karo`);
       (s.at || []).forEach(a => { if (!ids.has(a)) out.push(`${w}: at '${a}' koi node nahi hai`); });
       if (s.from == null && !(s.at || []).length) out.push(`${w}: na teer (from/to) hai na 'at' — learner ko pata nahi chalega kahan dekhna hai`);
-      Object.keys(s.set || {}).forEach(a => { if (!ids.has(a)) out.push(`${w}: set '${a}' koi node nahi hai`); });
+      Object.keys(s.set || {}).forEach(a => {
+        if (!ids.has(a)) out.push(`${w}: set '${a}' koi node nahi hai`);
+        if (String((s.set[a] || {}).sub || '').length > 26) out.push(`${w}: set '${a}'.sub 26 akshar se lamba hai (dabbe se bahar niklega)`);
+        if ((s.set[a] || {}).label != null) out.push(`${w}: set '${a}'.label kaam nahi karta — sirf tone aur sub badalte hain`);
+      });
       if (String(s.label || '').length > 28) out.push(`${w}: teer ka label 28 akshar se lamba hai`);
       if (s.from != null && ids.has(s.from) && ids.has(s.to) && s.from !== s.to) {
         const hit = edgeCrosses(scene, s);

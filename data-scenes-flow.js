@@ -174,7 +174,7 @@ SD.addScenes({
       { from: 'page', to: 'reviews', label: '1% slow', tone: 'bad', set: { page: { tone: 'bad', sub: '~4.9% requests slow' } }, say: 'Har service mein 1% requests slow hain. Calls independent hon toh P(paanch mein se koi ek slow) = 1 − 0.99⁵ ≈ 4.9%. Ek call ka 1% paanch calls mein ~5% ban gaya.' },
       { at: ['reviews', 'reco'], set: { reviews: { tone: 'muted', sub: 'page ke BAAD load' }, reco: { tone: 'muted', sub: 'page ke BAAD load' } }, say: 'Ilaaj 1: reviews aur recommend optional hain. Dono ko page load hone ke baad alag se lao. Main page sirf 3 zaroori calls ka intezaar kare.' },
       { from: 'page', to: 'inventory', label: 'p95 par doosri copy', tone: 'gold', say: 'Ilaaj 2, hedged request: inventory apne p95 time tak jawab na de, toh doosre server ko doosri copy bhejo. Jo jawab pehle aaye, wahi lo.' },
-      { at: ['page'], set: { page: { tone: 'good', sub: 'kam calls · har call par timeout' } }, say: 'Ilaaj 3: kam calls. Catalog, pricing aur inventory ek batch endpoint se lao. Aur har call par timeout rakho, taaki ek dheemi service poora page na roke.' },
+      { at: ['page'], set: { page: { tone: 'good', sub: 'kam calls + timeouts' } }, say: 'Ilaaj 3: kam calls. Catalog, pricing aur inventory ek batch endpoint se lao. Aur har call par timeout rakho, taaki ek dheemi service poora page na roke.' },
     ],
   },
 
