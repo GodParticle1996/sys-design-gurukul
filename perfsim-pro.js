@@ -14,6 +14,7 @@
      cost show | cost tag on|off | cost unit | cost fix <feature> --lever cache|rightsize|cdn
      capacity plan --peak P --per-server S [--target T] [--spare K] | capacity fail --servers N --peak P --per-server S
      fanout --mode write|read|hybrid [--celeb-threshold N]
+     kv status | kv put aman <rupaye> | kv get aman | kv config --w N --r N | kv down|up a|b|c | kv repair
    ===================================================================== */
 (function () {
   const baseDefault = SD.defaultSys;
@@ -22,6 +23,7 @@
     s.tenancy = { isolation: 'app-filter', exportFilter: false, quota: {}, replica: {} };
     s.tokens = { mode: 'jwt-30d', issued: 'jwt-30d', ageMin: 1440, revoked: false, minutesSinceRevoke: 0 }; /* issued = Aman ke maujooda tokens kis mode mein bane; ageMin = tokens kitne minute purane (1 din) */
     s.cost = { tags: false, fixed: {} };
+    s.kv = { n: 3, w: 1, r: 1, latest: 1, reps: { a: { v: 100, ver: 1 }, b: { v: 100, ver: 1 }, c: { v: 100, ver: 1 } }, down: { a: false, b: false, c: false } };
     return s;
   };
   const P = SD.perfsimPlugins = SD.perfsimPlugins || [];
@@ -303,6 +305,80 @@
         read: 'Post sirf ek baar likho; feed khulne par 200 doston ke posts jodo. Likhna sasta, padhna mehenga.',
         hybrid: celebPushed ? `Threshold ${num(thr)} celebrities ke 50 lakh followers se upar hai, toh celebrities bhi push ho rahi hain — write mode jaisa bojh.` : 'Aam users push (write par), celebrities pull (padhte waqt). Dono ka sasta hissa.' }[mode] + '  (Model ke chune hue numbers; feed ka SLO: p99 200 ms. Celebrity lag maan ke: 50,000 inbox writes/second.)');
       return rec({ kind: 'fanout', mode, threshold: mode === 'hybrid' ? thr : null, sourcePosts, inboxCopies, feedMs, celebLagMin });
+    },
+  });
+  /* ------------------------------------------------------------------ KV (quorum) */
+  /* Ek key (balance:aman), 3 replicas a, b, c. put pehle W zinda replicas par likhta hai (a → b → c kram mein);
+     baaki replicas tab tak purane rehte hain jab tak `kv repair` (anti-entropy) na chale.
+     get R zinda replicas padhta hai — model sabse buri kismat maanta hai: pehle woh replicas jo sabse peeche hain.
+     Isliye R + W ≤ N par stale read dikhta hai, aur R + W > N par overlap se taaza value milti hai. */
+  const KV_NODES = ['a', 'b', 'c'];
+  P.push({
+    match: /^kv\b/i,
+    help: ['KV STORE (Dynamo jaisa · key balance:aman · 3 replicas a, b, c)',
+      '  kv status                         replicas aur config',
+      '  kv put aman 500                   W replicas par likho',
+      '  kv get aman                       R replicas se padho (sabse peeche wale pehle)',
+      '  kv config --w 2 --r 2             quorum badlo (1–3)',
+      '  kv down b   ·   kv up b           ek replica band / chalu',
+      '  kv repair                         anti-entropy: zinda replicas ko taaza karo'],
+    run(api, norm) {
+      const { sim, print, table, rec, err } = api;
+      const K = sim.sys.kv;
+      const verb = word(norm, 1), arg = word(norm, 2);
+      const live = () => KV_NODES.filter(n => !K.down[n]);
+      const rupee = v => '₹' + num(v);
+      if (!verb || verb === 'status') {
+        table(['replica', 'haal', 'balance:aman', 'version'], KV_NODES.map(n => [n, K.down[n] ? '💀 band' : 'zinda', rupee(K.reps[n].v), 'v' + K.reps[n].ver + (K.reps[n].ver < K.latest ? ' (peeche)' : '')]));
+        print('ok', `N = ${K.n}, W = ${K.w}, R = ${K.r} → R + W = ${K.r + K.w} ${K.r + K.w > K.n ? '> N: har read mein kam se kam ek taaza replica aata hai' : '≤ N: read aur write ke replicas alag ho sakte hain'}`);
+        return rec({ kind: 'kv', op: 'status', w: K.w, r: K.r });
+      }
+      if (verb === 'config') {
+        const w = Number((norm.match(/--w\s+(\S+)/i) || [])[1]), r = Number((norm.match(/--r\s+(\S+)/i) || [])[1]);
+        if (![w, r].every(x => Number.isInteger(x) && x >= 1 && x <= 3)) err('400 — --w aur --r dono 1 se 3 ke beech do');
+        K.w = w; K.r = r;
+        print('ok', `W = ${w}, R = ${r}. R + W = ${w + r} ${w + r > K.n ? '> 3 → quorum overlap: read aur write kam se kam ek replica par milte hain.' : '≤ 3 → overlap ki guarantee nahi: purana balance padh sakte ho.'}`);
+        return rec({ kind: 'kv', op: 'config', w, r, quorum: w + r > K.n });
+      }
+      if (verb === 'down' || verb === 'up') {
+        if (!KV_NODES.includes(arg)) err('400 — replica a, b ya c do');
+        K.down[arg] = verb === 'down';
+        print('ok', verb === 'down' ? `Replica ${arg} band. Zinda: ${live().join(', ') || 'koi nahi'}.` : `Replica ${arg} wapas. Data abhi purana ho sakta hai — kv repair se taaza hoga.`);
+        return rec({ kind: 'kv', op: verb, node: arg });
+      }
+      if (verb === 'repair') {
+        const up = live();
+        if (!up.length) err('503 — koi replica zinda nahi; repair kis par karein?');
+        const best = Math.max(...up.map(n => K.reps[n].ver));
+        const src = up.find(n => K.reps[n].ver === best);
+        up.forEach(n => { K.reps[n] = { ...K.reps[src] }; });
+        print('ok', `Anti-entropy: zinda replicas (${up.join(', ')}) ab v${best} par. Asli systems Merkle tree se farak dhoondhte hain.`);
+        return rec({ kind: 'kv', op: 'repair', ver: best });
+      }
+      if (verb === 'put') {
+        if (arg !== 'aman') err("400 — key sirf aman hai: 'kv put aman 500'");
+        const v = Number(word(norm, 3));
+        if (!Number.isInteger(v) || v < 0 || v > 10000000) err('400 — rupaye ka poora number do, jaise kv put aman 500');
+        const up = live();
+        if (up.length < K.w) err(`503 — sirf ${up.length} replica zinda, W = ${K.w} chahiye. Write fail: consistency ki keemat availability.`);
+        const ver = K.latest + 1, acked = up.slice(0, K.w);
+        acked.forEach(n => { K.reps[n] = { v, ver }; });
+        K.latest = ver;
+        print('ok', `PUT balance:aman = ${rupee(v)} (v${ver}) → ack ${acked.join(', ')} (W = ${K.w}).${acked.length < K.n ? ' Baaki replicas abhi purane; replication baad mein pahunchega.' : ' Teeno replicas taaza.'}`);
+        return rec({ kind: 'kv', op: 'put', value: v, ver, w: K.w, r: K.r, acked: acked.length });
+      }
+      if (verb === 'get') {
+        if (arg !== 'aman') err("400 — key sirf aman hai: 'kv get aman'");
+        const up = live();
+        if (up.length < K.r) err(`503 — sirf ${up.length} replica zinda, R = ${K.r} chahiye. Read fail.`);
+        const read = up.slice().sort((x, y) => K.reps[x].ver - K.reps[y].ver).slice(0, K.r);
+        const best = read.reduce((m, n) => K.reps[n].ver > K.reps[m].ver ? n : m, read[0]);
+        const { v, ver } = K.reps[best], stale = ver < K.latest;
+        print(stale ? 'err' : 'ok', `GET balance:aman → ${rupee(v)} (v${ver}) · padhe: ${read.join(', ')} (R = ${K.r})` +
+          (stale ? `\n   ⚠️ STALE — sabse naya v${K.latest} hai. Padhe gaye replicas tak write abhi pahuncha nahi (R + W = ${K.r + K.w} ≤ ${K.n}).` : '\n   ✅ Sabse naya version mila.'));
+        return rec({ kind: 'kv', op: 'get', value: v, ver, latest: K.latest, stale, w: K.w, r: K.r });
+      }
+      err(`400 — 'kv ${verb}' samajh nahi aaya. 'help' dekho.`);
     },
   });
 })();
