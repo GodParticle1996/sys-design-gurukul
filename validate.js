@@ -20,7 +20,7 @@ const path = require('path');
 const vm = require('vm');
 const DIR = __dirname;
 
-const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js'];
+const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js'];
 const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js', 'data-dist.js', 'data-shapes.js', 'data-builds.js', 'data-feed.js', 'data-feed-2.js',
   'data-st-01-reddit.js', 'data-st-02-cloudflare.js', 'data-st-03-jira.js', 'data-st-04-snowflake.js',
   'data-st-05-airtable.js', 'data-st-06-slack.js', 'data-st-07-discord.js', 'data-st-08-instagram.js',
@@ -89,7 +89,7 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-fp-scale-1-kyun.js',
   'data-v2-fp-scale-2-kaise.js',
   'data-v2-fp-scale-3-code.js',
-  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-guidance.js', 'data-v2-concurrency.js'];
+  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-scenes-flow.js', 'data-guidance.js', 'data-v2-concurrency.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */
@@ -997,19 +997,70 @@ function soch() {
 /* =====================================================================
    RUN
    ===================================================================== */
+/* =====================================================================
+   SCENES — kadam-dar-kadam diagrams (scene.js; data-scenes-*.js aur soch scenarios ke andar).
+   Har scene ko sach mein render karke "Agla kadam" se aakhri kadam tak chalao.
+   ===================================================================== */
+let sceneCount = 0;
+function scenes() {
+  console.log('\n🎬 SCENES (kadam-dar-kadam diagrams)');
+  if (typeof SD.renderScene !== 'function') return fail('scene.js load nahi hua (SD.renderScene nahi mila)');
+  (SD.sceneOrphans || []).forEach(id => fail(`SD.addScenes: VISUALS['${id}'] nahi hai (level id galat?)`));
+  const walk = (e, out = []) => { out.push(e); (e.children || []).forEach(c => walk(c, out)); return out; };
+  const plain = s => String(s == null ? '' : s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const STAND = /\b(yeh|woh|isse|usse|isko|usko|iska|uska|iski|uski|iske|uske)\b/i;
+  const strings = (o, p, f) => {
+    if (typeof o === 'string') f(p, o);
+    else if (Array.isArray(o)) o.forEach((v, i) => strings(v, `${p}[${i}]`, f));
+    else if (o && typeof o === 'object') Object.keys(o).forEach(k => strings(o[k], p ? `${p}.${k}` : k, f));
+  };
+  const check = (where, scene) => {
+    sceneCount++;
+    const bad = SD.sceneProblems(scene);
+    bad.forEach(m => fail(`${where}: ${m}`));
+    if (bad.length) return;
+    try {
+      for (let i = -1; i < scene.steps.length; i++) {
+        if (/NaN|undefined|Infinity/.test(SD.sceneSvg(scene, i, 'v'))) fail(`${where}: kadam ${i + 1} ke SVG mein NaN/undefined`);
+      }
+      const box = SD.renderScene(scene);
+      const next = walk(box).find(x => /\bbtn\b/.test(x.className || '') && /kadam/i.test(x._txt || x._html || ''));
+      if (!next) return fail(`${where}: "Agla kadam" button nahi mila`);
+      for (let i = 0; i < scene.steps.length + 2; i++) next.click();
+      if (!/Aakhri/.test(next.textContent)) fail(`${where}: "Agla kadam" se aakhri kadam tak nahi pahunche`); else ok();
+    } catch (e) { fail(`${where}: render throw — ${e.message}`); }
+    scene.steps.forEach((st, i) => {
+      const t = plain(st.say);
+      if (STAND.test(t)) fail(`${where} kadam ${i + 1}: "say" mein yeh/woh/isse jaisa shabd hai — dabbe ka naam likho`);
+      else if (t.split(' ').length > 45) fail(`${where} kadam ${i + 1}: "say" 45 shabdon se lamba hai — ek-do chhote vaakya likho`);
+      else ok();
+    });
+    strings(scene, '', (p, s) => { const why = sharedHtmlProblem(s); if (why) fail(`${where}.${p}: ${why}`); });
+  };
+  Object.keys(VISUALS).forEach(k => { if (VISUALS[k].scene) check(`VISUALS['${k}'].scene`, VISUALS[k].scene); });
+  (SD.scenarios || []).forEach(sc => { if (sc.scene) check(`soch '${sc.id}'.scene`, sc.scene); });
+  let have = 0, all = 0;
+  ['flow', 'api', 'data', 'resil', 'dist', 'shapes', 'builds'].forEach(t => (SD.levelSets[t] || []).forEach(l => {
+    all++; if (VISUALS[l.id] && VISUALS[l.id].scene) have++;
+  }));
+  const soch = SD.scenarios || [];
+  console.log(`  ${sceneCount} scenes chale · Mukhya raasta: ${have}/${all} levels ke paas scene · Soch Akhada: ${soch.filter(s => s.scene).length}/${soch.length}`);
+}
+
 if (!ONLY) structure();
 missions();
 if (!ONLY) labs();
 if (!ONLY) render();
 if (!ONLY) dockerLabs();
 if (!ONLY) soch();
+if (!ONLY) scenes();
 
 const stageCount = allLevels.reduce((a, x) => a + allStages(x.level).length, 0);
 const cardCount = allLevels.reduce((a, x) => a + (x.level.cards || []).length, 0);
 const ivCount = allLevels.reduce((a, x) => a + ((x.level.interview && x.level.interview.questions) || []).length, 0);
 console.log(`\n📊 ${SD.tracks.length} tracks · ${allLevels.length} levels · ${stageCount} stages · ` +
   `${ivCount} interview Qs · ${cardCount} flashcards · ${Object.keys(VISUALS).length} diagrams · ` +
-  `${labStages.length} interactive labs · ${(SD.scenarios || []).length} soch scenarios`);
+  `${labStages.length} interactive labs · ${(SD.scenarios || []).length} soch scenarios · ${sceneCount} scenes`);
 SD.tracks.forEach(t => console.log(`   ${t.icon} ${t.id.padEnd(6)} ${(SD.levelSets[t.id] || []).map(l => l.id).join(' → ')}`));
 
 if (errors) { console.log(`\n❌ ${errors} error · ${warns} warning · ${checks} checks pass\n`); process.exit(1); }

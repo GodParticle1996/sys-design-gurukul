@@ -165,6 +165,16 @@ function diagramFor(id, hero) {
   const v = (typeof VISUALS !== 'undefined') && VISUALS[id];
   if (!v) return null;
   const d = el('div', 'diagram' + (hero ? ' hero' : ''));
+  /* scene (scene.js, data-scenes-*.js) = kadam-dar-kadam diagram. Purana static html band dabbe mein neeche rehta hai:
+     usmein "ek nazar" wali summary boxes hain jo scene mein nahi. */
+  if (v.scene && typeof SD.renderScene === 'function') {
+    d.classList.add('has-scene');
+    d.innerHTML = `<div class="dg-title">📊 ${v.t}</div>`;
+    d.appendChild(SD.renderScene(v.scene));
+    const all = el('details', 'dg-all', `<summary>📋 Poori tasveer ek saath dekho</summary>${v.html}`);
+    d.appendChild(all);
+    return d;
+  }
   d.innerHTML = `<div class="dg-title">📊 ${v.t}</div>${v.html}`;
   try { diagramStepper(d); } catch (e) { /* stepper sirf suvidha hai; diagram uske bina bhi poora hai */ }
   return d;

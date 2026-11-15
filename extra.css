@@ -106,3 +106,57 @@
 .diagram.dg-stepping .dg-on { opacity: 1; outline: 2px solid var(--accent); outline-offset: 3px; }
 .diagram.dg-stepping .dg-on .dg-rung, .diagram.dg-stepping .dg-on .dg-box, .diagram.dg-stepping .dg-on .dg-node,
 .diagram.dg-stepping .dg-seen .dg-rung, .diagram.dg-stepping .dg-seen .dg-box, .diagram.dg-stepping .dg-seen .dg-node { opacity: 1; }
+
+/* ---------- 🎬 scene player (scene.js) — kadam-dar-kadam SVG diagram (Kube Gurukul se; rang theme ke variables se) ---------- */
+.scene { margin-top: 4px; }
+.sc-stage { overflow-x: auto; text-align: center; }
+.sc-svg { width: 100%; min-width: 520px; height: auto; display: block; margin: 0 auto; }
+/* phone: diagram thoda bada rakho (akshar padhne layak); stage sideways scroll karta hai aur scene.js abhi wale kadam ko beech mein laata hai */
+@media (max-width: 700px) { .sc-svg { min-width: 600px; } .diagram .sc-stage { margin: 0 -18px; scroll-behavior: smooth; } }
+.sc-svg text { font-family: inherit; text-anchor: middle; }
+.sc-group rect { fill: color-mix(in srgb, var(--text) 3%, transparent); stroke: var(--border); stroke-width: 1.4; stroke-dasharray: 6 5; }
+.sc-group text { text-anchor: start; font-size: 10.5px; font-weight: 800; letter-spacing: 1.2px; fill: var(--muted); text-transform: uppercase; }
+.sc-group.accent rect { stroke: var(--accent); } .sc-group.accent text { fill: var(--accent); }
+.sc-group.good rect { stroke: var(--good); } .sc-group.good text { fill: var(--good); }
+.sc-group.gold rect { stroke: var(--gold); } .sc-group.gold text { fill: var(--gold); }
+.sc-group.bad rect { stroke: var(--bad); } .sc-group.bad text { fill: var(--bad); }
+.sc-node rect { fill: var(--panel2); stroke: var(--border); stroke-width: 1.5; transition: opacity .25s; }
+.sc-node .sc-ic { font-size: 18px; }
+.sc-node .sc-lb { font-size: 12.5px; font-weight: 700; fill: var(--text); }
+.sc-node .sc-sb { font-size: 10.5px; fill: var(--muted); }
+.sc-node.accent rect { stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+.sc-node.good rect { stroke: var(--good); fill: color-mix(in srgb, var(--good) 14%, var(--panel)); }
+.sc-node.bad rect { stroke: var(--bad); fill: color-mix(in srgb, var(--bad) 14%, var(--panel)); }
+.sc-node.gold rect { stroke: var(--gold); fill: color-mix(in srgb, var(--gold) 14%, var(--panel)); }
+.sc-node.muted { opacity: .6; }
+.sc-node.dim { opacity: .38; }
+.sc-node.on rect { stroke-width: 2.6; stroke: var(--gold); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gold) 40%, transparent)); }
+.sc-node.has-about { cursor: help; }
+.sc-edge { fill: none; stroke: var(--accent); stroke-width: 2.4; }
+.sc-edge.past { opacity: .22; stroke-width: 1.6; }
+.sc-edge.now { stroke-dasharray: 7 5; }
+.sc-edge.good { stroke: var(--good); } .sc-edge.bad { stroke: var(--bad); } .sc-edge.gold { stroke: var(--gold); }
+.sc-mk path { fill: var(--accent); } .sc-mk.good path { fill: var(--good); } .sc-mk.bad path { fill: var(--bad); } .sc-mk.gold path { fill: var(--gold); }
+.sc-dot { fill: var(--accent); } .sc-dot.good { fill: var(--good); } .sc-dot.bad { fill: var(--bad); } .sc-dot.gold { fill: var(--gold); }
+.sc-elabel rect { fill: var(--panel); stroke: var(--accent); stroke-opacity: .55; }
+.sc-elabel text { font-size: 10.5px; font-weight: 700; fill: var(--accent); }
+.sc-elabel.good rect { stroke: var(--good); } .sc-elabel.good text { fill: var(--good); }
+.sc-elabel.bad rect { stroke: var(--bad); } .sc-elabel.bad text { fill: var(--bad); }
+.sc-elabel.gold rect { stroke: var(--gold); } .sc-elabel.gold text { fill: var(--gold); }
+.sc-say {
+  background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+  min-height: 58px; line-height: 1.6; font-size: .93rem; margin-top: 8px; text-align: left; overflow-wrap: anywhere;
+}
+.sc-num {
+  display: inline-block; min-width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%;
+  background: var(--gold); color: var(--bg); font-weight: 800; font-size: .76rem; margin-right: 8px;
+}
+.sc-how { color: var(--muted); }
+.sc-ctrl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.sc-count { font-size: .82rem; color: var(--muted); }
+/* scene ke neeche purana poora diagram, band dabbe mein */
+.dg-all { margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 10px; }
+.dg-all > summary { cursor: pointer; font-weight: 700; color: var(--accent); font-size: .9rem; }
+.dg-all[open] > summary { margin-bottom: 10px; }
+/* Soch Akhada scenario ke andar scene */
+.so-scene-dia { margin: 12px 0; }

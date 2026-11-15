@@ -28,6 +28,7 @@
   <script src="dockerlab.js"></script>
   <script src="explain.js"></script>
   <script src="soch.js"></script>
+  <script src="scene.js"></script>
   <script src="data-flow.js"></script>
   <script src="data-api.js"></script>
   <script src="data-data.js"></script>
@@ -169,6 +170,7 @@
   <script src="data-soch-1.js"></script>
   <script src="data-soch-2.js"></script>
   <script src="data-soch-3.js"></script>
+  <script src="data-scenes-flow.js"></script>
   <script src="data-guidance.js"></script>
   <script src="data-v2-concurrency.js"></script>
   <script>
@@ -180,8 +182,16 @@
         if (!v) return;
         seen.add(id);
         const sec = document.createElement('section');
-        sec.innerHTML = '<div class="crumb" style="margin-top:26px">' + crumb + '</div>' +
-          '<div class="diagram hero"><div class="dg-title">📊 ' + v.t + '</div>' + v.html + '</div>';
+        sec.innerHTML = '<div class="crumb" style="margin-top:26px">' + crumb + (v.scene ? ' · 🎬 scene' : '') + '</div>' +
+          '<div class="diagram hero"><div class="dg-title">📊 ' + v.t + '</div>' + (v.scene ? '' : v.html) + '</div>';
+        if (v.scene) {   /* scene + purana poora diagram band dabbe mein — level intro jaisa */
+          const d = sec.querySelector('.diagram');
+          d.appendChild(SD.renderScene(v.scene));
+          const all = document.createElement('details');
+          all.className = 'dg-all';
+          all.innerHTML = '<summary>📋 Poori tasveer ek saath dekho</summary>' + v.html;
+          d.appendChild(all);
+        }
         g.appendChild(sec);
       }
       SD.tracks.forEach(track => {
