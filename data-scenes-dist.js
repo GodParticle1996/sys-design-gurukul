@@ -175,4 +175,164 @@ SD.addScenes({
     ],
   },
 
+  outbox: {
+    intro: 'Order DB mein save hua, par Kafka tak event <b>kabhi nahi pahuncha</b>. Sabse chhupa hua data-loss bug.',
+    nodes: [
+      { id: 'broker', col: 1, row: 0, icon: '📨', label: 'Kafka' },
+      { id: 'inv', col: 2, row: 0, icon: '📦', label: 'inventory-service' },
+      { id: 'api', col: 0, row: 1, icon: '🧾', label: 'order-service', tone: 'accent' },
+      { id: 'db', col: 1, row: 1, icon: '🗄️', label: 'orders DB' },
+      { id: 'relay', col: 2, row: 1, icon: '🔁', label: 'Relay', sub: 'polling ya CDC' },
+    ],
+    steps: [
+      { from: 'api', to: 'db', label: 'save(order) ✅', tone: 'good', say: 'Dual write: order-service pehle order DB mein save karta hai ✅.' },
+      { from: 'api', to: 'broker', label: 'publish(event) — crash 💥', tone: 'bad', set: { broker: { tone: 'bad', sub: 'event gaya hi nahi' }, inv: { tone: 'bad', sub: 'pata hi nahi' } }, say: 'Event bhejne se pehle crash. Order DB mein hai, event kabhi nahi gaya; inventory-service ko pata hi nahi. Chup-chaap data inconsistency.' },
+      { at: ['api'], say: 'Kram ulta karo toh ulta problem: event chala gaya, order bana hi nahi. Bina saajhe commit protocol ke do systems mein atomic write nahi milta.' },
+      { from: 'api', to: 'db', label: 'orders + outbox, 1 COMMIT', tone: 'good', set: { db: { tone: 'good', sub: 'order + outbox row' }, broker: { tone: '', sub: '' }, inv: { tone: '', sub: '' } }, say: 'Outbox: order aur event dono usi DB ki do tables mein, EK transaction mein. Atomic ✅. Beech mein doosra system hai hi nahi.' },
+      { from: 'db', to: 'relay', label: 'naye outbox rows', say: 'Alag relay process outbox padhta hai: polling (har kuch second SELECT) ya CDC (DB ka log padhna, DB par kam load).' },
+      { from: 'relay', to: 'broker', label: 'publish, phir mark sent', tone: 'good', say: 'Relay Kafka ko event bhejta hai, phir outbox row ko "sent" mark karta hai.' },
+      { from: 'broker', to: 'inv', label: 'OrderPlaced', tone: 'gold', say: 'Relay publish ke baad, mark karne se pehle crash ho toh event dobara jaayega. Outbox at-least-once deta hai, exactly-once nahi: inventory-service idempotent chahiye.' },
+    ],
+  },
+
+  exactlyonce: {
+    intro: 'Cashback consumer ne Riya ko ₹50 diye, phir <b>ACK se pehle crash</b>. Broker ab kya kare?',
+    nodes: [
+      { id: 'broker', col: 0, row: 1, icon: '📨', label: 'Broker', sub: 'msg m-77', tone: 'accent' },
+      { id: 'cons', col: 1, row: 1, icon: '👷', label: 'cashback consumer' },
+      { id: 'db', col: 2, row: 1, icon: '🗄️', label: 'wallet DB', sub: 'Riya: ₹500' },
+    ],
+    steps: [
+      { from: 'broker', to: 'cons', label: 'm-77: ₹50 cashback', say: 'Consumer message m-77 leta hai: Riya ko ₹50 cashback.' },
+      { from: 'cons', to: 'db', label: '+₹50', tone: 'good', set: { db: { sub: 'Riya: ₹550' } }, say: 'Consumer ne Riya ke wallet mein ₹50 jod diye.' },
+      { at: ['cons'], set: { cons: { tone: 'bad', sub: 'ACK se pehle crash 💥' } }, say: 'ACK bhejne se PEHLE crash. Broker ko pata nahi: kaam hua ya nahi? Dono haalat broker ko ek jaisi dikhti hain.' },
+      { at: ['broker'], say: 'Do hi raaste: dobara bhejo (at-least-once → duplicate ka khatra) ya mat bhejo (at-most-once → data loss). Teesra koi nahi.' },
+      { from: 'broker', to: 'cons', label: 'm-77 dobara', tone: 'gold', set: { cons: { tone: '', sub: 'restart hua' } }, say: 'Broker m-77 dobara bhejta hai (at-least-once). Naive consumer phir ₹50 jodta: ₹600 😱.' },
+      { from: 'cons', to: 'db', label: 'INSERT m-77 + credit, 1 txn', tone: 'good', set: { db: { tone: 'good', sub: 'm-77 pehle se → skip' } }, say: 'Idempotent consumer: processed_ids mein m-77 aur ₹50 credit EK transaction mein. Dobara aaya toh UNIQUE constraint fail → skip. Riya ka balance ₹550 hi.' },
+      { at: ['db'], say: 'At-least-once + idempotent processing = effectively-once. Broker ka "exactly-once" broker ke apne scope tak hai; bahar ke side effects (SMS, bank) ka nahi.' },
+    ],
+  },
+
+  streams: {
+    intro: '"Kafka bhi toh queue hi hai na?" Nahi. Queue ek to-do list hai; Kafka ek <b>log</b> — ek itihaas.',
+    nodes: [
+      { id: 'g1', col: 2, row: 0, icon: '🕵️', label: 'fraud group', sub: 'offset 1,204' },
+      { id: 'prod', col: 0, row: 1, icon: '💸', label: 'pay-api', sub: 'PaymentDone events', tone: 'accent' },
+      { id: 'log', col: 1, row: 1, icon: '📜', label: 'Kafka topic (log)', sub: '7 din retention' },
+      { id: 'g2', col: 2, row: 1, icon: '📊', label: 'analytics group', sub: 'offset 980' },
+      { id: 'g3', col: 2, row: 2, icon: '🎁', label: 'rewards group (naya)', sub: 'offset 0 se' },
+    ],
+    steps: [
+      { from: 'prod', to: 'log', label: 'append', say: 'pay-api har payment ka event log ke aakhir mein jodta hai. Message padhne ke baad bhi retention tak rehta hai.' },
+      { from: 'log', to: 'g1', label: 'fraud check', say: 'Har consumer group ko poora data milta hai. fraud group apna offset khud rakhta hai.' },
+      { from: 'log', to: 'g2', label: 'apni speed se', say: 'analytics group alag speed se padhta hai. Dono groups ek doosre ko nahi rokte.' },
+      { from: 'log', to: 'g3', label: 'offset 0 se replay', tone: 'good', set: { g3: { tone: 'good' } }, say: 'Naya feature (rewards)? Naya consumer group purana data shuru se replay kar leta hai. Bug se galat aggregation hua? Offset peeche karo. Queue mein namumkin.' },
+      { at: ['log'], set: { log: { tone: 'gold', sub: '6 partitions' } }, say: 'Partitions = parallelism ki hadd: 6 partitions par ek group mein zyada se zyada 6 consumers kaam karte hain. Ordering sirf partition ke andar.' },
+      { at: ['g2'], say: 'Event time (payment kab hua) vs processing time (kab padha). Late events ke liye watermark: "is waqt tak ke events aa chuke maano".' },
+    ],
+  },
+
+  scheduling: {
+    intro: '50,000 users ko bill due hone se 5 din pehle reminder bhejna hai. Har ghante <b>2 crore rows</b> scan karoge?',
+    nodes: [
+      { id: 'cron', col: 0, row: 0, icon: '⏰', label: 'Hourly cron', sub: 'poori table scan' },
+      { id: 'cards', col: 1, row: 0, icon: '🗄️', label: 'cards table', sub: '2 crore rows' },
+      { id: 'lock', col: 2, row: 1, icon: '👑', label: 'Leader lock', sub: 'TTL + fencing token' },
+      { id: 'bill', col: 0, row: 2, icon: '🧾', label: 'Bill aaya', sub: 'ya due date badli' },
+      { id: 'rem', col: 1, row: 2, icon: '📅', label: 'reminders table', sub: 'reminder_at (index)' },
+      { id: 'worker', col: 2, row: 2, icon: '👷', label: 'Workers' },
+      { id: 'sms', col: 3, row: 2, icon: '📲', label: 'SMS provider' },
+    ],
+    steps: [
+      { from: 'cron', to: 'cards', label: 'WHERE due_date …', tone: 'bad', set: { cards: { tone: 'bad', sub: '2 crore scan / ghanta' } }, say: 'Polling: har ghante 2 crore cards scan, 50,000 reminders mile. Wahi bimari jo deep pagination mein thi: jawab ke liye poora data chhuna.' },
+      { from: 'bill', to: 'rem', label: 'reminder_at = due − 5 din', tone: 'good', set: { cards: { tone: '', sub: '2 crore rows' } }, say: 'Sawaal ulta karo: bill aaye ya due date badle, tabhi ek baar reminder_at likh do (user ke timezone mein).' },
+      { from: 'worker', to: 'rem', label: 'reminder_at <= now()', tone: 'good', set: { rem: { tone: 'good' } }, say: 'Workers sirf abhi tak due rows padhte hain: index par chhota range scan. Due date badli? Bas ek row update.' },
+      { at: ['worker'], set: { worker: { sub: 'FOR UPDATE SKIP LOCKED' } }, say: 'Kai workers: FOR UPDATE SKIP LOCKED se har worker alag rows uthata hai; ek row do workers nahi uthate.' },
+      { from: 'worker', to: 'sms', label: 'SMS, phir mark sent', say: 'SMS bhejo, phir row "sent" mark karo. SMS ke baad, mark se pehle crash = dobara SMS. Exactly-once namumkin: at-least-once + idempotency key.' },
+      { at: ['lock'], set: { lock: { tone: 'gold' } }, say: 'Scheduler machine raat 3 baje mari? Leader election: TTL wala lock. Fencing token ke saath, taaki purana leader jaag kar job dobara na chalaye.' },
+      { at: ['rem'], say: 'Scale par: time buckets (har minute ka bucket), partitions, aur stagger: sab reminders 9:00:00 par nahi, 9:00–9:05 mein bikhar kar.' },
+    ],
+  },
+
+  locks: {
+    intro: 'Worker A ke paas lock hai… <b>ya Worker A ko aisa lagta hai</b>. Distributed lock jhooth kaise bolta hai?',
+    nodes: [
+      { id: 'a', col: 0, row: 0, icon: '👷', label: 'Worker A' },
+      { id: 'lock', col: 1, row: 1, icon: '🔐', label: 'Lock service', sub: 'TTL 30 s' },
+      { id: 'b', col: 0, row: 2, icon: '👷', label: 'Worker B' },
+      { id: 'store', col: 2, row: 1, icon: '🗄️', label: 'Storage', sub: 'last token: 0' },
+    ],
+    steps: [
+      { from: 'a', to: 'lock', label: 'lock do', tone: 'good', set: { a: { tone: 'good', sub: 'lock ✓ · token 33' } }, say: 'Worker A lock leta hai (TTL 30 s). Saath mein fencing token 33 milta hai.' },
+      { at: ['a'], set: { a: { tone: 'bad', sub: 'GC pause 40 s ⏸️' } }, say: 'Worker A ka GC pause: 40 second. Worker A ko pata hi nahi ki waqt beeta.' },
+      { from: 'b', to: 'lock', label: 'lock do', tone: 'gold', set: { lock: { tone: 'gold', sub: 'A ka expire → B' }, b: { tone: 'good', sub: 'lock ✓ · token 34' } }, say: '30 second par Worker A ka lock expire hua. Lock Worker B ko mila, token 34.' },
+      { from: 'b', to: 'store', label: 'write · token 34', tone: 'good', set: { store: { sub: 'last token: 34' } }, say: 'Worker B storage par likhta hai, token 34 ke saath.' },
+      { from: 'a', to: 'store', label: 'write · token 33', tone: 'bad', set: { a: { tone: 'bad', sub: 'jaaga, likhne laga' }, store: { tone: 'good', sub: '33 < 34 → REJECT' } }, say: 'Worker A jaaga aur likhne laga: khud ko abhi bhi maalik samajhta hai. Storage token 33 dekhta hai, 34 se chhota → REJECT. Fencing token ne double write roka.' },
+      { at: ['lock'], say: 'Lease liveness ke liye, fence safety ke liye. Redlock pause se nahi bachata: lock service ko Worker A ke pause ka pata hi nahi chalta.' },
+      { at: ['store'], say: 'Aur behtar: lock hi mat lo. DB unique constraint, conditional update (WHERE version = 7), ya partition (ek key = ek worker).' },
+    ],
+  },
+
+  'lock-choices': {
+    intro: 'Taala chahiye? Kaunsa — Redis, ZooKeeper, Postgres? Ya <b>taala chahiye bhi nahi</b>?',
+    nodes: [
+      { id: 'redis', col: 0, row: 0, icon: '⚡', label: 'Redis SET NX EX', sub: 'lease, tez' },
+      { id: 'zk', col: 1, row: 0, icon: '🦓', label: 'ZooKeeper / etcd', sub: 'line mein number' },
+      { id: 'pg', col: 2, row: 0, icon: '🐘', label: 'Postgres advisory', sub: 'session ke saath' },
+      { id: 'none', col: 3, row: 0, icon: '🚫', label: 'Koi taala nahi', sub: 'ON CONFLICT / version' },
+      { id: 'w', col: 1, row: 2, icon: '👥', label: '100 waiters', tone: 'accent' },
+    ],
+    steps: [
+      { at: ['redis'], say: 'Redis SET NX EX: lease, tez. Khatra: pause ke baad purana holder. Resource ko token jaanchna padega.' },
+      { at: ['zk'], say: 'ZooKeeper/etcd: session expiry, aur sequential node se line mein number. Har waiter sirf apne aage wale ko dekhta hai.' },
+      { from: 'w', to: 'zk', label: 'sabko jagao: 5,050', tone: 'bad', say: 'Lab 36: 100 waiters. Lock chhootne par "sabko jagao" = 5,050 wake-ups; sab daudte hain, ek jeet-ta hai (thundering herd).' },
+      { from: 'w', to: 'zk', label: 'line mein agla: 100', tone: 'good', say: '"Line mein agla" (ZooKeeper jaisa): sirf agle waiter ko jagao. Kul 100 wake-ups.' },
+      { at: ['pg'], say: 'Postgres advisory lock: session khatam hote hi lock chhoot jaata hai. DB pehle se hai, toh naya system nahi chahiye. DB failure par bartaav test karo.' },
+      { at: ['none'], set: { none: { tone: 'good' } }, say: 'Kya taala chahiye bhi? Idempotent write (ON CONFLICT) ya optimistic concurrency (version column) se aksar kaam chal jaata hai.' },
+      { at: ['redis', 'zk', 'pg'], say: 'Granularity: poori table nahi, sirf ek row ka taala. Ordering: do taale chahiye toh hamesha ek hi kram mein lo (chhota id pehle), warna deadlock.' },
+    ],
+  },
+
+  contention: {
+    intro: 'Seat A-12 ek hai, khareedaar do: Riya aur Aman. Dono ko <b>"free"</b> dikha. Ab?',
+    nodes: [
+      { id: 'a', col: 0, row: 0, icon: '📱', label: 'Riya', tone: 'accent' },
+      { id: 'db', col: 1, row: 1, icon: '🗄️', label: 'seats table', sub: 'A-12: free' },
+      { id: 'b', col: 0, row: 2, icon: '📱', label: 'Aman', tone: 'accent' },
+      { id: 'hold', col: 2, row: 1, icon: '⏳', label: 'Reservation', sub: 'hold 10 min (TTL)' },
+    ],
+    steps: [
+      { from: 'a', to: 'db', label: 'SELECT → free', say: 'Riya ki request: seat A-12 free hai? Haan.' },
+      { from: 'b', to: 'db', label: 'SELECT → free', say: 'Aman ki request bhi: free hai? Haan. Riya ki request ne abhi UPDATE nahi kiya.' },
+      { from: 'a', to: 'db', label: 'UPDATE → sold', say: 'Riya ki request UPDATE karti hai: sold.' },
+      { from: 'b', to: 'db', label: 'UPDATE → sold', tone: 'bad', set: { db: { tone: 'bad', sub: 'A-12: do log 💥' } }, say: 'Aman ki request bhi: sold. Ek seat, do log. Transaction atomicity deti hai, "beech mein koi na aaye" nahi. READ COMMITTED par dono SELECT safal.' },
+      { at: ['db'], set: { db: { tone: 'good', sub: "WHERE status='free'" } }, say: "Ilaaj: condition update ke andar: UPDATE … WHERE status='free'. Ek hi request safal; doosri ko 0 rows. Ya pessimistic: SELECT … FOR UPDATE." },
+      { from: 'db', to: 'hold', label: 'hold 10 min', tone: 'good', say: 'Checkout ka asli pattern: reservation. Seat 10 minute hold (TTL). Payment aaye toh hold ka maalik aur expiry jaancho, phir sold.' },
+      { at: ['db'], say: 'Lock ke andar kabhi network call nahi (payment API lock pakde rakhegi). Conflict kam toh optimistic (version check); garam row par pessimistic.' },
+    ],
+  },
+
+  'boss-dist': {
+    intro: 'FINAL BOSS: poora order system. Har kadam par ek purana sabak lagta hai.',
+    nodes: [
+      { id: 'orch', col: 2, row: 0, icon: '🎼', label: 'Saga orchestrator' },
+      { id: 'app', col: 0, row: 1, icon: '📱', label: 'App', tone: 'accent' },
+      { id: 'os', col: 1, row: 1, icon: '🧾', label: 'order-service' },
+      { id: 'broker', col: 2, row: 1, icon: '📨', label: 'Broker' },
+      { id: 'svc', col: 3, row: 1, icon: '🧩', label: '3 services', sub: 'inventory, payment, ship' },
+      { id: 'db', col: 1, row: 2, icon: '🗄️', label: 'orders DB', sub: 'order + outbox' },
+      { id: 'rm', col: 2, row: 2, icon: '📖', label: 'Read model', sub: 'Delhi pending orders' },
+    ],
+    steps: [
+      { from: 'app', to: 'os', label: 'Idempotency-Key', tone: 'good', say: '1. App Idempotency-Key ke saath order bhejta hai. Double-submit safe; order pending.' },
+      { from: 'os', to: 'db', label: 'order + outbox, 1 txn', tone: 'good', say: '2. Order aur outbox row EK transaction mein. Event kabhi kho nahi sakta.' },
+      { from: 'db', to: 'broker', label: 'relay → event', say: 'Relay outbox se event broker tak le jaata hai.' },
+      { from: 'broker', to: 'orch', label: 'OrderPlaced', say: '3. Saga orchestrator flow chalata hai, taaki poora flow ek jagah dikhe.' },
+      { from: 'orch', to: 'svc', label: 'reserve → charge → ship', say: '4. Har service idempotent: at-least-once ka matlab duplicates aayenge hi.' },
+      { at: ['svc', 'orch'], set: { svc: { tone: 'bad', sub: 'payment fail ❌' }, orch: { tone: 'gold', sub: 'compensate: ulta kram' } }, say: '5. Payment fail? Compensate: stock chhodo, order cancel. User ko state dikhao, kyunki saga mein isolation nahi.' },
+      { from: 'broker', to: 'rm', label: 'events', tone: 'good', say: '6. "Delhi ke pending orders" ke liye read model, kyunki cross-service JOIN gaya.' },
+      { at: ['os'], say: 'Distributed system mein "ek saath" jaisa kuch nahi, sirf "aakhir mein". Isliye har kadam dobara chalne layak (idempotent) aur ulta karne layak (compensate) banao.' },
+    ],
+  },
+
 });
