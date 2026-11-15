@@ -558,7 +558,7 @@
                 "Method se bahar aana ya exception close ki jagah nahi leta. close() bulana padta hai.",
               ],
               "Connection aur permit kaun wapas karta hai: semaphore khud, ya close()?") },
-          { title: '4. Do baar return?', say: 'Java ke aam semaphore par faltu release() khaali permits ki ginti badha deta hai. Lab mein ek acquire ke baad do release() se ginti 3/2 dikhti hai. Theek kiya hua <b>lease</b> resource ka kuch der ka handle hai; close() par ek hi baar chalne wala atomic guard dobara lautana rokta hai.', vars: { permits: 'Broken raw release: 3/2', free: 'Fixed lease: har ID ek baar', c: 'Duplicate return reject' },
+          { title: '4. Do baar return?', say: 'Java ke aam semaphore par faltu release() khaali permits ki ginti badha deta hai. Lab mein ek acquire ke baad do release() se ginti 3/2 dikhti hai. Theek kiya hua <b>lease</b> resource ka kuch der ka handle hai; close() par ek hi baar chalne wala atomic guard dobara lautana rokta hai.', vars: { permits: 'Broken raw release: 3/2', free: 'Fixed lease: har ID ek baar', c: 'Duplicate close: no-op' },
             ask: ask("Lease ka close() do baar bula diya gaya. Pool mein sahi nateeja kya rehna chahiye?",
               [
                 "ID aur permit ek-ek baar hi wapas aayein — kul capacity 2 hi rahe",
@@ -1096,7 +1096,7 @@
     mistake: 'Interrupt ko arbitrary held lock ki forced release maan lena.',
     compare: [
       { choice: 'Same lock order rakho', when: 'Kai resources ka cycle ban raha ho', tradeoff: 'Cycle ruk sakta hai; har path ko wahi niyam maanna hoga' },
-      { choice: 'Baari mein fairness lao', when: 'Ek task baar-baar service se vanchit ho', tradeoff: 'Task aage badhega; throughput ka sauda ho sakta hai' },
+      { choice: 'Baari mein fairness lao', when: 'Ek task baar-baar service se vanchit ho', tradeoff: 'Baari milne mein madad; CPU milne ka vaada nahi, throughput ghat sakta hai' },
     ],
     followup: 'Premium jobs finish hoti hain, normal job wait karti hai. Total throughput kya chhupaata hai?',
   }, ['locks', 'liveness']);

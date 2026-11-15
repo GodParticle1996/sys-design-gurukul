@@ -173,10 +173,10 @@ SD.addScenes({
     ],
     steps: [
       { at: ['fleet'], set: { fleet: { tone: 'bad' } }, say: 'Ek bade fleet par ek kharab deploy ya zehrila request = 100% users, chahe kitne bhi replicas hon.' },
-      { at: ['cells'], set: { cells: { tone: 'gold' } }, say: '10 cells: har cell apna poora stack. Ek cell gira = 10% users. Keemat: 10 control planes, 10 deploys, 10 dashboards.' },
+      { at: ['cells'], set: { cells: { tone: 'gold' } }, say: '10 cells: har cell ka apna stack. Users barabar bante hon toh ek cell girne par 10% users par asar. Saajhi dependencies aur deploy bhi alag sambhaalo.' },
       { from: 'cust', to: 'c3', label: 'cell #1', say: 'Shuffle sharding: har customer ko 8 mein se koi 2 cells milte hain. DreamTeam11 ko Cell 3…' },
       { from: 'cust', to: 'c6', label: 'cell #2', say: '…aur Cell 6. Poora outage tabhi jab dono cells kharab hon.' },
-      { at: ['c3', 'c6'], set: { c3: { tone: 'bad', sub: 'zehrila request se gira' }, c6: { tone: 'bad', sub: 'zehrila request se gira' } }, say: 'DreamTeam11 ka zehrila request Cell 3 aur Cell 6 dono gira deta hai. 8 cells mein C(8,2) = 28 jodiyan hain; isi jodi wale customers ≈ 1/28 = 3.6%.' },
+      { at: ['c3', 'c6'], set: { c3: { tone: 'bad', sub: 'zehrila request se gira' }, c6: { tone: 'bad', sub: 'zehrila request se gira' } }, say: 'DreamTeam11 ka request Cell 3 aur Cell 6 giraata hai. 8 mein se 2 ki 28 jodiyan. Barabar random bantwaare par isi jodi wale customers lagbhag 3.6%; baaki par bhi kuch asar pad sakta hai.' },
       { at: ['other'], set: { other: { tone: 'good', sub: 'ek cell gira: degrade' } }, say: 'Jin customers ki jodi mein sirf ek cell gira (jaise C3 + C5), un customers ka doosra cell jawab deta hai: degrade, maut nahi.' },
       { at: ['shuf'], set: { shuf: { tone: 'good' } }, say: 'Bina shuffle 5% blast radius ke liye 20 cells chahiye (20 control planes). Shuffle se 8 cells mein 3.6%. Aur socho: gire cell ka load kahan jaayega? Spare capacity ya shed.' },
     ],
@@ -194,12 +194,12 @@ SD.addScenes({
     ],
     steps: [
       { from: 'user', to: 'lb', label: 'saari traffic', say: 'Saari traffic ek load balancer se guzarti hai.' },
-      { at: ['a1', 'a2', 'd1', 'd2'], set: { a1: { tone: 'good' }, a2: { tone: 'good' }, d1: { tone: 'good' }, d2: { tone: 'good' } }, say: 'App aur DB do-do hain, alag zones mein. Kisi ek ke marne par bhi system chalta.' },
+      { at: ['a1', 'a2', 'd1', 'd2'], set: { a1: { tone: 'good' }, a2: { tone: 'good' }, d1: { tone: 'good' }, d2: { tone: 'good' } }, say: 'App aur DB do-do hain, alag zones mein. Ek copy marne par doosri kaam le sakti hai; sahi failover aur bachi capacity phir bhi chahiye.' },
       { at: ['lb'], set: { lb: { tone: 'bad', sub: 'mara 💀' } }, say: 'Load balancer mara → lab mein sirf 25% available. Chain utni hi mazboot jitni kamzor kadi. Jo cheez sirf ek hai, wahi poora system hai.' },
       { at: ['lb'], set: { lb: { tone: 'good', sub: 'active-passive + VIP' } }, say: 'Load balancer bhi replicate karo: active-passive + floating IP (ya managed LB). Critical path ki har cheez: DB, LB, Kafka (RF 3), gateway, aur cache agar dependency hai.' },
       { at: ['a1', 'a2'], say: 'Active-active stateless apps ke liye aasan: dono traffic lete hain. Stateful DB mein dono jagah write = conflict ka khatra, isliye DB aksar active-passive.' },
       { from: 'd1', to: 'd2', label: 'process → zone → region', tone: 'gold', say: 'Replicas kahan rakho? Process → machine → rack → zone → region. Jitna door, utna bada hadsa jhel sakta hai, par sync utna dheema.' },
-      { at: ['d2'], set: { d2: { tone: 'gold', sub: 'region B: DR' } }, say: 'Region hi gaya? DR ki seedhi: backup & restore → pilot light → warm standby → active-active. Upar jaao toh RTO aur RPO kam, par region B ka idle kharcha zyada (lab 40).' },
+      { at: ['d2'], set: { d2: { tone: 'gold', sub: 'region B: DR' } }, say: 'Region gaya? DR, yaani disaster ke baad recovery: backup restore → pilot light → warm standby → active-active. RTO wapas chalne ka waqt, RPO manzoor data loss. Taiyaari badhne par waqt ghat sakta hai; data loss replication par aur kharcha setup par tika hai.' },
     ],
   },
 
@@ -238,7 +238,7 @@ SD.addScenes({
       { at: ['scale'], set: { scale: { tone: 'good' } }, say: 'Pre-scale: autoscaling traffic aane ke BAAD react karta hai, aur minute laga deta hai. Servers pehle se chalu rakho.' },
       { from: 'st', to: 'wait', label: '1,20,000 rps', tone: 'gold', say: 'Admission control: waiting room. Ek waqt mein 1.5 lakh andar; baaki ko "loading…" aur line mein unka number.' },
       { from: 'wait', to: 'kv', label: 'GET roll_no', tone: 'good', say: 'Read path bilkul simple: partitioned key-value store, ek key lookup. Koi JOIN nahi, koi calculation nahi.' },
-      { from: 'kv', to: 'rep', label: 'copies banao', tone: 'good', say: 'Result immutable hai, isliye aggressive replication mein conflict ho hi nahi sakta. Jitni copies chahiye, banao.' },
+      { from: 'kv', to: 'rep', label: 'taiyaar copies', tone: 'good', say: 'Result ki copies traffic se pehle taiyaar rakho. Result badalta nahi, toh badle data ke conflicts nahi; kitni copies chahiye, load test se tay karo.' },
       { at: ['wait'], say: 'Retry amplification se bacho: refresh button par backoff. Aur asli traffic pattern ka load test, 5 baje se pehle.' },
     ],
   },
@@ -260,7 +260,7 @@ SD.addScenes({
       { from: 'svc', to: 'met', label: 'sasta, aggregate', say: 'Metrics: "kya kuch galat hai?" Sasta aur aggregate; alerting isi se.' },
       { from: 'svc', to: 'tr', label: 'trace_id', say: 'Traces: "waqt KAHAN gaya?" Ek request ka poora safar, har hop ka waqt.' },
       { from: 'svc', to: 'log', label: 'trace_id se dhoondo', say: 'Logs: "us EK request mein kya hua?" Structured logs, trace_id ke saath, taaki trace se seedha log mil jaaye.' },
-      { at: ['lb', 'svc'], set: { lb: { tone: 'gold', sub: 'pay-api ready hai?' } }, say: 'Liveness = process zinda hai? Readiness = traffic le sakta hai? (DB pool, dependencies). Pool khatam ho aur /health 200 de, toh health check jhooth bol raha hai.' },
+      { at: ['lb', 'svc'], set: { lb: { tone: 'gold', sub: 'pay-api ready hai?' } }, say: 'Liveness: process ko restart chahiye? Readiness: traffic le sakta hai? Sirf DB pool khatam hone par liveness fail mat karo. Saajhi DB ko readiness mein jaanchne se saare pods bahar ho sakte hain.' },
       { at: ['met'], set: { met: { tone: 'good', sub: 'alert: symptoms par' } }, say: 'Alert symptoms par (error rate, p99, SLO burn), causes par nahi (CPU 80%). Jo user ko dukhe, wahi page kare.' },
     ],
   },
@@ -268,7 +268,7 @@ SD.addScenes({
   slo: {
     intro: '"Kitna toot sakta hai?" ka ek number. SLI, SLO, SLA — aur <b>error budget</b>, jo product aur reliability ki bahas khatam karta hai.',
     nodes: [
-      { id: 'nines', col: 1, row: 0, icon: '9️⃣', label: 'Nines', sub: 'har 9 ≈ 10x mehenga' },
+      { id: 'nines', col: 1, row: 0, icon: '9️⃣', label: 'Nines', sub: 'har 9: budget 10x kam' },
       { id: 'sli', col: 0, row: 1, icon: '📏', label: 'SLI', sub: 'safal ÷ total' },
       { id: 'slo', col: 1, row: 1, icon: '🎯', label: 'SLO', sub: '99.9% / 30 din' },
       { id: 'sla', col: 2, row: 1, icon: '📜', label: 'SLA', sub: 'contract + paisa' },
@@ -278,11 +278,11 @@ SD.addScenes({
     steps: [
       { at: ['sli'], say: 'SLI = jo tum naapte ho: safal requests ÷ total requests.' },
       { from: 'sli', to: 'slo', label: 'target', say: 'SLO = tumhara apna target: 30 din mein 99.9%.' },
-      { from: 'slo', to: 'sla', label: 'SLA dheela rakho', tone: 'gold', say: 'SLA = customer se contract, paise ke saath. SLA hamesha SLO se dheela rakho, taaki SLO tootne par turant paisa na dena pade.' },
+      { from: 'slo', to: 'sla', label: 'SLA dheela rakho', tone: 'gold', say: 'SLA customer se contract hai, aksar paise ki shart ke saath. Internal SLO aam taur par zyada sakht rakhte hain, taaki contract tootne se pehle sudhaar ka waqt mile. Dono ki window aur shartein milao.' },
       { at: ['nines'], say: '99% = 432 min/mahina (7 ghante). 99.9% = 43 min. 99.99% = 4.3 min. 99.999% = 26 second. "100% uptime" target nahi, galatfehmi hai.' },
       { from: 'slo', to: 'bud', label: '100% − 99.9%', say: 'Error budget: 99.9% ka matlab ~43 minute/mahina kharch karne ki chhoot (time-based SLO mein). Product aur reliability ki bahas ab ek number par.' },
       { from: 'bud', to: 'dep', label: 'budget bacha: deploy', tone: 'good', say: 'Budget bacha hai? Deploy karo, experiment karo, tez chalo.' },
-      { at: ['bud'], set: { bud: { tone: 'bad', sub: 'khatam' }, dep: { tone: 'muted', sub: 'ruke' } }, say: 'Budget khatam? Naye features ruko, reliability par kaam karo. SLO user ke dard par rakho (checkout safal hua?), CPU par nahi.' },
+      { at: ['bud'], set: { bud: { tone: 'bad', sub: 'khatam' }, dep: { tone: 'muted', sub: 'ruke' } }, say: 'Budget khatam? Pehle se tay policy ke mutabiq risky deploy roko aur reliability sudhaaro. Zaroori fixes ki chhoot policy mein rakho. SLO user ke kaam par ho, CPU par nahi.' },
     ],
   },
 
@@ -302,7 +302,7 @@ SD.addScenes({
       { from: 'monkey', to: 'i2', label: 'instance band', tone: 'bad', set: { i2: { tone: 'bad', sub: 'mara 💀' } }, say: 'Inject: Chaos Monkey instance 2 band karta hai. Chhota blast radius, aur "band karo" button taiyaar.' },
       { from: 'lb', to: 'i2', label: 'traffic ab bhi ja raha', tone: 'bad', set: { ss: { tone: 'bad', sub: '87.4% 😬' } }, say: 'Observe: lab 42 mein 3 instances, bina health check: 87.4%. Load balancer mare instance ko traffic bhejta raha.' },
       { at: ['lb'], set: { lb: { tone: 'good', sub: '+ health check' }, ss: { tone: 'gold', sub: '97.1%' } }, say: 'Kami theek: health check joda → 97.1%. Mare instance ko traffic band, par pata chalne tak kuch requests fail.' },
-      { at: ['lb'], set: { lb: { sub: '+ health check + retry' }, ss: { tone: 'good', sub: '100% ✅' } }, say: 'Retry joda (idempotent requests par) → 100%. Monkey wahi, taiyaari alag. Steady state toote toh turant abort, kami likho, theek karo, dobara chalao.' },
+      { at: ['lb'], set: { lb: { sub: '+ health check + retry' }, ss: { tone: 'good', sub: '100% ✅' } }, say: 'Lab ke is run mein idempotent requests par retry joda: 100% safal. Production mein 100% ka vaada nahi. Experiment ki stop limit toote toh roko, kami likho, theek karo, dobara chalao.' },
     ],
   },
 
@@ -319,7 +319,7 @@ SD.addScenes({
     steps: [
       { at: ['dash'], say: '3:07 AM. checkout ka error rate 60%, p99 9.9 s. Dashboard par CPU 12%, memory 40%, health green: "sab theek hai"?' },
       { from: 'sdk', to: 'prov', label: 'p99 8 s', tone: 'bad', set: { prov: { tone: 'bad', sub: 'down nahi, DHEEMA' } }, say: 'Diagnose: payment provider down nahi, DHEEMA hai: p99 8 second.' },
-      { at: ['sdk'], set: { sdk: { tone: 'bad', sub: 'load ×4, sab ek saath' } }, say: 'SDK 3 retries karta hai, bina jitter: har call ki 4 koshish, load ×4, aur sab ek saath.' },
+      { at: ['sdk'], set: { sdk: { tone: 'bad', sub: 'load ×4, sab ek saath' } }, say: 'SDK mein 3 retries: har call ki zyada se zyada 4 koshish, load 4 guna tak. Bina jitter ke bahut se callers dobara ek saath koshish kar sakte hain.' },
       { at: ['pool'], set: { pool: { tone: 'bad', sub: 'saare threads atke' } }, say: 'Ek hi thread pool sab ke liye: payment ke intezaar mein threads khatam, checkout ke baaki kaam bhi gire.' },
       { at: ['sdk'], set: { sdk: { tone: 'good', sub: 'timeout + jitter + 1 retry' } }, say: 'Roko: timeout se ek call ka intezaar bounded; jitter se retry storm ka synchronization tootta hai; retries kam.' },
       { at: ['pool'], set: { pool: { tone: 'good', sub: 'payment ka alag pool' } }, say: 'Bulkhead: payment calls ka alag pool. Blast radius chhota: payment atke toh bhi baaki checkout chale.' },

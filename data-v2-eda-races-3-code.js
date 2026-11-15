@@ -213,7 +213,7 @@ SD.registerLevels('sdd-eda', [
           }
         }
       ],
-      "lesson": "Compare-and-swap: likhte waqt jaancho ki padhne ke baad kisi ne badla toh nahi (WHERE version = ?). Badla ho toh 0 rows — dobara padho. Sirf jodna ho toh line 44 ka atomic update (balance = balance + ?) aur sasta hai: koi gap, koi dobara koshish nahi."
+      "lesson": "Compare-and-swap: likhte waqt jaancho ki padhne ke baad kisi ne badla toh nahi (WHERE version = ?). Badla ho toh 0 rows — dobara padho. Sirf jodna ho toh line 44 ka atomic update (balance = balance + ?) is lab mein 20 updates se kaam karta hai; alag read-write ka gap nahi. Asli DB mein lock wait, timeout ya retry phir bhi ho sakti hai."
     },
     {
       "type": "dryrun",
@@ -323,7 +323,7 @@ SD.registerLevels('sdd-eda', [
       "steps": [
         {
           "title": "1. Processed keys kab tak?",
-          "say": "Key utni der rakho jitni der tak duplicate aa sakta hai: broker ki retention aur redelivery ka waqt. Jaldi mita di toh baad mein aaya duplicate naya lagega."
+          "say": "Key utni der rakho jitni der tak duplicate aa sakta hai: broker ki retention aur redelivery, producer ke retries, aur purane events ka manual replay bhi gino. Jaldi mita di toh baad mein aaya duplicate naya lagega."
         },
         {
           "title": "2. Kaam bahar ki service mein ho toh?",
