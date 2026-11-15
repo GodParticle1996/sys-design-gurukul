@@ -20,7 +20,7 @@
   SD.defaultSys = function () {
     const s = baseDefault();
     s.tenancy = { isolation: 'app-filter', exportFilter: false, quota: {}, replica: {} };
-    s.tokens = { mode: 'jwt-30d', issued: 'jwt-30d', revoked: false, minutesSinceRevoke: 0 }; /* issued = Aman ke maujooda tokens kis mode mein bane */
+    s.tokens = { mode: 'jwt-30d', issued: 'jwt-30d', ageMin: 1440, revoked: false, minutesSinceRevoke: 0 }; /* issued = Aman ke maujooda tokens kis mode mein bane; ageMin = tokens kitne minute purane (1 din) */
     s.cost = { tags: false, fixed: {} };
     return s;
   };
@@ -29,6 +29,7 @@
   const num = n => Number(n).toLocaleString('en-IN');
   const crore = n => (n / 1e7).toLocaleString('en-IN', { maximumFractionDigits: 1 }) + ' crore';
   const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
+  const own = (obj, k) => Object.prototype.hasOwnProperty.call(obj, k);   /* 'constructor' jaise naam tenant/token nahi */
 
   /* ------------------------------------------------------------------ TENANT */
   const TENANTS = {
@@ -49,7 +50,7 @@
       const { sim, print, table, panel, rec, err } = api;
       const T = sim.sys.tenancy;
       const verb = word(norm, 1), arg = word(norm, 2);
-      const need = id => { if (!TENANTS[id]) err(`400 — tenant '${id || ''}' nahi mila. Tenants: ${Object.keys(TENANTS).join(', ')}`); return TENANTS[id]; };
+      const need = id => { if (!own(TENANTS, id)) err(`400 — tenant '${id || ''}' nahi mila. Tenants: ${Object.keys(TENANTS).join(', ')}`); return TENANTS[id]; };
       if (!verb || verb === 'status') {
         table(['tenant', 'rows (orders)', 'CPU quota', 'replica'], Object.keys(TENANTS).map(id => [id + ' · ' + TENANTS[id].name, num(TENANTS[id].rows), T.quota[id] ? T.quota[id] + '%' : '—', T.replica[id] ? 'alag' : 'saajha'])
           .concat([['+ ' + num(OTHER_TENANTS) + ' aur merchants', num(OTHER_ROWS), '—', 'saajha']]));
@@ -131,21 +132,26 @@
       const verb = word(norm, 1), arg = word(norm, 2);
       if (verb === 'list') {
         if (arg !== 'aman') err("400 — 'token list aman' likho");
-        table(['token', 'device', 'umar'], Object.keys(TOKENS).map(k => [k, TOKENS[k], K.issued === 'short' ? '15 min (refresh se naya)' : '30 din']));
+        const left = Math.max(0, 43200 - K.ageMin);
+        table(['token', 'device', 'umar'], Object.keys(TOKENS).map(k => [k, TOKENS[k], K.issued === 'short' ? '15 min (refresh se naya)' : left ? `30 din ka; ${Math.ceil(left / 1440)} din baaki` : 'expire ho gaya']));
         return rec({ kind: 'token', op: 'list' });
       }
       if (verb === 'use') {
-        if (!TOKENS[arg]) err(`400 — token '${arg}' nahi mila. Tokens: ${Object.keys(TOKENS).join(', ')}`);
+        if (!own(TOKENS, arg)) err(`400 — token '${arg}' nahi mila. Tokens: ${Object.keys(TOKENS).join(', ')}`);
         let status = 200, why = 'wallet-api ne token ka signature aur expiry jaanchi — dono theek. Revoke list kisi ne nahi dekhi.';
-        if (K.revoked && K.mode === 'denylist') { status = 401; why = 'wallet-api ne revoke list jaanchi: Aman ke sessions radd hain.' + (arg === 't-new' ? ' Aman naye phone par dobara login karega aur naya token lega.' : ''); }
-        else if (K.revoked && K.issued === 'short' && K.minutesSinceRevoke >= 15) { status = 401; why = 'Access token 15 min mein expire hua, aur refresh token auth-service ne radd kar diya.'; }
-        else if (K.revoked && K.issued === 'short') why = `Access token abhi ${15 - K.minutesSinceRevoke} min aur chalega (short TTL); refresh nahi milega.`;
-        else if (K.revoked) why = 'Token 30 din wala JWT hai: signature aur expiry theek. wallet-api revoke list nahi dekhti (mode: ' + K.mode + ').';
+        /* Pehle expiry: 30 din wala token apni umar poori hone par khud band. */
+        if (K.issued === 'jwt-30d' && K.ageMin >= 43200) { status = 401; why = 'Token ki 30 din ki expiry (exp) poori ho gayi. Revoke ke bina bhi band — par itne din chor ke paas khula raha.'; }
+        else if (K.revoked && K.mode === 'denylist') { status = 401; why = 'wallet-api ne revoke list jaanchi: Aman ke sessions radd hain.' + (arg === 't-new' ? ' Aman naye phone par dobara login karega aur naya token lega.' : ''); }
+        else if (K.issued === 'short' && !K.revoked) why = 'Access token 15 min ka hai, par chor ke paas phone hai: refresh token se naya access token mil jaata hai. Revoke ke bina rukega nahi.';
+        else if (K.issued === 'short' && K.minutesSinceRevoke >= 15) { status = 401; why = 'Access token 15 min mein expire hua, aur refresh token auth-service ne radd kar diya.'; }
+        else if (K.issued === 'short') why = `Access token abhi ${15 - K.minutesSinceRevoke} min aur chalega (short TTL); refresh nahi milega.`;
+        else if (K.revoked) why = `Token 30 din wala JWT hai: signature theek, expiry mein ${Math.ceil((43200 - K.ageMin) / 1440)} din baaki. wallet-api revoke list nahi dekhti (mode: ${K.mode}).`;
         print(status === 200 ? 'err' : 'ok', `GET /v1/balance  (Bearer ${arg})  →  ${status} ${status === 200 ? 'OK — balance dikh gaya' : 'Unauthorized'}\n   ${why}`);
         return rec({ kind: 'token-use', token: arg, status, mode: K.mode, revoked: K.revoked });
       }
       if (verb === 'revoke') {
         if (arg !== 'aman') err("400 — 'token revoke aman' likho");
+        if (K.revoked) { print('ok', 'Aman ke sessions pehle se radd hain. Revoke ka samay wahi rehta hai.'); return rec({ kind: 'token', op: 'revoke', again: true }); }
         K.revoked = true; K.minutesSinceRevoke = 0;
         print('ok', 'auth-service: Aman ke saare sessions aur refresh tokens radd. Revoke list mein t-old, t-new.' +
           (K.mode === 'jwt-30d' ? '\n   Dhyaan: services token khud jaanchti hain aur revoke list nahi dekhtin.' : ''));
@@ -162,8 +168,9 @@
       if (verb === 'wait') {
         const m = Number(arg);
         if (!Number.isFinite(m) || m <= 0 || m > 100000) err('400 — minute ki ginti do, jaise token wait 15');
-        K.minutesSinceRevoke += m;
-        print('ok', `${m} minute aage badhe.`);
+        K.ageMin += m;
+        if (K.revoked) K.minutesSinceRevoke += m;
+        print('ok', `${m} minute aage badhe. Tokens ab ${Math.floor(K.ageMin / 1440)} din ${K.ageMin % 1440 ? Math.round((K.ageMin % 1440) / 60) + ' ghante ' : ''}purane.`);
         return rec({ kind: 'token', op: 'wait', minutes: m });
       }
       err(`400 — 'token ${verb}' samajh nahi aaya. 'help' dekho.`);
@@ -252,16 +259,18 @@
         const spare = flag(norm, 'spare') == null ? 0 : flag(norm, 'spare');
         if (!good(target, 10, 100) || !Number.isInteger(spare) || spare < 0 || spare > 50) err('400 — --target 10 se 100 (percent), --spare 0 ya zyada poora number');
         const base = Math.ceil(peak / (per * target / 100)), servers = base + spare;
+        const util = peak / (servers * per) * 100, shown = Math.round(util * 10) / 10;
         panel('Capacity plan', [`peak ${num(peak)} rps ÷ (${num(per)} rps/server × ${target}% target) = ${base} servers`, `+ spare ${spare} = ${servers} servers`,
-          target === 100 ? 'Har server 100% par — koi jagah nahi bachi (latency tail, GC, deploy).' : `Har server peak par ~${Math.round(peak / (base * per) * 100)}% busy.`]);
-        return rec({ kind: 'capacity', op: 'plan', peak, per, target, spare, servers });
+          `Model: saare ${servers} servers traffic lete hain. Peak par har server ~${shown}% busy.`,
+          util > 85 ? 'Koi jagah nahi bachi: burst, GC pause ya ek server ki maut par overload.' : `Target ${target}% planning ki hadd hai; asli load upar ki line mein.`]);
+        return rec({ kind: 'capacity', op: 'plan', peak, per, target, spare, servers, util: shown });
       }
       if (verb === 'fail') {
         const n = flag(norm, 'servers');
         if (!Number.isInteger(n) || n < 2 || n > 100000) err('400 — --servers 2 ya zyada poora number do');
-        const util = Math.round(peak / ((n - 1) * per) * 100);
-        const ok = util <= 85;
-        print(ok ? 'ok' : 'err', `${n} mein se 1 server mara → baaki ${n - 1} par peak: ${util}% ${ok ? '✅ jhel liya' : '💀 overload (85% se upar: queue aur timeouts)'}`);
+        const raw = peak / ((n - 1) * per) * 100, util = Math.round(raw * 10) / 10;
+        const ok = raw <= 85;   /* bina rounding ke tulna: 85.4% bhi overload */
+        print(ok ? 'ok' : 'err', `${n} mein se 1 server mara → baaki ${n - 1} par peak: ${util}% ${ok ? '✅ jhel liya' : '💀 overload (model ki hadd 85% se upar: queue aur timeouts)'}`);
         return rec({ kind: 'capacity', op: 'fail', servers: n, peak, per, util, survived: ok });
       }
       err(`400 — 'capacity ${verb}' samajh nahi aaya. plan ya fail.`);
@@ -272,7 +281,7 @@
   const FEED = { users: 5e7, friends: 200, postsPerDay: 1e7, celebs: 100, celebFollowers: 5e6, celebPostsPerDay: 20 };
   P.push({
     match: /^fanout\b/i,
-    help: ['FANOUT (activity feed · 5 crore users, aam user ke 200 dost, 100 celebrities × 50 lakh followers)',
+    help: ['FANOUT (feed · aam users ke 1 crore posts/din, har ek ke 200 dost; 100 celebrities × 50 lakh followers × 20 posts/din)',
       '  fanout --mode write | read | hybrid [--celeb-threshold 100000]'],
     run(api, norm) {
       const { table, print, rec, err } = api;
@@ -282,16 +291,18 @@
       if (mode !== 'hybrid' && thrRaw != null) err('400 — --celeb-threshold sirf hybrid mode mein');
       const thr = thrRaw == null ? 100000 : thrRaw;
       if (!Number.isFinite(thr) || thr < 1000 || thr > 1e8) err('400 — --celeb-threshold 1000 se 10 crore ke beech do');
-      const normalWrites = FEED.postsPerDay * FEED.friends, celebWrites = FEED.celebs * FEED.celebPostsPerDay * FEED.celebFollowers;
-      let writes, feedMs, celebLagMin, celebPushed = false;
-      if (mode === 'write') { writes = normalWrites + celebWrites; feedMs = 20; celebLagMin = Math.round(FEED.celebFollowers / 50000 / 60); }
-      else if (mode === 'read') { writes = FEED.postsPerDay; feedMs = 800; celebLagMin = 0; }
-      else { celebPushed = thr > FEED.celebFollowers; /* ≥ threshold followers = pull */ writes = normalWrites + (celebPushed ? celebWrites : 0); feedMs = celebPushed ? 20 : 60; celebLagMin = celebPushed ? Math.round(FEED.celebFollowers / 50000 / 60) : 0; }
-      table(['mode', 'inbox writes / din', 'feed khulne ka p99', 'celebrity post ka lag'], [[mode + (mode === 'hybrid' ? ` (≥ ${num(thr)} followers = pull)` : ''), crore(writes), feedMs + ' ms', celebLagMin ? celebLagMin + ' min tak' : 'turant (padhte waqt)']]);
+      /* postsPerDay = aam users ke posts; celebrity posts alag (100 × 20 = 2,000). */
+      const sourcePosts = FEED.postsPerDay + FEED.celebs * FEED.celebPostsPerDay;
+      const normalCopies = FEED.postsPerDay * FEED.friends, celebCopies = FEED.celebs * FEED.celebPostsPerDay * FEED.celebFollowers;
+      let inboxCopies, feedMs, celebLagMin, celebPushed = false;
+      if (mode === 'write') { inboxCopies = normalCopies + celebCopies; feedMs = 20; celebLagMin = Math.round(FEED.celebFollowers / 50000 / 60); }
+      else if (mode === 'read') { inboxCopies = 0; feedMs = 800; celebLagMin = 0; }
+      else { celebPushed = thr > FEED.celebFollowers; /* ≥ threshold followers = pull */ inboxCopies = normalCopies + (celebPushed ? celebCopies : 0); feedMs = celebPushed ? 20 : 60; celebLagMin = celebPushed ? Math.round(FEED.celebFollowers / 50000 / 60) : 0; }
+      table(['mode', 'naye posts / din', 'inbox copies / din', 'feed p99', 'celebrity post ka lag'], [[mode + (mode === 'hybrid' ? ` (≥ ${num(thr)} followers = pull)` : ''), num(sourcePosts), inboxCopies ? crore(inboxCopies) : '0', feedMs + ' ms', celebLagMin ? celebLagMin + ' min tak' : 'turant (padhte waqt)']]);
       print('ok', { write: 'Post karte hi har dost ki inbox mein copy. Padhna sasta; celebrity ka ek post = 50 lakh writes.',
         read: 'Post sirf ek baar likho; feed khulne par 200 doston ke posts jodo. Likhna sasta, padhna mehenga.',
-        hybrid: celebPushed ? `Threshold ${num(thr)} celebrities ke 50 lakh followers se upar hai, toh celebrities bhi push ho rahi hain — write mode jaisa bojh.` : 'Aam users push (write par), celebrities pull (padhte waqt). Dono ka sasta hissa.' }[mode] + '  (Model numbers; SLA: feed 200 ms.)');
-      return rec({ kind: 'fanout', mode, threshold: mode === 'hybrid' ? thr : null, writes, feedMs, celebLagMin });
+        hybrid: celebPushed ? `Threshold ${num(thr)} celebrities ke 50 lakh followers se upar hai, toh celebrities bhi push ho rahi hain — write mode jaisa bojh.` : 'Aam users push (write par), celebrities pull (padhte waqt). Dono ka sasta hissa.' }[mode] + '  (Model ke chune hue numbers; feed ka SLO: p99 200 ms. Celebrity lag maan ke: 50,000 inbox writes/second.)');
+      return rec({ kind: 'fanout', mode, threshold: mode === 'hybrid' ? thr : null, sourcePosts, inboxCopies, feedMs, celebLagMin });
     },
   });
 })();

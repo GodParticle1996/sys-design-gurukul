@@ -26,7 +26,7 @@ SD.registerLevels('pro-sec', [
   title: 'Threat model — hamla kahan se aayega?',
   badge: 'Khatra Naksha-kaar',
   objectives: [
-    '<b>Trust boundary</b> pehchano: jahan data kam bharose wali jagah se zyada bharose wali jagah aata hai',
+    '<b>Trust boundary</b> pehchano: jahan alag bharose ya permissions wale hisson ke beech data jaata hai',
     '<b>STRIDE</b> ke 6 khatre — har khatre ka ek seedha sawaal',
     'Har khatre ke liye ek control, aur control ki keemat',
     '20 khatron mein se pehle kaunse theek karein',
@@ -43,7 +43,7 @@ SD.registerLevels('pro-sec', [
      <p>ChaiPay ka raasta: <b>Aman ka phone</b> → <code>api-gateway</code> → <code>wallet-api</code> → <code>ledger-db</code>.
        Saath mein <b>partner bank</b> ka webhook aur <b>merchant dashboard</b>.</p>
      <p>Aman ka phone tumhare kaabu mein nahi hai. App ko koi bhi tod-marod sakta hai. Isliye phone se aaya har byte <b>shak</b> ke saath padho.</p>
-     <p><b>Trust boundary</b> woh line hai jahan data kam bharose wali jagah se zyada bharose wali jagah mein aata hai.
+     <p><b>Trust boundary</b> woh line hai jahan alag bharose ya permissions wale hisson ke beech data jaata hai.
        Har boundary par chaar kaam:</p>
      <table>
        <tr><th>Kaam</th><th>Sawaal</th></tr>
@@ -126,9 +126,9 @@ SD.registerLevels('pro-sec', [
             'Webhook ko ek baar fail karo; bank doosri baar bheje tabhi sach maano',
           ],
           answer: 0,
-          explain: 'Webhook ek trust boundary hai. Signature (jaise HMAC) se pata chalta hai ki bank ne bheja aur body nahi badli. Timestamp purane webhook ko dobara chalaane (replay) se rokta hai. Event id se duplicate delivery ek hi baar process hoti hai.',
+          explain: 'Webhook ek trust boundary hai. Signature (jaise HMAC) se pata chalta hai ki bank ne bheja aur body nahi badli. Signature mein timestamp bhi shaamil ho; server sirf chhoti samay-seema ke andar webhook maane. Samay-seema ke andar replay ko event id ki atomic duplicate jaanch rokti hai.',
           choiceExplanations: [
-            'Webhook ek trust boundary hai. Signature (jaise HMAC) se pata chalta hai ki bank ne bheja aur body nahi badli. Timestamp purane webhook ko dobara chalaane (replay) se rokta hai. Event id se duplicate delivery ek hi baar process hoti hai.',
+            'Webhook ek trust boundary hai. Signature (jaise HMAC) se pata chalta hai ki bank ne bheja aur body nahi badli. Signature mein timestamp bhi shaamil ho; server sirf chhoti samay-seema ke andar webhook maane. Samay-seema ke andar replay ko event id ki atomic duplicate jaanch rokti hai.',
             'IP allowlist ek extra parat hai, par IP badal sakte hain aur proxy/cloud IPs saajhe hote hain. Body ka saboot signature deta hai.',
             'HTTPS sirf raaste ko bachata hai. Bhejne wala koi bhi ho sakta hai jo tumhara webhook URL jaanta ho.',
             'Jaan-boojh ke fail karna kuch saabit nahi karta. Hamlawar bhi doosri baar bhej sakta hai, aur asli payments der se dikhenge.',
@@ -161,7 +161,7 @@ SD.registerLevels('pro-sec', [
       {
         q: '"Is payment design mein security kaise sochoge?" Sabse achha pehla jawab?',
         choices: [
-          'Trust boundaries ginaunga; har boundary par authn, authz, validation aur audit',
+          'Boundaries ginaunga; pehchaan, ijaazat, data ki jaanch aur audit log dekhunga',
           'Sab data encrypt kar dunga; encrypt hua data hamesha surakshit rehta hai',
           'Aage ek WAF laga dunga; WAF saare API hamle bahar hi rok deta hai',
           'Security team alag se dekhegi; system design mein uski jagah nahi hai',
@@ -203,7 +203,7 @@ SD.registerLevels('pro-sec', [
     Har arrow par ek line likho: "yahan STRIDE ka kaunsa khatra?" Sabse bade 2 khatron ke liye ek-ek control aur uski keemat likho.`,
   cards: [
     { front: 'Threat model kab?', back: '<b>Design review mein, code se pehle.</b> Naksha + har trust boundary par "kya bigad sakta hai?"' },
-    { front: 'Trust boundary?', back: 'Jahan data kam bharose wali jagah (phone, bahar ki service) se zyada bharose wali jagah mein aata hai. Wahan: authn, authz, validate, audit.' },
+    { front: 'Trust boundary?', back: 'Alag bharose ya permissions wale hisson ke beech ki seema. Wahan: pehchaan (authn), ijaazat (authz), data jaanch aur audit.' },
     { front: 'STRIDE?', back: '<b>S</b>poofing, <b>T</b>ampering, <b>R</b>epudiation, <b>I</b>nfo disclosure, <b>D</b>enial of service, <b>E</b>levation of privilege. Checklist, guarantee nahi.' },
     { front: 'Webhook par bharosa kab?', back: 'Signature + timestamp sahi ho. Event id se duplicate ek baar hi process karo.' },
   ],
@@ -244,7 +244,7 @@ SD.registerLevels('pro-sec', [
        <li><b>Mass assignment:</b> <code>PATCH /v1/merchants/42</code> body mein <code>"kyc_status": "verified"</code> bheja. Code ne poori body DB mein likh di. KYC bina jaanch ke "verified".</li>
        <li><b>Zyada data bhejna:</b> <code>GET /v1/me</code> ke jawab mein <code>pan_number</code> aur andar ka <code>risk_score</code> bhi.</li>
      </ul>
-     <p>Ilaaj: har role ke liye <b>likhne layak fields ki allowlist</b>; jawab mein sirf woh fields jo screen ko chahiye (response DTO).</p>`,
+     <p>Ilaaj: har role ke liye <b>likhne layak fields ki allowlist</b>; jawab mein sirf woh fields jo screen ko chahiye (response DTO: jawab mein bhejne layak fields ka chuna hua roop).</p>`,
     `<h3>3️⃣ Function — BFLA (Broken Function Level Authorization)</h3>
      <p>Support agent ka token. Request: <code>POST /admin/v1/merchants/42/payout-account</code>. Code ne sirf "login hai?" dekha. Settlement ka bank account badal gaya.</p>
      <p>Ilaaj: har route par role/permission check, aur <b>deny by default</b> — naya route bina permission ke likha toh band rahe.</p>
@@ -280,7 +280,7 @@ SD.registerLevels('pro-sec', [
           sitrep: '✅ Hotfix live (11:05). Ab 404 aata hai jab token ka merchant aur URL ka merchant alag hon.',
           text: 'Kitna data gaya — kaise pata karoge?',
           choices: [
-            { t: 'Access logs mein dhoondho: kis request mein token ka merchant ≠ URL ka merchant', good: true, next: 'fix', explain: 'Yahi saboot hai. Kitne merchants, kitni rows, kitne din se. Isi se tay hoga kise batana hai (merchants, regulator).' },
+            { t: 'Access logs mein dhoondho: kis request mein token ka merchant ≠ URL ka merchant', good: true, next: 'fix', explain: 'Logs se cross-tenant requests dhoondho. Status aur response metadata se jaancho ki data sach mein gaya ya request ruki. Row count log nahi hua toh exact rows ka daava mat karo.' },
             { t: 'DB ka slow query log dekho; jo queries chali hain, unhi se leak ginenge', good: false, explain: 'Slow query log sirf dheemi queries rakhta hai. Leak wali queries tez aur normal thi.' },
             { t: 'Maan lo ki sirf screenshot wale merchant ne dekha; baaki koi nahi jaanta', good: false, explain: 'Andaaza saboot nahi. Bug kab se tha aur kisne use kiya, logs batayenge.' },
             { t: 'Saare merchants ke password reset karwa do; usse purana leak bhi band', good: false, explain: 'Password sahi the; tokens bhi sahi the. Reset se pichhla leak nahi ginega aur grahak pareshaan honge.' },
@@ -476,7 +476,7 @@ SD.addScenes({
       { from: 'gw', to: 'wallet', label: 'user = Aman', say: 'wallet-api mein Elevation aur Info disclosure ke sawaal: Aman ye kaam kar sakta hai? Jawab mein sirf Aman ka data jaaye?' },
       { from: 'wallet', to: 'db', label: 'debit ₹500', tone: 'good', say: 'Tampering: amount raaste mein badla toh? Server amount khud jaanchta hai; client ki keemat par bharosa nahi.' },
       { from: 'bank', to: 'hook', label: 'payment SUCCESS', say: 'Boundary 2: bank ka webhook. Signature aur timestamp jaancho. Bina signature wala "SUCCESS" koi bhi bhej sakta hai.' },
-      { from: 'hook', to: 'wallet', label: 'event id 7781', bend: 40, say: 'Event id se duplicate webhook ek hi baar chalta hai. Purana webhook dobara aaye toh timestamp rok deta hai.' },
+      { from: 'hook', to: 'wallet', label: 'event id 7781', bend: 40, say: 'Signed timestamp ko chhoti samay-seema se jaancho. Event id ki atomic duplicate jaanch samay-seema ke andar bhi dobara processing rokti hai.' },
       { from: 'wallet', to: 'audit', label: 'kaun, kya, kab', tone: 'gold', say: 'Repudiation ka jawab: append-only audit log. Merchant mukre toh saboot ho; log engineers bhi na badal sakein.' },
       { at: ['gw'], set: { gw: { tone: 'gold', sub: 'rate limit: Denial' } }, say: 'Denial of service: ek bot 50,000 request/min bheje toh? Gateway par rate limit. Ab har boundary par 6 sawaal poochh liye.' },
     ],
@@ -497,7 +497,7 @@ SD.addScenes({
       { at: ['m42', 'db'], set: { db: { tone: 'bad', sub: 'leak!' }, m42: { tone: 'bad', sub: 'merchant 88 ka data' } }, say: 'Merchant 88 ke settlements Sharma Sweets tak pahunch gaye. Ye BOLA hai: OWASP API Top 10 ka number 1.' },
       { from: 'api', to: 'db', label: 'AND merchant_id=42', tone: 'good', set: { db: { tone: 'good', sub: 'owner check' } }, say: 'Hotfix: query mein doosri shart — merchant_id = token ka merchant. Row nahi mili.' },
       { at: ['m42'], set: { m42: { tone: 'good', sub: '404 Not Found' } }, say: '404: hamlawar ko ye bhi nahi pata chalta ki merchant 88 ke settlements hain ya nahi.' },
-      { from: 'api', to: 'log', label: 'cross-tenant try', tone: 'gold', say: 'Access log mein likho: token 42, maanga 88. Logs se ginti hogi ki pichhle dino mein kitna data gaya.' },
+      { from: 'api', to: 'log', label: 'cross-tenant try', tone: 'gold', say: 'Access log mein likho: token 42, maanga 88. Status aur response metadata se jaancho ki data gaya ya request ruki. Row count log na ho toh exact rows ka daava mat karo.' },
     ],
   },
 });

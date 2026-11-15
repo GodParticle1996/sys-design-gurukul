@@ -34,10 +34,11 @@ SD.registerLevels('pro-sec', [
     `<h3>📅 ChaiPay ki 1 tareekh</h3>
      <p>MegaMart (50 lakh orders) mahine ki report chalata hai. Report DB ka <b>80% CPU</b> khaati hai.
        Baaki 39,999 merchants ke dashboards ko <b>30%</b> chahiye. Kul maang <b>110%</b>.</p>
-     <p>100% se upar ka matlab: har query line mein. Sharma Sweets ka chhota dashboard bhi <b>10 second</b>.</p>
+     <p>Is model mein 110% maang par dashboards ka <b>p99 10 second</b> hai: 99% requests 10 second ya kam leti hain. Har request 10 second nahi leti. Asli DB par latency naapo.</p>
      <p><b>Kaun shor kar raha hai, kaise pata chale?</b> Har query ke log mein <code>merchant_id</code>. DB time ko merchant ke hisaab se jodo aur top 10 dekho.
        (40,000 merchants ko metric label banana mehenga hai — observability track mein dekhoge.)</p>`,
     `<h3>🛠️ Ilaaj aur unki keemat</h3>
+     <p><b>Cell</b> = app, DB aur queue ki alag copy, kuch tenants ke liye. Read replica sirf padhne ka alag DB hai; poora cell nahi. CPU quota yahan model ka control hai; asli system mein workload limits ya alag resources se hadd lagaani hogi.</p>
      <table>
        <tr><th>Ilaaj</th><th>Kya karta hai</th><th>Keemat</th></tr>
        <tr><td><b>Quota</b> (CPU ya parallel queries ki hadd)</td><td>Bada tenant apne hisse se zyada nahi le sakta</td><td>MegaMart ki report dheemi (15 → 60 min)</td></tr>
@@ -45,6 +46,7 @@ SD.registerLevels('pro-sec', [
        <tr><td><b>Per-tenant rate limit</b> (API par)</td><td>Ek tenant ki requests ki hadd</td><td>Burst wale tenant ko 429</td></tr>
        <tr><td><b>Report queue mein</b>, raat ko</td><td>Bhaari kaam bheed ke samay se hata do</td><td>Report turant nahi milti</td></tr>
      </table>
+     <p><b>SLO</b> = service ka naapne layak target, jaise dashboard ki 99% requests 200 ms ke andar.</p>
      <p class="tip">⚖️ Fair share ka matlab "sab baraabar" nahi. MegaMart zyada paisa deta hai toh uska hissa bhi bada ho sakta hai — par contract mein likha ho, aur baaki tenants ka SLO na toote.</p>`,
   ],
   stages: [
@@ -61,7 +63,7 @@ SD.registerLevels('pro-sec', [
         'tenant quota mega --cpu 20',
         'tenant load',
       ],
-      successText: 'Baaki 39,999 merchants ka dashboard wapas tez. Keemat dekho: quota se MegaMart ki report 15 se 60 minute ho gayi. Alag replica se report tez rehti, par har mahine server ka kharcha. Asli faisla SLO aur contract se hota hai.',
+      successText: 'Baaki 39,999 merchants ka dashboard wapas tez. Keemat dekho: 20% quota par MegaMart ki report 15 se 60 minute; doosre quota par samay alag hoga. Alag replica se report tez rehti, par har mahine server ka kharcha. Asli faisla SLO aur contract se hota hai.',
       hints: [
         'Pehle load chala ke dekho: baaki merchants ka p99 kitna hai, aur DB ka CPU kaun kha raha hai?',
         '`tenant load` 1 tareekh ka ghanta chalata hai. `tenant quota <tenant> --cpu <5-80>` ek tenant ka CPU hissa bandhta hai. `tenant replica <tenant>` bade tenant ko alag read replica deta hai.',
@@ -133,15 +135,15 @@ SD.registerLevels('pro-sec', [
       {
         q: '"Cell-based architecture" kya hai, aur kab?',
         choices: [
-          'Poore stack ki chhoti copy; har cell mein kuch tenants; ek cell ki aag doosre tak nahi',
+          'Stack ki alag copy, kuch tenants; fault ka asar us cell tak seemit rakhne ka design',
           'Har microservice ko alag container mein chalana; container hi cell kehlata hai',
           'Database table ko cells (rows aur columns) mein baantna, spreadsheet jaisa',
           'Mobile network ke cell towers ke hisaab se users ko alag servers par bhejna',
         ],
         answer: 0,
-        explain: 'Cell = app + DB + queue ki poori chhoti copy. Router batata hai ki tenant kis cell mein hai. Bura deploy ya noisy tenant sirf ek cell ko chhoota hai. Keemat: zyada copies chalana aur routing layer.',
+        explain: 'Cell = app + DB + queue ki poori chhoti copy. Router batata hai ki tenant kis cell mein hai. Noisy tenant ka asar cell tak seemit rehta hai. Deploy cells par ek-ek karke karo; saare cells par bura deploy ek saath karoge toh sab prabhavit honge. Keemat: zyada copies chalana aur routing layer.',
         choiceExplanations: [
-          'Cell = app + DB + queue ki poori chhoti copy. Router batata hai ki tenant kis cell mein hai. Bura deploy ya noisy tenant sirf ek cell ko chhoota hai. Keemat: zyada copies chalana aur routing layer.',
+          'Cell = app + DB + queue ki poori chhoti copy. Router batata hai ki tenant kis cell mein hai. Noisy tenant ka asar cell tak seemit rehta hai. Deploy cells par ek-ek karke karo; saare cells par bura deploy ek saath karoge toh sab prabhavit honge. Keemat: zyada copies chalana aur routing layer.',
           'Container ek process ko alag karta hai. Cell poore stack ko — DB samet.',
           'Ye database ka layout hai, isolation ka design nahi.',
           'Naam milta-julta hai, par cell architecture network towers ki baat nahi karta.',
@@ -159,7 +161,7 @@ SD.registerLevels('pro-sec', [
   cards: [
     { front: 'Noisy neighbour?', back: 'Saajhe resource par ek tenant ka bhaari kaam baaki sab ki latency badha deta hai.' },
     { front: 'Quota ki keemat?', back: 'Bade tenant ka kaam dheema (report 15 → 60 min). Baaki tenants ka SLO bachta hai.' },
-    { front: 'Cell?', back: 'Poore stack ki chhoti copy, kuch tenants ke saath. Ek cell ki dikkat doosre cell tak nahi jaati.' },
+    { front: 'Cell?', back: 'Poore stack ki chhoti copy, kuch tenants ke saath. Alag resources aur cell-wise rollout se dikkat ka asar seemit hota hai; shared dependencies phir bhi sabko gira sakti hain.' },
     { front: 'Kaun shor kar raha hai?', back: 'Logs ya query stats mein merchant_id; DB time ka top 10. Metric label mat banao — 40,000 series.' },
   ],
 },
@@ -195,8 +197,9 @@ SD.registerLevels('pro-sec', [
      <p>Data ko ek <b>data key (DEK)</b> se encrypt karo. DEK ko <b>master key</b> se encrypt (wrap) karke data ke saath rakho.
        Master key KMS (key management service) ke andar rehti hai — bahar aati hi nahi.</p>
      <ul>
-       <li>Master key rotate? Sirf DEKs dobara wrap. Poora data dobara encrypt nahi.</li>
-       <li>Har tenant ki alag DEK? Tenant ne "mera data mita do" kaha — uski DEK mita do. Backups ka data bhi padhne layak nahi (<b>crypto-shredding</b>).</li>
+       <li>AWS KMS ki automatic rotation purani wrapped DEKs nahi badalti; purana key material decrypt ke liye rehta hai. Alag KMS key par jaana ho toh DEKs dobara wrap kar sakte ho; poora data dobara encrypt karna zaroori nahi.</li>
+       <li>Har tenant ki alag DEK? Tenant ne "mera data mita do" kaha — DEK ki har recoverable copy mitni chahiye, backups ki wrapped copies bhi. Shared KMS key abhi unwrap kar sakti ho toh sirf live DEK mitaane se backups nahi mitte (<b>crypto-shredding</b>).</li>
+       <li>Aasaan raasta: har tenant ki <b>apni KMS wrapping key</b>. Tenant jaaye toh woh KMS key mita do — backups mein padi uski wrapped DEKs phir kabhi unwrap nahi hongi.</li>
        <li>DB ka disk chori? Wrapped DEK bekaar, jab tak KMS se unwrap na ho — aur KMS har unwrap ka log rakhta hai.</li>
      </ul>`,
   ],
@@ -211,7 +214,7 @@ SD.registerLevels('pro-sec', [
         { text: 'Purani key radd karo — chori hui key ab bekaar', explain: 'Asli suraksha yahi hai. Agar logs mein chor abhi key chala raha dikhe, toh purani key turant radd karo, chahe thodi der payouts rukein.' },
         { text: 'Logs mein dekho: purani key se in 40 minute mein kaunsi calls hui', explain: 'Kya kisi ne refund ya payout chalaya? Nuksaan ginna aur zaroorat ho toh gateway ko report karna.' },
         { text: 'Git history se file hatao, force push; forks aur caches ka dhyaan rakho', explain: 'Ye safai hai, suraksha nahi. Key pehle hi radd ho chuki hai, isliye ab jaldi nahi.' },
-        { text: 'Pre-commit secret scanning aur push protection chalu karo', explain: 'Agli baar commit hi na ho. Tool ek galti pakad leta hai jo insaan thakaan mein karta hai.' },
+        { text: 'Pre-commit secret scanning aur push protection chalu karo', explain: 'Pre-commit scanner local commit se pehle jaanchta hai. Push protection supported secrets ka push rokti hai; har secret nahi pakadti aur bypass mumkin hai.' },
       ],
     },
     {
@@ -229,7 +232,7 @@ SD.registerLevels('pro-sec', [
         { text: 'Deploy par secrets manager se env var; 90 din mein rotate', bin: 'meh', explain: 'Code se bahar hai — achha. Par key lambi umar ki hai, aur env vars crash dumps ya debug pages mein dikh sakte hain.' },
         { text: 'Service ka role 1 ghante ka DB credential leti hai', bin: 'good', explain: 'Chori hua credential ek ghante mein bekaar. Rotation apne aap.' },
         { text: 'Naye developer ko secrets Slack DM mein bhej diye', bin: 'bad', explain: 'Chat history mein secrets saalon rehte hain, search mein aate hain.' },
-        { text: 'Har tenant ki data key, KMS ki master key se wrap', bin: 'good', explain: 'Envelope encryption. Master key KMS se bahar nahi aati; tenant ki key mita ke data crypto-shred.' },
+        { text: 'Har tenant ki data key, KMS ki master key se wrap', bin: 'good', explain: 'Envelope encryption. DEK ki har recoverable copy, backups ki wrapped copies samet, mitne par hi crypto-shredding. Sirf live key mitaana kaafi nahi.' },
         { text: 'Saari services ek hi admin DB user share karti hain', bin: 'bad', explain: 'Ek service leak = poora DB. Har service ka alag user, kam permissions.' },
         { text: 'Logs mein Authorization header mask karke likhte hain', bin: 'good', explain: 'Logs bahut logon tak jaate hain. Token aur keys kabhi poore mat likho.' },
       ],
@@ -258,15 +261,15 @@ SD.registerLevels('pro-sec', [
         {
           q: 'Envelope encryption ka sabse bada faayda?',
           choices: [
-            'Master key KMS se bahar nahi aati; rotate par sirf data keys dobara wrap',
+            'Data key data encrypt kare; KMS key data key wrap kare aur KMS mein rahe',
             'Data do baar encrypt hota hai, isliye todna do guna mushkil ho jaata hai',
             'Saara data KMS ke andar rehta hai; app ke paas data hota hi nahi',
             'Data key aur master key ek hi chaabi hai; bas do naam diye gaye hain',
           ],
           answer: 0,
-          explain: 'Bada data local data key se tez encrypt hota hai. Master key sirf chhoti data keys ko wrap karti hai aur KMS mein rehti hai. Rotation sasta, aur har unwrap ka audit log.',
+          explain: 'Bada data local data key se tez encrypt hota hai. Master key sirf chhoti data keys ko wrap karti hai aur KMS mein rehti hai. Automatic KMS rotation purani DEKs ko rewrap nahi karti. Alag KMS key par DEKs rewrap kar sakte ho; KMS calls ka audit log milta hai.',
           choiceExplanations: [
-            'Bada data local data key se tez encrypt hota hai. Master key sirf chhoti data keys ko wrap karti hai aur KMS mein rehti hai. Rotation sasta, aur har unwrap ka audit log.',
+            'Bada data local data key se tez encrypt hota hai. Master key sirf chhoti data keys ko wrap karti hai aur KMS mein rehti hai. Automatic KMS rotation purani DEKs ko rewrap nahi karti. Alag KMS key par DEKs rewrap kar sakte ho; KMS calls ka audit log milta hai.',
             'Data ek hi baar encrypt hota hai (data key se). Doosri parat sirf data key par hai.',
             'KMS keys rakhta hai, bada data nahi. Data tumhare DB ya storage mein hi rehta hai.',
             'Do alag chaabiyan hain — yahi poora idea hai.',
@@ -299,15 +302,15 @@ SD.registerLevels('pro-sec', [
       {
         q: 'Tenant ne kaha "mera saara data mita do", backups mein bhi. Kaise?',
         choices: [
-          'Har tenant ki alag data key; key mita do, backups ka data bhi padhne layak nahi',
+          'Tenant ki alag key; backups aur cache samet key ki har recoverable copy mitao',
           'Har backup ko kholo, us tenant ki rows hatao, aur backup dobara bana do',
           'Backups mein se kuch mitaya hi nahi ja sakta; tenant ko mana kar do',
           'Tenant ki rows par deleted = true laga do; data dikhna band ho jaayega',
         ],
         answer: 0,
-        explain: 'Crypto-shredding: data encrypted hai aur key ab nahi hai, toh backups mein pada data bhi bekaar. Kanoon kuch records rakhne ko kahe (jaise tax), toh woh hissa alag niyam se.',
+        explain: 'Crypto-shredding tabhi jab key ki koi recoverable copy na bache. Backups mein wrapped DEK aur chalu shared KMS key bachi ho toh data abhi bhi khul sakta hai. Aasaan raasta: har tenant ki apni KMS wrapping key, aur tenant jaane par wahi mita do. Kanoon kuch records rakhne ko kahe (jaise tax), toh woh hissa alag niyam se.',
         choiceExplanations: [
-          'Crypto-shredding: data encrypted hai aur key ab nahi hai, toh backups mein pada data bhi bekaar. Kanoon kuch records rakhne ko kahe (jaise tax), toh woh hissa alag niyam se.',
+          'Crypto-shredding tabhi jab key ki koi recoverable copy na bache. Backups mein wrapped DEK aur chalu shared KMS key bachi ho toh data abhi bhi khul sakta hai. Aasaan raasta: har tenant ki apni KMS wrapping key, aur tenant jaane par wahi mita do. Kanoon kuch records rakhne ko kahe (jaise tax), toh woh hissa alag niyam se.',
           'Saikdon backups kholna mehenga aur galti wala kaam. Ek bhi chhoota toh vaada toota.',
           'Mitaane ka raasta design se banta hai. Crypto-shredding yahi karta hai.',
           'Soft delete se data DB aur backups mein pada rehta hai. Ye mitaana nahi, chhupana hai.',
@@ -326,8 +329,8 @@ SD.registerLevels('pro-sec', [
   cards: [
     { front: 'Key leak — pehla kaam?', back: '<b>Rotate + revoke.</b> History saaf karna baad mein; copies pehle hi ban chuki hongi.' },
     { front: 'Secrets kahan?', back: 'Secrets manager ya workload identity. Code, .env repo aur chat mein nahi.' },
-    { front: 'Envelope encryption?', back: 'Data → data key (DEK); DEK → master key (KMS mein). Rotate sasta, unwrap ka audit.' },
-    { front: 'Crypto-shredding?', back: 'Tenant ki data key mita do. Backups mein pada encrypted data bhi bekaar.' },
+    { front: 'Envelope encryption?', back: 'Data → data key (DEK); DEK → master key (KMS mein). KMS rotation purani wrapped DEKs nahi badalti; alag key par rewrap mumkin.' },
+    { front: 'Crypto-shredding?', back: 'Tenant ki key ki har recoverable copy mitao, backups ki wrapped DEKs aur caches samet. Sirf live key mitaana kaafi nahi.' },
   ],
 },
 ]);
@@ -411,7 +414,7 @@ SD.addScenes({
       { from: 'vault', to: 'svc', label: 'reload', tone: 'good', say: 'payout-service naya key padhti hai. Ab purani key ki zaroorat kisi service ko nahi.' },
       { at: ['gw', 'bot'], set: { gw: { tone: 'good', sub: 'purani key radd' }, bot: { tone: '', sub: 'key bekaar' } }, say: 'Purani key radd. Chori hui key ab bekaar. Chor abhi key chala raha ho toh ye kadam sabse pehle, chahe payouts thodi der rukein.' },
       { at: ['repo'], set: { repo: { tone: 'gold', sub: 'history saaf' } }, say: 'Ab git history saaf karo. Ye safai hai, suraksha nahi: copies pehle hi ban chuki hongi.' },
-      { at: ['dev'], set: { dev: { tone: 'good', sub: 'pre-commit scanning' } }, say: 'Aage ke liye: pre-commit secret scanning aur push protection. Galti commit tak pahunche hi nahi.' },
+      { at: ['dev'], set: { dev: { tone: 'good', sub: 'pre-commit scanning' } }, say: 'Aage ke liye: pre-commit secret scanning aur push protection. Local scanner commit se pehle jaanchta hai. Push protection supported secrets ko remote repo tak jaane se rokti hai; bypass aur chhoote patterns ka risk rehta hai.' },
     ],
   },
 });

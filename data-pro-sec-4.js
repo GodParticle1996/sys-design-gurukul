@@ -65,7 +65,7 @@ SD.registerLevels('pro-sec', [
         first: {
           text: 'Pehla kadam?',
           choices: [
-            { t: 'OTP API par turant: desh code ki allowlist aur per-number, per-IP limit', good: true, next: 'why', explain: 'Khoon rokna. Allowlist premium range ko band karti hai; limits baaki baarish ko. Asli Indian users chalte rahte hain.' },
+            { t: 'OTP API par turant: desh code ki allowlist aur per-number, per-IP limit', good: true, next: 'why', explain: 'Khoon rokna. Is incident mein hamle ka desh allowlist se bahar hai; allowed deshon ki pumping ke liye provider fraud checks aur limits bhi chahiye. Asli Indian users chalte rahte hain.' },
             { t: 'SMS provider badal do; naye provider ki per-SMS keemat kam hai', good: false, explain: 'Sasta provider bhi har SMS ka paisa lega. Hamla wahi rahega, bill thoda kam.' },
             { t: 'OTP API poori band karo jab tak subah team na aaye', good: false, explain: 'Saare asli users ka login band. Allowlist aur limit se chhota, sahi ilaaj mumkin hai.' },
             { t: 'Alert ko mute karo; subah team aaram se dekhegi', good: false, explain: 'Har ghante ₹1 lakh se zyada. Subah tak bill bahut bada.' },
@@ -85,7 +85,7 @@ SD.registerLevels('pro-sec', [
           sitrep: '📊 Bill: ek ghante ka ~₹1 lakh (kalpanik rate). Provider se dispute file kiya.',
           text: 'Dobara na ho — systemic fix?',
           choices: [
-            { t: 'Conversion rate par alert, desh allowlist, aur resend par CAPTCHA', good: true, next: 'end', explain: 'Conversion alert minton mein pakadta hai. Allowlist premium range band rakhti hai. CAPTCHA bot ke resend ko mehenga banata hai.' },
+            { t: 'Conversion rate par alert, desh allowlist, aur resend par CAPTCHA', good: true, next: 'end', explain: 'Conversion alert minton mein pakadta hai. Allowlist gair-zaroori deshon ko band rakhti hai; allowed deshon mein bhi pumping ho sakti hai. CAPTCHA bot ke resend ko mehenga banata hai.' },
             { t: 'IP blocklist mein aaj ke saare IPs daal do', good: false, explain: 'Agli baar naye IPs aayenge. Botnet ke paas lakhon IPs hain.' },
             { t: 'OTP ki lambai 6 se 8 digit karo; lamba OTP bots rokta hai', good: false, explain: 'Lambai OTP guess karna mushkil karti hai. Pumping mein bot OTP bharta hi nahi — usse SMS bhejwana hai.' },
             { t: 'Har OTP ka kharcha user ke wallet se kaat lo', good: false, explain: 'Asli users ko saza, aur bot ka wallet hai hi nahi.' },
@@ -109,7 +109,7 @@ SD.registerLevels('pro-sec', [
         { left: 'Ek number par 1,000 OTP — kisi ko pareshaan karna', right: 'Per-number limit + badhta cooldown', explain: 'Hamla ek number par hai, toh hadd bhi number par. Cooldown har resend ke saath badhta hai.' },
         { left: '1 crore leaked passwords, 50,000 IPs se, har IP 3 try', right: 'Leaked-password check + naye device par OTP', explain: 'IP limit ke neeche hamla hai. Account aur device ke signals kaam aate hain.' },
         { left: 'Ek account par 500 galat passwords', right: 'Per-account delay badhao, lock nahi', explain: 'Lock karne se hamlawar asli user ko bahar kar sakta hai. Delay se guessing dheemi, user safe.' },
-        { left: 'Premium numbers par lakhon OTP, conversion 0.1%', right: 'Desh allowlist + conversion alert', explain: 'Pumping ki pehchaan conversion hai. Allowlist premium range band karti hai.' },
+        { left: 'Premium numbers par lakhon OTP, conversion 0.1%', right: 'Desh allowlist + conversion alert', explain: 'Pumping ki pehchaan conversion hai. Allowlist gair-zaroori deshon ko rokti hai; allowed deshon mein provider fraud checks aur spend caps bhi chahiye.' },
         { left: 'Ek IP se ek minute mein 2,000 signups', right: 'Per-IP limit + CAPTCHA', explain: 'Yahan IP hi saaf signal hai. 429 ya CAPTCHA.' },
       ],
     },
@@ -143,9 +143,9 @@ SD.registerLevels('pro-sec', [
             'Nahi; isliye login API band karo jab tak hamla khud na ruk jaaye',
           ],
           answer: 0,
-          explain: '3 try per IP kisi bhi IP limit ke neeche hai. Hamla baanta hua hai, isliye signals bhi doosre chahiye: naya device, leaked password, poore system ka failure rate.',
+          explain: 'Har IP se ek minute mein 3 try, 100/min aur 10/min dono limits ke neeche hain. Hamla baanta hua hai, isliye signals bhi doosre chahiye: naya device, leaked password, poore system ka failure rate.',
           choiceExplanations: [
-            '3 try per IP kisi bhi IP limit ke neeche hai. Hamla baanta hua hai, isliye signals bhi doosre chahiye: naya device, leaked password, poore system ka failure rate.',
+            'Har IP se ek minute mein 3 try, 100/min aur 10/min dono limits ke neeche hain. Hamla baanta hua hai, isliye signals bhi doosre chahiye: naya device, leaked password, poore system ka failure rate.',
             'Limit per IP hai; 3 try har IP se kabhi limit tak pahunchte hi nahi.',
             '10/min bhi 3 se zyada hai. Aur office ke saajhe IP waale asli users ruk sakte hain.',
             'Login band = saare users ke liye outage. Hamlawar yahi chahta ho sakta hai.',
@@ -290,7 +290,7 @@ SD.registerLevels('pro-sec', [
         {
           id: 'otp', label: 'OTP login ka abuse', icon: '🤖',
           options: [
-            { id: 'layers', label: 'Number, IP aur device limit; desh allowlist; alert', score: 3, why: 'Kai signals; premium range band; conversion alert minton mein pakadta hai.' },
+            { id: 'layers', label: 'Number, IP aur device limit; desh allowlist; alert', score: 3, why: 'Kai signals; gair-zaroori desh band. Allowed deshon mein fraud checks aur spend caps; conversion alert se jaanch shuru.' },
             { id: 'ip', label: 'Sirf per-IP limit 100/min; baaki sab kuch khula', score: -1, why: 'Botnet ke paas lakhon IPs. Pumping aur stuffing dono IP limit ke neeche.' },
             { id: 'free', label: 'Koi limit nahi; SMS toh sasta hai, chalne do', score: -3, why: 'Ek raat ka pumping lakhon ka bill.' },
           ],
@@ -357,9 +357,9 @@ SD.registerLevels('pro-sec', [
             'Saare merchants ki keys ek saath rotate karo, taaki koi bhi khatra na bache',
           ],
           answer: 0,
-          explain: 'Do keys ek saath valid rehne se merchant bina downtime ke rotate kar sakta hai. GitHub jaise platforms ke secret scanning partner programs leak hui key ki khabar dete hain — ChaiPay purani key khud radd bhi kar sakta hai.',
+          explain: 'Do keys ek saath valid rehne se merchant bina downtime ke rotate kar sakta hai. GitHub jaise platforms ke secret scanning partner programs leak hui key ki khabar dete hain — ChaiPay purani key khud radd bhi kar sakta hai. Active abuse dikhe toh rotation ka intezaar kiye bina leaked key radd karo.',
           choiceExplanations: [
-            'Do keys ek saath valid rehne se merchant bina downtime ke rotate kar sakta hai. GitHub jaise platforms ke secret scanning partner programs leak hui key ki khabar dete hain — ChaiPay purani key khud radd bhi kar sakta hai.',
+            'Do keys ek saath valid rehne se merchant bina downtime ke rotate kar sakta hai. GitHub jaise platforms ke secret scanning partner programs leak hui key ki khabar dete hain — ChaiPay purani key khud radd bhi kar sakta hai. Active abuse dikhe toh rotation ka intezaar kiye bina leaked key radd karo.',
             'Chori hui key se merchant ke paise jaayenge, aur bharosa ChaiPay ka tootega.',
             'Account band = merchant ki dukaan band. Key radd karna chhota aur sahi ilaaj hai.',
             '40,000 merchants ki integrations ek saath tootengi. Ek leak ke liye sab par outage.',
@@ -419,7 +419,7 @@ SD.registerLevels('pro-sec', [
     { front: 'Defense in depth?', back: 'Kai parat; har parat ek alag bhool pakadti hai. Ek toote toh doosri bachaaye.' },
     { front: 'Enterprise "alag DB, apni key"?', back: 'Silo cell + customer-managed KMS key; routing layer tenant ko cell par bheje.' },
     { front: 'Support ka data access?', back: 'Just-in-time, ticket ke saath, read-only, kuch ghante, audit log mein.' },
-    { front: 'Merchant ki key leak?', back: 'Do keys ek saath valid → self-service rotation; secret scanning partner se khabar.' },
+    { front: 'Merchant ki key leak?', back: 'Self-service rotation aur leak scanning. Active abuse par leaked key turant radd; downtime se pehle nuksaan rokna.' },
   ],
 },
 ]);
@@ -478,7 +478,7 @@ SD.addScenes({
       { from: 'sms', to: 'prem', label: 'premium par SMS', tone: 'bad', say: 'Premium numbers par SMS pahunchne se hamlawar ko telecom se hissa milta hai. Bill ChaiPay ka.' },
       { at: ['alert'], set: { alert: { tone: 'bad', sub: 'bhara: 0.1%' } }, say: 'Pehchaan: OTP sahi bharne wale sirf 0.1%. Asli users mein zyadatar bharte hain. Ye SMS pumping hai.' },
       { at: ['limit'], set: { limit: { tone: 'good', sub: 'desh allowlist + hadd' } }, say: 'Ilaaj: desh code ki allowlist, aur har number, IP aur device par hadd.' },
-      { from: 'bot', to: 'limit', label: '429 / CAPTCHA', tone: 'good', set: { bot: { tone: '', sub: 'ruk gaya' } }, say: 'Bot ki maang ab limits par rukti hai. Premium range band, resend par CAPTCHA.' },
+      { from: 'bot', to: 'limit', label: '429 / CAPTCHA', tone: 'good', set: { bot: { tone: '', sub: 'ruk gaya' } }, say: 'Is incident ka destination band hai. Allowed deshon mein bhi pumping ho sakti hai; provider fraud checks, spend cap aur resend par CAPTCHA rakho.' },
       { at: ['sms', 'alert'], set: { sms: { tone: 'good', sub: '~3,000 / ghanta' }, alert: { tone: 'good', sub: 'alert chalu' } }, say: 'SMS wapas normal. Conversion alert agli baar minton mein khabar dega.' },
     ],
   },

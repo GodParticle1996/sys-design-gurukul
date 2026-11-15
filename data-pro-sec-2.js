@@ -42,13 +42,13 @@ SD.registerLevels('pro-sec', [
     `<h3>🎬 Misaal: cinema ka ticket vs club ka card</h3>
      <p><b>Cinema ticket:</b> gate wala ticket par mohar dekhta hai. Mohar asli hai toh andar. Ticket kho gaya? Cinema ko pata hi nahi ki ab kiske haath mein hai.</p>
      <p><b>Club card:</b> gate wala har baar register kholta hai: "ye card abhi chalu hai?" Card radd karna aasaan. Par har entry par register dekhna padta hai.</p>
-     <p class="tip">🎯 <b>Asli baat:</b> JWT cinema ticket hai — signature aur expiry token ke andar. Service ko kisi se poochhna nahi padta, isliye tez.
+     <p class="tip">🎯 <b>Asli baat:</b> Signed JWT (JSON Web Token) cinema ticket hai — signature aur expiry token ke andar. Service ko kisi se poochhna nahi padta, isliye tez.
        Par radd (revoke) karna mushkil. Session club card hai — har request par server ka record, revoke turant.</p>`,
     `<h3>📱 Aman ka phone chori hua</h3>
      <p>ChaiPay ke access tokens <b>JWT, 30 din</b> ke hain. Aman ne support ko call kiya. Support ne "logout all devices" dabaya.</p>
      <p><code>auth-service</code> ne Aman ke sessions aur refresh tokens radd kar diye. Lekin <code>wallet-api</code> sirf token ka signature aur expiry dekhti hai.
        Revoke list kabhi poochhti hi nahi.</p>
-     <p>Nateeja: chor ka token <b>29 din aur</b> chalega. "Logout" button sirf auth-service ke andar laga, wallet-api tak pahuncha hi nahi.</p>`,
+     <p>Maano token ek din pehle bana tha. Nateeja: chor ka token <b>29 din aur</b> chalega. "Logout" button sirf auth-service ke andar laga, wallet-api tak pahuncha hi nahi.</p>`,
     `<h3>🛠️ Teen ilaaj, teen keematein</h3>
      <table>
        <tr><th>Ilaaj</th><th>Asar kab</th><th>Keemat</th></tr>
@@ -57,11 +57,12 @@ SD.registerLevels('pro-sec', [
        <tr><td><b>Dono</b>: paise wale endpoints par denylist, baaki par chhota token</td><td>Paise par turant</td><td>Do mechanism chalaane padte hain</td></tr>
      </table>
      <p class="tip">⚠️ Mode badalne se <b>pehle se jaari</b> token chhota nahi hota. t-old ki expiry uske andar likhi hai: 30 din.
-       Isliye chori ke waqt sirf denylist bachaati hai.</p>`,
+       Purane token ko turant rokne ke liye denylist, token-version check ya introspection chahiye: service auth-server se token ka haal poochhe.</p>`,
     `<h3>🔁 "Logout all devices" ka seedha design</h3>
-     <p>User ke record mein ek timestamp: <code>tokens_valid_after = abhi</code>. Har JWT mein <code>iat</code> (kab jaari hua) hota hai.
+     <p>User ke record mein ek timestamp: <code>tokens_valid_after = abhi</code>. ChaiPay har JWT mein <code>iat</code> (kab jaari hua) rakhta aur jaanchta hai; JWT standard mein iat optional hai.
        Service jaanchti hai: <code>iat &lt; tokens_valid_after</code>? Toh 401.</p>
      <p>Ek user ke liye ek hi value — list har token ki nahi badhti. Ye bhi ek denylist hai, bas user ke hisaab se.</p>
+     <p>Asli JWT jaanch mein signature ke saath allowed algorithm, issuer (kisne jaari kiya), audience (kis service ke liye), expiry aur zaroori claims bhi jaancho. Simulator revoke ka farak dikhane ke liye jaanch ko chhota rakhta hai.</p>
      <p><b>Refresh token rotation:</b> har refresh par naya refresh token. Purana dobara aaya? Matlab kisi ne copy kiya — poori family radd.</p>`,
   ],
   stages: [
@@ -111,15 +112,15 @@ SD.registerLevels('pro-sec', [
         {
           q: 'Denylist ka Redis cache 5 minute ke liye gir gaya. Payment endpoint kya kare?',
           choices: [
-            'Payment par fail closed: roko ya OTP maango; balance dekhna chalne do',
+            'Payment roko ya alag OTP jaancho; balance par bhi data ka risk dekho',
             'Sab par fail open: sab chalne do; cache girna ChaiPay ki galti hai',
             'Saare users ke tokens radd karo; cache aane tak sab dobara login karein',
             'Cache aane tak denylist check hata do; bas logs mein likhte raho',
           ],
           answer: 0,
-          explain: 'Khatre ke hisaab se faisla: paise jaane wale kaam par chori ka nuksaan bada, toh fail closed (ya extra check). Balance dekhne jaisa kaam chalne do — poora app band karna bhi nuksaan hai.',
+          explain: 'Khatre ke hisaab se faisla: paise jaane wale kaam par chori ka nuksaan bada, toh fail closed (ya extra check). Balance private data hai. Balance par fail open sirf tab chuno jab data leak ka risk policy mein manzoor ho.',
           choiceExplanations: [
-            'Khatre ke hisaab se faisla: paise jaane wale kaam par chori ka nuksaan bada, toh fail closed (ya extra check). Balance dekhne jaisa kaam chalne do — poora app band karna bhi nuksaan hai.',
+            'Khatre ke hisaab se faisla: paise jaane wale kaam par chori ka nuksaan bada, toh fail closed (ya extra check). Balance private data hai. Balance par fail open sirf tab chuno jab data leak ka risk policy mein manzoor ho.',
             'Fail open ka matlab chura hua token 5 minute paisa bhej sakta hai. Payment par ye mehenga hai.',
             'Ek cache outage ke liye lakhon users ko logout karna khud ek bada incident hai.',
             'Ye fail open hi hai, bas naam alag. Logs baad mein batate hain; paisa tab tak ja chuka.',
@@ -134,9 +135,9 @@ SD.registerLevels('pro-sec', [
             'Refresh token ko bhi JWT bana do, taaki auth-service ko yaad na rakhna pade',
           ],
           answer: 0,
-          explain: 'Refresh token auth-service ke paas register hai, isliye radd ho sakta hai. Rotation mein chor aur Aman dono ek hi purana token chalayenge — doosri baar aate hi chori pakdi jaati hai aur poori family radd.',
+          explain: 'Refresh token ka record auth-service rakhti hai, isliye token radd ho sakta hai. Rotation mein purana token radd hota hai. Aman aur chor dono copy chalaayein tab reuse pakadta hai aur poori family radd hoti hai; akela chor chalaaye toh turant pata nahi chalta.',
           choiceExplanations: [
-            'Refresh token auth-service ke paas register hai, isliye radd ho sakta hai. Rotation mein chor aur Aman dono ek hi purana token chalayenge — doosri baar aate hi chori pakdi jaati hai aur poori family radd.',
+            'Refresh token ka record auth-service rakhti hai, isliye token radd ho sakta hai. Rotation mein purana token radd hota hai. Aman aur chor dono copy chalaayein tab reuse pakadta hai aur poori family radd hoti hai; akela chor chalaaye toh turant pata nahi chalta.',
             'Refresh token server-side hai; usse radd karna seedha hai. Intezaar ki zaroorat nahi.',
             'Chor naye access tokens banata rahega. Access token chhota karne se refresh ka khatra nahi jaata.',
             'Self-contained refresh token radd karna aur mushkil hoga — wahi dikkat jo 30 din ke JWT mein thi.',
@@ -163,7 +164,7 @@ SD.registerLevels('pro-sec', [
           'JWT se har service bina network call ke identity jaanch leti hai. Kamzori revoke hai — use chhoti expiry aur zaroori jagah denylist se bharo. Faisla khatre aur latency dono se.',
           'Phone chori, employee nikla, password leak — revoke roz ki zaroorat hai. Lambi expiry ka JWT in sab mein khula rehta hai.',
           'Har request par auth DB ki call latency aur ek single point of failure jodti hai. Cache ke saath ho sakta hai, par keemat gino.',
-          'JWT ka payload sirf encoded hai, encrypted nahi. Password hash wahan rakhna leak hai.',
+          'Yahan signed JWT ka payload encoded hai, encrypted nahi. JWT ka encrypted roop (JWE) bhi hota hai; password hash token mein phir bhi mat rakho.',
         ],
       },
       {
@@ -191,7 +192,7 @@ SD.registerLevels('pro-sec', [
     'Khatre ke hisaab se fail open ya fail closed chunna',
   ],
   homework: `Kisi bhi app mein login karo aur browser ke DevTools → Application/Storage mein token dhoondho.
-    Agar JWT hai toh jwt.io jaisi kisi local tool mein decode karo (asli production token kisi website par mat chipkao):
+    Agar JWT hai toh local offline decoder mein decode karo (asli production token kisi website par mat chipkao):
     exp aur iat dekho. Token kitne din chalta hai? Phone chori ho toh kitni der khula rahega?`,
   cards: [
     { front: 'JWT revoke mushkil kyun?', back: 'Service sirf signature + expiry dekhti hai, kisi se poochhti nahi. Revoke list na dekhe toh token expiry tak chalta hai.' },
@@ -208,7 +209,7 @@ SD.registerLevels('pro-sec', [
   title: 'Multi-tenancy — ek merchant ka data doosre ko na dikhe',
   badge: 'Kiraaydaar Rakshak',
   objectives: [
-    'Teen model: saajhi table (<b>pool</b>), alag schema (<b>bridge</b>), alag database (<b>silo</b>)',
+    'Data rakhne ke teen tareeke: saajhi table, alag schema, alag database; AWS ke pool, silo aur bridge ka farak',
     'App ka filter vs database ki policy (Postgres <b>RLS</b>)',
     'RLS ke jaal: table owner, BYPASSRLS, connection pool',
     'Terminal: export ka leak dekho aur RLS se band karo',
@@ -216,18 +217,19 @@ SD.registerLevels('pro-sec', [
   lesson: [
     `<h3>🏢 Misaal: ek godown, 40,000 dukaanein</h3>
      <p><b>A — ek bada godown</b>, har dabbe par dukaan ka naam. Sasta. Par galat dabba uthana aasaan.</p>
-     <p><b>B — ek building, har dukaan ka alag kamra.</b> Galti mushkil, par 40,000 kamron ki chaabiyan sambhalo.</p>
-     <p><b>C — har dukaan ki alag building.</b> Sabse surakshit, sabse mehenga.</p>
+     <p><b>B — ek building, har dukaan ka alag kamra.</b> Sahi permissions hon toh galti mushkil, par 40,000 kamron ki chaabiyan sambhalo.</p>
+     <p><b>C — har dukaan ki alag building.</b> Zyada alag resources, zyada kharcha; sahi permissions phir bhi chahiye.</p>
      <p class="tip">🎯 <b>Asli baat:</b> ChaiPay ke 40,000 merchants (tenants) ek hi <code>orders</code> table mein hain — model A.
        Ab har query ko yaad rakhna hai ki sirf apne merchant ki rows padhe.</p>`,
     `<h3>📊 Teen model</h3>
      <table>
        <tr><th>Model</th><th>Isolation</th><th>Kharcha</th><th>Kab</th></tr>
        <tr><td><b>Pool</b>: saajhi table, <code>merchant_id</code> column</td><td>Sabse kamzor — filter par nirbhar</td><td>Sabse sasta, ek migration sab par</td><td>Hazaaron chhote tenants</td></tr>
-       <tr><td><b>Bridge</b>: har tenant ka schema</td><td>Beech ka</td><td>Hazaaron schemas: migration aur catalog bhaari</td><td>Sau ke aas-paas tenants, custom fields</td></tr>
-       <tr><td><b>Silo</b>: har tenant ka database</td><td>Sabse mazboot</td><td>Sabse mehenga, har DB ko chalana</td><td>Bade, regulated ya bahut load wale tenants</td></tr>
+       <tr><td><b>Alag schema</b>: har tenant ki tables alag namespace mein</td><td>Beech ka</td><td>Hazaaron schemas: migration aur catalog bhaari</td><td>Sau ke aas-paas tenants, custom fields</td></tr>
+       <tr><td><b>Alag database</b>: har tenant ka apna DB</td><td>Data boundary mazboot; shared host par CPU phir bhi saajha</td><td>Sabse mehenga, har DB ko chalana</td><td>Bade, regulated ya bahut load wale tenants</td></tr>
      </table>
-     <p>Aksar mix: chhote merchants pool mein, bade enterprise silo mein.</p>`,
+     <p>AWS ke naam resources par lagte hain: <b>pool</b> = saajhe resources, <b>silo</b> = tenant ke apne resources, <b>bridge</b> = dono ka mix. Alag schema ko bridge kehna zaroori nahi. Alag DB bhi saajhe server par ho sakta hai; CPU aur connections ka isolation apne aap nahi milta.</p>
+     <p>ChaiPay mein chhote merchants pool mein, bade enterprise dedicated DB/server wale silo mein.</p>`,
     `<h3>🧯 App filter ka dard</h3>
      <p>Pool mein har query: <code>WHERE merchant_id = ?</code>. 400 queries. Ek naya "Export CSV" feature. Ek bhool = <b>sab merchants ka data</b>.</p>
      <p><b>Postgres Row-Level Security (RLS):</b> policy table par lagti hai. Database khud har query par filter jodta hai — code bhoole tab bhi.</p>
@@ -260,7 +262,7 @@ SELECT set_config('app.merchant_id', $1, true);   -- $1 = verified token ka merc
         'tenant isolation rls',
         'tenant export sharma',
       ],
-      successText: 'Export mein ab sirf Sharma Sweets ke 12,000 rows. Database ki policy ne filter lagaya, chahe export code bhool jaaye. Asli Postgres mein yaad rakho: app ka role table owner ya BYPASSRLS na ho, aur merchant ki setting har transaction mein set ho.',
+      successText: 'Export mein ab sirf Sharma Sweets ke 12,000 rows. Database ki policy ne filter lagaya, chahe export code bhool jaaye. Asli Postgres mein yaad rakho: app ka role superuser, table owner ya BYPASSRLS na ho, aur merchant ki setting har transaction mein set ho.',
       hints: [
         'Pehle export chala ke gino: 12,000 se zyada rows aaye toh doosre merchants ka data bhi aaya.',
         '`tenant export <merchant>` export chalata hai. `tenant isolation app-filter|rls` tay karta hai ki merchant ka filter code lagaye ya database.',
@@ -273,16 +275,16 @@ SELECT set_config('app.merchant_id', $1, true);   -- $1 = verified token ka merc
       instructions: 'Har tenant ke liye sabse theek isolation model chuno.',
       bins: [
         { id: 'pool', label: '🧺 Pool (saajhi table)' },
-        { id: 'bridge', label: '🚪 Bridge (alag schema)' },
+        { id: 'bridge', label: '🚪 Alag schema' },
         { id: 'silo', label: '🏰 Silo (alag DB)' },
       ],
       items: [
         { text: '40,000 chhoti dukaanein, har ek ke 100–10,000 orders', bin: 'pool', explain: 'Hazaaron chhote tenants ke liye alag DB ka kharcha aur kaam bahut. Pool + RLS.' },
         { text: 'Ek bank: contract kehta hai data alag DB mein, alag encryption key ke saath', bin: 'silo', explain: 'Contract hi silo maang raha hai. Alag DB, alag key, alag backup.' },
         { text: 'Free trial ke 5,000 merchants; aadhe ek hafte mein chhod dete hain', bin: 'pool', explain: 'Jaldi aane-jaane wale tenants ke liye har ek ka DB banana-mitaana mehenga. Pool.' },
-        { text: '200 B2B grahak, har ek ko apne custom columns aur reports chahiye', bin: 'bridge', explain: 'Sau ke aas-paas tenants aur har ek ka alag schema — bridge theek baithta hai.' },
-        { text: 'MegaMart: 50 lakh orders; iski reports se baaki sab dheeme ho jaate hain', bin: 'silo', explain: 'Bada aur shor machaane wala tenant. Alag DB (ya kam se kam alag replica) — agle level ka topic.' },
-        { text: 'Sarkari client: data sirf ek khaas region mein, audit alag', bin: 'silo', explain: 'Region aur audit ki shart alag infrastructure maangti hai.' },
+        { text: '200 B2B grahak, har ek ko apne custom columns aur reports chahiye', bin: 'bridge', explain: '200 tenants ko apne columns chahiye: alag schema ek vikalp hai. Migrations aur permissions har schema par sambhalni hongi.' },
+        { text: 'MegaMart: 50 lakh orders; iski reports se baaki sab dheeme ho jaate hain', bin: 'silo', explain: 'Bhaari reports ko dedicated compute ya alag read replica do. Saajhe host par sirf alag DB banaane se CPU isolation nahi milta.' },
+        { text: 'Sarkari client: contract mein dedicated DB, khaas region aur alag audit', bin: 'silo', explain: 'Is abhyas mein dedicated DB chuna hai. Sirf region aur audit ki shart se silo zaroori nahi; region-wise pool bhi shart poori kar sakta hai.' },
       ],
     },
     {
@@ -367,7 +369,7 @@ SELECT set_config('app.merchant_id', $1, true);   -- $1 = verified token ka merc
     ],
   },
   success: [
-    'Pool, bridge aur silo mein se tenant ke hisaab se chunna',
+    'Saajhi table, alag schema aur alag DB mein se zaroorat ke hisaab se chunna',
     'Postgres RLS lagana aur uske jaal pehchanna',
     'Tenant id ko sirf verified token se lena',
   ],
@@ -375,7 +377,7 @@ SELECT set_config('app.merchant_id', $1, true);   -- $1 = verified token ka merc
     owner se SELECT karo (sab rows dikhengi), phir app se — set_config ke saath aur bina.
     Phir FORCE ROW LEVEL SECURITY laga ke owner se dobara dekho.`,
   cards: [
-    { front: 'Pool / bridge / silo?', back: 'Saajhi table / har tenant ka schema / har tenant ka DB. Isolation badhta hai, kharcha bhi.' },
+    { front: 'Pool / bridge / silo?', back: 'AWS mein pool = saajhe resources, silo = tenant ke apne resources, bridge = dono ka mix. Alag schema sirf data rakhne ka ek tareeka hai.' },
     { front: 'RLS kyun?', back: 'Code filter bhoole tab bhi database khud <code>merchant_id</code> ka filter lagata hai. Doosri parat.' },
     { front: 'RLS kab nahi lagti?', back: 'Superuser, BYPASSRLS role, aur table owner (bina FORCE ROW LEVEL SECURITY).' },
     { front: 'Pool + RLS setting?', back: '<code>set_config(\'app.merchant_id\', $1, true)</code> — sirf transaction tak. Session par rakha toh agli request mein chipak sakta hai.' },
@@ -417,7 +419,7 @@ VISUALS['sec-tenancy'] = {
     </div>
     <div class="dg-grid">
       <div class="dg-node"><span class="ni">🧺</span><span class="nl">Pool</span><span class="ns">saajhi table — sasta, filter par nirbhar</span></div>
-      <div class="dg-node"><span class="ni">🚪</span><span class="nl">Bridge</span><span class="ns">alag schema — beech ka</span></div>
+      <div class="dg-node"><span class="ni">🚪</span><span class="nl">Alag schema</span><span class="ns">alag tables; permissions chahiye</span></div>
       <div class="dg-node"><span class="ni">🏰</span><span class="nl">Silo</span><span class="ns">alag DB — mazboot, mehenga</span></div>
     </div>
     <div class="dg-cap">Jaal: superuser / BYPASSRLS / table owner (bina FORCE) par policy nahi lagti.</div>`,
@@ -434,7 +436,7 @@ SD.addScenes({
       { id: 'deny', col: 2, row: 1, icon: '🧠', label: 'revoke list', sub: 'Redis cache' },
     ],
     steps: [
-      { from: 'thief', to: 'wallet', label: 'GET /balance (t-old)', say: 'Chor purane token se balance maangta hai. Token ka signature asli hai, expiry 29 din door.' },
+      { from: 'thief', to: 'wallet', label: 'GET /balance (t-old)', say: 'Chor purane token se balance maangta hai. Token ek din pehle bana tha. Signature asli hai, expiry 29 din door.' },
       { at: ['wallet'], set: { wallet: { tone: 'bad', sub: '200 OK — chor andar' } }, say: 'wallet-api sirf signature aur expiry jaanchti hai. Dono theek, toh 200 OK.' },
       { from: 'aman', to: 'auth', label: 'logout all devices', say: 'Aman support ko call karta hai. Support "logout all devices" dabata hai.' },
       { from: 'auth', to: 'deny', label: 'Aman: radd', tone: 'good', set: { deny: { tone: 'good', sub: 'aman: radd' } }, say: 'auth-service sessions aur refresh tokens radd karti hai, aur revoke list mein Aman ka naam likhti hai.' },
@@ -442,7 +444,7 @@ SD.addScenes({
       { at: ['wallet'], set: { wallet: { tone: 'gold', sub: 'mode: denylist' } }, say: 'Ilaaj: wallet-api har request par revoke list jaanche. Keemat: har request par ek tez lookup, lagbhag 1 ms.' },
       { from: 'wallet', to: 'deny', label: 'Aman radd hai?', say: 'Ab har request se pehle sawaal: is token ka user radd hai?' },
       { at: ['thief', 'wallet'], set: { wallet: { tone: 'good', sub: '401 Unauthorized' }, thief: { tone: 'good', sub: 'band' } }, say: 't-old ab 401. Chor bahar. Aman naye phone par dobara login karta hai.' },
-      { at: ['deny'], say: 'Cache gira toh? Paise wale endpoints par rok do (fail closed). Balance dekhne jaise kaam chalne do.' },
+      { at: ['deny'], say: 'Cache gira toh? Paise wale endpoints par rok do (fail closed). Balance bhi private data hai; fail open sirf manzoor risk policy ke saath.' },
     ],
   },
   'sec-tenancy': {

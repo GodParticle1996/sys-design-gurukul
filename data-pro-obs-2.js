@@ -269,7 +269,7 @@ Spare +1 deploy ke liye: 11 servers</pre>
         'capacity plan --peak 2400 --per-server 400 --target 60 --spare 1',
         'capacity fail --servers 11 --peak 2400 --per-server 400',
       ],
-      successText: '11 servers: har server peak par ~60% busy, ek mare toh baaki 60% par, aur deploy ke liye ek spare. Keemat: 6 ki jagah 11 servers. Model mein 85% se upar ko overload maana; asli hadd load test se naapo.',
+      successText: '11 servers: peak par har server ~55% busy; ek mare toh baaki 10 par 60%, aur deploy ke liye ek spare. Keemat: 6 ki jagah 11 servers. Model mein 85% se upar ko overload maana; asli hadd load test se naapo.',
       hints: [
         'Pehle bina target ke seedha hisaab lagao, phir utne servers mein se ek maar ke dekho.',
         '`capacity plan --peak <rps> --per-server <rps> [--target <pct>] [--spare <n>]` servers ginta hai. `capacity fail --servers <n> --peak <rps> --per-server <rps>` ek server maar ke baaki ka bojh dikhata hai.',
