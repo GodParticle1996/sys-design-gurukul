@@ -563,7 +563,7 @@ ek network call hai, isliye 100x zyada mehengi.</pre>
        <tr><td><b>Local copy</b></td><td>sirf zaroori fields apni DB mein</td><td>duplicate data; sync logic</td></tr>
        <tr><td><b>Search index</b></td><td>sab kuch ek index mein</td><td>ek aur system; consistency lag</td></tr>
      </table>`,
-    `<h3>🔬 CQRS read model — sabse zyada kaam ka</h3>
+    `<h3>🔬 CQRS read model — sabse zyada kaam ka</h3><p>CQRS (Command Query Responsibility Segregation) mein write aur read ke models alag rakhte hain.</p>
      <pre>-- order-service ke paas ek DENORMALIZED view:
 CREATE TABLE order_summary (
   order_id, user_id, user_city, user_name,   ← user-service se aaya

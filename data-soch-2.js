@@ -23,7 +23,7 @@ SD.registerScenarios([
       ['Paisa kaatne wala database dheema hai aur zyadatar waqt wahi le raha hai', 'Paisa kaatna sirf 200 ms leta hai. Sabse bada hissa SMS (900 ms) hai.'],
     ] },
     { t: 'Hal chuno', q: 'Payment ko tez aur SMS provider se azaad kaise karoge?', a: [
-      ['Fraud check aur paisa kaatne ke baad jawab do; baaki teen kaam queue se karo', 'User 350 ms mein "payment hua" dekh leta hai. SMS, cashback aur analytics ek queue mein jaate hain aur worker unhe peeche se karta hai.'],
+      ['Fraud check aur paisa kaatne ke baad jawab do; baaki teen kaam queue se karo', 'User 350 ms mein "payment hua" dekh leta hai. SMS, cashback aur analytics ek queue mein jaate hain aur worker teenon kaam background mein karta hai.'],
       ['Paanchon kaam ek saath (parallel) chalao aur paanchon ke jawab ka intezaar karo', 'Waqt ab sabse dheeme kaam jitna: SMS, yaani 900 ms ya 5 second. Aur fraud check ko paisa kaatne se pehle hi hona chahiye.'],
       ['SMS provider ki call ka timeout 5 second se ghatakar 1 second kar do, bas', 'Sabse bura din thoda behtar hoga. Lekin user phir bhi chaar ghair-zaroori kaamon ka intezaar karega.'],
     ] },
@@ -35,7 +35,7 @@ SD.registerScenarios([
   ],
   fixes: [
     { n: 'Zaroori abhi, baaki queue se', how: 'Jawab ke liye zaroori kaam request mein; baaki message queue mein.', cost: 'Baad wale kaam ka fail hona sambhalna padta hai.', when: 'Kaam ka nateeja user ko turant nahi chahiye.' },
-    { n: 'Ek saath chalana (parallel)', how: 'Jo calls ek doosre par tiki nahi, unhe saath bhejo.', cost: 'Waqt sabse dheemi call jitna.', when: 'Saare nateeje jawab ke liye chahiye.' },
+    { n: 'Ek saath chalana (parallel)', how: 'Independent calls ko saath bhejo.', cost: 'Waqt sabse dheemi call jitna.', when: 'Saare nateeje jawab ke liye chahiye.' },
     { n: 'Timeout + chhod dena', how: 'Ghair-zaroori call par chhoti hadd; na aaye toh aage badho.', cost: 'Wo kaam kabhi-kabhi chhoot jaata hai.', when: 'Kaam queue mein nahi daal sakte.' },
   ],
   twist: { q: 'Queue ka worker 2 ghante band raha. 40 lakh SMS queue mein jama hain. Worker chalu hote hi sab ek saath jaayenge.', a: [
@@ -52,7 +52,7 @@ SD.registerScenarios([
   story: 'ChaiPay ki home screen ek request mein 10 services ko call karti hai: balance, offers, bills aur 7 aur. Har service ka dashboard kehta hai "99% request 100 ms se kam". Phir bhi har 10 mein se lagbhag 1 home screen 1 second se zyada leti hai.',
   facts: [
     'Har service: 99% request tez (100 ms se kam), 1% dheeme (lagbhag 1 second).',
-    '10 calls ek saath (parallel) jaati hain.',
+    '10 calls ek saath (parallel) jaati hain; is misaal mein calls ka dheema hona independent hai.',
     'Home screen tab tak rukti hai jab tak saari 10 services jawab na de dein.',
   ],
   steps: [
@@ -78,12 +78,12 @@ SD.registerScenarios([
     { n: 'Kam calls', how: '10 calls ko 2–3 mein jodo, ya home screen ka data pehle se banakar rakho.', cost: 'Zyada kaam; data thoda purana.', when: 'Screen baar-baar wahi data dikhati hai.' },
   ],
   twist: { q: 'Balance ghair-zaroori nahi hai: balance ke bina home screen bekaar hai. Aur balance ki 1% calls 1 second leti hain.', a: [
-    ['95 ms tak jawab na aaye toh wahi request doosre server par bhi bhej do', 'Dono servers ke ek saath dheeme hone ka mauka 1% × 1% = 0.01% hai. Yeh sirf isliye surakshit hai ki balance padhna kuch badalta nahi.'],
+    ['95 ms tak jawab na aaye toh wahi request doosre server par bhi bhej do', 'Independent slow events hon toh dono ka dheema hona 1% × 1% = 0.01%; shared bottleneck par yeh hisaab nahi chalega. Yeh sirf isliye surakshit hai ki balance padhna kuch badalta nahi.'],
     ['Balance par 100 ms ka timeout rakho aur fail hone par ₹0 dikha do', 'Paise wali app mein ₹0 dikhana user ko dara deta hai. Galat number, khaali jagah se bura hai.'],
     ['Balance call ka timeout hata do taaki wo call kabhi fail hi na ho', 'Tab dheemi call poori screen ko 1 second ya usse zyada latkaye rakhegi.'],
   ] },
   asli: 'Ek request jitni zyada services par tiki hai, utni hi baar wo "1% dheeme" wali lottery khelti hai. Average mat dekho; poochho: "sabse dheemi call kya karegi?"',
-  say: 'Fan-out mein tail latency judti hai: 10 calls par 1% dheemapan 10% ban jaata hai. Main har call par timeout lagaunga aur ghair-zaroori hisson ko chhupaunga. Zaroori read call ke liye hedged request, aur lambe waqt mein calls ki ginti kam karunga.',
+  say: 'Independent calls ki is misaal mein 10 calls par 1% slow chance lagbhag 9.6% ban jaata hai. Main har call par timeout lagaunga aur ghair-zaroori hisson ko chhupaunga. Zaroori read call ke liye hedged request, aur lambe waqt mein calls ki ginti kam karunga.',
 },
 {
   id: 'long-conn-skew', icon: '⚖️', title: '4 naye server jode, phir bhi purane 4 hi jal rahe hain', topic: 'flow', hard: 3,
@@ -114,14 +114,14 @@ SD.registerScenarios([
   fixes: [
     { n: 'Thoda-thoda connection band karna', how: 'Scale ke baad purane servers dheere-dheere connection chhodte hain.', cost: 'Chhoti rukawat; app ko dobara judna aana chahiye.', when: 'Naye servers jodne ke turant baad.' },
     { n: 'Connection ki umr par hadd', how: 'Har connection kuch minute (+ random) baad band hota hai.', cost: 'Dobara judne ka thoda kharcha hamesha.', when: 'Hamesha, lambe connection ke saath.' },
-    { n: 'App mein ruk-kar judna', how: 'Toot-te hi nahi; random der rukkar judo.', cost: 'Judne mein kuch second.', when: 'Hamesha; upar ke dono iske bina khatarnaak.' },
+    { n: 'App mein ruk-kar judna', how: 'Toot-te hi nahi; random der rukkar judo.', cost: 'Judne mein kuch second.', when: 'Hamesha; connection draining aur age limit bina jitter ke khatarnaak.' },
   ],
-  twist: { q: 'Ek purana server crash ho gaya. Uske 5 lakh phone ek saath dobara jud rahe hain, aur baaki servers bhi girne lage.', a: [
+  twist: { q: 'Ek purana server crash ho gaya. Crash hue server ke 5 lakh phone ek saath dobara jud rahe hain, aur baaki servers bhi girne lage.', a: [
     ['App dobara judne se pehle random der ruke, aur har baar thoda zyada', 'Random der 5 lakh phone ko waqt mein phaila deti hai. Ise backoff + jitter kehte hain.'],
     ['App turant aur lagataar judne ki koshish kare jab tak jud na jaaye', 'Yahi toh jhatka bana raha hai: 5 lakh phone har pal dobara koshish karenge.'],
     ['Load balancer agle 10 minute tak koi naya connection na le', '10 minute tak kisi ko notification nahi milega, aur 10 minute baad wahi jhatka wapas.'],
   ] },
-  asli: 'Load balancer request nahi, <b>connection</b> baantta hai. Connection lamba ho toh "naye server jod diye" ka matlab "bojh bant gaya" nahi hota.',
+  asli: 'Is WebSocket setup mein load balancer <b>naye connection</b> baantta hai. Connection lamba ho toh "naye server jod diye" ka matlab "bojh bant gaya" nahi hota.',
   say: 'Lambe connection ke saath naye servers ko sirf naye connection milte hain. Main connection ki umr par hadd lagaunga aur scale ke baad purane servers se thode-thode connection band karwaunga. App backoff aur jitter ke saath dobara judegi aur aakhri message id se aage maangegi.',
 },
 
@@ -236,7 +236,7 @@ SD.registerScenarios([
     { n: 'Ruk-ruk kar retry', how: 'Asthaayi galti par gap ke saath dobara koshish.', cost: 'Message der se poora hota hai.', when: 'Galti thodi der ki ho (database band).' },
   ],
   twist: { q: 'Ab 6 lakh message DLQ mein hain kyunki <code>cashback-db</code> 10 minute band tha. Message kharab nahi the.', a: [
-    ['Asthaayi galti par ruk-ruk kar retry karo; DLQ sirf pakki galti ke liye', '"Database band hai" kuch der mein theek ho jaata hai; "amount abc hai" kabhi nahi. Dono ke saath alag bartaav chahiye. Phir DLQ ke message dobara chala do.'],
+    ['Asthaayi galti par ruk-ruk kar retry; pakki galti ya khatam budget par DLQ', '"Database band hai" kuch der mein theek ho jaata hai; "amount abc hai" kabhi nahi. Dono ke saath alag bartaav chahiye. Phir DLQ ke message dobara chala do.'],
     ['DLQ mein bhejne ki hadd 3 se badhakar 3,000 koshish kar do, bas itna', 'Agla kharab message 3,000 koshishon tak poori line ko roke rakhega.'],
     ['DLQ ke saare 6 lakh message delete kar do aur aage badho', '6 lakh logon ka cashback kho jaayega, jabki message bilkul sahi the.'],
   ] },
@@ -264,7 +264,7 @@ SD.registerScenarios([
       ['App ka timeout 10 second se badhakar 2 minute kar do taaki koi fail na ho', 'Line aur lambi hogi, aur user 2 minute ghoomta chakra dekhega.'],
     ] },
     { t: 'Keemat', q: 'Load shedding lag gayi. Iski keemat kya hai?', a: [
-      ['Har second 52,000 logon ko "ruko" dikhega, aur wo naraaz ho sakte hain', 'Lekin pehle 0 payment ho rahe the; ab 8,000 har second. "Tum line mein itne number par ho" wali screen narazgi kam karti hai.'],
+      ['Har second 52,000 logon ko "ruko" dikhega, aur wo naraaz ho sakte hain', 'Pehle requests timeout ho rahi thi; ab capacity ke andar requests chalengi. 8,000 requests/s ka matlab 8,000 safal ticket sales/s nahi. "Tum line mein itne number par ho" wali screen narazgi kam karti hai.'],
       ['Jin logon ko mana kiya gaya, unka paisa pehle hi kat chuka hoga', 'Mana sabse pehle hota hai, payment shuru hone se pehle. Paisa nahi kat-ta.'],
       ['Server ka poora CPU request ko mana karne mein hi kharch ho jaayega', 'Mana karna bahut sasta kaam hai, aur aksar server se pehle, gateway par hota hai.'],
     ] },
@@ -293,7 +293,7 @@ SD.registerScenarios([
   ],
   steps: [
     { t: 'Asli wajah', q: 'Checkout kyun band hai?', a: [
-      ['Ek ghair-zaroori call fail hui aur uske saath poora jawab fail kar diya gaya', 'Code har dependency ko barabar zaroori maan raha hai. Jaankari wali ek line ne payment ka raasta rok diya.'],
+      ['Reward call fail hui aur checkout ka poora jawab fail kar diya gaya', 'Code har dependency ko barabar zaroori maan raha hai. Jaankari wali ek line ne payment ka raasta rok diya.'],
       ['<code>rewards-service</code> ke bina payment ka hisaab galat ho jaata hai', 'Haalaat mein likha hai ki reward points sirf jaankari hain. Payment ka hisaab unke bina poora hai.'],
       ['Checkout screen ke frontend code mein koi galti hai jo screen tod rahi hai', 'Server khud 500 bhej raha hai. Frontend wahi dikha raha hai jo use mila.'],
     ] },
@@ -318,7 +318,7 @@ SD.registerScenarios([
     ['Checkout ka poora timeout badhakar 10 second kar do taaki wo fail na ho', 'User 4 second intezaar karega ek aisi line ke liye jo zaroori nahi.'],
     ['Reward points ko payment se pehle ka ek zaroori kadam bana do', 'Tab <code>rewards-service</code> ka har dheemapan seedha payment ko rokega.'],
   ] },
-  asli: 'Har dependency barabar nahi hoti. Pehle se tay karo: "iske bina bhi kaam chal sakta hai?" Jawab "haan" hai toh uska fail hona user ko dikhna hi nahi chahiye.',
+  asli: 'Har dependency barabar nahi hoti. Pehle se tay karo: "dependency band ho toh bhi core kaam chalega?" Jawab "haan" hai toh dependency fail hone par core flow chalna chahiye.',
   say: 'Yahan ek optional dependency ko critical ki tarah bartaa gaya. Main dependencies ko zaroori aur ghair-zaroori mein baantunga. Ghair-zaroori call par chhota timeout aur fallback hoga: hissa chhupao ya purana value dikhao.',
 },
 {
@@ -353,7 +353,7 @@ SD.registerScenarios([
     { n: 'Soft delete', how: 'Row mitao mat; <code>deleted_at</code> likho.', cost: 'Har query mein filter; data badhta hai.', when: 'User ka zaroori data.' },
   ],
   twist: { q: 'Backup se restore mein 9 ghante lagenge. Business kehta hai: 30 minute se zyada band nahi chalega.', a: [
-    ['Ek replica jaan-boojhkar 1 ghanta peeche rakho; galti par data wahin se lo', 'Us replica par DELETE abhi pahuncha nahi hota. Use rokkar wahan se table wapas laayi ja sakti hai, minuton mein.'],
+    ['Ek replica jaan-boojhkar 1 ghanta peeche rakho; galti par data wahin se lo', 'Galti delay window ke andar pakdo aur replay roko. Table recovery ka waqt data size aur restore rehearsal se jaancho; 30 minute guaranteed nahi.'],
     ['Backup ko din mein ek baar ki jagah har 12 ghante par lena shuru kar do', 'Kam data khoyega, lekin restore ka waqt wahi 9 ghante rahega.'],
     ['Restore ke waqt zyada engineers ko kaam par laga do', 'Restore ka waqt data ke size aur disk ki raftaar se tay hota hai, logon ki ginti se nahi.'],
   ] },
@@ -398,7 +398,7 @@ SD.registerScenarios([
     ['Worker ko aisa banao ki wo kabhi, kisi bhi halat mein crash na ho', 'Machine band ho sakti hai, bijli ja sakti hai. "Kabhi crash nahi" koi design nahi hai.'],
     ['Outbox row par "bheja" pehle likho, aur Kafka ko event uske baad bhejo', 'Ab crash par event kabhi nahi jaayega. Wahi purani samasya wapas.'],
   ] },
-  asli: 'Do alag system mein "dono ya koi nahi" likhna mumkin nahi. Ek mein likho (database), aur doosre ko wahin se bharosemand tareeke se pahunchao.',
+  asli: 'Bina saajhe commit protocol ke do alag systems mein "dono ya koi nahi" nahi milta. Ek mein likho (database), aur doosre ko wahin se bharosemand tareeke se pahunchao.',
   say: 'Yeh dual write hai: database commit aur Kafka publish ke beech koi transaction nahi. Main transactional outbox use karunga: event usi transaction mein outbox table mein, ek relay use Kafka bhejta hai. Delivery at-least-once hai, isliye consumer event id se idempotent hoga.',
 },
 {
@@ -416,7 +416,7 @@ SD.registerScenarios([
       ['<code>pay-service</code> ne Aman ka paisa galti se do baar kaat liya', 'Paisa ek hi baar kata hai. Samasya yeh hai ki ticket nahi bana aur paisa wapas nahi aaya.'],
       ['Seat rokne wala kadam sabse pehle nahi, sabse aakhir mein hona chahiye tha', 'Kram badalne se sirf aadhi halat ka roop badlega. Koi bhi kadam fail ho sakta hai.'],
     ] },
-    { t: 'Hal chuno', q: 'Teen services ke beech "poora ya kuch nahi" jaisa bartaav kaise laoge?', a: [
+    { t: 'Hal chuno', q: 'Har service ka apna database hai (shared DB ka option nahi). Teen services ke beech "poora ya kuch nahi" jaisa bartaav kaise laoge?', a: [
       ['Har kadam ka ulta kadam likho: fail hone par refund karo aur seat chhodo', 'Is pattern ko <b>saga</b> kehte hain. Ulte kadam (compensation) pichhle commit ka asar mitate hain.'],
       ['Teeno services ko ek hi saajha database par le aao aur ek transaction chalao', 'Kaam karega, par teeno teams ek doosre ke schema se bandh jaayengi. Services alag isiliye ki gayi thi.'],
       ['<code>ticket-service</code> ko tab tak retry karo jab tak safal na ho, chahe ghante lagein', 'Aman ka paisa ghanton atka rahega, aur film shuru ho chuki hogi. Retry ki ek hadd chahiye, uske baad ulta kadam.'],
@@ -472,7 +472,7 @@ SD.registerScenarios([
     { n: 'Kafka ke andar transaction', how: 'Padhna aur likhna, dono Kafka mein, ek transaction mein.', cost: 'Sirf Kafka se Kafka tak kaam karta hai.', when: 'Stream processing.' },
   ],
   twist: { q: 'Cashback ab database mein nahi, ek bahari bank API se jaata hai. Us API par unique constraint nahi laga sakte.', a: [
-    ['Bank API ko <code>payment_id</code> ek idempotency key ki tarah bhejo', 'Bank wahi key dobara dekhega toh paisa dobara nahi bhejega. Zyadatar payment API yeh suvidha deti hain.'],
+    ['Bank API ko <code>payment_id</code> ek idempotency key ki tarah bhejo', 'Bank wahi key dobara dekhega toh paisa dobara nahi bhejega. Bank ka documented key scope aur retention jaancho; idempotency support na ho toh reconciliation chahiye.'],
     ['Bank API ko call karne se pehle har baar 5 second ruk jao', 'Rukne se dobara aaya message "naya" nahi ban jaata. Paisa phir bhi do baar jaayega.'],
     ['Har din ke ant mein jinhe do baar mila, unse paisa wapas maango', 'Paisa wapas lena mushkil hai aur user ko bura lagta hai.'],
   ] },
@@ -490,7 +490,7 @@ SD.registerScenarios([
   ],
   steps: [
     { t: 'Asli wajah', q: 'Lock ke hote hue do workers kaise chale?', a: [
-      ['Lock expire ho gaya, par purana worker khud ko abhi bhi malik samajhta raha', 'Atka hua process waqt ka guzarna nahi dekh sakta. Jaagne par use lagta hai ki ek pal hi beeta hai. Lock "kisi aur ko diya ja chuka hai", yeh use kisi ne nahi bataya.'],
+      ['Lock expire ho gaya, par purana worker khud ko abhi bhi malik samajhta raha', 'Atka hua process waqt ka guzarna nahi dekh sakta. Jaagne par Worker A ko lagta hai ki ek pal hi beeta hai. Lock "kisi aur ko diya ja chuka hai", Worker A ko kisi ne nahi bataya.'],
       ['Redis ne ek hi lock ek hi pal mein do workers ko de diya tha', 'Redis ne lock sahi diya: pehle A ko, expire hone ke baad B ko. Galti lock dene mein nahi hai.'],
       ['Lock ka waqt 30 second bahut lamba tha; chhota hota toh yeh na hota', 'Chhote waqt mein lock aur jaldi expire hota. Samasya aur aasaani se aati.'],
     ] },
@@ -511,11 +511,11 @@ SD.registerScenarios([
     { n: 'Database ka apna lock', how: 'Lock usi database mein jahan data hai, usi transaction mein.', cost: 'Sirf ek database ke andar.', when: 'Saara kaam ek hi database mein hai.' },
   ],
   twist: { q: 'Settlement ek bahari bank API ko call karta hai. Bank fencing number nahi samajhta.', a: [
-    ['Bank ko har call ke saath <code>merchant + tareekh</code> wali idempotency key do', 'Dono workers wahi key bhejenge. Bank doosri baar paisa nahi bhejega.'],
+    ['Bank ko har call ke saath <code>merchant + tareekh</code> wali idempotency key do', 'Dono workers wahi key bhejenge. Bank documented idempotency support aur retention ke andar doosri baar paisa nahi bhejega.'],
     ['Lock ka waqt aur badha do taaki wo beech mein expire hi na ho', 'Worker kitni der atkega, iski koi hadd nahi. Waqt badhana sirf mauka kam karta hai.'],
-    ['Do ki jagah sirf ek worker rakho taaki takraav ho hi na sake', 'Wo ek worker mara toh settlement hoga hi nahi. Aur uske restart ke waqt bhi do copy chal sakti hain.'],
+    ['Do ki jagah sirf ek worker rakho taaki takraav ho hi na sake', 'Akela worker mara toh settlement hoga hi nahi. Aur Worker A ke restart ke waqt bhi do copy chal sakti hain.'],
   ] },
-  asli: 'Distributed lock ek <b>salaah</b> hai, guarantee nahi. Asli suraksha wahan lagao jahan data likha jaata hai: fencing number ya idempotency key.',
+  asli: 'Distributed lock ek <b>salaah</b> hai, guarantee nahi. Asli suraksha data store par lagao: fencing number ya idempotency key.',
   say: 'TTL wala lock process pause ke baad galat ho sakta hai: purana holder ko pata nahi chalta ki lock gaya. Main fencing token use karunga jise data store jaanche, ya kaam ko idempotent banaunga. Lock sirf faaltu kaam kam karne ke liye rahega.',
 },
 {
@@ -536,7 +536,7 @@ SD.registerScenarios([
     { t: 'Hal chuno', q: 'Sabse saada sahi hal?', a: [
       ['Ek hi query: <code>SET count = count + 1 WHERE count &lt; 100</code>', 'Jaanch aur badlaav ek hi atomic kadam ban jaate hain. Database ek waqt mein ek hi request ko row badalne deta hai. Row badli toh coupon do; nahi badli toh "khatam".'],
       ['Padhne aur likhne ke beech 100 ms ruk jao taaki baaki request nikal jaayein', 'Rukne se khidki aur badi ho jaati hai. Aur zyada request purana count padhenge.'],
-      ['<code>coupon-service</code> ka sirf ek hi server rakho, 10 ki jagah', 'Ek server ke andar bhi kai request ek saath chalte hain. Wahi khidki wahan bhi hai.'],
+      ['<code>coupon-service</code> ka sirf ek hi server rakho, 10 ki jagah', 'Ek server ke andar bhi kai request ek saath chalte hain. Ek server mein bhi read aur write ke beech race hai.'],
     ] },
     { t: 'Keemat', q: 'Ab saare request ek hi row ko badalte hain. Bahut zyada bojh par kya hoga?', a: [
       ['Wahi ek row sabki line ban jaati hai; request row ke lock ka intezaar karte hain', '5,000 log ke liye theek hai. 5 lakh log par wahi row gala ghont deti hai. Tab coupon ko pehle se tokens mein baantna padta hai.'],
@@ -573,7 +573,7 @@ SD.registerScenarios([
       ['Replication bahut dheemi thi, isliye dono taraf ka data alag ho gaya', 'Data isliye alag hua ki dono ne alag-alag write liye. Replication ki raftaar wajah nahi hai.'],
     ] },
     { t: 'Hal chuno', q: 'Kaise pakka karoge ki ek waqt mein ek hi primary ho?', a: [
-      ['Teesri jagah ek gawah rakho; primary wahi bane jise 3 mein se 2 vote milein', 'Network toote toh ek hi taraf ke paas 2 vote ho sakte hain. Doosri taraf akeli hai aur primary nahi ban sakti. Ise <b>quorum</b> (bahumat) kehte hain.'],
+      ['Teesri jagah ek gawah rakho; primary wahi bane jise 3 mein se 2 vote milein', 'Network toote toh sirf ek taraf ke paas 2 vote ho sakte hain; sirf wahi taraf primary chun sakti hai. Purana primary bhi bahumat khote hi write band kare (ya fence ho), warna purana primary likhta rahega. Ise <b>quorum</b> (bahumat) kehte hain.'],
       ['Failover script ka intezaar badhakar 10 minute kar do, phir failover karo', '11 minute ka network tootna phir wahi ghatna. Aur Mumbai sach mein mare toh 10 minute sab band.'],
       ['Dono ko hamesha write lene do aur network judne par data ko jod lo', 'Balance ko "jodna" mumkin nahi: ek hi ₹500 dono taraf kharch ho chuka ho sakta hai.'],
     ] },
@@ -593,7 +593,7 @@ SD.registerScenarios([
     ['Wo akeli jagah khud ko primary bana le, kyunki wahi zinda bachi hai', 'Agar baaki do zinda nikle aur unhone bhi primary chun liya ho toh phir do primary.'],
     ['Wo akeli jagah apna data mitaakar bilkul naye sire se shuru ho', 'Shaayad wahi aakhri sahi copy ho. Data mitaana sabse bura faisla hai.'],
   ] },
-  asli: 'Do machine kabhi tay nahi kar sakti ki doosri mari hai ya sirf dikh nahi rahi. Isliye faisla <b>bahumat</b> se hota hai, aur bahumat ke liye kam se kam teen chahiye.',
+  asli: 'Do machine kabhi tay nahi kar sakti ki doosri mari hai ya sirf dikh nahi rahi. Isliye faisla <b>bahumat</b> se hota hai, aur ek failure ke baad bhi bahumat chahiye toh kam se kam teen voters rakho.',
   say: 'Do nodes network partition aur crash mein farak nahi kar sakte, isliye split-brain hua. Main quorum use karunga: teen jagah, leader ko bahumat chahiye. Alpmat wali taraf write band karegi; yeh CAP ka consistency wala chunav hai.',
 },
 {
@@ -602,7 +602,7 @@ SD.registerScenarios([
   story: '"Bijli ka bill kal due hai" wala reminder har subah 9 baje jaata hai. <code>reminder-service</code> ke 3 servers hain aur har server par wahi cron chalta hai. Aaj 20 lakh users ko 3-3 SMS gaye. SMS ka bill ₹6 lakh ki jagah ₹18 lakh aaya.',
   facts: [
     'Teeno servers par wahi code aur wahi cron hai.',
-    'Servers ko ek doosre ke baare mein pata nahi.',
+    'Servers ko ek doosre ke baare mein pata nahi. Is SMS provider ki API idempotency keys support karti hai.',
     'Sirf ek server rakhna mana hai: wo gira toh reminder nahi jaayega.',
   ],
   steps: [
@@ -624,16 +624,16 @@ SD.registerScenarios([
   ],
   fixes: [
     { n: 'Saajha lock', how: 'Jise lock mile, wahi job chalaye.', cost: 'Lock wala beech mein mare toh aadha kaam.', when: 'Chhota job.' },
-    { n: 'Har SMS ka record', how: '<code>user + bill + tareekh</code> par unique: ek hi baar bhejo.', cost: 'Ek table aur har SMS par ek insert.', when: 'Dobara bhejna mehenga ya bura ho.' },
+    { n: 'Har SMS ka record', how: '<code>user + bill + tareekh</code> par unique pending record; provider-supported dedupe se bhejo.', cost: 'Ek table aur har SMS par ek insert.', when: 'Dobara bhejna mehenga ya bura ho.' },
     { n: 'Scheduler + queue', how: 'Ek scheduler kaam ko queue mein daalta hai; workers uthate hain.', cost: 'Queue chalani padti hai.', when: 'Bada job, kai workers.' },
   ],
   twist: { q: 'Lock wala server 12 lakh SMS ke baad crash ho gaya. Doosre server ne lock liya aur shuru se chalne laga.', a: [
-    ['Har SMS se pehle "user + tareekh" ka record likho; record ho toh chhod do', 'Doosra server pehle 12 lakh users ko chhodta jaayega aur baaki 8 lakh ko bhejega.'],
+    ['Har SMS ka durable pending record rakho; provider ko wahi idempotency key do', 'Pending SMS retry honge; provider-supported dedupe ek hi key ko dobara nahi bhejta. Provider dedupe na de toh duplicate ya loss ka khatra aur reconciliation chahiye.'],
     ['Crash ke baad doosra server us din kuch bhi na bheje', 'Bache hue 8 lakh users ko reminder nahi milega.'],
     ['Lock ka waqt 24 ghante kar do taaki doosra server use le hi na sake', 'Tab crash ke baad koi bhi baaki kaam nahi karega.'],
   ] },
   asli: 'Server ki ginti badhate hi poochho: "kaunsa kaam sirf <b>ek baar</b> hona chahiye?" Wo kaam apne aap ek baar nahi hoga; use tay karna padta hai.',
-  say: 'Har server par cron chalne se job N baar chalta hai. Main ek saajha lock ya leader se job ek jagah chalaunga, aur har SMS ke liye user + tareekh ka unique record rakhunga taaki crash ke baad dobara chalne par bhi duplicate na jaaye.',
+  say: 'Har server par cron chalne se job N baar chalta hai. Main ek saajha lock ya leader se job ek jagah chalaunga, aur user + bill + tareekh ka pending record rakhunga. Provider-supported idempotency se retry karunga; local unique record akela SMS dedupe nahi karta.',
 },
 
 ]);

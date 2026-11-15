@@ -16,18 +16,18 @@ SD.registerScenarios([
   facts: [
     'Saare <b>write</b>: <code>pg-primary</code>. Saare <b>read</b>: <code>pg-replica-1</code> aur <code>pg-replica-2</code>.',
     'Replication async hai. Aam din mein replica 200 ms se 2 second peeche rehta hai.',
-    'Paisa kahin khoya nahi: <code>pg-primary</code> mein Riya aur Aman, dono ka balance sahi hai.',
+    'Aman ke app ne phone ka cache use nahi kiya; request server tak gayi. Paisa kahin khoya nahi: <code>pg-primary</code> mein Riya aur Aman, dono ka balance sahi hai.',
   ],
   steps: [
     { t: 'Asli wajah', q: 'Aman ko purana balance kyun dikha?', a: [
-      ['Read us replica se hua jahan naya write abhi pahuncha nahi tha', 'Async replication mein <code>pg-primary</code> pehle commit karta hai; replica ko copy thodi der baad milti hai. Is beech ka read purana data deta hai. Is deri ka naam <b>replication lag</b> hai.'],
+      ['Read us replica se hua jahan naya write abhi lagu nahi hua tha', 'Async replication mein <code>pg-primary</code> pehle commit karta hai; replica ko copy thodi der baad milti hai. Is beech ka read purana data deta hai. Is deri ka naam <b>replication lag</b> hai.'],
       ['Transfer ka write <code>pg-primary</code> par chupchaap fail ho gaya tha', 'Haalaat mein likha hai ki <code>pg-primary</code> mein dono balance sahi hain, aur 2 second baad sahi balance dikha. Write fail hota toh sahi balance kabhi nahi dikhta.'],
-      ['Aman ke phone ne purana balance apne paas cache kar rakha tha', 'Aman ne app abhi kholi thi aur request server tak gayi thi. Jawab replica se aaya, aur replica peeche tha.'],
+      ['Server ne taaza balance bheja, par Aman ke phone ne purana cached balance dikhaya', 'Aman ne app abhi kholi thi aur request server tak gayi thi. Jawab replica se aaya, aur replica peeche tha.'],
     ] },
     { t: 'Hal chuno', q: 'Product ka niyam: paise bhejne ya paane ke turant baad <b>dono</b> logon ko sahi balance dikhe. Purani history aur offers thode purane chal sakte hain. Kaunsa hal sahi hai?', a: [
-      ['Balance wale read <code>pg-primary</code> se karo; baaki read replica par rahein', 'Sirf woh read primary par jaata hai jise taaza data chahiye. Replica ka fayda (read ka bojh baantna) baaki screens ke liye bana rehta hai.'],
+      ['Balance wale read <code>pg-primary</code> se karo; baaki read replica par rahein', 'Sirf taaza data maangne wala read primary par jaata hai. Replica ka fayda (read ka bojh baantna) baaki screens ke liye bana rehta hai.'],
       ['Sirf Riya (bhejne wali) ke read 5 second tak <code>pg-primary</code> par bhejo', 'Riya ke liye theek hai. Lekin Aman ne koi write nahi kiya, toh Aman ka read phir bhi replica par jaayega aur purana balance dikhega.'],
-      ['Replica ki ginti 2 se badhakar 6 kar do taaki lag kam ho jaaye', 'Zyada replica lag kam nahi karte. Har replica utna hi peeche rehta hai, isliye purana read phir bhi hoga.'],
+      ['Replica ki ginti 2 se badhakar 6 kar do taaki lag kam ho jaaye', 'Zyada replica lag kam nahi karte. Har replica ka lag alag ho sakta hai, isliye purana read phir bhi hoga.'],
     ] },
     { t: 'Keemat', q: 'Balance ke read ab <code>pg-primary</code> par jaate hain. Ab kis cheez par nazar rakhni hogi?', a: [
       ['<code>pg-primary</code> par read ka bojh: balance screen sabse zyada khulti hai', 'Primary par ab write ke saath balance ke read bhi aate hain. CPU aur connection pool dekhna padega. Bojh zyada ho toh sirf "abhi-abhi transfer hua" wale users ke read primary par bhejo.'],
@@ -39,10 +39,10 @@ SD.registerScenarios([
     { n: 'Zaroori read primary se', how: 'Jis screen ko taaza data chahiye (balance), uska read <code>pg-primary</code> par.', cost: 'Primary par read ka bojh badhta hai.', when: 'Sirf kuch screens ko taaza data chahiye.' },
     { n: 'Apna write turant dikhna (read-your-writes)', how: 'Jis user ne abhi likha, uske read kuch second primary par.', cost: 'Sirf likhne wale ko fayda. Doosre user (Aman) ko nahi.', when: 'Profile edit jaisi cheez: "mera badlaav mujhe dikhe".' },
     { n: 'Replica ko rukwana (LSN wait)', how: 'Write ke baad primary ki log position lo. Read tab tak ruke jab tak replica wahan na pahunche.', cost: 'Read ruk sakta hai; code mein position sambhalni padti hai.', when: 'Replica par hi padhna hai aur lag chhota hai.' },
-    { n: 'Synchronous replication', how: 'Primary tab tak "commit" nahi bolta jab tak replica likh na le.', cost: 'Har write dheema. Replica band ho toh write atak sakte hain.', when: 'Data khona bilkul manzoor nahi.' },
+    { n: 'Synchronous replication', how: 'Primary tab tak "commit" nahi bolta jab tak chuna hua replica WAL milne ki pushti na kare. Replica par turant dikhe, iske liye <code>remote_apply</code> setting chahiye.', cost: 'Har write dheema. Replica band ho toh write atak sakte hain.', when: 'Data khona bilkul manzoor nahi.' },
   ],
   twist: { q: 'Diwali ki raat <code>pg-replica-2</code> 30 second peeche chala gaya. History screen replica se padhti hai, aur log 30 second purani history dekh rahe hain.', a: [
-    ['Jo replica tay hadd (jaise 5 second) se zyada peeche ho, use read se hata do', 'App ya load balancer har replica ka lag naapta hai. Hadd paar hote hi us replica ko read milna band; lag theek hote hi wapas. Is tarah "kitna purana data dikh sakta hai" ki ek pakki hadd ban jaati hai.'],
+    ['Jo replica tay hadd (jaise 5 second) se zyada peeche ho, use read se hata do', 'App ya load balancer har replica ka lag naapta hai. Hadd paar hote hi us replica ko read milna band; lag theek hote hi wapas. Lag har kuch second mein naapa jaata hai, isliye khatra bahut ghatta hai, par pakki guarantee nahi. Pakki guarantee ke liye read se pehle replica ki replay position (LSN) jaancho.'],
     ['Raat khatam hone tak saare read <code>pg-primary</code> par bhej do', 'Diwali ki raat <code>pg-primary</code> pehle se sabse zyada bojh mein hai. Poora read bojh daalne se primary gir sakta hai, aur tab write bhi band ho jaayenge.'],
     ['Kuch mat karo; history ka 30 second purana hona koi samasya nahi hai', 'Bina hadd ke 30 second kal 5 minute ban sakta hai, aur kisi ko pata nahi chalega. Hadd aur alert dono chahiye.'],
   ] },
@@ -82,7 +82,7 @@ SD.registerScenarios([
     { n: 'Pehle se garam rakhna (pre-warm)', how: 'Ek job key ko expire hone se pehle dobara bana deti hai.', cost: 'Ek job sambhalni padti hai.', when: 'Gini-chuni, bahut garam keys.' },
   ],
   twist: { q: 'Ab home screen par 5 lakh alag keys hain (har sheher ke offers). Deploy ke baad saari keys ek saath bani thi, isliye saari ek saath expire hoti hain.', a: [
-    ['Har key ke TTL mein thoda random farak (jitter) jod do', 'Keys alag-alag waqt par expire hongi. DB par bojh ek jhatke ki jagah poore minute mein phail jaayega.'],
+    ['Har key ke TTL mein thoda random farak (jitter) jod do', 'Keys alag-alag waqt par expire hongi. DB par bojh jitter ki chuni hui window mein phailta hai; 60 second ±10% par window 12 second hai.'],
     ['Saari keys ka TTL ek saath badhakar 1 ghanta kar do', 'Saari keys phir bhi ek saath expire hongi; bas 1 ghante baad. Jhatka utna hi bada rahega.'],
     ['Deploy sirf raat 3 baje karo jab traffic kam hota hai', 'Keys ka expire hona TTL se chalta hai. Din mein bhi saari keys har TTL par ek saath expire hongi.'],
   ] },
@@ -104,7 +104,7 @@ SD.registerScenarios([
       ['<code>merchant-db</code> ka update commit hi nahi hua tha, isliye purana data dikha', 'Dashboard par naya 5% dikh raha tha aur 10 minute baad app mein bhi aa gaya. Update commit hua tha.'],
       ['User app ka purana version chal raha tha jo naya cashback nahi samajhta', '10 minute baad wahi app sahi cashback dikhane lagi. App ka version nahi, cache ka TTL wajah hai.'],
     ] },
-    { t: 'Hal chuno', q: 'Offer badalte hi user ko naya cashback dikhna chahiye. Sabse surakshit hal kaunsa hai?', a: [
+    { t: 'Hal chuno', q: 'Offer badalne ke baad purana cashback jaldi se jaldi hatna chahiye. Sabse surakshit pehla hal kaunsa hai?', a: [
       ['Database update ke turant baad us merchant ki cache key delete kar do', 'Agla read miss paata hai, database se naya data laata hai aur cache mein bhar deta hai. Is tareeke ko <b>cache-aside invalidation</b> kehte hain.'],
       ['Database update ke turant baad cache mein naya value seedha likh do', 'Do update ek saath aayein toh purana value baad mein likha ja sakta hai, aur cache galat reh jaata hai. Delete zyada surakshit hai.'],
       ['Cache key ka TTL 10 minute se ghatakar sirf 1 second kar do', 'Cache lagbhag bekaar ho jaata hai: har second database par read. Aur 1 second ki galat khidki phir bhi bachi rehti hai.'],
@@ -126,7 +126,7 @@ SD.registerScenarios([
     ['Cache hata do aur har read seedha database se karo', 'Ek chhoti gadbad ke liye poora cache hatane se database par 100% read ka bojh aa jaata hai.'],
   ] },
   asli: 'Cache database ki copy hai, aur copy ko khud pata nahi chalta ki asli badal gaya. Har cache ke liye likho: "data badle toh is key ko kaun, kab hatayega?"',
-  say: 'Yahan cache invalidation gayab thi. Main write ke baad key delete karunga (cache-aside), chhota TTL safety net ki tarah rakhunga, aur fail hui delete ko retry karunga. Value seedha likhne ki jagah delete isliye, kyunki do update ki race mein delete surakshit hai.',
+  say: 'Yahan cache invalidation gayab thi. Main write ke baad key delete karunga (cache-aside), chhota TTL safety net ki tarah rakhunga, aur fail hui delete ko retry karunga. Delete seedhe overwrite ki race ghatata hai; purane read ki refill race phir bhi sambhalni hogi.',
 },
 {
   id: 'hot-shard', icon: '🔥', title: 'Aath mein se ek shard jal raha hai', topic: 'data', hard: 3,
@@ -144,18 +144,18 @@ SD.registerScenarios([
       ['8 shards kam pad gaye hain kyunki poora data bahut bada ho gaya hai', 'Tab saare shards garam hote. Yahan sirf ek shard garam hai.'],
     ] },
     { t: 'Hal chuno', q: 'Agle mahine ke liye pakka hal chahiye. Kaunsa hal DreamTeam11 ka bojh sach mein baantta hai?', a: [
-      ['Shard key mein ek hissa aur jodo: <code>merchant_id + din</code>', 'DreamTeam11 ke rows ab din ke hisaab se alag shards par jaate hain. Aur "aaj ke transactions" wali query phir bhi ek hi shard par jaati hai.'],
+      ['Shard key mein ek hissa aur jodo: <code>merchant_id + bucket</code>', 'Har payment ka bucket payment id ke hash se chuno. Aaj ke writes kai shards par bantte hain; aaj ki query ko buckets se jawab jodna padega.'],
       ['Shards 8 se 16 kar do, shard key wahi <code>merchant_id</code> rakho', 'DreamTeam11 phir bhi poora ek hi shard par rahega. Wo shard utna hi garam rahega.'],
       ['Shard 3 ke saath teen read replica jod do taaki bojh bante', 'Bojh write ka hai. Replica read baantte hain, write nahi.'],
     ] },
-    { t: 'Keemat', q: 'Shard key ab <code>merchant_id + din</code> hai. Kaunsi query ab mehengi ho gayi?', a: [
-      ['"Is merchant ke pichhle 90 din" — ab kai shards se data jodna padega', '90 din matlab 90 alag keys, jo kai shards par hain. Har shard se jawab mangao, phir jodo. Ise <b>scatter-gather</b> kehte hain.'],
-      ['"Is merchant ke aaj ke transactions" — ab saare 8 shards par jaayegi', 'Aaj ka din ek hi key hai, isliye query ek hi shard par jaati hai. Yahi is key ka fayda hai.'],
-      ['"Naya payment likhna" — ab har write do shards par likha jaayega', 'Har row ki ek hi key hai, isliye ek hi shard. Write dugna nahi hota.'],
+    { t: 'Keemat', q: 'Shard key ab <code>merchant_id + bucket</code> hai (16 buckets, payment id ke hash se). Naye design ki keemat kya hai?', a: [
+      ['Merchant ki har report (aaj ki bhi) ab 16 buckets ke jawab jodkar banegi', 'DreamTeam11 ke rows ab kai shards par hain. "Aaj ke transactions" ho ya "pichhle 90 din", har bucket se jawab mangao aur jodo. Ise <b>scatter-gather</b> kehte hain.'],
+      ['Naya payment likhna ab do shards par hoga, isliye har write dugna dheema hoga', 'Har row ki ek hi key hai (merchant + bucket), isliye ek hi shard. Write dugna nahi hota.'],
+      ['Shards ki ginti 8 se badhani padegi, warna 16 buckets ke liye jagah nahi bachegi', 'Bucket ek logical hissa hai. 16 buckets 8 shards par baant sakte ho (har shard par 2). Shard badhana zaroori nahi.'],
     ] },
   ],
   fixes: [
-    { n: 'Milee-jule shard key', how: '<code>merchant_id + din</code>: ek merchant ka data kai shards par.', cost: 'Lambi avadhi wali query kai shards par jaati hai.', when: 'Queries zyadatar ek chhoti avadhi ki hain.' },
+    { n: 'Milee-jule shard key', how: '<code>merchant_id + bucket</code>: payment id ke hash se bucket chuno.', cost: 'Merchant ki aaj wali query bhi kai shards par jaati hai.', when: 'Ek merchant ke concurrent writes bahut zyada hain.' },
     { n: 'Bade merchant ka apna shard', how: 'Ek routing table: "DreamTeam11 → shard 9".', cost: 'Routing table sambhalni padti hai.', when: 'Sirf 1–2 bahut bade merchant hain.' },
     { n: 'Write ko queue se likhna', how: 'Payments pehle queue mein, phir shard par tay raftaar se.', cost: 'Data thodi der baad dikhta hai.', when: 'Bojh ka jhatka chhota hai (ek match).' },
   ],
@@ -165,7 +165,7 @@ SD.registerScenarios([
     ['Dashboard ke har load par saare shards se 90 din ke rows mangao', 'Har load par crore rows ka scatter-gather: dheema aur mehenga.'],
   ] },
   asli: 'Shard key do sawalon ka jawab hai: "bojh barabar bantega?" aur "meri aam query ek hi shard par jaayegi?" Ek sawal bhoolte hi ya garam shard milta hai ya scatter-gather.',
-  say: 'Yeh hot key ki samasya hai: hash keys ko baantta hai, bojh ko nahi. Main shard key ko merchant_id + din banaunga taaki bada merchant kai shards par bante aur aaj wali query ek shard par rahe. Lambi report ke liye roz ka total pehle se jodkar rakhunga.',
+  say: 'Yeh hot key ki samasya hai: hash keys ko baantta hai, bojh ko nahi. Main shard key ko merchant_id + bucket banaunga taaki bada merchant kai shards par bante aur aaj wali query buckets se jawab jode. Lambi report ke liye roz ka total pehle se jodkar rakhunga.',
 },
 {
   id: 'pool-exhaust', icon: '🚰', title: 'CPU 12% hai, phir bhi 30% request timeout', topic: 'data', hard: 2,
@@ -180,7 +180,7 @@ SD.registerScenarios([
     { t: 'Asli wajah', q: 'CPU khaali hai, phir bhi request timeout kyun ho rahe hain?', a: [
       ['Dheemi statement queries ne pool ke saare 20 connection pakad rakhe hain', '25 dheemi queries, 20 connection: saare connection 8-8 second ke liye busy. Tez request connection ke intezaar mein hi timeout ho jaate hain. CPU khaali hai kyunki sab intezaar kar rahe hain, kaam nahi.'],
       ['<code>pg-primary</code> par bojh zyada hai aur wo nayi queries ko mana kar raha hai', '<code>pg-primary</code> ka CPU 20% hai. Database ke paas jagah hai. Line database par nahi, pool par lagi hai.'],
-      ['<code>wallet-api</code> ke servers kam hain, isliye request server par atak rahe hain', '<code>wallet-api</code> ka CPU 12% hai. Servers ke paas kaam karne ki jagah hai; unhe connection nahi mil raha.'],
+      ['<code>wallet-api</code> ke servers kam hain, isliye request server par atak rahe hain', '<code>wallet-api</code> ka CPU 12% hai. Servers ke paas kaam karne ki jagah hai; wallet-api servers ko connection nahi mil raha.'],
     ] },
     { t: 'Hal chuno', q: 'Aaj hi, kam se kam badlaav mein, tez requests ko bachana hai. Kya karoge?', a: [
       ['Statement queries ko apna alag chhota pool do, jaise 4 connection', 'Dheemi queries ab sirf apne 4 connection rok sakti hain. Baaki 16 connection tez requests ke liye bache rehte hain. Is deewar ko <b>bulkhead</b> kehte hain.'],
@@ -212,7 +212,7 @@ SD.registerScenarios([
   story: 'Dopahar 2 baje ek developer ne <code>transactions</code> table par migration chalaya: <code>ALTER TABLE transactions ALTER COLUMN amount TYPE BIGINT</code>. Usi pal se har payment latak gaya. 25 minute baad sab apne aap theek ho gaya.',
   facts: [
     '<code>transactions</code> table mein 40 crore rows hain.',
-    'Postgres mein column ka type badalne par poori table dobara likhi jaati hai.',
+    'Yahan amount ka purana type INTEGER hai. INTEGER se BIGINT badalne par Postgres poori table dobara likhta hai.',
     'Table dobara likhte waqt us par poora lock rehta hai: read aur write, dono rukte hain.',
   ],
   steps: [
@@ -229,7 +229,7 @@ SD.registerScenarios([
     { t: 'Keemat', q: 'Expand → backfill → switch wale tareeke ki keemat kya hai?', a: [
       ['Kuch din tak code ko purana aur naya, dono column sambhalne padte hain', 'Ek ALTER ki jagah 3–4 deploy: dono mein likhna, copy jaanchna, switch karna, purana column hatana. Badle mein zero downtime milta hai.'],
       ['Backfill ke dauraan table ke saare read galat amount lautate rahenge', 'Switch hone tak saare read purane column se hi chalte hain. Purana column poore waqt sahi rehta hai.'],
-      ['Table ka size hamesha ke liye dugna ho jaata hai aur kam nahi hota', 'Purana column hatane ke baad jagah wapas mil jaati hai. Extra jagah sirf beech ke dino mein lagti hai.'],
+      ['Table ka size hamesha ke liye dugna ho jaata hai aur kam nahi hota', 'Hamesha ke liye nahi. Drop kiye column ki jagah turant disk se nahi hatti, par ek planned table rewrite (jaise VACUUM FULL ya pg_repack) se wapas mil jaati hai.'],
     ] },
   ],
   fixes: [
@@ -243,7 +243,7 @@ SD.registerScenarios([
     ['Batch 10 lakh se 1 crore rows karo taaki job jaldi khatam ho jaaye', 'Bada batch = bada transaction: lag aur badhega, aur rows par lock lamba rahega.'],
   ] },
   asli: 'Badi table par "ek command" wala badlaav khatarnaak hai. Schema ka badlaav bhi ek deploy hai: chhote kadam, har kadam se wapsi ka raasta.',
-  say: 'Postgres mein column type badalna poori table dobara likhta hai aur poora lock leta hai. 40 crore rows par main expand-backfill-switch-contract karunga: naya column, dual write, chhote batch mein backfill replica lag dekhte hue, phir read switch, phir purana column hatana.',
+  say: 'Yahan INTEGER se BIGINT badlaav table dobara likhta hai aur read/write rokne wala lock leta hai. 40 crore rows par main expand-backfill-switch-contract karunga: naya column, dual write, chhote batch mein backfill replica lag dekhte hue, phir read switch, phir purana column hatana.',
 },
 {
   id: 'nplus1-screen', icon: '🔁', title: 'Ek screen, 51 queries', topic: 'data', hard: 1,
@@ -308,7 +308,7 @@ SD.registerScenarios([
     ] },
     { t: 'Keemat', q: 'Idempotency key lagane mein sabse naazuk hissa kaunsa hai?', a: [
       ['Key ka check aur paisa kaatna, dono ek hi transaction mein hone chahiye', 'Warna do request ek saath aayein toh dono ko "key nahi mili" dikhega aur dono paisa kaat denge. Key par unique constraint lagao aur usi transaction mein paisa kaato.'],
-      ['Key ko hamesha ke liye rakhna padta hai, isliye database bharta jaata hai', 'Retry kuch second ya ghanton mein aate hain. Key ko 24 ghante se kuch din rakhna kaafi hai.'],
+      ['Key ko hamesha ke liye rakhna padta hai, isliye database bharta jaata hai', 'Retry kuch second ya ghanton mein aate hain. Key ki retention documented retry aur recovery window ko cover kare; 24 ghante sirf ek misaal hai.'],
       ['Key banane ke liye app ko har baar server se ek extra call karni padti hai', 'Key app khud banati hai (ek random UUID). Server ko poochhne ki zaroorat nahi.'],
     ] },
   ],
@@ -354,7 +354,7 @@ SD.registerScenarios([
   fixes: [
     { n: 'Cursor (keyset) paging', how: '<code>WHERE (created_at, id) &lt; (?, ?) LIMIT 50</code>.', cost: 'Seedha kisi page number par nahi ja sakte.', when: 'Lambi list, "aur dikhao" wali screen.' },
     { n: 'OFFSET paging', how: '<code>LIMIT 50 OFFSET n</code>.', cost: 'Gehra page dheema; list khisakti hai.', when: 'Chhota data, kuch hi page.' },
-    { n: 'Tareekh ka filter', how: 'User tareekh chunta hai; index seedha wahan jaata hai.', cost: 'UI badalna padta hai.', when: 'User ko purana data dhoondhna ho.' },
+    { n: 'Tareekh ka filter', how: 'User tareekh chunta hai; index tareekh ki range par seedha jaata hai.', cost: 'UI badalna padta hai.', when: 'User ko purana data dhoondhna ho.' },
   ],
   twist: { q: 'Do transactions ka <code>created_at</code> bilkul ek jaisa hai, aur ek row list se gayab ho gayi.', a: [
     ['Cursor mein <code>created_at</code> ke saath <code>id</code> bhi rakho', 'Jab do rows ka waqt same ho toh <code>id</code> kram tay karta hai. Tab koi row na chhootti hai, na dobara aati hai.'],

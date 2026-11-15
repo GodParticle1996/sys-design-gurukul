@@ -1188,7 +1188,7 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
 WHERE lat BETWEEN 19.05 AND 19.15
   AND lng BETWEEN 72.80 AND 72.90;</pre>
      <p>lat/lng range query sahi lagta hai. Par yaad karo composite index ka niyam:
-     <b>range column ke baad index ruk jaata hai</b>. Yahan
+     <b>range ke baad bhi index predicate filtering mumkin hai</b>. Yahan
      <b>dono</b> columns range hain. Index <code>(lat, lng)</code> banao toh
      index <code>lat</code> ki range tak chalega — yaani poori latitude patti ke
      saare drivers — aur phir <code>lng</code> se filter karne ke liye DB ko
@@ -1230,7 +1230,7 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
      <p>Tum cell <code>te7ud9</code> mein ho, bilkul cell ke kinare par. Sabse paas ka
      driver 50 meter door hai — par driver <b>bagal wale cell</b> mein hai. Sirf apni
      cell dekhoge toh driver milega hi nahi.</p>
-     <pre>Ilaaj: apni cell + apni cell ke 8 padosi cells query karo (geohash ke neighbours)
+     <pre>Ilaaj: query radius cover karne wali saari cells query karo; radius chhota ho toh apni cell + 8 neighbours kaafi ho sakte hain
        phir un candidates par ASLI doori nikaal ke sort karo</pre>
      <p class="tip">🎯 Yahi geo ka standard do-kadam design hai:
      <b>1. index se candidates chuno (mota chhanna), 2. unhi par sahi hisaab karo
@@ -1421,9 +1421,9 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
     par box kitna bada hai aur 7 par kitna. Phir socho: tumhare use case ke liye
     kaunsi precision sahi hai — aur peak par us cell mein kitne log honge?`,
   cards: [
-    { front: 'lat/lng dono par BETWEEN — kya hota hai?', back: 'Composite index <b>pehli range ke baad ruk jaata hai</b>. Poori latitude patti padhni padti hai. B-tree 1D hai, jagah 2D.' },
+    { front: 'lat/lng dono par BETWEEN — kya hota hai?', back: 'Composite index mein <b>pehli range scan span ko bound karti hai; baad ke predicates index par bhi filter kar sakte hain</b>. Poori latitude patti padhni padti hai. B-tree 1D hai, jagah 2D.' },
     { front: 'Geohash ka kamaal?', back: 'Common prefix ek hi coarse cell dikhata hai. Paas ke points cell boundaries ke aar-paar hon toh prefixes alag ho sakte hain. Isliye "nearby" = <code>LIKE \'te7ud%\'</code> = B-tree prefix scan. 2D problem 1D ban gaya.' },
-    { front: 'Geo query ka do-kadam design?', back: '1. Index se <b>mota chhanna</b> (cell + 8 padosi → ~900 candidates). 2. Un par <b>asli doori</b> (haversine) nikaal ke sort. Index ka kaam sirf candidates dena hai.' },
+    { front: 'Geo query ka do-kadam design?', back: '1. Index se <b>mota chhanna</b> (radius cover karne wali cells → candidates). 2. Un par <b>asli doori</b> (haversine) nikaal ke sort. Index ka kaam sirf candidates dena hai.' },
     { front: 'Hot cell?', back: 'Geo data uniformly nahi bikhra — airport 8 PM par jalta hai. Hot cell <b>wahi hot key</b> problem hai: cell ko finer resolution par split karo ya replicate karo. Fixed grid size lagbhag hamesha galti hai.' },
     { front: 'Driver locations kahan store karein?', back: '<b>In-memory geo store</b> (Redis) — driver locations current state hai, history nahi. 1 lakh drivers × 15 ping/min DB par bhejna write storm hai.' },
     { front: 'H3 hexagons kyun?', back: "H3 mostly hexagonal hierarchical grid hai,pentagons aur projection distortion bhi hain.Neighbor/radius cover gridDisk ya appropriate coverage algorithm se nikalo,phir exact distance verify karo." },

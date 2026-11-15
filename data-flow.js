@@ -204,7 +204,7 @@ help                                       ← saare commands</pre>
       ],
       items: [
         { text: 'Product images aur JS bundles', bin: 'edge', explain: 'Public + immutable = CDN ka perfect candidate. User ke sabse paas, aur tumhara server bilkul involve nahi.' },
-        { text: 'JWT verify karna (tum kaun ho?)', bin: 'gw', explain: 'AuthN gateway par. Ek jagah, sab services ke liye. Har service mein dobara likhna = ek din koi bhool jaayega.' },
+        { text: 'Signed login token (JWT) verify karna', bin: 'gw', explain: 'AuthN gateway par. Ek jagah, sab services ke liye. Har service mein dobara likhna = ek din koi bhool jaayega.' },
         { text: 'Per-user rate limit — 100 req/min', bin: 'gw', explain: 'Baahar hi roko. Service tak aane diya toh thread + memory + shayad ek DB connection pehle hi kharch ho gaya.' },
         { text: '"Kya user IS order ko dekh sakta hai?"', bin: 'svc', explain: 'AuthZ service mein. Gateway ko pata nahi ki order kiska hai — us business rule ka maalik service hai.' },
         { text: 'Refund tabhi jab order 30 din se purana na ho', bin: 'svc', explain: 'Pura business rule. Ownership ka check gateway mein daalna matlab business logic ko infrastructure mein bikhraana.' },
@@ -643,12 +643,12 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
   ],
   lesson: [
     `<h3>📖 100 requests, ek jhooth</h3>
-     <pre>99 requests →    10 ms
- 1 request  → 5,000 ms
+     <pre>98 requests →    10 ms
+ 2 requests → 5,000 ms
 ────────────────────────
-average     →    59 ms   😊 "sab theek hai"
+average     →   109.8 ms   😊 "sab theek hai"
 p50         →    10 ms   😊
-p99         → 5,000 ms   😡 ← asli kahani</pre>
+p99 (nearest-rank) → 5,000 ms   😡 ← asli kahani</pre>
      <p>Average ka kaam hi outliers ko <b>ghol dena</b> hai. Par user
      average anubhav nahi karta — user <b>apni</b> request anubhav karta hai.
      Aur agar tumhare 10 lakh requests roz hain, toh p99 ka matlab hai
@@ -829,7 +829,7 @@ P(koi ek slow) = 1 − 0.99⁵ =  4.9%   ← 1% se 4.9% ho gaya!
     Ratio dekho: agar p99/p50 &gt; 10 hai, toh kahin queueing ho rahi hai (pool, thread, lock).
     Phir poochho: endpoint <b>kitni downstream calls</b> karta hai? Kya sabhi zaroori hain?`,
   cards: [
-    { front: 'Average kyun jhooth bolta hai?', back: '99 requests 10ms + 1 request 5000ms = average 59ms 😊 par p99 = 5000ms 😡. Average ka kaam hi outliers ko <b>ghol dena</b> hai — user apni request anubhav karta hai, average nahi.' },
+    { front: 'Average kyun jhooth bolta hai?', back: '98 requests 10ms + 2 requests 5000ms = average 109.8ms 😊 par p99 = 5000ms 😡. Average ka kaam hi outliers ko <b>ghol dena</b> hai — user apni request anubhav karta hai, average nahi.' },
     { front: 'Tail amplification formula?', back: "<code>P(any slow) = 1 − (1−p)ⁿ</code> jab events independent hon aur har event ka p barabar ho. n=5, p=1% → 4.9%; n=100 → 63%. Page ka exact p99 correlation, deadlines aur wait-for-all behavior par nirbhar hai." },
     { front: 'p99 theek karne ka pehla kadam?', back: 'Aksar <b>fan-out kam karo</b> — calls ghatao ya optional calls ko async karo. Har service ko 2x tez karne se zyada asar hota hai.' },
     { front: 'Bade customers aur p99?', back: 'Bade customers ke paas 10x data hai, isliye bade customers ki har query tail mein baithti hai. <b>Bade customers ka p50 tumhara p99 hai.</b> Per-tenant percentiles rakho.' },
@@ -875,7 +875,7 @@ Har record 2 KB:
 concurrency = arrival rate × service time</pre>
      <p>500 requests/sec aa rahi hain, har ek 20 ms leti hai:</p>
      <pre>L = 500 × 0.020 = 10 requests ek saath andar</pre>
-     <p>Matlab tumhe <b>10 connections</b> chahiye, 500 nahi. Little's Law sabse
+     <p>Yeh <b>mean concurrency 10</b> hai; DB hold time, burst aur headroom se pool size chuno. Little's Law sabse
      bada gurumantra hai pool sizing ke liye — log aksar rps jitna pool
      bana dete hain, jo bilkul galat hai.</p>
      <p>Ulta karke padho toh aur bhi kaam ka hai:</p>
@@ -1023,7 +1023,7 @@ Ab query 8 second ki ho gayi (deep pagination):
     ek slow-query incident se sirf ek deploy door ho.`,
   cards: [
     { front: 'Estimation ke 3 numbers?', back: '<b>1 din = 86,400 s</b> (≈10⁵) · <b>1M/din ≈ 12 rps</b> · <b>peak = average × 2-5</b> (predictable event ho toh 50x).' },
-    { front: "Little's Law?", back: '<code>L = λ × W</code> — concurrency = arrival rate × service time. 500 rps × 20ms = <b>10 concurrent</b>, matlab 10 connections chahiye, 500 nahi.' },
+    { front: "Little's Law?", back: '<code>L = λ × W</code> — concurrency = arrival rate × service time. 500 rps × 20ms = <b>10 concurrent</b>, mean concurrency 10 hai; sufficient pool size DB hold time aur burst se naapo.' },
     { front: 'Capacity ka formula?', back: '<code>capacity = pool_size × (1000 / service_ms)</code>. Pool 50 + query 20ms = 2500 rps. Wahi pool + query 8s = <b>6 rps</b>.' },
     { front: 'Storage kaise nikalte ho?', back: '<code>rps × bytes × 86400</code> = per din. × 365 = per saal. <b>× 3 replication</b> — aakhri step log bhool jaate hain aur budget teen guna galat ho jaata hai.' },
   ],
@@ -1710,9 +1710,9 @@ Sab ek hi row par lock maang rahe hain.
           note: 'Worker crash hua, message dobara aaya',
           options: [
             { id: 'hope', label: "Broker ke \"exactly-once\" flag par bharosa karo", score: -3,
-              why: 'Exactly-once delivery distributed systems mein hoti hi nahi. Asal mein hota hai at-least-once delivery + <b>idempotent processing</b>. Exactly-once maan lena sabse common galatfehmi hai.' },
+              why: 'Broker ki scoped exactly-once processing external notification send ko atomic nahi banati. Asal mein hota hai at-least-once delivery + <b>idempotent processing</b>. Exactly-once maan lena sabse common galatfehmi hai.' },
             { id: 'idem', label: "Unique key (campaign_id, user_id) se dedupe karo", score: 3,
-              why: 'Sahi. "Bheja gaya" ko DB mein unique constraint ke saath likho. Dobara aane par insert fail hoga aur tum skip kar doge. At-least-once + idempotent = effectively-once.' },
+              why: 'Durable pending record par unique key rakho. External send ke liye provider-supported idempotency ya reconciliation chahiye; local UNIQUE akela loss aur duplicate dono nahi rokta.' },
             { id: 'mem', label: "Bheje gaye IDs ko worker ki memory mein rakho", score: -2,
               why: 'Worker restart par memory chali jaayegi. Aur 10 workers ki memory alag-alag hai — koi bhi doosre ka bheja hua nahi jaanta.' },
           ],
@@ -1841,7 +1841,7 @@ Sab ek hi row par lock maang rahe hain.
     Jitne sawaalon ka jawab nahi hai, utne future incidents hain.`,
   cards: [
     { front: 'Head-of-line blocking?', back: 'Bulk messages ke peeche urgent message atak jaata hai. Ilaaj: <b>alag queue + alag consumers</b> — queue-level bulkhead.' },
-    { front: 'Exactly-once ka sach?', back: 'Exactly-once hoti hi nahi. <b>At-least-once delivery + idempotent processing = effectively-once.</b> Dedupe key par unique constraint lagao.' },
+    { front: 'Exactly-once ka sach?', back: 'Exactly-once ka scope jaancho. Local DB effect ko atomic dedupe karo; external push ke liye provider-supported idempotency ya reconciliation chahiye.' },
     { front: 'Poison message?', back: 'Aisa message jo har baar crash karta hai. Bina DLQ ke poison message poori queue rok deta hai. Pattern: <b>N retries with backoff → DLQ</b>.' },
     { front: 'Downstream rate limit kaise respect karein?', back: '<b>Outbound rate limiter</b> — limit se thoda NEECHE (headroom). "429 par retry kar lenge" retry storm banata hai.' },
   ],

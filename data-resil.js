@@ -341,7 +341,7 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
      <p><b>Aur sirf idempotent operations.</b> Non-idempotent POST ko retry
      karna hai? Toh pehle Idempotency-Key lagao (Track 2).</p>
      <h3>⚠️ Layers ka guna</h3>
-     <pre>SDK: 3 retries × gateway: 3 retries × client app: 3 retries
+     <pre>SDK: 3 kul koshish × gateway: 3 kul koshish × client app: 3 kul koshish
 = 27 requests, EK user action ke liye</pre>
      <p class="tip">🎯 Retry <b>ek</b> layer par rakho — aksar sabse upar
      wali (jo user ke sabse kareeb hai aur jaanti hai ki request abhi

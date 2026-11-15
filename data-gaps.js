@@ -565,7 +565,7 @@ Warm connection:                                             request</pre>
     aur kya site ki published rate policy ya crawler-specific crawl-delay extension hai. <code>crawl-delay</code> RFC 9309 ka standard field nahi. Phir poochho: chosen per-domain budget par us site ko poora crawl karne mein kitne
     din lagenge?`,
   cards: [
-    { front: 'Crawler ka asli bottleneck?', back: 'Bandwidth ya CPU nahi — <b>politeness aur DNS</b>. 10 arab pages sirf ~8 machines par ho jaate hain; poora design <b>coordination</b> ka hai, capacity ka nahi.' },
+    { front: 'Crawler ka asli bottleneck?', back: '~8 machines sirf assumed bandwidth ka floor hai. CPU, storage, DNS aur domain politeness ko alag benchmark karo; sabse tang resource capacity tay karega.' },
     { front: 'Politeness kahan lagti hai?', back: 'Domain par hone wale kul dispatch ko coordinate karo: partition owner/shared atomic rate budget ek option hai. 500 independent local 1/s budgets milkar 500/s bhej sakte hain. Durable claiming, retries aur scheduler races test karo.' },
     { front: 'Do dedup kaunse?', back: '<b>URL dedup</b> — queue mein daalne se pehle (normalize + hash). <b>Content dedup</b> — fetch ke baad (content hash / simhash). Ek hi content darjan URLs par milta hai: tracking params, session ids, mirrors.' },
     { front: 'DNS ka kharcha kitna?', back: 'Universal percentage nahi. DNS lookup latency/cache misses aur resolver QPS trace karo; TTL-aware resolver cache, capacity/redundancy aur connection reuse evaluate karo. Arbitrary TTL overrun safe assumption nahi.' },

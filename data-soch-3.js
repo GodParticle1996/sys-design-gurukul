@@ -23,19 +23,19 @@ SD.registerScenarios([
       ['<code>user_id</code> seedha 1, 2, 3 jaisa number hai; yahi asli galti hai', 'Seedha number andaaza aasaan banata hai. Lekin asli galti yeh hai ki server ne kisi ka bhi id maan liya.'],
     ] },
     { t: 'Hal chuno', q: 'Sabse pakka hal kaunsa hai?', a: [
-      ['<code>user_id</code> URL se mat lo; token ke andar wale user ka hi data do', 'Token server ne khud banaya tha, isliye uske andar ka user bharosemand hai. URL, body ya header mein client jo bheje, wo sirf ek daava hai.'],
+      ['<code>user_id</code> URL se mat lo; token ke andar wale user ka hi data do', 'Token ka signature aur relevant claims verify karke user identity lo. URL, body ya header mein client jo bheje, wo sirf ek daava hai.'],
       ['<code>user_id</code> ko number ki jagah ek lamba random UUID bana do', 'Andaaza mushkil hoga. Lekin id kahin se bhi leak ho (link, log, screenshot) toh wahi samasya. Suraksha "chhupa hua id" par nahi tik sakti.'],
       ['Statement API par rate limit laga do: har user 10 request per minute', '2 lakh statement dheere-dheere niklenge. Lekin ek bhi doosre ka statement dikhna galat hai.'],
     ] },
     { t: 'Keemat', q: 'Ab identity sirf token se aati hai. Support agent ko kisi user ka statement dekhna ho toh?', a: [
       ['Agent ke liye alag permission aur alag raasta, aur har dekhne ka record', '"Doosre ka data dekhna" ek alag adhikaar hai. Use saaf-saaf dena padta hai aur har istemaal likhna padta hai.'],
-      ['Agent user se uska password maang le aur user ban kar login kar le', 'Password kisi se bhi nahi maanga jaana chahiye. Aur record mein dikhega ki user ne khud dekha.'],
+      ['Support agent user ka password maange aur user bankar login karke statement dekhe', 'Password kisi se bhi nahi maanga jaana chahiye. Aur record mein dikhega ki user ne khud dekha.'],
       ['Sirf support team ke liye purana <code>user_id</code> wala URL chalu rakho', 'Wahi chhed wapas khul jaayega. Hamlavar ko bas wo URL dhoondhna hai.'],
     ] },
   ],
   fixes: [
     { n: 'Identity token se', how: 'Server token se user nikaalta hai; client se nahi poochhta.', cost: 'Doosre ka data dekhne ke liye alag raasta chahiye.', when: '"Mera data" wali har API.' },
-    { n: 'Malik ki jaanch', how: 'Data laane ke baad jaancho: iska malik = token wala user?', cost: 'Har endpoint par yaad rakhni padti hai.', when: 'Saajhi cheezein: order, file, group.' },
+    { n: 'Malik ki jaanch', how: 'Data laane ke baad jaancho: resource ka malik = token wala user?', cost: 'Har endpoint par yaad rakhni padti hai.', when: 'Saajhi cheezein: order, file, group.' },
     { n: 'Random id', how: 'Seedhe number ki jagah UUID.', cost: 'Akela kaafi nahi; sirf ek extra parat.', when: 'Upar ke dono ke saath.' },
   ],
   twist: { q: 'Naya feature "family account": maa apne bete ka statement dekh sakti hai.', a: [
@@ -78,12 +78,12 @@ SD.registerScenarios([
     { n: 'Server-side session', how: 'Token sirf ek random id; asli data server ke paas.', cost: 'Har request par session store padhna.', when: 'Chhota system, ya poora control chahiye.' },
   ],
   twist: { q: 'Bank ka niyam: password badalte hi purana token 5 second ke andar band hona chahiye.', a: [
-    ['Radd kiye tokens ki chhoti list rakho jise har service har request par jaanche', 'List mein token sirf 15 minute rehta hai (uski bachi umr tak), isliye list chhoti rehti hai. Lookup ek tez store se hota hai.'],
+    ['Radd kiye tokens ki chhoti list rakho jise har service har request par jaanche', 'List mein token id sirf access token ki bachi umr tak rehta hai, isliye list chhoti rehti hai. Lookup ek tez store se hota hai.'],
     ['Access token ki umr 15 minute se ghatakar seedha 5 second kar do', 'Har app har 5 second par naya token maangegi. <code>auth-service</code> par bojh sainkdon guna ho jaayega.'],
     ['Kisi ek ka password badle toh saare users ko usi pal ek saath logout kar do', 'Ek user ki ghatna ke liye crore logon ko dobara login karwana.'],
   ] },
   asli: 'Jo token khud apni sachchai saabit karta hai, use wapas lena mushkil hota hai. Token ki umr = "chori ke baad chor kitni der andar reh sakta hai".',
-  say: 'Lambi umr ka JWT revoke nahi hota kyunki services use bina poochhe maan leti hain. Main chhota access token aur revocable refresh token rakhunga. Turant revocation chahiye toh ek deny-list jise services jaanchein; entry sirf token ki bachi umr tak rehti hai.',
+  say: 'Yahan services revocation nahi jaanchti, isliye JWT expiry tak chalta hai. Main chhota access token aur revocable refresh token rakhunga. Turant revocation chahiye toh ek deny-list jise services jaanchein; entry sirf token ki bachi umr tak rehti hai.',
 },
 {
   id: 'tenant-leak', icon: '🏢', title: 'Export mein doosre merchants ke orders aa gaye', topic: 'sec', hard: 3,
@@ -101,12 +101,12 @@ SD.registerScenarios([
       ['Export feature ko release se pehle theek se test nahi kiya gaya tha', 'Test ne madad ki hoti. Lekin agli nayi query mein wahi bhool phir ho sakti hai.'],
     ] },
     { t: 'Hal chuno', q: 'Kaunsa hal "bhool" ko hi namumkin banata hai?', a: [
-      ['Filter ek hi jagah lagao jo har query par apne aap chale', 'Jaise database ki row-level security, ya ek data-access parat jo har query mein merchant ka filter khud jodti hai. Developer bhool hi nahi sakta.'],
+      ['Filter ek hi jagah lagao jo har query par apne aap chale', 'Jaise database ki row-level security, ya ek data-access parat jo har query mein merchant ka filter khud jodti hai. App role RLS bypass na kare; tenant identity trusted ho. Data-access layer se seedhi query ka bypass bhi roko.'],
       ['Team ko kaho ki aage se har query mein filter dhyaan se lagayein', 'Yahi toh abhi ka niyam hai, aur yahi toota hai.'],
       ['Har merchant ko turant apna alag database de do, saare 40,000 ko', '40,000 database chalana, badalna aur backup lena bahut bhaari hai. Yeh sirf kuch bade customers ke liye theek hai.'],
     ] },
     { t: 'Keemat', q: 'Filter ab apne aap lagta hai. Kaunsa kaam ab alag se sochna padega?', a: [
-      ['Jo kaam sach mein sabka data chahta hai (admin report) uske liye alag raasta', 'Us raaste ka access kam logon ko, alag permission ke saath, aur har istemaal ka record.'],
+      ['Admin report ko sabka data chahiye; cross-tenant access ka alag authorized raasta', 'Admin report ke raaste ka access kam logon ko, alag permission ke saath, aur har istemaal ka record.'],
       ['Har query ab pehle se lagbhag 10 guna dheemi chalegi, filter ki wajah se', 'Wahi filter pehle bhi lagta tha, bas haath se. Index ho toh raftaar wahi rehti hai.'],
       ['Code review ki ab koi zaroorat nahi rahegi kyunki bhool namumkin hai', 'Sirf yeh ek bhool namumkin hui hai. Baaki galtiyon ke liye review ab bhi chahiye.'],
     ] },
@@ -122,7 +122,7 @@ SD.registerScenarios([
     ['Bank ko samjhao ki filter kaafi hai, aur kuch bhi mat badlo', 'Bank ka niyam aksar kanoon se aata hai. Samjhane se nahi badalta.'],
   ] },
   asli: 'Jo suraksha "har developer har baar yaad rakhe" par tiki hai, wo suraksha nahi, ummeed hai. Niyam ko <b>ek jagah</b> lagao jahan se bachna mumkin na ho.',
-  say: 'Multi-tenant saajhi table mein tenant filter har query par zaroori hai. Main use ek jagah lagaunga: row-level security ya data-access layer. Cross-tenant kaam ke liye alag, logged raasta, aur har endpoint ka do-tenant test. Bade niyam-bandhe customer ko alag database.',
+  say: 'Multi-tenant saajhi table mein tenant filter har query par zaroori hai. Main tenant filter ek jagah lagaunga: row-level security ya data-access layer. Cross-tenant kaam ke liye alag, logged raasta, aur har endpoint ka do-tenant test. Bade niyam-bandhe customer ko alag database.',
 },
 {
   id: 'noisy-tenant', icon: '📢', title: 'Ek merchant ka report, 40,000 merchants ka dashboard dheema', topic: 'sec', hard: 2,
@@ -145,20 +145,20 @@ SD.registerScenarios([
       ['DreamTeam11 ka account har mahine ki 1 tareekh ko band kar do', 'Sabse bada customer apna kaam nahi kar paayega.'],
     ] },
     { t: 'Keemat', q: 'Har merchant par hadd lag gayi. Keemat kaun chukayega?', a: [
-      ['DreamTeam11: uska report ab dheema chalega ya line mein lagega', 'Yeh sahi jagah ki keemat hai: bhaari kaam karne wala rukta hai, baaki 40,000 nahi.'],
-      ['Chhote merchants: unka dashboard ab pehle se bhi dheema ho jaayega', 'Chhote merchants apni hadd ke bahut neeche rehte hain. Unka dashboard tez ho jaata hai.'],
+      ['DreamTeam11 ka report ab dheema chalega ya apni line mein lagega', 'Yeh sahi jagah ki keemat hai: bhaari kaam karne wala rukta hai, baaki 40,000 nahi.'],
+      ['Chhote merchants ka dashboard limits ke baad pehle se dheema ho jaayega', 'Chhote merchants apni hadd ke bahut neeche rehte hain. Unka dashboard tez ho jaata hai.'],
       ['ChaiPay: ab har merchant ke liye ek alag server chalana padega', 'Hadd ek ginti hai jo saajhe system ke andar lagti hai. Alag server nahi chahiye.'],
     ] },
   ],
   fixes: [
     { n: 'Har customer ki hadd', how: 'Ek saath queries aur request ki ginti par hadd, customer ke hisaab se.', cost: 'Bhaari customer ko rukna padta hai.', when: 'Har saajha system.' },
     { n: 'Bhaari kaam ka alag raasta', how: 'Report queue se, aur read replica par.', cost: 'Report turant nahi milta.', when: 'Report, export, bulk kaam.' },
-    { n: 'Bade customer ka alag hissa', how: 'Uske liye alag pool, replica ya cell.', cost: 'Extra kharcha.', when: 'Kuch bahut bade customers.' },
+    { n: 'Bade customer ka alag hissa', how: 'Bade merchant ke liye alag capacity wala replica ya cell.', cost: 'Extra kharcha.', when: 'Kuch bahut bade customers.' },
   ],
   twist: { q: 'DreamTeam11 kehta hai: hum sabse zyada paisa dete hain, hamara report tez chahiye.', a: [
-    ['DreamTeam11 ko apna alag hissa (replica ya pool) do, aur kharcha usi se lo', 'Tez report mil jaata hai, aur baaki customers ab bhi surakshit hain.'],
-    ['Sirf DreamTeam11 par se hadd hata do, baaki sab merchants par rehne do', 'Wahi 1 tareekh wali ghatna wapas.'],
-    ['Saare merchants ki hadd barabar ghata do taaki jagah bane', 'Baaki 40,000 ko saza milegi, aur DreamTeam11 ko phir bhi hadd lagegi.'],
+    ['DreamTeam11 ko apni alag DB capacity (replica ya cell) do, aur kharcha DreamTeam11 se lo', 'Tez report mil jaata hai, aur baaki customers ab bhi surakshit hain.'],
+    ['DreamTeam11 par query ki hadd hata do; baaki merchants ko usi shared DB par limits ke saath rakho', 'Wahi 1 tareekh wali ghatna wapas.'],
+    ['Saare merchants ki query hadd barabar ghata do; DreamTeam11 ki report usi shared database par chale', 'Baaki 40,000 ko saza milegi, aur DreamTeam11 ko phir bhi hadd lagegi.'],
   ] },
   asli: 'Saajhe system mein "sab achhe se chalenge" koi design nahi hai. Har customer ke hisse par <b>hadd</b> lagao, warna sabse bada customer sabki raftaar tay karega.',
   say: 'Yeh noisy neighbour hai. Main per-tenant limits lagaunga: concurrency aur request quota. Bhaari reports queue aur read replica par jaayengi. Bahut bade tenant ko dedicated capacity, taaki uska bojh baaki tenants tak na pahunche.',
@@ -186,7 +186,7 @@ SD.registerScenarios([
       ['Saare alert ek channel mein bhejo aur ek aur engineer ko on-call rakho', 'Ab do log 214 alert ko andekha karenge.'],
     ] },
     { t: 'Keemat', q: 'Phone ab sirf user ke dard par bajta hai. CPU aur disk wale alert ka kya?', a: [
-      ['Wo phone nahi bajayenge; unhe dashboard ya ticket mein, din mein dekhna hoga', 'Wo jaankari kaaran dhoondhne mein kaam aati hai. Lekin "disk dheere-dheere bhar rahi hai" jaisi cheez ke liye ticket zaroor banna chahiye.'],
+      ['CPU/disk alerts phone nahi bajayenge; din mein dashboard ya ticket dekho', 'CPU aur disk metrics kaaran dhoondhne mein kaam aate hain. Lekin "disk dheere-dheere bhar rahi hai" jaisi cheez ke liye ticket zaroor banna chahiye.'],
       ['Wo hamesha ke liye hata diye jaayenge aur un metrics ko koi nahi dekhega', 'Metrics rehte hain aur dashboard par dikhte hain. Sirf raat ko phone bajna band hota hai.'],
       ['Ab on-call ki zaroorat hi nahi rahegi, kyunki alert bahut kam ho gaye', 'On-call isiliye hai ki jab phone baje toh koi uthe. Ab phone bajna sach mein zaroori hoga.'],
     ] },
@@ -202,7 +202,7 @@ SD.registerScenarios([
     ['Nahi; jab tak disk sach mein bhar na jaaye tab tak kuch mat karo', 'Disk bharne par database ruk jaayega. Tab user ko dard hoga, aur wo roka ja sakta tha.'],
   ] },
   asli: 'Har alert ke liye do sawal: "kya user ko abhi dard hai?" aur "kya insaan ko abhi kuch karna hai?" Dono "haan", tabhi phone baje.',
-  say: 'Yeh alert fatigue hai: cause-based alerts ka shor. Main page sirf symptom-based alerts par rakhunga, jaise error rate ya SLO burn. Jo zaroori hai par urgent nahi, wo ticket banega; baaki sirf dashboard.',
+  say: 'Yeh alert fatigue hai: cause-based alerts ka shor. Main page sirf symptom-based alerts par rakhunga, jaise error rate ya SLO burn. Jo zaroori hai par urgent nahi, us alert ka ticket banega; baaki sirf dashboard.',
 },
 {
   id: 'slow-hop', icon: '🔍', title: 'Payment 2.4 second ka, aur har team kehti hai "hum tez hain"', topic: 'obs', hard: 2,
@@ -236,12 +236,12 @@ SD.registerScenarios([
     { n: 'Har call ke metrics', how: 'Har service apni har bahari call ka waqt naape.', cost: 'Ek request ki kahani nahi milti.', when: 'Dashboard aur alert ke liye.' },
   ],
   twist: { q: 'Trace dikhata hai: 2.4 second mein se 2.1 second "khaali" hai, do services ke beech.', a: [
-    ['Wo waqt intezaar hai: queue, connection pool ya retry; wahan ke metrics dekho', 'Jab koi service kaam nahi kar rahi aur waqt phir bhi ja raha hai, toh request kisi line mein khada hai.'],
-    ['Trace ka auzaar galat dikha raha hai; use hatakar logs par laut jao', 'Khaali jagah galti nahi, sabse kaam ki jaankari hai.'],
-    ['Network hi dheema hai; data centre badalne ki tayyari shuru karo', 'Ek hi data centre mein network millisecond leta hai, second nahi.'],
+    ['Gap = waqt jo kisi span ne record nahi kiya; aksar pool ya queue mein intezaar', 'Gap mein koi service kaam karti nahi dikhi. Sabse aam wajah: request kisi line (pool, queue, retry) mein khadi thi. Missing span ya clock skew bhi gap bana sakte hain, isliye pool aur retry metrics se pakka karo.'],
+    ['Trace ka auzaar hi galat dikha raha hai; tracing hatao aur logs par laut jao', 'Khaali jagah galti nahi, sabse kaam ki jaankari hai.'],
+    ['Network hi dheema hai; turant data centre badalne ki tayyari shuru karo', 'Ek hi data centre mein network millisecond leta hai, second nahi.'],
   ] },
   asli: 'Kai services wale system mein samasya aksar <b>beech mein</b> hoti hai: line, pool, retry. Har service ka apna dashboard wo jagah kabhi nahi dikhata.',
-  say: 'Per-service dashboards ek request ki poori kahani nahi dikhate. Main distributed tracing lagaunga: trace id saari services tak, har span ka waqt. Sampling se kharcha kaabu mein. Trace mein khaali gap ka matlab queueing hai: pool ya retry dekhunga.',
+  say: 'Per-service dashboards ek request ki poori kahani nahi dikhate. Main distributed tracing lagaunga: trace id saari services tak, har span ka waqt. Sampling se kharcha kaabu mein. Trace ka khaali gap queueing, missing span, clock skew ya network delay ho sakta hai; pool aur retry metrics se wajah jaanchunga.',
 },
 {
   id: 'bill-doubled', icon: '🧾', title: 'Users 10% badhe, cloud bill dugna', topic: 'obs', hard: 2,
@@ -285,7 +285,7 @@ SD.registerScenarios([
 {
   id: 'error-budget', icon: '⏳', title: 'Budget ke 3 minute bache hain, aur kal bada launch', topic: 'obs', hard: 2,
   levels: ['slo', 'rollout'],
-  story: 'Payment API ka SLO hai: 99.9% request safal. Mahine ke 10ve din tak 2 kharab deploy 40 minute ka nuksaan kar chuke hain. Product team kal ek bada feature launch karna chahti hai. Engineering kehti hai "khatra hai". Dono bahas kar rahe hain.',
+  story: 'Payment API ka time-based SLO hai: 30 din ke 99.9% waqt payment available ho. Mahine ke 10ve din tak 2 kharab deploy 40 minute ka nuksaan kar chuke hain. Product team kal ek bada feature launch karna chahti hai. Engineering kehti hai "khatra hai". Dono bahas kar rahe hain.',
   facts: [
     '99.9% ka matlab: 30 din mein lagbhag 43 minute fail hone ki chhoot (error budget).',
     '40 minute kharch ho chuke. 3 minute bache hain, agle 20 din ke liye.',
@@ -314,7 +314,7 @@ SD.registerScenarios([
     { n: 'SLO dobara dekhna', how: 'Kya users ko sach mein 99.9% chahiye?', cost: 'Galat number chunne ka khatra.', when: 'Budget baar-baar khatam ho.' },
   ],
   twist: { q: 'Feature ek kanooni deadline ke liye hai. Kal launch hona hi hai.', a: [
-    ['Pehle 1% users par chalao, jaancho, dheere badhao; turant wapsi ka button rakho', 'Khatra lena hi hai toh use chhota karo. 1% par galti 100% ki tulna mein budget ka 1/100 hissa khaati hai.'],
+    ['Pehle 1% users par chalao, jaancho, dheere badhao; turant wapsi ka button rakho', 'Khatra lena hi hai toh use chhota karo. Canary ka asar traffic aur SLI ki definition se naapo; time-based budget mein 1% users ka matlab 1/100 minutes nahi.'],
     ['Saare users par ek saath launch karo taaki kaam ek hi baar mein jaldi nipat jaaye', 'Yahi tareeka is mahine do baar toot chuka hai.'],
     ['Deadline ko andekha karo, kyunki budget ka niyam sabse upar hai', 'Kanoon todna bhi ek nuksaan hai. Niyam khatra kam karne ke liye hai, aankh band karne ke liye nahi.'],
   ] },
@@ -380,7 +380,7 @@ SD.registerScenarios([
     { t: 'Mukhya faisla', q: 'Ginti kahan aur kaise rakhoge?', a: [
       ['Redis mein har user ka counter; ek hi atomic kadam mein badhao aur jaancho', 'Redis memory mein hai, isliye tez hai. Saare servers wahi counter dekhte hain. "Badhao aur jaancho" ek hi kadam hai, isliye do request ke beech koi nahi ghus sakta.'],
       ['Har gateway server apni memory mein har user ki alag ginti rakhe', 'Sabse tez, lekin har server sirf apna hissa dekhta hai. User 12 × 100 = 1,200 request kar paayega.'],
-      ['Har request par database ki ek table mein ek nayi row likho aur gino', '50,000 write har second, sirf ginne ke liye. Database limiter se pehle hi dab jaayega.'],
+      ['Har request par database ki ek table mein ek nayi row likho aur gino', '50,000 write har second, sirf ginne ke liye. Bina aggregation har request ka INSERT + COUNT mehenga hai; capacity workload par benchmark karo.'],
     ] },
     { t: 'Keemat', q: '"Har minute 100" tay khidki se gin rahe ho. User 12:00:59 par 100 aur 12:01:00 par 100 request bhejta hai. Kya hua?', a: [
       ['2 second mein 200 request nikal gaye: khidki ki seema par dugna', 'Tay khidki (fixed window) seema par dhokha khaati hai. Hal: khisakti khidki (sliding window) ya token bucket.'],
@@ -418,7 +418,7 @@ SD.registerScenarios([
     ] },
     { t: 'Mukhya faisla', q: 'Jawab 100 ms mein kaise aayega?', a: [
       ['Har shuruaati akshar ke top 5 jawab pehle se banakar rakho; request par bas uthao', 'Mehnat pehle hi ho chuki hai. Request par sirf ek lookup: "sha" → 5 naam. Ise precompute karna kehte hain.'],
-      ['Har request par database se poochho: naam "sha" se shuru ho, lokpriyata se sort', 'Har akshar par 1 crore rows mein dhoondhna aur sort karna. 100 ms ka budget nahi bachega.'],
+      ['Har request par database se poochho: naam "sha" se shuru ho, lokpriyata se sort', 'Bina matching index prefix lookup aur popularity sort mehenga hai; indexed query ko benchmark kiye bina 100 ms namumkin mat maano.'],
       ['Poori merchant list ek baar phone par bhej do aur phone par hi dhoondho', '1 crore naam phone par bhejna bhaari hai, aur list har din badalti hai.'],
     ] },
     { t: 'Keemat', q: 'Pehle se bane jawab ki keemat kya hai?', a: [
@@ -469,7 +469,7 @@ SD.registerScenarios([
   fixes: [
     { n: 'Zaroorat ke hisaab se alag line', how: 'OTP, alert, offer: alag queue aur workers.', cost: 'Zyada queue sambhalni padti hain.', when: 'Message ki zaroorat alag-alag ho.' },
     { n: 'Doosra provider', how: 'Pehla fail ho toh doosre se bhejo.', cost: 'Do provider ka kharcha aur jod.', when: 'OTP jaisa zaroori message.' },
-    { n: 'Unique id + hadd', how: 'Ek notification ek baar; ek user ko din mein N offer.', cost: 'Ek table aur jaanch.', when: 'Hamesha.' },
+    { n: 'Unique id + hadd', how: 'Local dedupe + provider-supported idempotency; ek user ko din mein N offer.', cost: 'Ek table aur jaanch.', when: 'Hamesha.' },
   ],
   twist: { q: 'SMS provider 20 minute ke liye band hai. OTP ka kya karoge?', a: [
     ['OTP turant doosre provider se bhejo; purane OTP ko baad mein mat bhejo', 'OTP kuch minute mein bekaar ho jaata hai. 20 minute baad pahuncha OTP sirf uljhan hai.'],

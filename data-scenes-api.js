@@ -75,7 +75,7 @@ SD.addScenes({
     ],
     steps: [
       { from: 'app', to: 'api', label: 'GET /transactions', say: 'Pehla page: transactions-api 50 rows deta hai, saath mein next_cursor.' },
-      { from: 'api', to: 'app', label: 'next_cursor: eyJ0Ijo…', tone: 'gold', say: 'Cursor opaque hai: base64({t, id}). App andar nahi jhaankta. Server kal cursor ka format badal sake, isliye client ko sirf ek band dabba milta hai.' },
+      { from: 'api', to: 'app', label: 'next_cursor: eyJ0Ijo…', tone: 'gold', say: 'Cursor opaque hai: base64({t, id}) + server ka signature. App andar nahi jhaankta; badla hua cursor server pakad leta hai. Server kal cursor ka format badal sakta hai.' },
       { from: 'app', to: 'api', label: '?cursor=eyJ0Ijo…', say: 'Agla page: app wahi cursor wapas bhejta hai. Page number kahin nahi hai.' },
       { from: 'api', to: 'idx', label: '(created_at, id) < (?, ?)', tone: 'good', say: 'Server cursor kholta hai aur keyset query chalata hai. Index ka kram (user_id, created_at, id) query se match karta hai: filter → sort → tie-break.' },
       { from: 'idx', to: 'db', label: '1 seek · 50 rows', tone: 'good', set: { db: { tone: 'good' } }, say: 'Index par 1 seek, 50 rows padhi, 50 di. Page 1 ho ya page 4,85,728, cost same.' },
@@ -99,7 +99,7 @@ SD.addScenes({
       { from: 'api', to: 'idx', label: 'index seek', tone: 'good', say: 'Index ka kram: merchant → status → created_at. Range filter (created_after) index ke aakhri column par, isliye seek tez.' },
       { from: 'evil', to: 'api', label: '?sort=random()', tone: 'bad', set: { api: { tone: 'good', sub: '400: sort allowed nahi' } }, say: 'Har column par filter/sort allow kiya toh 15 columns = 32,768 combinations; har ek ka index namumkin. Koi na koi full scan dhoondh lega. Allow-list ke bahar = 400.' },
       { from: 'client', to: 'api', label: '?fields=id,amount,status', tone: 'gold', say: 'Sparse fieldsets: sirf 3 columns maango. Payload chhota hota hai.' },
-      { from: 'idx', to: 'db', label: 'table chhui hi nahi', tone: 'good', set: { db: { tone: 'muted', sub: 'index-only scan' } }, say: 'Bada faayda: maange gaye columns index mein hi hon toh covering index se jawab mil jaata hai. Postgres table padhta hi nahi (index-only scan).' },
+      { from: 'idx', to: 'db', label: 'table aksar nahi chhui', tone: 'good', set: { db: { tone: 'muted', sub: 'aksar index-only scan' } }, say: 'Bada faayda: maange gaye columns index mein hi hon toh covering index se jawab mil sakta hai (index-only scan). Postgres ko visibility ke liye kabhi table padhni padti hai; speedup naap kar dekho.' },
     ],
   },
 
