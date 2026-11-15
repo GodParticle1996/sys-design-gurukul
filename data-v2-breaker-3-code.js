@@ -382,7 +382,7 @@ async function getRecs() {
             • <code>!res</code> → jawab hi nahi aaya (timeout / connection toota).<br>
             • <code>res.status &gt;= 500</code> → recs-service ne 5xx error diya.<br><br>
             Call #5 mein <code>res</code> null → <code>sick</code> = true. (<code>!res</code> pehle likha hai. Null par <code>.status</code> padhte toh code hi crash ho jaata.)<br><br>
-            4xx (jaise 404) bimaari <b>nahi</b> hai. 4xx ka matlab: maangne wale ne galat cheez maangi. recs-service theek hai.`,
+            Is lab ka expected 404 dependency ki bimaari nahi. Production mein har status ka niyam API ke contract se chuno; 429 jaise status alag sambhaalo.`,
           vars: { sick: 'true — res null hai' },
         },
         {
@@ -489,7 +489,7 @@ async function getRecs() {
   cards: [
     { front: 'Breaker ke do kaam code mein kaise dikhte hain?', back: '<code>allow()</code> call se <b>pehle</b>: true ya false. <code>record(ok)</code> call ke <b>baad</b>: nateeja window mein, zaroorat ho toh <code>open()</code> / <code>close()</code>. Lab: lib/breaker.js ki 29 line.' },
     { front: 'Apni fetch ke aaspaas breaker kahan lagta hai?', back: 'Pehle <code>if (!breaker.allow()) return fallback</code>. Phir apni fetch (time limit ke saath). Phir <code>breaker.record(!sick)</code>. Lab: tools/mini.js, line 11 se 17.' },
-    { front: 'Breaker ke liye "fail" kya hai?', back: 'Jawab nahi aaya (timeout / connection toota) ya 5xx. 4xx (jaise 404) nahi: 4xx client ki galti hai. Lab ex2: 4xx ginne par 90 mein se 87 theek requests roki gayi.' },
+    { front: 'Breaker ke liye "fail" kya hai?', back: 'Jawab nahi aaya (timeout / connection toota) ya 5xx. Is lab ke expected client 4xx nahi; production classifier API contract se tay karo. Lab ex2: 4xx ginne par 90 mein se 87 theek requests roki gayi.' },
     { front: 'Breaker ka object kahan banta hai — function ke andar ya bahar?', back: 'Bahar, ek baar (mini.js line 7). Breaker ko calls ke beech window, state aur timer yaad rakhne hain. Andar banaya toh har call par naya khaali breaker — kabhi OPEN nahi hoga.' },
   ],
 },

@@ -506,9 +506,9 @@ order-service ne column rename kiya
           'Jitni entities (tables), utne service DB — bas entity ki ginti dekh ke faisla karo',
         ],
         answer: 0,
-        explain: 'Apna DB = apni migration, apna deploy, aur ek DB girne par sirf ek service par asar. Shared writable DB se bana "distributed monolith" network ki der aur aadhi-adhuri failure deta hai, aazadi nahi. Keemat: services ke beech JOIN aur ACID transaction chale jaate hain — read model ya saga lagana padta hai. Har service ke andar local ACID waisa hi rehta hai. Shared DB beech ke daur mein, ya soch-samajh ke, chal bhi sakta hai.',
+        explain: 'Apna DB = apni migration, apna deploy, aur ek DB girne ka seedha asar uski service par; dependent flows bhi ruk sakte hain. Shared writable DB se bana "distributed monolith" network ki der aur aadhi-adhuri failure deta hai, aazadi nahi. Keemat: services ke beech JOIN aur ACID transaction chale jaate hain — read model ya saga lagana padta hai. Har service ke andar local ACID waisa hi rehta hai. Shared DB beech ke daur mein, ya soch-samajh ke, chal bhi sakta hai.',
         choiceExplanations: [
-          'Apna DB = apni migration, apna deploy, aur ek DB girne par sirf ek service par asar. Shared writable DB se bana "distributed monolith" network ki der aur aadhi-adhuri failure deta hai, aazadi nahi. Keemat: services ke beech JOIN aur ACID transaction chale jaate hain — read model ya saga lagana padta hai. Har service ke andar local ACID waisa hi rehta hai. Shared DB beech ke daur mein, ya soch-samajh ke, chal bhi sakta hai.',
+          'Apna DB = apni migration, apna deploy, aur ek DB girne ka seedha asar uski service par; dependent flows bhi ruk sakte hain. Shared writable DB se bana "distributed monolith" network ki der aur aadhi-adhuri failure deta hai, aazadi nahi. Keemat: services ke beech JOIN aur ACID transaction chale jaate hain — read model ya saga lagana padta hai. Har service ke andar local ACID waisa hi rehta hai. Shared DB beech ke daur mein, ya soch-samajh ke, chal bhi sakta hai.',
           'Ulta: alag DBs ke beech transaction ke liye saga ya outbox jaisa naya kaam chahiye.',
           'Throughput query aur load par depend karta hai. Alag DB ka faayda ownership hai, speed ki guarantee nahi.',
           'Service ki seema business ownership se banti hai. Ek service ke paas kai tables ho sakti hain.',
@@ -902,9 +902,9 @@ arbitrary search + facets + typo tolerance       → search index</pre>
           'Business ko zaroori ho tab bhi us step ko skip karo — na rahega step, na dikkat',
         ],
         answer: 0,
-        explain: 'Jo step ulta nahi ho sakta (email, SMS, shipping), aise step ko saga mein aakhir mein rakho — aakhri step ke baad fail hone wala kuch bacha hi nahi. Aur jahan ulta karna namumkin ho, ek naya sudhaar action rakho — jaise "hamari galti" wala email. Async karna theek hai, par async step ka bhi recovery plan chahiye.',
+        explain: 'Jo step ulta nahi ho sakta (email, SMS, shipping), aise step ko saga mein aakhir mein rakho — par aakhri step ka jawab kho sakta hai; status jaanch aur recovery phir bhi chahiye. Aur jahan ulta karna namumkin ho, ek naya sudhaar action rakho — jaise "hamari galti" wala email. Async karna theek hai, par async step ka bhi recovery plan chahiye.',
         choiceExplanations: [
-          'Jo step ulta nahi ho sakta (email, SMS, shipping), aise step ko saga mein aakhir mein rakho — aakhri step ke baad fail hone wala kuch bacha hi nahi. Aur jahan ulta karna namumkin ho, ek naya sudhaar action rakho — jaise "hamari galti" wala email. Async karna theek hai, par async step ka bhi recovery plan chahiye.',
+          'Jo step ulta nahi ho sakta (email, SMS, shipping), aise step ko saga mein aakhir mein rakho — par aakhri step ka jawab kho sakta hai; status jaanch aur recovery phir bhi chahiye. Aur jahan ulta karna namumkin ho, ek naya sudhaar action rakho — jaise "hamari galti" wala email. Async karna theek hai, par async step ka bhi recovery plan chahiye.',
           '2PC network ke bahar gaye email ko wapas nahi la sakta. Bheja hua email bheja hi rehta hai.',
           'Async step bhi fail ho sakta hai. Retry, dead letter aur sudhaar ka plan phir bhi chahiye.',
           'Zaroori step chhodne se business ka nateeja galat hota hai. Step rehna chahiye — bas sahi jagah par.',
@@ -955,9 +955,8 @@ kafka.publish(event)    ❌ crash!
      <p>Kram ulta karo toh ulta problem: event chala gaya aur order bana hi
      nahi — ab downstream services ek aise order par kaam kar rahi hain jo
      exist nahi karta.</p>
-     <p><b>Do alag systems ko ek saath atomic likhna namumkin hai.</b>
-     Atomicity ki dikkat koi library ya framework theek nahi kar sakta — do systems ki atomicity distributed
-     systems ka basic sach hai.</p>
+     <p><b>Bina saajhe commit protocol ke do alag systems mein atomic write nahi milta.</b>
+     2PC jaise protocols maujood hain, par dono systems ka support aur availability ki keemat chahiye.</p>
      <h3>✅ Outbox — trick hai ki DOOSRA system hi na ho</h3>
      <pre>BEGIN;
   INSERT INTO orders (...);
@@ -989,8 +988,7 @@ UPDATE sent=true  ← nahi hua
 
 → restart par event DOBARA jaayega</pre>
      <p>Outbox se delivery at-least-once hai. Outbox ka vaada <b>nahi</b> hai ki event
-     ek hi baar jaayega — outbox ka vaada hai ki event <b>kabhi kho nahi
-     sakta</b>. Duplicates handle karna consumers ka kaam hai
+     ek hi baar jaayega — outbox producer ka <b>dual-write gap</b> band karta hai; durable DB, retained row aur relay ki recovery chahiye. Duplicates handle karna consumers ka kaam hai
      (agla level).</p>
      <p class="tip">🎯 Do aur baatein: <b>(1)</b> outbox table ko regularly
      saaf karo (purane sent rows delete) warna outbox table anant badhegi.
@@ -1338,10 +1336,10 @@ COMMIT;</pre>
     Jinke jawab mein "duplicate charge / duplicate email / galat count" hai,
     unme dedupe key aur ek transaction chahiye — aaj.`,
   cards: [
-    { front: 'Exactly-once kyun namumkin?', back: 'Crash ke baad "kaam hua ya nahi" pata karna namumkin hai — dono halat ek jaisi dikhti hain. Do vikalp: <b>at-least-once</b> (duplicates) ya <b>at-most-once</b> (data loss).' },
-    { front: 'Asli formula?', back: '<b>at-least-once delivery + idempotent processing = effectively-once.</b> Duplicates aayenge — bas duplicates ka koi asar nahi hoga.' },
+    { front: 'Exactly-once ka scope kya hai?', back: 'Missing ACK se broker ko natija aspasht ho sakta hai. Durable transactional state se processing ka natija jaan sakte hain; external effects ka alag contract chahiye.' },
+    { front: 'Asli formula?', back: '<b>at-least-once delivery + idempotent processing = effectively-once.</b> Duplicates aa sakte hain; idempotent processing dobara asar rokta hai.' },
     { front: 'Idempotent consumer ke 3 kadam?', back: '<b>1.</b> Message mein unique id <b>2.</b> <code>processed_ids</code> par UNIQUE constraint <b>3.</b> side-effect + id <b>ek hi transaction</b> mein (warna dual write dobara).' },
-    { front: 'Sabse sasti idempotency?', back: 'Design se: <b>"value SET karo"</b> (<code>SET status = shipped</code>), "value BADHAO" nahi. Koi extra table, koi constraint nahi lagti.' },
+    { front: 'Sabse sasti idempotency?', back: 'Design se: <b>"value SET karo"</b> (<code>SET status = shipped</code>), "value BADHAO" nahi. Naye concurrent writes aur external effects ke liye guards phir bhi chahiye.' },
     { front: '"Broker exactly-once deta hai"?', back: 'Kafka transactions supported Kafka read-process-write boundary ko bachati hain. External sink/payment/email ke liye cooperating transaction, idempotency ya reconciliation ka contract chahiye.' },
   ],
 },
@@ -1400,8 +1398,7 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
      se zyada <b>access pattern</b> matter karta hai.</p>
      <p><b>Partition karo:</b> <code>user_id</code>, date, ya region se —
      taaki kai workers alag-alag partitions par bina takraav ke kaam karein.
-     (Aur partition karne se distributed lock ki zaroorat bhi khatam ho jaati hai —
-     ek partition, ek worker.)</p>
+     (Ek partition ka ek active owner rakho; owner badalte waqt stale worker aur duplicate effects ko guard karo.)</p>
      <p><b>Stagger karo:</b> 50 lakh notifications theek 9:00 AM par mat
      bhejo. 9:00–9:30 mein phailao — warna tumne khud apne liye ek
      flash crowd bana liya (aur provider ki rate limit bhi paar kar doge).</p>
@@ -1449,7 +1446,7 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
         { text: 'reminders table mein store karo (status: pending)', explain: 'Ab system ko pata hai ki is bill ko kab dhyaan chahiye. Use har scan mein dobara dhoondhne ki zaroorat nahi.' },
         { text: 'reminder_at par index banao', explain: 'Index se worker ki query ek seek ban jaati hai. Technology se zyada yahi matter karta hai.' },
         { text: 'Worker due jobs uthaye — WHERE reminder_at <= now() LIMIT 1000', explain: '2 crore scan ki jagah due rows par seedha seek. Batch mein lo taaki ek query bahut badi na ho.' },
-        { text: 'Partition karo — user_id ya date se', explain: 'Kai workers bina takraav ke chalein. Partition karne se distributed lock ki zaroorat bhi khatam ho jaati hai: ek partition, ek worker.' },
+        { text: 'Partition karo — user_id ya date se', explain: 'Kai workers bina takraav ke chalein. Ek active owner rakho; reassignment par purane worker aur duplicate effects ko guard karo.' },
         { text: 'Stagger karo — 9:00-9:30 mein phailao', explain: '50 lakh notifications theek 9:00 par bhejna apne liye flash crowd banana hai — aur provider ki rate limit bhi paar ho jaayegi.' },
         { text: 'Idempotent send — (user, bill, date) par unique constraint', explain: 'Workers crash hote hain, queues redeliver karti hain. Idempotent send ke bina user ko wahi reminder 3 baar jaayega.' },
         { text: 'Reality change handle karo — pay/cancel/date change par update', explain: 'Badlaav sambhaalna scheduler ko cron se alag banata hai. Schedule ek jeeti-jaagti cheez hai — user pehle pay kare toh reminder cancel hona chahiye.' },
@@ -1576,7 +1573,7 @@ Worker sirf paas wale bucket ko dekhta hai.</pre>
     Zyadatar cases mein jawab "haan" hota hai — aur pehle se store kiya jawab ek full scan ko ek seek bana deta hai.`,
   cards: [
     { front: 'Polling vs scheduled event?', back: '<b>Polling:</b> har ghante 2 crore rows scan. <b>Scheduled:</b> <code>reminder_at</code> ek baar calculate karke store karo, phir due rows par seedha seek. Wahi seekh jo deep pagination mein thi.' },
-    { front: 'Scale par 3 cheezein?', back: '<b>Time buckets</b> (agla 1 min / 5 min / baad mein) · <b>Partition</b> (user_id/date/region — lock ki zaroorat bhi khatam) · <b>Stagger</b> (9:00-9:30, apna flash crowd mat banao).' },
+    { front: 'Scale par 3 cheezein?', back: '<b>Time buckets</b> (agla 1 min / 5 min / baad mein) · <b>Partition</b> (user_id/date/region — owner badalne par stale worker guard) · <b>Stagger</b> (9:00-9:30, apna flash crowd mat banao).' },
     { front: 'Cron se kya alag hai?', back: '<b>Reality badalti hai.</b> User pehle pay kare → cancel. Due date badle → recompute. Reminders band → cancel. Schedule ek <b>jeeti-jaagti</b> cheez hai.' },
     { front: 'Idempotent send?', back: '<code>(user_id, bill_id, reminder_date)</code> par unique constraint. Workers crash hote hain aur queues redeliver karti hain — warna wahi reminder 3 baar jaayega.' },
   ],
@@ -1618,7 +1615,7 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
        <tr><th>Lock ki jagah</th><th>Kaise</th></tr>
        <tr><td><b>DB unique constraint</b></td><td>"sirf ek jeetega" — DB khud tay kar dega</td></tr>
        <tr><td><b>Conditional update</b></td><td><code>UPDATE ... WHERE status = 'pending'</code> — 0 rows mile toh kisi aur ne le liya</td></tr>
-       <tr><td><b>Partition</b></td><td>ek key sirf ek worker ko — do worker same cheez chhuenge hi nahi</td></tr>
+       <tr><td><b>Partition</b></td><td>ek key ka ek active owner; owner badle toh stale worker aur duplicates guard karo</td></tr>
        <tr><td><b>Idempotency</b></td><td>do baar ho bhi jaaye toh koi nuksaan nahi</td></tr>
      </table>
      <p><b>Sabse achha distributed lock aisa hai jiski zaroorat hi na pade.</b></p>
@@ -1632,7 +1629,7 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
      leader lock split-brain se nahi bachata.</p>
      <p class="tip">🎯 Practical seedhi: <b>(1)</b> DB constraint /
      conditional update — sabse simple aur sabse strong. <b>(2)</b> Partition
-     — lock ki zaroorat khatam. <b>(3)</b> etcd/ZooKeeper — jab sach mein
+     — stale worker aur duplicate effects ko guard karo. <b>(3)</b> etcd/ZooKeeper — jab sach mein
      leader chahiye. <b>(4)</b> Redis lock — sirf "best effort" kaam ke liye
      (cache warming, duplicate work kam karna).Strong correctness claim mein stale holder,failure model aur resource fencing test karo.</p>`,
   ],
@@ -1648,7 +1645,7 @@ A jaaga, likhne aaya (token 33) → storage ne REJECT kiya ✅</pre>
       ],
       items: [
         { text: 'Ek order sirf ek baar ship ho', bin: 'db', explain: "Atomic conditional claim ek worker ko order own karne deta hai. Actual carrier shipment alag effect hai: stable shipment ID, durable outbox, idempotency aur reconciliation chahiye; status update alone physical once-only shipping prove nahi karta." },
-        { text: '10 workers, 2 crore reminders process karne hain', bin: 'part', explain: 'user_id ya date se partition karo — har worker apna hissa lega. Do worker same reminder chhuenge hi nahi, isliye lock ki zaroorat khatam.' },
+        { text: '10 workers, 2 crore reminders process karne hain', bin: 'part', explain: 'user_id ya date se partition karo — har worker apna hissa lega. Owner badalne par purane worker ko fence karo aur send idempotent rakho.' },
         { text: 'Ek username sirf ek user ko mile', bin: 'db', explain: "UNIQUE constraint chosen DB scope mein concurrent duplicate writes reject karti hai. Index maintenance, locking aur replicated commit ka cost hota hai; application-side check race se stronger invariant milta hai." },
         { text: 'Cluster mein sirf ek node nightly job chalaye', bin: 'lock', explain: 'Sirf ek node ka job chalaana sach mein leader election hai. Quorum-based (etcd/ZooKeeper) chahiye — warna split-brain mein do node job chala denge.' },
         { text: 'Ek cache key sirf ek baar refresh ho (stampede)', bin: 'lock', explain: 'Best-effort lock bilkul theek hai. Do baar refresh ho bhi jaaye toh sirf thodi extra query hai — correctness par koi asar nahi.' },
@@ -2326,10 +2323,10 @@ SD.registerLevelsAfter('dist', 'exactlyonce', [
      Log ek <b>itihaas</b> hai: sab kuch likha hai, aur har padhne wala apni
      jagah khud yaad rakhta hai.</p>
      <p>Log se jo cheezein mumkin ho jaati hain, aisi cheezein queue mein ho hi nahi saktin:</p>
-     <pre>• Naya feature banaya? Purana data usi log se replay kar lo
+     <pre>• Naya feature banaya? Retained purana data log se replay karo
 • Bug se galat aggregation bani? Offset peeche karo, dobara chalao
 • Nayi team ko wahi events chahiye? Naya consumer group — purane par koi asar nahi
-• Debugging? Debug karne wala exact event abhi bhi wahin pada hai</pre>
+• Debugging? Exact event retention mein bacha ho toh padho</pre>
      <p class="tip">🎯 Aur ulta bhi sach hai: agar tumhe <b>sirf</b> "kaam lo aur karo"
      chahiye — background jobs, emails, thumbnails — toh queue simple, sasti aur
      kaafi hai. Kafka ka bill (cluster, partitions, offsets, rebalancing) tabhi
@@ -2539,7 +2536,7 @@ Chhota watermark →  natija jaldi, par late events chhoot gaye</pre>
   cards: [
     { front: 'Queue vs log?', back: '<b>Queue</b> = to-do list (padha ki gaya). <b>Log</b> = itihaas (retention tak rehta hai, har consumer ka apna offset). Log deta hai: <b>replay · kai independent consumers · ordering</b>.' },
     { front: 'Partitions ka matlab?', back: '<b>Max parallelism.</b> Ek partition = ek consumer (warna ordering tootti). Zyada consumers khaali baithenge. Aur partition count badhana <b>baad mein mehenga</b> — key→partition mapping badal jaata hai.' },
-    { front: 'Kafka mein ordering?', back: 'Sirf <b>ek partition ke andar</b>. Isliye jin cheezon ka kram chahiye, aise events ko ek hi <b>key</b> (jaise user_id) par bhejo. Global ordering = ek partition = zero parallelism.' },
+    { front: 'Kafka mein ordering?', back: 'Sirf <b>ek partition ke andar</b>. Isliye jin cheezon ka kram chahiye, aise events ko ek hi <b>key</b> (jaise user_id) par bhejo. Global log order ke liye ek partition; group mein ek consumer owner, processing parallel ho toh apply-order sambhaalo.' },
     { front: 'Event time vs processing time?', back: 'Event <b>hua</b> kab vs tumhe <b>mila</b> kab. Processing time se ginna aasan par galat. Event time sahi — par phir "window kab band karein?"' },
     { front: 'Watermark?', back: '"Itni der se purana event ab nahi aayega" ka anumaan. <b>Bada</b> = zyada sahi, natija der se. <b>Chhota</b> = jaldi, par late events chhoote. <b>Completeness vs latency</b> — jawab business deta hai.' },
     { front: 'Kafka kab NAHI?', back: 'Jab sirf "kaam lo aur karo" chahiye — emails, thumbnails, nightly jobs. Background jobs ke liye queue simple, sasti aur kaafi hai. Kafka ka bill tabhi jaayaz hai jab Kafka ka <b>log</b> wala gun chahiye.' },

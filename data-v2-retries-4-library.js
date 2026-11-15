@@ -330,7 +330,7 @@ p-retry, koi option nahi:           order 4.61 s par   ← payment-service 2.40 
   cards: [
     { front: 'p-retry mein retries: 4 ka matlab?', back: '4 <b>retries</b> = pehli call + 4 = <b>kul 5 koshish</b>. Default retries: 10 → kul 11.' },
     { front: 'p-retry ka randomize: true kya karta hai?', back: 'Intezaar × (1 se 2 ke beech random). Kabhi base se kam nahi. Lab: 451 ms (300–600), phir 1150 ms (600–1200). Full jitter 0 se hadd tak chunta hai.' },
-    { front: 'p-retry default mein kis error par dobara bhejta hai?', back: '<b>Har</b> phenke gaye error par — 404 par bhi. Rokne ke liye <code>AbortError</code> phenko ya <code>shouldRetry</code> do.' },
+    { front: 'p-retry default mein kis error par dobara bhejta hai?', back: 'Har saadhaaran Error par — wrapper ka 404 bhi. AbortError aur non-network TypeError par retry nahi. Rokne ke liye <code>AbortError</code> phenko ya <code>shouldRetry</code> do.' },
     { front: 'p-retry ke default ka bill?', back: 'retries 10 · minTimeout 1000 ms · maxTimeout Infinity · randomize false. Lab: order 4.61 s par (hamari settings: 3.22 s). Der tak chale toh 1 + 2 + … + 512 = 1023 second.' },
   ],
 },

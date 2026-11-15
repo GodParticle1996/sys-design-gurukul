@@ -355,7 +355,7 @@ SD.registerLevels('sdd-resil', [
     { front: 'Limiter ke teen sawaal?', back: '<b>Kitne</b> (limit) · <b>kitni der mein</b> (window) · <b>kiski ginti</b> (key). Teesra sabse zyada chhoot-ta hai. express-rate-limit ka default: 1 minute mein 5, ek IP se.' },
     { front: 'Ginti IP ki ho toh kya ho sakta hai?', back: 'Ek IP ke peeche sab ek doosre ka hissa khaate hain: office, mobile network, ya load balancer ke peeche ki har request. Lab: A ki 12 requests → B#2 ko 429, jabki B ne 2 hi bheji.' },
     { front: '"Har second nayi ginti" banaam token bucket?', back: 'Nayi ginti wale hisaab mein do second ke kinare par lagbhag dugna aa sakta hai. Lab: wahi 8 requests → library 8 andar (0.2 s mein 7), token bucket 5.' },
-    { front: 'Kubernetes: request, limit, QoS class? (docs)', back: '<b>Request</b> = baari ka wazan (khaali ho toh request se upar bhi). <b>Limit</b> = pakki chhat (khaali machine par bhi). <b>QoS class</b> = request aur limit se bani pehchaan; tangi mein nikaalne ke kram ka sirf andaaza (asli kram: request se zyada use, phir priority).' },
+    { front: 'Kubernetes: request, limit, QoS class? (docs)', back: 'CPU request = scheduling ka aadhar aur tangi mein baari ka wazan. CPU limit = CPU-time quota; memory limit ka asar alag hai. <b>QoS class</b> = request aur limit se bani pehchaan; tangi mein nikaalne ke kram ka sirf andaaza (asli kram: request se zyada use, phir priority).' },
     { front: 'API gateway par har grahak ki hadd? (docs)', back: 'AWS API Gateway: token bucket — rate (tokens har second) + burst (baalti). Har grahak ki apni hadd API key + usage plan se. Paar → 429. Documentation is hadd ko "best-effort" kehti hai.' },
   ],
 },

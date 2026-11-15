@@ -17,7 +17,7 @@ SD.addScenes({
     steps: [
       { at: ['creator', 'user'], say: '40 writes/sec : 4,000 average reads/sec (peak ~12,000). Write:read = 1:100. Write path itna chhota ki uspar zyada sochna galti; saara kaam read path par.' },
       { from: 'creator', to: 'counter', label: 'naya code chahiye', say: 'Teen tareeke: random 7 chars (har insert par "code free hai?" lookup), md5 ke pehle 7 (collision phir bhi), ya counter → scramble → base62 (collision hi nahi).' },
-      { from: 'counter', to: 'db', label: 'aX9k2Lq → URL', tone: 'good', say: 'Counter tareeka: 62⁷ ≈ 35.2 kharab codes; 5 saal ke 6 arab URLs ke liye ~586x margin. Counter sortable hai, index bhi khush.' },
+      { from: 'counter', to: 'db', label: 'aX9k2Lq → URL', tone: 'good', say: 'Counter tareeka: 62⁷ ≈ 35.2 kharab codes; 5 saal ke 6 arab URLs ke liye ~586x margin. Counter unique rakho; scramble ek-se-ek ho. Scrambled codes ka index zaroori nahi sorted inserts paaye.' },
       { from: 'user', to: 'app', label: 'GET /aX9k2Lq', say: 'Aman short link kholta hai. Redirect path bilkul simple rakho.' },
       { from: 'app', to: 'cache', label: 'HIT (95%+)', tone: 'good', say: 'Zyadatar redirects Redis cache se: code → long URL.' },
       { from: 'app', to: 'db', label: 'MISS', say: 'Cache miss par Postgres, phir cache mein rakho.' },
@@ -48,7 +48,7 @@ SD.addScenes({
   },
 
   adclick: {
-    intro: 'Ad clicks ginne hain. Billing <b>isi data</b> par hoti hai — galti matlab paisa.',
+    intro: 'Ad clicks ginne hain. Billing <b>click data</b> par hoti hai — galti matlab paisa.',
     nodes: [
       { id: 'ch', col: 3, row: 0, icon: '📊', label: 'ClickHouse', sub: 'dashboard (fast)' },
       { id: 'browser', col: 0, row: 1, icon: '🖱️', label: 'Browser', sub: 'ad click', tone: 'accent' },
@@ -61,10 +61,10 @@ SD.addScenes({
     steps: [
       { from: 'browser', to: 'ingest', label: 'click (id: c-9)', say: 'User ne ad par click kiya. Har click ki apni unique id hai.' },
       { from: 'ingest', to: 'kafka', label: 'key = ad_id', say: 'Kafka partition key ad_id: ek ad ke saare clicks ek partition mein, kram mein. Partition key ka chunav = ordering ka design.' },
-      { from: 'kafka', to: 'flink', label: 'event time', tone: 'good', say: 'Flink event time (click kab hua) se minute ki windows banata hai, processing time se nahi. Mobile ke late clicks bhi sahi minute mein jaate hain.' },
+      { from: 'kafka', to: 'flink', label: 'event time', tone: 'good', say: 'Flink event time (click kab hua) se minute ki windows banata hai, processing time se nahi. Late clicks ki hadd watermark aur allowed lateness tay karte hain; bahut late clicks ka alag raasta rakho.' },
       { from: 'flink', to: 'ch', label: 'turant, thodi galti', say: 'Fast path: ClickHouse dashboard. Turant chahiye, thodi galti manzoor.' },
       { from: 'kafka', to: 's3', label: 'har raw event', say: 'Har raw event S3 mein bhi jaata hai.' },
-      { from: 's3', to: 'batch', label: 'billing yahin se', tone: 'good', set: { batch: { tone: 'good' } }, say: 'Slow path: raat ko exact batch, dedup ke saath. Billing isi se. Ek pipeline se speed aur correctness dono maangna galti hai.' },
+      { from: 's3', to: 'batch', label: 'billing yahin se', tone: 'good', set: { batch: { tone: 'good' } }, say: 'Slow path: raat ko exact batch, dedup ke saath. Billing batch ke hisaab se. Is design mein dashboard aur billing ke alag raaste hain; ek sahi bani streaming pipeline bhi exact hisaab rakh sakti hai.' },
       { at: ['kafka'], say: 'Dedup laazmi: at-least-once mein consumer crash par batch dobara = dugna bill. Click id se dedup. Billing ke liye HLL jaise approximate structures galat jagah.' },
     ],
   },
@@ -85,7 +85,7 @@ SD.addScenes({
       { from: 'wr', to: 'map', label: 'seat map', say: 'Seat map ka read path alag: cache se (1–2 second purana theek), aur "seat A14 gayi" jaise updates SSE se.' },
       { from: 'wr', to: 'redis', label: 'HOLD A14', tone: 'good', set: { redis: { tone: 'good', sub: 'A14 = user:912 · 10 min' } }, say: 'Kadam 1, HOLD: SET seat:evt42:A14 user:912 NX EX 600. NX = sirf khaali ho tab (atomic). EX = abandoned checkout apne aap wapas.' },
       { from: 'redis', to: 'pay', label: 'PAY (10 min)', say: 'Kadam 2, PAY: user 10 minute mein checkout karta hai. Is beech koi DB lock latka hua nahi.' },
-      { from: 'pay', to: 'db', label: 'CONFIRM', tone: 'good', set: { db: { tone: 'good', sub: 'A14 sold ✅' } }, say: 'Kadam 3, CONFIRM: payment ok → hold ka owner aur version jaancho, phir seat sold + booking row ek DB transaction mein. Redis hold baad mein saaf.' },
+      { from: 'pay', to: 'db', label: 'CONFIRM', tone: 'good', set: { db: { tone: 'good', sub: 'A14 sold ✅' } }, say: 'Kadam 3, CONFIRM: payment ok → DB mein seat khaali hone ki shart aur UNIQUE booking lagao; hold owner/version bhi jaancho. Seat sold + booking ek transaction mein. Redis hold baad mein saaf.' },
       { at: ['redis'], say: 'Payment fail ya timeout → hold apne aap expire, seat wapas. Payment hold expire hone ke baad aaye toh seat kisi aur ki ho sakti hai: refund aur reconciliation ka raasta pehle se rakho.' },
     ],
   },
@@ -108,7 +108,7 @@ SD.addScenes({
       { from: 'push', to: 'phone', label: '8818', tone: 'good', set: { phone: { tone: 'good', sub: 'last_seen 8818' } }, say: 'Riya ka phone online tha: message turant mila.' },
       { from: 'store', to: 'laptop', label: '8814 ke baad kya hai?', tone: 'good', set: { laptop: { tone: 'good', sub: 'last_seen 8818' } }, say: 'Laptop wapas online aaya: "last_seen 8814 ke baad kya hai?" Wahi gap-fill query jo har reconnect chalata hai.' },
       { from: 'store', to: 'tablet', label: '8801 ke baad kya hai?', tone: 'good', set: { tablet: { tone: 'good', sub: 'last_seen 8818' } }, say: 'Tablet ke 17 messages baaki the; wahi query. Multi-device ke liye alag sync system nahi chahiye: har device ka apna cursor.' },
-      { at: ['store'], say: 'Delivery aur read receipts bhi cursors hi hain: "kitno ne padha" = kitne cursors 8818 tak pahunche. Group chat mein fanout write par ya read par, group ke size par tay hota hai.' },
+      { at: ['store'], say: 'Delivery aur read ke alag cursors rakho: "kitno ne padha" = kitne users ka read cursor 8818 tak pahuncha. Group chat mein fanout write par ya read par, group ke size par tay hota hai.' },
     ],
   },
 
@@ -127,7 +127,7 @@ SD.addScenes({
       { from: 's3', to: 'tx', label: 'S3 event → queue', say: '2. TRANSCODE: S3 event → queue → workers. CPU-bound: 240p se 4K tak versions, chhote chunks aur ek manifest. Status API se progress.' },
       { from: 'tx', to: 'cdn', label: 'chunks + manifest', say: '3. DELIVER: CDN; miss par origin. Egress-bound, 99% traffic yahin. Teenon alag scale karte hain; viral video ki delivery uploads ko nahi rokti.' },
       { from: 'viewer', to: 'cdn', label: 'manifest + chunks', tone: 'good', set: { viewer: { tone: 'good', sub: 'network gira → 360p' } }, say: 'Adaptive bitrate: video ek file nahi, chunks ki list. Player network dekh kar har agla chunk chunta hai: network gira toh agla chunk 360p.' },
-      { at: ['cdn'], set: { cdn: { tone: 'gold', sub: 'hit ratio sabse zaroori' } }, say: 'CDN byte hit ratio sabse zaroori metric: 95% se 90% hua toh origin traffic dugna (5% → 10%).' },
+      { at: ['cdn'], set: { cdn: { tone: 'gold', sub: 'hit ratio sabse zaroori' } }, say: 'Same delivery volume aur shield boundary par byte hit ratio 95% se 90% ho toh origin bytes dugne (5% → 10%).' },
       { at: ['count'], say: '100 crore views/din ≈ 11,574 events/sec poore platform par. View count exact nahi chahiye: batch mein jodo; ek hot video ki row par har view ka UPDATE mat karo.' },
     ],
   },
@@ -166,9 +166,9 @@ SD.addScenes({
       { id: 'cd', col: 2, row: 2, icon: '📄', label: 'Content dedup', sub: 'content hash / simhash' },
     ],
     steps: [
-      { at: ['frontier'], say: '10 arab ÷ 3,750 pages/sec/machine ÷ 5 din ≈ 8 machines — sirf assumed bandwidth ka floor. CPU, storage, DNS aur politeness benchmark karo; sabse tang resource capacity tay karta hai.' },
+      { at: ['frontier'], say: '10 arab ÷ 3,750 pages/sec/machine ÷ 5 din ≈ 6.2 machines; headroom ke saath ~8 — sirf assumed bandwidth ka floor. CPU, storage, DNS aur politeness benchmark karo; sabse tang resource capacity tay karta hai.' },
       { from: 'workers', to: 'web', label: '500 × 1 req/s', tone: 'bad', set: { web: { tone: 'bad', sub: 'ek domain: 500 req/s 😵' } }, say: 'Har worker "main 1 req/sec bhejta hoon" — par 500 workers × 1 = 500 req/sec ek hi domain par. Politeness worker ka kaam nahi.' },
-      { from: 'workers', to: 'lock', label: 'is domain ki baari?', tone: 'good', set: { web: { tone: 'good', sub: 'ek domain: 1 req/s' } }, say: 'Global shart ke liye shared jagah: per-domain lock (Redis), ya message delay karke wapas queue mein. Politeness queue ka kaam hai.' },
+      { from: 'workers', to: 'lock', label: 'is domain ki baari?', tone: 'good', set: { web: { tone: 'good', sub: 'ek domain: 1 req/s' } }, say: 'Global shart ke liye shared jagah: per-domain shared rate budget; baari na mile toh message delay karke queue mein wapas. Politeness queue ka kaam hai.' },
       { from: 'frontier', to: 'ud', label: 'pehle crawl hua?', say: 'URL dedup, queue mein daalne se pehle: URL normalize → hash → Bloom filter ya index.' },
       { from: 'web', to: 'cd', label: 'page ka hash', say: 'Content dedup, fetch ke baad: ek hi page darjan URLs par (tracking params). Content hash ya simhash se pehchano.' },
       { at: ['trap'], set: { trap: { tone: 'bad' } }, say: 'Crawler trap: infinite calendar (agla mahina, agla mahina…). Sasta ilaaj: har domain ka page budget aur URL depth ki hadd.' },
@@ -190,7 +190,7 @@ SD.addScenes({
     ],
     steps: [
       { at: ['loc'], set: { loc: { tone: 'gold', sub: '1.5 cr/min → in-memory' } }, say: 'Driver locations: 10 lakh drivers, har 4 second update = 1.5 crore writes/min. DB par storm. Location durable nahi, current chahiye: in-memory geo index.' },
-      { at: ['geo'], set: { geo: { tone: 'gold', sub: 'hot cell → chhote cells' } }, say: 'Nearby search: geo. Airport par 8 baje, baarish: hot cell. Wahan chhote cells; radius cover karne wali saari cells padho.' },
+      { at: ['geo'], set: { geo: { tone: 'gold', sub: 'hot cell → chhote cells' } }, say: 'Nearby search: geo. Airport par 8 baje, baarish: hot cell. Airport par chhote cells; radius cover karne wali saari cells padho.' },
       { at: ['match'], set: { match: { tone: 'gold', sub: '1 driver, 2 riders → hold' } }, say: 'Matching: contention. Ek driver do riders ko? Driver par atomic hold; offer reject ya timeout par hold chhodo.' },
       { at: ['life'], set: { life: { tone: 'gold', sub: 'beech mein fail → saga' } }, say: 'Ride lifecycle: workflow (requested → accepted → started → completed). Beech mein fail → saga + compensation.' },
       { at: ['track'], set: { track: { tone: 'gold', sub: 'reconnect storm → jitter' } }, say: 'Live tracking: realtime fanout. Reconnect storm → jitter; offline gap → last-seen se backlog.' },

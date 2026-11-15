@@ -66,7 +66,7 @@ SD.registerLevels('sdd-resil', [
         {
           text: 'KhanaKart ka payment provider kuch minute ke liye band hai. Doosra payment provider taiyaar khada hai.',
           bin: 'brk',
-          explain: 'Breaker + fallback. Pehle provider ka breaker OPEN hota hai, aur fallback = payment doosre provider ko bhejna. Har payment pehle bimaar provider ko try karke timeout nahi khaayegi.',
+          explain: 'Breaker + fallback. Pehle provider ka breaker OPEN hota hai, aur fallback = payment doosre provider ko bhejna, par pehle pehle charge ka natija jaancho; adhoore jawab par provider badalna double charge kar sakta hai. Har payment pehle bimaar provider ko try karke timeout nahi khaayegi.',
         },
         {
           text: 'recs-service har roz apne deploy ke dauraan kuch minute 503 deti hai.',
@@ -300,7 +300,7 @@ Sirf ek (forced) outage ho toh B t=7 s par poora theek (3 s band + 3 s thanda).`
         {
           text: 'Breaker ko har error gina chahiye — 4xx bhi, taaki koi failure na chhoote.',
           bin: 'myth',
-          explain: 'Sirf dependency ki bimaari gino: 5xx, timeout, connection error. 4xx gine toh lab mein 90 theek requests mein se 87 roki gayi, aur breaker 3 baar khula.',
+          explain: 'Is lab mein dependency ki bimaari: 5xx, timeout, connection error; production niyam contract se chuno. 4xx gine toh lab mein 90 theek requests mein se 87 roki gayi, aur breaker 3 baar khula.',
         },
         {
           text: 'Circuit OPEN ka matlab hai calls beh rahi hain.',
@@ -333,9 +333,9 @@ Sirf ek (forced) outage ho toh B t=7 s par poora theek (3 s band + 3 s thanda).`
           'Naye app dheeme the — breaker sirf latency ginta hai, status code dekhta hi nahi',
         ],
         answer: 0,
-        explain: 'Lab: 4xx bhi failure gino toh 90 theek requests mein se sirf 3 safal, 87 roki, breaker 3 baar khula. Sirf 5xx + timeout gino toh 90 / 90 safal. 400 client ki galti hai, dependency ki bimaari nahi. Ilaaj: sirf 5xx, timeout aur connection error gino.',
+        explain: 'Lab: 4xx bhi failure gino toh 90 theek requests mein se sirf 3 safal, 87 roki, breaker 3 baar khula. Sirf 5xx + timeout gino toh 90 / 90 safal. 400 client ki galti hai, dependency ki bimaari nahi. Is lab mein 5xx, timeout aur connection error gine; production mein API contract se classifier chuno.',
         choiceExplanations: [
-          'Lab: 4xx bhi failure gino toh 90 theek requests mein se sirf 3 safal, 87 roki, breaker 3 baar khula. Sirf 5xx + timeout gino toh 90 / 90 safal. 400 client ki galti hai, dependency ki bimaari nahi. Ilaaj: sirf 5xx, timeout aur connection error gino.',
+          'Lab: 4xx bhi failure gino toh 90 theek requests mein se sirf 3 safal, 87 roki, breaker 3 baar khula. Sirf 5xx + timeout gino toh 90 / 90 safal. 400 client ki galti hai, dependency ki bimaari nahi. Is lab mein 5xx, timeout aur connection error gine; production mein API contract se classifier chuno.',
           '400 ka matlab hai bhejne wale ki request galat thi. Dependency bimaar hone ka saboot nahi.',
           'Chhota timer breaker ko jaldi uthata hai, khulne ki wajah nahi banta. Khulne ki wajah 400s ki ginti thi.',
           'Breaker calls ka natija ginta hai — fail ya safal. Is kahani mein latency badli hi nahi.',
@@ -373,8 +373,8 @@ Sirf ek (forced) outage ho toh B t=7 s par poora theek (3 s band + 3 s thanda).`
   ],
   cards: [
     { front: 'Breaker, retry ya timeout — kaunsa kab?', back: 'Ek call dheemi → <b>timeout</b>. Kabhi-kabhi ek blip → <b>retry</b> (jitter ke saath). Dependency lagataar bimaar → <b>breaker</b> (timeout aur fallback ke saath). Lab: timeout se /profile 360 → 0 fail; breaker se bimaar service ko calls 300 → 30.' },
-    { front: 'Breaker kab NAHI lagate?', back: 'Random blip (retry) · 4xx (client theek karo) · apne process ka function (bug) · bahut kam calls wala endpoint (timeout) · apni service overload (rate limiting / load shedding / scaling).' },
-    { front: 'Kaunsi teen galtiyan breaker ko hi outage bana deti hain?', back: '1) 4xx ginna: 90 theek requests mein se 87 roki. 2) Poori service ka ek breaker: 150 mein se 144 roki. 3) Khulte hi poora traffic: service 3 baar phir giri. Ilaaj: sirf 5xx / timeout / connection error gino · independent failure domains ke separate breakers · bounded trials + recovery ramp.' },
+    { front: 'Breaker kab NAHI lagate?', back: 'Random blip (retry) · expected client expected client 4xx (client theek karo) · apne process ka function (bug) · bahut kam calls wala endpoint (timeout) · apni service overload (rate limiting / load shedding / scaling).' },
+    { front: 'Kaunsi teen galtiyan breaker ko hi outage bana deti hain?', back: '1) 4xx ginna: 90 theek requests mein se 87 roki. 2) Poori service ka ek breaker: 150 mein se 144 roki. 3) Khulte hi poora traffic: service 3 baar phir giri. Ilaaj: failure ka niyam API contract se chuno; lab mein 5xx / timeout / connection error gine · independent failure domains ke separate breakers · bounded trials + recovery ramp.' },
     { front: 'Trial calls kaafi kyun nahi?', back: 'Trial calls poochhti hain "zinda hai?", "poora bojh utha sakti hai?" nahi. Lab: naive mein recs-service 3 baar giri (19.6 s), 3 trial calls mein bhi 3 baar (19.9 s). Trials + slow start: 0 baar, 7.0 s, 1666 live jawab.' },
     { front: 'States ka asli kram?', back: 'CLOSED → OPEN → HALF-OPEN (phir CLOSED, ya ek trial fail toh phir OPEN). HALF-OPEN = aadhi requests nahi, sirf kuch trial calls. OPEN = calls band.' },
   ],

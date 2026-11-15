@@ -51,7 +51,7 @@ SD.registerLevels('sdd-resil', [
      <pre>lab, asli raftaar (100 requests/second, 16 second, har 4 second par ek instance mara — teen run):
 3 instances the      → 87.44% requests safal · 201 fail
 1 instance hota toh  → 62.25–62.31% requests safal · 603–604 fail</pre>
-     <p>Teen copies ne nuksaan ghataya, khatam nahi kiya. Aur dashboard par errors "thoda sa noise" dikhe — jabki asal mein har teesra grahak error dekh raha tha.</p>
+     <p>Teen copies ne nuksaan ghataya, khatam nahi kiya. Aur dashboard par errors "thoda sa noise" dikhe — jabki instance band rehne ke dauraan har teesri request error de rahi thi.</p>
      <p class="tip">👉 Agle screen par wahi raat slow motion mein: teen instances, har 0.2 second par ek request. Dekho ki instance 2 ke marne ke baad load balancer kya karta hai.</p>`,
   ],
   stages: [
@@ -149,7 +149,7 @@ SD.registerLevels('sdd-resil', [
               <li><b>4 fail</b>: #5, #8, #11, #14 — har teesri.</li>
               <li>Sabse lamba lagataar fail: <b>1</b>. Kabhi do requests ek ke baad ek nahi giri.</li>
             </ul>
-            Isi wajah se dashboard par errors "thoda noise" dikhte hain: errors bikhre hue hain. Par 2 second tak <b>har teesra grahak</b> error dekh raha tha.`,
+            Isi wajah se dashboard par errors "thoda noise" dikhte hain: errors bikhre hue hain. Par 2 second tak <b>har teesri request</b> fail ho rahi thi.`,
           nodes: { i2: { tone: 'slow', badge: '2 s mara raha' } },
           vars: { list: '1 · 2 · 3 — kabhi nahi badli', req: '25 mein se 4 fail', fail: '4 (har teesri)' },
         },

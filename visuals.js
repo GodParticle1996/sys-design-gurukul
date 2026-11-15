@@ -1710,7 +1710,7 @@ VISUALS['slo'] = {
       <div class="dg-rung a"><span class="lv">99.99%</span><span class="cmd">"chaar nines"</span><span class="q">4.3 min/mahina</span></div>
       <div class="dg-rung g"><span class="lv">99.999%</span><span class="cmd">"paanch nines"</span><span class="q">26 SECOND/mahina</span></div>
     </div>
-    <div class="dg-cap" style="margin-top:8px">Har extra 9 ki keemat lagbhag <b>10x</b> hai.
+    <div class="dg-cap" style="margin-top:8px">Har extra 9 mein manzoor errors <b>10 guna kam</b>; kharcha design par hai.
       "100% uptime" ek target nahi, ek galatfehmi hai.</div>
 
     <div class="dg-rule"></div>
@@ -1722,7 +1722,7 @@ VISUALS['slo'] = {
           <div class="dg-node is-gold" data-hs="slo"><span class="nl">SLO</span>
             <span class="ns">tumhara apna target<br>"99.9% over 30 days"</span></div>
           <div class="dg-node is-bad" data-hs="sla"><span class="nl">SLA</span>
-            <span class="ns">customer se contract + PAISA<br>hamesha SLO se DHEELA rakho</span></div>
+            <span class="ns">customer se contract + PAISA<br>aam taur par SLO se DHEELA</span></div>
         </div>
       </div>
       <div class="dg-box is-good"><span class="bx-label">💰 ERROR BUDGET — asli kaam yeh hai</span>
@@ -1732,7 +1732,7 @@ VISUALS['slo'] = {
           <div class="dg-node is-good"><span class="nl">Budget bacha hai?</span>
             <span class="ns">deploy karo, risk lo, tez chalo 🚀</span></div>
           <div class="dg-node is-bad"><span class="nl">Budget khatam?</span>
-            <span class="ns">feature freeze — sirf reliability kaam</span></div>
+            <span class="ns">tay policy; critical fixes ki saaf chhoot</span></div>
         </div>
         <div class="dg-cap">Error budget "product vs reliability" wali behes ko
           ek <b>number</b> mein badal deta hai. Yahi uski asli taakat hai.</div>
@@ -1890,7 +1890,7 @@ VISUALS['dbperservice'] = {
         </div>
         <div class="dg-ladder" style="margin-top:8px">
           <div class="dg-rung g"><span class="lv">✅</span><span class="cmd">independent deploy aur migration</span><span class="q">apna schema, apni marzi</span></div>
-          <div class="dg-rung g"><span class="lv">✅</span><span class="cmd">blast radius bandha</span><span class="q">ek DB gire toh ek service</span></div>
+          <div class="dg-rung g"><span class="lv">✅</span><span class="cmd">blast radius bandha</span><span class="q">seedha asar ek service; dependent flows bhi ruk sakte hain</span></div>
           <div class="dg-rung a"><span class="lv">⚠️</span><span class="cmd">JOIN gaya, transaction gaya</span><span class="q">ab composition aur saga</span></div>
         </div>
       </div>
@@ -2035,7 +2035,7 @@ COMMIT;                             ← ATOMIC ✅
 poll outbox → publish → mark sent</pre>
         <div class="dg-cap">Ab dono ek hi transaction mein hain — ya dono hue,
           ya dono nahi. Publisher crash ho toh event <b>outbox mein pada</b> hai;
-          restart par chala jaayega.</div>
+          relay recover ho aur row bachi ho toh retry hoga.</div>
       </div>
     </div>
 
@@ -2055,7 +2055,7 @@ poll outbox → publish → mark sent</pre>
       <span class="dg-pill gold" data-hs="atleast">⚠️ AT-LEAST-ONCE</span>
       <span>Publish ke <b>baad</b> aur mark ke <b>pehle</b> crash? Event dobara jaayega.
         Isiliye consumers ko <b>idempotent</b> hona hi hoga —
-        outbox exactly-once nahi deta, woh "<b>kabhi kho nahi sakta</b>" deta hai.</span>
+        outbox exactly-once nahi deta, woh <b>producer dual-write gap</b> band karta hai; DB durability, retention aur relay recovery chahiye.</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill acc" data-hs="cdc">🔄 CDC (Debezium)</span>
@@ -2065,7 +2065,7 @@ poll outbox → publish → mark sent</pre>
 };
 
 VISUALS['exactlyonce'] = {
-  t: 'Exactly-once ka jhooth — at-least-once + idempotent',
+  t: 'Exactly-once ka scope — delivery aur processing',
   html: `
     <div class="dg-split">
       <div class="dg-box is-bad"><span class="bx-label">🤔 CRASH KE BAAD — pata hi nahi chal sakta</span>
@@ -2074,7 +2074,7 @@ VISUALS['exactlyonce'] = {
           <div class="dg-rung"><span class="lv">2</span><span class="cmd">ack bhejne se PEHLE crash</span><span class="q">💥</span></div>
           <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">?</span><span class="cmd">broker ko pata nahi: kaam hua ya nahi</span><span class="q">dono ek jaise dikhte hain</span></div>
         </div>
-        <div class="dg-cap">Do hi vikalp hain — aur teesra koi nahi:</div>
+        <div class="dg-cap">Delivery retry ke vikalp; processing ka natija durable state se jaancho:</div>
         <div class="dg-stack" style="margin-top:8px">
           <div class="dg-node is-gold"><span class="nl">Dobara bhejo</span><span class="ns">at-least-once → DUPLICATES</span></div>
           <div class="dg-node is-bad"><span class="nl">Mat bhejo</span><span class="ns">at-most-once → DATA LOSS</span></div>
@@ -2212,7 +2212,7 @@ VISUALS['locks'] = {
       <div class="dg-box is-good"><span class="bx-label">🧰 KYA USE KARO</span>
         <div class="dg-ladder">
           <div class="dg-rung g"><span class="lv">1</span><span class="cmd">DB unique constraint / conditional update</span><span class="q">sabse simple, sabse strong</span></div>
-          <div class="dg-rung g"><span class="lv">2</span><span class="cmd">Partition — ek key sirf ek worker ko</span><span class="q">lock ki zaroorat hi khatam</span></div>
+          <div class="dg-rung g"><span class="lv">2</span><span class="cmd">Partition — ek key sirf ek worker ko</span><span class="q">owner badle toh stale worker guard chahiye</span></div>
           <div class="dg-rung a"><span class="lv">3</span><span class="cmd">etcd / ZooKeeper (consensus)</span><span class="q">sach mein leader chahiye toh</span></div>
           <div class="dg-rung"><span class="lv">4</span><span class="cmd">Redis lock (fencing token ke saath)</span><span class="q">sirf "best effort" kaam ke liye</span></div>
         </div>
@@ -2233,9 +2233,9 @@ VISUALS['boss-dist'] = {
     <div class="dg-rule"></div>
     <div class="dg-ladder">
       <div class="dg-rung g"><span class="lv">1</span><span class="cmd">Idempotency-Key se order banao (pending)</span><span class="q">double-submit safe</span></div>
-      <div class="dg-rung g"><span class="lv">2</span><span class="cmd">order + outbox row EK transaction mein</span><span class="q">event kabhi kho nahi sakta</span></div>
+      <div class="dg-rung g"><span class="lv">2</span><span class="cmd">order + outbox row EK transaction mein</span><span class="q">dual-write gap band; durability + relay recovery chahiye</span></div>
       <div class="dg-rung g"><span class="lv">3</span><span class="cmd">orchestrator saga chalaye</span><span class="q">flow ek jagah dikhe</span></div>
-      <div class="dg-rung g"><span class="lv">4</span><span class="cmd">har consumer idempotent</span><span class="q">at-least-once = duplicates</span></div>
+      <div class="dg-rung g"><span class="lv">4</span><span class="cmd">har consumer idempotent</span><span class="q">at-least-once = duplicates mumkin</span></div>
       <div class="dg-rung g"><span class="lv">5</span><span class="cmd">fail par compensate + state dikhao</span><span class="q">saga mein isolation nahi hai</span></div>
       <div class="dg-rung g"><span class="lv">6</span><span class="cmd">"Delhi ke pending orders" ke liye read model</span><span class="q">cross-service JOIN gaya</span></div>
     </div>
@@ -4611,7 +4611,7 @@ VISUALS['clocks'] = {
       <span class="dg-pill good">🔢 SAMAY KI JAGAH KRAM</span>
       <span><b>Lamport</b> — badhta counter (kaaran ka kram) &nbsp;·&nbsp;
         <b>Vector clock</b> — concurrent tha ya nirbhar, yeh batata hai &nbsp;·&nbsp;
-        <b>HLC</b> — wall clock jaisa dikhta hai par kram ki guarantee deta hai (aaj ka aam chunav)</span>
+        <b>HLC</b> — physical time + logical counter; causal kram bachata hai, conflict ka business niyam alag chahiye</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill gold">🛰️ SPANNER KA TRUETIME</span>

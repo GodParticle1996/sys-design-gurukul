@@ -637,11 +637,10 @@ SD.registerLevelsAfter('resil', 'shedding', [
     `<h3>🧊 "Kitne users girenge?" — ek design number</h3>
      <p>Availability ka sawaal aksar "kitni der" par atak jaata hai. Utna hi
      zaroori doosra sawaal hai: <b>"kitne users?"</b> Ek hi bade fleet par
-     jawab hamesha <b>100%</b> hota hai, chahe tumhare paas kitne bhi replicas hon.</p>
-     <pre>Ek bada fleet:      koi bhi poison request, koi bhi bad config,
-                    koi bhi O(N²) ganit  →  100% users
+     fleet-wide failure ka asar <b>100%</b> tak ho sakta hai, chahe tumhare paas kitne bhi replicas hon.</p>
+     <pre>Ek bada fleet:      fleet-wide poison/config failure  →  100% tak users
 
-10 alag cells:      wahi failure  →  10% users
+10 alag cells:      ek isolated cell fail → ~10% users (barabar bantwaara)
                     aur baaki 90% ko pata bhi nahi chalta</pre>
      <p>Cell ek <b>poori swatantra copy</b> hai — apna load balancer, apni
      compute, apna database, apna cache. Cells aapas mein baat nahi karte.
@@ -649,7 +648,7 @@ SD.registerLevelsAfter('resil', 'shedding', [
      <h3>💰 Cells ki asli keemat</h3>
      <table>
        <tr><th>Kya milta hai</th><th>Kya dena padta hai</th></tr>
-       <tr><td>Blast radius 1/N</td><td>N control planes, N deploy targets, N monitoring dashboards</td></tr>
+       <tr><td>Blast radius 1/N</td><td>N deploy targets aur per-cell monitoring; control plane shared ho sakta hai</td></tr>
        <tr><td>Capacity add karna local ho jaata hai (naya cell)</td><td>Har cell mein alag se spare capacity</td></tr>
        <tr><td>Deploy bhi cell-dar-cell ho sakta hai</td><td>Routing layer chahiye: "ye customer kaunse cell mein hai?"</td></tr>
        <tr><td>Ek cell ka data doosre cell tak nahi rista</td><td>Cross-cell query ab ek fan-out hai</td></tr>
@@ -697,7 +696,7 @@ Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
         return [
           { label: 'Poison tenant: exact full-set overlap', value: m.blast.toFixed(1) + '% customers', tone: m.blast <= 5 ? 'ok' : m.blast <= 15 ? 'warn' : 'bad' },
           { label: 'Ek cell ka load absorb hoga?', value: m.absorb ? 'haan, spare kaafi hai' : `nahi — ${m.need.toFixed(0)}% chahiye`, tone: m.absorb ? 'ok' : 'bad' },
-          { label: 'Operational bojh', value: m.cells + ' control planes / deploy targets', tone: m.cells <= 12 ? 'ok' : 'bad' },
+          { label: 'Operational bojh', value: m.cells + ' deploy targets / per-cell monitoring', tone: m.cells <= 12 ? 'ok' : 'bad' },
           { label: 'Capacity ka kharcha', value: '+' + k.spare + '% (spare)', tone: k.spare <= 25 ? 'ok' : 'warn' },
         ];
       },
@@ -716,7 +715,7 @@ Sirf ek cell down: full pair loss = 0%, par 25% tenants exposed</pre>
           ? `exact-pair full-loss share <b>${m.blast.toFixed(1)}%</b> hai — C(${k.cells},2) abhi chhota hai; partial overlap isse alag hai`
           : `one-cell assignment full-loss share <b>${m.blast.toFixed(1)}%</b> hai. Pair assignment full-set overlap reduce kar sakti hai; partial degradation phir bhi assess karo`);
         if (!m.absorb) bad.push(`ek cell girne par uska load absorb karne ke liye <b>${m.need.toFixed(0)}%</b> spare chahiye, hai sirf ${k.spare}%`);
-        if (m.cells > 12) bad.push(`<b>${m.cells} cells</b> ka matlab hai ${m.cells} control planes, deploy targets aur dashboards — operational bojh bahut zyada`);
+        if (m.cells > 12) bad.push(`<b>${m.cells} cells</b> ka matlab hai ${m.cells} deploy targets aur per-cell monitoring — operational bojh bahut zyada`);
         if (!bad.length) return { ok: true, text: `<b>${m.cells} cells</b>${k.shuffle ? ' + shuffle sharding' : ''}, <b>${k.spare}%</b> spare — poison tenant ke poore assigned set ka full-overlap share <b>${m.blast.toFixed(1)}%</b> hai. Separate single-cell-loss model mein spare uniformly rerouted load absorb karti hai; actual hotspot/routing constraints test karna baaki hai.` };
         return { ok: false, text: bad.join(' &nbsp;·&nbsp; ') };
       },
