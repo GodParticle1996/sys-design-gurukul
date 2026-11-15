@@ -96,3 +96,13 @@
 .term-hint.pulse { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 3px #ffb34722; }
 .term-nextcmd { border-color: #6ea8fe88; color: var(--text); }
 .term-btns .btn:disabled { opacity: .45; cursor: default; transform: none; filter: none; }
+
+/* ============ Diagram: "ek-ek hissa dekho" (app.js diagramStepper) ============ */
+.dg-stepbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0 12px; }
+.dg-step-pos { color: var(--muted); font-size: .88rem; }
+.dg-stepbar .btn:disabled { opacity: .35; cursor: default; transform: none; filter: none; }
+.diagram.dg-stepping .dg-rung, .diagram.dg-stepping .dg-box, .diagram.dg-stepping .dg-node { opacity: .25; transition: opacity .2s; }
+.diagram.dg-stepping .dg-seen { opacity: .6; }
+.diagram.dg-stepping .dg-on { opacity: 1; outline: 2px solid var(--accent); outline-offset: 3px; }
+.diagram.dg-stepping .dg-on .dg-rung, .diagram.dg-stepping .dg-on .dg-box, .diagram.dg-stepping .dg-on .dg-node,
+.diagram.dg-stepping .dg-seen .dg-rung, .diagram.dg-stepping .dg-seen .dg-box, .diagram.dg-stepping .dg-seen .dg-node { opacity: 1; }

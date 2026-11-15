@@ -166,7 +166,44 @@ function diagramFor(id, hero) {
   if (!v) return null;
   const d = el('div', 'diagram' + (hero ? ' hero' : ''));
   d.innerHTML = `<div class="dg-title">📊 ${v.t}</div>${v.html}`;
+  try { diagramStepper(d); } catch (e) { /* stepper sirf suvidha hai; diagram uske bina bhi poora hai */ }
   return d;
+}
+
+/* Purane static diagrams ko "ek-ek hissa" mein padhna: ek waqt mein ek hi hissa chamakta hai, baaki dhundhle.
+   Hissa = .dg-rung / .dg-box / .dg-node (jo kisi doosre hisse ke andar na ho). 3 se kam hisse hon toh button nahi aata.
+   Content mein kuch likhna nahi padta; SD.viz.svg wale diagrams (playlist tracks) dry run se pehle hi kadam-dar-kadam hain. */
+function diagramStepper(d) {
+  if (typeof d.querySelectorAll !== 'function') return;
+  const UNIT = '.dg-rung, .dg-box, .dg-node';
+  const units = Array.prototype.filter.call(d.querySelectorAll(UNIT), u => !(u.parentElement && u.parentElement.closest(UNIT)));
+  if (units.length < 3) return;
+  let i = -1;
+  const bar = el('div', 'dg-stepbar');
+  const start = el('button', 'btn small ghost dg-step-start', '▶ Ek-ek hissa dekho');
+  const prev = el('button', 'btn small ghost dg-step-prev', '← Pichla');
+  const pos = el('span', 'dg-step-pos');
+  const next = el('button', 'btn small dg-step-next', 'Agla hissa →');
+  const stop = el('button', 'btn small ghost dg-step-stop', 'Poora diagram');
+  const paint = () => {
+    const on = i >= 0;
+    d.classList.toggle('dg-stepping', on);
+    units.forEach((u, k) => { u.classList.toggle('dg-seen', on && k < i); u.classList.toggle('dg-on', on && k === i); });
+    start.style.display = on ? 'none' : '';
+    [prev, pos, next, stop].forEach(x => { x.style.display = on ? '' : 'none'; });
+    if (!on) return;
+    pos.innerHTML = `Hissa <b>${i + 1}</b> / ${units.length}`;
+    prev.disabled = i === 0; next.disabled = i === units.length - 1;
+    units[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+  start.onclick = () => { i = 0; paint(); };
+  prev.onclick = () => { if (i > 0) { i--; paint(); } };
+  next.onclick = () => { if (i < units.length - 1) { i++; paint(); } };
+  stop.onclick = () => { i = -1; paint(); };
+  bar.append(start, prev, pos, next, stop);
+  const title = d.querySelector('.dg-title');
+  if (title && title.after) title.after(bar); else d.appendChild(bar);
+  paint();
 }
 
 /* Topic recap (dev/REVIEW.md, decision 2): shown once per track, after the guide's LAST level in that

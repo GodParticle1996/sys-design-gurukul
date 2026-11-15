@@ -793,7 +793,7 @@ SD.registerScenarios([{
 ## 12. 🧭 UX ke naye hisse (2026-11-15) — raasta, chhote lesson cards, terminal mein madad
 
 Owner ki chaar dikkatein thi: raasta saaf nahi · ek screen par bahut text · diagram saaf nahi · terminal mein atakna. Is pass mein pehli teen par kaam hua
-(diagrams ko kadam-dar-kadam banana abhi baaki hai — §12.4). Saari nayi CSS `extra.css` mein hai (`style.css` ke baad load hoti hai).
+(diagrams ke liye ek aam "ek-ek hissa" reader bana — §12.4; likhe hue kadam abhi baaki — §12.5). Saari nayi CSS `extra.css` mein hai (`style.css` ke baad load hoti hai).
 
 ### 12.1 Raasta (`app.js`)
 - **`TRACK_GROUPS`** — home par tracks teen group mein: `core` (jo `alwaysUnlocked` nahi; card par "Kadam N"), `course` (id `fp-` / `sdd-` / `sds-` / `concurrency` se shuru),
@@ -816,7 +816,12 @@ Madad ki seedhi: **👉** checklist ka pehla adhoora kaam (`li.now`) → **💡 
 - 5 command tak checklist mein naya ✅ na aaye toh ek baar "Atak gaye?" wali line chhapti hai aur hint button chamakta hai.
 - Har madad (`sim.hintsUsed`) `HINT_COST` XP ghatati hai; mission ka XP 10 se neeche nahi jaata.
 
-### 12.4 Jo is pass mein nahi hua
-- Purane static diagrams (`VISUALS[...]`, 300+) ko kadam-dar-kadam banana. Playlist tracks (`fp-core`, `sdd-eda`, `sdd-resil`) pehle se `dryrun` use karte hain;
-  mukhya 7 tracks ke diagrams static hain.
+### 12.4 Diagram: "▶ Ek-ek hissa dekho" (`app.js` `diagramStepper`)
+Har static diagram (`VISUALS[...]`) jisme 3 ya zyada hisse hain, apne aap ek button paata hai. Hissa = `.dg-rung` / `.dg-box` / `.dg-node` (jo kisi doosre hisse ke
+andar na ho). Button dabane par ek waqt mein ek hi hissa chamakta hai, dekhe hue halke, baaki dhundhle. Content mein kuch likhna nahi padta: naya diagram in teen
+classes se banao aur hisson ko **padhne ke kram** mein likho. 303 mein se 149 level diagrams par yeh lagta hai (baaki `SD.viz.svg` wale hain ya unme 3 se kam hisse hain).
+
+### 12.5 Jo is pass mein nahi hua
+- Purane static diagrams ke liye likhe hue kadam (har kadam par "kya ho raha hai" wali line, chalte arrows). Abhi sirf §12.4 wala aam reader hai.
+  Playlist tracks (`fp-core`, `sdd-eda`, `sdd-resil`) pehle se `dryrun` use karte hain.
 - Soch Akhada ke scenarios mein diagram nahi hai (owner ne budget ki wajah se "halke" scenarios chune).
