@@ -761,7 +761,7 @@ Lesson mein "video mein…" ya presenter ka zikr nahi. Source video ka credit si
 
 ---
 
-## 11. 🧠 Soch Akhada — soch-vichaar wale scenario sawal (`soch.js`, `soch.css`, `data-soch-*.js`)
+## 11. 🧠 Soch Akhada — soch-vichaar wale scenario sawal (`soch.js`, `extra.css`, `data-soch-*.js`)
 
 Owner ki maang (2026-11-14): ratta nahi, **critical thinking**. Ek asli jaisi samasya → 3–5 chhote kadam (har jawab par turant
 feedback) → saare hal ki tulna → interviewer ka twist → nichod. Home page par "🧠 Soch Akhada" card se khulta hai (hamesha khula),

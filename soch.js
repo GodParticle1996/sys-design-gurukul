@@ -1,5 +1,5 @@
 /* =====================================================================
-   System Gurukul — soch.js : 🧠 Soch Akhada
+   System Gurukul — soch.js : 🧠 Soch Akhada   (CSS: extra.css)
    Soch-vichaar wale scenario sawal: ek asli jaisi samasya, 3–5 chhote kadam
    (har jawab par turant feedback), saare hal ki tulna, phir interviewer ka twist.
 

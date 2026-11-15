@@ -74,3 +74,18 @@
   .so-card { align-items: flex-start; flex-wrap: wrap; }
   .so-card-state { width: 100%; padding-left: 44px; }
 }
+
+/* ============ Raasta: home ke group + "agla kadam" card (app.js) ============ */
+.next-card { border-color: #6ea8fe77; }
+.tk-group { margin: 26px 0 10px; }
+.tk-group h3 { margin: 0 0 4px; font-size: 1.15rem; }
+.tk-group p { margin: 0; color: var(--muted); line-height: 1.5; font-size: .92rem; }
+.tk-group-count { white-space: nowrap; color: var(--accent); font-weight: 700; margin-left: 4px; }
+.tk-step { font-size: .72rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-bottom: 4px; }
+
+/* ============ Lesson ke chhote cards (app.js lessonPager) ============ */
+.lp-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 10px 0 4px; }
+.lp-pos { color: var(--muted); font-size: .9rem; text-align: center; flex: 1 1 140px; }
+.lp-nav .btn:disabled { opacity: .35; cursor: default; transform: none; filter: none; }
+.lp-all { background: none; border: 0; color: var(--muted); font: inherit; font-size: .82rem; text-decoration: underline; cursor: pointer; padding: 4px 0; }
+.lp-all:hover { color: var(--text); }
