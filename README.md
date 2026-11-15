@@ -43,7 +43,15 @@ node dev/concurrency-test.js     # real Java output vs captures, lesson text and
 
 ## Kya hai isme
 
-**15 tracks · 303 levels · 1273 stages · 621 interview Qs · 1250 flashcards · 303 diagrams · 518 interactive labs · 59 lab projects**
+**15 tracks · 303 levels · 1273 stages · 621 interview Qs · 1250 flashcards · 303 diagrams · 518 interactive labs · 59 lab projects · 40 soch scenarios**
+
+### 🧠 Soch Akhada — soch-vichaar wale scenario sawal
+
+Home page par hamesha khula hissa. Har scenario ek asli jaisi samasya hai (ChaiPay ki kahani): **3 kadam** (asli wajah → hal chuno → keemat),
+har jawab par turant "kyun", phir **saare hal ki tulna** aur **interviewer ka twist**. 40 scenarios: Data 7 · API 4 · Request ka raasta 3 ·
+Resilience 6 · Distributed 7 · Security 4 · Observability aur cost 4 · Poora design 5. Jis level ka topic hai, uske complete screen par scenario ka link aata hai.
+Files: `soch.js` (engine), `extra.css`, `data-soch-1…3.js`. Naya scenario kaise jodein: `EXTENDING.md` §11. UX ke naye hisse (raasta, chhote lesson cards,
+terminal mein madad): `EXTENDING.md` §12.
 (ginti `node validate.js` se, 2026-11-13)
 
 | Track | Levels | Kya seekhoge |
