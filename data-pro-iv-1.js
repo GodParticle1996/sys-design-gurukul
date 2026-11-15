@@ -58,7 +58,7 @@ SD.registerLevels('pro-iv', [
        <tr><td>High-level design</td><td>~10–15 min</td><td>Boxes + data ka flow, har functional requirement poori</td></tr>
        <tr><td>Deep dive</td><td>~10–15 min</td><td>Non-functional: bottleneck, scale, failure, trade-off</td></tr>
      </table>
-     <p>Ye dhaancha Hello Interview ke "delivery framework" jaisa hai. Har company thoda alag chalti hai; dhaancha sahara hai, kaid nahi.</p>`,
+     <p>Ye Hello Interview se prerit bantwara hai. Hello Interview deep dive ke liye ~10 min aur optional data flow ke liye ~5 min batata hai. Yahan bacha samay wrap-up aur sawaalon ke liye rakho. Har company ka format alag ho sakta hai.</p>`,
     `<h3>📋 Functional vs non-functional</h3>
      <p><b>Functional</b> = user kya kar sakta hai: "post karo", "feed dekho", "follow karo".</p>
      <p><b>Non-functional</b> = kitna tez, kitna bada, kitna pakka: "feed p99 200 ms", "5 crore daily users", "naya post 1 minute mein dikhe toh chalega".</p>
@@ -176,9 +176,9 @@ SD.registerLevels('pro-iv', [
           'Sirf aakhir mein, summary slide ki tarah, sab ek saath',
         ],
         answer: 0,
-        explain: 'Number ka kaam faisla karwana hai. "40 writes/sec" ne bata diya ki write path ki chinta nahi. Jo number kisi faisle mein kaam na aaye, woh samay ki barbaadi.',
+        explain: 'Number ka kaam faisla karwana hai. "40 writes/sec" ke saath har write ka kaam bhi dekho. Ek write crore followers tak jaaye toh bojh bada hai. Jo number kisi faisle mein kaam na aaye, woh samay ki barbaadi.',
         choiceExplanations: [
-          'Number ka kaam faisla karwana hai. "40 writes/sec" ne bata diya ki write path ki chinta nahi. Jo number kisi faisle mein kaam na aaye, woh samay ki barbaadi.',
+          'Number ka kaam faisla karwana hai. "40 writes/sec" ke saath har write ka kaam bhi dekho. Ek write crore followers tak jaaye toh bojh bada hai. Jo number kisi faisle mein kaam na aaye, woh samay ki barbaadi.',
           'Bekaar numbers 10 minute kha jaate hain aur kuch tay nahi karte.',
           'Bina numbers ke ek DB ya sharding ka faisla andaaza hai.',
           'Aakhir mein numbers aaye toh faisle pehle hi andaaze par ho chuke.',
@@ -233,11 +233,11 @@ Pull (read fanout):
   0 inbox copies; har feed khulne par 200 doston ke latest posts jodo</pre>
      <p>Push mein celebrity ka ek post = 50 lakh writes — followers ki feed mein der se pahunchta hai. Pull mein feed kholna mehenga aur dheema.</p>`,
     `<h3>🧩 Hybrid</h3>
-     <p>Aam users ke posts <b>push</b>. Celebrities (threshold se zyada followers) ke posts <b>pull</b> — feed kholte waqt jode jaate hain.</p>
+     <p>Aam users ke posts <b>push</b>. Celebrities (threshold jitne ya zyada followers) ke posts <b>pull</b> — feed kholte waqt jode jaate hain.</p>
      <pre>POST /posts → posts DB → queue → fanout workers → har follower ki feed cache (Redis list, ~500 post ids)
 GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest posts
             → post ids se post data (post cache) → rank → jawab</pre>
-     <p><b>Threshold</b> celebrities ke followers se <b>neeche</b> hona chahiye, warna celebrities bhi push ho jaayengi.</p>
+     <p><b>Threshold</b> celebrities ke followers se <b>baraabar ya neeche</b> hona chahiye, warna celebrities bhi push ho jaayengi.</p>
      <p>Aur chhote sudhaar: lambe samay se inactive users ko push mat karo; feed cache mein sirf ids rakho, poora post nahi.</p>`,
   ],
   stages: [
@@ -256,10 +256,10 @@ GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest
         'fanout --mode hybrid --celeb-threshold 10000000',
         'fanout --mode hybrid --celeb-threshold 1000000',
       ],
-      successText: 'Hybrid: aam users push, celebrities pull. Inbox copies 1,200 crore se 200 crore, feed p99 60 ms, celebrity post turant. Threshold celebrities ke followers se neeche hona chahiye. Latency ke numbers model ke chune hue hain.',
+      successText: 'Hybrid: aam users push, celebrities pull. Inbox copies 1,200 crore se 200 crore, feed p99 60 ms, celebrity post turant. Threshold celebrities ke followers ke baraabar ya neeche hona chahiye. Latency ke numbers model ke chune hue hain.',
       hints: [
         'Pehle dono seedhe tareeke naapo: write aur read. Phir hybrid mein threshold badal ke dekho ki celebrities kis taraf jaati hain.',
-        '`fanout --mode write|read|hybrid [--celeb-threshold <followers>]`. Hybrid mein threshold se zyada followers wale users pull hote hain. Celebrities ke 50 lakh followers hain.',
+        '`fanout --mode write|read|hybrid [--celeb-threshold <followers>]`. Hybrid mein threshold jitne ya zyada followers wale users pull hote hain. Celebrities ke 50 lakh followers hain.',
         'Poora raasta — har command alag Enter se chalao:\nfanout --mode write\nfanout --mode read\nfanout --mode hybrid --celeb-threshold 10000000\nfanout --mode hybrid --celeb-threshold 1000000',
       ],
     },
@@ -275,7 +275,7 @@ GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest
         {
           id: 'fanout', label: 'Fanout ka tareeka', icon: '📮',
           options: [
-            { id: 'hybrid', label: 'Hybrid: aam users push, celebrities pull', score: 3, why: 'Dono ka sasta hissa. Threshold celebrities ke followers se neeche.' },
+            { id: 'hybrid', label: 'Hybrid: aam users push, celebrities pull', score: 3, why: 'Dono ka sasta hissa. Threshold celebrities ke followers ke baraabar ya neeche.' },
             { id: 'push', label: 'Sab push: har post har follower tak', score: -2, why: 'Celebrity ka ek post 50 lakh writes; 1,200 crore copies/din aur der.' },
             { id: 'pull', label: 'Sab pull: feed kholte waqt sab jodo', score: -1, why: 'Likhna sasta, par har feed par 200 doston ka merge — p99 200 ms mushkil.' },
           ],
@@ -324,9 +324,9 @@ GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest
             'Delete hone hi mat do; post ek baar gaya toh wapas nahi',
           ],
           answer: 0,
-          explain: 'Ids feed mein, data post cache/DB mein. Hydration ke waqt deleted post chhod do — ek jagah ka badlaav sab feeds par lagta hai. Cache ki safai dheere.',
+          explain: 'Ids feed mein, data post cache/DB mein. Hydration par deleted post chhod do. Post cache bhi invalidate karo ya deletion marker jaancho; purana cached post serve na ho. Feed ids ki safai baad mein ho sakti hai.',
           choiceExplanations: [
-            'Ids feed mein, data post cache/DB mein. Hydration ke waqt deleted post chhod do — ek jagah ka badlaav sab feeds par lagta hai. Cache ki safai dheere.',
+            'Ids feed mein, data post cache/DB mein. Hydration par deleted post chhod do. Post cache bhi invalidate karo ya deletion marker jaancho; purana cached post serve na ho. Feed ids ki safai baad mein ho sakti hai.',
             '50 lakh writes ek delete ke liye — wahi push ka dard ulta.',
             'Delete kiya post dikhana privacy aur legal problem ho sakti hai.',
             'Users ko delete ka haq chahiye. Design ko sambhalna hai.',
@@ -369,7 +369,7 @@ GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest
         choiceExplanations: [
           'Kaam ya toh write par ya read par. Read-heavy feed (log likhne se zyada padhte hain) mein push zyadatar achha — celebrities ko chhod ke. Isliye hybrid.',
           'Celebrity ke 50 lakh followers par push ka kharcha bahut.',
-          'Push mein data nahi khota; queue aur retries se pahunchta hai.',
+          'Push mein durability ke liye durable queue, retries aur recovery chahiye.',
           'Kaam kab hota hai — yahi poora farak hai.',
         ],
       },
@@ -386,7 +386,7 @@ GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest
         choiceExplanations: [
           'Do kadam: candidate generation (feed cache + celebrity pull se kuch sau posts) aur ranking (model se score). Score read time par, kyunki user aur samay ke hisaab se badalta hai.',
           'Relevance user aur samay par nirbhar hai; likhte waqt ka score purana pad jaata hai.',
-          'Sau posts mobile par bhejna bhaari, aur model client par nahi chalega.',
+          'Saare candidates bhejna bandwidth leta hai. Client par model chal sakta hai; yahan server ranking se candidates kam bhejte hain.',
           'Training offline hoti hai; feed par sirf model ka istemaal (inference).',
         ],
       },
@@ -402,7 +402,7 @@ GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest
   cards: [
     { front: 'Fanout on write?', back: 'Post karte hi har follower ki inbox mein id. Padhna tez; celebrity par mehenga.' },
     { front: 'Fanout on read?', back: 'Feed kholte waqt doston ke posts jodo. Likhna sasta; padhna dheema.' },
-    { front: 'Hybrid threshold?', back: 'Celebrities ke followers se neeche, taaki celebrities pull hon.' },
+    { front: 'Hybrid threshold?', back: 'Celebrities ke followers ke baraabar ya neeche, taaki celebrities pull hon.' },
     { front: 'Feed cache mein kya?', back: 'Sirf post ids (~500). Data post cache se, deleted post hydration par chhoot jaata hai.' },
   ],
 },
@@ -511,7 +511,7 @@ SD.addScenes({
     points: [
       '<b>Push:</b> padhna tez; celebrity par writes ka pahaad.',
       '<b>Pull:</b> likhna sasta; har feed par merge.',
-      '<b>Hybrid:</b> threshold celebrities ke followers se neeche.',
+      '<b>Hybrid:</b> threshold celebrities ke followers ke baraabar ya neeche.',
     ],
     use: 'Social feed, activity feed, notification inbox jaise read-heavy systems.',
     avoid: 'Inbox mein poora post copy mat karo; sirf ids.',

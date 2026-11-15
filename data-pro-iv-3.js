@@ -8,20 +8,21 @@ SD.registerLevels('pro-iv', [
 {
   id: 'iv-notify',
   icon: '🔔',
-  title: 'Design: Notification system — sahi baat, sahi waqt, ek hi baar',
+  title: 'Design: Notification system — sahi baat, sahi waqt, kam duplicates',
   badge: 'Sandesh Sanchalak',
   objectives: [
     'Channels: push, SMS, email — alag provider, alag keemat, alag raftaar',
     '<b>Priority queues</b>: OTP turant; offers ka campaign OTP ko na roke',
-    '<b>Dedup</b>: ek event, ek notification — retries ke baad bhi',
+    '<b>Dedup</b>: duplicate events roko; provider timeout par duplicate mumkin',
     'Preferences, quiet hours aur har user ki hadd',
   ],
   lesson: [
     `<h3>💌 Misaal: shaadi ke card</h3>
      <p>Kuch rishtedaaron ko phone (zaroori, turant). Kuch ko WhatsApp. Kuch ko daak se card.</p>
      <p>Dadi ko raat 2 baje phone mat karo. Aur ek rishtedaar ko teen baar card mat bhejo.</p>
-     <p class="tip">🎯 <b>Asli baat:</b> notification system = <b>kya</b> bhejna (event), <b>kise</b> (preferences), <b>kis raaste</b> (channel), <b>kab</b> (priority, quiet hours) — aur <b>ek hi baar</b> (dedup).</p>`,
+     <p class="tip">🎯 <b>Asli baat:</b> notification system = <b>kya</b> bhejna (event), <b>kise</b> (preferences), <b>kis raaste</b> (channel), <b>kab</b> (priority, quiet hours) — aur <b>duplicate events rokna</b> (dedup). Provider timeout par duplicate delivery phir bhi mumkin.</p>`,
     `<h3>🏗️ Dhaancha</h3>
+     <p>APNs Apple ka push service hai; FCM Google ka Firebase Cloud Messaging. TPS = transactions/messages per second, provider ki bhejne ki hadd.</p>
      <pre>services → notification API (event: user, type, data, event_id)
          → preferences + template
          → priority queues:  critical (OTP, payment) · normal (social) · bulk (offers)
@@ -32,12 +33,13 @@ SD.registerLevels('pro-iv', [
     `<h3>🧩 Mushkil hisse</h3>
      <table>
        <tr><th>Dikkat</th><th>Ilaaj</th></tr>
-       <tr><td>Payment service ne retry kiya, event do baar aaya</td><td><b>Dedup:</b> event_id + channel ki key, 24 ghante yaad rakho</td></tr>
+       <tr><td>Payment service ne retry kiya, event do baar aaya</td><td><b>Dedup:</b> event_id + recipient + channel ki key; atomic claim, retry window tak yaad rakho</td></tr>
        <tr><td>SMS provider gira</td><td>Backoff ke saath retry, phir doosra provider (failover)</td></tr>
        <tr><td>User ko din mein 15 offers</td><td>Har user ki hadd (jaise 3 marketing/din), quiet hours</td></tr>
-       <tr><td>"3 naye messages", phir "5 naye messages"</td><td>Collapse key: purana notification naye se badlo</td></tr>
+       <tr><td>"3 naye messages", phir "5 naye messages"</td><td>FCM collapse key: device tak na pahuncha pending message naye se badal sakta hai</td></tr>
        <tr><td>Provider ki apni hadd (TPS)</td><td>Provider ke hisaab se rate budget, critical ke liye alag hissa</td></tr>
      </table>
+     <p>FCM notification messages collapsible hote hain. Har event alag chahiye toh non-collapsible data messages aur durable inbox/sync rakho; FCM akela durable history nahi hai. Android ke priority-based API mein high priority urgent, user-visible messages ke liye hai; turant delivery ki guarantee nahi.</p>
      <p>Preferences <b>kism</b> ke hisaab se: transactional (OTP, payment receipt) aur marketing alag. User marketing band kare, OTP phir bhi jaaye.</p>`,
   ],
   stages: [
@@ -61,7 +63,7 @@ SD.registerLevels('pro-iv', [
         {
           id: 'dedup', label: 'Duplicate events', icon: '🧾',
           options: [
-            { id: 'key', label: 'event_id + channel ki key, 24 ghante yaad', score: 3, why: 'Retry wala event dobara aaye toh pakda jaata hai.' },
+            { id: 'key', label: 'Event + recipient + channel ka atomic claim', score: 3, why: 'Atomic claim do workers ko ek saath bhejne se rokta hai. Retention poori retry window tak rakho; provider timeout par duplicate mumkin.' },
             { id: 'none', label: 'Dedup nahi; provider khud duplicate rok lega', score: -2, why: 'Provider ko ye pata nahi ki do alag calls ek hi event ki hain.' },
             { id: 'text', label: 'Same text wale messages ko duplicate maano', score: -1, why: 'Do alag payments ka text same ho sakta hai — asli notification chhoot jaayega.' },
           ],
@@ -109,14 +111,14 @@ SD.registerLevels('pro-iv', [
         first: {
           text: 'Pehla kadam?',
           choices: [
-            { t: 'Campaign rok do (pause) taaki OTP aage aa sake', good: true, next: 'why', explain: 'Users login nahi kar pa rahe — offers ruk sakte hain, OTP nahi. Pause sabse tez mitigation.' },
+            { t: 'Bulk bhejna roko; pending offers hataakar OTP aage lao', good: true, next: 'why', explain: 'Campaign producer pause karo. Queue mein pade offers ko bulk queue mein le jao; sirf naye offers rokne se FIFO backlog nahi hat-ta.' },
             { t: 'SMS workers 10 guna karo; queue jaldi khaali ho jaayegi', good: false, explain: 'Provider ki apni TPS hadd hai. Zyada workers sirf provider ko throttle karwayenge.' },
             { t: 'Users ko bolo ki 10 minute baad login karein', good: false, explain: 'Dard user par daal diya. System ka kaam system mein theek karo.' },
             { t: 'Queue ke saare messages mita do aur campaign dobara chalao', good: false, explain: 'OTP bhi mit jaayenge, aur campaign dobara wahi karega.' },
           ],
         },
         why: {
-          sitrep: '✅ Campaign paused 7:08 PM. OTP 7:12 tak phir 5 second mein.',
+          sitrep: '✅ 7:08 PM: campaign paused, pending offers bulk queue mein alag. OTP 7:12 tak phir 5 second mein.',
           text: 'Aisa kyun hua?',
           choices: [
             { t: 'OTP aur offers ek FIFO queue mein; OTP 1.8 crore ke peeche', good: true, next: 'fix', explain: 'Priority ka koi raasta nahi tha. Bheed aage, zaroori peeche.' },
@@ -153,15 +155,15 @@ SD.registerLevels('pro-iv', [
         {
           q: 'Payment service ke retry se "payment safal" event do baar aaya. User ko do push jaayenge?',
           choices: [
-            'Nahi: event_id + channel ki key se dedup; doosra event chupchaap chhoot jaata hai',
+            'Duplicate event roko: event + recipient + channel ki key atomically claim karo',
             'Haan: do events aaye toh do push; user samajh jaayega ki ek hi payment hai',
             'Nahi: har user ko din mein ek hi push jaata hai, isliye apne aap ruk jaayega',
             'Haan: aur payment service ko retry band karne ko bolo, problem wahin hai',
           ],
           answer: 0,
-          explain: 'At-least-once delivery mein duplicates aayenge hi. Notification service event_id + channel ko yaad rakhti hai (jaise 24 ghante) aur doosri baar bhejti nahi.',
+          explain: 'At-least-once mein duplicate events aa sakte hain. Event + recipient + channel ko atomically claim karo. Record poori retry window tak rakho. Provider ne bheja par jawab kho gaya toh retry se duplicate ho sakta hai.',
           choiceExplanations: [
-            'At-least-once delivery mein duplicates aayenge hi. Notification service event_id + channel ko yaad rakhti hai (jaise 24 ghante) aur doosri baar bhejti nahi.',
+            'At-least-once mein duplicate events aa sakte hain. Event + recipient + channel ko atomically claim karo. Record poori retry window tak rakho. Provider ne bheja par jawab kho gaya toh retry se duplicate ho sakta hai.',
             'Do "payment safal" push dekh ke user dar jaayega ki paisa do baar kata.',
             'Din ki hadd marketing ke liye hai; payment receipts uske bahar.',
             'Retry zaroori hai (warna event kho jaayega). Dedup receiver ka kaam hai.',
@@ -176,9 +178,9 @@ SD.registerLevels('pro-iv', [
             'Preferences ignore karo; jo zaroori lage, sab bhejo',
           ],
           answer: 0,
-          explain: 'Transactional (OTP, receipts) aur marketing alag kism. User marketing band kar sakta hai; OTP login ke liye zaroori hai. Kanoon aur app store niyam bhi aisa alag-alag hisaab maangte hain.',
+          explain: 'Transactional (OTP, receipts) aur marketing alag kism. User marketing band kar sakta hai; OTP login ke liye zaroori hai. Device ki notification permission band ho toh push OTP nahi pahunchega; doosra login channel chahiye.',
           choiceExplanations: [
-            'Transactional (OTP, receipts) aur marketing alag kism. User marketing band kar sakta hai; OTP login ke liye zaroori hai. Kanoon aur app store niyam bhi aisa alag-alag hisaab maangte hain.',
+            'Transactional (OTP, receipts) aur marketing alag kism. User marketing band kar sakta hai; OTP login ke liye zaroori hai. Device ki notification permission band ho toh push OTP nahi pahunchega; doosra login channel chahiye.',
             'Ek switch par user offers ke chakkar mein OTP bhi band karega.',
             'User ne offers band kiye, login nahi.',
             'Marzi todne par user poore notifications band karega — ya app hata dega.',
@@ -217,9 +219,9 @@ SD.registerLevels('pro-iv', [
           'Nahi, isliye dedup ki koshish bhi bekaar hai; duplicates aane do',
         ],
         answer: 0,
-        explain: 'Hamare system ke andar dedup se ek event ek baar bhejte hain. Par provider ko bhejne ke baad jawab kho gaya toh retry se duplicate ho sakta hai. Isliye "lagbhag ek baar" aur idempotent receivers.',
+        explain: 'Atomic claim duplicate event ko dobara enqueue hone se rokta hai. Par provider ko bhejne ke baad jawab kho gaya toh retry se duplicate ho sakta hai. Isliye "lagbhag ek baar" aur idempotent receivers.',
         choiceExplanations: [
-          'Hamare system ke andar dedup se ek event ek baar bhejte hain. Par provider ko bhejne ke baad jawab kho gaya toh retry se duplicate ho sakta hai. Isliye "lagbhag ek baar" aur idempotent receivers.',
+          'Atomic claim duplicate event ko dobara enqueue hone se rokta hai. Par provider ko bhejne ke baad jawab kho gaya toh retry se duplicate ho sakta hai. Isliye "lagbhag ek baar" aur idempotent receivers.',
           'Kafka ka exactly-once Kafka ke andar ka vaada hai; phone tak ka nahi.',
           'Retry band = kuch notifications kabhi nahi pahunchenge.',
           'Dedup duplicates ko bahut kam kar deta hai — koshish bekaar nahi.',
@@ -236,7 +238,7 @@ SD.registerLevels('pro-iv', [
     Kisi app ne raat ko offer bheja? Kisi ne ek hi baat do baar? Teen niyam likho jo tum apne notification system mein lagaoge.`,
   cards: [
     { front: 'Sabse zaroori niyam?', back: 'Critical (OTP) aur bulk (offers) alag queues, alag workers, provider budget mein hissa.' },
-    { front: 'Duplicate event?', back: 'event_id + channel ki key yaad rakho (jaise 24 ghante); doosri baar mat bhejo.' },
+    { front: 'Duplicate event?', back: 'event_id + recipient + channel ki key yaad rakho (jaise 24 ghante); poori retry window tak atomic claim rakho. Provider timeout par duplicate mumkin.' },
     { front: 'Provider gira?', back: 'Backoff + jitter retry, phir doosra provider.' },
     { front: 'Preferences?', back: 'Kism ke hisaab: marketing opt-out alag, OTP alag. Quiet hours, din ki hadd.' },
   ],
@@ -261,27 +263,29 @@ SD.registerLevels('pro-iv', [
      <p class="tip">🎯 <b>Asli baat:</b> payment mein <b>timeout = "pata nahi"</b>, failure nahi. Paisa shayad kat chuka ho.
        Status check karo. Naye transaction se dobara paisa bhejna = double debit.</p>`,
     `<h3>🔀 Payment ka safar (saral roop)</h3>
-     <pre>Aman ki app → ChaiPay backend → UPI switch (NPCI) → Aman ka bank (debit)
+     <pre>Aman ki app → ChaiPay / PSP bank → UPI switch (NPCI) → Aman ka bank (debit)
                                                   → Sharma Sweets ka bank (credit)
             ← jawab wapas ←</pre>
+     <p>PSP = Payment Service Provider. PSP bank app ko UPI network se jodta hai. NPCI switch banks tak request route karta hai; bank debit aur credit karte hain.</p>
      <p>ChaiPay ke andar har payment ek row hai, ek <b>state machine</b> ke saath:</p>
      <pre>CREATED → PENDING → SUCCESS
                     ↘ FAILED
 PENDING mein timeout → status check (backoff ke saath) → SUCCESS ya FAILED</pre>
      <ul>
        <li>State sirf aage jaati hai. SUCCESS wapas PENDING nahi.</li>
-       <li>Client ek <b>idempotency key</b> (client_txn_id) bhejta hai; DB mein UNIQUE. Double click = wahi payment, naya nahi.</li>
+       <li>Client ek <b>idempotency key</b> (client_txn_id) bhejta hai; DB mein UNIQUE. Ek logical payment ki key double click aur retry par wahi rahe. Key user ke scope mein ho; alag amount/payee par conflict do. UNIQUE claim ke saath bank ko bhi stable transaction ID bhejo; crash ke baad status se recover karo.</li>
      </ul>`,
     `<h3>📒 Ledger: double-entry</h3>
      <p>Har paisa ek khaate se nikalta hai aur doosre mein jaata hai. Har entry ka joda: Aman −₹500, Sharma Sweets +₹500. Jod hamesha zero.</p>
-     <p>Ledger badla nahi jaata. Galti hui? <b>Ulti entry</b> (reversal) likho, purani mat badlo. Isse har paise ka itihaas bachta hai.</p>
+     <p>Aman −₹500, Sharma +₹500 ek saral transfer view hai. Double-entry mein har transaction ke total debits aur credits baraabar hon. Balanced entry bhi galat account par ho sakti hai; validation aur milaan chahiye.
+     </p><p>Posted ledger entries badlo mat. Payment ID par posting ek baar karo; state aur ledger ko ek DB transaction mein likho. Galti hui? <b>Ulti entry</b> (reversal) likho, purani mat badlo. Isse har paise ka itihaas bachta hai.</p>
      <h3>🔄 Reconciliation (milaan)</h3>
      <p>Roz bank ya switch ki settlement file apne ledger se milao:</p>
      <ul>
        <li>Hamare paas PENDING, bank mein SUCCESS → SUCCESS karo, ledger entry.</li>
        <li>Paisa kata, credit nahi hua → reversal (paisa wapas).</li>
      </ul>
-     <p>RBI ke niyam failed transactions ka paisa ek tay samay mein lautana zaroori karte hain (UPI P2P mein T+1 din), warna grahak ko roz ka muavza. Isliye reconciliation roz chalta hai, mahine mein nahi.</p>`,
+     <p>RBI circular RBI/2019-20/67 (20 September 2019): UPI transfer mein debit hua par beneficiary credit nahi ho saka toh T+1 tak auto-reversal. Merchant ko confirmation na mile toh T+5. Har sambandhit deadline ke baad deri par ₹100/din muavza apne aap credit ho. T transaction ki calendar date hai. Roz milaan aur automated recovery rakho.</p>`,
   ],
   stages: [
     {
@@ -490,11 +494,11 @@ SD.addScenes({
     steps: [
       { from: 'camp', to: 'fifo', label: '1.8 crore line mein', tone: 'bad', say: 'Purana dhaancha: campaign ke 1.8 crore messages ek hi FIFO queue mein.' },
       { from: 'aman', to: 'fifo', label: 'OTP — sabse peeche', tone: 'bad', set: { fifo: { tone: 'bad', sub: 'OTP 6 min late' } }, say: 'Aman ka OTP 1.8 crore offers ke peeche. 6 minute baad pahunchta hai; login fail.' },
-      { at: ['camp'], set: { camp: { tone: 'gold', sub: 'paused, phir throttle' } }, say: 'Mitigation: campaign pause. Fix: offers alag bulk queue se, dheere-dheere (throttle).' },
+      { at: ['camp'], set: { camp: { tone: 'gold', sub: 'paused, phir throttle' } }, say: 'Campaign pause karo. Pending offers bhi FIFO se bulk queue mein alag karo, taaki OTP aage badhe. Bulk queue dheere chalao (throttle).' },
       { from: 'aman', to: 'crit', label: 'OTP', tone: 'good', say: 'Naya dhaancha: OTP critical queue mein, apne workers ke saath.' },
       { from: 'crit', to: 'sms', label: 'reserved hissa', tone: 'good', say: 'SMS provider ki hadd mein critical ka hissa reserved. Campaign kitna bhi bada ho.' },
       { from: 'sms', to: 'phone', label: 'OTP 5 sec mein', tone: 'good', set: { phone: { tone: 'good', sub: 'login ho gaya' } }, say: 'OTP 5 second mein. Aman login kar leta hai.' },
-      { at: ['crit'], say: 'Saath mein dedup: event_id + channel ki key, taaki retry wala event dobara OTP na bheje.' },
+      { at: ['crit'], say: 'Saath mein dedup: event_id + recipient + channel ki key, taaki retry wala event dobara OTP na bheje.' },
     ],
   },
   'iv-upi': {
@@ -527,7 +531,7 @@ SD.addScenes({
     asli: 'Notification system mein priority isolation, dedup, retry + failover aur kism ke hisaab preferences sabse zaroori hain.',
     points: [
       '<b>Isolation:</b> critical, normal, bulk alag queues aur workers.',
-      '<b>Dedup:</b> event_id + channel ki key.',
+      '<b>Dedup:</b> event_id + recipient + channel ki key.',
       '<b>Marzi:</b> marketing opt-out alag, quiet hours, din ki hadd.',
     ],
     use: 'OTP, receipts aur marketing ek hi system se jaate hon.',
@@ -563,7 +567,7 @@ SD.addScenes({
     followup: 'Status check API bhi 10 minute se jawab nahi de raha. User ko kya dikhaoge, aur paisa kab tak lautega?',
     sources: [
       'idem',
-      { title: 'NPCI — UPI product overview', url: 'https://www.npci.org.in/what-we-do/upi/product-overview' },
+      { title: 'NPCI — UPI presentation (PSP, switch aur banks ka flow; DBT Bharat par hosted)', url: 'https://dbtbharat.gov.in/data/documents/npci%202%20upi.pdf' },
       { title: 'RBI — Harmonisation of Turn Around Time and customer compensation for failed transactions (2019)', url: 'https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11693' },
     ],
   } },

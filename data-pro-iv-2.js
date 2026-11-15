@@ -101,7 +101,7 @@ Kul traffic: 50,000 rps · 20 gateway nodes</pre>
           options: [
             { id: 'redis', label: 'Central Redis, Lua script se atomic check', score: 3, why: 'Saajha aur sahi. Lua se padhna aur ghatana ek kadam.' },
             { id: 'local', label: 'Har node apni memory mein, limit ÷ 20', score: -1, why: 'Tez, par uneven load par merchant ko jaldi 429.' },
-            { id: 'db', label: 'Postgres row par har request UPDATE', score: -2, why: '50,000 updates/sec ek-ek row par — locks aur latency.' },
+            { id: 'db', label: 'Postgres row par har request UPDATE', score: -2, why: '50,000 updates/sec ka DB load; popular keys par locks aur latency. Benchmark chahiye.' },
           ],
         },
         {
@@ -109,7 +109,7 @@ Kul traffic: 50,000 rps · 20 gateway nodes</pre>
           options: [
             { id: 'bucket', label: 'Token bucket: rate + chhota burst', score: 3, why: 'Do numbers per key, burst ki saaf hadd. Ya sliding window counter — dono theek.' },
             { id: 'fixed', label: 'Fixed window: har minute naya counter', score: -1, why: 'Sasta, par minute ki border par 2× burst.' },
-            { id: 'log', label: 'Har request ka timestamp list mein', score: -1, why: 'Sahi, par memory 100 guna — sliding log.' },
+            { id: 'log', label: 'Har request ka timestamp list mein', score: -1, why: 'Sliding log mein har request ka timestamp; counter se zyada memory, exact ratio storage par nirbhar.' },
           ],
         },
         {
@@ -142,7 +142,7 @@ Kul traffic: 50,000 rps · 20 gateway nodes</pre>
         {
           q: 'Do gateway nodes ne ek saath padha: tokens = 1. Dono ne request allow kar di. Ilaaj?',
           choices: [
-            'Padhna aur ghatana ek atomic kadam: Redis par Lua script ya INCR',
+            'Redis par Lua: tokens padho, jaancho aur ghatao, ek atomic kadam mein',
             'Dono nodes ke beech 10 ms ka random delay daal do; takraav kam hoga',
             'Har node apna alag Redis rakhe; takraav hi nahi hoga',
             'Tokens 1 ki jagah 2 se shuru karo; ek extra request chal jaayegi',
@@ -225,7 +225,7 @@ Kul traffic: 50,000 rps · 20 gateway nodes</pre>
     Do terminals se ek saath 100 requests bhejo. Script ke bina (GET phir SET) aur script ke saath — kitni zyada requests allow hui?`,
   cards: [
     { front: 'Local vs central limit?', back: 'Local tez, uneven load par galat. Central (Redis) sahi, har request par ek call.' },
-    { front: 'Race kaise rokein?', back: 'Padhna + ghatana ek atomic kadam: Lua script ya INCR.' },
+    { front: 'Race kaise rokein?', back: 'Lua mein refill, token check aur decrement ek saath. Akela INCR token bucket nahi banata.' },
     { front: 'Redis gira?', back: 'Aam APIs fail open + local backup limit; OTP jaise flows fail closed. Chhota timeout.' },
     { front: 'Hadd paar ka jawab?', back: '429 + Retry-After (+ bache tokens ke headers).' },
   ],
@@ -248,7 +248,7 @@ Kul traffic: 50,000 rps · 20 gateway nodes</pre>
      <p>Tum likhte ho "Har…" aur librarian turant bolta hai: "Harry Potter, Harivansh Rai…"</p>
      <p>Woh har baar poori library nahi ghoomta. Usne pehle se har shuruaati akshar ke liye top kitaabon ki list bana rakhi hai.</p>
      <p class="tip">🎯 <b>Asli baat:</b> prefix ka jawab <b>pehle se nikaal ke</b> rakho (precompute). Query ke waqt sirf ek lookup.
-       Har keystroke par database mein <code>LIKE 'har%'</code> chalana 100 ms mein nahi chalega.</p>`,
+       Bina sahi index aur bounded results ke <code>LIKE 'har%'</code> mehenga ho sakta hai. Latency benchmark se jaancho.</p>`,
     `<h3>🔢 Numbers (kalpanik)</h3>
      <pre>1 crore daily users × 5 searches/din × ~3 requests per search (debounce ke baad)
 = 15 crore requests/din
@@ -299,7 +299,7 @@ Trending: pichhle 10 min ki ginti (streaming) → batch top-10 ke saath merge</p
           answer: 6944,
           tol: 0.05,
           steps: ['1,736 × 4 ≈ 6,944'],
-          lesson: 'Lagbhag 7,000 rps aur 100 ms — memory mein lookup hi chalega.',
+          lesson: 'Lagbhag 7,000 rps aur 100 ms. Memory lookup ek vikalp hai; index aur search engine ko bhi benchmark karo.',
         },
       ],
     },
@@ -316,7 +316,7 @@ Trending: pichhle 10 min ki ginti (streaming) → batch top-10 ke saath merge</p
           id: 'store', label: 'Prefix ka jawab kahan se', icon: '🌳',
           options: [
             { id: 'pre', label: 'Pehle se bani prefix → top-10 table, memory mein', score: 3, why: 'Query par ek lookup. 100 ms mein aaram se.' },
-            { id: 'like', label: "SQL: LIKE 'har%' ORDER BY count, har keystroke par", score: -3, why: 'Har akshar par scan aur sort. 7,000 rps par DB gir jaayega.' },
+            { id: 'like', label: "SQL: LIKE 'har%' ORDER BY count, har keystroke par", score: -3, why: 'Index na ho toh scan aur sort mehenga. Sahi index se prefix search chal sakti hai; benchmark karo.' },
             { id: 'fts', label: 'Har keystroke par full-text search query chalao', score: -1, why: 'Search engine chal sakta hai, par har akshar par ranking mehengi. Precompute sasta.' },
           ],
         },
@@ -331,7 +331,7 @@ Trending: pichhle 10 min ki ginti (streaming) → batch top-10 ke saath merge</p
         {
           id: 'client', label: 'Client par', icon: '📱',
           options: [
-            { id: 'debounce', label: 'Debounce + purani request cancel + local cache', score: 3, why: 'Requests aadhi; purana jawab naye ko overwrite nahi karta.' },
+            { id: 'debounce', label: 'Debounce + purani request cancel + local cache', score: 3, why: 'Debounce requests ghataata hai. Cancel ke saath request ID jaancho; purana jawab screen na badle.' },
             { id: 'every', label: 'Har akshar par turant request bhejo, bina ruke', score: -2, why: 'Requests do-teen guna, aur purane jawab der se aakar ulat-pulat.' },
             { id: 'enter', label: 'Sirf Enter dabane par suggestion maango', score: -2, why: 'Ye typeahead hi nahi raha.' },
           ],
@@ -405,12 +405,12 @@ Trending: pichhle 10 min ki ginti (streaming) → batch top-10 ke saath merge</p
           'Edge cache mein har user ka personalized jawab rakho',
         ],
         answer: 0,
-        explain: 'Global candidates sasti aur cache-able. User ki history se halka re-rank. Personalized hissa CDN par mat rakho — ek user ka jawab doosre ko dikh sakta hai.',
+        explain: 'Global candidates cache mein rakho. User history se re-rank karo. Shared cache mein personalized jawab tabhi rakho jab user isolation aur cache key sahi ho.',
         choiceExplanations: [
-          'Global candidates sasti aur cache-able. User ki history se halka re-rank. Personalized hissa CDN par mat rakho — ek user ka jawab doosre ko dikh sakta hai.',
+          'Global candidates cache mein rakho. User history se re-rank karo. Shared cache mein personalized jawab tabhi rakho jab user isolation aur cache key sahi ho.',
           '1 crore tables ka storage aur build bahut bhaari.',
           'Client par poori history aur ranking — bhaari, aur doosre devices par nahi.',
-          'Personalized jawab edge par = privacy ka khatra.',
+          'User identity cache key mein na ho toh jawab doosre user ko mil sakta hai. Sahi isolation se edge caching mumkin hai.',
         ],
       },
       {
@@ -510,7 +510,7 @@ SD.addScenes({
       { id: 'trend', col: 3, row: 0, icon: '⚡', label: 'Trending (10 min)' },
     ],
     steps: [
-      { at: ['riya'], set: { riya: { tone: 'accent', sub: 'debounce 150 ms' } }, say: 'Client 150 ms rukta hai (debounce). "h" aur "ha" ki requests cancel; sirf "har" jaati hai.' },
+      { at: ['riya'], set: { riya: { tone: 'accent', sub: 'debounce 150 ms' } }, say: 'Har key ke baad timer dobara shuru: 150 ms ka pause mile toh request. Tez typing mein sirf "har" jaata hai. Bheji gayi purani requests cancel karo; request ID bhi jaancho.' },
       { from: 'riya', to: 'edge', label: '"har"', say: 'Chhota, sabke liye same prefix edge cache par mil sakta hai.' },
       { from: 'edge', to: 'table', label: 'miss → lookup', say: 'Miss par prefix table: "har" ke top-10 pehle se nikaale hue. Ek lookup, kuch ms.' },
       { at: ['riya'], set: { riya: { tone: 'good', sub: 'Harry Potter…' } }, say: 'Riya ko suggestions 100 ms ke andar.' },
@@ -556,7 +556,7 @@ SD.addScenes({
     ],
     use: 'Search box, address autocomplete, product search jahan har akshar par jawab chahiye.',
     avoid: "Har keystroke par LIKE 'har%' ya bhaari ranking.",
-    mistake: 'Personalized jawab ko CDN par cache karna.',
+    mistake: 'Personalized jawab ko shared CDN cache key par rakhna.',
     compare: [
       { choice: 'Precomputed prefix table', when: 'Suggestions sabke liye milte-julte, latency tight', tradeoff: 'Lookup tez; build pipeline aur storage chahiye' },
       { choice: 'Query-time search engine', when: 'Bahut personal ya filter-bhari queries', tradeoff: 'Lachila; har keystroke par mehenga aur dheema' },

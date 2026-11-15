@@ -3,18 +3,40 @@
    Levels: iv-kvstore (kv quorum mission), boss-iv (mock interview: 24 ghante wali Stories).
    ===================================================================== */
 (() => {
-const kvLatest = (s, op) => SD.mission.latest(s, 'kv', op);
+/* Ek hi kram ka experiment, records ke kram se:
+   W=1 par ₹500 → usi write ka R=1 stale read → uske baad naya write (W ≥ 2) → us naye write ka taaza read (write ka W + read ka R > 3).
+   Config badalne ya `kv repair` se purana W=1 write "quorum write" nahi banta. */
+const kvChain = s => {
+  const R = s.records, kv = (r, op) => r.kind === 'kv' && r.op === op;
+  const out = { p1: -1, g1: -1, p2: -1, g2: -1 };
+  for (let i = 0; i < R.length && out.g1 < 0; i++) {
+    if (!kv(R[i], 'put') || R[i].w !== 1 || R[i].value !== 500) continue;
+    for (let j = i + 1; j < R.length; j++) {
+      if (kv(R[j], 'get') && R[j].r === 1 && R[j].stale === true && R[j].latest === R[i].ver) { out.p1 = i; out.g1 = j; break; }
+    }
+  }
+  if (out.g1 < 0) return out;
+  let lastPut = -1;
+  for (let i = out.g1 + 1; i < R.length; i++) if (kv(R[i], 'put')) lastPut = i;
+  if (lastPut < 0 || R[lastPut].w < 2 || R[lastPut].ver !== s.sys.kv.latest) return out;
+  out.p2 = lastPut;
+  let lastGet = -1;
+  for (let i = out.p2 + 1; i < R.length; i++) if (kv(R[i], 'get')) lastGet = i;
+  const P = R[out.p2], G = R[lastGet];
+  if (G && G.stale === false && G.ver === P.ver && P.w + G.r > 3) out.g2 = lastGet;
+  return out;
+};
 const T_KV = [
   { text: 'W = 1 par Aman ka naya balance ₹500 likho',
     check: s => s.records.some(r => r.kind === 'kv' && r.op === 'put' && r.w === 1 && r.value === 500) },
-  { text: 'R = 1 par padho — purana balance (stale read) dekho',
-    check: s => s.records.some(r => r.kind === 'kv' && r.op === 'get' && r.stale === true) },
+  { text: 'R = 1 par padho — usi ₹500 write ke baad purana balance (stale read)',
+    check: s => kvChain(s).g1 >= 0 },
   { text: 'Quorum lagao: R + W > N (jaise W = 2, R = 2)',
     check: s => s.sys.kv.w + s.sys.kv.r > s.sys.kv.n },
-  { text: 'Naye quorum par naya balance likho',
-    check: s => s.records.some(r => r.kind === 'kv' && r.op === 'put' && r.w + r.r > 3) },
-  { text: 'Dobara padho: sabse naya balance mile',
-    check: s => { const g = kvLatest(s, 'get'), p = kvLatest(s, 'put'); return !!g && !!p && g.stale === false && g.w + g.r > 3 && g.ver === p.ver && g.ver === s.sys.kv.latest; } },
+  { text: 'Stale read ke baad naya balance likho, W kam se kam 2',
+    check: s => kvChain(s).p2 >= 0 },
+  { text: 'Dobara padho: naye write ka balance mile (write ka W + read ka R > 3)',
+    check: s => kvChain(s).g2 >= 0 },
 ];
 
 SD.registerLevels('pro-iv', [
@@ -32,7 +54,9 @@ SD.registerLevels('pro-iv', [
   ],
   lesson: [
     `<h3>🗳️ Misaal: teen munshi, ek khaata</h3>
+     <p>N = key ki replica copies. W = write poora maanne ke liye kitne replies; R = read par kitne replies chahiye. Ack ka matlab replica ka confirmation.</p>
      <p>Teen munshiyon ke paas ek hi khaate ki copy hai. Tumne naya hisaab sirf ek munshi ko bataya (W = 1). Phir doosre munshi se poochha (R = 1). Jawab: purana hisaab.</p>
+     <p>Is model mein writes ek-ek karke hoti hain. W aur R ka niyam write se pehle tay hai; replicas wahi teen hain. Sirf config badalne se purana write zyada replicas par nahi pahunchta.</p>
      <p>Ab har nayi baat do munshiyon ko batao (W = 2) aur do se poochho (R = 2). Teen mein se do + do = kam se kam ek munshi dono baar common. Taaza jawab pakka.</p>
      <p class="tip">🎯 <b>Asli baat:</b> <b>R + W &gt; N</b> ho toh har read kam se kam ek aise replica ko chhoota hai jisne aakhri write dekha. Ise <b>quorum overlap</b> kehte hain.</p>`,
     `<h3>🏗️ Dhaancha</h3>
@@ -58,7 +82,7 @@ get: R replicas se jawab, sabse naya version lo</pre>
      <table>
        <tr><th>Tareeka</th><th>Kaise</th><th>Keemat</th></tr>
        <tr><td><b>Last-write-wins</b></td><td>Bada timestamp jeete</td><td>Aasaan; ek write chupchaap kho jaata hai, ghadiyon ka farak bhi</td></tr>
-       <tr><td><b>Vector clocks</b></td><td>Dono versions client ko; client merge kare</td><td>Kuch nahi khota (jaise shopping cart); par merge ka code chahiye</td></tr>
+       <tr><td><b>Vector clocks</b></td><td>Dono versions client ko; client merge kare</td><td>Concurrent versions pehchaano; app merge kare. Galat merge se data kho ya hataaya item laut sakta hai</td></tr>
      </table>`,
   ],
   stages: [
@@ -156,9 +180,9 @@ get: R replicas se jawab, sabse naya version lo</pre>
           'W = 0, R = 1: write ka intezaar hi mat karo',
         ],
         answer: 0,
-        explain: '2 + 2 > 3, toh overlap. Har call par sabse dheeme 2 mein se nahi, sabse tez 2 ka intezaar. Ek replica down ho tab bhi quorum milta hai.',
+        explain: '2 + 2 > 3, toh overlap. Asli store mein pehle 2 replies ka intezaar. Mission jaan-boojhkar sabse purane replicas padhta hai. Ek replica down ho tab bhi quorum milta hai.',
         choiceExplanations: [
-          '2 + 2 > 3, toh overlap. Har call par sabse dheeme 2 mein se nahi, sabse tez 2 ka intezaar. Ek replica down ho tab bhi quorum milta hai.',
+          '2 + 2 > 3, toh overlap. Asli store mein pehle 2 replies ka intezaar. Mission jaan-boojhkar sabse purane replicas padhta hai. Ek replica down ho tab bhi quorum milta hai.',
           '1 + 1 = 2, overlap nahi — mission mein stale read dekha.',
           'Teeno ka intezaar: sabse dheema replica latency tay karega, aur ek gira toh sab band.',
           'Ack ke bina write kho sakta hai.',
@@ -189,9 +213,9 @@ get: R replicas se jawab, sabse naya version lo</pre>
     'LWW aur vector clocks mein se chunna',
   ],
   homework: `Kaagaz par teen replicas banao. W = 1, R = 1 ke saath 3 writes aur 3 reads ka koi kram likho jismein purana padha jaaye.
-    Phir W = 2, R = 2 ke saath wahi koshish karo. Kya stale read bana paaye? Kyun nahi?`,
+    Phir pehle W = 2, R = 2 tay karo; har write poori hone par read karo. Fixed replicas par overlap kyun milta hai? Sirf config badal kar purana write padhne par kya hoga?`,
   cards: [
-    { front: 'R + W > N?', back: 'Har read kam se kam ek aise replica ko chhoota hai jisne aakhri write dekha.' },
+    { front: 'R + W > N?', back: 'Fixed replicas aur poori hui serial writes mein: read R + us write ka W > N ho toh ek replica common.' },
     { front: 'Hinted handoff?', back: 'Replica down: write doosre node par note ke saath; lautne par saunp do.' },
     { front: 'Merkle tree?', back: 'Hashes ka ped; replicas ka farak bina poora data bheje dhoondho.' },
     { front: 'LWW vs vector clocks?', back: 'LWW aasaan, par ek write chupchaap khota. Vector clocks dono versions, client merge kare.' },
@@ -213,7 +237,7 @@ get: R replicas se jawab, sabse naya version lo</pre>
     `<h3>🎤 Interviewer: "Design Instagram-style Stories."</h3>
      <p>Story = photo ya chhota video jo <b>24 ghante</b> baad gayab. Upar ek "tray" mein jinhe follow karte ho unki stories. Har story par "kisne dekha" ki list.</p>
      <p>Is level mein poora interview: pehle requirements chhaanto, phir numbers, phir design canvas, phir interviewer ke twists.</p>
-     <p class="tip">🎯 Pichhle levels ki cheezein yahan judti hain: media upload (presigned URL), feed jaisa fanout, TTL se expiry, hot key (celebrity views), aur CDN.</p>`,
+     <p class="tip">🎯 Pichhle levels ki cheezein yahan judti hain: media upload (presigned URL), feed jaisa fanout, expires_at se access expiry, TTL se cleanup, hot key (celebrity views), aur CDN.</p>`,
   ],
   stages: [
     {
@@ -257,7 +281,7 @@ get: R replicas se jawab, sabse naya version lo</pre>
           answer: 150,
           tol: 0.05,
           steps: ['15 crore × 1 MB = 15,00,00,000 MB', '15,00,00,000 ÷ 10,00,000 = 150 TB'],
-          lesson: '150 TB roz — media object storage aur CDN mein, DB mein nahi. 24 ghante baad hatao toh storage sthir rehta hai.',
+          lesson: '150 TB roz — media object storage aur CDN mein, DB mein nahi. Retention bounded ho toh storage ka badhna ruk sakta hai. Lifecycle cleanup async hai; replicas, highlights aur versions ka storage alag jodo.',
         },
         {
           q: 'Har user roz 20 stories dekhta hai. Kul views/din — CRORE mein?',
@@ -298,7 +322,7 @@ get: R replicas se jawab, sabse naya version lo</pre>
         {
           id: 'expiry', label: '24 ghante ki expiry', icon: '⏳',
           options: [
-            { id: 'ttl', label: 'Metadata par TTL + storage lifecycle se media delete', score: 3, why: 'DB/cache TTL se story chhupti hai; object lifecycle rule media ko hatata hai.' },
+            { id: 'ttl', label: 'Read par expires_at check + TTL; media lifecycle', score: 3, why: 'API har read par expires_at jaanche. TTL cleanup aur S3 lifecycle baad mein ho sakte hain; CDN aur media access bhi expiry par roko.' },
             { id: 'cron', label: 'Har minute cron job poori stories table scan kare', score: -2, why: 'Bhaari scan; 15 crore rows/din par bojh aur der.' },
             { id: 'hide', label: 'Kabhi delete mat karo; sirf UI mein chhupao', score: -2, why: 'Storage roz 150 TB badhta jaayega, aur privacy ka vaada toota.' },
           ],
@@ -350,18 +374,18 @@ get: R replicas se jawab, sabse naya version lo</pre>
         {
           q: 'Naya feature: story sirf "close friends" ke liye. Kya badlega?',
           choices: [
-            'Story par audience list; tray aur media dono par check (signed URL)',
+            'Story par audience; tray aur har media request par viewer/session check',
             'Sirf app mein story chhupao; server par kuch badalne ki zaroorat nahi',
             'Close friends ki stories alag app mein daalo',
             'Media ka URL lamba aur random rakho; koi guess nahi karega',
           ],
           answer: 0,
-          explain: 'Authorization server par: tray mein sirf allowed viewers ko dikhe, aur media URL chhoti umar ka signed ho — warna link forward karke koi bhi dekh lega.',
+          explain: 'Server audience jaanchkar media access de. Signed URL bearer permission hai: link paane wala expiry tak dekh sakta hai. Sakht close-friends access ke liye har media request par viewer/session jaancho; URL expiry story expiry se aage na ho.',
           choiceExplanations: [
-            'Authorization server par: tray mein sirf allowed viewers ko dikhe, aur media URL chhoti umar ka signed ho — warna link forward karke koi bhi dekh lega.',
+            'Server audience jaanchkar media access de. Signed URL bearer permission hai: link paane wala expiry tak dekh sakta hai. Sakht close-friends access ke liye har media request par viewer/session jaancho; URL expiry story expiry se aage na ho.',
             'App chhupaaye par API de de toh koi bhi dekh lega. Security track ka BOLA yaad karo.',
             'Alag app se data model nahi badalta.',
-            'Lamba URL guess mushkil karta hai, par forward hua link kaam karega. Signed + expiry chahiye.',
+            'Lamba URL guess mushkil karta hai, par forward hua link kaam karega. Signed URL bhi expiry tak forward ho sakta hai. Sakht rok ke liye viewer/session check chahiye.',
           ],
         },
         {
@@ -373,9 +397,9 @@ get: R replicas se jawab, sabse naya version lo</pre>
             'Expiry hi band kar do; sab stories saalon tak rakho',
           ],
           answer: 0,
-          explain: 'Expiry "story" ki hai, media ki nahi. Highlight media ko refer kare toh lifecycle us object ko na hataaye (alag prefix, ya reference count). Baaki stories ka media waise hi jaaye.',
+          explain: 'Expiry "story" ki hai, media ki nahi. Highlight media ko refer kare toh lifecycle us object ko na hataaye (alag lifecycle prefix/tag; app reference count se retention tag badle). Baaki stories ka media waise hi jaaye.',
           choiceExplanations: [
-            'Expiry "story" ki hai, media ki nahi. Highlight media ko refer kare toh lifecycle us object ko na hataaye (alag prefix, ya reference count). Baaki stories ka media waise hi jaaye.',
+            'Expiry "story" ki hai, media ki nahi. Highlight media ko refer kare toh lifecycle us object ko na hataaye (alag lifecycle prefix/tag; app reference count se retention tag badle). Baaki stories ka media waise hi jaaye.',
             'Highlight ka matlab hi rakhna hai.',
             'User par bojh, aur network ka bekaar kharcha.',
             'Roz 150 TB jodte jaoge, aur privacy ka vaada toota.',
@@ -434,7 +458,7 @@ get: R replicas se jawab, sabse naya version lo</pre>
   cards: [
     { front: 'Stories ke teen numbers?', back: '15 crore stories/din, ~150 TB/din, 1,000 crore views/din (kalpanik).' },
     { front: 'Media upload?', back: 'Presigned URL se seedha object storage; CDN se delivery.' },
-    { front: '24 ghante expiry?', back: 'Metadata TTL + storage lifecycle rule. Highlights ka alag reference.' },
+    { front: '24 ghante expiry?', back: 'Read par expires_at check. TTL/lifecycle baad mein cleanup; CDN/media access bhi expire. Highlights ka retention alag.' },
     { front: 'Celebrity views?', back: 'Hot key: sharded counter ya async jod. Viewer list async.' },
   ],
 },
@@ -466,7 +490,7 @@ VISUALS['boss-iv'] = {
     </div>
     <div class="dg-flow">
       <span class="dg-pill">🎞️ tray: followees ka active-story index</span>
-      <span class="dg-pill gold">⏳ TTL + lifecycle (24 h)</span>
+      <span class="dg-pill gold">⏳ 24 h access expiry; cleanup async</span>
       <span class="dg-pill">👀 views: queue → async list, sharded counter</span>
     </div>
     <div class="dg-cap">15 crore stories/din · ~150 TB/din · 1,000 crore views/din (kalpanik).</div>`,
@@ -510,7 +534,7 @@ SD.addScenes({
       { from: 'meta', to: 'tray', label: 'Riya: active story', say: 'Tray index mein "Riya ki aakhri story kab" update. Followers ka tray isi index se banta hai.' },
       { from: 'obj', to: 'cdn', label: 'kai resolutions', tone: 'good', say: 'Dekhne wale CDN se video lete hain — kamzor network par chhota version.' },
       { from: 'cdn', to: 'views', label: 'view event', say: 'Har view ek event; viewer list async likhi jaati hai. Celebrity ke liye counter sharded.' },
-      { at: ['meta'], set: { meta: { tone: 'gold', sub: '24 ghante baad gayab' } }, say: '24 ghante baad metadata gayab, aur lifecycle media hatata hai. Highlight wale media ka alag reference bachta hai.' },
+      { at: ['meta'], set: { meta: { tone: 'gold', sub: '24 ghante baad gayab' } }, say: '24 ghante par API expires_at se story chhupaaye; CDN/media access bhi expire ho. TTL aur lifecycle cleanup baad mein ho sakta hai. Highlights ka retention tag alag rakho.' },
     ],
   },
 });
@@ -518,8 +542,8 @@ SD.addScenes({
 (SD.guidanceExtra = SD.guidanceExtra || []).push(
   { id: 'pro-iv-kvstore', levels: 'iv-kvstore', guide: {
     title: 'Tez reads ya taaza reads?',
-    misaal: 'Teen munshiyon mein se ek ko batao aur doosre se poochho toh purana jawab. Do ko batao, do se poochho — ek munshi common, jawab taaza.',
-    asli: 'R + W > N overlap deta hai. W aur R se latency, consistency aur availability ka santulan chunte ho. Failures ke liye handoff, read repair aur anti-entropy.',
+    misaal: 'Fixed replicas aur ek-ek karke poori hoti writes maano. Teen munshiyon mein se ek ko batao aur doosre se poochho toh purana jawab. Do ko batao, do se poochho — ek munshi common, jawab taaza.',
+    asli: 'W aakhri successful write ka hai, R read ka. Fixed replica set par R + W > N overlap deta hai; concurrent writes ka conflict alag sambhaalo. W aur R se latency, consistency aur availability ka santulan chunte ho. Failures ke liye handoff, read repair aur anti-entropy.',
     points: [
       '<b>Quorum:</b> N = 3 par W = 2, R = 2 aam.',
       '<b>Failure:</b> hinted handoff, read repair, Merkle tree.',
@@ -541,7 +565,7 @@ SD.addScenes({
     asli: 'Mock interview mein sab hisse judte hain: requirements, numbers, design (upload, tray, expiry, views, CDN), aur twists.',
     points: [
       '<b>Numbers se faisle:</b> 150 TB/din = object storage; 1,000 crore views = CDN.',
-      '<b>Expiry:</b> TTL + lifecycle; highlights ka reference.',
+      '<b>Expiry:</b> read par expires_at; TTL/lifecycle cleanup async. Highlights ke retention tags alag.',
       '<b>Twists:</b> hot key, authorization, references.',
     ],
     use: 'Kisi bhi media-heavy, read-heavy product ke interview mein.',

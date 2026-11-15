@@ -332,14 +332,14 @@
       const rupee = v => '₹' + num(v);
       if (!verb || verb === 'status') {
         table(['replica', 'haal', 'balance:aman', 'version'], KV_NODES.map(n => [n, K.down[n] ? '💀 band' : 'zinda', rupee(K.reps[n].v), 'v' + K.reps[n].ver + (K.reps[n].ver < K.latest ? ' (peeche)' : '')]));
-        print('ok', `N = ${K.n}, W = ${K.w}, R = ${K.r} → R + W = ${K.r + K.w} ${K.r + K.w > K.n ? '> N: har read mein kam se kam ek taaza replica aata hai' : '≤ N: read aur write ke replicas alag ho sakte hain'}`);
+        print('ok', `N = ${K.n}, W = ${K.w}, R = ${K.r} → R + W = ${K.r + K.w} ${K.r + K.w > K.n ? '> N: fixed replicas par overlap, agar aakhri write isi W se hua; config badalna purane data ko nahi phailaata' : '≤ N: read aur write ke replicas alag ho sakte hain'}`);
         return rec({ kind: 'kv', op: 'status', w: K.w, r: K.r });
       }
       if (verb === 'config') {
         const w = Number((norm.match(/--w\s+(\S+)/i) || [])[1]), r = Number((norm.match(/--r\s+(\S+)/i) || [])[1]);
         if (![w, r].every(x => Number.isInteger(x) && x >= 1 && x <= 3)) err('400 — --w aur --r dono 1 se 3 ke beech do');
         K.w = w; K.r = r;
-        print('ok', `W = ${w}, R = ${r}. R + W = ${w + r} ${w + r > K.n ? '> 3 → quorum overlap: read aur write kam se kam ek replica par milte hain.' : '≤ 3 → overlap ki guarantee nahi: purana balance padh sakte ho.'}`);
+        print('ok', `W = ${w}, R = ${r}. R + W = ${w + r} ${w + r > K.n ? '> 3 → fixed replicas par overlap, agar write naye W se poora ho. Purana write config badalne se nahi phailta.' : '≤ 3 → overlap ki guarantee nahi: purana balance padh sakte ho.'}`);
         return rec({ kind: 'kv', op: 'config', w, r, quorum: w + r > K.n });
       }
       if (verb === 'down' || verb === 'up') {
@@ -359,8 +359,8 @@
       }
       if (verb === 'put') {
         if (arg !== 'aman') err("400 — key sirf aman hai: 'kv put aman 500'");
-        const v = Number(word(norm, 3));
-        if (!Number.isInteger(v) || v < 0 || v > 10000000) err('400 — rupaye ka poora number do, jaise kv put aman 500');
+        const amount = word(norm, 3), v = Number(amount);
+        if (amount === '' || !Number.isInteger(v) || v < 0 || v > 10000000) err('400 — rupaye ka poora number do, jaise kv put aman 500');
         const up = live();
         if (up.length < K.w) err(`503 — sirf ${up.length} replica zinda, W = ${K.w} chahiye. Write fail: consistency ki keemat availability.`);
         const ver = K.latest + 1, acked = up.slice(0, K.w);
@@ -377,7 +377,7 @@
         const best = read.reduce((m, n) => K.reps[n].ver > K.reps[m].ver ? n : m, read[0]);
         const { v, ver } = K.reps[best], stale = ver < K.latest;
         print(stale ? 'err' : 'ok', `GET balance:aman → ${rupee(v)} (v${ver}) · padhe: ${read.join(', ')} (R = ${K.r})` +
-          (stale ? `\n   ⚠️ STALE — sabse naya v${K.latest} hai. Padhe gaye replicas tak write abhi pahuncha nahi (R + W = ${K.r + K.w} ≤ ${K.n}).` : '\n   ✅ Sabse naya version mila.'));
+          (stale ? `\n   ⚠️ STALE — sabse naya v${K.latest} hai. Padhe gaye replicas par aakhri write nahi mila. Config badalne se purana write nahi phailta; overlap ke liye us write ka W aur read ka R dekho.` : '\n   ✅ Sabse naya version mila.'));
         return rec({ kind: 'kv', op: 'get', value: v, ver, latest: K.latest, stale, w: K.w, r: K.r });
       }
       err(`400 — 'kv ${verb}' samajh nahi aaya. 'help' dekho.`);
