@@ -10,12 +10,12 @@
 
 VISUALS['colab-isolation'] = {
   t: 'Container, VM, aur beech ka raasta (gVisor)',
-  html: "\n    <div class=\"dg-grid\">\n      <div class=\"dg-node is-bad\"><span class=\"ni\">📦</span><span class=\"nl\">Container</span>\n        <span class=\"ns\">apni files/processes dikhte hain, par saare containers ka EK host kernel.<br>Reachable host vulnerability/config flaw isolation risk</span></div>\n      <div class=\"dg-node is-gold\"><span class=\"ni\">🖥️</span><span class=\"nl\">Poori VM</span>\n        <span class=\"ns\">apna kernel — sabse mazboot.<br>Par boot, reserved RAM/CPU: laakhon 10-min muft sessions ke liye bhaari</span></div>\n      <div class=\"dg-node is-good\"><span class=\"ni\">🛡️</span><span class=\"nl\">gVisor</span>\n        <span class=\"ns\">user-space \"application kernel\" (Sentry, Go mein).<br>Code ki syscall Sentry pakadta hai; host kernel tak sirf chhota, jaancha hua set</span></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">🐍 notebook code</span><span class=\"dg-arrow\">→ syscall →</span>\n      <span class=\"dg-pill acc\">🛡️ Sentry (emulate)</span><span class=\"dg-arrow\">→ chhota set →</span>\n      <span class=\"dg-pill good\">🐧 host kernel</span>\n    </div>\n    <div class=\"dg-cap\">gVisor host syscall exposure kam karke defense layers add karta hai. Escape ke liye exact vulnerability chain configuration and attack surface par depend karti hai; fixed two-bug guarantee nahi.\n      Tax sirf syscall par lagta hai — isliye ML (matrix math) ke liye lagbhag muft, database ke liye bhaari.</div>",
+  html: "\n    <div class=\"dg-grid\">\n      <div class=\"dg-node is-bad\"><span class=\"ni\">📦</span><span class=\"nl\">Container</span>\n        <span class=\"ns\">apni files/processes dikhte hain, par saare containers ka EK host kernel.<br>Reachable host vulnerability/config flaw isolation risk</span></div>\n      <div class=\"dg-node is-gold\"><span class=\"ni\">🖥️</span><span class=\"nl\">Poori VM</span>\n        <span class=\"ns\">apna kernel — sabse mazboot.<br>Par boot, reserved RAM/CPU: laakhon 10-min muft sessions ke liye bhaari</span></div>\n      <div class=\"dg-node is-good\"><span class=\"ni\">🛡️</span><span class=\"nl\">gVisor</span>\n        <span class=\"ns\">user-space \"application kernel\" (Sentry, Go mein).<br>Code ki syscall Sentry pakadta hai; host kernel tak sirf chhota, jaancha hua set</span></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">🐍 notebook code</span><span class=\"dg-arrow\">→ syscall →</span>\n      <span class=\"dg-pill acc\">🛡️ Sentry (emulate)</span><span class=\"dg-arrow\">→ chhota set →</span>\n      <span class=\"dg-pill good\">🐧 host kernel</span>\n    </div>\n    <div class=\"dg-cap\">gVisor host syscall exposure kam karke defense layers add karta hai. Escape ke liye exact vulnerability chain configuration and attack surface par depend karti hai; fixed two-bug guarantee nahi.\n      Tax syscall, memory, network aur filesystem par bhi lag sakta hai; ML aur database ka overhead asli workload par naapo.</div>",
 };
 
 VISUALS['colab-disposable'] = {
   t: 'Recipe hamesha ki, rasoi udhaar ki',
-  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">📓 Notebook (.ipynb) — durable</span>\n        <div class=\"dg-cap\">Drive mein JSON: cells, code, outputs. Yeh <b>recipe</b> hai — kal bhi wahi.</div></div>\n      <div class=\"dg-box is-gold\"><span class=\"bx-label\">🍳 Runtime — phenkne layak</span>\n        <div class=\"dg-cap\">Variables, <code>pip install</code>, downloaded files. Yeh <b>udhaar ki rasoi</b> hai —\n          disconnect / idle / time limit par <b>delete</b>, pause nahi.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-ladder\">\n      <div class=\"dg-rung\"><span class=\"lv\">📍</span><span class=\"cmd\">Jagah mein chhota</span><span class=\"q\">gVisor: host syscall exposure ghataane ki extra boundary</span></div>\n      <div class=\"dg-rung g\"><span class=\"lv\">⏳</span><span class=\"cmd\">Samay mein chhota</span><span class=\"q\">har session saaf image se, khatam hote hi machine delete — pair jamaane ki jagah nahi</span></div>\n    </div>",
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">📓 Notebook (.ipynb) — durable</span>\n        <div class=\"dg-cap\">Drive mein JSON: cells, code, outputs. Yeh <b>recipe</b> hai — kal bhi wahi.</div></div>\n      <div class=\"dg-box is-gold\"><span class=\"bx-label\">🍳 Runtime — phenkne layak</span>\n        <div class=\"dg-cap\">Variables, <code>pip install</code>, downloaded files. Yeh <b>udhaar ki rasoi</b> hai —\n          idle / lifetime limit ya explicit delete par <b>delete</b>; sirf disconnect hona deletion ka saboot nahi.</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-ladder\">\n      <div class=\"dg-rung\"><span class=\"lv\">📍</span><span class=\"cmd\">Jagah mein chhota</span><span class=\"q\">gVisor: host syscall exposure ghataane ki extra boundary</span></div>\n      <div class=\"dg-rung g\"><span class=\"lv\">⏳</span><span class=\"cmd\">Samay mein chhota</span><span class=\"q\">har session saaf image se, khatam hote hi machine delete — pair jamaane ki jagah nahi</span></div>\n    </div>",
 };
 
 VISUALS['colab-rationing'] = {
@@ -23,7 +23,7 @@ VISUALS['colab-rationing'] = {
   html: `
     <div class="dg-stack">
       <div class="dg-node is-good"><span class="ni">👩‍🎓</span><span class="nl">Interactive user (abhi code likh raha hai)</span><span class="ns">sabse pehle GPU</span></div>
-      <div class="dg-node is-gold"><span class="ni">😴</span><span class="nl">Tab khula, 90 min se koi cell nahi</span><span class="ns">GPU wapas pool mein</span></div>
+      <div class="dg-node is-gold"><span class="ni">😴</span><span class="nl">Lab: 90 min idle</span><span class="ns">GPU wapas pool mein</span></div>
       <div class="dg-node is-gold"><span class="ni">⏰</span><span class="nl">12 ghante ho gaye</span><span class="ns">free tier ki hadd — lambi training paid tier par</span></div>
       <div class="dg-node is-bad"><span class="ni">⛏️</span><span class="nl">Mining / hosting / remote desktop</span><span class="ns">pakdo, throttle ya band</span></div>
     </div>
@@ -169,7 +169,7 @@ SD.registerLevels('ai', [
   lesson: [
     `<h3>⏳ Samay bhi ek deewar hai</h3>
      <p>gVisor ne <b>jagah</b> chhoti ki. Colab <b>samay</b> bhi chhota karta hai: har session ek saaf
-     base image se shuru hota hai, aur disconnect, idle ya time limit par machine <b>delete</b> hoti
+     base image se shuru hota hai, aur idle/lifetime limit ya explicit delete par machine <b>delete</b> hoti
      hai — pause nahi. "Disconnect and delete runtime" button yahi hai.</p>
      <p>Attacker ke liye machine delete hone ka matlab: kuch bhi tika ke rakhne ki jagah nahi. Na backdoor, na chhupi
      file, na agle user ka intezaar. Har session ek naya kamra, aur jaate hi kamra gira diya.</p>
@@ -181,7 +181,7 @@ SD.registerLevels('ai', [
        <li><b>Runtime</b> — variables, <code>pip install</code>, downloaded files. <b>Phenkne layak.</b>
        Isi liye har session mein <code>pip install</code> dobara karna padta hai.</li>
      </ul>
-     <p>"Your runtime was disconnected" koi web glitch nahi — door ki machine gayab ho gayi. Datasets,
+     <p>"Your runtime was disconnected" se VM delete hona pakka nahi; reconnect karke runtime ki haalat jaancho. Datasets,
      models, logs chahiye toh Drive mount karo — durable jagah par rakho.</p>`,
     `<h3>🍞 Base image — jo roz chahiye, pehle se pakaa lo</h3>
      <p>Agar har session delete hoga, toh har session ka shuru hona sasta hona chahiye. Base image mein
@@ -332,7 +332,7 @@ SD.registerLevels('ai', [
      <p>Muft GPU tabhi chal sakta hai jab ek GPU bahut logon ke kaam aaye. Colab GPUs ko ek <b>shared
      pool</b> maanta hai — library ki kitaab ki tarah: padh lo, lauta do.</p>
      <ul>
-       <li><b>Idle reclaim</b> — ~90 minute tak koi cell nahi chala → GPU wapas pool mein.</li>
+       <li><b>Idle reclaim</b> — Video/lab ka udaharan: ~90 minute idle → reclaim; asli timeout badalta hai.</li>
        <li><b>Hard cap</b> — free tier mein ~12 ghante. Do din ki training free pool ka kaam nahi.</li>
        <li><b>Priority</b> — jo abhi sach mein code likh raha hai (interactive), use pehle.</li>
        <li><b>Abuse</b> — SSH server, remote desktop, hamesha-on web service, file hosting, torrents,
@@ -487,7 +487,7 @@ SD.registerLevels('ai', [
     aur kitne users ka runtime kaam ke beech gaya? (2) miners 30 → 100 — <code>colab</code> policy
     kitna sambhalti hai? Dono ke numbers apne notes mein likho.</p>`,
   cards: [
-    { front: 'Colab GPU rashan ke teen niyam?', back: 'Idle ~90 min → reclaim; free tier ~12 h hadd; abuse (mining, hosting, remote desktop) pakdo. Plus interactive users ko priority.' },
+    { front: 'Colab GPU rashan ke teen niyam?', back: 'Video/lab: idle ~90 min → reclaim; free runtime up to ~12 h, usage/availability par; abuse (mining, hosting, remote desktop) pakdo. Plus interactive users ko priority.' },
     { front: 'Lab 12: bina niyam vs Colab niyam (150 GPUs)?', back: 'none: 412 users ko GPU mila hi nahi, 46% GPU-time khule tabs ne pakda. colab: har interactive user ko 5 min ke andar.' },
     { front: 'Paid tiers ka do-tarfa kaam?', back: 'Paisa free tier ka kharcha chalata hai, aur bhaari users (lambi training) free pool se bahar chale jaate hain.' },
   ],

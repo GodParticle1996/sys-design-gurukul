@@ -184,11 +184,11 @@ VISUALS['estimation'] = {
       <div class="dg-box is-good"><span class="bx-label">📦 Storage ka formula</span>
         <div class="dg-col">
           <div class="dg-node"><span class="nl">rps × bytes × seconds</span>
-            <span class="ns">14 × 2 KB × 86,400 = 2.4 GB/din</span></div>
+            <span class="ns">28 × 2 KB × 86,400 = 4.8 GB/din</span></div>
           <div class="dg-node is-gold"><span class="nl">× 365</span>
-            <span class="ns">= 880 GB/saal</span></div>
+            <span class="ns">= 1.8 TB/saal</span></div>
           <div class="dg-node is-bad"><span class="nl">× 3 (replication)</span>
-            <span class="ns">= 2.6 TB — <b>yeh number budget meeting mein chahiye</b></span></div>
+            <span class="ns">= 5.3 TB — <b>yeh number budget meeting mein chahiye</b></span></div>
         </div>
       </div>
     </div>
@@ -3940,7 +3940,7 @@ VISUALS['pm-config'] = {
     <div class="dg-rule"></div>
     <div class="dg-ladder">
       <div class="dg-rung"><span class="lv">11:05</span><span class="cmd">ClickHouse permission change</span><span class="q">users ko <code>r0</code> database ke columns bhi dikhne lage</span></div>
-      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">11:15</span><span class="cmd">feature file 60 → 240 rows</span><span class="q">query mein database ka filter tha hi nahi — har column do baar</span></div>
+      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">11:15</span><span class="cmd">feature file > 200 rows</span><span class="q">query mein database ka filter tha hi nahi — har column do baar</span></div>
       <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">11:20</span><span class="cmd">FL2 proxy panic</span><span class="q">200 features pre-allocated · <code>unwrap()</code> Err par chala · 5xx</span></div>
       <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">11:35+</span><span class="cmd">har 5 min: theek → kharab → theek</span><span class="q">ClickHouse rolling update — file kabhi acche node se, kabhi kharab node se</span></div>
       <div class="dg-rung g"><span class="lv">14:30</span><span class="cmd">sahi file manually daali gayi</span><span class="q">core traffic chal pada · 17:06 par sab normal</span></div>
@@ -3989,7 +3989,7 @@ VISUALS['pm-regex'] = {
     <div class="dg-ladder">
       <div class="dg-rung"><span class="lv">x=x</span><span class="cmd">23 kadam</span><span class="q">chhota input, chhota kaam</span></div>
       <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">20 x</span><span class="cmd">555 kadam</span><span class="q">input 7x bada, kaam 24x bada</span></div>
-      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">thoda aur</span><span class="cmd">lakhon kadam</span><span class="q">exponential — CPU khatam</span></div>
+      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">thoda aur</span><span class="cmd">lakhon kadam</span><span class="q">polynomial — CPU khatam</span></div>
     </div>
     <div class="dg-cap">Ilaaj review ya timeout nahi — <b>linear-time engine</b> (RE2 / Rust regex),
       jo nested quantifiers ko exponential hone hi nahi deta.</div>
@@ -4205,7 +4205,7 @@ VISUALS['napkin'] = {
       <div class="dg-box is-good"><span class="bx-label">🔢 Little's Law</span>
         <div class="dg-cap"><code>L = λ × W</code>
           <br>50,000 rps × 40 ms = <b>2,000 concurrent</b>
-          <br>Pool 200 ka? <b>1,800 queue mein</b>
+          <br>DB hold 40 ms, pool 200? <b>Capacity 5,000 rps; queue badhegi</b>
           <br><br>Queue mein khadi request <b>CPU nahi jalati</b> —
           isliye "CPU 10% par timeout" dikhta hai.</div>
       </div>
@@ -4245,7 +4245,7 @@ VISUALS['vectors'] = {
       <div class="dg-box is-good"><span class="bx-label">🗜️ Quantization (10 crore × 768)</span>
         <div class="dg-cap">
           float32 · 3,072 B → <b>307 GB</b> · baseline recall
-          <br>int8 · 768 B → <b>77 GB</b> · recall ~1-2% kam
+          <br>int8 · 768 B → <b>77 GB</b> · recall workload par naapo
           <br>binary · 96 B → <b>10 GB</b> · recall bahut kam
           <br><br><small>Binary akela nahi — binary se candidates nikalo,
           phir float32 se <b>rerank</b>.</small></div>
@@ -4271,9 +4271,9 @@ VISUALS['multiregion'] = {
   html: `
     <div class="dg-ladder">
       <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">1️⃣</span><span class="cmd">Ek global primary</span><span class="q">strong · remote users ko poora RTT · <b>region gira toh writes BAND</b></span></div>
-      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">🗳️</span><span class="cmd">Cross-region quorum</span><span class="q">strong · <b>har write par 1 RTT</b> · 3+ regions par zinda rehta hai</span></div>
-      <div class="dg-rung g"><span class="lv">📍</span><span class="cmd">Regional-by-row</span><span class="q"><b>strong AUR local</b> · har row ka apna home region · us region ke rows hi rukte hain</span></div>
-      <div class="dg-rung"><span class="lv">🔀</span><span class="cmd">Async multi-primary</span><span class="q">local writes · <b>eventual</b> + conflicts · hamesha zinda</span></div>
+      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">🗳️</span><span class="cmd">Cross-region quorum</span><span class="q">strong · required remote ACK ka RTT · quorum bache toh chalta hai</span></div>
+      <div class="dg-rung g"><span class="lv">📍</span><span class="cmd">Regional-by-row</span><span class="q">home-region locality · strong · quorum aur survival goal par nirbhar</span></div>
+      <div class="dg-rung"><span class="lv">🔀</span><span class="cmd">Async multi-primary</span><span class="q">local writes · <b>eventual</b> + conflicts · failover aur capacity chahiye</span></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -4284,8 +4284,7 @@ VISUALS['multiregion'] = {
       </div>
       <div class="dg-box is-good"><span class="bx-label">🌏 Ek continent ka quorum</span>
         <div class="dg-cap">write p99 = 5 ms + <b>30 ms</b> = ~35 ms
-          <br><small>isiliye asli global systems quorum ek continent mein rakhte hain
-          aur continents ke beech async replicate karte hain</small></div>
+          <br><small>locality ke liye ek continent; global strong writes/survival ko WAN quorum lag sakti hai</small></div>
       </div>
     </div>
 
@@ -4293,7 +4292,7 @@ VISUALS['multiregion'] = {
     <div class="dg-legend">
       <span class="dg-pill gold">📍 REGIONAL-BY-ROW — kam samjha jaane wala hal</span>
       <span>Mumbai ka user apna data Mumbai se padhta aur likhta hai (5 ms, strong).
-        Virginia ka user Virginia se. <b>Cross-region coordination hai hi nahi</b> —
+        Virginia ka user Virginia se. <b>Required quorum local ho toh WAN coordination bach sakti hai</b> —
         isliye tez BHI hai aur strong BHI.</span>
     </div>
     <div class="dg-legend">
@@ -4304,7 +4303,7 @@ VISUALS['multiregion'] = {
     </div>
     <div class="dg-cap"><b>Faisle ka sahi kram:</b> 1. data user-wise baanta ja sakta hai? →
       regional-by-row &nbsp;·&nbsp; 2. har jagah ek jaisa chahiye? → global table &nbsp;·&nbsp;
-      3. strong + multi-region writes? → quorum, <b>par ek continent mein</b> &nbsp;·&nbsp;
+      3. strong + multi-region writes? → quorum, <b>survival aur latency dekh kar</b> &nbsp;·&nbsp;
       4. stale read chalega? → local replica. Zyadatar teams kadam 3 se shuru karti hain,
       aur wahi sabse mehenga kadam hai.</div>`,
 };
