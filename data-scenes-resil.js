@@ -160,4 +160,172 @@ SD.addScenes({
     ],
   },
 
+  blast: {
+    intro: 'Availability ka doosra sawaal: "kitni der" nahi, <b>"kitne users"</b> girenge? Cells aur shuffle sharding ka ganit.',
+    nodes: [
+      { id: 'fleet', col: 0, row: 0, icon: '🏢', label: 'Ek bada fleet', sub: 'blast radius: 100%' },
+      { id: 'cells', col: 0, row: 1, icon: '🧊', label: '10 cells', sub: 'blast radius: 10%' },
+      { id: 'shuf', col: 0, row: 2, icon: '🎲', label: '8 cells + shuffle', sub: 'blast radius: 3.6%' },
+      { id: 'cust', col: 1, row: 1, icon: '🏏', label: 'DreamTeam11', sub: 'cells: C3 + C6', tone: 'accent' },
+      { id: 'c3', col: 2, row: 0, icon: '📦', label: 'Cell 3' },
+      { id: 'c6', col: 2, row: 2, icon: '📦', label: 'Cell 6' },
+      { id: 'other', col: 3, row: 1, icon: '👥', label: 'Doosre customers', sub: 'alag jodiyan' },
+    ],
+    steps: [
+      { at: ['fleet'], set: { fleet: { tone: 'bad' } }, say: 'Ek bade fleet par ek kharab deploy ya zehrila request = 100% users, chahe kitne bhi replicas hon.' },
+      { at: ['cells'], set: { cells: { tone: 'gold' } }, say: '10 cells: har cell apna poora stack. Ek cell gira = 10% users. Keemat: 10 control planes, 10 deploys, 10 dashboards.' },
+      { from: 'cust', to: 'c3', label: 'cell #1', say: 'Shuffle sharding: har customer ko 8 mein se koi 2 cells milte hain. DreamTeam11 ko Cell 3…' },
+      { from: 'cust', to: 'c6', label: 'cell #2', say: '…aur Cell 6. Poora outage tabhi jab dono cells kharab hon.' },
+      { at: ['c3', 'c6'], set: { c3: { tone: 'bad', sub: 'zehrila request se gira' }, c6: { tone: 'bad', sub: 'zehrila request se gira' } }, say: 'DreamTeam11 ka zehrila request Cell 3 aur Cell 6 dono gira deta hai. 8 cells mein C(8,2) = 28 jodiyan hain; isi jodi wale customers ≈ 1/28 = 3.6%.' },
+      { at: ['other'], set: { other: { tone: 'good', sub: 'ek cell gira: degrade' } }, say: 'Jin customers ki jodi mein sirf ek cell gira (jaise C3 + C5), un customers ka doosra cell jawab deta hai: degrade, maut nahi.' },
+      { at: ['shuf'], set: { shuf: { tone: 'good' } }, say: 'Bina shuffle 5% blast radius ke liye 20 cells chahiye (20 control planes). Shuffle se 8 cells mein 3.6%. Aur socho: gire cell ka load kahan jaayega? Spare capacity ya shed.' },
+    ],
+  },
+
+  replication: {
+    intro: 'Lab 32: app aur DB dono replicate kiye. Phir bhi system gir gaya. <b>Kaun si kadi</b> akeli thi?',
+    nodes: [
+      { id: 'user', col: 0, row: 1, icon: '👥', label: 'Users', tone: 'accent' },
+      { id: 'lb', col: 1, row: 1, icon: '⚖️', label: 'Load balancer', sub: 'sirf EK' },
+      { id: 'a1', col: 2, row: 0, icon: '⚙️', label: 'app #1' },
+      { id: 'a2', col: 2, row: 2, icon: '⚙️', label: 'app #2' },
+      { id: 'd1', col: 3, row: 0, icon: '🗄️', label: 'DB primary', sub: 'zone A' },
+      { id: 'd2', col: 3, row: 2, icon: '🗄️', label: 'DB replica', sub: 'zone B' },
+    ],
+    steps: [
+      { from: 'user', to: 'lb', label: 'saari traffic', say: 'Saari traffic ek load balancer se guzarti hai.' },
+      { at: ['a1', 'a2', 'd1', 'd2'], set: { a1: { tone: 'good' }, a2: { tone: 'good' }, d1: { tone: 'good' }, d2: { tone: 'good' } }, say: 'App aur DB do-do hain, alag zones mein. Kisi ek ke marne par bhi system chalta.' },
+      { at: ['lb'], set: { lb: { tone: 'bad', sub: 'mara 💀' } }, say: 'Load balancer mara → lab mein sirf 25% available. Chain utni hi mazboot jitni kamzor kadi. Jo cheez sirf ek hai, wahi poora system hai.' },
+      { at: ['lb'], set: { lb: { tone: 'good', sub: 'active-passive + VIP' } }, say: 'Load balancer bhi replicate karo: active-passive + floating IP (ya managed LB). Critical path ki har cheez: DB, LB, Kafka (RF 3), gateway, aur cache agar dependency hai.' },
+      { at: ['a1', 'a2'], say: 'Active-active stateless apps ke liye aasan: dono traffic lete hain. Stateful DB mein dono jagah write = conflict ka khatra, isliye DB aksar active-passive.' },
+      { from: 'd1', to: 'd2', label: 'process → zone → region', tone: 'gold', say: 'Replicas kahan rakho? Process → machine → rack → zone → region. Jitna door, utna bada hadsa jhel sakta hai, par sync utna dheema.' },
+      { at: ['d2'], set: { d2: { tone: 'gold', sub: 'region B: DR' } }, say: 'Region hi gaya? DR ki seedhi: backup & restore → pilot light → warm standby → active-active. Upar jaao toh RTO aur RPO kam, par region B ka idle kharcha zyada (lab 40).' },
+    ],
+  },
+
+  'replicas-backups': {
+    intro: 'Raat 2 baje <code>DELETE FROM orders</code> chala, WHERE ke bina. Replica bachayega?',
+    nodes: [
+      { id: 'dev', col: 0, row: 1, icon: '😰', label: 'Galti wala script', sub: 'DELETE FROM orders', tone: 'bad' },
+      { id: 'pri', col: 1, row: 1, icon: '🗄️', label: 'Primary', sub: '10,500 orders' },
+      { id: 'rep', col: 2, row: 1, icon: '🪞', label: 'Replica', sub: '10,500 orders' },
+      { id: 'snap', col: 1, row: 2, icon: '📸', label: 'Snapshot (subah)', sub: '10,000 orders' },
+      { id: 'rest', col: 2, row: 2, icon: '🛟', label: 'Restored DB' },
+      { id: 'wal', col: 3, row: 2, icon: '📜', label: 'WAL archive', sub: 'har change ka log' },
+    ],
+    steps: [
+      { from: 'dev', to: 'pri', label: 'DELETE (bina WHERE)', tone: 'bad', set: { pri: { tone: 'bad', sub: '0 orders 😱' } }, say: 'Galti se WHERE ke bina DELETE. Primary par 0 orders.' },
+      { from: 'pri', to: 'rep', label: 'turant copy', tone: 'bad', set: { rep: { tone: 'bad', sub: '0 orders 😱' } }, say: 'Replica wafadaar hai, galtiyon ke saath bhi: DELETE turant copy. Replica machine ke marne se bachata hai, galti se nahi.' },
+      { from: 'snap', to: 'rest', label: 'sirf snapshot', tone: 'gold', set: { rest: { tone: 'gold', sub: '10,000 (500 gaye)' } }, say: 'Sirf subah ka snapshot restore kiya: 10,000 orders. Subah se raat tak ke 500 orders gaye.' },
+      { from: 'wal', to: 'rest', label: 'DELETE se theek pehle tak', tone: 'good', set: { rest: { tone: 'good', sub: '10,500 ✅' } }, say: 'Snapshot + WAL log replay, DELETE se theek pehle ke pal tak (point-in-time restore): 10,500 orders ✅.' },
+      { at: ['rest'], say: 'Backup tabhi backup hai jab restore ka test hua ho. Restore ka abhyaas asli Postgres par karo (SQL Gurukul lab).' },
+    ],
+  },
+
+  flashcrowd: {
+    intro: 'Board result <b>5 baje</b>. 12 lakh students ek saath. Achhi baat: tumhe pehle se pata hai kab aayenge.',
+    nodes: [
+      { id: 'scale', col: 1, row: 0, icon: '📈', label: 'Pre-scale', sub: '4:30 par servers up' },
+      { id: 'batch', col: 2, row: 0, icon: '🧮', label: 'Precompute job', sub: '5 baje se pehle' },
+      { id: 'st', col: 0, row: 1, icon: '🎓', label: '12 lakh students', sub: '~1,20,000 rps', tone: 'accent' },
+      { id: 'wait', col: 1, row: 1, icon: '🚪', label: 'Waiting room', sub: '1.5 lakh andar' },
+      { id: 'kv', col: 2, row: 1, icon: '🔑', label: 'Result KV store', sub: 'roll_no → result' },
+      { id: 'rep', col: 3, row: 1, icon: '🪞', label: 'Replicas', sub: 'result immutable' },
+    ],
+    steps: [
+      { at: ['st'], say: '4:59:59: 12 lakh students, ~1,20,000 rps. Normal scaling problem nahi: predictable flash crowd hai, aur waqt pehle se pata hai.' },
+      { from: 'batch', to: 'kv', label: 'roll_no → poora result', tone: 'good', say: 'Precompute: 5 baje se pehle har roll number ka poora result object taiyaar. Request par koi calculation nahi.' },
+      { at: ['scale'], set: { scale: { tone: 'good' } }, say: 'Pre-scale: autoscaling traffic aane ke BAAD react karta hai, aur minute laga deta hai. Servers pehle se chalu rakho.' },
+      { from: 'st', to: 'wait', label: '1,20,000 rps', tone: 'gold', say: 'Admission control: waiting room. Ek waqt mein 1.5 lakh andar; baaki ko "loading…" aur line mein unka number.' },
+      { from: 'wait', to: 'kv', label: 'GET roll_no', tone: 'good', say: 'Read path bilkul simple: partitioned key-value store, ek key lookup. Koi JOIN nahi, koi calculation nahi.' },
+      { from: 'kv', to: 'rep', label: 'copies banao', tone: 'good', say: 'Result immutable hai, isliye aggressive replication mein conflict ho hi nahi sakta. Jitni copies chahiye, banao.' },
+      { at: ['wait'], say: 'Retry amplification se bacho: refresh button par backoff. Aur asli traffic pattern ka load test, 5 baje se pehle.' },
+    ],
+  },
+
+  observability: {
+    intro: 'pay-api dheema hai. "Kya toota" kaafi nahi — <b>"waqt kahan gaya?"</b> Teen signals, teen alag sawaal.',
+    nodes: [
+      { id: 'red', col: 0, row: 0, icon: '🔴', label: 'RED', sub: 'rate · errors · duration' },
+      { id: 'svc', col: 1, row: 1, icon: '⚙️', label: 'pay-api', tone: 'accent' },
+      { id: 'use', col: 0, row: 2, icon: '🟡', label: 'USE', sub: 'utilization · saturation' },
+      { id: 'met', col: 2, row: 0, icon: '📊', label: 'Metrics', sub: '"kuch galat hai?"' },
+      { id: 'tr', col: 2, row: 1, icon: '🧵', label: 'Traces', sub: '"waqt kahan gaya?"' },
+      { id: 'log', col: 2, row: 2, icon: '📜', label: 'Logs', sub: '"us request mein kya?"' },
+      { id: 'lb', col: 3, row: 1, icon: '⚖️', label: 'Load balancer', sub: 'readiness check' },
+    ],
+    steps: [
+      { from: 'svc', to: 'red', label: 'har service', say: 'RED har service ke liye: Rate (requests/sec), Errors, Duration (p50, p95, p99).' },
+      { from: 'svc', to: 'use', label: 'har resource', say: 'USE har resource ke liye (CPU, DB pool, disk): Utilization, Saturation (kitna intezaar), Errors. Outage aksar saturation se aata hai; dashboard par aksar sirf utilization hota hai.' },
+      { from: 'svc', to: 'met', label: 'sasta, aggregate', say: 'Metrics: "kya kuch galat hai?" Sasta aur aggregate; alerting isi se.' },
+      { from: 'svc', to: 'tr', label: 'trace_id', say: 'Traces: "waqt KAHAN gaya?" Ek request ka poora safar, har hop ka waqt.' },
+      { from: 'svc', to: 'log', label: 'trace_id se dhoondo', say: 'Logs: "us EK request mein kya hua?" Structured logs, trace_id ke saath, taaki trace se seedha log mil jaaye.' },
+      { at: ['lb', 'svc'], set: { lb: { tone: 'gold', sub: 'pay-api ready hai?' } }, say: 'Liveness = process zinda hai? Readiness = traffic le sakta hai? (DB pool, dependencies). Pool khatam ho aur /health 200 de, toh health check jhooth bol raha hai.' },
+      { at: ['met'], set: { met: { tone: 'good', sub: 'alert: symptoms par' } }, say: 'Alert symptoms par (error rate, p99, SLO burn), causes par nahi (CPU 80%). Jo user ko dukhe, wahi page kare.' },
+    ],
+  },
+
+  slo: {
+    intro: '"Kitna toot sakta hai?" ka ek number. SLI, SLO, SLA — aur <b>error budget</b>, jo product aur reliability ki bahas khatam karta hai.',
+    nodes: [
+      { id: 'nines', col: 1, row: 0, icon: '9️⃣', label: 'Nines', sub: 'har 9 ≈ 10x mehenga' },
+      { id: 'sli', col: 0, row: 1, icon: '📏', label: 'SLI', sub: 'safal ÷ total' },
+      { id: 'slo', col: 1, row: 1, icon: '🎯', label: 'SLO', sub: '99.9% / 30 din' },
+      { id: 'sla', col: 2, row: 1, icon: '📜', label: 'SLA', sub: 'contract + paisa' },
+      { id: 'bud', col: 1, row: 2, icon: '💰', label: 'Error budget', sub: '~43 min / mahina' },
+      { id: 'dep', col: 2, row: 2, icon: '🚀', label: 'Naye deploys' },
+    ],
+    steps: [
+      { at: ['sli'], say: 'SLI = jo tum naapte ho: safal requests ÷ total requests.' },
+      { from: 'sli', to: 'slo', label: 'target', say: 'SLO = tumhara apna target: 30 din mein 99.9%.' },
+      { from: 'slo', to: 'sla', label: 'SLA dheela rakho', tone: 'gold', say: 'SLA = customer se contract, paise ke saath. SLA hamesha SLO se dheela rakho, taaki SLO tootne par turant paisa na dena pade.' },
+      { at: ['nines'], say: '99% = 432 min/mahina (7 ghante). 99.9% = 43 min. 99.99% = 4.3 min. 99.999% = 26 second. "100% uptime" target nahi, galatfehmi hai.' },
+      { from: 'slo', to: 'bud', label: '100% − 99.9%', say: 'Error budget: 99.9% ka matlab ~43 minute/mahina kharch karne ki chhoot (time-based SLO mein). Product aur reliability ki bahas ab ek number par.' },
+      { from: 'bud', to: 'dep', label: 'budget bacha: deploy', tone: 'good', say: 'Budget bacha hai? Deploy karo, experiment karo, tez chalo.' },
+      { at: ['bud'], set: { bud: { tone: 'bad', sub: 'khatam' }, dep: { tone: 'muted', sub: 'ruke' } }, say: 'Budget khatam? Naye features ruko, reliability par kaam karo. SLO user ke dard par rakho (checkout safal hua?), CPU par nahi.' },
+    ],
+  },
+
+  chaos: {
+    intro: '"Humare paas 3 copies hain" — kya sach mein? Chaos engineering: todna nahi, <b>saabit</b> karna.',
+    nodes: [
+      { id: 'monkey', col: 0, row: 1, icon: '🐒', label: 'Chaos Monkey', tone: 'accent' },
+      { id: 'i1', col: 1, row: 0, icon: '⚙️', label: 'instance 1' },
+      { id: 'i2', col: 1, row: 1, icon: '⚙️', label: 'instance 2' },
+      { id: 'i3', col: 1, row: 2, icon: '⚙️', label: 'instance 3' },
+      { id: 'lb', col: 2, row: 1, icon: '⚖️', label: 'Load balancer' },
+      { id: 'ss', col: 3, row: 1, icon: '📊', label: 'Steady state', sub: 'success ≥ 99.9%?' },
+    ],
+    steps: [
+      { at: ['ss'], say: 'Steady state: "normal" ka number likho: success rate, p99, orders/min.' },
+      { at: ['ss'], say: 'Hypothesis: "ek instance mare toh bhi success ≥ 99.9% rahega." Experiment ka kaam is hypothesis ko saabit ya galat karna hai.' },
+      { from: 'monkey', to: 'i2', label: 'instance band', tone: 'bad', set: { i2: { tone: 'bad', sub: 'mara 💀' } }, say: 'Inject: Chaos Monkey instance 2 band karta hai. Chhota blast radius, aur "band karo" button taiyaar.' },
+      { from: 'lb', to: 'i2', label: 'traffic ab bhi ja raha', tone: 'bad', set: { ss: { tone: 'bad', sub: '87.4% 😬' } }, say: 'Observe: lab 42 mein 3 instances, bina health check: 87.4%. Load balancer mare instance ko traffic bhejta raha.' },
+      { at: ['lb'], set: { lb: { tone: 'good', sub: '+ health check' }, ss: { tone: 'gold', sub: '97.1%' } }, say: 'Kami theek: health check joda → 97.1%. Mare instance ko traffic band, par pata chalne tak kuch requests fail.' },
+      { at: ['lb'], set: { lb: { sub: '+ health check + retry' }, ss: { tone: 'good', sub: '100% ✅' } }, say: 'Retry joda (idempotent requests par) → 100%. Monkey wahi, taiyaari alag. Steady state toote toh turant abort, kami likho, theek karo, dobara chalao.' },
+    ],
+  },
+
+  'boss-resil': {
+    intro: 'Pager <b>3:07 AM</b>. checkout gir raha hai. Pehle roko, phir diagnose, phir theek karo.',
+    nodes: [
+      { id: 'dash', col: 0, row: 0, icon: '📊', label: 'Dashboard', sub: 'CPU 12% · health green' },
+      { id: 'co', col: 0, row: 1, icon: '🛒', label: 'checkout-api', sub: '60% errors · p99 9.9 s', tone: 'bad' },
+      { id: 'pool', col: 1, row: 1, icon: '🧵', label: 'Thread pool', sub: 'ek hi, sab ke liye' },
+      { id: 'sdk', col: 2, row: 1, icon: '🔁', label: 'payment SDK', sub: '3 retries, bina jitter' },
+      { id: 'prov', col: 3, row: 1, icon: '🏦', label: 'Payment provider' },
+      { id: 'fb', col: 2, row: 2, icon: '🪂', label: 'Fallback', sub: '"payment pending"' },
+    ],
+    steps: [
+      { at: ['dash'], say: '3:07 AM. checkout ka error rate 60%, p99 9.9 s. Dashboard par CPU 12%, memory 40%, health green: "sab theek hai"?' },
+      { from: 'sdk', to: 'prov', label: 'p99 8 s', tone: 'bad', set: { prov: { tone: 'bad', sub: 'down nahi, DHEEMA' } }, say: 'Diagnose: payment provider down nahi, DHEEMA hai: p99 8 second.' },
+      { at: ['sdk'], set: { sdk: { tone: 'bad', sub: 'load ×4, sab ek saath' } }, say: 'SDK 3 retries karta hai, bina jitter: har call ki 4 koshish, load ×4, aur sab ek saath.' },
+      { at: ['pool'], set: { pool: { tone: 'bad', sub: 'saare threads atke' } }, say: 'Ek hi thread pool sab ke liye: payment ke intezaar mein threads khatam, checkout ke baaki kaam bhi gire.' },
+      { at: ['sdk'], set: { sdk: { tone: 'good', sub: 'timeout + jitter + 1 retry' } }, say: 'Roko: timeout se ek call ka intezaar bounded; jitter se retry storm ka synchronization tootta hai; retries kam.' },
+      { at: ['pool'], set: { pool: { tone: 'good', sub: 'payment ka alag pool' } }, say: 'Bulkhead: payment calls ka alag pool. Blast radius chhota: payment atke toh bhi baaki checkout chale.' },
+      { from: 'sdk', to: 'fb', label: 'breaker OPEN', tone: 'good', say: 'Circuit breaker failing provider par koshish rokta hai. Fallback: order "payment pending" mein, user ko saaf message, baad mein confirm.' },
+      { at: ['co'], set: { co: { tone: 'good', sub: 'sambhal gaya' } }, say: 'Load shedding tay karti hai overload mein kitna kaam lena hai. Har guard ka alag kaam. Har remote call ek din fail hogi; sawaal hai tab system kya karega.' },
+    ],
+  },
+
 });
