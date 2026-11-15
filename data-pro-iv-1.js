@@ -14,6 +14,7 @@ SD.tracks.push({
   motto: 'Pehle sawaal, phir numbers, phir boxes — aur har box ki keemat.',
   formula: 'Interview = scope + numbers + design + bottleneck ka deep dive + trade-off',
   alwaysUnlocked: true,
+  freeOrder: true,   /* har design alag sawaal hai — koi bhi pehle khol sakte ho */
 });
 
 const fanLatest = s => SD.mission.latest(s, 'fanout');
@@ -244,7 +245,8 @@ GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest
       type: 'terminal',
       title: 'Mission — teeno fanout naapo',
       goal: 'Feed ka model chalao. Pehle write fanout aur read fanout dono naapo. Phir hybrid try karo — pehle galat threshold (celebrities ke 50 lakh followers se upar), phir sahi threshold. Lakshya: feed p99 200 ms ke andar aur celebrity post turant.',
-      sys: {},
+      sys: { name: 'feed-service' },
+      placeholder: 'fanout --mode …',
       tasks: T_FEED,
       success: SD.allTasks(T_FEED),
       verify: s => { const r = fanLatest(s); return !!r && r.mode === 'hybrid' && r.feedMs <= 200 && r.celebLagMin === 0; },

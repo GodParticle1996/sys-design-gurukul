@@ -541,7 +541,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     </div>
     <div class="term-out"></div>
     <div class="term-in"><span class="ps1">$</span><input type="text" autocomplete="off"
-      spellcheck="false" placeholder="GET /api/v1/transactions?page=1&amp;limit=50    (madad: help)"></div>`;
+      spellcheck="false" placeholder="${SD.escapeHtml(stage.placeholder || 'GET /api/v1/transactions?page=1&limit=50')}    (madad: help)"></div>`;
   const out = term.querySelector('.term-out');
   const input = term.querySelector('input');
 
