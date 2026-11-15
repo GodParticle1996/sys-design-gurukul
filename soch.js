@@ -97,6 +97,12 @@
     mount.appendChild(el('h2', 'level-h', `${sc.icon} ${sc.title}`));
     mount.appendChild(el('div', 'so-scene',
       `<h4>📋 Haalaat</h4><p>${sc.story}</p><ul>${sc.facts.map(f => `<li>${f}</li>`).join('')}</ul>`));
+    /* scene (scene.js): ghatna kadam-dar-kadam. Sirf jo hua woh dikhata hai — wajah ya hal ka naam nahi (sawaal wahi poochhte hain). */
+    if (sc.scene && typeof SD.renderScene === 'function') {
+      const dia = el('div', 'diagram so-scene-dia', `<div class="dg-title">🎬 Ghatna kadam-dar-kadam</div>`);
+      dia.appendChild(SD.renderScene(sc.scene));
+      mount.appendChild(dia);
+    }
     const log = el('div', 'so-log');
     const stage = el('div', 'so-stage');
     mount.append(log, stage);
