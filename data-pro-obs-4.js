@@ -21,7 +21,7 @@ SD.registerLevels('pro-obs', [
      <p>Fire brigade pehle aag bujhati hai. Aag kaise lagi, ye jaanch baad mein. Jaanch ke liye aag jalne nahi dete.</p>
      <p>Aur ek commander hota hai jo kaam baant-ta hai. Sab ek saath pipe nahi pakadte.</p>
      <p class="tip">🎯 <b>Asli baat:</b> incident ka pehla lakshya users ka dard rokna (<b>mitigate</b>): rollback, traffic hatao, feature flag band.
-       Root cause (asli wajah) baad mein, aaram se.</p>`,
+       Root cause (asli wajah) ki gehri jaanch mitigation ke baad. Turant mitigation chunne jitni jaanch abhi karo.</p>`,
     `<h3>👥 Teen kirdaar</h3>
      <table>
        <tr><th>Kirdaar</th><th>Kaam</th></tr>
@@ -31,7 +31,7 @@ SD.registerLevels('pro-obs', [
      </table>
      <p>Ek channel, ek incident doc jismein timeline likhi jaaye. IC thak jaaye toh saaf handoff: "ab IC Priya hai".</p>
      <p>Chhoti team mein ek insaan do kirdaar le sakta hai. Par IC aur debug ek saath karna mushkil hai.</p>`,
-    `<h3>🎚️ Severity</h3>
+    `<h3>🎚️ Severity: ChaiPay ke misaali niyam</h3>
      <table>
        <tr><th>SEV</th><th>Kab</th><th>Kya</th></tr>
        <tr><td><b>SEV1</b></td><td>Paise atke ya bahut users par asar (payments fail)</td><td>Sab haath, status page, har 30 min update</td></tr>
@@ -99,7 +99,7 @@ SD.registerLevels('pro-obs', [
         },
         end: {
           end: true,
-          text: 'Incident band. 11 minute mein mitigate.',
+          text: 'Page ke 11 minute baad mitigate; deploy se recovery tak 17 minute. Atke payments ka reconciliation track karo.',
           summary: `<b>Seekh:</b> incident mein raftaar faisle se aati hai, akele hero se nahi.
             <br><br><b>Chaar niyam:</b>
             <br>1. Jaldi declare, severity, IC.
@@ -209,7 +209,7 @@ SD.registerLevels('pro-obs', [
     'Blameless postmortem aur kaam ke action items likhna',
   ],
   homework: `Apne kisi purane bug ya outage ka chhota postmortem likho (ek page):
-    timeline, asar, wajah, kaise test se bacha, aur 3 action items owner aur date ke saath. "Kisne" shabd ek baar bhi mat likho.`,
+    timeline, asar, wajah, kaise test se bacha, aur 3 action items owner aur date ke saath. Dosh mat lagao. Timeline mein kaun kya kar raha tha aur action owner saaf likho.`,
   cards: [
     { front: 'Incident ka pehla lakshya?', back: 'Mitigate: users ka dard roko (rollback, flag, traffic hatao). Wajah baad mein.' },
     { front: 'Teen kirdaar?', back: 'Incident Commander (faisle), Ops lead (system par haath), Comms lead (status page, updates).' },
@@ -264,7 +264,7 @@ SD.registerLevels('pro-obs', [
         {
           id: 'tracing', label: 'Tracing aur sampling', icon: '🧵',
           options: [
-            { id: 'tail', label: 'OpenTelemetry + tail sampling: errors, dheeme, 1%', score: 3, why: 'Har failed aur dheemi payment ka trace bachta hai. Collector ka kharcha manzoor.' },
+            { id: 'tail', label: 'OpenTelemetry + tail sampling: errors, dheeme, 1%', score: 3, why: 'Error aur latency policy se traces chuno. Pehle head sampling se spans mat chhodo; collector ki capacity aur buffer window jaancho.' },
             { id: 'head', label: 'Sirf 1% head sampling; baaki traces chhod do', score: -1, why: 'Sasta, par 0.05% failed payments ka trace zyadatar nahi milega.' },
             { id: 'none', label: 'Tracing nahi; har service ke logs alag-alag padho', score: -2, why: 'Kai services mein dheemi payment dhoondhna ghanton ka kaam.' },
           ],
@@ -280,7 +280,7 @@ SD.registerLevels('pro-obs', [
         {
           id: 'capacity', label: 'Diwali ke servers', icon: '🧮',
           options: [
-            { id: 'plan', label: 'Peak ÷ (per-server × 60%) + spare, 3 AZ mein', score: 3, why: 'Ek server ya ek AZ jaaye tab bhi peak jhelo. Keemat: zyada servers.' },
+            { id: 'plan', label: 'Peak ÷ (per-server × 60%) + spare, 3 AZ mein', score: 3, why: 'Ek server ke liye spare. AZ loss par bache servers ka load alag jaancho; 3 AZ mein baantna akela kaafi nahi.' },
             { id: 'avg', label: 'Average traffic ke hisaab se servers gino', score: -3, why: 'Peak average ka kai guna. Diwali par outage.' },
             { id: 'auto', label: 'Autoscaling laga do; spare ki zaroorat nahi', score: -1, why: 'Naya server minton mein aata hai; peak aur failure seconds mein.' },
           ],
@@ -349,15 +349,15 @@ SD.registerLevels('pro-obs', [
         {
           q: 'Partner bank ka SLO 99.5% hai. ChaiPay ka payment SLO 99.9% kaise ho sakta hai?',
           choices: [
-            'Fallback ho tabhi: doosra bank ya queue; warna 99.5% hi sach hai',
+            'Doosra bank; queue tab jab SLO payment accept hone ka ho',
             'Retries laga do; teen retries se 99.5% apne aap 99.9% ban jaata hai',
             'Bank ka SLO hamara SLO nahi; contract mein 99.9% likh do, bas',
             'Monitoring se; zyada dashboards se availability badh jaati hai',
           ],
           answer: 0,
-          explain: 'Ek zaroori dependency se zyada available hona mushkil hai. Doosra raasta (doosra bank) ya async (queue) chahiye. Retries sirf choti, alag-alag failures mein madad karte hain; bank poora gira toh retry kaam nahi aata.',
+          explain: 'Dependency ka SLO target hai, measured ceiling nahi. Completion SLO ke liye doosra bank madad karta hai. Queue sirf acceptance SLO bacha sakti hai; bank down ho toh payment complete nahi hoti. Retries sirf choti, alag-alag failures mein madad karte hain; bank poora gira toh retry kaam nahi aata.',
           choiceExplanations: [
-            'Ek zaroori dependency se zyada available hona mushkil hai. Doosra raasta (doosra bank) ya async (queue) chahiye. Retries sirf choti, alag-alag failures mein madad karte hain; bank poora gira toh retry kaam nahi aata.',
+            'Dependency ka SLO target hai, measured ceiling nahi. Completion SLO ke liye doosra bank madad karta hai. Queue sirf acceptance SLO bacha sakti hai; bank down ho toh payment complete nahi hoti. Retries sirf choti, alag-alag failures mein madad karte hain; bank poora gira toh retry kaam nahi aata.',
             'Bank 30 minute gira toh har retry bhi fail. Retries outage ko nahi mitate.',
             'Contract mein likhne se system nahi badalta. Vaada todoge.',
             'Dashboards dekhte hain, theek nahi karte.',
@@ -396,9 +396,9 @@ SD.registerLevels('pro-obs', [
           'Metrics sirf finance ke liye; engineers ko logs chahiye',
         ],
         answer: 0,
-        explain: 'Metric alert batata hai dikkat hai. Trace batata hai kis service mein. Log batata hai us request mein kya hua. Teeno trace_id se jude.',
+        explain: 'Metric alert batata hai dikkat hai. Trace mein service ka waqt; logs mein request ki detail. Exemplar metric se trace ka link hai. trace_id log field hai, metric label nahi.',
         choiceExplanations: [
-          'Metric alert batata hai dikkat hai. Trace batata hai kis service mein. Log batata hai us request mein kya hua. Teeno trace_id se jude.',
+          'Metric alert batata hai dikkat hai. Trace mein service ka waqt; logs mein request ki detail. Exemplar metric se trace ka link hai. trace_id log field hai, metric label nahi.',
           'Har signal alag sawaal ka jawab hai. Ek ko hatane se ek sawaal andha.',
           'Logs se metrics banana mehenga aur dheema. Alerts metrics par.',
           'Metrics engineers ke alerts aur capacity ka aadhar hain.',
@@ -415,7 +415,7 @@ SD.registerLevels('pro-obs', [
     Har line ke saamne likho: hai / nahi / adhoora. Sabse bada "nahi" kaunsa hai?`,
   cards: [
     { front: 'Production plan ke chhe faisle?', back: 'Labels, sampling, alerts, capacity, kharcha, on-call — har ek number ke saath.' },
-    { front: 'Dependency ka SLO kam ho toh?', back: 'Tumhara SLO usse zyada tabhi jab fallback (doosra raasta) ya async (queue) ho.' },
+    { front: 'Dependency ka SLO kam ho toh?', back: 'Measured dependency failures dekho. Doosra bank completion mein madad kare; queue acceptance bacha sakti hai, turant completion nahi.' },
     { front: 'Monitoring bill phata?', back: 'High-cardinality labels, bhaari logs, 100% traces — teeno soch ke kaato.' },
     { front: 'Teen signals?', back: 'Metrics: gadbad hai. Traces: kahan. Logs: kya hua. trace_id se jude.' },
   ],
@@ -469,7 +469,7 @@ SD.addScenes({
       { from: 'ic', to: 'ops', label: 'rollback dekho', say: 'IC kaam baant-ta hai. Ops lead graph dekhta hai: 2:41 par deploy, turant baad errors.' },
       { from: 'ops', to: 'deploy', label: 'rollback', tone: 'good', set: { deploy: { tone: 'good', sub: 'rollback 2:58' } }, say: 'Rollback. 2:58 tak success rate wapas 99.9%. Wajah dhoondhna baad mein.' },
       { from: 'ic', to: 'comms', label: 'users ko batao', say: 'Saath-saath Comms lead: status page aur support ko update.' },
-      { from: 'comms', to: 'status', label: 'asar + agla update', tone: 'gold', set: { status: { tone: 'gold', sub: 'atke paise: 24 ghante' } }, say: 'Status page: kya hua, kab theek hua, atke paise ka kya hoga, agla update kab.' },
+      { from: 'comms', to: 'status', label: 'asar + agla update', tone: 'gold', set: { status: { tone: 'gold', sub: 'atke paise: jaanch jaari' } }, say: 'Status page: kya hua, kab theek hua, atke paise ka kya hoga, agla update kab.' },
       { at: ['pm'], set: { pm: { tone: 'good', sub: 'system badlo' } }, say: 'Agle din blameless postmortem: bug test se kaise bacha? Canary kyun nahi pakda? Action items owner aur date ke saath.' },
     ],
   },
@@ -502,11 +502,11 @@ SD.addScenes({
     asli: 'Incident mein pehle mitigate karo, kirdaar baanto, saaf comms karo. Wajah aur sudhaar blameless postmortem mein.',
     points: [
       '<b>Declare jaldi:</b> severity, IC, ek channel.',
-      '<b>Mitigate:</b> rollback ya flag; naya hotfix raat ko nahi.',
+      '<b>Mitigate:</b> safe rollback ya flag pehle; rollback mumkin na ho toh jaancha hua hotfix.',
       '<b>Postmortem:</b> system ka sawaal, owner + date wale items.',
     ],
     use: 'Users ko dard ho aur ek se zyada log kaam par hon.',
-    avoid: 'Postmortem mein insaan ka naam aur dosh mat likho.',
+    avoid: 'Postmortem mein dosh mat lagao. Timeline ke roles aur action owners saaf likho.',
     mistake: 'Akele debug karte rehna aur incident declare na karna.',
     compare: [
       { choice: 'Rollback / feature flag', when: 'Badlaav ke baad dikkat shuru hui', tradeoff: 'Tez aur bharosemand; naya feature kuch der band' },

@@ -17,7 +17,7 @@ const T_UNIT = [
   { text: 'Bill feature ke hisaab se dekho',
     check: s => s.records.some(r => r.kind === 'cost' && r.view === 'feature') },
   { text: 'Pehle ek payment ka kharcha naapo',
-    check: s => s.records.some(r => r.kind === 'cost-unit' && r.perUnit >= 0.1) },
+    check: s => s.records.some(r => r.kind === 'cost-unit' && r.total === 36) },   /* ₹36 lakh sirf kisi fix se pehle hi milta hai */
   { text: 'Statement PDF ka kharcha sahi lever se ghatao',
     check: s => s.sys.cost.fixed['statement-pdf'] === true },
   { text: 'Recommendations ka kharcha sahi lever se ghatao',
@@ -46,16 +46,16 @@ SD.registerLevels('pro-obs', [
      <p>Bill ₹3,000 se ₹6,000 ho gaya. Meter ek hi hai. AC? Geyser? Naya fridge?</p>
      <p>Har plug par chhota meter (sub-meter) lagaya. Pata chala: naya geyser din bhar chalu rehta hai.</p>
      <p class="tip">🎯 <b>Asli baat:</b> cloud bill batata hai "compute ₹20 lakh, database ₹9 lakh". Ye nahi batata ki <b>kaunse feature</b> ne kharcha kiya.
-       Har resource par <b>tag</b> (team, feature, env) = sub-meter.</p>`,
+       Resource par <b>tag</b> (team, feature, env) maalik batata hai. Saajhe resource ka usage alag naapna padta hai.</p>`,
     `<h3>📈 ChaiPay: ₹18 lakh se ₹36 lakh</h3>
      <p>Do mahine mein bill do guna. Isi beech teen naye features aaye: <b>Statement PDF</b>, <b>Recommendations</b>, <b>Analytics export</b>.</p>
-     <p>Bina tags: "compute badha". Bas. CFO ka sawaal ka jawab nahi.</p>
+     <p>Bina tags: "compute badha". Bas. CFO (finance ke zimmedaar) ke sawaal ka jawab nahi.</p>
      <p><b>Tagging ka niyam:</b></p>
      <ul>
        <li>Har resource par zaroori tags: <code>team</code>, <code>feature</code>, <code>env</code> (prod/staging/dev).</li>
        <li>Bina tag ka resource ban hi na sake — deploy pipeline ya cloud policy rok de.</li>
        <li>"Untagged %" ko ek number ki tarah roz dekho.</li>
-       <li>Cloud billing mein tags ko cost allocation ke liye chalu karna padta hai. Tags lagne ke baad ka bill saaf milta hai; purane mahinon ke liye provider ke niyam dekho.</li>
+       <li>AWS billing mein tags ko cost allocation (kharcha team ya feature ko dena) ke liye activate karna padta hai. Activation ki list mein tag aane mein 24 ghante tak lag sakte hain. Activate hone mein 24 ghante aur lag sakte hain. Tags lagne ke baad ka bill saaf milta hai; purane mahinon ke liye provider ke niyam dekho.</li>
      </ul>`,
     `<h3>🔀 Saajha kharcha aur showback</h3>
      <p>Ek Postgres sab features use karte hain. Uska tag ek hi hai: <code>platform</code>. Kaise baantein?</p>
@@ -98,7 +98,7 @@ SD.registerLevels('pro-obs', [
         { left: 'Saajha Postgres jo sab features use karte hain', right: 'Usage se baanto: CPU time ya queries', explain: 'Ek tag sab nahi bata sakta. Har feature ka hissa usage se naapo.' },
         { left: 'Data transfer (egress) ka bada bill', right: 'Kis service ne bheja: flow logs, CDN reports', explain: 'Network ka kharcha resource tag par aksar saaf nahi dikhta. Bhejne wale ko flow logs se dhoondho.' },
         { left: 'Dev environment jo raat bhar chalu rehta hai', right: 'env tag + raat ko band karne ka schedule', explain: 'env=dev tag se pehchano, aur kaam ke ghanton ke baad band karo.' },
-        { left: 'Ek purani disk jiska koi tag nahi', right: 'Untagged report: maalik dhoondho ya mitao', explain: 'Untagged resources ka maalik dhoondho. Nahi mila toh snapshot lekar mitao.' },
+        { left: 'Ek purani disk jiska koi tag nahi', right: 'Untagged report: maalik dhoondho ya mitao', explain: 'Untagged resources ka maalik dhoondho. Resource ka istemaal aur retention jaancho. Zimmedaar team ki manzoori ke baad hi hatao; snapshot akela deletion ka saboot nahi.' },
       ],
     },
     {
@@ -213,18 +213,18 @@ SD.registerLevels('pro-obs', [
     `<h3>🍵 Misaal: chai ki dukaan</h3>
      <p>Mahine ka kharcha ₹60,000 se ₹1,20,000. Achha ya bura?</p>
      <p>Agar cup bhi do guna se zyada bike, toh achha. Asli number hai: <b>ek cup ka kharcha</b>.</p>
-     <p class="tip">🎯 <b>Asli baat:</b> unit cost = kul kharcha ÷ business ki ek ikai (payments, orders, active users).
+     <p class="tip">🎯 <b>Asli baat:</b> unit cost = ek hi period ka kul kharcha ÷ business ikaiyon ki ginti (payments, orders, active users).
        Bill badhe aur unit cost gire = achhi growth. Bill badhe aur unit cost bhi badhe = kuch phool raha hai.</p>`,
     `<h3>🧮 ChaiPay ka hisaab (kalpanik model)</h3>
      <pre>Pichhla mahina: ₹18 lakh ÷ 2.5 crore payments = ₹0.072 har payment
 Is mahine:      ₹36 lakh ÷ 3 crore payments   = ₹0.12 har payment</pre>
-     <p>Payments 20% badhe, kharcha 100%. Unit cost 0.072 se 0.12 — growth se nahi, <b>naye features</b> se.</p>`,
+     <p>Payments 20% badhe, kharcha 100%. Unit cost 0.072 se 0.12 — is model mein <b>naye features</b> ka kharcha badha. Sirf unit cost badhne se wajah saabit nahi hoti.</p>`,
     `<h3>🔧 Teen levers — kharche ki kism se milao</h3>
      <table>
        <tr><th>Feature</th><th>Kharcha kahan</th><th>Lever</th><th>Keemat</th></tr>
        <tr><td>Statement PDF (₹8 lakh)</td><td>Compute: har download par PDF dobara ban raha</td><td><b>cache</b>: mahine ka PDF ek baar banao, storage mein rakho</td><td>Storage; refund aaye toh PDF dobara banana</td></tr>
        <tr><td>Recommendations (₹8 lakh)</td><td>Compute + DB: servers 70% waqt khaali</td><td><b>rightsize</b>: chhote servers + autoscaling</td><td>Scale-up mein der; peak par p99 jaancho</td></tr>
-       <tr><td>Analytics export (₹5 lakh)</td><td>Network: badi files seedhe origin se</td><td><b>cdn</b>: compression + CDN</td><td>CDN cache invalidation, signed URLs</td></tr>
+       <tr><td>Analytics export (₹5 lakh)</td><td>Network: badi files seedhe origin se</td><td><b>cdn</b>: compression + CDN</td><td>CDN ka bill; private files ki access jaanch; cache invalidation</td></tr>
      </table>
      <p class="tip">⚠️ Bachat tabhi bachat hai jab SLO na toote. Rightsize ke baad p99 2 second ho gaya? Woh bachat nahi, outage hai.</p>`,
   ],
@@ -340,9 +340,9 @@ Is mahine:      ₹36 lakh ÷ 3 crore payments   = ₹0.12 har payment</pre>
           'Reserved/committed discount le lo; architecture badalne ki zaroorat nahi',
         ],
         answer: 0,
-        explain: 'Bada kharcha pehle (sabse zyada bachat). Lever kism se: compute → cache/rightsize, network → CDN/compression. Har badlaav ke baad SLO. Discounts achhe hain, par phoole hue design ko sasta nahi banate.',
+        explain: 'Bada kharcha pehle (sabse zyada bachat). Lever kism se: compute → cache/rightsize, network → CDN/compression. Har badlaav ke baad SLO. Discounts rate ghatate hain; bekaar kaam aur capacity ki barbaadi alag ghatao.',
         choiceExplanations: [
-          'Bada kharcha pehle (sabse zyada bachat). Lever kism se: compute → cache/rightsize, network → CDN/compression. Har badlaav ke baad SLO. Discounts achhe hain, par phoole hue design ko sasta nahi banate.',
+          'Bada kharcha pehle (sabse zyada bachat). Lever kism se: compute → cache/rightsize, network → CDN/compression. Har badlaav ke baad SLO. Discounts rate ghatate hain; bekaar kaam aur capacity ki barbaadi alag ghatao.',
           'Baraabar kaat se chhote kharche wali team dukhi, bade kharche wali theek. Data se chalo.',
           'Umar kharche ka paimana nahi. Bill dekho.',
           'Commitment discount usi kharche par lagta hai. Bekaar kaam ka discount bhi bekaar kharcha hai.',
@@ -358,7 +358,7 @@ Is mahine:      ₹36 lakh ÷ 3 crore payments   = ₹0.12 har payment</pre>
   homework: `Apne kisi project ka mahine ka andaazan kharcha likho (server, DB, storage, network).
     Use mahine ke users ya requests se bhaag do. Ek request kitne paise ki? Sabse bada hissa kaunsa, aur usko kaunsa lever chhota karega?`,
   cards: [
-    { front: 'Unit cost?', back: 'Kul kharcha ÷ business ikai (payments, users). Scale par girna chahiye.' },
+    { front: 'Unit cost?', back: 'Kul kharcha ÷ business ikai (payments, users). Trend dekho; naye features aur SLO ki keemat bhi jodo.' },
     { front: 'Dobara ka kaam?', back: 'Cache: ek baar banao, rakh lo. Keemat: invalidation.' },
     { front: 'Khaali servers?', back: 'Rightsize + autoscaling. Keemat: scale-up mein der — p99 jaancho.' },
     { front: 'Network ka bill?', back: 'Compression + CDN. Keemat: CDN invalidation, signed URLs.' },
@@ -430,7 +430,7 @@ SD.addScenes({
       { from: 'unit', to: 'pdf', label: 'cache', tone: 'good', set: { pdf: { tone: 'good', sub: '₹8 → ₹2 lakh' } }, say: 'Statement PDF har download par dobara ban raha tha. Mahine ka PDF ek baar banao aur rakh lo. Keemat: refund aaye toh dobara banana.' },
       { from: 'pdf', to: 'reco', label: 'rightsize', tone: 'good', set: { reco: { tone: 'good', sub: '₹8 → ₹4 lakh' } }, say: 'Recommendations ke servers 70% waqt khaali. Chhote servers aur autoscaling.' },
       { from: 'reco', to: 'slo', label: 'p99 theek?', tone: 'gold', say: 'Rightsize ke baad p99 jaancho. SLO toota toh bachat nahi, outage hai.' },
-      { from: 'reco', to: 'exp', label: 'cdn', tone: 'good', set: { exp: { tone: 'good', sub: '₹5 → ₹2 lakh' } }, say: 'Badi export files seedhe origin se ja rahi thi. Compression aur CDN se network ka kharcha kam.' },
+      { from: 'reco', to: 'exp', label: 'cdn', tone: 'good', set: { exp: { tone: 'good', sub: '₹5 → ₹2 lakh' } }, say: 'Badi export files seedhe origin se ja rahi thi. Model mein compression aur CDN se kharcha kam. Asli bill mein CDN delivery bhi jodo; private exports ki access jaancho.' },
       { at: ['unit'], set: { unit: { tone: 'good', sub: '₹0.077 / payment' } }, say: '₹23 lakh ÷ 3 crore ≈ ₹0.077. Har lever kharche ki kism se mila.' },
     ],
   },
@@ -473,7 +473,7 @@ SD.addScenes({
     mistake: 'Har team par 10% ka andha cut.',
     compare: [
       { choice: 'Architecture lever (cache, rightsize, CDN)', when: 'Kaam bekaar ho raha hai ya khaali resources hain', tradeoff: 'Badi bachat; code aur testing ka kaam, invalidation ka risk' },
-      { choice: 'Commitment discount', when: 'Load sthir hai aur design theek hai', tradeoff: 'Code nahi badalta; lambi commitment, bekaar kaam bhi sasta nahi hota' },
+      { choice: 'Commitment discount', when: 'Load sthir hai aur design theek hai', tradeoff: 'Code nahi badalta; rate kam hota hai, par commitment aur bekaar usage ka risk rehta hai' },
     ],
     followup: 'Recommendations ka kharcha ghata, par conversion 2% gira. Unit cost ke saath kaunsa number aur dekhoge?',
     sources: [

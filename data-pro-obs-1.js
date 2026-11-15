@@ -46,10 +46,10 @@ SD.registerLevels('pro-obs', [
        Ye cheezein <b>logs aur traces</b> mein rakho.</p>`,
     `<h3>📊 Average jhooth bolta hai</h3>
      <p>Average latency 120 ms. Par 1% payments 3 second le rahi hain. Average ne unhe chhupa diya.</p>
-     <p><b>Histogram</b> requests ko buckets mein ginta hai (≤50 ms, ≤100 ms, ≤250 ms, …). Buckets se p99 nikalta hai.</p>
+     <p><b>Histogram</b> requests ko buckets mein ginta hai (≤50 ms, ≤100 ms, ≤250 ms, …). Buckets se p99 ka andaaza nikalta hai.</p>
      <ul>
-       <li>Do servers ka p99 100 ms aur 900 ms. Poore service ka p99 <b>500 ms nahi</b>. Dono ke buckets jodo, phir p99 nikaalo.</li>
-       <li>Histogram bhi series badhata hai: har bucket ek series, upar se <code>_sum</code> aur <code>_count</code>.</li>
+       <li>Do servers ka p99 100 ms aur 900 ms. Poore service ka p99 <b>500 ms maan nahi sakte</b>. Dono ke samaan boundaries wale buckets jodo, phir p99 ka andaaza nikaalo.</li>
+       <li>Classic histogram (har bucket ki alag series) bhi series badhata hai: har bucket ek series, upar se <code>_sum</code> aur <code>_count</code>.</li>
      </ul>`,
   ],
   stages: [
@@ -65,7 +65,7 @@ SD.registerLevels('pro-obs', [
           answer: 32000,
           tol: 0.05,
           steps: ['4 × 50 = 200', '200 × 8 = 1,600', '1,600 × 20 = 32,000'],
-          lesson: 'Har label ek guna hai. Chaar chhote labels bhi hazaaron series bana dete hain.',
+          lesson: 'Saare combinations banein toh label counts guna hote hain. Chaar chhote labels bhi hazaaron series bana dete hain.',
         },
         {
           q: 'Ab merchant_id label joda (40,000 merchants). Zyada se zyada kitni series? Jawab CRORE mein do.',
@@ -77,13 +77,13 @@ SD.registerLevels('pro-obs', [
           lesson: 'Ek bina-hadd wala label ne series ko 40,000 guna kar diya. Isliye merchant_id log mein, label mein nahi.',
         },
         {
-          q: 'Latency histogram mein 12 buckets. Har (route, instance) par bucket series + _sum + _count. 50 routes × 20 instances par kitni series?',
+          q: 'Latency classic histogram mein 12 buckets (∞ bucket samet). Har (route, instance) par bucket series + _sum + _count. 50 routes × 20 instances par kitni series?',
           unit: 'series',
           given: ['12 buckets', '+ _sum + _count = 2 aur', '50 routes × 20 instances = 1,000'],
           answer: 14000,
           tol: 0.05,
           steps: ['Har combination: 12 + 2 = 14 series', '14 × 1,000 = 14,000'],
-          lesson: 'Histogram mehenga hai, par p99 ke liye zaroori. Buckets aur labels soch ke chuno.',
+          lesson: 'Classic histogram se p99 ka andaaza milta hai. Buckets aur labels soch ke chuno.',
         },
       ],
     },
@@ -119,9 +119,9 @@ SD.registerLevels('pro-obs', [
             '100 ms; zyada traffic wala server hi poore service ka p99 tay karta hai',
           ],
           answer: 0,
-          explain: 'Percentiles ka average nahi hota. Jawab traffic ke bantwaare par nirbhar hai. Histogram buckets jodne layak hain: dono ke buckets jodo, phir poore data ka p99 nikaalo.',
+          explain: 'Percentiles ka average nahi hota. Jawab traffic ke bantwaare par nirbhar hai. Summary (client par nikle percentiles) ke p99 jod nahi sakte. Samaan boundaries wale histogram buckets jodne layak hain: dono ke buckets jodo, phir poore data ka p99 nikaalo.',
           choiceExplanations: [
-            'Percentiles ka average nahi hota. Jawab traffic ke bantwaare par nirbhar hai. Histogram buckets jodne layak hain: dono ke buckets jodo, phir poore data ka p99 nikaalo.',
+            'Percentiles ka average nahi hota. Jawab traffic ke bantwaare par nirbhar hai. Summary (client par nikle percentiles) ke p99 jod nahi sakte. Samaan boundaries wale histogram buckets jodne layak hain: dono ke buckets jodo, phir poore data ka p99 nikaalo.',
             'Average tabhi sahi hota jab percentiles jod sakte. Ek server 99% traffic le toh jawab 100 ms ke paas hoga.',
             'Agar dheema server sirf 1% traffic leta hai, toh poore service ka p99 900 ms se kaafi kam ho sakta hai.',
             'Traffic ka bantwaara jawab badalta hai, par dheeme server ki tail bhi poore p99 mein aati hai.',
@@ -226,19 +226,19 @@ SD.registerLevels('pro-obs', [
                                  ├→ wallet-api → ledger-db  80 ms
                                  └→ bank-adapter → partner bank  1,900 ms ⚠️
 total: 2.4 s</pre>
-     <p>Waterfall dekhte hi pata chala: <b>bank-adapter</b> mein 1.9 s, andar 3 retries.</p>
+     <p>Waterfall dekhte hi pata chala: <b>bank-adapter</b> mein 1.9 s, andar 3 attempts: pehli call aur 2 retries.</p>
      <p>trace id kaise pahuncha? Har HTTP call ke header mein (W3C Trace Context):</p>
      <pre>traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
-             ver  trace id (32 hex)                 parent span id    flags (01 = sampled)</pre>
+             ver  trace id (32 hex)                 parent span id (16 hex)    flags (01 = sampled)</pre>
      <p>Queue (Kafka) ke through async kaam? Trace context message ke headers mein jaata hai.</p>`,
     `<h3>🎯 Sampling: sab rakhoge toh bill, kam rakhoge toh chhootega</h3>
      <table>
        <tr><th>Tareeka</th><th>Kaise</th><th>Kamzori</th></tr>
-       <tr><td><b>Head sampling</b></td><td>Request ke shuru mein faisla: 1% rakho</td><td>Sasta. Par 0.05% failed payments ka trace 99% baar nahi milega</td></tr>
-       <tr><td><b>Tail sampling</b></td><td>Poora trace collector mein ruk ke dekho: saare errors + saare dheeme (&gt;1 s) + 1% normal</td><td>Behtar chunav. Collector ko poora trace memory mein rakhna padta hai</td></tr>
+       <tr><td><b>Head sampling</b></td><td>Request ke shuru mein faisla: 1% rakho</td><td>Sasta. Par har failed payment ka trace chhootne ka chance 99% (random 1% policy)</td></tr>
+       <tr><td><b>Tail sampling</b></td><td>Poora trace collector mein ruk ke dekho: errors + dheeme (&gt;1 s) + 1% normal chunne ki policy</td><td>Behtar chunav. Spans buffer hote hain. Pehle head sampling ne spans chhode toh tail sampling wapas nahi la sakti</td></tr>
      </table>
      <h3>🔗 Teeno signals jodo</h3>
-     <p>Alert (p99 badha) → us waqt ka ek trace → sabse lamba span → us span ke <code>trace_id</code> se logs. Har log line mein trace_id likho.</p>`,
+     <p>Alert (p99 badha) → us waqt ka ek trace → sabse lamba span → us span ke <code>trace_id</code> se logs. Request ke logs mein trace_id likho. Metrics se trace tak exemplar (trace ka link) use karo; trace_id metric label nahi.</p>`,
   ],
   stages: [
     {
@@ -266,14 +266,14 @@ total: 2.4 s</pre>
             { t: 'Bank dheema hai; har timeout par retry, toh wait teen baar jud gaya', good: true, next: 'fix', explain: 'Do timeouts + ek success = 1.9 s. Retry ne dheemi dependency ki wait ko teen guna kar diya.' },
             { t: 'Network packet loss; trace ke spans galat time dikha rahe hain', good: false, explain: 'Teen spans saaf alag call dikha rahe hain. Trace ka time yahan ka saboot hai.' },
             { t: 'fraud-check ne bank-adapter ko block kar rakha tha', good: false, explain: 'fraud-check 120 ms mein khatam ho gaya. Spans parallel the.' },
-            { t: 'Tracing ka overhead hi 1.9 s le raha hai', good: false, explain: 'Tracing ka kharcha microseconds mein hota hai, second mein nahi.' },
+            { t: 'Tracing ka overhead hi 1.9 s le raha hai', good: false, explain: 'Child spans bank calls ka waqt dikha rahe hain. Tracing ka apna overhead alag naapo.' },
           ],
         },
         fix: {
           sitrep: '📈 Partner bank ka apna p99 abhi 650 ms (aam din: 200 ms).',
           text: 'Kya badloge?',
           choices: [
-            { t: 'Retries kam aur backoff ke saath; timeout ke baad status check, dobara debit nahi', good: true, next: 'end', explain: 'Payment ka retry khatarnaak hai: pehli call shayad safal hui ho. Status check se pakka karo, aur kul samay ki hadd rakho.' },
+            { t: 'Retries kam aur backoff ke saath; timeout ke baad status check, dobara debit nahi', good: true, next: 'end', explain: 'Payment ka retry khatarnaak hai: pehli call shayad safal hui ho. Status check karo. Retry par wahi idempotency key rakho, taaki ek payment do baar debit na ho. Kul samay ki hadd rakho.' },
             { t: 'Timeout 5 second kar do; koi call timeout hi nahi hogi', good: false, explain: 'Har payment 5 s tak latak sakti hai. Threads aur connections bhar jaayenge.' },
             { t: 'Tracing band karo; trace mein dheemapan dikh raha hai, toh trace hi wajah hai', good: false, explain: 'Trace ne sirf dikhaya. Thermometer todne se bukhaar nahi jaata.' },
             { t: 'bank-adapter ke pods double karo; zyada pods, zyada tez', good: false, explain: 'Dheemapan partner bank mein hai. Zyada pods bank par aur load daalenge.' },
@@ -286,7 +286,7 @@ total: 2.4 s</pre>
             <br><br><b>Teen niyam:</b>
             <br>1. Sabse lamba span pehle.
             <br>2. Retry dheemi dependency ki wait ko guna kar deta hai.
-            <br>3. Payment par retry se pehle status check — dobara debit nahi.`,
+            <br>3. Payment par status check aur retry mein wahi idempotency key — dobara debit nahi.`,
         },
       },
     },
@@ -320,9 +320,9 @@ total: 2.4 s</pre>
             'Errors sirf logs mein dekho; failed payment ke liye trace ki zaroorat nahi',
           ],
           answer: 0,
-          explain: 'Head sampling shuru mein faisla karta hai, jab pata nahi ki request fail hogi. 99% failed payments ka trace gaya. Tail sampling poora trace dekh ke errors aur dheemi requests rakhta hai.',
+          explain: 'Head sampling shuru mein faisla karta hai, jab pata nahi ki request fail hogi. Random 1% policy mein har failed payment ka trace chhootne ka chance 99%. Tail sampling poora trace dekh ke errors aur dheemi requests rakhta hai.',
           choiceExplanations: [
-            'Head sampling shuru mein faisla karta hai, jab pata nahi ki request fail hogi. 99% failed payments ka trace gaya. Tail sampling poora trace dekh ke errors aur dheemi requests rakhta hai.',
+            'Head sampling shuru mein faisla karta hai, jab pata nahi ki request fail hogi. Random 1% policy mein har failed payment ka trace chhootne ka chance 99%. Tail sampling poora trace dekh ke errors aur dheemi requests rakhta hai.',
             'Rare cheezein 1% sample mein rare hi rehti hain. 0.05% ka 1% bahut kam traces.',
             'Bade system mein 100% traces ka storage aur network bill bada hota hai.',
             'Logs batate hain kya fail hua; trace batata hai kis service ke kis kadam par aur kitna samay.',
@@ -378,9 +378,9 @@ total: 2.4 s</pre>
           'Dono ek jaise; farak sirf naam ka hai, kaam ka nahi',
         ],
         answer: 0,
-        explain: 'Head: shuru mein random faisla, koi buffering nahi. Tail: poora trace dekh ke faisla, isliye collector ko spans rok ke rakhne padte hain — par rare errors bachte hain.',
+        explain: 'Head: shuru mein faisla; 1% random sampling ek policy hai, poora trace buffer nahi hota. Tail: poora trace dekh ke faisla, isliye collector ko spans rok ke rakhne padte hain — par rare errors bachte hain.',
         choiceExplanations: [
-          'Head: shuru mein random faisla, koi buffering nahi. Tail: poora trace dekh ke faisla, isliye collector ko spans rok ke rakhne padte hain — par rare errors bachte hain.',
+          'Head: shuru mein faisla; 1% random sampling ek policy hai, poora trace buffer nahi hota. Tail: poora trace dekh ke faisla, isliye collector ko spans rok ke rakhne padte hain — par rare errors bachte hain.',
           'Head rare errors chhod deta hai. Bade systems mein bhi tail sampling chalta hai, collectors ke saath.',
           'Tail mein services saare spans collector ko bhejti hain; faisla baad mein hota hai. Network ka kharcha zyada.',
           'Faisla kab hota hai, isi se fark padta hai: shuru mein ya poora trace dekh ke.',
@@ -398,7 +398,7 @@ total: 2.4 s</pre>
   cards: [
     { front: 'Trace vs span?', back: 'Trace = ek request ki poori yatra. Span = ek hissa (service/kaam), parent ke saath.' },
     { front: 'traceparent?', back: 'W3C header: version-traceid-parentspanid-flags. Har outgoing call mein aage bhejo.' },
-    { front: 'Head vs tail sampling?', back: 'Head: shuru mein random, sasta, rare errors chhoot-te hain. Tail: poora trace dekh ke, errors bachte hain, collector bhaari.' },
+    { front: 'Head vs tail sampling?', back: 'Head: shuru mein faisla; random 1% sasta, rare errors chhoot-te hain. Tail: poora trace dekh ke, errors bachte hain, collector bhaari.' },
     { front: 'Signals kaise jodein?', back: 'Alert → trace → sabse lamba span → trace_id se logs. Har log mein trace_id.' },
   ],
 },
@@ -453,7 +453,7 @@ SD.addScenes({
     ],
   },
   'obs-trace': {
-    intro: 'Ek payment ka p99 <b>2.4 second</b>. Trace se dekho waqt kahan gaya.',
+    intro: 'Payment service ka p99 <b>2.4 second</b>. Ek dheeme trace se dekho waqt kahan gaya.',
     nodes: [
       { id: 'gw', col: 0, row: 1, icon: '🚪', label: 'api-gateway', sub: 'trace shuru' },
       { id: 'pay', col: 1, row: 1, icon: '💳', label: 'payment-api', sub: '2,400 ms' },

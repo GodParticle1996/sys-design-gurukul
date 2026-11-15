@@ -261,6 +261,7 @@
         const spare = flag(norm, 'spare') == null ? 0 : flag(norm, 'spare');
         if (!good(target, 10, 100) || !Number.isInteger(spare) || spare < 0 || spare > 50) err('400 — --target 10 se 100 (percent), --spare 0 ya zyada poora number');
         const base = Math.ceil(peak / (per * target / 100)), servers = base + spare;
+        if (servers > 100000) err('400 — plan 1,00,000 servers se upar ja raha hai; model ki hadd 1,00,000 (capacity fail ki bhi yahi hadd)');
         const util = peak / (servers * per) * 100, shown = Math.round(util * 10) / 10;
         panel('Capacity plan', [`peak ${num(peak)} rps ÷ (${num(per)} rps/server × ${target}% target) = ${base} servers`, `+ spare ${spare} = ${servers} servers`,
           `Model: saare ${servers} servers traffic lete hain. Peak par har server ~${shown}% busy.`,
@@ -272,7 +273,8 @@
         if (!Number.isInteger(n) || n < 2 || n > 100000) err('400 — --servers 2 ya zyada poora number do');
         const raw = peak / ((n - 1) * per) * 100, util = Math.round(raw * 10) / 10;
         const ok = raw <= 85;   /* bina rounding ke tulna: 85.4% bhi overload */
-        print(ok ? 'ok' : 'err', `${n} mein se 1 server mara → baaki ${n - 1} par peak: ${util}% ${ok ? '✅ jhel liya' : '💀 overload (model ki hadd 85% se upar: queue aur timeouts)'}`);
+        const shown = !ok && util <= 85 ? '85% se thoda upar' : util + '%';
+        print(ok ? 'ok' : 'err', `${n} mein se 1 server mara → baaki ${n - 1} par peak: ${shown} ${ok ? '✅ jhel liya' : '💀 overload (model ki hadd 85% se upar: queue aur timeouts)'}`);
         return rec({ kind: 'capacity', op: 'fail', servers: n, peak, per, util, survived: ok });
       }
       err(`400 — 'capacity ${verb}' samajh nahi aaya. plan ya fail.`);

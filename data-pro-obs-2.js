@@ -37,11 +37,11 @@ SD.registerLevels('pro-obs', [
      <p>Tank mein 30 din ka petrol hai. Sawaal ye nahi ki "abhi kitna petrol gaya?". Sawaal ye hai: <b>"is raftaar se kitne din chalega?"</b></p>
      <p>Ek ghante mein 2% gaya? 50 ghante mein tank khaali — abhi dhyaan do. Teen din mein 10% gaya? Dheere ja raha hai — kal theek kar lo.</p>
      <p class="tip">🎯 <b>Asli baat:</b> error budget petrol hai. <b>Burn rate</b> = abhi ki error rate ÷ SLO ki manzoor error rate.
-       1× ka matlab budget theek 30 din mein khatam. 14.4× ka matlab bahut tez.</p>`,
+       Samaan traffic par 1× se poora budget 30 din mein khatam. 14.4× ka matlab bahut tez.</p>`,
     `<h3>🧮 ChaiPay ke numbers (SLO 99.9%, 30 din)</h3>
      <pre>Manzoor error rate = 0.1%
 30 din = 720 ghante
-Budget = 0.1% × 720 ghante = 0.72 ghante = 43.2 minute poora down
+Samaan traffic maan kar downtime-equivalent budget = 0.1% × 720 ghante = 0.72 ghante = 43.2 minute poora down
 
 Burn 14.4×  (error 1.44%)  → 1 ghante mein budget ka 14.4/720 = 2%
 Burn 6×     (error 0.6%)   → 6 ghante mein 5%
@@ -52,11 +52,11 @@ Burn 1×     (error 0.1%)   → 3 din (72 ghante) mein 10%</pre>
        <tr><td>5% chhe ghante mein</td><td>6×</td><td>📟 Page</td></tr>
        <tr><td>10% teen din mein</td><td>1×</td><td>🎫 Ticket</td></tr>
      </table>
-     <p>Ye numbers Google ki SRE workbook ke shuruaati sujhaav hain. Apne SLO ke hisaab se badlo.</p>`,
+     <p>Request-based budget = kul requests × 0.1%. Upar ke time waale hisaab samaan traffic maante hain. Ye numbers Google ki SRE workbook ke shuruaati sujhaav hain. Apne SLO ke hisaab se badlo.</p>`,
     `<h3>🪟 Do khidkiyan kyun?</h3>
      <p>Sirf 1 ghante ki khidki: problem 10:05 par theek ho gayi, par 1 ghante ka average 11 baje tak upar rahega. <b>Alert der tak bajta rahega.</b></p>
      <p>Isliye saath mein ek chhoti khidki (lambi ka 1/12 — 1 ghante ke saath 5 minute). Page tabhi jab <b>dono</b> 14.4× se upar.
-       Problem theek hote hi 5 minute wali neeche aati hai aur alert chup.</p>
+       Problem theek hone ke baad 5 minute wali neeche aati hai aur alert chup. Ticket ke liye 3 din aur 6 ghante, dono mein burn 1× se upar ho.</p>
      <h3>❌ Purana tareeka: "error rate &gt; 1%, 5 minute"</h3>
      <ul>
        <li>Raat ko kam traffic: 100 mein 2 errors = 2% → bekaar page.</li>
@@ -74,13 +74,13 @@ Burn 1×     (error 0.1%)   → 3 din (72 ghante) mein 10%</pre>
       goal: 'Burn rate ke numbers khud nikaalo.',
       problems: [
         {
-          q: 'SLO 99.9%, 30 din ki khidki. Error budget kitne MINUTE ke poore downtime jitna hai?',
+          q: 'SLO 99.9%, 30 din ki khidki. Samaan traffic maan kar error budget kitne MINUTE ke poore downtime jitna hai?',
           unit: 'minute',
           given: ['Manzoor error = 0.1%', '30 din = 43,200 minute'],
           answer: 43.2,
           tol: 0.05,
           steps: ['43,200 × 0.001 = 43.2 minute'],
-          lesson: 'Ek mahine mein sirf 43 minute ka poora outage. Har minute keemti hai.',
+          lesson: 'Samaan traffic par lagbhag 43 minute ke poore outage jitna budget. Har minute keemti hai.',
         },
         {
           q: 'Abhi error rate 1.44% hai. SLO 99.9%. Burn rate kitna hai?',
@@ -114,7 +114,7 @@ Burn 1×     (error 0.1%)   → 3 din (72 ghante) mein 10%</pre>
       items: [
         { text: 'Burn rate: 1 ghante mein 16×, aur 5 minute mein bhi 15×', bin: 'page', explain: 'Dono khidkiyan 14.4× se upar. Budget tez ja raha hai, abhi bhi chal raha hai.' },
         { text: 'Burn rate: 6 ghante mein 7×, aur 30 minute mein 6.5×', bin: 'page', explain: '6 ghante mein 5% budget wali shart (6×) dono khidkiyon par paar. Dheema par lamba — page.' },
-        { text: 'Burn rate: 3 din mein 1.2×', bin: 'ticket', explain: 'Budget mahine se thoda pehle khatam hoga. Kaam ke ghanton mein theek karo.' },
+        { text: 'Burn rate: 3 din mein 1.2× aur 6 ghante mein bhi 1.2×; page waali shartein false', bin: 'ticket', explain: 'Budget mahine se thoda pehle khatam hoga. Kaam ke ghanton mein theek karo.' },
         { text: 'Burn rate: 1 ghante mein 15×, par 5 minute mein 0.5× — theek ho chuka', bin: 'none', explain: 'Chhoti khidki batati hai ki problem ruk chuki. Raat ko jagaane ka faayda nahi; subah postmortem.' },
         { text: 'Ek pod restart hua; error rate normal, users par koi asar nahi', bin: 'none', explain: 'Users ko dard nahi, budget nahi gaya. Dashboard par dikhe, page nahi.' },
         { text: 'Disk 80% bhari; isi raftaar se 3 hafte mein poori', bin: 'ticket', explain: 'Asli problem, par 3 hafte ka samay hai. Ticket.' },
@@ -226,14 +226,14 @@ Burn 1×     (error 0.1%)   → 3 din (72 ghante) mein 10%</pre>
   objectives: [
     'Peak se servers: seedha bhaag kyun kam padta hai',
     '<b>Target utilization</b>: 100% par chalne wala server dheema kyun',
-    '<b>N+1</b>: ek server mare ya deploy mein bahar ho, tab bhi jhelo',
+    '<b>N+1</b> (zaroorat ke N servers aur ek extra): ek server mare ya deploy mein bahar ho, tab bhi jhelo',
     'Terminal: plan banao, ek server maaro, plan sudhaaro',
   ],
   lesson: [
     `<h3>🚌 Misaal: shaadi ki buses</h3>
      <p>240 mehmaan, ek bus mein 40 seat. 6 bus? Theek — jab tak koi bus kharab na ho.</p>
      <p>Ek bus kharab hui: 40 log sadak par. Aur har bus 100% bhari — kisi ka bag rakhne ki jagah nahi.</p>
-     <p class="tip">🎯 <b>Asli baat:</b> servers = peak ÷ (ek server ki capacity × target utilization) + spare.
+     <p class="tip">🎯 <b>Asli baat:</b> servers = peak ÷ (ek server ki capacity × target utilization), upar poore number tak round karo, phir spare jodo.
        Seedha bhaag sirf tab chalta hai jab kuch kharab na ho aur traffic kabhi uchhle nahi.</p>`,
     `<h3>📈 ChaiPay ka Diwali peak</h3>
      <ul>
@@ -250,8 +250,8 @@ Spare +1 deploy ke liye: 11 servers</pre>
      <p><b>Keemat:</b> 6 ki jagah 11 servers — lagbhag 1.8 guna kharcha. Bharosa sasta nahi hai.</p>
      <ul>
        <li><b>Autoscaling</b> madad karta hai, par naya server aane mein minute lagte hain. Peak aur failure seconds mein aate hain.</li>
-       <li><b>3 AZ</b> (availability zones) mein baanto. Ek AZ gaya toh baaki do milke poora peak jhelein.</li>
-       <li>Bade systems N+2 rakhte hain: ek planned maintenance + ek achanak failure.</li>
+       <li><b>3 AZ</b> (availability zones: alag failure waale data centres) mein baanto. Ek AZ gaya toh baaki do milke poora peak jhelein.</li>
+       <li>Zaroorat ho toh N+2 (do extra servers) rakho: ek planned maintenance + ek achanak failure.</li>
      </ul>`,
   ],
   stages: [
@@ -269,7 +269,7 @@ Spare +1 deploy ke liye: 11 servers</pre>
         'capacity plan --peak 2400 --per-server 400 --target 60 --spare 1',
         'capacity fail --servers 11 --peak 2400 --per-server 400',
       ],
-      successText: '11 servers: peak par har server ~55% busy; ek mare toh baaki 10 par 60%, aur deploy ke liye ek spare. Keemat: 6 ki jagah 11 servers. Model mein 85% se upar ko overload maana; asli hadd load test se naapo.',
+      successText: 'Plan aur failure test poore. Solution ke 60% target aur 1 spare par 11 servers: peak par ~55%; ek mare toh 60%. Apne plan ke numbers terminal mein dekho. Model mein 85% se upar ko overload maana; asli hadd load test se naapo.',
       hints: [
         'Pehle bina target ke seedha hisaab lagao, phir utne servers mein se ek maar ke dekho.',
         '`capacity plan --peak <rps> --per-server <rps> [--target <pct>] [--spare <n>]` servers ginta hai. `capacity fail --servers <n> --peak <rps> --per-server <rps>` ek server maar ke baaki ka bojh dikhata hai.',
@@ -289,9 +289,9 @@ Spare +1 deploy ke liye: 11 servers</pre>
             'Nahi; production mein 20% se upar kabhi mat chalao, warna khatra',
           ],
           answer: 0,
-          explain: '100% ke paas queue tezi se badhti hai. Burst, GC pause ya ek server ki maut ke liye jagah chahiye. 20% bahut mehenga hai — aath guna servers.',
+          explain: '100% ke paas queue tezi se badhti hai. Burst, GC pause ya ek server ki maut ke liye jagah chahiye. 20% bahut mehenga hai — 100% target ke mukaable 5 guna servers.',
           choiceExplanations: [
-            '100% ke paas queue tezi se badhti hai. Burst, GC pause ya ek server ki maut ke liye jagah chahiye. 20% bahut mehenga hai — aath guna servers.',
+            '100% ke paas queue tezi se badhti hai. Burst, GC pause ya ek server ki maut ke liye jagah chahiye. 20% bahut mehenga hai — 100% target ke mukaable 5 guna servers.',
             'Load test ek saaf haalat hai. Production mein burst, noisy neighbour aur failures hote hain.',
             'Load test aksar asli traffic se saaf hota hai, isliye asli capacity kam ho sakti hai, zyada nahi.',
             'Bahut kam utilization ka matlab bahut zyada kharcha. 60–70% aam shuruaat hai.',
@@ -341,7 +341,7 @@ Spare +1 deploy ke liye: 11 servers</pre>
       {
         q: '"Is design ke liye kitne servers?" Kaise jawab doge?',
         choices: [
-          'Peak rps ÷ (per-server rps × target) + N+1; per-server number load test se',
+          'Peak rps ÷ (per-server rps × target), round up + spare; capacity load test se',
           'Average rps ÷ per-server rps; average hi asli load batata hai',
           'Jitne servers competitor chalata hai, utne; unhone pehle se soch rakha hai',
           'Ek server se shuru karo; problem aaye toh tab badha lenge',
@@ -367,7 +367,7 @@ Spare +1 deploy ke liye: 11 servers</pre>
         explain: 'Headroom ka kaam numbers mein dikhao: ek server mare toh baaki kitne % par, aur Diwali peak kitna. Bharosa ki keemat aur outage ki keemat dono saamne rakho.',
         choiceExplanations: [
           'Headroom ka kaam numbers mein dikhao: ek server mare toh baaki kitne % par, aur Diwali peak kitna. Bharosa ki keemat aur outage ki keemat dono saamne rakho.',
-          '95% par ek server ki maut = baaki 100% se upar, aur autoscaling minuton baad aata hai.',
+          '95% par chhote fleet mein ek failure load 100% se upar le jaa sakta hai. N servers par naya load = 95% × N ÷ (N−1). Autoscaling mein der lagti hai.',
           'Kharcha business ka sawaal hai. Numbers se baat karo.',
           'Peak achanak bhi aata hai (viral sale). Haath se chalu karne mein der hogi.',
         ],
@@ -384,7 +384,7 @@ Spare +1 deploy ke liye: 11 servers</pre>
   cards: [
     { front: 'Servers ka formula?', back: 'peak ÷ (per-server × target) + spare. Per-server load test se.' },
     { front: '100% target kyun nahi?', back: 'Queue tezi se badhti hai; burst, GC aur failure ke liye jagah nahi.' },
-    { front: '3 AZ, ek AZ jaaye?', back: 'Har AZ mein peak ÷ 2. Baaki do milke poora peak.' },
+    { front: '3 AZ, ek AZ jaaye?', back: 'Har AZ mein kam se kam peak ÷ 2 usable capacity. Target utilization aur server rounding alag lagao.' },
     { front: 'Autoscaling hai, spare kyun?', back: 'Naya server minton mein; peak aur failure seconds mein.' },
   ],
 },
@@ -422,7 +422,7 @@ VISUALS['obs-capacity'] = {
 
 SD.addScenes({
   'obs-burn': {
-    intro: 'ChaiPay ka SLO: 99.9% payments safal, 30 din mein. Budget = <b>43.2 minute</b>.',
+    intro: 'ChaiPay ka SLO: 99.9% payments safal, 30 din mein. Samaan traffic par budget <b>43.2 minute</b> ke poore outage jitna.',
     nodes: [
       { id: 'err', col: 0, row: 0, icon: '📉', label: 'error rate', sub: '1.44%' },
       { id: 'burn', col: 1, row: 0, icon: '🔥', label: 'burn rate', sub: '÷ 0.1%' },
@@ -435,9 +435,9 @@ SD.addScenes({
       { from: 'err', to: 'burn', label: '1.44% ÷ 0.1%', say: 'Error rate 1.44%. Manzoor 0.1%. Burn rate 14.4: budget 14.4 guna tez ja raha hai.' },
       { from: 'burn', to: 'long', label: '14.4× · 1 ghanta', tone: 'bad', set: { long: { tone: 'bad', sub: '14.4× — 2% gaya' } }, say: 'Ek ghante mein mahine ke budget ka 2%. Isi raftaar se 50 ghante mein poora budget khatam.' },
       { from: 'burn', to: 'short', label: 'abhi bhi 14.4×?', set: { short: { tone: 'bad', sub: 'haan, abhi jal raha' } }, say: 'Chhoti khidki poochhti hai: abhi bhi jal raha hai? Haan.' },
-      { from: 'long', to: 'page', label: 'dono upar → page', tone: 'bad', set: { page: { tone: 'bad', sub: 'on-call jaaga' } }, say: 'Dono khidkiyan 14.4× se upar. On-call ko page.' },
+      { from: 'long', to: 'page', label: 'dono upar → page', tone: 'bad', set: { page: { tone: 'bad', sub: 'on-call jaaga' } }, say: 'Page tab jab dono khidkiyan 14.4× se upar hon. Sirf 14.4× ke barabar hona kaafi nahi.' },
       { at: ['short', 'page'], set: { short: { tone: 'good', sub: '0.5× — theek' }, page: { tone: 'good', sub: 'alert chup' } }, say: 'Fix ke 5 minute baad chhoti khidki neeche. Alert chup, chahe 1 ghante ka average abhi upar ho.' },
-      { at: ['ticket'], set: { ticket: { tone: 'gold', sub: '10% budget, 3 din' } }, say: 'Dheema rissaav (1× teen din) raat ko nahi jagata. Ticket banta hai, kaam ke ghanton mein theek.' },
+      { at: ['ticket'], set: { ticket: { tone: 'gold', sub: '10% budget, 3 din' } }, say: '3 din aur 6 ghante, dono mein burn 1× se upar; page waali shartein false. Ticket banta hai, kaam ke ghanton mein theek.' },
     ],
   },
   'obs-capacity': {
@@ -487,10 +487,10 @@ SD.addScenes({
   { id: 'pro-obs-capacity', levels: 'obs-capacity', guide: {
     title: 'Kitni khaali jagah rakhein?',
     misaal: '240 mehmaan, 40 seat ki bus. 6 bus tab tak theek jab tak koi kharab na ho. Ek extra bus aur thodi khaali seat — shaadi bach gayi.',
-    asli: 'Servers = peak ÷ (per-server capacity × target utilization) + spare. Ek server, ek deploy ya ek AZ jaane par bhi peak jhelo.',
+    asli: 'Servers = peak ÷ (per-server capacity × target utilization) + spare. Ek server ya deploy ke liye spare gino. AZ loss ke liye bache hue AZ ki capacity alag jaancho.',
     points: [
       '<b>Peak se:</b> average se plan = peak par outage.',
-      '<b>Target 60–70%:</b> burst, GC aur failure ke liye jagah.',
+      '<b>Target 60–70%:</b> misaal ki shuruaat; asli target load test aur failure ki zaroorat se tay karo.',
       '<b>N+1 / AZ:</b> ek jaaye toh baaki jhelein; keemat bolo.',
     ],
     use: 'Sale, launch ya naye region se pehle capacity tay karni ho.',
