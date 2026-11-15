@@ -1,0 +1,76 @@
+/* ============ 🧠 Soch Akhada (soch.js) ============ */
+.so-home { border-color: #6ea8fe66; }
+.so-panel .level-h { margin-top: 12px; }
+
+.so-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 16px; }
+.so-chip {
+  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 999px; padding: 7px 13px; font: inherit; font-size: .88rem; cursor: pointer;
+}
+.so-chip span { color: var(--muted); margin-left: 4px; font-size: .8rem; }
+.so-chip:hover, .so-chip.on { border-color: var(--accent); }
+.so-chip.on { background: #6ea8fe22; font-weight: 700; }
+
+.so-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+.so-card {
+  display: flex; align-items: center; gap: 12px; min-width: 0;
+  background: var(--panel2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; cursor: pointer; transition: transform .15s, border-color .15s;
+}
+.so-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.so-card.done { border-color: #34d39966; }
+.so-card-icon { font-size: 1.7rem; flex: 0 0 auto; }
+.so-card-body { flex: 1 1 auto; min-width: 0; }
+.so-card-title { font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.so-card-meta { color: var(--muted); font-size: .8rem; margin-top: 3px; }
+.so-card-state { flex: 0 0 auto; color: var(--gold); font-size: .86rem; font-weight: 700; white-space: nowrap; }
+
+.so-scene {
+  background: var(--panel2); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 12px; padding: 12px 16px; margin: 12px 0; line-height: 1.6;
+}
+.so-scene h4 { margin: 0 0 6px; color: var(--accent); }
+.so-scene p { margin: 0 0 8px; }
+.so-scene ul { margin: 0; padding-left: 20px; }
+.so-scene li { margin: 3px 0; overflow-wrap: anywhere; }
+.so-scene code, .so-ask code, .so-compare code, .so-end code, .so-logline code { overflow-wrap: anywhere; }
+
+.so-log { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.so-logline {
+  border: 1px solid #34d39950; background: #34d39910; color: var(--success-ink);
+  border-radius: 10px; padding: 7px 12px; font-size: .9rem; line-height: 1.45; overflow-wrap: anywhere;
+}
+.so-stage > .btn { margin-top: 14px; }
+.so-ask .choice { text-align: left; }
+.so-compare h3 { margin: 6px 0 4px; }
+.so-compare td:first-child { font-weight: 700; color: var(--accent); }
+
+.so-end { text-align: center; margin-top: 6px; }
+.so-end .asli, .so-say { text-align: left; }
+.so-say {
+  margin: 12px 0; padding: 10px 14px; border-radius: 12px; line-height: 1.6;
+  background: var(--panel2); border: 1px solid #6ea8fe44;
+}
+.so-say h4 { margin: 0 0 4px; color: var(--accent); }
+.so-say p { margin: 0; }
+.so-related { margin: 12px 0; }
+.so-related h4 { margin: 0 0 8px; }
+.so-related .btn { margin: 0 8px 8px 0; text-align: left; }
+.so-locked { color: var(--muted); margin: 4px 0; font-size: .9rem; }
+
+.so-link {
+  margin: 14px 0; padding: 10px 14px; border-radius: 12px; text-align: left;
+  background: #6ea8fe12; border: 1px solid #6ea8fe44;
+}
+.so-link p { margin: 0 0 8px; }
+.so-link .btn { margin: 0 8px 8px 0; text-align: left; }
+
+:root[data-theme="light"] .so-chip.on { background: #dbe8ff; }
+:root[data-theme="light"] .so-logline { background: #e3f6ee; color: #0b5137; }
+:root[data-theme="light"] .so-link { background: #eef4ff; }
+
+@media (max-width: 560px) {
+  .so-grid { grid-template-columns: 1fr; }
+  .so-card { align-items: flex-start; flex-wrap: wrap; }
+  .so-card-state { width: 100%; padding-left: 44px; }
+}

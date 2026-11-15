@@ -758,3 +758,32 @@ Lesson mein "video mein…" ya presenter ka zikr nahi. Source video ka credit si
 **6. Likhne ka dhang** (files 1–2 se): Hinglish Roman script; chhote vaakya, ek vaakya = ek vichaar; pronoun (`ye/woh/uska`) ki jagah wahi noun dohrao ("recs-service latak gayi", "woh latak gayi" nahi); roz ki misaal → sawaal jaisa heading → mechanism (kaun kya karta hai aur kyun) → number → `🎯 Asli baat:` ek line → jargon ka naam; aakhir mein "ab main kya karoon" (faisla, setting ya command). Feynman-style ("apne shabdon mein samjhao") nahi — uski jagah dry run, scenario aur "kab use karein / kab nahi".
 
 **Lab ka pattern (har topic):** `tools/slowmo.js` (chhota paimaana, tay schedule, ek line ek ghatna; random ho toh `tools/seeded.js` jaisa tay-beej wala), ek chhoti asli code file `lib/<cheez>.js` jise lab ke tools/service sach mein chalate hain, `tools/mini.js` (sabse chhota program), aur jahan ho sake asli library ka demo (`tools/<library>.js`; library scratch folder mein install karke `NODE_PATH` se chalao — project mein `node_modules` nahi). Purane exercises pehle aur baad mein chala ke milao; README fresh output se dobara likho.
+
+---
+
+## 11. 🧠 Soch Akhada — soch-vichaar wale scenario sawal (`soch.js`, `soch.css`, `data-soch-*.js`)
+
+Owner ki maang (2026-11-14): ratta nahi, **critical thinking**. Ek asli jaisi samasya → 3–5 chhote kadam (har jawab par turant
+feedback) → saare hal ki tulna → interviewer ka twist → nichod. Home page par "🧠 Soch Akhada" card se khulta hai (hamesha khula),
+aur jis level ka topic hai uske complete screen par link aata hai (`levels: [...]` se).
+
+```js
+SD.registerScenarios([{
+  id: 'stale-balance', icon: '💸', title: '...', topic: 'data', hard: 2,       // topic: soch.js ke TOPICS mein se
+  levels: ['replication', 'eventual'],                                        // in levels ke ant mein link dikhega
+  story: 'HTML — 75 shabd se kam, naam ke saath', facts: ['HTML', ...],        // 2–5 facts
+  steps: [{ t: 'Asli wajah', q: 'HTML', a: [['jawab', 'kyun'], ...] }],        // 3–5 kadam; a[0] HAMESHA sahi jawab
+  fixes: [{ n, how, cost, when }],                                             // tulna table, 3–5 rows
+  twist: { q: 'HTML', a: [['jawab', 'kyun'], ...] },                           // a[0] sahi
+  asli: 'HTML — ek line', say: 'HTML — interview mein aise bolo',
+}]);
+```
+
+- **Kadam ka kram:** `Asli wajah` → `Hal chuno` → `Keemat`. Twist mein haalaat badalte hain (bojh 10 guna, do server, network toota).
+- **Har jawab ka apna "kyun"** — galat jawab par wahi dikhta hai. Galat jawab bhi aisa ho jo ek samajhdaar insaan chun sakta hai.
+- **Lambai ka niyam** (validator fail karta hai): sahi jawab sabse lambe galat jawab ke 1.15 guna se chhota aur sabse chhote galat
+  jawab ke 0.85 guna se bada ho. Theek karna ho toh galat jawab ko lamba karo, sahi ko kaato mat.
+- **Kahani:** ChaiPay (UPI wallet): `wallet-api`, `pay-api`, `api-gateway`, `pg-primary` + `pg-replica-1/2`, users Riya aur Aman. ₹ mein number.
+- Progress `SD.state.soch` (id → stars) mein; XP sirf pehli baar. Renderer scenario data par kuch nahi likhta. Buttons: `so-opt` (`data-i`), `so-next`, `so-done`.
+- Nayi file: IIFE mein likho, `index.html` + `gallery.html` + `validate.js` ke `CONTENT` mein `data-guidance.js` se pehle jodo.
+- Jaanch: `node validate.js` ka "🧠 SOCH AKHADA" hissa har scenario ko sahi jawab se aur pehle-galat jawab se poora chalata hai.

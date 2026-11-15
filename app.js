@@ -144,6 +144,7 @@ function showHome() {
     </div>`;
   SD.makeInteractive(dojoCard, showDojo);
   strip.appendChild(dojoCard);
+  if (SD.soch && SD.scenarios.length) strip.appendChild(SD.soch.homeCard());
 
   const alive = SD.streakAlive() && st.count > 0;
   strip.appendChild(el('div', 'stripcard', `
@@ -305,6 +306,9 @@ function showIntro(level) {
     });
     wrap.appendChild(box);
   }
+
+  const sochIntro = replay && SD.soch && SD.soch.linkBox(level);
+  if (sochIntro) wrap.appendChild(sochIntro);
 
   const row = el('div', 'btnrow');
   const back = el('button', 'btn ghost', '← Level map');
@@ -611,6 +615,9 @@ function levelComplete() {
       ${level.homework}`));
   }
 
+  const sochDone = SD.soch && SD.soch.linkBox(level);
+  if (sochDone) wrap.appendChild(sochDone);
+
   const track = SD.trackOf(level);
   const levels = SD.levelsOf(track);
   const row = el('div', 'btnrow center');
@@ -746,7 +753,7 @@ function showCertificate(track) {
 }
 
 /* ---------------- boot ---------------- */
-SD.ui = { renderTopbar, showHome, showTrack, showIntro, showPopQuiz, runStage, stageDone, renderInterview, levelComplete, showDojo, showCertificate, allStages, diagramFor, topicGuide };
+SD.ui = { leaveSession, renderTopbar, showHome, showTrack, showIntro, showPopQuiz, runStage, stageDone, renderInterview, levelComplete, showDojo, showCertificate, allStages, diagramFor, topicGuide };
 renderTopbar();
 showHome();
 })();
