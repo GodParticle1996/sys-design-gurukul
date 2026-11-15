@@ -20,7 +20,7 @@ const path = require('path');
 const vm = require('vm');
 const DIR = __dirname;
 
-const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js'];
+const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'perfsim-pro.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js'];
 const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js', 'data-dist.js', 'data-shapes.js', 'data-builds.js', 'data-feed.js', 'data-feed-2.js',
   'data-st-01-reddit.js', 'data-st-02-cloudflare.js', 'data-st-03-jira.js', 'data-st-04-snowflake.js',
   'data-st-05-airtable.js', 'data-st-06-slack.js', 'data-st-07-discord.js', 'data-st-08-instagram.js',

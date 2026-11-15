@@ -2677,7 +2677,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         return;
       }
     }
-    if (/^help\b/i.test(norm)) return cmdHelp();
+    if (/^help\b/i.test(norm)) { cmdHelp(); (SD.perfsimPlugins || []).forEach(p => print('ok', p.help.join('\n'))); return; }
     if (/^clear\b/i.test(norm)) { out.innerHTML = ''; return; }
     if (/^curl\s/i.test(norm)) {
       let c = norm.replace(/^curl\s+/i, '').replace(/(^|\s)-[isSL]+(\s|$)/g, ' ');
@@ -2709,6 +2709,11 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     if (/^net\b/i.test(norm)) return cmdNet(norm);
     if (/^stream\b/i.test(norm)) return cmdStream(norm);
     if (/^book\b/i.test(norm)) return cmdBook(norm);
+    /* Plugins (perfsim-pro.js): { match: /^tenant\b/i, help: [lines], run(api, norm) }. Naye commands alag file mein,
+       taaki is badi file mein kam badlaav ho. api = is terminal ke helpers. */
+    for (const p of (SD.perfsimPlugins || [])) {
+      if (p.match.test(norm)) return p.run({ sim, print, table, panel, rec, err, initialSystem }, norm);
+    }
     err(`command samajh nahi aaya: '${norm.split(' ')[0]}'. 'help' likho.`);
   }
   return { sim, run };
