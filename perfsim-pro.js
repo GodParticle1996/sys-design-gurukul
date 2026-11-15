@@ -33,7 +33,7 @@
   /* ------------------------------------------------------------------ TENANT */
   const TENANTS = {
     sharma: { name: 'Sharma Sweets', rows: 12000, cpu: 0.5 },
-    dt11: { name: 'DreamTeam11', rows: 5000000, cpu: 80 },
+    mega: { name: 'MegaMart', rows: 5000000, cpu: 80 },
   };
   const OTHER_ROWS = 488000, OTHER_TENANTS = 39998, OTHER_CPU = 30;
   P.push({
@@ -42,9 +42,9 @@
       '  tenant status                     tenants, isolation, quotas',
       '  tenant export sharma              ek merchant ka export chalao',
       '  tenant isolation rls              row-level security (ya app-filter)',
-      '  tenant load                       1 tareekh ka ghanta: DreamTeam11 report + baaki dashboards',
-      '  tenant quota dt11 --cpu 20        ek tenant ka CPU hissa bandho',
-      '  tenant replica dt11               bade tenant ko alag read replica'],
+      '  tenant load                       1 tareekh ka ghanta: MegaMart report + baaki dashboards',
+      '  tenant quota mega --cpu 20        ek tenant ka CPU hissa bandho',
+      '  tenant replica mega               bade tenant ko alag read replica'],
     run(api, norm) {
       const { sim, print, table, panel, rec, err } = api;
       const T = sim.sys.tenancy;
@@ -59,7 +59,7 @@
       if (verb === 'export') {
         const t = need(arg);
         const safe = T.isolation === 'rls' || T.exportFilter;
-        const rows = safe ? t.rows : TENANTS.sharma.rows + TENANTS.dt11.rows + OTHER_ROWS;
+        const rows = safe ? t.rows : TENANTS.sharma.rows + TENANTS.mega.rows + OTHER_ROWS;
         const leaked = rows - t.rows;
         if (leaked) {
           print('err', `⚠️ LEAK — ${t.name} ke export mein ${num(rows)} rows aaye: ${num(leaked)} rows ${num(OTHER_TENANTS + 1)} doosre merchants ke.\n   Naye export code mein WHERE merchant_id = ? lagana bhool gaye (isolation: ${T.isolation}).`);
@@ -73,9 +73,12 @@
         T.isolation = arg;
         if (arg === 'rls') panel('Row-level security ON', [
           "ALTER TABLE orders ENABLE ROW LEVEL SECURITY;",
-          "CREATE POLICY by_tenant ON orders USING (merchant_id = current_setting('app.merchant_id'));",
-          'App ka DB role table owner nahi, aur BYPASSRLS nahi — warna policy lagti hi nahi.',
-          'merchant_id request ke verified token se aata hai, URL se nahi.']);
+          "CREATE POLICY by_tenant ON orders USING (merchant_id = current_setting('app.merchant_id')::bigint);",
+          'App ka DB role superuser ya BYPASSRLS wala nahi. Table owner bhi policy se bach jaata hai,',
+          '  jab tak FORCE ROW LEVEL SECURITY na lagao.',
+          "Har request ke transaction mein: SELECT set_config('app.merchant_id', $1, true);",
+          '  $1 = verified token ka merchant. true = sirf is transaction tak (SET LOCAL jaisa),',
+          '  kyunki pool ka connection agli request ko milta hai.']);
         else print('ok', 'isolation: app-filter — har query mein filter developer ki yaaddasht par.');
         return rec({ kind: 'tenant', op: 'isolation', mode: arg });
       }
@@ -94,19 +97,19 @@
         return rec({ kind: 'tenant', op: 'replica', tenant: arg });
       }
       if (verb === 'load') {
-        const d = TENANTS.dt11;
+        const d = TENANTS.mega;
         let dtCpu = d.cpu, dtReportMin = 15;
-        if (T.replica.dt11) { dtCpu = 0; }
-        else if (T.quota.dt11 && T.quota.dt11 < dtCpu) { dtReportMin = Math.round(15 * dtCpu / T.quota.dt11); dtCpu = T.quota.dt11; }
+        if (T.replica.mega) { dtCpu = 0; }
+        else if (T.quota.mega && T.quota.mega < dtCpu) { dtReportMin = Math.round(15 * dtCpu / T.quota.mega); dtCpu = T.quota.mega; }
         const cpu = OTHER_CPU + dtCpu;
         const othersP99 = cpu >= 100 ? 10000 : cpu > 85 ? 2400 : cpu > 70 ? 600 : 180;
         table(['kaun', 'DB CPU', 'nateeja'], [
-          ['DreamTeam11 report (50 lakh rows)', T.replica.dt11 ? '0% (alag replica)' : dtCpu + '%', `report ${dtReportMin} min mein`],
+          ['MegaMart report (50 lakh rows)', T.replica.mega ? '0% (alag replica)' : dtCpu + '%', `report ${dtReportMin} min mein`],
           [num(OTHER_TENANTS + 1) + ' baaki merchants', OTHER_CPU + '%', 'dashboard p99 ' + (othersP99 >= 1000 ? (othersP99 / 1000) + ' s' : othersP99 + ' ms')],
           ['kul (saajha primary)', Math.min(cpu, 100) + '%' + (cpu > 100 ? ' (maang ' + cpu + '%)' : ''), cpu >= 100 ? '💀 sab line mein' : '✅ jagah hai'],
         ]);
         print('ok', 'Model: CPU maang 100% se upar = sab queries line mein. Asli DB par numbers alag honge; dhaancha wahi.');
-        return rec({ kind: 'tenant-load', othersP99, dtReportMin, cpu, quota: T.quota.dt11 || 0, replica: !!T.replica.dt11 });
+        return rec({ kind: 'tenant-load', othersP99, dtReportMin, cpu, quota: T.quota.mega || 0, replica: !!T.replica.mega });
       }
       err(`400 — 'tenant ${verb}' samajh nahi aaya. 'help' dekho.`);
     },
