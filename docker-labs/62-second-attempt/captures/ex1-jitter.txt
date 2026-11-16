@@ -1,0 +1,17 @@
+MODEL (seeded, 20 runs ka ausat): saral "slot" model — Brooker (AWS, 2015) ke OCC simulation se prerit, uski nakal nahi.
+Saare clients t = 0 par ek hi row likhte hain. Har 1 ms slot mein kai calls aayein toh EK jeetti hai, baaki fail hokar backoff.
+Backoff = min(1 s, 10 ms × 2^koshish). Har retry par 0–4 ms ka random network delay bhi.
+
+tareeka                                                   20 clients: calls / samay     100 clients: calls / samay
+jitter nahi (sirf exponential)                                69 /   617 ms           737 /    8.1 s
+chhota jitter: backoff × 0.8–1.2 (video ka "2 s + thoda")     51 /   157 ms           391 /   753 ms
+equal jitter: aadha + random(0, aadha)                        50 /   112 ms           371 /   492 ms
+full jitter: random(0, backoff)                               46 /    68 ms           350 /   346 ms
+decorrelated: random(10 ms, pichhla × 3)                      46 /   100 ms           326 /   297 ms
+
+Network delay 0 ho toh bina jitter: 100 clients = 5,050 calls (N(N+1)/2 — sab har baar bilkul ek saath; model ki banawat).
+
+→ Bina jitter sabse bura (video sahi; Brooker ne bhi no-jitter ko "clear loser" kaha): clients ek jaisa rukte, saath lautte.
+  Network ki thodi variance kuch takkar todti hai, par jitter wali strategies phir bhi kai guna kam calls aur samay lete hain.
+→ Jitter wali strategies aapas mein kareeb hain; unka kram is model mein slot ki chaudai par tika hai (Brooker ke asli
+  simulation mein decorrelated ne full se zyada kaam kiya). "random(0, backoff)" — full jitter — ek achha default hai.

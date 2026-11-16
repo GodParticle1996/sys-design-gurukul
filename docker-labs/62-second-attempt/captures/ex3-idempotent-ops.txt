@@ -1,0 +1,19 @@
+ASLI code (lib/idem.js, memory mein): sirf success-path, Stripe API v1 ke idempotency niyamon se prerit. Har row ek scenario.
+Lab ke chune hue niyam: key theek 24 ghante par mitti, alag parameters par 422.
+
+scenario                                                   bina suraksha                        suraksha ke saath
+jawab khoya, client ne retry kiya                          2 charge                             1 charge (same jawab dobara)
+double click: pehla abhi chal raha, doosra aaya            2 charge (key thi, lock/token nahi)  1 charge, doosre ko 409
+same key, alag amount (bug)                                —                                    422: same key, different parameters
+25 ghante baad retry (DLQ se redrive)                      —                                    2 charge — key mit chuki thi
+pehla worker 90 s atka, 60 s lease ke baad doosre ne liya  —                                    1 charge; purane ko 409 (token purana)
+DELETE /users/10 retry, beech mein id 10 naye user ko mili naya user Bilal mit gaya             412 — version alag, kuch nahi mita
+"balance +100" retry vs "balance = 600 (agar version 0)"   700 (₹100 zyada)                     600, retry ko 412
+
+→ Idempotency key: khoye jawab par retry safe. Par key ke saath "chal raha hai" ka lock (409) bhi chahiye, warna double click
+  par do charge. Alag parameters par same key = bug, server mana kare (Stripe bhi error deta hai).
+→ Key hamesha nahi rehti: Stripe v1 key ko 24 ghante ke baad kabhi bhi hata sakta hai — tab din baad ka redrive naya charge bana
+  sakta hai. Apna durable record ("is order ka payment hua?") aur reconciliation rakho.
+→ Video: "delete idempotent hai". Asar same, par jawab badalta hai (204 phir 404), aur id dobara mile toh purana retry naya row
+  mita deta hai. Version wali shart (If-Match) ya kabhi dobara na milne wali id (UUID) bachaati hai.
+→ "+100" retry par do baar judta hai; "= 600 agar version 0" ek hi baar lagta hai (doosre ko 412).

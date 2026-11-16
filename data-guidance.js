@@ -74,6 +74,9 @@
     karlton: { title: 'Martin Fowler — TwoHardThings (Phil Karlton quote)', url: 'https://martinfowler.com/bliki/TwoHardThings.html' },
     sqsvis: { title: 'Amazon SQS — visibility timeout and at-least-once delivery', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html' },
     outboxpat: { title: 'Chris Richardson — Pattern: Transactional outbox', url: 'https://microservices.io/patterns/data/transactional-outbox.html' },
+    brooker15: { title: 'Marc Brooker — Exponential Backoff And Jitter (AWS Architecture Blog, 2015)', url: 'https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/' },
+    awssdkretry: { title: 'AWS SDKs and Tools — retry behavior (standard mode, retry quota)', url: 'https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html' },
+    metastable21: { title: 'Bronson et al. — Metastable Failures in Distributed Systems (HotOS 2021)', url: 'https://sigops.org/s/conferences/hotos/2021/papers/hotos21-s11-bronson.pdf' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -310,6 +313,27 @@
     ],
     followup: 'Tumhari food app mein order placed event: kitchen, rider assignment, SMS aur analytics. Queue ya log? Key kya hogi, retention kitni, aur kitchen service 10 minute band rahi toh kya hoga?',
     sources: ['kafka', 'kafkaintro', 'sqsvis', 'sqsdlq', 'idem', 'outboxpat'],
+  });
+  add('retry-fp', 'fp-retry-kyun fp-retry-kaise fp-retry-code fp-retry-kab', {
+    title: 'Retries: doosri koshish madad bhi, bojh bhi — had, jitter, key aur deadline ke saath',
+    misaal: 'Call center ki line bhari ho aur kate hue log turant dobara phone karein, toh bheed khatam hone ke baad bhi line kabhi khaali nahi hoti. Har kisi ko alag samay par bulaao, dobara phone ki ginti baandho, aur parchi par number likho taaki kaam do baar na ho.',
+    asli: 'Retry asthaayi galti ko chhupata hai, par overload mein bojh badhata hai aur trigger ke baad bhi loop chala sakta hai. Retries ki ginti baandho, jitter se phailao, sirf idempotent kaam retry karo, aur deadline ke andar hi.',
+    points: [
+      '<b>Metastable:</b> lab 62 ex0 (model) — 10 s ka spike, phir bhi turant retry ke saath 800/sec par bojh 2,521/sec atka; chhota backoff (2/4/8 s) bhi 120 s mein nahi nikla; retry token bucket (~10%) turant wapas.',
+      '<b>Jitter:</b> ex1 (saral model) — 100 clients: bina jitter 737 calls / 8.1 s, full jitter 350 / 0.35 s, decorrelated 326 / 0.30 s. Lab ka chhota jitter (±20%, video ke "thoda random" ka roop) 391.',
+      '<b>Deadline:</b> ex2 — timeout C ko nahi rokta: 9 C calls × 20 s, ~128 s bekaar kaam user ke jaane ke baad. Deadline aage + C cancel maane tab 0; sirf deadline bhejna kaafi nahi.',
+      '<b>Idempotency aur DLQ:</b> ex3 — key + in-flight lock (409) + parameter check + owner token; key ki umar seemit (Stripe v1: 24 h ke baad). ex4 — standard queue mein DLQ retention pehle bheje samay se.',
+    ],
+    use: 'Asthaayi errors (timeout, 503, 429 Retry-After) par, idempotent operations par, ek hi layer par, jitter aur cap ke saath, aur user ki deadline ke andar.',
+    avoid: 'Har error par retry (400/404 bhi), har layer par retry (teen callers × 3 koshish = 27×), bina jitter backoff, bina had retries overload mein, bina key ke payment retry, aur bina retention/alert ki DLQ.',
+    mistake: '"Backoff laga diya, ab retry safe hai" maan lena. Chhota backoff retries ko thoda baad bhejta hai par loop nahi todta (lab 62 ex0); retries ki ginti par had (token bucket), sirf asthaayi errors par retry, aur deadline chahiye.',
+    compare: [
+      { choice: 'Turant retry', when: 'Shayad hi kabhi — ek bahut kam-bojh, kabhi-kabhi ki galti', tradeoff: 'Overload mein bojh guna; metastable loop' },
+      { choice: 'Backoff + full jitter + cap', when: 'Default har client retry ke liye', tradeoff: 'Bheed todta hai; ginti nahi baandhta — bahut lamba backoff user ko minuton rokta' },
+      { choice: 'Retry token bucket + circuit breaker', when: 'Service par overload ya band hone ka khatra', tradeoff: 'Kuch requests bina retry fail; system jaldi wapas' },
+    ],
+    followup: 'Tumhari checkout service payment gateway ko kul 3 koshish (pehli request samet) ke saath bulaati hai, gateway bank ko bhi kul 3 ke saath. Bank 2 minute dheema hua. Bank par kitni calls, kaunsi layer retry kare, aur key aur deadline kahan?',
+    sources: ['brooker15', 'retry', 'awssdkretry', 'idem', 'sqsdlq', 'metastable21'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

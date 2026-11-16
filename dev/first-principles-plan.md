@@ -375,7 +375,37 @@ skipping a FIFO event breaks order (150 s is idealized); compaction is not a ful
 `latest`; message wait vs drain time; ex2 is labelled as overwrites with amortized timing and batching 7–17× in the saved runs;
 10 more guards added to the tests (every surviving mutation now fails a test).
 
+## Video 12: Mathematics of the Second Attempt — retries (2026-11-15)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-12-retries/`. Built by Claude. Levels
+`fp-retry-kyun` → `fp-retry-kaise` → `fp-retry-code` → `fp-retry-kab` (`data-v2-fp-retry-1…4`, group "🔁 Retries: Doosri
+Koshish", guide `retry-fp`, sources `brooker15`, `retry`, `awssdkretry`, `idem`, `sqsdlq`, `metastable21`). Builders:
+`sdg-codex-xp/jobs/fp12/levels/*.py`. Lab 62 (`docker-labs/62-second-attempt`, Node 24, zero deps, no ports, deterministic):
+a metastable retry-loop model (immediate retries, backoff + jitter, retry budget; recovery vs headroom; amplification
+arithmetic), a Brooker-style contention model of five jitter strategies, an exact user → A → B → C timeline for timeouts,
+retries and deadline propagation (zombie work), a real in-memory idempotency-key store (lost reply, double click with an
+in-flight lock, mismatched parameters, key expiry, delete with id reuse, increment vs conditional set) and DLQ-retention and
+MTBF/MTTR arithmetic.
+
+The resilience track (retries `rt-*`, circuit breaker `cb-*`) and labs 37–38 already run real servers for storms, jitter, layer
+amplification and breakers; this topic adds what they do not measure. Corrections taught: 10% failures alone are a 1.11× load,
+the danger is overload-driven failure growth (metastable, with an assumed goodput curve) and layer multiplication; short backoff
+windows (2/4/8 s) do not break the loop in the run, long windows do but users wait minutes, and a retry token bucket bounds
+the count; retry only transient errors and respect Retry-After; the AWS SDK standard mode caps computed backoff at 20 s; small
+jitter helps, full jitter is a good default (the slotted model is an illustration, not Brooker's OCC simulation); idempotency keys need an in-flight lock, a parameter check, owner tokens and a lifetime (Stripe API v1); "delete is
+idempotent" breaks with id reuse; DLQ messages expire too (retention from the original enqueue time in SQS standard
+queues, reset in FIFO); retries must fit the deadline, and deadline propagation saves work only if callees honour cancellation.
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 62 (`sdg-codex-xp/jobs/fp12/LAB-REVIEW.md`, 12 findings) and then the
+levels and guide (`LEVELS-REVIEW.md`, 8 findings) before the first push; Claude fixed all of them: explicit timeline events and
+separate propagation/cancellation switches in ex2 (a new "deadline, no cancel" row keeps ~128 s of zombie work); configurable
+backoff windows (long windows recover, short ones do not in the run) and a real retry token bucket in ex0; seeded network
+variance in the jitter model, labelled as a slotted illustration (no-jitter 737 calls, 5,050 only with zero variance); snapshot
+params/responses and owner tokens with a running lease in the idempotency store; SQS standard vs FIFO DLQ rows with stated
+assumptions; Stripe API v1 scope; 409 retry nuance; "three total attempts per caller" for 27×; EBS attribution and Netflix
+citation; 11 mutation guards in the tests.
+
 ## Next
 
-Continue with numbered video 12, `s5HWkMyRRcA` (Mathematics of the Second Attempt — retries, backoff, jitter); check the
-existing retries topic (`rt-*` in `sdd-resil`) and lab 37 first. Videos 1–11 are built; four remain.
+Continue with numbered video 13, `cmiAEDVcGbE` (Microservices — Know When NOT to Use); check the existing decomposition
+levels, the Prime Video story and lab 16 first. Videos 1–12 are built; three remain.

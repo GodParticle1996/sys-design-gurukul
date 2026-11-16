@@ -1,0 +1,37 @@
+A. MODEL (1 s ke kadam): server 1,000 kaam/sec karta hai. 1,000 se zyada aayein toh har request shuru hoti hai, par timeout
+   wali requests ka kaam bekaar — kaam ki raftaar girti hai (maana hua: useful = 1,000 × 1,000 / load). Naye requests 800/sec;
+   t = 10–20 s par spike 1,500/sec. Ek request kul 4 koshish tak. 120 s dekha. "Wapas" = bojh lagaataar 10 s ≤ 1,000.
+
+tareeka                                          serve hui   calls ÷ naye   spike ke baad wapas   t = 80 s par bojh
+retry nahi                                         91.9%       1.00×      0 s baad               800/sec
+turant retry                                       48.3%       3.03×      120 s mein nahi      2,521/sec
+backoff + full jitter, windows 2 / 4 / 8 s         48.0%       2.99×      120 s mein nahi      2,521/sec
+backoff + full jitter, windows 32 / 64 / 128 s     99.6%       1.24×      61 s baad            1,001/sec
+retry token bucket: har naya request 0.1 token     91.6%       1.01×      0 s baad               800/sec
+
+→ Spike 10 s ka tha, par turant retry ke saath bojh ~2,500/sec par atka (naye sirf 800/sec): har fail request retries laati
+  hai, overload mein kaam ki raftaar girti hai, aur zyada fail. Is loop ko metastable failure kehte hain — trigger gaya,
+  girawat rahi (Bronson et al., HotOS 2021; Amazon Builders' Library bhi kehti hai ki retries recovery ko der karwa sakte hain).
+→ Chhote backoff windows (2 / 4 / 8 s) is run mein loop nahi todte. Bade windows (32 / 64 / 128 s) todte hain aur aakhir mein zyada
+  requests serve hoti hain — par user ko jawab minuton baad. Token bucket retries ko naye traffic ke 10% tak baandhta hai:
+  turant wapas, par kuch requests retry ke bina fail. Backoff samay phailaata hai; bucket ginti baandhta hai — dono alag auzaar.
+
+B. MODEL: naye requests kitne hon toh system 120 s ke andar wapas aaye?
+
+naye/sec   turant retry      backoff 2/4/8 s     token bucket
+    500               6 s              15 s              0 s
+    600               9 s              23 s              0 s
+    700              26 s              69 s              0 s
+    800   120 s mein nahi   120 s mein nahi              0 s
+    900   120 s mein nahi   120 s mein nahi              0 s
+
+→ Jitna kam khaali margin, utna bada khatra. Kaam ki raftaar ka curve model ka maana hua hai; asli system ka margin naapo.
+
+C. Arithmetic: har koshish f hissa fail ho (alag-alag), toh 4 koshishon tak bojh = 1 + f + f² + f³ (ek layer).
+
+f = 0.1  → 1.11×
+f = 0.5  → 1.88×
+f = 0.9  → 3.44×
+f = 1    → 4.00×
+→ Video: "10% fail → seconds mein 100% outage". Sirf 10% par bojh 1.11× hai; khatra tab jab overload se f khud badhe (A).
+  Kai layers retry karein toh guna hota hai: 3 layers × 3 koshish = 27× (lab 37 ex3).

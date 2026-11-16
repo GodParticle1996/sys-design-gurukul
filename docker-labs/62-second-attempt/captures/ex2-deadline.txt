@@ -1,0 +1,23 @@
+A. Arithmetic: user 10 s rukta hai. Har koshish ka timeout 3 s. Backoff video wala: 2 s, 4 s, 8 s.
+
+  koshish 1: 0–3 s ✓ deadline ke andar
+  koshish 2: 5–8 s ✓ deadline ke andar
+  koshish 3: 12–15 s ✗ user ja chuka (bekaar)
+  koshish 4: 23–26 s ✗ user ja chuka (bekaar)
+→ 10 s ki deadline mein sirf 2 koshishein fit. Retries ka total samay deadline se bada ho toh baaki retries bekaar kaam hain.
+
+B. ASLI ginti (ek request ki timeline): user → A → B → C. C ek baar 20 s latak gaya. User 10 s par chala jaata hai.
+   Har layer 3 koshish, beech mein 100 ms backoff. "Deadline aage" = caller ka intezaar khatam hone ka samay call ke saath jaata hai.
+   "Cancel" = neeche wala us samay par apna kaam rok deta hai (cooperative cancellation).
+
+tareeka                                                C par calls   thread-samay A / B / C        C ka bekaar kaam   user ke jaane ke baad
+lambe timeouts (30 s)                                       1       20.0 s / 20.0 s /  20.0 s        0.0 s         30.0 s
+chhote timeouts (A→B 3 s, B→C 1 s)                          9        9.2 s /  9.6 s / 180.0 s      180.0 s        127.8 s
+chhote timeouts + deadline aage, C cancel nahi maanta       9        9.2 s /  9.0 s / 180.0 s      180.0 s        127.8 s
+chhote timeouts + deadline aage + C cancel maanta           9        9.2 s /  9.0 s /   8.4 s        8.4 s          0.0 s
+
+→ Lambe timeouts: teeno threads 20 s atke, user 10 s par ja chuka (C ka jawab B tak pahuncha, par user tak nahi).
+→ Chhote timeouts: A aur B jaldi chhodte hain, par timeout sirf caller ka intezaar khatam karta hai — C ko pata nahi. Har retry C par
+  naya 20 s ka kaam (3 × 3 = 9 calls): ~128 s kaam user ke jaane ke baad (video ka shabd: zombie processing).
+→ Deadline aage bhejna akele kaafi nahi: C cancel na maane toh utna hi bekaar kaam. C deadline par ruke tabhi bekaar kaam ghata —
+  is run mein C har call ki 1 s ki deadline par rukta hai. gRPC deadline bhejta hai, par kaam rokna application ki zimmedari.
