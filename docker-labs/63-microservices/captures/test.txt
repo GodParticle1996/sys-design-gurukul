@@ -1,0 +1,14 @@
+npm notice run lab-63-microservices@1.0.0 test
+npm notice run node --test test/*.test.js
+✔ call cost: same answer over HTTP; a function call is far cheaper; a new connection costs more than keep-alive (230.460402ms)
+✔ fan-out: sequential adds latency, parallel waits for the slowest; exposure 1 − 0.99^n only when hiccups are independent (64.772978ms)
+✔ two databases: final states; saga recovery is idempotent even if recovery crashes; 2PC readers can see the middle; prepared participants block (0.945045ms)
+✔ arithmetic: copies multiply max DB connections; Brooks paths; within-team totals; rename deploys (0.225453ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 334.491484

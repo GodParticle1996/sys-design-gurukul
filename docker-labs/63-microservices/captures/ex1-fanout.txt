@@ -1,0 +1,17 @@
+MODEL (seeded, 1 lakh requests): har service call 1–3 ms, par 1% calls ko 50 ms ka jhatka (GC, packet dobara bhejna).
+Ek user request ko kitni services se jawab chahiye — ek ke baad ek (sequential) ya saath-saath (parallel fan-out)?
+
+services   sequential p50 / p99      parallel p50 / p99     kitni requests ko kam se kam ek jhatka (theory)
+       1      2.0 /   50.0 ms         2.0 /  50.0 ms          1.1%  (1.0%)
+       3      6.0 /   54.4 ms         2.6 /  50.0 ms          3.1%  (3.0%)
+      10     20.3 /   70.7 ms         2.9 /  50.0 ms          9.7%  (9.6%)
+      30     61.5 /  158.5 ms         3.0 /  50.0 ms         26.1%  (26.0%)
+
+Saanjha jhatka (ek hi pause, jaise caller ka GC, saari 10 calls par): 1.0% requests — 9.6% nahi.
+
+Maanyatayein: jhatke alag-alag (independent), har jawab zaroori, koi bheed nahi, jhatka theek 50 ms.
+
+→ Video: "10 services × 2 ms = 20 ms network tax". Tab sahi jab calls ek ke baad ek hon; parallel mein median sabse dheemi
+  call jitna. Fan-out se kisi dheemi call se takraane ka chance badhta hai: alag-alag jhatke hon toh 10 calls par ~9.6%
+  (1 − 0.99^10). Is model mein jhatka 50 ms par ruk jaata hai, isliye parallel ka p99 50 ms hi rehta hai — badhta hai
+  dheemi requests ka hissa. Jhatke saanjhe hon toh exposure kam. Bada pattern: Dean & Barroso, "The Tail at Scale" (2013).

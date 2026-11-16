@@ -1,0 +1,25 @@
+A. Arithmetic (Brooks, The Mythical Man-Month, ch. 2): agar har insaan ko har insaan se taal-mel karna pade toh n(n − 1)/2
+   sambhavit raaste. 8 ki teams sirf ek chuni hui misaal hai (aakhri team chhoti ho sakti hai).
+
+log      sab-se-sab raaste     8 ki teams: saari teams ke andar ke raaste   teams ke beech sambhavit raaste
+    5                 10                  10                                         0
+   20                190                  62                                         3
+  100              4,950                 342                                        78
+ 5000        1,24,97,500              17,500                                  1,95,000
+
+→ Raaste log ke square ki tarah badhte hain — par ye sambhavit raaste hain, naapa hua kaam nahi. Kitna taal-mel chahiye,
+  code ki dependencies, zimmedariyon aur tools par tika hai. Raaston ka hisaab kisi headcount par "ab todo" ka faisla nahi deta.
+  Conway (1968): system ka dhaancha team ke baat-cheet ke dhaanche jaisa banta hai. Team, codebase aur deploy unit alag cheezein hain.
+
+B. Arithmetic: services ke beech ke API mein ek field ka naam badlo ("name" → "full_name") — ek TODNE wala badlaav, bina downtime.
+   Ek producer, baaki consumers alag-alag deploy hote hain. (Naya field jodna, jise purane readers ignore karein — tolerant reader —
+   bina is kram ke ship ho sakta hai. DB column ka naam badalna ho toh monolith mein bhi expand/contract chahiye.)
+
+services   deploys   kram
+       1         1   ek codebase, ek release (monolith ke andar ka function interface)
+       2         3   producer dono naam likhe → 1 consumer naya naam padhein → producer purana band
+       3         4   producer dono naam likhe → 2 consumer naya naam padhein → producer purana band
+       5         6   producer dono naam likhe → 4 consumer naya naam padhein → producer purana band
+
+→ Monolith ke andar ka function interface: ek release, compiler/IDE saari jagah dikhata hai. Services ke beech todne wala badlaav:
+  expand/contract (parallel change), deploys ka kram, aur galat kram par purana consumer toota (video ka "purane format" wala).

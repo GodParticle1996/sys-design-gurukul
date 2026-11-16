@@ -1,0 +1,20 @@
+ASLI ginti (lib/twodb.js): "1 cheez khareedo" (operation id op1) = stock − 1 AUR order banao. Har step ke baad crash,
+restart aur recovery; recovery khud bhi ek baar crash hokar dobara chalti hai. Har step ke baad ek reader dono databases ki
+committed haalat padhta hai. Participants operation id ki receipt rakhte hain (dohraaya step dobara asar nahi karta).
+
+tareeka                            cases   ant mein galat   reader ne beech ki haalat dekhi   crash par locks atke   recovery crash ke saath galat
+ek DB, ek transaction                 4            0                        0                    0             0 of 9
+saga, progress sirf memory mein       3            2                        3                    0             6 of 6
+saga + durable saga log               5            0                        5                    0             0 of 12
+2PC (do-phase commit)                 5            0                        3                    4             0 of 12
+
+(Order fail ho toh: 2PC coordinator zinda hai toh turant abort — locks sirf 1 crash case mein atke.)
+
+→ Ek database: ek ACID transaction — reader ko ya purani haalat dikhti hai ya poori nayi; crash par rollback.
+→ Saga, progress sirf memory mein: stock ghata, order se pehle crash = stock gaya, order nahi, aur kisi ko yaad nahi.
+→ Saga + durable log + receipts: recovery log padh kar idempotent steps dobara chalati hai — ant mein sahi, recovery khud crash
+  ho tab bhi. Par har run mein reader ne "stock ghata, order nahi" dekha: saga mein isolation nahi.
+→ 2PC: video kehta hai "do databases par transaction bilkul nahi". Hota hai (2PC/XA): ant mein kabhi galat nahi. Par (1) commit
+  dono databases par alag pal mein lagta hai, toh alag-alag padhne wala reader beech ki haalat dekh sakta hai; (2) coordinator
+  ne COMMIT log kar liya ho tab bhi, jab tak faisla participant tak na pahunche, participant locks pakad kar intezaar karta hai.
+  Recovery: coordinator lautkar log padhta hai — COMMIT mila toh poora karo, nahi mila toh abort (presumed abort).

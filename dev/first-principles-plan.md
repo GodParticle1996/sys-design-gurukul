@@ -405,7 +405,36 @@ params/responses and owner tokens with a running lease in the idempotency store;
 assumptions; Stripe API v1 scope; 409 retry nuance; "three total attempts per caller" for 27×; EBS attribution and Netflix
 citation; 11 mutation guards in the tests.
 
+## Video 13: Microservices — Know When NOT to Use (2026-11-16)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-13-microservices/` (the first download attempt hit
+an HTTP 403; a retry worked). Built by Claude. Levels `fp-micro-kyun` → `fp-micro-kaise` → `fp-micro-code` → `fp-micro-kab`
+(`data-v2-fp-micro-1…4`, group "🧩 Microservices: Kab Nahi", guide `micro-fp`, sources `conway68`, `monolithfirst`,
+`tailatscale`, `shopifymono`, `tx`, `pgmaxconn`). Builders: `sdg-codex-xp/jobs/fp13/levels/*.py`. Lab 63
+(`docker-labs/63-microservices`, Node 24, zero deps; ex0 runs its own HTTP server on 127.0.0.1:0): a REAL comparison of an
+in-process function call, JSON serialize/parse and loopback HTTP (keep-alive vs new connection, 3 runs) with an assumed
+0.5 ms same-data-center row; a seeded fan-out model (sequential vs parallel, tail exposure 1 − 0.99^n); an exhaustive
+crash-point count for one ACID transaction vs a memory-only saga vs a saga with a durable log vs 2PC (wrong end state, visible
+middle state, blocked locks); and arithmetic for monolith copies (idle RAM vs DB connections) and Conway/Brooks (communication
+paths, expand/contract deploys for a field rename).
+
+Lab 16 (Prime Video) already runs the boundary tax and monolith copies; the `saga`, `dbperservice` and `decompose` levels teach
+the patterns. Corrections taught: the "100,000×" ratio holds only once a real network hop is added (loopback HTTP is
+~6,500×); "10 services = 20 ms" assumes sequential calls, while tail exposure grows either way; cross-database transactions
+exist (2PC/XA) at the cost of blocking; extracting a module is not "copy-paste" (network calls, sagas, deploy order); copies
+multiply DB connections, not just RAM; fault isolation is a fifth reason to split; the video's DZone/CNCF statistics were not
+verified by this course (Codex found no primary study; CNCF's 2025 "42%" is service-mesh adoption, and "35% more
+debugging" is not "35% of engineering time").
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 63 (`sdg-codex-xp/jobs/fp13/LAB-REVIEW.md`, 11 findings) and then the levels
+and guide (`LEVELS-REVIEW.md`, 12 findings) before the first push; Claude fixed all of them: ex2 rebuilt with operation-id receipts
+(idempotent saga recovery even when recovery crashes), a reader after every step for every protocol (2PC readers can see the
+middle), and participant knowledge for 2PC blocking (a logged COMMIT not yet delivered still blocks); ex0 compares equal work
+and labels best-batch averages vs HTTP medians; a shared-pause fan-out case; Conway/Brooks counts called potential links with no
+headcount verdict; "primarily" (not exclusively) organizational reasons; breaking vs compatible API changes; PCI scope needs
+real segmentation; local functions can fail too; tests guard final states, repeated recovery and percentiles.
+
 ## Next
 
-Continue with numbered video 13, `cmiAEDVcGbE` (Microservices — Know When NOT to Use); check the existing decomposition
-levels, the Prime Video story and lab 16 first. Videos 1–12 are built; three remain.
+Continue with numbered video 14, `jwVEgkBDyM8` (Observability — How to Not Fly Blind); check the existing observability
+levels and labs 42–43 first. Videos 1–13 are built; two remain.

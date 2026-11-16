@@ -1,6 +1,6 @@
 # 🐳 System Gurukul — Docker Projects
 
-Saare tracks ke hands-on projects (62). Lab 46 ke alawa saare projects **zero-dependency Node.js** services aur tools hain.
+Saare tracks ke hands-on projects (63). Lab 46 ke alawa saare projects **zero-dependency Node.js** services aur tools hain.
 Lab 46 mein **Java 21+** ke asli platform threads hain; Node sirf launcher hai. Koi Maven/Gradle dependency nahi.
 Har README measured output aur model ki boundary bataata hai.
 
@@ -68,6 +68,7 @@ Har README measured output aur model ki boundary bataata hai.
 | [60-caching](60-caching/README.md) | Asli latency ki seedhi (L1 → RAM → disk → fsync → loopback, 3 runs); Zipf skew × LRU hit rate aur DB ka bojh; asli SIGKILL par write-through, group commit, write-back aur page cache ka loss; delete race, TTL, lease aur khoya delete; cache crash → DB crash loop (coalescing, limiter, warming); asli Bloom filter, negative cache | Caching 1–4 (First Principles) |
 | [61-queues](61-queues/README.md) | Spike ke baad backlog (worker kshamata, retention); asli queue vs log code (visibility timeout, consumer groups, replay vs retention); asli disk par append vs random vs batch; Kafka murmur2 se kram, hot key, 6 → 8 partitions; backpressure (drop, block, reject, autoscale vs DB, DLQ); har crash point par idempotency aur outbox | Async 1–4 (First Principles) |
 | [62-second-attempt](62-second-attempt/README.md) | Retry loop ka metastable failure (turant retry, backoff + jitter, retry budget); paanch jitter strategies; user → A → B → C mein timeouts aur deadline propagation; idempotency key store ke kinaare; DLQ retention aur MTBF/MTTR | Retries 1–4 (First Principles) |
+| [63-microservices](63-microservices/README.md) | Asli function call vs JSON vs loopback HTTP (keep-alive / naya connection, 3 runs); fan-out mein tail latency; ek DB transaction vs saga (memory / durable log) vs 2PC har crash point par; monolith ki copies se DB connections; Conway / Brooks aur field rename ke deploys | Microservices 1–4 (First Principles) |
 
 ```bash
 cd docker-labs/09-raft

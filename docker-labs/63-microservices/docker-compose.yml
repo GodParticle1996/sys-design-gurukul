@@ -1,0 +1,23 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. Zero dependency Node 24. ex0 ek HTTP server 127.0.0.1 ke random port par chalata hai (bahar publish nahi).
+services:
+  call-cost:
+    build: .
+    profiles: [ex0-call-cost]
+    command: node start.js ex0-call-cost
+  fanout:
+    build: .
+    profiles: [ex1-fanout]
+    command: node start.js ex1-fanout
+  two-databases:
+    build: .
+    profiles: [ex2-two-databases]
+    command: node start.js ex2-two-databases
+  copies:
+    build: .
+    profiles: [ex3-copies]
+    command: node start.js ex3-copies
+  conway:
+    build: .
+    profiles: [ex4-conway]
+    command: node start.js ex4-conway

@@ -77,6 +77,11 @@
     brooker15: { title: 'Marc Brooker — Exponential Backoff And Jitter (AWS Architecture Blog, 2015)', url: 'https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/' },
     awssdkretry: { title: 'AWS SDKs and Tools — retry behavior (standard mode, retry quota)', url: 'https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html' },
     metastable21: { title: 'Bronson et al. — Metastable Failures in Distributed Systems (HotOS 2021)', url: 'https://sigops.org/s/conferences/hotos/2021/papers/hotos21-s11-bronson.pdf' },
+    conway68: { title: 'Melvin Conway — How Do Committees Invent? (Datamation, 1968)', url: 'https://www.melconway.com/Home/Committees_Paper.html' },
+    monolithfirst: { title: 'Martin Fowler — MonolithFirst (2015)', url: 'https://martinfowler.com/bliki/MonolithFirst.html' },
+    fowlerconway: { title: "Martin Fowler — Conway's Law (2022)", url: 'https://martinfowler.com/bliki/ConwaysLaw.html' },
+    shopifymono: { title: 'Shopify Engineering — Deconstructing the Monolith (2019)', url: 'https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity' },
+    pgmaxconn: { title: 'PostgreSQL — connection settings (max_connections)', url: 'https://www.postgresql.org/docs/current/runtime-config-connection.html' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -334,6 +339,27 @@
     ],
     followup: 'Tumhari checkout service payment gateway ko kul 3 koshish (pehli request samet) ke saath bulaati hai, gateway bank ko bhi kul 3 ke saath. Bank 2 minute dheema hua. Bank par kitni calls, kaunsi layer retry kare, aur key aur deadline kahan?',
     sources: ['brooker15', 'retry', 'awssdkretry', 'idem', 'sqsdlq', 'metastable21'],
+  });
+  add('micro-fp', 'fp-micro-kyun fp-micro-kaise fp-micro-code fp-micro-kab', {
+    title: 'Microservices: aksar teams ki azaadi ka auzaar — pehle modular monolith tolo',
+    misaal: 'Ghar ki rasoi mein teen log aaraam se khana banate hain. Shaadi ke 500 logon ke liye alag-alag rasoiyaan banti hain, har ek ka apna sardar — par rasoiyon ke beech khaana laana-le jaana mehnga aur dheema. Ghar ke khane ke liye alag rasoiyaan bekaar kharcha.',
+    asli: 'Har service boundary ek contract hai jise sambhalna padta hai, aur function call ko network call bana deti hai. Agar ek write do owners ka data chhoota hai toh transaction saga ya 2PC banta hai; todne wale API badlaav ordered deploys maangte hain. Todo tab jab koi thos faayda (team ki azaadi, alag hardware, security, fault isolation) is keemat se bada ho.',
+    points: [
+      '<b>Network ka tax:</b> lab 63 ex0 (asli) — function call 4–5 ns, loopback HTTP + JSON ~34 µs (keep-alive), naya connection ~120 µs; + 0.5 ms data center (maana) ≈ 1.2 lakh guna.',
+      '<b>Tail:</b> ex1 (model) — 10 services: sequential p50 20 ms, parallel 2.9 ms; jhatke alag-alag hon toh 9.6% requests ko kisi ek ka 50 ms jhatka (1 − 0.99^10); saanjha jhatka ho toh 1%.',
+      '<b>Do databases:</b> ex2 — ek transaction: 0 galat; saga (durable log + receipts): 0 galat, recovery crash par bhi, par reader ko beech ki haalat dikhti; 2PC: 0 galat, par faisla pahunchne tak locks (4 injected crash mein se 4).',
+      '<b>Scaling aur log:</b> ex3 — 100 copies: RAM sasta, par har pool bhare toh DB connections 2,000. ex4 — sab-se-sab taal-mel par 20 log 190, 5,000 log ~1.25 crore sambhavit raaste.',
+    ],
+    use: 'Alag teams ko alag release chahiye aur deploy ki line asli dard hai; alag hardware (GPU); alag technology; security ki deewar (PCI); fault isolation.',
+    avoid: 'Chhoti team mein "Netflix jaisa" todna, har table ki ek service, ek DB share karti aur saath deploy hoti services (distributed monolith), bina batch ke per-item network calls, aur bina source ke survey aankdon par faisla.',
+    mistake: '"Modular monolith se service nikaalna copy-paste hai" maan lena. Saaf seemayein madad karti hain, par function call network call banti hai, do owners ka data chhoone wala transaction saga/2PC banta hai, aur todne wale API badlaav expand/contract maangte hain (lab 63 ex0, ex2, ex4).',
+    compare: [
+      { choice: 'Modular monolith', when: 'Chhoti/madhyam team; ek deploy; ACID transactions', tradeoff: 'Ek release line; ek hissa gire toh poora process prabhavit' },
+      { choice: 'Monolith + alag workers', when: 'Ek hissa bhaari (image, ML) par team ek', tradeoff: 'Alag scale, same code; release packaging aur queue contract par tika ki deploy saath ho ya alag' },
+      { choice: 'Microservices', when: 'Kai teams, alag releases, alag hardware/security', tradeoff: 'Network ka tax, saga/2PC, tracing, kram wale deploys' },
+    ],
+    followup: 'Tumhari 30 logon ki team ek monolith chalati hai; payments ko PCI audit chahiye aur recommendations ko GPU. Kya nikaaloge, kya nahi, aur kyun?',
+    sources: ['conway68', 'fowlerconway', 'monolithfirst', 'tailatscale', 'shopifymono', 'tx', 'pgmaxconn'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',
