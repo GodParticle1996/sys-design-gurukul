@@ -649,10 +649,14 @@ Database → constraints (unique, FK, NOT NULL — aakhri kila)</pre>
 average     →   109.8 ms   😊 "sab theek hai"
 p50         →    10 ms   😊
 p99 (nearest-rank) → 5,000 ms   😡 ← asli kahani</pre>
+     <p><b>Nearest-rank p99</b> aise nikalta hai: 100 requests ko tez se dheemi
+     tak line mein lagao. 99th request ka time hi p99 hai. Yahan 99th aur 100th
+     dono 5,000 ms wali hain.</p>
      <p>Average ka kaam hi outliers ko <b>ghol dena</b> hai. Par user
      average anubhav nahi karta — user <b>apni</b> request anubhav karta hai.
-     Aur agar tumhare 10 lakh requests roz hain, toh p99 ka matlab hai
-     <b>10,000 log roz</b> 5 second ruk rahe hain.</p>
+     Aur agar tumhare 10 lakh requests roz hain, toh p99 = 5 s ka matlab hai
+     roz kam se kam <b>10,000 requests</b> 5 second ya zyada rukti hain.
+     Ginti requests ki hai, logon ki nahi: ek user ki kai requests ho sakti hain.</p>
      <p>Percentile padhne ka sahi tareeka:</p>
      <table>
        <tr><th>Metric</th><th>Kya batata hai</th><th>Kab dekho</th></tr>
