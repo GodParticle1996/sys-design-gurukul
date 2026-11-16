@@ -4,6 +4,7 @@ const assert = require('node:assert');
 const { measure, sweep } = require('../lib/ladder');
 const { zipf } = require('../lib/zipf');
 const { lru } = require('../lib/lru');
+const { human } = require('../lib/human');
 const { rng } = require('../lib/rng');
 const { avgMs, dbQps } = require('../lib/amat');
 const { run: runWrites } = require('../lib/writes');
@@ -47,7 +48,21 @@ test('invalidation: the delete race leaves old data forever without TTL, until T
   assert.ok(simulate({ ...racy, ttl: 30000 }).longWindows > 0, 'delete + TTL races');
   assert.strictEqual(simulate({ ...racy, ttl: 30000, lease: true }).longWindows, 0);
   const lost = simulate({ ...cfg, ttl: 30000, lease: true, lostDelete: 0.05 });
-  assert.ok(lost.longWindows > 0 && lost.longestMs <= 30000 + 10, `lost-delete windows ${lost.longWindows}, longest ${lost.longestMs}`);
+  assert.ok(lost.longWindows > 0 && lost.longestMs <= 30000 + 300, `lost-delete windows ${lost.longWindows}, longest ${lost.longestMs}`);
+  // TTL counts from when a value is SET, not from when the DB changed: a slow refill can stay stale longer than the TTL.
+  const slow = simulate({ ttl: 30000, pauseP: 1, pauseMs: 60000, seconds: 180, readsPerSec: 100, writesPerSec: 0.05, seed: 1 });
+  assert.ok(slow.longestMs > 30000, `slow fill longest ${slow.longestMs}`);
+  // lease: readers without a token wait and ask again (no reader is silently dropped)
+  assert.ok(simulate({ ...cfg, ttl: 30000, lease: true }).retries > 0);
+});
+
+test('LRU recency and the human scale', () => {
+  const c = lru(2); c.set('a', 1); c.set('b', 1); c.get('a'); c.set('c', 1);
+  assert.strictEqual(c.get('b'), undefined, 'b was least recently used');
+  assert.strictEqual(c.get('a'), 1, 'a was touched, so it stays');
+  assert.strictEqual(human(150e6, 3.26), '16 saal');               // 150 ms × 3.26 GHz = 4.9 crore s ≈ 15.5 years
+  assert.strictEqual(human(1, 1), '1.0 second');
+  assert.strictEqual(human(60, 1), '1.0 minute');
 });
 
 test('herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks', () => {
@@ -66,4 +81,9 @@ test('herd + penetration: a limiter keeps the DB alive; Bloom has no false negat
   assert.ok(a.bloom.db < 2000);
   const newIds = new Set([N + 1, N + 2]);
   assert.ok(scenario([N + 1, N + 2], { N, b, newIds }).bloom.wrongNo >= 1);
+  // negative cache expires: the same 10 missing ids, 1 request/sec each for 300 s, 60 s TTL → each id asked ~5 times
+  const rep = []; for (let i = 0; i < 3000; i++) rep.push(5e6 + (i % 10));
+  assert.strictEqual(scenario(rep, { N, b, perSec: 10, negTtl: 60 }).negative.db, 50);
+  // coalesced callers keep their own deadline: coalescing alone stops the crash loop in this model
+  assert.strictEqual(runHerd({ strategy: 'coalesce', seconds: 150 }).crashes, 0);
 });

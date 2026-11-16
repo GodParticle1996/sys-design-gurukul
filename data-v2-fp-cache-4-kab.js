@@ -207,9 +207,9 @@ SD.registerLevels('fp-core', [
             ],
             "answer": 0,
             "hint": "Cache-aside mein cache mein data kaun daalta hai?",
-            "explain": "Cache-aside mein app miss par DB padh kar cache bharta hai. DB band = koi naya data nahi = hit rate ~78% par atka. DB 30 s baad laut'ta hai aur same bojh phir. Lab: kuch na karo toh 2 crash, 67 s mein wapas.",
+            "explain": "Cache-aside mein app miss par DB padh kar cache bharta hai. DB band = koi naya data nahi = hit rate ~78% par atka. DB 30 s baad laut'ta hai aur same bojh phir. Lab: kuch na karo toh 1 crash, 48 s mein wapas (late jawab cache bhare); late jawab phenka toh 2 crash, 67 s.",
             "choiceExplanations": [
-              "Cache-aside mein app miss par DB padh kar cache bharta hai. DB band = koi naya data nahi = hit rate ~78% par atka. DB 30 s baad laut'ta hai aur same bojh phir. Lab: kuch na karo toh 2 crash, 67 s mein wapas.",
+              "Cache-aside mein app miss par DB padh kar cache bharta hai. DB band = koi naya data nahi = hit rate ~78% par atka. DB 30 s baad laut'ta hai aur same bojh phir. Lab: kuch na karo toh 1 crash, 48 s mein wapas (late jawab cache bhare); late jawab phenka toh 2 crash, 67 s.",
               "Cache ke paas data ka koi aur source nahi.",
               "Cache chalta rehta hai aur jo keys hain un par hit deta hai; sirf naya bhar nahi paata."
             ]
@@ -218,7 +218,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "Loop",
           "clock": "loop",
-          "say": "Video ka scenario: har DB restart ke saath cache bhi khaali (poora stack restart). Lab: 9 crash, sirf 80% requests serve hui, 300 s mein kabhi wapas nahi.",
+          "say": "Ek maana hua scenario (video sirf \"cache cold rehta hai\" kehta hai): har DB restart ke saath cache bhi khaali. Lab: 9 crash, sirf 81% requests serve hui, 300 s mein kabhi wapas nahi.",
           "nodes": {
             "users": {
               "tone": "bad",
@@ -287,15 +287,15 @@ SD.registerLevels('fp-core', [
           "ask": {
             "q": "Video ka ilaaj \"cache warming\" hai. Achanak crash mein warming kitna kaam aaya?",
             "choices": [
-              "0 crash, par users ko 13 s rokna pada; limiter 4 s mein wapas",
+              "0 crash, par users ko 11 s mana kiya; limiter 4 s mein wapas",
               "Warming ne crash se pehle hi cache bhar diya, toh koi asar nahi hua",
               "Warming akele kaafi nahi chala; DB phir bhi 9 baar gira tha"
             ],
             "answer": 0,
             "hint": "ex4 A ka table: warming row ke \"wapas\" aur \"serve hui\" columns.",
-            "explain": "Warming: users ko roko, hot keys pehle bharo. Lab: 0 crash, par 13 s users ruke (96.3% serve). Limiter: 99.9% serve, 4 s. Planned restart (deploy) mein naya cache purane ke chalte-chalte bharo — planned restart mein warming sabse sasta. Achanak crash ke liye limiter.",
+            "explain": "Warming: users ko mana karo, hot keys pehle bharo. Lab: 0 crash, par 11.1 s users ko mana (96.3% serve), hit rate 13 s par wapas. Limiter: 99.9% serve, 4 s. Planned restart (deploy) mein naya cache purane ke chalte-chalte bharo — planned restart mein warming sabse sasta. Achanak crash ke liye limiter.",
             "choiceExplanations": [
-              "Warming: users ko roko, hot keys pehle bharo. Lab: 0 crash, par 13 s users ruke (96.3% serve). Limiter: 99.9% serve, 4 s. Planned restart (deploy) mein naya cache purane ke chalte-chalte bharo — planned restart mein warming sabse sasta. Achanak crash ke liye limiter.",
+              "Warming: users ko mana karo, hot keys pehle bharo. Lab: 0 crash, par 11.1 s users ko mana (96.3% serve), hit rate 13 s par wapas. Limiter: 99.9% serve, 4 s. Planned restart (deploy) mein naya cache purane ke chalte-chalte bharo — planned restart mein warming sabse sasta. Achanak crash ke liye limiter.",
               "Crash achanak tha; warming crash ke baad hi shuru ho sakti hai.",
               "Warming row mein 0 crash; 9 crash \"kuch nahi + har restart par khaali\" wali row ke hain."
             ]
@@ -312,11 +312,11 @@ SD.registerLevels('fp-core', [
       "steps": [
         {
           "title": "1. Herd ke teen ilaaj",
-          "say": "<b>Limiter</b> (load shedding): hamesha — DB ko kshamata se zyada kaam mat do. <b>Coalescing</b> (ek key ke saare misses = ek DB read): hot key ke liye; akele kaafi nahi (lab: 1 crash, 39 s). <b>Warming</b>: planned restart aur deploy ke liye."
+          "say": "<b>Limiter</b> (load shedding): hamesha — DB ko kshamata se zyada kaam mat do. <b>Coalescing</b> (ek key ke saare misses = ek DB read): hot keys ke liye; is model mein 0 crash, par wapsi late jawab ki policy par tiki (11 s ya 51 s). <b>Warming</b>: planned restart aur deploy ke liye."
         },
         {
           "title": "2. Na-maujood ids (penetration)",
-          "say": "Video: \"deliberate attack\". Hamesha nahi — app ka bug bhi same ids baar-baar maang sakta hai. Lab (10 lakh requests): bug par negative cache (\"nahi mila\" 60 s) DB ko 1,000 queries tak laata hai; attack (har id nayi) par negative cache bekaar, Bloom 8,149. Dono saath: bug par 8.",
+          "say": "Video: \"deliberate attack\". Hamesha nahi — app ka bug bhi same ids baar-baar maang sakta hai. Lab (10 lakh requests): bug par negative cache (\"nahi mila\" 60 s) har id ko har minute ek query tak laata hai (17,000 vs 10 lakh); attack (har id nayi) par negative cache bekaar, Bloom 8,149. Dono saath: bug par 136.",
           "ask": {
             "q": "Har request mein random naya user id (attack). Negative cache kyun bekaar?",
             "choices": [
@@ -351,28 +351,28 @@ SD.registerLevels('fp-core', [
         {
           "text": "Herd aur penetration (~10 s).",
           "cmd": "cd docker-labs/60-caching && npm start -- ex4-herd",
-          "expect": "A. MODEL (10 ms ticks): 10,000 reads/sec, 1,00,000 keys (Zipf s = 1.2), LRU cache 10,000 keys (~92% hits).\n   DB: 1,000 reads/sec. User 1 s baad haar maanta hai, par DB woh kaam karta rehta hai. Queue > 3 s ka kaam → DB crash,\n   30 s mein wapas. t = 30 s par cache server crash, khaali wapas aaya. 300 s dekha.\n\ntareeka                                                DB crash   requests serve hui   bekaar DB kaam   wapas ≥85% hits\nkuch nahi                                                  2        96.1%              3,213        67 s baad\nkuch nahi, aur har DB restart par cache bhi khaali         9        80.1%              2,580        kabhi nahi\nrequest coalescing (ek key = ek DB read)                   1        98.0%              5,669        39 s baad\nDB ke aage limiter (queue bhari → turant \"baad mein\")      0        99.9%                  0        4 s baad\nlimiter + coalescing                                       0        99.9%                  0        4 s baad\nwarming: users ko roko, hot keys pehle bharo               0        96.3%                  0        13 s baad\n\nTimeline (har 5 s): hit rate %, D = DB band\nnone      91 D78 D79 D79 D79 D78 D78 85 D86 D86 D86 D86 D85 D86 89 92 92 91\nnone-cold 91 D78 D79 D79 D79 D78 D78 D78 D78 D78 D78 D78 D78 D77 D77 D77 D77 D78\nlimit     91 87 92 92 92 91 91 92 92 92 92 92 91 92 92 92 92 91\nwarm      91 0 0 91 92 92 92 92 92 92 91 92 91 92 92 92 92 91\n\n→ Cache gaya toh misses ~8% se lagbhag 100%; DB ki queue badhi, 1 s se purane jawab bekaar (user ja chuka), DB gira. DB band = cache\n  bhar nahi sakta = DB lautte hi phir wahi bojh. Cache ne jo bhara woh rakha toh loop do crash baad toota; har restart par\n  cache bhi khaali ho toh loop chalta hi raha (video ka scenario).\n→ Limiter (load shedding) asli dhaal hai: kuch users ko turant \"baad mein\", par DB zinda, cache bharta rehta hai.\n  Coalescing akele kaafi nahi (alag-alag keys ke misses phir bhi bahut). Warming: crash ke baad users ko rokna padta hai\n  (yahan 13 s); deploy jaise planned restart mein naya cache purane ke chalte-chalte bharo — wahan warming sabse sasta.\n\nB. ASLI Bloom filter: users 1 … 10,00,000 DB mein. Filter: 10 bits/key, 7 probes. Cache penetration = na-maujood ids.\n\nFilter: 1.25 MB. 10 lakh na-maujood ids mein \"shayad hai\": 0.83% (theory 0.82%). Ek lookup ~28 ns.\n\nDB tak kitni queries (10 lakh requests)        attack: har id nayi     bug: wahi 1,000 ids baar-baar\nkuch nahi                                       10,00,000                10,00,000\nnegative cache (\"nahi mila\" 60 s)               10,00,000                    1,000\nBloom filter                                        8,149                    8,000\nBloom + negative cache                              8,149                        8\n\nNaye 1,000 users signup (1 lakh requests): filter update nahi kiya → 99,100 asli requests galti se \"nahi hai\"; signup par add kiya → 0.\n\n→ Har baar nayi id (attack): negative cache bekaar, Bloom filter ~99% rokta hai. Wahi ids baar-baar: negative cache kaafi.\n→ Bloom ka \"shayad\" wala hissa DB tak jaata hai; Bloom + negative cache dono kamzoriyan dhakte hain.\n→ Bloom ko har insert par update karna zaroori; delete support nahi (uske liye counting Bloom ya rebuild)."
+          "expect": "A. MODEL (10 ms ticks): 10,000 reads/sec, 1,00,000 keys (Zipf s = 1.2), LRU cache 10,000 keys (~92% hits).\n   DB: 1,000 reads/sec. Har user 1 s baad haar maanta hai (apni deadline), par DB queue ka kaam karta rehta hai. Queue > 3 s ka\n   kaam → DB crash, 30 s mein wapas. t = 30 s par cache server crash, khaali wapas aaya. 300 s dekha. Har tareeke par same requests.\n   \"late fill\" = timeout ke baad pahuncha DB jawab bhi cache bharta hai (jab handler cancel nahi hota); \"phenka\" = jawab bekaar.\n\ntareeka                                                DB crash   requests serve hui   bekaar DB reads   wapas ≥85% hits\nkuch nahi (late fill)                                      1        97.4%             14,491        48 s baad\nkuch nahi (late jawab phenka)                              2        96.1%              3,213        67 s baad\nkuch nahi + har DB restart par cache bhi khaali*           9        81.3%              2,707        kabhi nahi\nrequest coalescing (late fill)                             0        99.7%              8,941        11 s baad\nrequest coalescing (late jawab phenka)                     0        98.2%             46,917        51 s baad\nDB ke aage limiter (queue bhari → turant \"baad mein\")      0        99.9%                  0        4 s baad\nlimiter + coalescing                                       0        99.9%                  0        4 s baad\nwarming: users ko mana, hot keys pehle bharo               0        96.3%                  0        13 s baad\n\n* Video kehta hai cache cold rehta hai; \"har restart par khaali\" ek alag maana hua scenario hai. Warming: users 11.1 s tak mana.\n\"Bekaar DB reads\" = DB ne padha, par us waqt koi user intezaar mein nahi tha.\n\nTimeline (har 5 s): hit rate %, D = DB band\nnone      91 D80 D80 D80 D81 D80 D80 87 91 92 91 92 91 92 92 92 92 91\nnone-cold 91 D80 D80 D80 D81 D80 D80 D79 D79 D79 D79 D79 D79 D77 D79 D79 D79 D79\nlimit     91 87 92 92 92 91 91 92 92 92 92 92 91 92 92 92 92 91\nwarm      91 0 0 91 92 91 91 92 92 92 92 92 91 92 92 92 92 91\n\n→ Cache gaya toh misses ~8% se lagbhag 100%; DB ki queue badhi, 1 s se purane users ja chuke, DB gira. DB band = cache bhar nahi\n  sakta. Har restart par cache bhi khaali ho toh loop chalta hi raha.\n→ Limiter (load shedding) sabse tez dhaal: kuch users ko turant \"baad mein\", DB zinda, 4 s mein wapas — late fill policy\n  kuch bhi ho. Coalescing bhi is model mein DB ko bachata hai (hot keys ke dohraaye misses ek read), par wapsi late fill\n  policy par tiki hai (11 s vs 51 s). Warming: crash ke baad users ko mana karna padta hai; deploy jaise planned restart mein\n  naya cache purane ke chalte-chalte bharo — wahan warming sabse sasta.\n\nB. ASLI Bloom filter: users 1 … 10,00,000 DB mein. Filter: 10 bits/key, 7 probes. Cache penetration = na-maujood ids.\n\nFilter: 1.25 MB. 10 lakh na-maujood ids mein se \"shayad hai\": 0.83% (theory 0.82%). Ek lookup ~21 ns.\n\nMODEL ginti (koi asli DB nahi; 1,000 requests/sec, 10 lakh requests = ~17 minute):\nDB tak kitni queries                            attack: har id nayi     bug: same 1,000 ids baar-baar\nkuch nahi                                       10,00,000                10,00,000\nnegative cache (\"nahi mila\" 60 s)               10,00,000                   17,000\nBloom filter                                        8,149                    8,000\nBloom + negative cache                              8,149                      136\n\nNaye 1,000 users signup (1 lakh requests): filter update nahi kiya → 99,100 asli requests galti se \"nahi hai\"; signup par add kiya → 0.\nNegative cache ka khatra: id X \"nahi mila\" cache hua, phir X ne signup kiya — create par negative entry na mitaayi toh 60 s tak \"nahi hai\".\n\n→ Har baar nayi id (attack): negative cache bekaar, Bloom filter ~99% rokta hai. Same ids baar-baar: negative cache har 60 s\n  mein ek DB query per id. Bloom ka \"shayad\" wala hissa DB tak jaata hai; dono saath sabse kam.\n→ Bloom ko har insert par update karna zaroori; delete support nahi (uske liye counting Bloom ya rebuild)."
         },
         {
           "text": "Lab ke 5 tests (race, lease, Bloom aur herd ke guards samet).",
           "cmd": "npm test",
-          "expect": "✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential\n✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size\n✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none\n✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease\n✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 14459.172433"
+          "expect": "npm notice run lab-60-caching@1.0.0 test\nnpm notice run node --test test/*.test.js\n✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential (1059.860239ms)\n✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size (209.423523ms)\n✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none (4942.867037ms)\n✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease (426.038582ms)\n✔ LRU recency and the human scale (0.333507ms)\n✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks (10142.85791ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 16830.705764"
         }
       ],
       "observe": {
-        "q": "Hissa A: coalescing (ek key = ek DB read) ke baad bhi DB ek baar gira. Kyun?",
+        "q": "Hissa A: coalescing par wapsi 11 s (late jawab cache bhare) ya 51 s (late jawab phenka). Itna farq kyun?",
         "choices": [
-          "Alag-alag keys ke misses phir bhi DB ki kshamata se bahut zyada the",
-          "Coalescing har miss ko do baar DB bhejta hai, isliye bojh dugna ho gaya",
-          "Coalescing sirf writes ke liye hai, reads par kuch nahi karta model mein"
+          "Late jawab cache bhare toh us key ki agli requests hit; phenka toh phir DB",
+          "Late fill wale model mein DB tez chalta hai, isliye jaldi wapas aata hai",
+          "Phenka policy mein coalescing band ho jaati hai, har miss alag read banta"
         ],
         "answer": 0,
-        "hint": "Cache khaali hai aur 1 lakh keys hain. Ek tick mein kitni alag keys aati hain?",
-        "explain": "Coalescing ek hi key ke dohraaye misses jodta hai. Khaali cache par hazaaron alag keys miss hoti hain, aur alag keys jod nahi sakte. DB par phir bhi 1,000/sec se bahut zyada → 1 crash, 39 s. Limiter kshamata baandhta hai, isliye 0 crash.",
+        "hint": "Timeout ke baad pahuncha DB jawab cache mein jaata hai ya nahi?",
+        "explain": "DB ki raftaar dono mein same (1,000/sec). Late fill mein der se aaya jawab bhi cache bharta hai, toh us key ki agli requests hit. Phenka toh cache khaali, agli request phir DB par, queue phir lambi. Isliye coalescing kitna bachata hai, is policy par tika hai. Limiter dono policies mein 4 s.",
         "choiceExplanations": [
-          "Coalescing ek hi key ke dohraaye misses jodta hai. Khaali cache par hazaaron alag keys miss hoti hain, aur alag keys jod nahi sakte. DB par phir bhi 1,000/sec se bahut zyada → 1 crash, 39 s. Limiter kshamata baandhta hai, isliye 0 crash.",
-          "Coalescing bojh kam karta hai, badhata nahi.",
-          "Model mein coalescing reads ke misses jodta hai (lib/herd.js)."
+          "DB ki raftaar dono mein same (1,000/sec). Late fill mein der se aaya jawab bhi cache bharta hai, toh us key ki agli requests hit. Phenka toh cache khaali, agli request phir DB par, queue phir lambi. Isliye coalescing kitna bachata hai, is policy par tika hai. Limiter dono policies mein 4 s.",
+          "DB model mein dono policies mein 1,000 reads/sec hi karta hai.",
+          "Coalescing dono mein chalti hai; farq sirf late jawab ka hai."
         ]
       },
       "lesson": "Herd mein DB ko kshamata se zyada kaam milna asli khatra hai. Limiter pehle; coalescing aur warming saath mein."
@@ -408,9 +408,9 @@ SD.registerLevels('fp-core', [
           "Har product id ke liye DB index banao, taaki galat ids bhi tez mil jaayein"
         ],
         "answer": 0,
-        "explain": "Same ids baar-baar = negative cache kaafi (lab 60 ex4 B: bug par 1,000 queries). Bloom filter attack (har id nayi) ke liye. Saath mein app ke purane version ka bug theek karo.",
+        "explain": "Same ids baar-baar = negative cache kaafi (lab 60 ex4 B: bug par har id har minute ek query, 17,000 vs 10 lakh). Bloom filter attack (har id nayi) ke liye. Saath mein app ke purane version ka bug theek karo.",
         "choiceExplanations": [
-          "Same ids baar-baar = negative cache kaafi (lab 60 ex4 B: bug par 1,000 queries). Bloom filter attack (har id nayi) ke liye. Saath mein app ke purane version ka bug theek karo.",
+          "Same ids baar-baar = negative cache kaafi (lab 60 ex4 B: bug par har id har minute ek query, 17,000 vs 10 lakh). Bloom filter attack (har id nayi) ke liye. Saath mein app ke purane version ka bug theek karo.",
           "Bloom chalega, par har insert par update aur alag system; dohraaye ids ke liye zaroorat nahi.",
           "Purana app version bug hai, attack nahi; block karne se asli users bhi rukenge.",
           "Primary key par index pehle se hota hai; problem queries ki ginti hai."
@@ -430,11 +430,11 @@ SD.registerLevels('fp-core', [
     },
     {
       "front": "Warming kab?",
-      "back": "Planned restart/deploy: naya cache purane ke chalte bharo. Achanak crash mein users ko rokna padta hai (lab: 13 s). Achanak ke liye limiter."
+      "back": "Planned restart/deploy: naya cache purane ke chalte bharo. Achanak crash mein users ko mana karna padta hai (lab: 11 s). Achanak ke liye limiter."
     },
     {
       "front": "Negative cache vs Bloom?",
-      "back": "Same ids baar-baar (bug) → negative cache. Har id nayi (attack) → Bloom (~99% ruka). Dono saath: lab mein bug par 8 queries."
+      "back": "Same ids baar-baar (bug) → negative cache. Har id nayi (attack) → Bloom (~99% ruka). Dono saath: lab mein bug par 136 queries."
     }
   ]
 }

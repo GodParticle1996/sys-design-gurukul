@@ -3,6 +3,7 @@
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path'), net = require('node:net');
 const { measure, sweep } = require('../lib/ladder');
 const { human } = require('../lib/human');
+const { rng } = require('../lib/rng');
 const { percentile } = require('../lib/stats');
 
 const mhz = Number((fs.readFileSync('/proc/cpuinfo', 'utf8').match(/cpu MHz\s*:\s*([\d.]+)/) || [])[1]) || 3000;
@@ -22,7 +23,7 @@ for (const [kb, hops] of curve) {
 row('ASLI', 'L1 (32 KB data)', got[32]); row('ASLI', 'L2 (1 MB data)', got[1024]); row('ASLI', 'L3 (4 MB data)', got[4096]);
 row('ASLI', 'RAM (256 MB data, TLB miss samet)', got[262144]);
 
-console.log('\nB. Spatial locality: wahi 3.2 crore ints (128 MB), ek baar seedhe kram mein, ek baar random kram mein.');
+console.log('\nB. Spatial locality: same 3.2 crore ints (128 MB), ek baar seedhe kram mein, ek baar random kram mein.');
 const seq = sweep(1 << 25, false), rnd = sweep(1 << 25, true);
 console.log(`seedha kram: ${seq.toFixed(2)} ns / int     random kram: ${rnd.toFixed(2)} ns / int     → ${(rnd / seq).toFixed(0)}× farq`);
 console.log('Seedhe kram mein ek 64-byte line 16 ints laati hai aur CPU agli lines pehle se mangwa leta hai (prefetch).');
@@ -39,17 +40,18 @@ const fdc = fs.openSync(f, 'r'), pc = [];
 for (let i = 0; i < 64; i++) fs.readSync(fdc, buf, 0, 4096, i * 4096);
 for (let i = 0; i < 4000; i++) { const t = process.hrtime.bigint(); fs.readSync(fdc, buf, 0, 4096, (i % 64) * 4096); pc.push(Number(process.hrtime.bigint() - t)); }
 row('ASLI', '4 KB read, OS page cache se (RAM)', percentile(pc, 50));
-let direct = null;
+let direct = null, distinct = 0;
 try {
   const fdd = fs.openSync(f, fs.constants.O_RDONLY | fs.constants.O_DIRECT), d = [];
-  let x = 12345;
-  for (let i = 0; i < 400; i++) { x = (x * 1103515245 + 12345) >>> 0; const t = process.hrtime.bigint(); fs.readSync(fdd, buf, 0, 4096, (x % (MB * 256)) * 4096); d.push(Number(process.hrtime.bigint() - t)); }
+  const r = rng(12345), blocks = new Set();
+  for (let i = 0; i < 400; i++) { const blk = Math.floor(r() * MB * 256); blocks.add(blk); const t = process.hrtime.bigint(); const got = fs.readSync(fdd, buf, 0, 4096, blk * 4096); d.push(Number(process.hrtime.bigint() - t)); if (got !== 4096) throw Object.assign(new Error('short read'), { code: 'SHORT' }); }
+  distinct = blocks.size;
   direct = percentile(d, 50); fs.closeSync(fdd);
-  row('ASLI', '4 KB random read, disk se (O_DIRECT)', direct);
+  row('ASLI', '4 KB random read, O_DIRECT (WSL path)', direct);
 } catch (e) { console.log(`\n(O_DIRECT nahi chala: ${e.code}; disk read ki row chhod di)`); }
 fs.closeSync(fdc); fs.unlinkSync(f); // 256 MB test file temp folder mein nahi chhodte
 const w = path.join(os.tmpdir(), 'lab60-fsync.bin'), fdw = fs.openSync(w, 'w'), fsy = [], e = Buffer.alloc(128, 1);
-for (let i = 0; i < 200; i++) { fs.writeSync(fdw, e); const t = process.hrtime.bigint(); fs.fsyncSync(fdw); fsy.push(Number(process.hrtime.bigint() - t)); }
+for (let i = 0; i < 200; i++) { const t = process.hrtime.bigint(); fs.writeSync(fdw, e); fs.fsyncSync(fdw); fsy.push(Number(process.hrtime.bigint() - t)); }
 fs.closeSync(fdw); fs.unlinkSync(w);
 row('ASLI', 'write + fsync (disk tak pakka)', percentile(fsy, 50));
 
@@ -74,5 +76,6 @@ srv.listen(0, '127.0.0.1', () => {
     const l1 = rows[0].ns;
     console.log(`\nL1 se${direct ? ' disk read tak ' + Math.round(direct / l1).toLocaleString('en-IN') + '×,' : ''} fsync tak ${Math.round(rows.find(r => r.name.startsWith('write')).ns / l1).toLocaleString('en-IN')}×, doosre region tak ${Math.round(150e6 / l1).toLocaleString('en-IN')}×.`);
     console.log('Note: L1 ki row mein JS loop ka kaam bhi shaamil hai; RAM ki row mein TLB miss (page table walk) bhi. WSL ki disk ek virtual disk hai.');
+    if (direct) console.log(`O_DIRECT row: ${distinct} alag 4 KB blocks (400 reads, 256 MB file). Buffer ki alignment aur WSL host/disk ki caching jaanchi nahi gayi —\n  isliye row "is machine ka direct-I/O raasta" hai, pakka "physical SSD" nahi.`);
   }
 });

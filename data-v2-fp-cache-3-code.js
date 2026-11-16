@@ -30,7 +30,7 @@ SD.registerLevels('fp-core', [
         "title": "lib/invalidation.js",
         "file": "docker-labs/60-caching/lib/invalidation.js",
         "from": 19,
-        "text": "  const read = () => {\n    reads++;\n    if (cache && now < cache.until) { if (cache.v !== db) stale++; return; }\n    const token = lease ? (leaseHolder === null ? (leaseHolder = ++leaseId) : null) : 0;   // only one filler per lease\n    if (lease && token === null) return;                  // another reader is filling: this one waits / reads DB (not counted stale)\n    q.push(now + 2, () => {                               // DB read 2 ms\n      const v = db;\n      const delay = r() < pauseP ? pauseMs : 0.1;         // GC pause or slow network before the set\n      q.push(now + delay, () => {\n        if (lease && leaseHolder !== token) return;       // a delete cancelled this lease: drop the old value\n        if (lease) leaseHolder = null;\n        cache = { v, until: now + ttl }; checkStale();\n      });\n    });\n  };\n  const write = () => {\n    q.push(now + 3, () => {                               // DB write 3 ms\n      db++; checkStale();\n      q.push(now + 0.2, () => {\n        if (r() < lostDelete) return;                     // delete message lost\n        cache = null; leaseHolder = null; checkStale();\n      });\n    });\n  };"
+        "text": "  const read = (retry = false) => {\n    if (!retry) reads++; else retries++;\n    if (cache && now < cache.until) { if (cache.v !== db) stale++; return; }\n    const token = lease ? (leaseHolder === null ? (leaseHolder = ++leaseId) : null) : 0;   // only one filler per lease\n    if (lease && token === null) { q.push(now + 10, () => read(true)); return; }   // another reader is filling: wait 10 ms, ask the cache again\n    q.push(now + 2, () => {                               // DB read 2 ms\n      const v = db;\n      const delay = rPause() < pauseP ? pauseMs : 0.1;    // GC pause or slow network before the set\n      q.push(now + delay, () => {\n        if (lease && leaseHolder !== token) return;       // a delete cancelled this lease: drop the old value\n        if (lease) leaseHolder = null;\n        cache = { v, until: now + ttl }; checkStale();\n      });\n    });\n  };\n  const write = () => {\n    q.push(now + 3, () => {                               // DB write 3 ms\n      db++; checkStale();\n      q.push(now + 0.2, () => {\n        if (rLoss() < lostDelete) return;                 // delete message lost\n        cache = null; leaseHolder = null; checkStale();\n      });\n    });\n  };"
       },
       "vars": [
         {
@@ -95,9 +95,9 @@ SD.registerLevels('fp-core', [
             ],
             "answer": 0,
             "hint": "Line 30 TTL ke saath kya alag karti hai?",
-            "explain": "TTL sirf <code>until</code> set karta hai: galti ki umar 30 s. Race phir bhi hoti hai. Lab 60 ex3 A: TTL 30 s par 1 s aur 10 s par v1, 1 min par v2.",
+            "explain": "TTL sirf <code>until</code> set karta hai: entry set hone ke 30 s baad mitti — DB badalne ke waqt se nahi. Race phir bhi hoti hai. Lab 60 ex3 A: TTL 30 s par 1 s aur 10 s par v1, 1 min par v2. Dheemi fill purani value der se set kare toh galti 30 s se lambi bhi ho sakti hai.",
             "choiceExplanations": [
-              "TTL sirf <code>until</code> set karta hai: galti ki umar 30 s. Race phir bhi hoti hai. Lab 60 ex3 A: TTL 30 s par 1 s aur 10 s par v1, 1 min par v2.",
+              "TTL sirf <code>until</code> set karta hai: entry set hone ke 30 s baad mitti — DB badalne ke waqt se nahi. Race phir bhi hoti hai. Lab 60 ex3 A: TTL 30 s par 1 s aur 10 s par v1, 1 min par v2. Dheemi fill purani value der se set kare toh galti 30 s se lambi bhi ho sakti hai.",
               "Set DB se kuch milaata nahi; line 30 seedha likhti hai.",
               "Delete ek hi baar chalta hai (line 37–40); TTL delete dobara nahi bhejta."
             ]
@@ -113,25 +113,25 @@ SD.registerLevels('fp-core', [
             "lease": "radd"
           },
           "ask": {
-            "q": "Lease ke saath line 23 doosre readers ko seedha lauta deti hai. Kyun?",
+            "q": "Lease ke saath line 23 token-rahit readers ko 10 ms baad dobara bhejti hai. Kyun?",
             "choices": [
               "Ek key par ek hi filler: baaki ruk kar dobara poochte hain, DB par herd nahi",
               "Doosre readers ke paas token nahi, isliye un readers ko hamesha purana value milta",
-              "Line 23 bas gin'ti chhupaati hai; asli memcache mein sab DB padhte hain"
+              "Line 23 sirf ginti ke liye hai; asli memcache mein sab DB padhte hain"
             ],
             "answer": 0,
             "hint": "Facebook memcache (NSDI 2013) mein lease do kaam karta hai. Doosra kaam kya?",
-            "explain": "Lease token ek waqt mein ek hi reader ko milta hai. Baaki readers thoda ruk kar dobara cache poochte hain. Token se stale set bhi rukta hai aur hot key par thundering herd bhi (sab ek saath DB nahi jaate). Model mein token ke bina wale readers stale nahi gine jaate.",
+            "explain": "Lease token ek waqt mein ek hi reader ko milta hai. Baaki readers thoda ruk kar (model: 10 ms) dobara cache poochte hain. Token se stale set bhi rukta hai aur hot key par thundering herd bhi (sab ek saath DB nahi jaate). Lab ka lease ek saral model hai; paper mein token ki rate-limit aur retry ke niyam zyada vistaar mein hain.",
             "choiceExplanations": [
-              "Lease token ek waqt mein ek hi reader ko milta hai. Baaki readers thoda ruk kar dobara cache poochte hain. Token se stale set bhi rukta hai aur hot key par thundering herd bhi (sab ek saath DB nahi jaate). Model mein token ke bina wale readers stale nahi gine jaate.",
+              "Lease token ek waqt mein ek hi reader ko milta hai. Baaki readers thoda ruk kar (model: 10 ms) dobara cache poochte hain. Token se stale set bhi rukta hai aur hot key par thundering herd bhi (sab ek saath DB nahi jaate). Lab ka lease ek saral model hai; paper mein token ki rate-limit aur retry ke niyam zyada vistaar mein hain.",
               "Token na milne par purana value nahi milta; reader ko \"thoda ruko\" milta hai.",
-              "Memcache paper mein lease ka doosra kaam herd rokna hi hai."
+              "Memcache paper (NSDI 2013 §3.2.1) mein lease ka doosra kaam herd rokna hi hai."
             ]
           }
         },
         {
           "title": "6. Khoya hua delete",
-          "say": "Line 38: <code>lostDelete</code> chance se delete message kho jaata hai (network, crash). Tab na delete hua, na lease radd. Lab 60 ex3 B: 1% delete khone par stale reads ~2% tak, lease ke saath bhi.",
+          "say": "Line 38: <code>lostDelete</code> chance se delete message kho jaata hai (network, crash). Tab na delete hua, na lease radd. Lab 60 ex3 B: 1% delete khone par stale cache hits ~1.2–1.4%, lease ke saath bhi.",
           "line": "38",
           "vars": {
             "db": "v3",
@@ -140,7 +140,7 @@ SD.registerLevels('fp-core', [
           }
         }
       ],
-      "lesson": "Delete race: purana reader delete ke baad purana value set kar deta hai. TTL galti ki umar baandhta hai; lease race rokta hai; khoye hue delete ke liye TTL ya change-log se invalidation."
+      "lesson": "Delete race: purana reader delete ke baad purana value set kar deta hai. TTL har entry ki umar baandhta hai (set hone se); lease race rokta hai; khoye hue delete ke liye TTL ya change-log se invalidation."
     },
     {
       "type": "dryrun",
@@ -210,7 +210,7 @@ SD.registerLevels('fp-core', [
             "q": "Kya maujood user ko kabhi \"nahi hai\" mil sakta hai?",
             "choices": [
               "Nahi, agar add hua ho: add ne saaton bits on kiye, koi bit off nahi hota",
-              "Haan, ~0.8% baar; Bloom dono taraf barabar galti karta hai har haal mein",
+              "Haan, ~0.8% baar; Bloom dono taraf galti karta hai, har haal mein",
               "Haan, jab doosri id ke bits us user ke bits ko off kar dete hain"
             ],
             "answer": 0,
@@ -225,7 +225,7 @@ SD.registerLevels('fp-core', [
         },
         {
           "title": "5. Theory vs naap",
-          "say": "Line 11: false positive = (1 − e^(−kn/m))^k = 0.82%. Lab ne 10 lakh na-maujood ids par 0.83% naapa. Ek lookup ~25–33 ns.",
+          "say": "Line 11: false positive = (1 − e^(−kn/m))^k = 0.82%. Lab mein 10 lakh na-maujood ids mein se 0.83% ko \"shayad\" mila. Is traffic mein har \"shayad\" galat tha — isliye har \"shayad\" DB se jaancho. Ek lookup ~20–30 ns.",
           "line": "11",
           "vars": {
             "m": "1 crore",
@@ -234,7 +234,7 @@ SD.registerLevels('fp-core', [
           }
         }
       ],
-      "lesson": "Bloom: \"nahi\" pakka, \"shayad\" ~0.8% galat (10 bits/key). Delete nahi hota, aur har insert par add zaroori."
+      "lesson": "Bloom: jo id add hui, us id ko \"nahi\" kabhi nahi. Na-maujood ids mein se ~0.8% ko \"shayad\" (10 bits/key) — har \"shayad\" DB se jaancho. Delete nahi hota, aur har insert par add zaroori."
     },
     {
       "type": "docker",
@@ -247,16 +247,16 @@ SD.registerLevels('fp-core', [
         {
           "text": "Race aur 1 ghante ka model.",
           "cmd": "cd docker-labs/60-caching && npm start -- ex3-invalidation",
-          "expect": "A. Script (ek hi race, haath se): DB = v1, cache khaali.\n   t=1 ms   reader R: cache miss → DB se v1 padha → GC pause\n   t=5 ms   writer W: DB = v2\n   t=6 ms   writer W: cache delete (abhi cache mein kuch nahi)\n   t=105 ms reader R jaaga: cache = v1  ← purana value, DB mein v2\n\ntareeka                        1 s        10 s       1 min      10 min  baad reader ko kya mila\nsirf delete (koi TTL nahi)   v1 ✗       v1 ✗       v1 ✗       v1 ✗      \ndelete + TTL 30 s            v1 ✗       v1 ✗       v2 ✓       v2 ✓      \ndelete + lease + TTL 30 s    v2 ✓       v2 ✓       v2 ✓       v2 ✓      \n\n→ Bina TTL: purana v1 tab tak jab tak koi agla write delete na kare — price roz badalta hai toh poora din.\n  TTL: galti ki umar TTL tak. Lease (Facebook memcache, NSDI 2013): miss par cache ek token deta hai; delete token\n  cancel karta hai; purane token wala set thukra diya jaata hai.\n\nB. MODEL, 1 ghanta, ek hot key: 1,000 reads/sec, write har ~5 s (Poisson). DB read 2 ms, write 3 ms.\n   1% readers ko DB read ke baad 200 ms ka pause. \"Lambi galti\" = 5 ms se lamba stale window.\n\ntareeka                       delete message khota   stale reads           lambi galtiyan   sabse lambi\nsirf delete                   kabhi nahi                 164 (0.005%)          0         0.0 s\nsirf delete                   1%                      66,041 (1.834%)         11         28.0 s\ndelete + TTL 30 s             kabhi nahi               5,559 (0.154%)          2         4.1 s\ndelete + TTL 30 s             1%                      30,235 (0.840%)         10         9.8 s\ndelete + lease + TTL 30 s     kabhi nahi                 142 (0.004%)          0         0.0 s\ndelete + lease + TTL 30 s     1%                      68,053 (1.890%)         12         13.9 s\n\n→ Har write ke baad DB commit se delete tak (0.2 ms) thode stale reads hamesha — woh \"lambi galti\" mein nahi gine.\n→ TTL ke saath race thoda zyada (expiry par naye miss = naye mauke), par har galti TTL ke andar khatam.\n→ Lease race rokta hai; khoya hua delete lease bhi nahi rok sakta — uske liye TTL (ya change-log se invalidation, lab 33).\n→ Model ek key ka hai; bahut saari keys par yahi chhote chance jud kar asli galtiyan bante hain."
+          "expect": "A. Script (ek hi race, haath se): DB = v1, cache khaali.\n   t=1 ms   reader R: cache miss → DB se v1 padha → GC pause\n   t=5 ms   writer W: DB = v2\n   t=6 ms   writer W: cache delete (abhi cache mein kuch nahi)\n   t=105 ms reader R jaaga: cache = v1  ← purana value, DB mein v2\n\ntareeka                        1 s        10 s       1 min      10 min  baad reader ko kya mila\nsirf delete (koi TTL nahi)   v1 ✗       v1 ✗       v1 ✗       v1 ✗      \ndelete + TTL 30 s            v1 ✗       v1 ✗       v2 ✓       v2 ✓      \ndelete + lease + TTL 30 s    v2 ✓       v2 ✓       v2 ✓       v2 ✓      \n\n→ Bina TTL: purana v1 tab tak jab tak koi agla write delete na kare — price roz badalta hai toh poora din.\n  TTL: purani value set hone ke 30 s baad mitti. Lease (Facebook memcache, NSDI 2013, saral model): miss par cache token\n  deta hai; delete token radd karta hai; purane token wala set thukra diya jaata hai.\n\nB. MODEL, 1 ghanta, ek hot key: 1,000 reads/sec, write har ~5 s (Poisson). DB read 2 ms, write 3 ms.\n   1% readers ko DB read ke baad 200 ms ka pause. \"Lambi galti\" = 5 ms se lamba stale window.\n   Har tareeke par same arrivals aur writes (alag random streams). Lease: token na mile toh reader 10 ms ruk kar dobara poochta hai.\n\ntareeka                       delete message khota   stale cache hits      lambi galtiyan   sabse lambi\nsirf delete                   kabhi nahi               1,334 (0.037%)          1         1.1 s\nsirf delete                   1%                      50,807 (1.411%)          7         27.0 s\ndelete + TTL 30 s             kabhi nahi               1,683 (0.047%)          1         1.5 s\ndelete + TTL 30 s             1%                      46,121 (1.281%)          8         21.2 s\ndelete + lease + TTL 30 s     kabhi nahi                 150 (0.004%)          0         0.0 s\ndelete + lease + TTL 30 s     1%                      43,404 (1.205%)          6         21.2 s\n\n→ Har write ke baad DB commit se delete tak (0.2 ms) thode stale reads hamesha — woh \"lambi galti\" mein nahi gine.\n→ TTL har entry ki umar hai, set hone ke waqt se — DB badalne ke waqt se nahi. Dheemi fill purani value der se set kare\n  toh galti TTL se lambi bhi ho sakti hai. TTL race nahi rokta; expiry par naye miss = race ke naye mauke.\n→ Lease race rokta hai; khoya hua delete lease bhi nahi rok sakta — uske liye TTL (ya change-log se invalidation, lab 33).\n→ Model ek key ka hai; bahut saari keys par chhote chance jud kar asli galtiyan bante hain."
         },
         {
           "text": "Lab ke 5 tests (race, lease, Bloom aur herd ke guards samet).",
           "cmd": "npm test",
-          "expect": "✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential\n✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size\n✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none\n✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease\n✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 14459.172433"
+          "expect": "npm notice run lab-60-caching@1.0.0 test\nnpm notice run node --test test/*.test.js\n✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential (1059.860239ms)\n✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size (209.423523ms)\n✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none (4942.867037ms)\n✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease (426.038582ms)\n✔ LRU recency and the human scale (0.333507ms)\n✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks (10142.85791ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 16830.705764"
         }
       ],
       "observe": {
-        "q": "Hissa B: lease + TTL par bhi 1% delete khone se ~68 hazaar stale reads. Lease kyun nahi bacha paaya?",
+        "q": "Hissa B: lease + TTL par bhi 1% delete khone se ~43 hazaar stale cache hits. Lease kyun nahi bacha paaya?",
         "choices": [
           "Delete hi nahi pahuncha, toh lease radd nahi hua; purana value TTL tak rehta hai",
           "Lease sirf pehle reader ko bachata hai, baaki readers ko hamesha stale milta hai",
@@ -264,11 +264,11 @@ SD.registerLevels('fp-core', [
         ],
         "answer": 0,
         "hint": "Lease kis cheez par radd hota hai? (line 39)",
-        "explain": "Lease delete par radd hota hai. Delete kho gaya → na cache mita, na lease radd. Bachaav: TTL (is model mein sabse lambi galti 13.9 s, 30 s se kam), ya DB ke change log se invalidation (CDC, lab 33), jo khoye delete ko dobara bhej sake.",
+        "explain": "Lease delete par radd hota hai. Delete kho gaya → na cache mita, na lease radd. Bachaav: TTL (is model mein sabse lambi galti 21.2 s), ya DB ke change log se invalidation (CDC, lab 33), jo khoye delete ko dobara bhej sake.",
         "choiceExplanations": [
-          "Lease delete par radd hota hai. Delete kho gaya → na cache mita, na lease radd. Bachaav: TTL (is model mein sabse lambi galti 13.9 s, 30 s se kam), ya DB ke change log se invalidation (CDC, lab 33), jo khoye delete ko dobara bhej sake.",
+          "Lease delete par radd hota hai. Delete kho gaya → na cache mita, na lease radd. Bachaav: TTL (is model mein sabse lambi galti 21.2 s), ya DB ke change log se invalidation (CDC, lab 33), jo khoye delete ko dobara bhej sake.",
           "Baaki readers ruk kar dobara poochte hain; un readers ko stale nahi gina gaya.",
-          "TTL chal raha hai: sabse lambi galti 13.9 s, TTL 30 s ke andar."
+          "TTL chal raha hai: sabse lambi galti 21.2 s; TTL har purani entry ko set hone ke 30 s baad mitaata hai."
         ]
       },
       "lesson": "Har cache invalidation ke liye do sawaal: race kaise rukegi (lease, version), aur khoya delete kaise sudhrega (TTL, change log)."
@@ -330,7 +330,7 @@ SD.registerLevels('fp-core', [
     },
     {
       "front": "Bloom 10 bits/key?",
-      "back": "k = 7, false positive ~0.82% (lab: 0.83%). \"Nahi\" pakka sirf tab jab har insert add ho. Delete support nahi."
+      "back": "k = 7. Na-maujood ids mein se ~0.82% ko \"shayad\" (lab: 0.83%) — har \"shayad\" DB se jaancho. \"Nahi\" pakka sirf tab jab har insert add ho. Delete support nahi."
     }
   ]
 }

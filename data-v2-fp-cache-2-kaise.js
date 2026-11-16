@@ -138,7 +138,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "Write-through",
           "clock": "through",
-          "say": "Likhna: cache turant DB ko likhta hai, DB ki pushti ka intezaar, phir app ko \"ho gaya\". DB ne fsync kiya toh crash ke baad bhi data pakka. Lab: har write ka apna fsync = 560–650 writes/sec.",
+          "say": "Likhna: cache turant DB ko likhta hai, DB ki pushti ka intezaar, phir app ko \"ho gaya\". DB ne fsync kiya toh crash ke baad bhi data pakka. Lab: har write ka apna fsync = ~760–810 writes/sec.",
           "nodes": {
             "app": {
               "tone": "acc",
@@ -186,7 +186,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "Write-back",
           "clock": "back",
-          "say": "Cache memory mein likh kar turant \"ho gaya\". DB ko baad mein, batch mein. Lab: har 1 s flush, phir SIGKILL → 55–58 hazaar acked writes gayab.",
+          "say": "Cache memory mein likh kar turant \"ho gaya\". DB ko baad mein, batch mein. Lab: har 1 s flush, phir SIGKILL → ~60 hazaar acked writes gayab.",
           "nodes": {
             "app": {
               "tone": "acc",
@@ -221,17 +221,17 @@ SD.registerLevels('fp-core', [
           "ask": {
             "q": "Flush har 1 s se har 100 ms kiya. Lab mein kya badla?",
             "choices": [
-              "Khoye ~55 hazaar se ~1 hazaar; flush ka interval hi loss ki had hai",
+              "Khoye ~60 hazaar se ~1 hazaar; flush ka interval hi loss ki had hai",
               "Kuch nahi; write-back mein crash par sab writes hamesha chali jaati hain",
               "Writes/sec 10 guna gir gaya, kyunki har flush fsync karta hai baar-baar"
             ],
             "answer": 0,
             "hint": "Crash ke waqt memory mein kitne milliseconds ki writes thi?",
-            "explain": "Write-back mein khatra = flush se pehle wali writes. 1 s par lagbhag ek second ki writes (~55–58 hazaar at 1 lakh/sec) memory mein thi; 100 ms par ~1 hazaar. Writes/sec lagbhag same raha (~91–97 hazaar), kyunki 100 ms mein ek fsync bhi sasta hai.",
+            "explain": "Write-back mein khatra = flush se pehle wali writes. 1 s par lagbhag ek second ki writes (~60 hazaar at 1 lakh/sec) memory mein thi; 100 ms par ~1 hazaar. Writes/sec lagbhag same raha (~91–97 hazaar), kyunki 100 ms mein ek fsync bhi sasta hai.",
             "choiceExplanations": [
-              "Write-back mein khatra = flush se pehle wali writes. 1 s par lagbhag ek second ki writes (~55–58 hazaar at 1 lakh/sec) memory mein thi; 100 ms par ~1 hazaar. Writes/sec lagbhag same raha (~91–97 hazaar), kyunki 100 ms mein ek fsync bhi sasta hai.",
+              "Write-back mein khatra = flush se pehle wali writes. 1 s par lagbhag ek second ki writes (~60 hazaar at 1 lakh/sec) memory mein thi; 100 ms par ~1 hazaar. Writes/sec lagbhag same raha (~91–97 hazaar), kyunki 100 ms mein ek fsync bhi sasta hai.",
               "Flush ho chuki writes file mein bachi; sirf aakhri interval gaya.",
-              "Lab mein dono intervals par ~91–97 hazaar writes/sec; 10 guna girawat nahi."
+              "Lab mein dono intervals par ~98–99 hazaar writes/sec; 10 guna girawat nahi."
             ]
           }
         },
@@ -260,20 +260,20 @@ SD.registerLevels('fp-core', [
           "vars": {
             "way": "page cache",
             "ack": "write() ke baad",
-            "risk": "process crash: 0; bijli: ~30 s tak"
+            "risk": "process crash: 0; bijli: bina fsync ka data ja sakta"
           },
           "ask": {
             "q": "Toh page cache ka \"ho gaya\" kab tak pakka nahi?",
             "choices": [
-              "Bijli ya kernel crash tak: Linux 30 s purana dirty data har 5 s mein likhta hai",
+              "Bijli ya kernel crash tak: bina fsync ka dirty data kabhi bhi ja sakta hai",
               "Kabhi nahi — process mara phir bhi data bacha, toh page cache hamesha pakka hai",
               "Sirf process crash tak; bijli jaane par OS RAM ko battery se bachata hai"
             ],
             "answer": 0,
             "hint": "Lab ne process maara. Kernel ko kisne maara?",
-            "explain": "SIGKILL sirf process ko maarta hai; kernel aur kernel ki RAM chalti rehti hai, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh page cache ka dirty data gaya. Linux default: dirty data 30 s (dirty_expire_centisecs = 3000) purana ho toh flusher (har 5 s) likhta hai. Pakka chahiye toh fsync.",
+            "explain": "SIGKILL sirf process ko maarta hai; kernel aur kernel ki RAM chalti rehti hai, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh page cache ka bina likha (dirty) data gaya. Linux defaults (dirty_expire_centisecs = 3000, flusher har 5 s) writeback ki settings hain, khone ki pakki had nahi. Pakka chahiye toh fsync.",
             "choiceExplanations": [
-              "SIGKILL sirf process ko maarta hai; kernel aur kernel ki RAM chalti rehti hai, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh page cache ka dirty data gaya. Linux default: dirty data 30 s (dirty_expire_centisecs = 3000) purana ho toh flusher (har 5 s) likhta hai. Pakka chahiye toh fsync.",
+              "SIGKILL sirf process ko maarta hai; kernel aur kernel ki RAM chalti rehti hai, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh page cache ka bina likha (dirty) data gaya. Linux defaults (dirty_expire_centisecs = 3000, flusher har 5 s) writeback ki settings hain, khone ki pakki had nahi. Pakka chahiye toh fsync.",
               "Lab ne sirf process maara; bijli ka test nahi hua.",
               "Aam laptop/server RAM bijli ke saath mit jaati hai; RAM ko battery nahi bachati."
             ]
@@ -290,7 +290,7 @@ SD.registerLevels('fp-core', [
       "steps": [
         {
           "title": "1. Group commit: dono duniya",
-          "say": "256 pending writes, ek fsync, phir sabka \"ho gaya\". Lab: ~93k–142k writes/sec, crash par 0 khoye. Write-through ka pakkapan, write-back ke paas ki raftaar. Keemat: har write ko ek fsync (~1 ms) jitna rukna padta hai. Databases (Postgres WAL, MySQL redo log) bhi group commit karte hain."
+          "say": "256 pending writes, ek fsync, phir sabka \"ho gaya\". Lab: ~1.71–1.86 lakh writes/sec, crash par 0 khoye. Write-through ka pakkapan, write-back ke paas ki raftaar. Keemat: har write ko kam se kam ek fsync (~1 ms) rukna padta hai, batch banne ka intezaar alag. Databases (Postgres WAL, MySQL redo log) bhi group commit karte hain."
         },
         {
           "title": "2. Write-through bhi stale ho sakta hai",
@@ -329,12 +329,12 @@ SD.registerLevels('fp-core', [
         {
           "text": "Paanch tareeke, har ek 1.6 s.",
           "cmd": "cd docker-labs/60-caching && npm start -- ex2-writes",
-          "expect": "Ek chhota store (child process). 1.6 s chalao, phir SIGKILL (jaise process crash). Phir file padho: jin writes\nko \"ho gaya\" bola gaya tha, unmein se kitni sach mein file mein hain? (16-byte records, is machine ki disk)\n\ntareeka                                                       writes/sec   \"ho gaya\" bola   file mein   khoye\nwrite-through: har write ka apna fsync, phir ack                    561              900         915        0\ngroup commit: 256 pending writes, EK fsync, phir sabka ack       93,265         1,49,504    1,50,784        0\nwrite-back: memory se ack, har 1 s flush + fsync                97,136*         1,56,000      98,000   58,000\nwrite-back: memory se ack, har 100 ms flush + fsync             91,022*         1,46,000    1,45,000    1,000\nOS page cache: write() karke ack, fsync kabhi nahi              98,381*         1,58,000    1,59,000        0\n\n* write-back aur page cache ko 1,00,000 writes/sec diye gaye (memory se ack, isliye aur bhi le sakte the).\n→ Write-through sabse dheema (har write = ek fsync). Group commit wahi pakkapan deta hai, ek fsync ko sau writes mein\n  baant kar — par har write ko ek fsync jitna (~1 ms) rukna padta hai. Write-back tez, par flush se pehle crash = writes gayi.\n→ OS page cache: process mara, par data kernel ke paas tha, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh\n  lagbhag 30 s tak ka data ja sakta hai (is machine par dirty_expire = 30 s, flusher har 5 s jaagta hai).\n  Process crash aur power loss alag khatre hain — \"write-back\" kahan hai (app ki memory ya kernel), wahi tay karta hai."
+          "expect": "Ek chhota store (child process). 1.6 s chalao, phir SIGKILL (jaise process crash). Phir file padho: jin writes\nko \"ho gaya\" bola gaya tha, unmein se kitni sach mein file mein hain? (16-byte records, is machine ki disk)\n\ntareeka                                                       writes/sec   \"ho gaya\" bola   file mein   khoye\nwrite-through: har write ka apna fsync, phir ack                    811            1,300       1,302        0\ngroup commit: 256 pending writes, EK fsync, phir sabka ack     1,76,260         2,82,368    2,83,904        0\nwrite-back: memory se ack, har 1 s flush + fsync                98,504*         1,58,000      98,000   60,000\nwrite-back: memory se ack, har 100 ms flush + fsync             99,127*         1,59,000    1,58,000    1,000\nOS page cache: write() karke ack, fsync kabhi nahi              99,127*         1,59,000    1,60,000        0\n\n* write-back aur page cache ko 1,00,000 writes/sec diye gaye (memory se ack, isliye aur bhi le sakte the).\n→ Write-through sabse dheema (har write = ek fsync). Group commit ek fsync ko sau writes mein baantta hai — har write ko\n  kam se kam ek fsync (~1 ms) rukna padta hai, batch banne ka intezaar alag. Write-back tez, par flush se pehle crash = writes gayi.\n  Ye sirf PROCESS crash ka test hai (SIGKILL). Bijli/kernel crash ka test nahi hua; file aur folder dono fsync kiye gaye.\n→ OS page cache: process mara, par data kernel ke paas tha, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh bina fsync\n  ka data ja sakta hai. Is machine par dirty_expire = 30 s aur flusher har 5 s jaagta hai — ye writeback ki settings hain,\n  khone ki koi pakki had nahi. Process crash aur power loss alag khatre hain; pakka chahiye toh fsync."
         },
         {
           "text": "Lab ke 5 tests.",
           "cmd": "npm test",
-          "expect": "✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential\n✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size\n✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none\n✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease\n✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 14459.172433"
+          "expect": "npm notice run lab-60-caching@1.0.0 test\nnpm notice run node --test test/*.test.js\n✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential (1059.860239ms)\n✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size (209.423523ms)\n✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none (4942.867037ms)\n✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease (426.038582ms)\n✔ LRU recency and the human scale (0.333507ms)\n✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks (10142.85791ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 16830.705764"
         }
       ],
       "observe": {
@@ -369,11 +369,11 @@ SD.registerLevels('fp-core', [
           "fsync hata do — OS page cache process crash mein bhi data bacha leta hai"
         ],
         "answer": 0,
-        "explain": "Paisa kho nahi sakta, toh ack se pehle disk tak pakka chahiye. Group commit (lab 60 ex2: ~93k–142k/s, 0 khoye) dono deta hai. Write-back mein 1 s flush = ~55 hazaar acked writes gayi lab mein.",
+        "explain": "Paisa kho nahi sakta, toh ack se pehle disk tak pakka chahiye. Group commit (lab 60 ex2: ~1.7–1.9 lakh/s, 0 khoye) dono deta hai. Write-back mein 1 s flush = ~60 hazaar acked writes gayi lab mein.",
         "choiceExplanations": [
-          "Paisa kho nahi sakta, toh ack se pehle disk tak pakka chahiye. Group commit (lab 60 ex2: ~93k–142k/s, 0 khoye) dono deta hai. Write-back mein 1 s flush = ~55 hazaar acked writes gayi lab mein.",
+          "Paisa kho nahi sakta, toh ack se pehle disk tak pakka chahiye. Group commit (lab 60 ex2: ~1.7–1.9 lakh/s, 0 khoye) dono deta hai. Write-back mein 1 s flush = ~60 hazaar acked writes gayi lab mein.",
           "Ek second = hazaaron top-ups; \"ho gaya\" bolkar paisa khona galat hai.",
-          "Har write ka apna fsync lab mein ~600/s; 5,000/sec nahi chalega.",
+          "Har write ka apna fsync lab mein ~800/s; 5,000/sec nahi chalega.",
           "Page cache bijli ya kernel crash nahi sahta; paise ke liye fsync chahiye."
         ]
       },
@@ -389,7 +389,7 @@ SD.registerLevels('fp-core', [
         "explain": "Loss chalta hai aur writes bahut, toh write-back sahi. Flush interval = kitne views kho sakte hain. 2 lakh/sec par har-write-fsync ya har-view UPDATE DB ko gira dega.",
         "choiceExplanations": [
           "Loss chalta hai aur writes bahut, toh write-back sahi. Flush interval = kitne views kho sakte hain. 2 lakh/sec par har-write-fsync ya har-view UPDATE DB ko gira dega.",
-          "Ek-ek fsync lab mein ~600/s; 2 lakh/sec ke paas bhi nahi.",
+          "Ek-ek fsync lab mein ~800/s; 2 lakh/sec ke paas bhi nahi.",
           "2 lakh rows/sec insert aur phir ginti, bahut bhaari kaam hai.",
           "Ek hi row par 2 lakh UPDATE/sec = lock par lambi line."
         ]
@@ -404,15 +404,15 @@ SD.registerLevels('fp-core', [
   "cards": [
     {
       "front": "Write-back ka loss?",
-      "back": "Flush se pehle ki saari acked writes. Lab 60 ex2: 1 s flush par ~55–58 hazaar, 100 ms par ~1 hazaar (1 lakh writes/sec)."
+      "back": "Flush se pehle ki saari acked writes. Lab 60 ex2: 1 s flush par ~60 hazaar, 100 ms par ~1 hazaar (1 lakh writes/sec)."
     },
     {
       "front": "Group commit?",
-      "back": "Kai pending writes, ek fsync, phir sabka ack. Lab: ~93k–142k/s, crash par 0 khoye. Har write ~1 fsync jitna rukti hai."
+      "back": "Kai pending writes, ek fsync, phir sabka ack. Lab: ~1.7–1.9 lakh/s, process crash par 0 khoye. Har write kam se kam ~1 fsync jitna rukti hai."
     },
     {
       "front": "Page cache ka \"saved\"?",
-      "back": "Process crash sah leta hai (data kernel ke paas). Bijli/kernel crash nahi: Linux ~30 s tak ka dirty data. Pakka = fsync."
+      "back": "Process crash sah leta hai (data kernel ke paas). Bijli/kernel crash nahi: bina fsync ka data ja sakta hai (30 s / 5 s writeback settings hain, had nahi). Pakka = fsync."
     }
   ]
 }

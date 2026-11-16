@@ -5,25 +5,25 @@ const { heap } = require('./heap');
 const { rng } = require('./rng');
 
 function simulate({ ttl = Infinity, lease = false, lostDelete = 0, seconds = 3600, readsPerSec = 500, writesPerSec = 2, pauseP = 0.01, pauseMs = 100, seed = 1 } = {}) {
-  const r = rng(seed), q = heap();
+  const rArr = rng(seed), rWrite = rng(seed + 101), rPause = rng(seed + 202), rLoss = rng(seed + 303), q = heap();   // separate streams: every strategy sees the same arrivals and writes
   let db = 1, now = 0;                                    // DB holds a version number
   let cache = null;                                       // { v, until }
   let leaseId = 0, leaseHolder = null;                    // lease: token handed out on a miss; delete cancels it
-  let reads = 0, stale = 0, staleSince = null, longest = 0, staleWindows = 0, longWindows = 0;
-  const exp = rate => -Math.log(1 - r()) / rate * 1000;   // ms between Poisson events
+  let reads = 0, stale = 0, staleSince = null, longest = 0, staleWindows = 0, longWindows = 0, retries = 0;
+  const exp = (rate, r) => -Math.log(1 - r()) / rate * 1000;   // ms between Poisson events
   const checkStale = () => {
     const bad = cache && now < cache.until && cache.v !== db;
     if (bad && staleSince === null) { staleSince = now; staleWindows++; }
     if (!bad && staleSince !== null) { longest = Math.max(longest, now - staleSince); if (now - staleSince > 5) longWindows++; staleSince = null; }
   };
-  const read = () => {
-    reads++;
+  const read = (retry = false) => {
+    if (!retry) reads++; else retries++;
     if (cache && now < cache.until) { if (cache.v !== db) stale++; return; }
     const token = lease ? (leaseHolder === null ? (leaseHolder = ++leaseId) : null) : 0;   // only one filler per lease
-    if (lease && token === null) return;                  // another reader is filling: this one waits / reads DB (not counted stale)
+    if (lease && token === null) { q.push(now + 10, () => read(true)); return; }   // another reader is filling: wait 10 ms, ask the cache again
     q.push(now + 2, () => {                               // DB read 2 ms
       const v = db;
-      const delay = r() < pauseP ? pauseMs : 0.1;         // GC pause or slow network before the set
+      const delay = rPause() < pauseP ? pauseMs : 0.1;    // GC pause or slow network before the set
       q.push(now + delay, () => {
         if (lease && leaseHolder !== token) return;       // a delete cancelled this lease: drop the old value
         if (lease) leaseHolder = null;
@@ -35,17 +35,17 @@ function simulate({ ttl = Infinity, lease = false, lostDelete = 0, seconds = 360
     q.push(now + 3, () => {                               // DB write 3 ms
       db++; checkStale();
       q.push(now + 0.2, () => {
-        if (r() < lostDelete) return;                     // delete message lost
+        if (rLoss() < lostDelete) return;                 // delete message lost
         cache = null; leaseHolder = null; checkStale();
       });
     });
   };
   const end = seconds * 1000;
-  const sched = (rate, fn) => { const go = () => { fn(); const t = now + exp(rate); if (t < end) q.push(t, go); }; q.push(exp(rate), go); };
-  sched(readsPerSec, read); sched(writesPerSec, write);
+  const sched = (rate, fn, r) => { const go = () => { fn(); const t = now + exp(rate, r); if (t < end) q.push(t, go); }; q.push(exp(rate, r), go); };
+  sched(readsPerSec, () => read(), rArr); sched(writesPerSec, write, rWrite);
   while (q.size) { const [t, , fn] = q.pop(); now = t; if (cache && now >= cache.until) cache = null; fn(); checkStale(); }
   if (staleSince !== null) { longest = Math.max(longest, end - staleSince); if (end - staleSince > 5) longWindows++; }
-  return { reads, stale, staleWindows, longWindows, longestMs: longest };
+  return { reads, stale, staleWindows, longWindows, longestMs: longest, retries };
 }
 
 // Scripted race (the classic one). Returns what readers see at later times.

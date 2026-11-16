@@ -5,7 +5,7 @@
 (function () {
 const HERO = [{"id": "cpu", "icon": "🧠", "label": "CPU (L1–L3)", "x": 115, "y": 200}, {"id": "ram", "icon": "🧮", "label": "RAM", "x": 345, "y": 200}, {"id": "ssd", "icon": "💾", "label": "SSD", "x": 560, "y": 200}, {"id": "net", "icon": "🌏", "label": "Doosra region", "x": 780, "y": 200}, {"id": "cache", "icon": "⚡", "label": "Cache (RAM mein)", "x": 560, "y": 60}];
 const EDGES = [{"from": "cpu", "to": "ram"}, {"from": "ram", "to": "ssd"}, {"from": "ssd", "to": "net"}, {"from": "ram", "to": "cache"}];
-VISUALS["fp-cache-kyun"] = { t: "Data jitna neeche, read utna lamba. Cache request ko upar wale paaydaan par rokta hai.", html: SD.viz.svg(HERO, EDGES, { nodes: { cpu: {tone:'ok',badge:'1.6 ns'}, ram: {tone:'ok',badge:'220 ns'}, ssd: {tone:'busy',badge:'170 µs'}, net: {tone:'bad',badge:'150 ms'}, cache: {tone:'acc',badge:'hit'} } }, {w:900,h:320}) };
+VISUALS["fp-cache-kyun"] = { t: "Data jitna neeche, read utna lamba. Cache request ko upar wale paaydaan par rokta hai.", html: SD.viz.svg(HERO, EDGES, { nodes: { cpu: {tone:'ok',badge:'1.3 ns'}, ram: {tone:'ok',badge:'160 ns'}, ssd: {tone:'busy',badge:'110 µs'}, net: {tone:'bad',badge:'150 ms'}, cache: {tone:'acc',badge:'hit'} } }, {w:900,h:320}) };
 SD.registerLevels('fp-core', [
 {
   "id": "fp-cache-kyun",
@@ -103,11 +103,11 @@ SD.registerLevels('fp-core', [
         {
           "title": "L1 cache",
           "clock": "L1",
-          "say": "Number CPU ke apne L1 cache mein hai (32 KB tak ka data). Lab: 1.5–1.8 ns.",
+          "say": "Number CPU ke apne L1 cache mein hai (32 KB tak ka data). Lab: 1.2–1.4 ns.",
           "nodes": {
             "cpu": {
               "tone": "ok",
-              "badge": "1.6 ns"
+              "badge": "1.3 ns"
             },
             "ram": {
               "tone": "idle",
@@ -128,14 +128,14 @@ SD.registerLevels('fp-core', [
           },
           "vars": {
             "where": "L1",
-            "real": "1.5–1.8 ns",
-            "human": "~5 second"
+            "real": "1.2–1.4 ns",
+            "human": "~4–5 second"
           }
         },
         {
           "title": "RAM",
           "clock": "RAM",
-          "say": "Data 256 MB ka hai, CPU ke caches mein nahi samaata. Har read RAM tak: 220–290 ns. L1 se ~150 guna.",
+          "say": "Data 256 MB ka hai, CPU ke caches mein nahi samaata. Har read RAM tak: 157–162 ns. L1 se ~120 guna.",
           "nodes": {
             "cpu": {
               "tone": "busy",
@@ -143,7 +143,7 @@ SD.registerLevels('fp-core', [
             },
             "ram": {
               "tone": "ok",
-              "badge": "~220 ns"
+              "badge": "~160 ns"
             },
             "ssd": {
               "tone": "idle",
@@ -160,22 +160,22 @@ SD.registerLevels('fp-core', [
           },
           "vars": {
             "where": "RAM",
-            "real": "220–290 ns",
-            "human": "12–16 minute"
+            "real": "157–162 ns",
+            "human": "~9 minute"
           },
           "ask": {
             "q": "Video kehta hai \"1 cycle = 1 s par L1 0.5 s, RAM 2 minute\". Lab ke hisaab se kya galat hai?",
             "choices": [
-              "Video ke number \"1 ns = 1 s\" wale hain; 1 cycle par sab ~3× lambe",
+              "Scale mel nahi khaata: 1 cycle par L1 0.5 s = aadha cycle",
               "Video sahi hai; bas is laptop ka RAM aur L1 bahut dheeme nikle",
               "Video ne L1 aur RAM ke naam aapas mein galti se badal diye"
             ],
             "answer": 0,
             "hint": "1 cycle kitne nanosecond ka hai, 3.26 GHz par?",
-            "explain": "1 cycle = 0.31 ns. Video ke number (L1 0.5 s, RAM 2 min) tab bante hain jab 1 ns = 1 s maano. 1 cycle = 1 s par L1 ~5 s, RAM ~12 min. Seedhi ka aakaar (L1 se disk tak hazaaron-laakhon guna) sahi hai; bas scale ka label galat.",
+            "explain": "1 cycle = 0.31 ns (3.26 GHz). \"1 cycle = 1 s\" par L1 0.5 s ka matlab aadha cycle — par L1 hit ko kai cycles lagte hain (is laptop par ~4–5). Video ke kai numbers \"1 ns = 1 s\" analogy jaise lagte hain, par video apne asli ns numbers nahi batata — andaza hi hai. Is laptop par naapa: L1 ~4 s, RAM ~9 min. Seedhi ka aakaar (L1 se disk tak hazaaron-laakhon guna) sahi hai.",
             "choiceExplanations": [
-              "1 cycle = 0.31 ns. Video ke number (L1 0.5 s, RAM 2 min) tab bante hain jab 1 ns = 1 s maano. 1 cycle = 1 s par L1 ~5 s, RAM ~12 min. Seedhi ka aakaar (L1 se disk tak hazaaron-laakhon guna) sahi hai; bas scale ka label galat.",
-              "Lab ka L1 (1.6 ns) bhi video ke 0.5 s se ~10× zyada nikla; farq scale ka hai, RAM ka nahi.",
+              "1 cycle = 0.31 ns (3.26 GHz). \"1 cycle = 1 s\" par L1 0.5 s ka matlab aadha cycle — par L1 hit ko kai cycles lagte hain (is laptop par ~4–5). Video ke kai numbers \"1 ns = 1 s\" analogy jaise lagte hain, par video apne asli ns numbers nahi batata — andaza hi hai. Is laptop par naapa: L1 ~4 s, RAM ~9 min. Seedhi ka aakaar (L1 se disk tak hazaaron-laakhon guna) sahi hai.",
+              "Lab ka L1 (~1.3 ns) bhi ~4 cycles; aadha cycle kisi CPU ka L1 nahi.",
               "L1 sabse tez aur RAM dheemi — kram video mein sahi hai."
             ]
           }
@@ -183,7 +183,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "SSD",
           "clock": "disk",
-          "say": "Data RAM mein nahi, disk par. Lab: O_DIRECT se 4 KB random read (OS cache ke bina) 140–200 µs. L1 se ~1 lakh guna.",
+          "say": "Data RAM mein nahi, disk par. Lab: O_DIRECT se 4 KB random read 102–115 µs (WSL ka direct-I/O raasta; host ki caching jaanchi nahi). L1 se ~80 hazaar guna.",
           "nodes": {
             "cpu": {
               "tone": "busy",
@@ -195,7 +195,7 @@ SD.registerLevels('fp-core', [
             },
             "ssd": {
               "tone": "ok",
-              "badge": "~170 µs"
+              "badge": "~110 µs"
             },
             "net": {
               "tone": "idle",
@@ -208,14 +208,14 @@ SD.registerLevels('fp-core', [
           },
           "vars": {
             "where": "SSD",
-            "real": "140–200 µs",
-            "human": "5–8 din"
+            "real": "102–115 µs",
+            "human": "~4 din"
           }
         },
         {
           "title": "Doosra region",
           "clock": "network",
-          "say": "Data doosre region ke server par. Round trip 150 ms (model, video ka number). 1 cycle = 1 s par ~16 saal.",
+          "say": "Data doosre region ke server par. Round trip 150 ms (model, video ka number). 1 cycle = 1 s par ~15.5 saal.",
           "nodes": {
             "cpu": {
               "tone": "busy",
@@ -241,20 +241,20 @@ SD.registerLevels('fp-core', [
           "vars": {
             "where": "doosra region",
             "real": "150 ms",
-            "human": "~16 saal"
+            "human": "~15.5 saal"
           },
           "ask": {
             "q": "Video kehta hai 150 ms \"2.5 saal\". Sahi number kya hai?",
             "choices": [
-              "~16 saal (1 cycle = 1 s); \"1 ns = 1 s\" par bhi ~4.8 saal",
+              "~15.5 saal (1 cycle = 1 s); \"1 ns = 1 s\" par bhi ~4.8 saal",
               "2.5 saal sahi hai, kyunki network CPU se alag ghadi chalata hai",
               "~16 minute, kyunki network RAM jitna hi tez hota hai"
             ],
             "answer": 0,
             "hint": "150 ms = 15 crore ns. Ek saal mein lagbhag 3.15 crore second.",
-            "explain": "150 ms ÷ 0.31 ns ≈ 49 crore cycles = 49 crore second ≈ 16 saal. \"1 ns = 1 s\" par 15 crore second ≈ 4.8 saal. 2.5 saal kisi bhi scale par nahi banta.",
+            "explain": "150 ms × 3.26 GHz ≈ 49 crore cycles = 49 crore second ≈ 15.5 saal. \"1 ns = 1 s\" par 15 crore second ≈ 4.8 saal. 2.5 saal kisi bhi scale par nahi banta.",
             "choiceExplanations": [
-              "150 ms ÷ 0.31 ns ≈ 49 crore cycles = 49 crore second ≈ 16 saal. \"1 ns = 1 s\" par 15 crore second ≈ 4.8 saal. 2.5 saal kisi bhi scale par nahi banta.",
+              "150 ms × 3.26 GHz ≈ 49 crore cycles = 49 crore second ≈ 15.5 saal. \"1 ns = 1 s\" par 15 crore second ≈ 4.8 saal. 2.5 saal kisi bhi scale par nahi banta.",
               "Scale ek hi hai; har cheez CPU cycle mein naapi gayi.",
               "Doosre region ka round trip roshni ki raftaar aur routers se bandha hai; RAM se laakhon guna dheema."
             ]
@@ -301,7 +301,7 @@ SD.registerLevels('fp-core', [
           ]
         }
       ],
-      "lesson": "Seedhi asli hai: L1 ~1.6 ns, RAM ~220 ns, SSD ~170 µs, doosra region 150 ms. Cache ka kaam = request ko seedhi ke upar wale paaydaan par rokna."
+      "lesson": "Seedhi asli hai: L1 ~1.3 ns, RAM ~160 ns, disk read ~110 µs, doosra region 150 ms. Cache ka kaam = request ko seedhi ke upar wale paaydaan par rokna."
     },
     {
       "type": "cards",
@@ -321,9 +321,9 @@ SD.registerLevels('fp-core', [
             ],
             "answer": 0,
             "hint": "ex1 ka table: s badalne par top 10% ka hissa kitna badla?",
-            "explain": "\"90/10\" ek aam anubhav hai, niyam nahi. Lab mein s = 0.99 par top 10% ko 80%, aur 90% ke liye s ~1.1 chahiye. Web par naapa gaya s 0.64–0.83 (Breslau 1999) — us range par top 10% ko 90% se kaafi kam. Cache ka size apne logs ka skew dekh kar chuno.",
+            "explain": "\"90/10\" ek aam anubhav hai, niyam nahi. Lab mein s = 0.99 par top 10% ko 80%, aur 90% ke liye s ~1.1 chahiye. Breslau 1999 ke chhe web proxy traces mein s 0.64–0.83 tha — us range par top 10% ko 90% se kaafi kam. Cache ka size apne logs ka skew dekh kar chuno.",
             "choiceExplanations": [
-              "\"90/10\" ek aam anubhav hai, niyam nahi. Lab mein s = 0.99 par top 10% ko 80%, aur 90% ke liye s ~1.1 chahiye. Web par naapa gaya s 0.64–0.83 (Breslau 1999) — us range par top 10% ko 90% se kaafi kam. Cache ka size apne logs ka skew dekh kar chuno.",
+              "\"90/10\" ek aam anubhav hai, niyam nahi. Lab mein s = 0.99 par top 10% ko 80%, aur 90% ke liye s ~1.1 chahiye. Breslau 1999 ke chhe web proxy traces mein s 0.64–0.83 tha — us range par top 10% ko 90% se kaafi kam. Cache ka size apne logs ka skew dekh kar chuno.",
               "Zipf mein hissa s par tika hai; s = 0.6 par sirf 39%.",
               "Zyada skew = popular keys aur popular; top 10% ka hissa badhta hai (94% s = 1.2 par)."
             ]
@@ -366,7 +366,7 @@ SD.registerLevels('fp-core', [
         {
           "text": "Seedhi (lagbhag 1 minute).",
           "cmd": "cd docker-labs/60-caching && npm start -- ex0-ladder",
-          "expect": "CPU: Intel(R) Core(TM) Ultra 7 255U — 3.26 GHz (/proc/cpuinfo), 1 cycle = 0.31 ns\n\nA. Pointer chasing: har hop ek random 64-byte line se agla pata padhta hai (CPU andaza nahi laga sakta).\n\ndata ka size     ns / hop\n16 KB               1.7\n32 KB               1.6\n256 KB              4.9\n1 MB                6.7\n4 MB               50.3\n8 MB              192.2\n64 MB             182.4\n256 MB            227.2\n\nB. Spatial locality: wahi 3.2 crore ints (128 MB), ek baar seedhe kram mein, ek baar random kram mein.\nseedha kram: 1.08 ns / int     random kram: 15.60 ns / int     → 14× farq\nSeedhe kram mein ek 64-byte line 16 ints laati hai aur CPU agli lines pehle se mangwa leta hai (prefetch).\n\nC. Ladder, \"1 cycle = 1 second\" scale par (3.26 GHz). ASLI = is machine par naapa, MODEL = maana hua.\n\n                                                  asli samay     cycles          agar 1 cycle = 1 s\nASLI   L1 (32 KB data)                                1.6 ns              5   5.1 second\nASLI   L2 (1 MB data)                                 6.7 ns             22   22 second\nASLI   L3 (4 MB data)                                50.3 ns            164   2.7 minute\nASLI   RAM (256 MB data, TLB miss samet)            227.2 ns            741   12 minute\nASLI   4 KB read, OS page cache se (RAM)            719.0 ns          2,347   39 minute\nASLI   4 KB random read, disk se (O_DIRECT)         203.2 µs       6,63,401   7.7 din\nASLI   write + fsync (disk tak pakka)                 4.7 ms    1,54,13,237   5.9 mahine\nASLI   TCP round trip, isi machine par (loopback)     8.3 µs         27,232   7.6 ghante\nMODEL  round trip doosre region tak (video: 150 ms)   150.0 ms   48,95,99,550   16 saal\n\nL1 se disk read tak 1,30,619×, fsync tak 30,34,756×, doosre region tak 9,63,98,646×.\nNote: L1 ki row mein JS loop ka kaam bhi shaamil hai; RAM ki row mein TLB miss (page table walk) bhi. WSL ki disk ek virtual disk hai."
+          "expect": "CPU: Intel(R) Core(TM) Ultra 7 255U — 3.26 GHz (/proc/cpuinfo), 1 cycle = 0.31 ns\n\nA. Pointer chasing: har hop ek random 64-byte line se agla pata padhta hai (CPU andaza nahi laga sakta).\n\ndata ka size     ns / hop\n16 KB               1.5\n32 KB               1.4\n256 KB              4.0\n1 MB                5.2\n4 MB               21.4\n8 MB               94.3\n64 MB             143.3\n256 MB            161.6\n\nB. Spatial locality: same 3.2 crore ints (128 MB), ek baar seedhe kram mein, ek baar random kram mein.\nseedha kram: 0.95 ns / int     random kram: 10.89 ns / int     → 11× farq\nSeedhe kram mein ek 64-byte line 16 ints laati hai aur CPU agli lines pehle se mangwa leta hai (prefetch).\n\nC. Ladder, \"1 cycle = 1 second\" scale par (3.26 GHz). ASLI = is machine par naapa, MODEL = maana hua.\n\n                                                  asli samay     cycles          agar 1 cycle = 1 s\nASLI   L1 (32 KB data)                                1.4 ns              5   4.6 second\nASLI   L2 (1 MB data)                                 5.2 ns             17   17 second\nASLI   L3 (4 MB data)                                21.4 ns             70   1.2 minute\nASLI   RAM (256 MB data, TLB miss samet)            161.6 ns            527   8.8 minute\nASLI   4 KB read, OS page cache se (RAM)            447.0 ns          1,459   24 minute\nASLI   4 KB random read, O_DIRECT (WSL path)        115.3 µs       3,76,257   4.4 din\nASLI   write + fsync (disk tak pakka)                 1.2 ms      39,79,070   1.5 mahine\nASLI   TCP round trip, isi machine par (loopback)     8.0 µs         26,213   7.3 ghante\nMODEL  round trip doosre region tak (video: 150 ms)   150.0 ms   48,95,99,550   16 saal\n\nL1 se disk read tak 81,691×, fsync tak 8,63,918×, doosre region tak 10,62,99,654×.\nNote: L1 ki row mein JS loop ka kaam bhi shaamil hai; RAM ki row mein TLB miss (page table walk) bhi. WSL ki disk ek virtual disk hai.\nO_DIRECT row: 399 alag 4 KB blocks (400 reads, 256 MB file). Buffer ki alignment aur WSL host/disk ki caching jaanchi nahi gayi —\n  isliye row \"is machine ka direct-I/O raasta\" hai, pakka \"physical SSD\" nahi."
         },
         {
           "text": "Skew aur hit rate.",
@@ -375,7 +375,7 @@ SD.registerLevels('fp-core', [
         }
       ],
       "observe": {
-        "q": "Hissa B: same 128 MB data, seedhe kram mein 14–27× tez kyun padha gaya?",
+        "q": "Hissa B: same 128 MB data, seedhe kram mein 11–12× tez kyun padha gaya?",
         "choices": [
           "Ek 64-byte line 16 ints laati hai aur CPU agli lines pehle mangwa leta",
           "Seedhe kram mein data compress hota hai, isliye kam bytes padhne padte",
@@ -423,9 +423,9 @@ SD.registerLevels('fp-core', [
           "Cache ko LFU par rakho; LFU hamesha 90% hits de deta hai"
         ],
         "answer": 0,
-        "explain": "Skew data par tika hai. Lab 60 ex1: s = 0.99 par 10% ka LRU cache 72% hits, s = 0.6 par 25%. Logs se top keys ka hissa nikaalo, phir size chuno. Web par naapa gaya s 0.64–0.83 tha.",
+        "explain": "Skew data par tika hai. Lab 60 ex1: s = 0.99 par 10% ka LRU cache 72% hits, s = 0.6 par 25%. Logs se top keys ka hissa nikaalo, phir size chuno. Purane web proxy traces mein s 0.64–0.83 tha (Breslau 1999).",
         "choiceExplanations": [
-          "Skew data par tika hai. Lab 60 ex1: s = 0.99 par 10% ka LRU cache 72% hits, s = 0.6 par 25%. Logs se top keys ka hissa nikaalo, phir size chuno. Web par naapa gaya s 0.64–0.83 tha.",
+          "Skew data par tika hai. Lab 60 ex1: s = 0.99 par 10% ka LRU cache 72% hits, s = 0.6 par 25%. Logs se top keys ka hissa nikaalo, phir size chuno. Purane web proxy traces mein s 0.64–0.83 tha (Breslau 1999).",
           "90/10 aam anubhav hai; ex1 mein s = 0.6 par top 10% ko sirf 39%.",
           "Saara data RAM mein rakhna mehnga; skew pata ho toh chhota cache kaafi ho sakta hai.",
           "Eviction policy skew nahi badalti; kam skew par koi policy 90% nahi de sakti."
@@ -441,11 +441,11 @@ SD.registerLevels('fp-core', [
   "cards": [
     {
       "front": "Latency ki seedhi (lab 60 ex0)?",
-      "back": "L1 ~1.6 ns · RAM ~220 ns · SSD 4 KB random read ~170 µs · fsync 1–5 ms · doosra region 150 ms (model). 1 cycle = 1 s par: 5 s, 12 min, ~6 din, ~16 saal."
+      "back": "L1 ~1.3 ns · RAM ~160 ns · 4 KB random read (O_DIRECT) ~110 µs · write + fsync ~1 ms · doosra region 150 ms (model). 1 cycle = 1 s par: ~4 s, ~9 min, ~4 din, ~15.5 saal."
     },
     {
       "front": "90/10 rule?",
-      "back": "Kanoon nahi. Zipf s = 0.99 par top 10% = 80%, s = 0.6 par 39% (lab 60 ex1). Web par s ~0.64–0.83 (Breslau 1999). Logs se naapo."
+      "back": "Kanoon nahi. Zipf s = 0.99 par top 10% = 80%, s = 0.6 par 39% (lab 60 ex1). Breslau 1999 ke proxy traces: s ~0.64–0.83. Logs se naapo."
     },
     {
       "front": "Hit rate aur DB?",

@@ -1,13 +1,16 @@
-✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential
-✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size
-✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none
-✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease
-✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks
-ℹ tests 5
+npm notice run lab-60-caching@1.0.0 test
+npm notice run node --test test/*.test.js
+✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential (1059.860239ms)
+✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size (209.423523ms)
+✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none (4942.867037ms)
+✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease (426.038582ms)
+✔ LRU recency and the human scale (0.333507ms)
+✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks (10142.85791ms)
+ℹ tests 6
 ℹ suites 0
-ℹ pass 5
+ℹ pass 6
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 14459.172433
+ℹ duration_ms 16830.705764

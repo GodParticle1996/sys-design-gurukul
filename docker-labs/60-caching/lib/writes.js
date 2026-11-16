@@ -11,9 +11,12 @@ function run(mode, ms = 1600, flushMs = 1000) {
     child.on('exit', () => {
       const secs = (Date.now() - t0) / 1000;
       const text = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
-      const lines = text.split('\n').filter(Boolean);
-      let onDisk = 0;                                             // records 1..onDisk all present, in order
-      for (const l of lines) { if (Number(l) === onDisk + 1) onDisk++; else break; }
+      let onDisk = 0;                                             // complete 16-byte records 1..onDisk, in order
+      for (let i = 0; i + 16 <= text.length; i += 16) {
+        const r = text.slice(i, i + 16);
+        if (!/^\d{15}\n$/.test(r) || Number(r) !== onDisk + 1) break;
+        onDisk++;
+      }
       fs.rmSync(file, { force: true });
       resolve({ mode, acked, onDisk, lost: Math.max(0, acked - onDisk), perSec: acked / secs });
     });

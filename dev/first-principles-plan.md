@@ -333,8 +333,18 @@ writers, writers that bypass the cache); the page cache survives a process crash
 Bloom for unique ids, Bloom must be updated on insert); warming alone does not stop a sudden herd — a limiter does; a
 2-second query usually needs an index before a cache; "Karlton", not "Carlton".
 
-Review: Codex could not run (its sign-in had expired), so Claude self-reviewed the claims, lab and levels (2026-11-15).
-Lab 60 passes `tools/lab-lint.js` and `tools/run-labs.js`. Codex brief for the fact-check: `sdg-codex-xp/jobs/fp10/LAB-BRIEF.md`.
+Review: first pushed self-reviewed (Codex sign-in had expired). Codex (GPT-6.1-Sol xhigh) then fact-checked the lab,
+levels and guide (`sdg-codex-xp/jobs/fp10/LAB-REVIEW.md`, 15 findings) and Claude fixed all of them (2026-11-15): short writes
+and record-format recovery plus file/directory fsync in ex2, and "process crash only"; the 30 s / 5 s writeback settings are
+not a power-loss bound; TTL is an entry lifetime from set time (a slow refill can stay stale longer — new test); the lease model
+now retries token-less readers and every strategy replays the same arrivals and writes (separate RNG streams); negative cache
+entries now expire (60 s) and the penetration counts are labelled MODEL; per-waiter deadlines and a late-fill option in the
+herd model (coalescing alone now avoids the crash; recovery depends on late-fill policy); warming reports users rejected for
+11.1 s; ex0 random offsets fixed (399 distinct blocks, was 158), fsync row times write + fsync, O_DIRECT row labelled as the
+WSL direct-I/O path; the video's scale is called internally inconsistent (L1 0.5 s = half a cycle) instead of "really 1 ns";
+Bloom "maybe" wording; the guide no longer pairs group commit with read freshness; source table gains Redis-down fallback,
+eviction vs freshness and TTL rows. New tests: LRU recency, human scale, TTL slow-fill, negative expiry, lease retries,
+coalesced deadlines (mutation-checked). All ex0/ex2/ex3/ex4 captures regenerated.
 
 ## Next
 

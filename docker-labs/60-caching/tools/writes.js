@@ -21,10 +21,11 @@ const sysctl = f => { try { return Number(fs.readFileSync(`/proc/sys/vm/${f}`, '
     console.log(`${label.padEnd(60)} ${rate.padStart(10)}   ${n(r.acked).padStart(14)}   ${n(r.onDisk).padStart(9)}   ${n(r.lost).padStart(6)}`);
   }
   console.log('\n* write-back aur page cache ko 1,00,000 writes/sec diye gaye (memory se ack, isliye aur bhi le sakte the).');
-  console.log('→ Write-through sabse dheema (har write = ek fsync). Group commit wahi pakkapan deta hai, ek fsync ko sau writes mein');
-  console.log('  baant kar — par har write ko ek fsync jitna (~1 ms) rukna padta hai. Write-back tez, par flush se pehle crash = writes gayi.');
+  console.log('→ Write-through sabse dheema (har write = ek fsync). Group commit ek fsync ko sau writes mein baantta hai — har write ko');
+  console.log('  kam se kam ek fsync (~1 ms) rukna padta hai, batch banne ka intezaar alag. Write-back tez, par flush se pehle crash = writes gayi.');
+  console.log('  Ye sirf PROCESS crash ka test hai (SIGKILL). Bijli/kernel crash ka test nahi hua; file aur folder dono fsync kiye gaye.');
   const exp = sysctl('dirty_expire_centisecs'), wb = sysctl('dirty_writeback_centisecs');
-  console.log(`→ OS page cache: process mara, par data kernel ke paas tha, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh`);
-  console.log(`  ${exp !== null ? `lagbhag ${exp} s` : 'kuch seconds'} tak ka data ja sakta hai (is machine par dirty_expire = ${exp ?? '?'} s, flusher har ${wb ?? '?'} s jaagta hai).`);
-  console.log('  Process crash aur power loss alag khatre hain — "write-back" kahan hai (app ki memory ya kernel), wahi tay karta hai.');
+  console.log(`→ OS page cache: process mara, par data kernel ke paas tha, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh bina fsync`);
+  console.log(`  ka data ja sakta hai. Is machine par dirty_expire = ${exp ?? '?'} s aur flusher har ${wb ?? '?'} s jaagta hai — ye writeback ki settings hain,`);
+  console.log('  khone ki koi pakki had nahi. Process crash aur power loss alag khatre hain; pakka chahiye toh fsync.');
 })();
