@@ -1,0 +1,24 @@
+A. ASLI code (lib/queue.js, SQS standard jaisa): 1,000 email jobs, 3 workers, visibility timeout 30 s.
+   Har worker 1 job/sec. Worker B delete 10-10 ke batch mein karta hai, aur 5 jobs poore karke crash (delete se pehle).
+   Worker A ki ek job (t = 10 s par mili) 45 s leti hai — visibility timeout se lambi.
+
+unique jobs: 1,000   do baar chale: 6   (B ke 5 + 1 lambi job)
+lambi job ka delete: kuch nahi mita — receipt purani; job doosre worker ko mil chuki thi (SQS: purani receipt par delete ki guarantee nahi)
+→ Video: "har image theek ek worker, theek ek baar". Sach: at-least-once. Crash ya timeout se lamba kaam = duplicate.
+
+B. ASLI code: ek signup event, teen services (email, analytics, fraud). 1,000 events.
+
+ek hi queue, teeno services padhti hain:    email 334, analytics 333, fraud 333   ← har service ko sirf ek-tihaai
+ek log, har service ka apna offset (group):  email 1000, analytics 1000, fraud 1000
+→ Queue par fan-out ke liye har service ki alag queue chahiye (jaise SNS → 3 SQS). Log mein har group poora padhta hai.
+
+C. ASLI code: analytics mein bug, 14 din ke counts galat. Aaj (din 21) bug theek, 14 din peeche se replay.
+   1,000 events/din. Video: "offset 2 hafte peeche le jao, sab wahin hai".
+
+retention  7 din (Kafka default): replay mein  7,000 of 14,000 events   ← purane din disk se mit chuke
+retention 14 din                : replay mein 14,000 of 14,000 events   
+retention 30 din                : replay mein 14,000 of 14,000 events   
+task queue (delete on ack):            replay mein      0 of 14,000 events
+→ Replay utna hi jitna retention. Default 7 din par "2 hafte peeche" nahi chalega — retention ya poora archive pehle se chuno.
+  Compaction har key ki aakhri value rakhta hai, poori history nahi: ginti dobara karne ke kaam nahi aata.
+  Lab ka naya group shuru se padhta hai; asli Kafka mein naya group default (auto.offset.reset = latest) se naye events hi padhta hai.

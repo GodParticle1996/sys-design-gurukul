@@ -72,6 +72,8 @@
     memcache13: { title: 'Nishtala et al. — Scaling Memcache at Facebook (NSDI 2013), leases', url: 'https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala' },
     linuxvm: { title: 'Linux kernel — /proc/sys/vm (dirty_expire_centisecs, dirty_writeback_centisecs)', url: 'https://docs.kernel.org/admin-guide/sysctl/vm.html' },
     karlton: { title: 'Martin Fowler — TwoHardThings (Phil Karlton quote)', url: 'https://martinfowler.com/bliki/TwoHardThings.html' },
+    sqsvis: { title: 'Amazon SQS — visibility timeout and at-least-once delivery', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html' },
+    outboxpat: { title: 'Chris Richardson — Pattern: Transactional outbox', url: 'https://microservices.io/patterns/data/transactional-outbox.html' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -287,6 +289,27 @@
     ],
     followup: 'Tumhari product API: 20,000 reads/sec, Redis 96% hit, DB 1,500 reads/sec sambhalta hai. Redis ka ek node gira toh kya hoga? Kya naapoge aur kya lagaoge (limiter, coalescing, warming)?',
     sources: ['breslau99', 'memcache13', 'cache', 'linuxvm', 'karlton'],
+  });
+  add('queue-fp', 'fp-async-kyun fp-async-kaise fp-async-code fp-async-kab', {
+    title: 'Async: queue spike ko samay mein phailaati hai — had, duplicates aur kram ke saath',
+    misaal: 'Phone call mein dono ko ek saath free hona padta hai; message bhejo toh tum apna kaam karte raho. Par dost din mein 10 hi message padh sake aur 1,000 aa jaayein, toh jawab ghanton baad. Aur dost galti se ek message do baar padh le, toh kaam do baar na ho — is baat ka intezaam tumhe karna hai.',
+    asli: 'Queue user ko kaam ke samay se alag karti hai aur spike ko backlog bana deti hai. Backlog sirf worker ki khaali kshamata se ghatta hai. Delivery at-least-once hai, kram sirf partition ke andar, aur har system ki ek had hai jiske paar ka niyam pehle se tay karna padta hai.',
+    points: [
+      '<b>Backlog:</b> lab 61 ex0 (model) — 60 s ke spike par email ~99 min late; worker = normal traffic ho toh backlog kabhi khatam nahi.',
+      '<b>Queue vs log:</b> ex1 (asli code) — queue mein delete se pehle crash ya lamba kaam = duplicate; log mein har group poora padhta hai, replay retention tak (Kafka default 7 din).',
+      '<b>Kram aur disk:</b> ex3 — key se ek user ek partition mein (kram tab, jab partition serially chale); 6 → 8 partitions par 75% keys hilti hain. ex2 (asli SSD, overwrite) — seedha vs random lagbhag barabar, 1 MB batch 7–17× tez.',
+      '<b>Had aur crash:</b> ex4 — DB ki had ke paar autoscale kaam kam karta hai aur theek messages DLQ mein bhejta hai. ex5 — check → charge → record mein ₹200; outbox kuch nahi khota.',
+    ],
+    use: 'Lambe side effects (image, PDF, email), bahar ki API jinka result abhi nahi chahiye, bahut zyada events (logs, analytics), aur alag teams ki services jo apni raftaar se chalein.',
+    avoid: 'User ko jo result abhi chahiye (payment ka jawab) ko async karna, bina idempotency ke consumer, bina had ke autoscale, DLQ ko overload ka ilaaj maanna (DLQ = quarantine + redrive), aur default retention par replay ka bharosa.',
+    mistake: '"Queue lagaa di, ab sab scale karega" maan lena. Worker ki kshamata ausat traffic se kam ho toh backlog badhta hi rahega; DB ki had ke paar workers kaam ghataate hain (lab 61 ex0, ex4).',
+    compare: [
+      { choice: 'Sync call', when: 'Result abhi chahiye, kaam 100–200 ms mein', tradeoff: 'Seedha aur debug aasaan; dheemi dependency user ko rokti hai' },
+      { choice: 'Task queue (SQS, RabbitMQ)', when: 'Ek kaam, ek worker: image, email, PDF', tradeoff: 'At-least-once; replay nahi; fan-out ke liye alag queues' },
+      { choice: 'Log (Kafka, Kinesis)', when: 'Kai consumers, kram (key se), replay', tradeoff: 'Partitions aur retention pehle se sochne padte; group mein consumers ≤ partitions; naya group default latest se' },
+    ],
+    followup: 'Tumhari food app mein order placed event: kitchen, rider assignment, SMS aur analytics. Queue ya log? Key kya hogi, retention kitni, aur kitchen service 10 minute band rahi toh kya hoga?',
+    sources: ['kafka', 'kafkaintro', 'sqsvis', 'sqsdlq', 'idem', 'outboxpat'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

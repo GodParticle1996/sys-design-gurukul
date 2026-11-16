@@ -1,0 +1,16 @@
+npm notice run lab-61-queues@1.0.0 test
+npm notice run node --test test/*.test.js
+✔ buffer: a worker no faster than normal traffic never drains the spike; spare capacity does (11.39741ms)
+✔ queue vs log: an undeleted message comes back; each log group reads everything; replay stops at retention (0.586732ms)
+✔ append: real writes work; 1 MB writes beat 4 KB writes with O_DIRECT (365.784193ms)
+✔ partitions: Kafka murmur2 vectors; a key keeps order, round-robin does not; 6 → 8 moves most keys (17.531261ms)
+✔ backpressure: drop loses acked writes, reject does not; scaling past the DB wastes work and fills the DLQ (2.862382ms)
+✔ crash points: check-then-act double charges; one transaction or a provider key never does; outbox loses nothing (0.929733ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 444.063373

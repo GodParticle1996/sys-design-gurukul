@@ -1,0 +1,25 @@
+A. ASLI ginti (lib/crash.js): ek message = ₹100 charge. Har step ke baad crash (ack se pehle) → message wapas
+   aata hai (at-least-once) aur poora flow dobara chalta hai. Saath mein: do workers ko ek hi message ek saath mila —
+   dono workers ke steps ke har mumkin kram mein kitni baar ₹200 kata?
+
+tareeka                                          har crash point par charges   do workers: double charge
+koi idempotency nahi                             ₹200                          2 of 2 kram
+check → charge → record (video)                  ₹100, ₹200, ₹100              18 of 20 kram
+ek DB transaction: id insert (UNIQUE) + charge   ₹100                          0 of 2 kram
+provider ko Idempotency-Key = message id         ₹100                          0 of 2 kram
+
+→ Video ka "check karo, kaam karo, phir id likho": charge ke baad aur id likhne se pehle crash = ₹200.
+  Do workers ek saath check karein toh dono ko "nahi kiya" milta hai: 20 mein se 18 kram mein ₹200.
+→ Ilaaj: id ka record aur kaam EK transaction mein (UNIQUE constraint), ya bahar ki API ko idempotency key do
+  (Stripe: Idempotency-Key header). Asli processes + SQLite par same race: lab 49.
+
+B. ASLI ginti: signup = user save + "user signed up" event. Har step ke baad crash, aur ek case jahan DB write fail.
+
+tareeka                                                                  cases   theek   event khoya   bina user event   event 2 baar
+DB save → queue publish                                                      4       3             1                 0              0
+queue publish → DB save                                                      4       2             0                 2              0
+outbox: ek transaction (user + outbox row) → relay publish → relay "sent"     5       4             0                 0              1
+
+→ Dono dual-write kram kisi crash par galat. Outbox mein user aur event ek transaction mein; relay baad mein bhejta hai.
+→ Video: "outbox dual write ko poori tarah khatam karta hai". Haan, par relay at-least-once hai: publish ke baad aur
+  "sent" likhne se pehle crash = event 2 baar. Consumer ko phir bhi idempotent hona padega. Asli processes par: lab 44.

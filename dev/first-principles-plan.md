@@ -346,7 +346,36 @@ Bloom "maybe" wording; the guide no longer pairs group commit with read freshnes
 eviction vs freshness and TTL rows. New tests: LRU recency, human scale, TTL slow-fill, negative expiry, lease retries,
 coalesced deadlines (mutation-checked). All ex0/ex2/ex3/ex4 captures regenerated.
 
+## Video 11: Kafka vs RabbitMQ vs SQS — Async System (2026-11-15)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-11-queues/`. Built by Claude. Levels
+`fp-async-kyun` → `fp-async-kaise` → `fp-async-code` → `fp-async-kab` (`data-v2-fp-async-1…4`, group "📮 Async: Queue vs
+Stream", guide `queue-fp`, sources `kafka`, `kafkaintro`, `sqsvis`, `sqsdlq`, `idem`, `outboxpat`). Builders:
+`sdg-codex-xp/jobs/fp11/levels/*.py`. Lab 61 (`docker-labs/61-queues`, Node 24, zero deps, no ports): a fluid spike/backlog
+model (worker capacity vs average traffic, retention), REAL queue and log code (visibility timeout, receipts, consumer groups,
+replay vs retention), REAL disk writes (sequential vs random 4 KB vs 1 MB batches with O_DIRECT, 3 runs), Kafka's murmur2
+partitioner (checked against Kafka's test vectors) with an ordering model, hot keys and 6 → 8 key movement, a backpressure model
+(drop, block, reject, autoscale past the DB limit, DLQ accounting, poison message) and an exhaustive crash-point and
+interleaving count for idempotency and dual write vs outbox.
+
+The EDA course (labs 44, 47–51) already runs real processes for save/publish gaps, retention, duplicate charges and
+idempotency keys; this topic adds what those labs do not measure. Corrections taught: a task queue is at-least-once, not
+"exactly one worker, exactly once"; a 60 s spike delays email ~99 min, not 10, and a worker no faster than average traffic
+never drains the backlog; Kafka replay is bounded by retention (default 7 days); on this SSD sequential vs random 4 KB writes
+are about equal and batching is the big win; zero copy does not apply with TLS; reject (429) is a fourth backpressure
+strategy and the Kafka producer itself blocks up to `max.block.ms`; a DLQ is for poison messages, and scaling workers past the
+DB's limit sends healthy messages there; check → act → record idempotency double-charges on a crash or a race; the outbox
+relay is at-least-once.
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 61, the levels and the guide before the first push
+(`sdg-codex-xp/jobs/fp11/LAB-REVIEW.md`, 10 findings); Claude fixed all of them: manifests and code-pane lines; one consumer
+cannot restore cross-partition order and the ordering model assumes serial processing per partition (no-key Java producer
+default is sticky, not round-robin); Stripe keys can be removed after 24 hours; DLQ is bounded-retry quarantine plus redrive and
+skipping a FIFO event breaks order (150 s is idealized); compaction is not a full-history replay; a new Kafka group defaults to
+`latest`; message wait vs drain time; ex2 is labelled as overwrites with amortized timing and batching 7–17× in the saved runs;
+10 more guards added to the tests (every surviving mutation now fails a test).
+
 ## Next
 
-Continue with numbered video 11 (Message Queues); check the existing EDA course (`sdd-eda`), the queue/backpressure levels
-and labs 44 and 47–51 first. Videos 1–10 are built; five remain.
+Continue with numbered video 12, `s5HWkMyRRcA` (Mathematics of the Second Attempt — retries, backoff, jitter); check the
+existing retries topic (`rt-*` in `sdd-resil`) and lab 37 first. Videos 1–11 are built; four remain.

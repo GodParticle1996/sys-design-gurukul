@@ -1,0 +1,28 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. Zero dependency Node 24. Kuch bahar publish nahi.
+# Note: container mein ex2 ke disk numbers host se alag honge (overlay filesystem; O_DIRECT shayad na chale).
+services:
+  buffer:
+    build: .
+    profiles: [ex0-buffer]
+    command: node start.js ex0-buffer
+  queue-vs-log:
+    build: .
+    profiles: [ex1-queue-vs-log]
+    command: node start.js ex1-queue-vs-log
+  append:
+    build: .
+    profiles: [ex2-append]
+    command: node start.js ex2-append
+  partitions:
+    build: .
+    profiles: [ex3-partitions]
+    command: node start.js ex3-partitions
+  backpressure:
+    build: .
+    profiles: [ex4-backpressure]
+    command: node start.js ex4-backpressure
+  crash-points:
+    build: .
+    profiles: [ex5-crash-points]
+    command: node start.js ex5-crash-points
