@@ -1,0 +1,28 @@
+ex2 — kaunsa signal kitna mehenga (hisaab, maane hue numbers ke saath; sampling ek seeded model)
+
+1) Ek din ka data — 10 lakh requests/minute (video ka "millions per minute"), har request ke logs ~1 KB (maana):
+   logs:    1.44 TB/din  (30 din rakho toh 43.2 TB)
+   metrics: kul 300 series × har 15 s ek sample × ~2 byte (Prometheus docs: disk par compressed 1–2 byte/sample) = 3.5 MB/din
+            (sirf samples ka disk; index, WAL aur RAM mein chalti series ka hisaab alag — RAM ka kharcha series ki ginti se badhta hai)
+   → in maanyataon par ~4 lakh× ka farq (logs ka compression nahi joda; 10× dabaane par bhi ~42 hazaar×).
+     Video ka "saalon ke metrics memory mein" — disk par sasta, RAM ka kharcha active series par tika.
+     Metric sasta isliye ki metric ginti hai, kahani nahi.
+
+2) Metric tab tak sasta jab tak labels ki ginti chhoti hai (har label-combination = ek alag series):
+   http_requests_total{method, route, status}            → zyada se zyada 300 series
+   + user_id label (10 lakh users)                        → zyada se zyada 30,00,00,000 series (30 crore)
+   → "metric sasta hai" tabhi tak sach hai. Prometheus docs: user ID jaise anginat values label mein mat daalo.
+     "Kis user ka fail hua" — sawaal logs/traces ka hai.
+
+3) Traces: 1,00,000 requests, 0.1% error, 1% dheemi; dono ka sikka 1% (seeded model):
+   tareeka                                    rakhe     errors rakhe     dheemi rakhe
+   sab                                        1,00,000            108          1,006
+   head (shuru mein sikka uchhaalo, 1%)          1,027              0             12
+   tail (khatam hone par: saare error/dheeme     2,126            108          1,006
+         + baaki ka 1%)
+   head, 3 aur seeds par (errors rakhe / kul errors): 1 / 97 · 1 / 94 · 0 / 115
+   → head sampling sasta hai par talaash wali request (error, dheemi) aksar phenk deta hai.
+     Tail sampling (is aadarsh model mein) har error rakhta hai — shart: poora trace samay par collector tak pahunche;
+     der se aaya error span pehle liye faisle ko nahi badal sakta. Faisle se pehle saare spans bhejne aur rakhne ka kharcha bhi lagta hai.
+     Keemat: ek trace ke saare spans ek hi collector tak aane chahiye, aur collector faisle tak (OpenTelemetry default 30 s)
+     poora trace memory mein rakhta hai.

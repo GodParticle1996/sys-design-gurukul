@@ -434,7 +434,45 @@ and labels best-batch averages vs HTTP medians; a shared-pause fan-out case; Con
 headcount verdict; "primarily" (not exclusively) organizational reasons; breaking vs compatible API changes; PCI scope needs
 real segmentation; local functions can fail too; tests guard final states, repeated recovery and percentiles.
 
+## Video 14: Observability — How to Not Fly Blind (2026-11-16)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-14-observability/`. Built by Claude. Levels
+`fp-obs-kyun` → `fp-obs-kaise` → `fp-obs-code` → `fp-obs-kab` (`data-v2-fp-obs-1…4`, group "🔭 Observability: Andhe Mat Udo",
+guide `obs-fp`, sources `signals`, `sloalert`, `postmortem`, `w3ctrace`, `traces`, `tailsampling`, `promlabels`, `promstorage`,
+`tailatscale`). Builders: `sdg-codex-xp/jobs/fp14/levels/*.py`. Lab 64 (`docker-labs/64-observability`, Node 24, zero deps;
+ex1 runs four HTTP servers on 127.0.0.1:0): arithmetic for the video's 100-request example (average vs nearest-rank and linear
+p99 vs max), sessions of k requests, and a seeded three-host case (average of p99s vs pooled p99 vs merged histogram); a REAL
+four-service HTTP mesh with W3C `traceparent` propagation (span tree from parent ids, an assumed 50 ms clock skew that reorders
+logs sorted by timestamp, and a service that drops the header); signal-cost arithmetic (logs vs metrics bytes, label
+cardinality) and a seeded head-vs-tail sampling model; a seeded FIFO queue simulation (M/M/1, D/D/1, M/D/1, M/M/8, 50%–105%
+busy) checked against the formulas; and a minute-by-minute 30-day error-budget model comparing a plain threshold with the SRE
+Workbook's multiwindow burn-rate alerts on five incidents.
+
+The `observability` and `slo` levels (Resilience) already teach RED/USE, signal roles, liveness vs readiness, symptom alerts and
+error budgets; labs 42–43 cover chaos and health checks. Corrections taught: with exactly 1% slow requests the nearest-rank p99
+does not show them (the video's own example); percentiles describe requests, not users; averaging per-host p99s is not a
+percentile; sorting logs from different machines by timestamp can invert causality — parent span ids give the structure;
+"50% busy, nobody waits" holds only without randomness (with random arrivals half the customers wait, mean wait = one service
+time); at 99% the wait is large but finite (~99× service time) and unbounded only at ≥ 100%; ρ/(1−ρ) is the M/M/1 waiting
+formula, not the utilization law (U = X·S, which says throughput grows linearly); "alert at 70%" is a single-server rule of
+thumb (a pool of 8 at 85% waits ~12× less than one server); metrics are cheap only with bounded labels; head sampling
+discards most error traces.
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 64 (`sdg-codex-xp/jobs/fp14/LAB-REVIEW.md`, 11 findings) and then the levels
+and guide (`LEVELS-REVIEW.md`, 11 findings) before the first push; Claude fixed all of them: `traceparent` validation (zero ids,
+version `ff`, future versions) and caller traces that render from an external parent; histogram edge cases (empty → NaN, the
+`+Inf` bucket is a cap); burn rules use the Workbook's strict `>` (C/D 109/217 min, ticket 1,441 min) and report reset times;
+the video's own 1% rule is a separate column (it never catches the 0.3% slow burn); metric bytes are compressed disk samples,
+not RAM; tail sampling keeps errors only from complete, timely traces; parent ids give relationships, not a full timeline;
+questions no longer derive tail odds from a p99 value, fix the direction of an average-of-p99s error, use a mean-wait formula
+for p99, or freeze releases without a stated policy; correction rows for monitoring vs observability, "optimize p99" and
+"remove every dashboard metric". Tests grew to 6 plus `npm run mutate` (19 deliberate bugs, all caught).
+
+Queued (not mine to change here): the Flow `latency` level (`data-flow.js`, currently also modified by the other agent's
+uncommitted work) calls p99 = 5 s for 99 fast + 1 slow request and counts requests as people; Lab 64 and `fp-obs-kyun`
+now point out the conflict.
+
 ## Next
 
-Continue with numbered video 14, `jwVEgkBDyM8` (Observability — How to Not Fly Blind); check the existing observability
-levels and labs 42–43 first. Videos 1–13 are built; two remain.
+Continue with numbered video 15, `ozWW5nIdzQM` (designing a global-scale system end to end); check the existing story tracks
+(Instagram/feed, Stories) first. Videos 1–14 are built; one remains.

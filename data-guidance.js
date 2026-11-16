@@ -82,6 +82,12 @@
     fowlerconway: { title: "Martin Fowler — Conway's Law (2022)", url: 'https://martinfowler.com/bliki/ConwaysLaw.html' },
     shopifymono: { title: 'Shopify Engineering — Deconstructing the Monolith (2019)', url: 'https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity' },
     pgmaxconn: { title: 'PostgreSQL — connection settings (max_connections)', url: 'https://www.postgresql.org/docs/current/runtime-config-connection.html' },
+    sloalert: { title: 'Google SRE Workbook — Alerting on SLOs (burn rate)', url: 'https://sre.google/workbook/alerting-on-slos/' },
+    postmortem: { title: 'Google SRE — Postmortem Culture', url: 'https://sre.google/sre-book/postmortem-culture/' },
+    w3ctrace: { title: 'W3C — Trace Context (traceparent)', url: 'https://www.w3.org/TR/trace-context/' },
+    tailsampling: { title: 'OpenTelemetry Collector — tail sampling processor', url: 'https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/tailsamplingprocessor/README.md' },
+    promlabels: { title: 'Prometheus — metric and label naming (cardinality)', url: 'https://prometheus.io/docs/practices/naming/' },
+    promstorage: { title: 'Prometheus — storage (1–2 bytes per sample)', url: 'https://prometheus.io/docs/prometheus/latest/storage/' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -360,6 +366,27 @@
     ],
     followup: 'Tumhari 30 logon ki team ek monolith chalati hai; payments ko PCI audit chahiye aur recommendations ko GPU. Kya nikaaloge, kya nahi, aur kyun?',
     sources: ['conway68', 'fowlerconway', 'monolithfirst', 'tailatscale', 'shopifymono', 'tx', 'pgmaxconn'],
+  });
+  add('obs-fp', 'fp-obs-kyun fp-obs-kaise fp-obs-code fp-obs-kab', {
+    title: 'Observability: failaav dekho, safar jodo, budget se jagao',
+    misaal: 'Dhaabe ka register kehta hai "average 11 minute" — par ek grahak 2 ghante baitha raha. Courier ki tracking har godaam ka scan jodti hai, par godaam ki ghadi galat ho toh kram ulta. Aur data pack ka alert "har 100 MB par call" bekaar, "is raftaar se 3 din mein khatam" kaam ka.',
+    asli: 'Ek number poori kahani nahi batata: latency ka failaav dekho (p50, p99, p99.9/max), percentiles ka average mat lo. Metric batata hai KI, trace batata hai KAHAN (parent span id se "kaun kiske andar"), log batata hai KYA — teeno trace_id se jude. Line ka average wait randomness aur busy-pan se ρ/(1−ρ) jaisa badhta hai. Page tab jab error budget sach mein khatre mein ho.',
+    points: [
+      '<b>Average ka jhooth:</b> lab 64 ex0 (hisaab) — 99 × 10 ms + 1 × 10 s: average 109.9 ms, nearest-rank p99 10 ms, max 10 s. Hosts ke p99 ka average asli p99 se 11.8× zyada ya 2.6× kam; histogram buckets jodo.',
+      '<b>Trace ka safar:</b> ex1 (asli HTTP) — DB ka ~300 ms span trace mein saaf; logs ko timestamp se sort kiya toh product ki 50 ms peeche ghadi ne kram ulta kiya (parent id rishta batata hai, poori timeline nahi); ek service header na bheje toh trace toota.',
+      '<b>Line ka ganit:</b> ex3 (simulation) — 50% busy par 50% customers ruke (wait = ek checkout), 92.3% par 12×, 99% par ~99× (seemit), 100% par bina had. 85% par 8 cashier ka wait 1 cashier se ~12× kam.',
+      '<b>Budget aur alert:</b> ex4 (model) — 99.9% = 43.2 min/mahina. Video ka 1% rule 0.3% ki dheemi jalan (70% budget) kabhi nahi pakadta; SLO wala threshold sab 5 min mein pakadta par 0.58% wale jhatke par bhi jagata; burn-rate sirf khatre par page, 2% × 6 ghante par 44 min der.',
+    ],
+    use: 'p50/p99/p99.9 aur seema se upar ki ginti; histogram se global percentile; har hop par traceparent (OpenTelemetry); errors ke liye tail sampling; saturation (pool wait, queue depth) par jaldi nazar; SLO + error budget policy; burn-rate page aur ticket; blameless postmortem.',
+    avoid: 'Sirf average; hosts ke p99 ka average; alag machines ke logs ka timestamp se kram; metric label mein user_id; 1% head sampling se error dhoondhna; "70%" jaisa ek number har pool par; har chhote jhatke par page; bina action ke page ya laal alert.',
+    mistake: '"p99 sabse bure 1% users ka haal hai" maan lena. p99 requests ki ek seema hai — theek 1% dheeme hon toh nearest-rank p99 unhe dikhata hi nahi, aur 100 requests wale session mein 63% users ek dheemi request dekhte hain (lab 64 ex0).',
+    compare: [
+      { choice: 'Metric', when: 'Kuch galat hai? Alert, trend', tradeoff: 'Disk par sasta (compressed 1–2 byte/sample) jab tak labels gine-chune; RAM active series par; "kis user" nahi bata sakta' },
+      { choice: 'Trace', when: 'Waqt kahan gaya? Kaun kiske andar', tradeoff: 'Har hop par header chahiye; tail sampling poore, samay par aaye traces mein se errors chunta — pehle saare spans bhejne aur collector ka bojh' },
+      { choice: 'Log', when: 'Us ek request mein kya hua?', tradeoff: 'Kharcha = bytes/event × rate × sampling × din (lab ki maanyata par TB/din); trace_id se judo, rishta trace se lo' },
+    ],
+    followup: 'Checkout ka p99 raat ko 3× ho jaata hai par average hara rehta hai, DB pool 85% busy dikhta hai, aur alert hafte mein 15 baar bajta hai. Kaunse teen badlaav karoge, aur kis kram mein?',
+    sources: ['signals', 'sloalert', 'postmortem', 'w3ctrace', 'traces', 'tailsampling', 'promlabels', 'promstorage', 'tailatscale'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

@@ -1,0 +1,23 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. Zero dependency Node 24. ex1 chaar HTTP servers 127.0.0.1 ke random ports par chalata hai (bahar publish nahi).
+services:
+  average:
+    build: .
+    profiles: [ex0-average]
+    command: node start.js ex0-average
+  trace:
+    build: .
+    profiles: [ex1-trace]
+    command: node start.js ex1-trace
+  cost:
+    build: .
+    profiles: [ex2-cost]
+    command: node start.js ex2-cost
+  queue:
+    build: .
+    profiles: [ex3-queue]
+    command: node start.js ex3-queue
+  budget:
+    build: .
+    profiles: [ex4-budget]
+    command: node start.js ex4-budget

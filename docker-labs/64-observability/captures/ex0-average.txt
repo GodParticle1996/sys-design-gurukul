@@ -1,0 +1,27 @@
+ex0 — average kya chhupata hai (hisaab + seeded model; kuch time nahi kiya)
+
+1) Video ka misaal: 100 requests — 99 × 10 ms, 1 × 10 s
+   1 dheema: average 109.9 ms · p50 10 ms · p90 10 ms · p99 (nearest-rank) 10 ms · p99 (linear) 109.9 ms · max 10 s
+   2 dheema: average 209.8 ms · p50 10 ms · p90 10 ms · p99 (nearest-rank) 10 s · p99 (linear) 10 s · max 10 s
+   → 1 dheema request par nearest-rank p99 = 10 ms: dheema request p99 se UPAR baitha hai. p99 "sabse bure 1%" ki
+     seema hai, unka haal nahi. Tool ki percentile definition bhi number badal deti hai (10 ms vs 109.9 ms).
+     Isliye max (ya p99.9) aur dheeme requests ki ginti bhi dekho.
+
+2) Ek user, kai requests (har request 1% chance se dheemi, ek-doosre se aazaad — maana hua)
+   requests/user   kam se kam ek dheemi
+               1   1.0%
+               5   4.9%
+              20   18.2%
+              50   39.5%
+             100   63.4%
+   → percentile requests ka hai, users ka nahi. 100 requests wale session mein 63.4% users kam se kam ek dheemi request dekhte hain.
+
+3) Teen hosts, ek dashboard: "har host ka p99, phir unka average" vs asli p99 (seeded model, 10,000 requests)
+   chhota-host-bimar: A (9,000 req) p99 24.1 ms · B (900 req) p99 25.6 ms · C (100 req) p99 874.7 ms
+      p99 ka average 308.1 ms · asli p99 (saare requests) 26.0 ms · histogram jod kar 33.9 ms (bucket 25–50 ms)
+   bada-host-bimar: A (9,000 req) p99 301.4 ms · B (900 req) p99 23.5 ms · C (100 req) p99 24.5 ms
+      p99 ka average 116.5 ms · asli p99 (saare requests) 299.0 ms · histogram jod kar 369.1 ms (bucket 250–500 ms)
+   → p99 ka average koi percentile nahi: ek case mein 11.8× zyada bataya, doosre mein 2.6× kam.
+     Histogram ke buckets jod sakte ho (ginti judti hai), phir p99 nikaalo — jawab bucket ki chaudai jitna sahi,
+     jab tak jawab kisi finite bucket mein ho. Sabse upar (+Inf, is lab mein 10 s se upar) gira toh sirf 10 s ki seema milti hai:
+     teen 20 s ki requests ka histogram p99 = 10 s. Badi latency ke liye bada aakhri bucket rakho.

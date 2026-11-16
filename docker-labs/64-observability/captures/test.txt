@@ -1,0 +1,14 @@
+✔ ex0: average, two p99 definitions, merged histograms (22.348249ms)
+✔ ex1: real HTTP mesh — tree from parent ids, skewed log order, broken propagation (1108.888262ms)
+✔ ex1: traceparent parsing and continuing a caller trace (10.80949ms)
+✔ ex2: costs and sampling (5.183804ms)
+✔ ex3: queue simulator matches the formulas (251.397423ms)
+✔ ex4: budget and alert rules (26.419589ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1482.801257
