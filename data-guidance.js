@@ -68,6 +68,10 @@
     crdt11: { title: 'Shapiro et al. — Conflict-free Replicated Data Types (2011)', url: 'https://asc.di.fct.unl.pt/~nmp/pubs/tr-inria-2011.pdf' },
     lamport01: { title: 'Lamport — Paxos Made Simple (2001)', url: 'https://lamport.azurewebsites.net/pubs/paxos-simple.pdf' },
     etcdtune: { title: 'etcd — tuning (heartbeat and election timeout)', url: 'https://etcd.io/docs/v3.5/tuning/' },
+    breslau99: { title: 'Breslau et al. — Web Caching and Zipf-like Distributions (INFOCOM 1999)', url: 'https://pages.cs.wisc.edu/~cao/papers/zipf-implications.html' },
+    memcache13: { title: 'Nishtala et al. — Scaling Memcache at Facebook (NSDI 2013), leases', url: 'https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala' },
+    linuxvm: { title: 'Linux kernel — /proc/sys/vm (dirty_expire_centisecs, dirty_writeback_centisecs)', url: 'https://docs.kernel.org/admin-guide/sysctl/vm.html' },
+    karlton: { title: 'Martin Fowler — TwoHardThings (Phil Karlton quote)', url: 'https://martinfowler.com/bliki/TwoHardThings.html' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -262,6 +266,27 @@
     ],
     followup: 'Tumhare 3-node etcd mein ek node baar-baar GC mein 2 s atakta hai aur leader badalta rehta hai. Kya naapoge aur kya badloge (timeouts, node, N)?',
     sources: ['raft', 'lamport01', 'etcdtune'],
+  });
+  add('cache-fp', 'fp-cache-kyun fp-cache-kaise fp-cache-code fp-cache-kab', {
+    title: 'Caching: seedhi naapo, skew naapo, aur DB ki dhaal banao',
+    misaal: 'Hisaab karte waqt jo kitaabein baar-baar chahiye, mez par rakhte ho; library doosre shehar mein hai. Par mez par rakhi kitaab purani ho sakti hai, aur mez gir jaaye toh sab log ek saath library daudte hain.',
+    asli: 'Cache dheemi jagah ka zaroori data tez jagah par rakhta hai. Teen sawaal har cache ke saath: kitne misses DB tak jaayenge, purana data kab tak chalega, aur cache gire toh DB kaise bachega.',
+    points: [
+      '<b>Seedhi:</b> lab 60 ex0 (asli) — L1 ~1.6 ns, RAM ~220 ns, SSD random read ~170 µs, doosra region 150 ms. Video ke numbers "1 ns = 1 s" wale hain, "1 cycle = 1 s" nahi.',
+      '<b>Skew:</b> ex1 (model) — 90/10 kanoon nahi: Zipf 0.99 par top 10% = 80%, 0.6 par 39%. 95% se 99% hit rate = DB ka bojh 5 guna kam.',
+      '<b>Likhna:</b> ex2 (asli SIGKILL) — write-back 1 s flush par ~55 hazaar acked writes gayi; group commit ~93k–142k/s par 0. Page cache process crash sahta hai, bijli nahi.',
+      '<b>Purana data aur herd:</b> ex3 — delete race TTL ke bina agla write tak; lease race rokta hai, khoya delete nahi. ex4 — limiter se 0 DB crash; Bloom na-maujood ids ka ~99% rokta hai.',
+    ],
+    use: 'Read-heavy data jismein skew ho (product page, profile, feed), mehngi computed values, aur doosre region ka data (CDN).',
+    avoid: 'Write-back paise ya order ke data par, bina TTL ke cache, bina limiter ke DB ke saamne akela cache, aur dheemi query ko index ki jagah cache se chhupana.',
+    mistake: '"Write-through hai toh kabhi stale nahi" maan lena. DB write fail, do writers ki race, aur cache bypass karne wala job — teeno stale chhodte hain. TTL ya change-log se invalidation chahiye (lab 60 ex3, lab 33).',
+    compare: [
+      { choice: 'Cache-aside + TTL', when: 'Zyadatar read-heavy data; thoda purana chalega', tradeoff: 'Delete race aur khoye delete; TTL galti ki umar baandhta hai' },
+      { choice: 'Write-through / group commit', when: 'Write ke baad turant sahi read chahiye, data kho nahi sakta', tradeoff: 'Har write DB tak dheemi; bypass karne wale writers phir bhi stale chhodte' },
+      { choice: 'Write-back', when: 'Counters, views, analytics — kuch second ka loss chalega', tradeoff: 'Flush interval tak ki acked writes crash mein gayi' },
+    ],
+    followup: 'Tumhari product API: 20,000 reads/sec, Redis 96% hit, DB 1,500 reads/sec sambhalta hai. Redis ka ek node gira toh kya hoga? Kya naapoge aur kya lagaoge (limiter, coalescing, warming)?',
+    sources: ['breslau99', 'memcache13', 'cache', 'linuxvm', 'karlton'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

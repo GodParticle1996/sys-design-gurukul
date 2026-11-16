@@ -1,0 +1,13 @@
+✔ ladder: a big random ring is far slower than an L1-sized one; random order is slower than sequential
+✔ zipf + LRU: uniform gives top 10% = 10%; more skew, more hits; bigger cache, more hits; LRU keeps its size
+✔ writes: after SIGKILL, write-back loses acked writes; through, group commit and the OS page cache lose none
+✔ invalidation: the delete race leaves old data forever without TTL, until TTL with it, and never with a lease
+✔ herd + penetration: a limiter keeps the DB alive; Bloom has no false negatives and blocks unique-id attacks
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14459.172433

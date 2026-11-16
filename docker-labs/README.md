@@ -1,6 +1,6 @@
 # 🐳 System Gurukul — Docker Projects
 
-Saare tracks ke hands-on projects (49). Lab 46 ke alawa saare projects **zero-dependency Node.js** services aur tools hain.
+Saare tracks ke hands-on projects (60). Lab 46 ke alawa saare projects **zero-dependency Node.js** services aur tools hain.
 Lab 46 mein **Java 21+** ke asli platform threads hain; Node sirf launcher hai. Koi Maven/Gradle dependency nahi.
 Har README measured output aur model ki boundary bataata hai.
 
@@ -65,6 +65,7 @@ Har README measured output aur model ki boundary bataata hai.
 | [57-sharding](57-sharding/README.md) | 4–8 shards = worker threads + SQLite: range (mahina) vs hash shard key, live writes aur range/id sawaal, ek disk par fsync; `hash % N` vs ring; viral vote key ko todna aur total padhna; UUIDv4/UUIDv7/Snowflake B-tree inserts aur Snowflake ke guards; co-location aur cross-shard transfer crash; backfill race, tombstone, sample check aur repair | Sharding 1–4 (First Principles) |
 | [58-cap](58-cap/README.md) | Atka vs mara node (asli worker, 3 timeouts); 5 nodes 3 \| 2 split mein ATM: CP vs AP + LWW / ledger / offline seema; async vs sync-any-1 vs sync-all latency aur crash; session guarantees aur causal; LWW vs version vectors vs CRDT; split brain, quorum, fencing, five nines | CAP & PACELC 1–4 (First Principles) |
 | [59-consensus](59-consensus/README.md) | Majority overlap (har subset), odd vs even N ki availability, commit latency model; 10,000 elections × timeout ranges; asli fsync par consensus ki keemat aur batching; up-to-date niyam ke bina committed entry ka khona; kata hua leader — local read, ReadIndex, lease, dheemi ghadi | Raft 1–4 (First Principles) |
+| [60-caching](60-caching/README.md) | Asli latency ki seedhi (L1 → RAM → disk → fsync → loopback, 3 runs); Zipf skew × LRU hit rate aur DB ka bojh; asli SIGKILL par write-through, group commit, write-back aur page cache ka loss; delete race, TTL, lease aur khoya delete; cache crash → DB crash loop (coalescing, limiter, warming); asli Bloom filter, negative cache | Caching 1–4 (First Principles) |
 
 ```bash
 cd docker-labs/09-raft

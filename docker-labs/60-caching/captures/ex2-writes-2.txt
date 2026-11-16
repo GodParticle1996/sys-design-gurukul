@@ -1,0 +1,16 @@
+Ek chhota store (child process). 1.6 s chalao, phir SIGKILL (jaise process crash). Phir file padho: jin writes
+ko "ho gaya" bola gaya tha, unmein se kitni sach mein file mein hain? (16-byte records, is machine ki disk)
+
+tareeka                                                       writes/sec   "ho gaya" bola   file mein   khoye
+write-through: har write ka apna fsync, phir ack                    624            1,000       1,020        0
+group commit: 256 pending writes, EK fsync, phir sabka ack     1,41,583         2,26,816    2,29,632        0
+write-back: memory se ack, har 1 s flush + fsync                95,031*         1,53,000      98,000   55,000
+write-back: memory se ack, har 100 ms flush + fsync             93,342*         1,50,000    1,49,000    1,000
+OS page cache: write() karke ack, fsync kabhi nahi              97,196*         1,56,000    1,58,000        0
+
+* write-back aur page cache ko 1,00,000 writes/sec diye gaye (memory se ack, isliye aur bhi le sakte the).
+→ Write-through sabse dheema (har write = ek fsync). Group commit wahi pakkapan deta hai, ek fsync ko sau writes mein
+  baant kar — par har write ko ek fsync jitna (~1 ms) rukna padta hai. Write-back tez, par flush se pehle crash = writes gayi.
+→ OS page cache: process mara, par data kernel ke paas tha, isliye 0 khoye. Bijli jaaye ya kernel crash ho toh
+  lagbhag 30 s tak ka data ja sakta hai (is machine par dirty_expire = 30 s, flusher har 5 s jaagta hai).
+  Process crash aur power loss alag khatre hain — "write-back" kahan hai (app ki memory ya kernel), wahi tay karta hai.

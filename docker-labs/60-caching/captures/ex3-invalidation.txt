@@ -1,0 +1,30 @@
+A. Script (ek hi race, haath se): DB = v1, cache khaali.
+   t=1 ms   reader R: cache miss → DB se v1 padha → GC pause
+   t=5 ms   writer W: DB = v2
+   t=6 ms   writer W: cache delete (abhi cache mein kuch nahi)
+   t=105 ms reader R jaaga: cache = v1  ← purana value, DB mein v2
+
+tareeka                        1 s        10 s       1 min      10 min  baad reader ko kya mila
+sirf delete (koi TTL nahi)   v1 ✗       v1 ✗       v1 ✗       v1 ✗      
+delete + TTL 30 s            v1 ✗       v1 ✗       v2 ✓       v2 ✓      
+delete + lease + TTL 30 s    v2 ✓       v2 ✓       v2 ✓       v2 ✓      
+
+→ Bina TTL: purana v1 tab tak jab tak koi agla write delete na kare — price roz badalta hai toh poora din.
+  TTL: galti ki umar TTL tak. Lease (Facebook memcache, NSDI 2013): miss par cache ek token deta hai; delete token
+  cancel karta hai; purane token wala set thukra diya jaata hai.
+
+B. MODEL, 1 ghanta, ek hot key: 1,000 reads/sec, write har ~5 s (Poisson). DB read 2 ms, write 3 ms.
+   1% readers ko DB read ke baad 200 ms ka pause. "Lambi galti" = 5 ms se lamba stale window.
+
+tareeka                       delete message khota   stale reads           lambi galtiyan   sabse lambi
+sirf delete                   kabhi nahi                 164 (0.005%)          0         0.0 s
+sirf delete                   1%                      66,041 (1.834%)         11         28.0 s
+delete + TTL 30 s             kabhi nahi               5,559 (0.154%)          2         4.1 s
+delete + TTL 30 s             1%                      30,235 (0.840%)         10         9.8 s
+delete + lease + TTL 30 s     kabhi nahi                 142 (0.004%)          0         0.0 s
+delete + lease + TTL 30 s     1%                      68,053 (1.890%)         12         13.9 s
+
+→ Har write ke baad DB commit se delete tak (0.2 ms) thode stale reads hamesha — woh "lambi galti" mein nahi gine.
+→ TTL ke saath race thoda zyada (expiry par naye miss = naye mauke), par har galti TTL ke andar khatam.
+→ Lease race rokta hai; khoya hua delete lease bhi nahi rok sakta — uske liye TTL (ya change-log se invalidation, lab 33).
+→ Model ek key ka hai; bahut saari keys par yahi chhote chance jud kar asli galtiyan bante hain.

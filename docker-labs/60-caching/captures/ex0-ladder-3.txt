@@ -1,0 +1,33 @@
+CPU: Intel(R) Core(TM) Ultra 7 255U — 3.26 GHz (/proc/cpuinfo), 1 cycle = 0.31 ns
+
+A. Pointer chasing: har hop ek random 64-byte line se agla pata padhta hai (CPU andaza nahi laga sakta).
+
+data ka size     ns / hop
+16 KB               1.7
+32 KB               1.7
+256 KB              4.7
+1 MB                7.0
+4 MB               38.9
+8 MB              204.5
+64 MB             211.4
+256 MB            287.4
+
+B. Spatial locality: wahi 3.2 crore ints (128 MB), ek baar seedhe kram mein, ek baar random kram mein.
+seedha kram: 1.15 ns / int     random kram: 30.53 ns / int     → 27× farq
+Seedhe kram mein ek 64-byte line 16 ints laati hai aur CPU agli lines pehle se mangwa leta hai (prefetch).
+
+C. Ladder, "1 cycle = 1 second" scale par (3.26 GHz). ASLI = is machine par naapa, MODEL = maana hua.
+
+                                                  asli samay     cycles          agar 1 cycle = 1 s
+ASLI   L1 (32 KB data)                                1.7 ns              6   5.6 second
+ASLI   L2 (1 MB data)                                 7.0 ns             23   23 second
+ASLI   L3 (4 MB data)                                38.9 ns            127   2.1 minute
+ASLI   RAM (256 MB data, TLB miss samet)            287.4 ns            938   16 minute
+ASLI   4 KB read, OS page cache se (RAM)            597.0 ns          1,949   32 minute
+ASLI   4 KB random read, disk se (O_DIRECT)         141.1 µs       4,60,654   5.3 din
+ASLI   write + fsync (disk tak pakka)                 1.3 ms      41,74,326   1.6 mahine
+ASLI   TCP round trip, isi machine par (loopback)     9.8 µs         32,056   8.9 ghante
+MODEL  round trip doosre region tak (video: 150 ms)   150.0 ms   48,95,99,550   16 saal
+
+L1 se disk read tak 81,750×, fsync tak 7,40,797×, doosre region tak 8,68,86,806×.
+Note: L1 ki row mein JS loop ka kaam bhi shaamil hai; RAM ki row mein TLB miss (page table walk) bhi. WSL ki disk ek virtual disk hai.

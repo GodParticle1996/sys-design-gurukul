@@ -1,0 +1,24 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. Zero dependency Node 24. Kuch bahar publish nahi.
+# Note: container mein disk aur fsync ke numbers host se alag honge (overlay filesystem).
+services:
+  ladder:
+    build: .
+    profiles: [ex0-ladder]
+    command: node start.js ex0-ladder
+  zipf:
+    build: .
+    profiles: [ex1-zipf]
+    command: node start.js ex1-zipf
+  writes:
+    build: .
+    profiles: [ex2-writes]
+    command: node start.js ex2-writes
+  invalidation:
+    build: .
+    profiles: [ex3-invalidation]
+    command: node start.js ex3-invalidation
+  herd:
+    build: .
+    profiles: [ex4-herd]
+    command: node start.js ex4-herd

@@ -313,7 +313,30 @@ claimed lab 09's SAME_TIMEOUT run elects a leader (lab 09's capture shows no lea
 names Raft §5.4.2 (a new leader does not count replicas of older-term entries); ReadIndex credits paper §8 and Ongaro's
 thesis §6.4 with the no-op-entry condition; two over-strong wrong-answer notes in kyun. Codex fact-check: still to do.
 
+## Video 10: Caching (2026-11-15)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-10-caching/`. Built by Claude. Levels
+`fp-cache-kyun` → `fp-cache-kaise` → `fp-cache-code` → `fp-cache-kab` (`data-v2-fp-cache-1…4`, group "⚡ Caching",
+guide `cache-fp`, sources `breslau99`, `memcache13`, `cache`, `linuxvm`, `karlton`). Builders: `sdg-codex-xp/jobs/fp10/levels/*.py`.
+Lab 60 (`docker-labs/60-caching`, Node 24, zero deps): a REAL latency ladder on this laptop (pointer chasing L1 → RAM,
+O_DIRECT disk reads, fsync, loopback TCP; 3 runs), a seeded Zipf × LRU model with hit-rate arithmetic, a REAL SIGKILL crash
+test of write-through, group commit, write-back and the OS page cache (3 runs), a seeded delete-race model (TTL, Facebook
+memcache leases, lost deletes), a cache-crash → DB-crash herd model (coalescing, limiter, warming) and a REAL Bloom filter on
+10 lakh ids (negative cache, attack vs bug, stale filter on signup).
+
+Existing cache levels (`caching`, `stampede`, `eviction`, `cache-invalidation`) and labs 01 and 33 cover patterns, TTL jitter,
+single-flight and CDC; this topic adds what they do not measure. Corrections taught: the video's "1 cycle = 1 s" numbers
+are really "1 ns = 1 s" numbers, and 150 ms is ~16 years (or ~4.8 on the 1 ns scale), not 2.5; 90/10 is skew-dependent
+(Zipf 0.99 gives 80%, measured web α 0.64–0.83); write-through can still serve stale data (failed DB write, racing
+writers, writers that bypass the cache); the page cache survives a process crash but not power loss; Redis defaults to
+`noeviction` and its LRU is approximate; cache penetration is not always an attack (negative caching for repeated ids,
+Bloom for unique ids, Bloom must be updated on insert); warming alone does not stop a sudden herd — a limiter does; a
+2-second query usually needs an index before a cache; "Karlton", not "Carlton".
+
+Review: Codex could not run (its sign-in had expired), so Claude self-reviewed the claims, lab and levels (2026-11-15).
+Lab 60 passes `tools/lab-lint.js` and `tools/run-labs.js`. Codex brief for the fact-check: `sdg-codex-xp/jobs/fp10/LAB-BRIEF.md`.
+
 ## Next
 
-Continue with numbered video 10, `t9jtxlu7k4k` (Caching); check the existing cache, eviction and stampede levels and
-labs 01 and 33 first. Videos 1–9 are built; six remain.
+Continue with numbered video 11 (Message Queues); check the existing EDA course (`sdd-eda`), the queue/backpressure levels
+and labs 44 and 47–51 first. Videos 1–10 are built; five remain.
