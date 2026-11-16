@@ -1,0 +1,24 @@
+A. Arithmetic (SQS STANDARD queue): message DLQ mein jaakar bhi apna PEHLA bheja-gaya samay rakhta hai, isliye DLQ ki
+   retention pehli baar bheje jaane se ginti hai. Maana: messages pehle 72 ghante mein barabar faile hue samay par DLQ mein
+   aate hain, aur har message ko DLQ mein aane ke itne ghante baad koi dekhta hai. Source retention 4 din.
+
+queue      DLQ retention   koi dekhta hai (DLQ mein aane ke baad)   jaanch se pehle mit gaye
+standard      4 din          48 ghante baad                            33%
+standard      4 din          12 ghante baad                             0%
+standard     14 din          48 ghante baad                             0%
+standard     14 din         300 ghante baad                            50%
+FIFO          4 din          48 ghante baad                             0%
+
+→ Video: "DLQ mein koi data kabhi nahi khota". DLQ ki bhi retention hai (1 minute se 14 din). Standard queue mein source jitni
+  retention (4 din) aur 2 din baad jaanch: in maanyataon par 33% messages pehle hi mit gaye. FIFO queue mein samay
+  DLQ mein dobara shuru hota hai. AWS docs: DLQ ki retention source se lambi rakho; DLQ ki depth aur umar par alert lagao.
+
+B. Arithmetic: availability ≈ MTBF ÷ (MTBF + MTTR)  (MTBF = do girawaton ke beech ausat samay, MTTR = theek hone ka samay)
+
+saal mein ek baar gira, 24 ghante mein theek       99.72678%   saal mein band:   1436.1 min
+roz gira, 100 ms mein khud theek                   99.99988%   saal mein band:      0.6 min
+mahine mein ek baar, 1 ghanta                      99.86130%   saal mein band:    729.0 min
+hafte mein ek baar, 5 minute                       99.95042%   saal mein band:    260.6 min
+
+→ Video ka hisaab sahi: roz 100 ms ki girawat saal ke 24 ghante se bahut behtar. Par dono (MTBF aur MTTR) ginti mein hain;
+  aur "100 ms mein khud theek" tabhi jab girawat chhoti aur alag-alag ho — retries ka loop (ex0) MTTR ko ghanton tak le jaata hai.

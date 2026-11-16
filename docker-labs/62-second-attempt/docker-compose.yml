@@ -1,0 +1,23 @@
+# Is machine par Docker nahi hai; compose chala ke nahi dekha.
+# Har exercise ek container mein. Zero dependency Node 24. Kuch bahar publish nahi.
+services:
+  metastable:
+    build: .
+    profiles: [ex0-metastable]
+    command: node start.js ex0-metastable
+  jitter:
+    build: .
+    profiles: [ex1-jitter]
+    command: node start.js ex1-jitter
+  deadline:
+    build: .
+    profiles: [ex2-deadline]
+    command: node start.js ex2-deadline
+  idempotent-ops:
+    build: .
+    profiles: [ex3-idempotent-ops]
+    command: node start.js ex3-idempotent-ops
+  dlq-mttr:
+    build: .
+    profiles: [ex4-dlq-mttr]
+    command: node start.js ex4-dlq-mttr

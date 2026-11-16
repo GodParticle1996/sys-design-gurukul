@@ -313,7 +313,99 @@ claimed lab 09's SAME_TIMEOUT run elects a leader (lab 09's capture shows no lea
 names Raft §5.4.2 (a new leader does not count replicas of older-term entries); ReadIndex credits paper §8 and Ongaro's
 thesis §6.4 with the no-op-entry condition; two over-strong wrong-answer notes in kyun. Codex fact-check: still to do.
 
+## Video 10: Caching (2026-11-15)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-10-caching/`. Built by Claude. Levels
+`fp-cache-kyun` → `fp-cache-kaise` → `fp-cache-code` → `fp-cache-kab` (`data-v2-fp-cache-1…4`, group "⚡ Caching",
+guide `cache-fp`, sources `breslau99`, `memcache13`, `cache`, `linuxvm`, `karlton`). Builders: `sdg-codex-xp/jobs/fp10/levels/*.py`.
+Lab 60 (`docker-labs/60-caching`, Node 24, zero deps): a REAL latency ladder on this laptop (pointer chasing L1 → RAM,
+O_DIRECT disk reads, fsync, loopback TCP; 3 runs), a seeded Zipf × LRU model with hit-rate arithmetic, a REAL SIGKILL crash
+test of write-through, group commit, write-back and the OS page cache (3 runs), a seeded delete-race model (TTL, Facebook
+memcache leases, lost deletes), a cache-crash → DB-crash herd model (coalescing, limiter, warming) and a REAL Bloom filter on
+10 lakh ids (negative cache, attack vs bug, stale filter on signup).
+
+Existing cache levels (`caching`, `stampede`, `eviction`, `cache-invalidation`) and labs 01 and 33 cover patterns, TTL jitter,
+single-flight and CDC; this topic adds what they do not measure. Corrections taught: the video's "1 cycle = 1 s" numbers
+are really "1 ns = 1 s" numbers, and 150 ms is ~16 years (or ~4.8 on the 1 ns scale), not 2.5; 90/10 is skew-dependent
+(Zipf 0.99 gives 80%, measured web α 0.64–0.83); write-through can still serve stale data (failed DB write, racing
+writers, writers that bypass the cache); the page cache survives a process crash but not power loss; Redis defaults to
+`noeviction` and its LRU is approximate; cache penetration is not always an attack (negative caching for repeated ids,
+Bloom for unique ids, Bloom must be updated on insert); warming alone does not stop a sudden herd — a limiter does; a
+2-second query usually needs an index before a cache; "Karlton", not "Carlton".
+
+Review: first pushed self-reviewed (Codex sign-in had expired). Codex (GPT-6.1-Sol xhigh) then fact-checked the lab,
+levels and guide (`sdg-codex-xp/jobs/fp10/LAB-REVIEW.md`, 15 findings) and Claude fixed all of them (2026-11-15): short writes
+and record-format recovery plus file/directory fsync in ex2, and "process crash only"; the 30 s / 5 s writeback settings are
+not a power-loss bound; TTL is an entry lifetime from set time (a slow refill can stay stale longer — new test); the lease model
+now retries token-less readers and every strategy replays the same arrivals and writes (separate RNG streams); negative cache
+entries now expire (60 s) and the penetration counts are labelled MODEL; per-waiter deadlines and a late-fill option in the
+herd model (coalescing alone now avoids the crash; recovery depends on late-fill policy); warming reports users rejected for
+11.1 s; ex0 random offsets fixed (399 distinct blocks, was 158), fsync row times write + fsync, O_DIRECT row labelled as the
+WSL direct-I/O path; the video's scale is called internally inconsistent (L1 0.5 s = half a cycle) instead of "really 1 ns";
+Bloom "maybe" wording; the guide no longer pairs group commit with read freshness; source table gains Redis-down fallback,
+eviction vs freshness and TTL rows. New tests: LRU recency, human scale, TTL slow-fill, negative expiry, lease retries,
+coalesced deadlines (mutation-checked). All ex0/ex2/ex3/ex4 captures regenerated.
+
+## Video 11: Kafka vs RabbitMQ vs SQS — Async System (2026-11-15)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-11-queues/`. Built by Claude. Levels
+`fp-async-kyun` → `fp-async-kaise` → `fp-async-code` → `fp-async-kab` (`data-v2-fp-async-1…4`, group "📮 Async: Queue vs
+Stream", guide `queue-fp`, sources `kafka`, `kafkaintro`, `sqsvis`, `sqsdlq`, `idem`, `outboxpat`). Builders:
+`sdg-codex-xp/jobs/fp11/levels/*.py`. Lab 61 (`docker-labs/61-queues`, Node 24, zero deps, no ports): a fluid spike/backlog
+model (worker capacity vs average traffic, retention), REAL queue and log code (visibility timeout, receipts, consumer groups,
+replay vs retention), REAL disk writes (sequential vs random 4 KB vs 1 MB batches with O_DIRECT, 3 runs), Kafka's murmur2
+partitioner (checked against Kafka's test vectors) with an ordering model, hot keys and 6 → 8 key movement, a backpressure model
+(drop, block, reject, autoscale past the DB limit, DLQ accounting, poison message) and an exhaustive crash-point and
+interleaving count for idempotency and dual write vs outbox.
+
+The EDA course (labs 44, 47–51) already runs real processes for save/publish gaps, retention, duplicate charges and
+idempotency keys; this topic adds what those labs do not measure. Corrections taught: a task queue is at-least-once, not
+"exactly one worker, exactly once"; a 60 s spike delays email ~99 min, not 10, and a worker no faster than average traffic
+never drains the backlog; Kafka replay is bounded by retention (default 7 days); on this SSD sequential vs random 4 KB writes
+are about equal and batching is the big win; zero copy does not apply with TLS; reject (429) is a fourth backpressure
+strategy and the Kafka producer itself blocks up to `max.block.ms`; a DLQ is for poison messages, and scaling workers past the
+DB's limit sends healthy messages there; check → act → record idempotency double-charges on a crash or a race; the outbox
+relay is at-least-once.
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 61, the levels and the guide before the first push
+(`sdg-codex-xp/jobs/fp11/LAB-REVIEW.md`, 10 findings); Claude fixed all of them: manifests and code-pane lines; one consumer
+cannot restore cross-partition order and the ordering model assumes serial processing per partition (no-key Java producer
+default is sticky, not round-robin); Stripe keys can be removed after 24 hours; DLQ is bounded-retry quarantine plus redrive and
+skipping a FIFO event breaks order (150 s is idealized); compaction is not a full-history replay; a new Kafka group defaults to
+`latest`; message wait vs drain time; ex2 is labelled as overwrites with amortized timing and batching 7–17× in the saved runs;
+10 more guards added to the tests (every surviving mutation now fails a test).
+
+## Video 12: Mathematics of the Second Attempt — retries (2026-11-15)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-12-retries/`. Built by Claude. Levels
+`fp-retry-kyun` → `fp-retry-kaise` → `fp-retry-code` → `fp-retry-kab` (`data-v2-fp-retry-1…4`, group "🔁 Retries: Doosri
+Koshish", guide `retry-fp`, sources `brooker15`, `retry`, `awssdkretry`, `idem`, `sqsdlq`, `metastable21`). Builders:
+`sdg-codex-xp/jobs/fp12/levels/*.py`. Lab 62 (`docker-labs/62-second-attempt`, Node 24, zero deps, no ports, deterministic):
+a metastable retry-loop model (immediate retries, backoff + jitter, retry budget; recovery vs headroom; amplification
+arithmetic), a Brooker-style contention model of five jitter strategies, an exact user → A → B → C timeline for timeouts,
+retries and deadline propagation (zombie work), a real in-memory idempotency-key store (lost reply, double click with an
+in-flight lock, mismatched parameters, key expiry, delete with id reuse, increment vs conditional set) and DLQ-retention and
+MTBF/MTTR arithmetic.
+
+The resilience track (retries `rt-*`, circuit breaker `cb-*`) and labs 37–38 already run real servers for storms, jitter, layer
+amplification and breakers; this topic adds what they do not measure. Corrections taught: 10% failures alone are a 1.11× load,
+the danger is overload-driven failure growth (metastable, with an assumed goodput curve) and layer multiplication; short backoff
+windows (2/4/8 s) do not break the loop in the run, long windows do but users wait minutes, and a retry token bucket bounds
+the count; retry only transient errors and respect Retry-After; the AWS SDK standard mode caps computed backoff at 20 s; small
+jitter helps, full jitter is a good default (the slotted model is an illustration, not Brooker's OCC simulation); idempotency keys need an in-flight lock, a parameter check, owner tokens and a lifetime (Stripe API v1); "delete is
+idempotent" breaks with id reuse; DLQ messages expire too (retention from the original enqueue time in SQS standard
+queues, reset in FIFO); retries must fit the deadline, and deadline propagation saves work only if callees honour cancellation.
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 62 (`sdg-codex-xp/jobs/fp12/LAB-REVIEW.md`, 12 findings) and then the
+levels and guide (`LEVELS-REVIEW.md`, 8 findings) before the first push; Claude fixed all of them: explicit timeline events and
+separate propagation/cancellation switches in ex2 (a new "deadline, no cancel" row keeps ~128 s of zombie work); configurable
+backoff windows (long windows recover, short ones do not in the run) and a real retry token bucket in ex0; seeded network
+variance in the jitter model, labelled as a slotted illustration (no-jitter 737 calls, 5,050 only with zero variance); snapshot
+params/responses and owner tokens with a running lease in the idempotency store; SQS standard vs FIFO DLQ rows with stated
+assumptions; Stripe API v1 scope; 409 retry nuance; "three total attempts per caller" for 27×; EBS attribution and Netflix
+citation; 11 mutation guards in the tests.
+
 ## Next
 
-Continue with numbered video 10, `t9jtxlu7k4k` (Caching); check the existing cache, eviction and stampede levels and
-labs 01 and 33 first. Videos 1–9 are built; six remain.
+Continue with numbered video 13, `cmiAEDVcGbE` (Microservices — Know When NOT to Use); check the existing decomposition
+levels, the Prime Video story and lab 16 first. Videos 1–12 are built; three remain.

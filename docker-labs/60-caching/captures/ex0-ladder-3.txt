@@ -1,0 +1,35 @@
+CPU: Intel(R) Core(TM) Ultra 7 255U — 3.26 GHz (/proc/cpuinfo), 1 cycle = 0.31 ns
+
+A. Pointer chasing: har hop ek random 64-byte line se agla pata padhta hai (CPU andaza nahi laga sakta).
+
+data ka size     ns / hop
+16 KB               1.3
+32 KB               1.2
+256 KB              3.5
+1 MB                4.7
+4 MB               32.0
+8 MB              115.2
+64 MB             143.2
+256 MB            156.6
+
+B. Spatial locality: same 3.2 crore ints (128 MB), ek baar seedhe kram mein, ek baar random kram mein.
+seedha kram: 0.90 ns / int     random kram: 10.82 ns / int     → 12× farq
+Seedhe kram mein ek 64-byte line 16 ints laati hai aur CPU agli lines pehle se mangwa leta hai (prefetch).
+
+C. Ladder, "1 cycle = 1 second" scale par (3.26 GHz). ASLI = is machine par naapa, MODEL = maana hua.
+
+                                                  asli samay     cycles          agar 1 cycle = 1 s
+ASLI   L1 (32 KB data)                                1.2 ns              4   4.0 second
+ASLI   L2 (1 MB data)                                 4.7 ns             15   15 second
+ASLI   L3 (4 MB data)                                32.0 ns            105   1.7 minute
+ASLI   RAM (256 MB data, TLB miss samet)            156.6 ns            511   8.5 minute
+ASLI   4 KB read, OS page cache se (RAM)            427.0 ns          1,394   23 minute
+ASLI   4 KB random read, O_DIRECT (WSL path)        102.1 µs       3,33,166   3.9 din
+ASLI   write + fsync (disk tak pakka)                 1.1 ms      36,86,783   1.4 mahine
+ASLI   TCP round trip, isi machine par (loopback)     7.6 µs         24,676   6.9 ghante
+MODEL  round trip doosre region tak (video: 150 ms)   150.0 ms   48,95,99,550   16 saal
+
+L1 se disk read tak 82,875×, fsync tak 9,17,086×, doosre region tak 12,17,87,682×.
+Note: L1 ki row mein JS loop ka kaam bhi shaamil hai; RAM ki row mein TLB miss (page table walk) bhi. WSL ki disk ek virtual disk hai.
+O_DIRECT row: 399 alag 4 KB blocks (400 reads, 256 MB file). Buffer ki alignment aur WSL host/disk ki caching jaanchi nahi gayi —
+  isliye row "is machine ka direct-I/O raasta" hai, pakka "physical SSD" nahi.

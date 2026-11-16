@@ -1,0 +1,22 @@
+A. MODEL: signups 10/sec, phir 60 s ke liye 1,000/sec (video ka "Reddit hug of death").
+   Sync: har request web thread ko 2 s pakadti hai (image, email, index sab andar). 100 threads.
+   Async: web thread sirf queue mein daalta hai; email worker 10/sec (video ka number).
+
+sync:  kshamata 50/sec → spike ki 60,000 mein se 3,000 serve, 57,000 ko error (95%)
+async: 60,000 mein se 60,000 ko turant "ho gaya" (queue mein); kaam baad mein.
+
+B. MODEL: spike ke baad backlog kab khatam? Normal traffic phir 10/sec. (seedha hisaab, 1 s ke kadam)
+
+worker kshamata   spike ke ant par backlog   sabse lamba intezaar   backlog khaali   7 din baad backlog
+10/sec                  59,400                   99 min          kabhi nahi       59,400
+12/sec                  59,280                   82 min          8.2 ghante            0
+20/sec                  58,800                   49 min              98 min            0
+50/sec                  57,000                   19 min              24 min            0
+
+→ Video: "email 10 second ki jagah 10 minute late". 10 minute ka intezaar tab jab spike sirf ~6 s chale.
+  60 s ke spike par intezaar ~99 minute. Aur worker 10/sec par (normal traffic jitna) backlog KABHI khatam nahi hota:
+  queue tabhi load ko "barabar" karti hai jab worker ki kshamata ausat traffic se zyada ho.
+
+C. Retention (arithmetic): worker 5 din band, 10 messages/sec. SQS default retention 4 din (max 14).
+   5 din mein 43,20,000 messages. Pehle din ke 8,64,000 worker lautne se pehle expire → gaye.
+   "Queue mein ek bhi message nahi khota" tabhi sach jab worker retention ke andar laut aaye.

@@ -1,0 +1,25 @@
+A. MODEL (1 s steps): signups 200/sec, phir 60 s ke liye 1,000/sec. Queue mein 10,000 messages ki jagah.
+   Workers 300/sec likhte hain; DB 400 writes/sec sambhalta hai (zyada = timeout, message wapas queue mein).
+   5 baar fail → DLQ. 600 s dekha. Kul 1,68,000 signups.
+
+tareeka                                              likhe gaye   "ho gaya" par khoye   user ko error/429   bekaar DB kaam   DLQ mein
+drop: queue bhari → "ho gaya" bolkar phenk do         1,35,500            32,300                 0               0         0
+block: queue bhari → web thread jagah ka intezaar     1,35,500                 0            32,300               0         0
+reject: queue bhari → turant 429 "baad mein"          1,35,500                 0            32,300               0         0
+reject + workers autoscale 1,000/sec tak              1,39,271                 0            25,394          57,402     3,135
+reject + workers sirf DB ki had (400/sec) tak         1,41,400                 0            26,400               0         0
+
+→ drop: user ne "ho gaya" dekha, data gaya — logs/metrics ke liye theek, signup ya paise ke liye nahi.
+→ block: 47 s tak queue bhari, har naya signup thread intezaar mein, phir timeout. Asli server mein same threads
+  doosre pages bhi chalate hain — async phir se sync ban gaya.
+→ reject: utne hi log mana, par har "ho gaya" wala signup pakka. User ko pata hai, baad mein dobara kar sakta hai.
+→ autoscale DB ki had ke paar: kaam KAM hua, DB par 57,402 bekaar koshishein, aur 3,135 theek messages DLQ mein.
+  Bottleneck queue se DB par chala gaya (video sahi). Ilaaj DLQ nahi — workers ko DB ki had par roko. (Kitne DLQ mein gaye,
+  retry ki had par tika hai: maxReceive 500 par autoscale aur DB-had wali rows barabar kaam karti hain.)
+  Model mein block aur reject ki ginti barabar maani gayi; intezaar karte threads ki deadline alag se simulate nahi ki.
+
+B. Poison message (aadarsh hisaab: retry turant, polling ka intezaar nahi): ordered (FIFO) group ka ek message har baar fail. Visibility 30 s.
+   Bina DLQ: group hamesha ke liye atka. maxReceiveCount 5 ke saath: ~150 s baad DLQ, baaki group chal pada —
+   par ab group ke baaki events us event ke bina aage badhe: FIFO ka kram toota. Rokna ya skip karna — faisla tumhara.
+→ DLQ = seemit retries ke baad message ko alag rakhna (quarantine) + alert + jaanch + redrive. Overload ki kshamata DLQ nahi
+  badhata. Wajah aksar asthaayi bhi hoti hai (DB band tha) — theek karke wapas bhejo.

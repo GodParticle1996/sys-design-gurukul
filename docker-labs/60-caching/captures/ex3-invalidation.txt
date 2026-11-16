@@ -1,0 +1,32 @@
+A. Script (ek hi race, haath se): DB = v1, cache khaali.
+   t=1 ms   reader R: cache miss → DB se v1 padha → GC pause
+   t=5 ms   writer W: DB = v2
+   t=6 ms   writer W: cache delete (abhi cache mein kuch nahi)
+   t=105 ms reader R jaaga: cache = v1  ← purana value, DB mein v2
+
+tareeka                        1 s        10 s       1 min      10 min  baad reader ko kya mila
+sirf delete (koi TTL nahi)   v1 ✗       v1 ✗       v1 ✗       v1 ✗      
+delete + TTL 30 s            v1 ✗       v1 ✗       v2 ✓       v2 ✓      
+delete + lease + TTL 30 s    v2 ✓       v2 ✓       v2 ✓       v2 ✓      
+
+→ Bina TTL: purana v1 tab tak jab tak koi agla write delete na kare — price roz badalta hai toh poora din.
+  TTL: purani value set hone ke 30 s baad mitti. Lease (Facebook memcache, NSDI 2013, saral model): miss par cache token
+  deta hai; delete token radd karta hai; purane token wala set thukra diya jaata hai.
+
+B. MODEL, 1 ghanta, ek hot key: 1,000 reads/sec, write har ~5 s (Poisson). DB read 2 ms, write 3 ms.
+   1% readers ko DB read ke baad 200 ms ka pause. "Lambi galti" = 5 ms se lamba stale window.
+   Har tareeke par same arrivals aur writes (alag random streams). Lease: token na mile toh reader 10 ms ruk kar dobara poochta hai.
+
+tareeka                       delete message khota   stale cache hits      lambi galtiyan   sabse lambi
+sirf delete                   kabhi nahi               1,334 (0.037%)          1         1.1 s
+sirf delete                   1%                      50,807 (1.411%)          7         27.0 s
+delete + TTL 30 s             kabhi nahi               1,683 (0.047%)          1         1.5 s
+delete + TTL 30 s             1%                      46,121 (1.281%)          8         21.2 s
+delete + lease + TTL 30 s     kabhi nahi                 150 (0.004%)          0         0.0 s
+delete + lease + TTL 30 s     1%                      43,404 (1.205%)          6         21.2 s
+
+→ Har write ke baad DB commit se delete tak (0.2 ms) thode stale reads hamesha — woh "lambi galti" mein nahi gine.
+→ TTL har entry ki umar hai, set hone ke waqt se — DB badalne ke waqt se nahi. Dheemi fill purani value der se set kare
+  toh galti TTL se lambi bhi ho sakti hai. TTL race nahi rokta; expiry par naye miss = race ke naye mauke.
+→ Lease race rokta hai; khoya hua delete lease bhi nahi rok sakta — uske liye TTL (ya change-log se invalidation, lab 33).
+→ Model ek key ka hai; bahut saari keys par chhote chance jud kar asli galtiyan bante hain.

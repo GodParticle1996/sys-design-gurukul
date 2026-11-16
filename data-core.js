@@ -44,7 +44,7 @@ const RANKS = [
   { xp: 41200, name: 'Vitaran Vidvaan',      icon: '🕸️' },
   { xp: 45500, name: 'Pranali Paramguru',    icon: '🌟' },
   { xp: 52000, name: 'Production Prahari',   icon: '🏭' },
-  { xp: 60500, name: 'System Samrat',        icon: '🔱' },
+  { xp: 62000, name: 'System Samrat',        icon: '🔱' },
 ];
 
 SD.tracks = [

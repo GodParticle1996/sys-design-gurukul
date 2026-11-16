@@ -1,0 +1,15 @@
+npm notice run lab-62-second-attempt@1.0.0 test
+npm notice run node --test test/*.test.js
+✔ metastable: short backoff and immediate retries stay stuck; long backoff and a token bucket recover; accounting holds (8.288598ms)
+✔ jitter: with zero network variance no-jitter needs N(N+1)/2 calls; jittered strategies need far fewer calls and less time (8.069964ms)
+✔ deadline: retries without cancellation keep slow work running after the user left; propagation alone is not enough (0.497782ms)
+✔ idempotency: key + in-flight lock + parameter check; snapshots; ownership tokens; expiry; delete; add vs set (1.314823ms)
+✔ DLQ retention (standard: from first send; FIFO: reset); availability = MTBF / (MTBF + MTTR) (0.784559ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 58.6445

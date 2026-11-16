@@ -68,6 +68,15 @@
     crdt11: { title: 'Shapiro et al. — Conflict-free Replicated Data Types (2011)', url: 'https://asc.di.fct.unl.pt/~nmp/pubs/tr-inria-2011.pdf' },
     lamport01: { title: 'Lamport — Paxos Made Simple (2001)', url: 'https://lamport.azurewebsites.net/pubs/paxos-simple.pdf' },
     etcdtune: { title: 'etcd — tuning (heartbeat and election timeout)', url: 'https://etcd.io/docs/v3.5/tuning/' },
+    breslau99: { title: 'Breslau et al. — Web Caching and Zipf-like Distributions (INFOCOM 1999)', url: 'https://pages.cs.wisc.edu/~cao/papers/zipf-implications.html' },
+    memcache13: { title: 'Nishtala et al. — Scaling Memcache at Facebook (NSDI 2013), leases', url: 'https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala' },
+    linuxvm: { title: 'Linux kernel — /proc/sys/vm (dirty_expire_centisecs, dirty_writeback_centisecs)', url: 'https://docs.kernel.org/admin-guide/sysctl/vm.html' },
+    karlton: { title: 'Martin Fowler — TwoHardThings (Phil Karlton quote)', url: 'https://martinfowler.com/bliki/TwoHardThings.html' },
+    sqsvis: { title: 'Amazon SQS — visibility timeout and at-least-once delivery', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html' },
+    outboxpat: { title: 'Chris Richardson — Pattern: Transactional outbox', url: 'https://microservices.io/patterns/data/transactional-outbox.html' },
+    brooker15: { title: 'Marc Brooker — Exponential Backoff And Jitter (AWS Architecture Blog, 2015)', url: 'https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/' },
+    awssdkretry: { title: 'AWS SDKs and Tools — retry behavior (standard mode, retry quota)', url: 'https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html' },
+    metastable21: { title: 'Bronson et al. — Metastable Failures in Distributed Systems (HotOS 2021)', url: 'https://sigops.org/s/conferences/hotos/2021/papers/hotos21-s11-bronson.pdf' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -266,6 +275,69 @@
     ],
     followup: 'Tumhare 3-node etcd mein ek node baar-baar GC mein 2 s atakta hai aur leader badalta rehta hai. Kya naapoge aur kya badloge (timeouts, node, N)?',
     sources: ['raft', 'lamport01', 'etcdtune'],
+  });
+  add('cache-fp', 'fp-cache-kyun fp-cache-kaise fp-cache-code fp-cache-kab', {
+    title: 'Caching: seedhi naapo, skew naapo, aur DB ki dhaal banao',
+    misaal: 'Hisaab karte waqt jo kitaabein baar-baar chahiye, mez par rakhte ho; library doosre shehar mein hai. Par mez par rakhi kitaab purani ho sakti hai, aur mez gir jaaye toh sab log ek saath library daudte hain.',
+    asli: 'Cache dheemi jagah ka zaroori data tez jagah par rakhta hai. Teen sawaal har cache ke saath: kitne misses DB tak jaayenge, purana data kab tak chalega, aur cache gire toh DB kaise bachega.',
+    points: [
+      '<b>Seedhi:</b> lab 60 ex0 (asli) — L1 ~1.3 ns, RAM ~160 ns, 4 KB random read (O_DIRECT, WSL) ~110 µs, doosra region 150 ms. Video ka "1 cycle = 1 s" scale apne andar mel nahi khaata (L1 0.5 s = aadha cycle).',
+      '<b>Skew:</b> ex1 (model) — 90/10 kanoon nahi: Zipf 0.99 par top 10% = 80%, 0.6 par 39%. 95% se 99% hit rate = DB ka bojh 5 guna kam.',
+      '<b>Likhna:</b> ex2 (asli SIGKILL, sirf process crash) — write-back 1 s flush par ~60 hazaar acked writes gayi; group commit ~1.7–1.9 lakh/s par 0. Page cache process crash sahta hai, bijli nahi.',
+      '<b>Purana data aur herd:</b> ex3 — delete race TTL ke bina agla write tak; TTL entry ki umar hai, set hone se; lease race rokta hai, khoya delete nahi. ex4 — limiter se 0 DB crash, 4 s; Bloom na-maujood ids ka ~99% rokta hai, har "shayad" DB se jaancho.',
+    ],
+    use: 'Read-heavy data jismein skew ho (product page, profile, feed), mehngi computed values, aur doosre region ka data (CDN).',
+    avoid: 'Write-back paise ya order ke data par, bina TTL ke cache, bina limiter ke DB ke saamne akela cache, aur dheemi query ko index ki jagah cache se chhupana.',
+    mistake: '"Write-through hai toh kabhi stale nahi" maan lena. DB write fail, do writers ki race, aur cache bypass karne wala job — teeno stale chhodte hain. TTL ya change-log se invalidation chahiye (lab 60 ex3, lab 33).',
+    compare: [
+      { choice: 'Cache-aside + TTL', when: 'Zyadatar read-heavy data; thoda purana chalega', tradeoff: 'Delete race aur khoye delete; TTL har entry ki umar baandhta hai, freshness ki guarantee nahi' },
+      { choice: 'Write-through (cache se DB tak)', when: 'Write ke baad cache mein naya value chahiye', tradeoff: 'Har write dheemi; DB fail, writers ki race aur bypass karne wale jobs phir bhi stale chhodte' },
+      { choice: 'Write-back', when: 'Counters, views, analytics — kuch second ka loss chalega', tradeoff: 'Flush interval tak ki acked writes crash mein gayi' },
+    ],
+    followup: 'Tumhari product API: 20,000 reads/sec, Redis 96% hit, DB 1,500 reads/sec sambhalta hai. Redis ka ek node gira toh kya hoga? Kya naapoge aur kya lagaoge (limiter, coalescing, warming)?',
+    sources: ['breslau99', 'memcache13', 'cache', 'linuxvm', 'karlton'],
+  });
+  add('queue-fp', 'fp-async-kyun fp-async-kaise fp-async-code fp-async-kab', {
+    title: 'Async: queue spike ko samay mein phailaati hai — had, duplicates aur kram ke saath',
+    misaal: 'Phone call mein dono ko ek saath free hona padta hai; message bhejo toh tum apna kaam karte raho. Par dost din mein 10 hi message padh sake aur 1,000 aa jaayein, toh jawab ghanton baad. Aur dost galti se ek message do baar padh le, toh kaam do baar na ho — is baat ka intezaam tumhe karna hai.',
+    asli: 'Queue user ko kaam ke samay se alag karti hai aur spike ko backlog bana deti hai. Backlog sirf worker ki khaali kshamata se ghatta hai. Delivery at-least-once hai, kram sirf partition ke andar, aur har system ki ek had hai jiske paar ka niyam pehle se tay karna padta hai.',
+    points: [
+      '<b>Backlog:</b> lab 61 ex0 (model) — 60 s ke spike par email ~99 min late; worker = normal traffic ho toh backlog kabhi khatam nahi.',
+      '<b>Queue vs log:</b> ex1 (asli code) — queue mein delete se pehle crash ya lamba kaam = duplicate; log mein har group poora padhta hai, replay retention tak (Kafka default 7 din).',
+      '<b>Kram aur disk:</b> ex3 — key se ek user ek partition mein (kram tab, jab partition serially chale); 6 → 8 partitions par 75% keys hilti hain. ex2 (asli SSD, overwrite) — seedha vs random lagbhag barabar, 1 MB batch 7–17× tez.',
+      '<b>Had aur crash:</b> ex4 — DB ki had ke paar autoscale kaam kam karta hai aur theek messages DLQ mein bhejta hai. ex5 — check → charge → record mein ₹200; outbox kuch nahi khota.',
+    ],
+    use: 'Lambe side effects (image, PDF, email), bahar ki API jinka result abhi nahi chahiye, bahut zyada events (logs, analytics), aur alag teams ki services jo apni raftaar se chalein.',
+    avoid: 'User ko jo result abhi chahiye (payment ka jawab) ko async karna, bina idempotency ke consumer, bina had ke autoscale, DLQ ko overload ka ilaaj maanna (DLQ = quarantine + redrive), aur default retention par replay ka bharosa.',
+    mistake: '"Queue lagaa di, ab sab scale karega" maan lena. Worker ki kshamata ausat traffic se kam ho toh backlog badhta hi rahega; DB ki had ke paar workers kaam ghataate hain (lab 61 ex0, ex4).',
+    compare: [
+      { choice: 'Sync call', when: 'Result abhi chahiye, kaam 100–200 ms mein', tradeoff: 'Seedha aur debug aasaan; dheemi dependency user ko rokti hai' },
+      { choice: 'Task queue (SQS, RabbitMQ)', when: 'Ek kaam, ek worker: image, email, PDF', tradeoff: 'At-least-once; replay nahi; fan-out ke liye alag queues' },
+      { choice: 'Log (Kafka, Kinesis)', when: 'Kai consumers, kram (key se), replay', tradeoff: 'Partitions aur retention pehle se sochne padte; group mein consumers ≤ partitions; naya group default latest se' },
+    ],
+    followup: 'Tumhari food app mein order placed event: kitchen, rider assignment, SMS aur analytics. Queue ya log? Key kya hogi, retention kitni, aur kitchen service 10 minute band rahi toh kya hoga?',
+    sources: ['kafka', 'kafkaintro', 'sqsvis', 'sqsdlq', 'idem', 'outboxpat'],
+  });
+  add('retry-fp', 'fp-retry-kyun fp-retry-kaise fp-retry-code fp-retry-kab', {
+    title: 'Retries: doosri koshish madad bhi, bojh bhi — had, jitter, key aur deadline ke saath',
+    misaal: 'Call center ki line bhari ho aur kate hue log turant dobara phone karein, toh bheed khatam hone ke baad bhi line kabhi khaali nahi hoti. Har kisi ko alag samay par bulaao, dobara phone ki ginti baandho, aur parchi par number likho taaki kaam do baar na ho.',
+    asli: 'Retry asthaayi galti ko chhupata hai, par overload mein bojh badhata hai aur trigger ke baad bhi loop chala sakta hai. Retries ki ginti baandho, jitter se phailao, sirf idempotent kaam retry karo, aur deadline ke andar hi.',
+    points: [
+      '<b>Metastable:</b> lab 62 ex0 (model) — 10 s ka spike, phir bhi turant retry ke saath 800/sec par bojh 2,521/sec atka; chhota backoff (2/4/8 s) bhi 120 s mein nahi nikla; retry token bucket (~10%) turant wapas.',
+      '<b>Jitter:</b> ex1 (saral model) — 100 clients: bina jitter 737 calls / 8.1 s, full jitter 350 / 0.35 s, decorrelated 326 / 0.30 s. Lab ka chhota jitter (±20%, video ke "thoda random" ka roop) 391.',
+      '<b>Deadline:</b> ex2 — timeout C ko nahi rokta: 9 C calls × 20 s, ~128 s bekaar kaam user ke jaane ke baad. Deadline aage + C cancel maane tab 0; sirf deadline bhejna kaafi nahi.',
+      '<b>Idempotency aur DLQ:</b> ex3 — key + in-flight lock (409) + parameter check + owner token; key ki umar seemit (Stripe v1: 24 h ke baad). ex4 — standard queue mein DLQ retention pehle bheje samay se.',
+    ],
+    use: 'Asthaayi errors (timeout, 503, 429 Retry-After) par, idempotent operations par, ek hi layer par, jitter aur cap ke saath, aur user ki deadline ke andar.',
+    avoid: 'Har error par retry (400/404 bhi), har layer par retry (teen callers × 3 koshish = 27×), bina jitter backoff, bina had retries overload mein, bina key ke payment retry, aur bina retention/alert ki DLQ.',
+    mistake: '"Backoff laga diya, ab retry safe hai" maan lena. Chhota backoff retries ko thoda baad bhejta hai par loop nahi todta (lab 62 ex0); retries ki ginti par had (token bucket), sirf asthaayi errors par retry, aur deadline chahiye.',
+    compare: [
+      { choice: 'Turant retry', when: 'Shayad hi kabhi — ek bahut kam-bojh, kabhi-kabhi ki galti', tradeoff: 'Overload mein bojh guna; metastable loop' },
+      { choice: 'Backoff + full jitter + cap', when: 'Default har client retry ke liye', tradeoff: 'Bheed todta hai; ginti nahi baandhta — bahut lamba backoff user ko minuton rokta' },
+      { choice: 'Retry token bucket + circuit breaker', when: 'Service par overload ya band hone ka khatra', tradeoff: 'Kuch requests bina retry fail; system jaldi wapas' },
+    ],
+    followup: 'Tumhari checkout service payment gateway ko kul 3 koshish (pehli request samet) ke saath bulaati hai, gateway bank ko bhi kul 3 ke saath. Bank 2 minute dheema hua. Bank par kitni calls, kaunsi layer retry kare, aur key aur deadline kahan?',
+    sources: ['brooker15', 'retry', 'awssdkretry', 'idem', 'sqsdlq', 'metastable21'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

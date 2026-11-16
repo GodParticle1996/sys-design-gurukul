@@ -1,0 +1,13 @@
+ASLI: is machine ki disk par 64 MiB ki pehle se bani file, temp folder mein. Same bytes, alag kram aur size. Har row ke ant mein ek fsync.
+   File pehle se poori likhi hai, isliye ye overwrite hai — asli Kafka segment ka badhna (append) ya broker nahi naapa.
+
+tareeka                                                     MiB/sec   ek write (ausat, fsync samet)
+seedha overwrite, 4 KB writes, O_DIRECT (page cache nahi)       48   82.2 µs
+random jagah, 4 KB writes, O_DIRECT                             44   89.6 µs
+seedha overwrite, 1 MB writes, O_DIRECT (batching)             823   1.2 ms
+seedha overwrite, 4 KB writes, page cache + ek fsync           621   6.3 µs
+random jagah, 4 KB writes, page cache + ek fsync               815   4.8 µs
+
+→ O_DIRECT, 4 KB: seedha ÷ random = 1.1× — is SSD par lagbhag barabar. 1 MB writes 4 KB se 17× tez.
+→ SSD par random ki saza spinning disk (head ka seek, ~5–10 ms) se bahut kam hai; batching (bade writes) ka asar bada.
+  Page cache rows: OS writes ko RAM mein jodta hai aur fsync par disk ko bade tukdon mein bhejta hai.
