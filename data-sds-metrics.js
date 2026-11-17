@@ -18,15 +18,15 @@
         {title:'Ek request ka wait',say:'D t=9 ms par aayi. Worker D ko t=30 par start karta hai; finish t=40. Queue wait 21 ms, service 10 ms, total latency 31 ms.',ask:q('D ki arrival-to-completion latency?', ['31 ms','10 ms','21 ms'],0,
           ['40 minus 9 = 31 ms; wait aur service dono included.','10 ms sirf service duration hai.','21 ms queue wait hai; work duration add karo.'])},
         {title:'Different denominator',say:'Observation window t=0 se t=100 ms kar do aur koi nayi completion na ho. Ab rate 6 / 0.100 = 60/s. Pehle six requests ki individual latencies unchanged hain.'},
-        {title:'Errors ko chhupao mat',say:'Alag ten-second example: 100 responses, jinmein 20 errors. Total response rate 10/s; successful completion rate 8/s. Successful aur failed latency distributions separately report karna useful hai.',ask:q('10 responses/s se kya prove nahi hua?', ['Server ne responses return kiye','Specified interval 10 seconds tha','10 successful business operations/s hue'],2,
+        {title:'Errors ko chhupao mat',say:'Alag ten-second example: 100 responses, jinmein 20 errors. Total response rate 10/s; successful completion rate 8/s. Successful aur failed latency distributions separately report karna useful hai.',ask:q('10 responses/s se kya prove nahi hua?', ['Server ne responses return kiye','Specified interval 10 seconds tha',"10 successful business operations/s"],2,
           ['Response counter wahi count karta hai.','Example interval explicitly ten seconds hai.','20 responses errors the. Fast error response ko business success mat count karo.'])}
       ],lesson:'Counter, boundary, unit aur time window likho. Service time ko total latency mat samjho.'},
       {type:'quiz',title:'Interview · rate badhao ya delay ghatao?',questions:[
-        q('Intake API jobs jaldi accept karti hai, par worker backlog badh raha hai. Sahi next measurement?', ['Sirf intake response latency','Sirf gateway server count','Completed jobs/s, arrival rate aur backlog age'],2,
+        q('Intake API jobs jaldi accept karti hai, par worker backlog badh raha hai. Sahi next measurement?', ["Sirf intake API ki response latency dekho",'Sirf gateway server count',"Completions/s, arrivals aur backlog age"],2,
           ['Fast acceptance completion prove nahi karti.','Server count processing progress ka metric nahi.','Input aur completed output compare karo; waiting jobs ki age user impact batati hai.']),
-        q('Throughput high hai. Kya har request fast hai?', ['Haan; throughput latency ka reciprocal hai','Nahi; latency distribution aur workload boundary separately dekho','Haan; simultaneous work queue wait remove karta hai'],1,
+        q('Throughput high hai. Kya har request fast hai?', ['Haan; throughput latency ka reciprocal hai',"Nahi; latency distribution aur workload alag dekho",'Haan; simultaneous work queue wait remove karta hai'],1,
           ['Concurrent/queued systems mein aisa universal reciprocal relation nahi.','Lots of completions aur slow individual requests coexist kar sakti hain.','Parallelism queue wait automatically eliminate nahi karta.']),
-        q('Ping 5 ms hai, checkout confirmation 700 ms. First useful step?', ['Checkout ke measured phases dekho: queue, work, dependencies, client render','Ping ko checkout latency ka final proof maano','Har service ka server count double karo'],0,
+        q('Ping 5 ms hai, checkout confirmation 700 ms. First useful step?', ["Checkout ke queue, work, dependency aur render times dekho",'Ping ko checkout latency ka final proof maano',"Har service ke servers double karke checkout speed badhao"],0,
           ['Ping application path ke saare phases measure nahi karta.','ICMP probe aur checkout different operations hain.','Bottleneck identify kiye bina scaling ka effect uncertain hai.'])
       ]}
     ],

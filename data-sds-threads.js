@@ -26,13 +26,13 @@
             ['Check ka scope shared integer increment hai.','Do accounts ya multiple fields ka invariant alag coordination maangta hai.','Koi timing benchmark is experiment mein nahi hua.'])}
         ],lesson:'Sharing API explicit rakho. Atomic load + atomic store ek atomic read-modify-write nahi.'},
       {type:'quiz',title:'Thread ya process: requirement pe decision',questions:[
-        q('Node API mein CPU-heavy JS parsing event loop block kar rahi hai. Useful candidate?', ['Har parse ko Promise.resolve mein wrap karo','Bounded worker pool evaluate karo aur data-copy overhead measure karo','Sirf DB pool size badhao'],1,
+        q('Node API mein CPU-heavy JS parsing event loop block kar rahi hai. Useful candidate?', ['Har parse ko Promise.resolve mein wrap karo',"Bounded worker pool aur copy cost measure karo",'Sirf DB pool size badhao'],1,
           ['Same-thread CPU work ko Promise parallel CPU execution nahi deta.','Work another JS execution thread par move ho sakta hai; benefit measure karo.','Measured bottleneck JavaScript CPU work hai.']),
-        q('Video kehta hai threads I/O, processes CPU. General statement ka correct limit?', ['Har language/runtime mein rule same hai','More processes always more hardware cores dete hain','GIL-enabled CPython ka case qualify karo; Node/Java threads CPU work parallel kar sakte hain'],2,
+        q('Video kehta hai threads I/O, processes CPU. General statement ka correct limit?', ["Har runtime mein threads sirf I/O ke liye suitable choice hain","More processes se hardware cores bhi badhte hain","GIL-on CPython alag; Node/Java threads CPU parallel kar sakte hain"],2,
           ['Runtime restrictions differ; work type alone final choice nahi.','Hardware allocation aur runnable worker count separate hain.','Runtime, available cores, sharing and overhead decide the fit.']),
-        q('Child process crash hui; parent alive hai. Kya task successfully complete hua?', ['Abhi unknown; job state, partial effects aur recovery verify karo','Haan; parent survival task completion hai','Haan; separate memory pending effects rollback karti hai'],0,
+        q('Child process crash hui; parent alive hai. Kya task successfully complete hua?', ["Unknown; job state aur partial effects verify karo",'Haan; parent survival task completion hai','Haan; separate memory pending effects rollback karti hai'],0,
           ['Process liveness aur business outcome separate checks hain.','Alive parent failed child ka unfinished work automatically complete nahi karta.','External/shared effects automatic rollback nahi hote.']),
-        q('Do separate processes same DB row update karte hain. Race impossible?', ['Haan; separate address spaces enough hain','Nahi; shared database operation ka concurrency contract chahiye','Haan; IPC use na ho toh shared resource nahi hota'],1,
+        q('Do separate processes same DB row update karte hain. Race impossible?', ['Haan; separate address spaces enough hain',"Nahi; shared DB par concurrency control chahiye",'Haan; IPC use na ho toh shared resource nahi hota'],1,
           ['Heap separation database conflict eliminate nahi karti.','Transaction, conditional update ya suitable lock shared resource par apply karo.','Database dono processes ka shared resource hai.'])
       ]}
     ],

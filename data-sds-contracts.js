@@ -38,17 +38,17 @@
           step('User ko 404 mila','Redirect query mein abc absent hai. Yeh observation Link DB ki hai; diagram mein koi worker write nahi hui.',{read:'404 — not found'}),
           step('Worker ab commit karta hai','Worker mapping aur completion state save karta hai. Kaam pehle accepted tha; ab complete hua.',{job:'Done',mapping:'abc → menu'},'jobs','db','commit mapping'),
           step('Ab redirect chalta hai','Same redirect read ab destination paata hai. Baad mein fix hona pehle diye promise ko sahi nahi banata.',{read:'302 — destination'},null,null,null,
-            q('Bug ka seedha repair kya ho sakta hai?',['Created se pehle commit; ya pending contract do','Client ko har 404 par cache clear karwao','Queue ko rename karke database bolo'],0,
+            q('Bug ka seedha repair kya ho sakta hai?',["Created se pehle commit; ya pending bolo",'Client ko har 404 par cache clear karwao','Queue ko rename karke database bolo'],0,
               ['Synchronous completion aur explicit asynchronous pending dono valid contracts ho sakte hain.','Client cache clear karne se missing database row nahi banti.','Component ka naam badalne se data visibility nahi badalti.']))
         ],'Fast response tab useful hai jab response ka promise sach ho.'),
         {type:'quiz',title:'Chat mein kaunsi state prove hui?',instructions:'Har question mein sirf observed boundary tak conclusion nikalo.',questions:[
           q('Message database transaction commit hui. Recipient ka phone offline hai. Kya keh sakte ho?',['Recipient ne message padh liya','Recipient device ne message receive kiya','Server ne message save kar liya'],2,
             ['Read receipt ka evidence nahi hai.','Offline device tak delivery prove nahi hui.','Commit server-side save ka evidence hai; device delivery alag step hai.']),
-          q('Push provider ne request accept ki. Recipient app se acknowledgement nahi aaya. State?', ['Notification attempt accepted; device receipt unknown','Device par message delivered; read unknown','Device ne read kar liya; receipt pending'],0,
+          q('Push provider ne request accept ki. Recipient app se acknowledgement nahi aaya. State?', ["Attempt accepted; device receipt unknown",'Device par message delivered; read unknown','Device ne read kar liya; receipt pending'],0,
             ['Provider acceptance aur recipient device acknowledgement alag observations hain.','Provider acceptance akela device delivery prove nahi karta.','Read state ke liye recipient-side evidence chahiye.'])
         ]}
       ],
-      interview:{title:'Interview · promise pehle',questions:[q('Shortener diagram banane se pehle kaunsa sawaal success timing decide karega?', ['Logo ka colour kya hai?','Created ke turant baad link usable hona chahiye?','Queue box left mein hoga ya right?'],1,
+      interview:{title:'Interview · promise pehle',questions:[q('Shortener diagram banane se pehle kaunsa sawaal success timing decide karega?', ["Logo ka colour user ko kab dikhana hai?",'Created ke turant baad link usable hona chahiye?',"Queue box diagram mein kis taraf rakhna hai?"],1,
         ['Brand colour write/read consistency decide nahi karta.','Read-after-create requirement write completion aur read routing dono ko affect karti hai.','Drawing position implementation guarantee nahi hai.'])]},
       success:['Job receipt ko completed result se alag explain kar sakte ho.'],cards:[{front:'Accepted, committed, readable?',back:'Accepted: work receive hua. Committed: transaction complete. Readable: chosen reader ko result milta hai. Har boundary alag verify karo.'}]
     },
@@ -66,20 +66,20 @@
           step('Mapping commit','Database mapping save karta hai. Failure hoti toh created response nahi bhejte.',{mapping:'abc → menu'},'client','db','commit mapping'),
           step('Created response','Successful commit ke baad 201 aur short-link location milte hain.',{response:'201 Created'},'db','client','201 Created'),
           step('Immediate redirect','Primary read mapping paata hai. Replica ya cache add karoge toh wahi guarantee dobara test karo.',{read:'302 — destination'},null,null,null,
-            q('Analytics service slow hai. Link already committed hai. Kya zaroori hai?',['Har redirect analytics ka wait kare','Har create ko pending bana do','Required analytics intent save karo; delivery retry alag rakho'],2,
+            q('Analytics service slow hai. Link already committed hai. Kya zaroori hai?',["Har redirect ko analytics complete hone tak roko",'Har create ko pending bana do',"Analytics intent save karo; delivery alag retry karo"],2,
               ['Analytics agar optional side work hai toh redirect ko rokna unnecessary dependency hai.','Analytics slow hone se already usable link pending nahi ban jaata.','Business row aur event intent ek local transaction mein save kar sakte ho; external delivery alag retry hoti hai.']))
         ],'Commit-before-response ke saath actual read path bhi verify karo.'),
         walk('Option B · pending se done tak','Client tab tak result ready assume nahi karta jab tak job completion na dikhe.',nodes,[
           step('Job durably save hui','Fresh run mein only pending job save hui. Link DB abhi empty hai.',{response:'Waiting',job:'Pending',mapping:'Absent',read:'Not ready'},'client','jobs','save job'),
           step('202 aur status location','Client ko /jobs/abc diya. UI processing dikhati hai; usable short link ka promise abhi nahi.',{response:'202 Accepted'},'jobs','client','202 + status'),
           step('Worker ki retryable failure','Worker transaction fail hui. Job pending rehti hai. Mapping aur done state commit nahi hoti.',{job:'Pending — retry',mapping:'Absent'},null,null,null,
-            q('Worker fail hua. Client ko done bolna safe hai?', ['Haan, kyunki 202 pehle mil gaya','Nahi; completed result abhi absent hai','Haan, kyunki job ID unique hai'],1,
+            q('Worker fail hua. Client ko done bolna safe hai?', ['Haan, kyunki 202 pehle mil gaya',"Nahi; completed result absent hai",'Haan, kyunki job ID unique hai'],1,
               ['202 future success ka proof nahi hai.','Pending aur failed result ko completed se alag rakhna contract ka part hai.','Unique identity work completion prove nahi karti.'])),
           step('Retry successful','Worker mapping aur job done ek transaction mein save karta hai.',{job:'Done',mapping:'abc → menu'},'jobs','db','commit result'),
           step('Client completion dekhta hai','Status done ke baad client short link use karta hai. Is primary-only model mein redirect 302 deta hai.',{response:'Job status: done',read:'302 — destination'})
         ],'Async workflow mein pending, success aur failure user ko clearly dikhne chahiye.')
       ],
-      interview:{title:'Interview · stale read diagnose karo',questions:[q('Primary par abc row hai. Sirf replica-backed redirect 404 deta hai. Agla check?', ['Response label ko 202 kar do','Replica applied position aur read routing inspect karo','ID encoding Base62 se Base64 kar do'],1,
+      interview:{title:'Interview · stale read diagnose karo',questions:[q('Primary par abc row hai. Sirf replica-backed redirect 404 deta hai. Agla check?', ['Response label ko 202 kar do',"Replica position aur read route dekho",'ID encoding Base62 se Base64 kar do'],1,
         ['Label change actual stale reader ka reason nahi samjhaata.','Primary/replica difference replication lag ya routing ko directly investigate karne ka evidence hai.','Encoding badalne se existing row replica par jaldi nahi pahunchti.'])]},
       success:['Do valid completion contracts aur unka client behavior explain kar sakte ho.'],cards:[{front:'201 ke baad bhi 404 kyun?',back:'Primary commit ke baad lagging replica ya stale negative cache read ho sakta hai. Creation aur actual redirect path ko saath test karo.'}]
     },
@@ -108,7 +108,7 @@
             {title:'One local commit',say:'Link mapping aur created:abc intent application DB mein commit hue. Analytics abhi update nahi hui.',vars:{intent:'Unsent',seen:'Absent',count:'0'}},
             {title:'Consumer commit',say:'Consumer created:abc ID aur counter update apni transaction mein save karta hai.',vars:{seen:'created:abc',count:'1'}},
             {title:'Sender abruptly exits',say:'Sender ne sent flag abhi save nahi kiya. Restart par same intent unsent dikhega.',vars:{intent:'Still unsent'},
-              ask:q('Sender ab retry karega. Delivery exactly once hui maan sakte ho?', ['Haan, database transaction use hui thi','Haan, consumer ne count badha diya','Nahi; acknowledgement gap duplicate la sakta hai'],2,
+              ask:q('Sender ab retry karega. Delivery exactly once hui maan sakte ho?', ['Haan, database transaction use hui thi','Haan, consumer ne count badha diya',"Nahi; ACK gap se duplicate aa sakta hai"],2,
                 ['Local transaction dono databases aur delivery ko ek atomic operation nahi banati.','Consumer commit ke baare mein sender ko durable acknowledgement abhi nahi hai.','Retry same event ID dubara deliver kar sakti hai.'])},
             {title:'Same event ID dubara aayi',say:'Consumer seen ID pehchaanta hai. Counter 1 hi rehta hai. Seen ID aur counter ek transaction mein hain.',vars:{count:'1 — unchanged'}},
             {title:'Sender progress save karta hai',say:'Successful retry ke baad sender intent sent mark karta hai. Next relay pass mein pending intent nahi.',vars:{intent:'Sent'},
@@ -116,7 +116,7 @@
                 ['Mark-seen-before-effect par effect miss ho sakta hai; effect-before-mark par duplicate apply ho sakti hai.','ID identity deta hai; separate writes ko atomic nahi banata.','Sender state consumer ki local effect transaction replace nahi karti.'])}
           ],lesson:'Outbox lost intent ka gap address karta hai. Consumer idempotency duplicate effect ka gap address karti hai.'}
       ],
-      interview:{title:'Debugging · proof ko naam do',questions:[q('Crash test mein reopened DB par mapping absent, job pending aur outbox empty hai. Kya prove hua?', ['External broker ne message exactly once deliver kiya','Us process-exit point par uncommitted transaction recover hui','Har hardware power failure safe hai'],1,
+      interview:{title:'Debugging · proof ko naam do',questions:[q('Crash test mein reopened DB par mapping absent, job pending aur outbox empty hai. Kya prove hua?', ['External broker ne message exactly once deliver kiya',"Us exit point par uncommitted work recover hua",'Har hardware power failure safe hai'],1,
         ['Test mein external broker nahi hai.','Test observed transaction boundary ko verify karta hai.','Process exit storage hardware power loss ka same failure nahi hai.'])]},
       success:['Expected output, failure point aur test boundary explain kar sakte ho.'],cards:[{front:'Outbox ke baad duplicates kyun?',back:'Consumer apply kar sakta hai aur sender sent flag se pehle fail ho sakta hai. Stable event ID aur atomic consumer deduplication chahiye.'}]
     },
@@ -131,24 +131,24 @@
       ],
       stages:[
         {type:'quiz',title:'Requirement se design choose karo',instructions:'Har choice ke saath failure mode aur missing evidence dekho.',questions:[
-          q('Small link write measured latency budget mein fit hai. User immediately share karega. Simple first design?', ['Queue first; created response turant','Commit mapping; ensure redirect read sees it','Encoding worker complete hone tak wait'],1,
+          q('Small link write measured latency budget mein fit hai. User immediately share karega. Simple first design?', ['Queue first; created response turant',"Mapping commit karo; redirect visible rakho",'Encoding worker complete hone tak wait'],1,
             ['Async acceptance possible hai, lekin usable-created promise ke liye completion boundary solve karni padegi.','Required result chhota aur timely hai. Queue mandatory nahi.','URL mapping ke liye video encoding worker irrelevant dependency hai.']),
-          q('Multi-GB video background encoding mein bhejna hai. Queue job ka useful payload?', ['Full movie har retry message mein inline','Mutable filename alone, version ke bina','Immutable object reference aur operation metadata'],2,
+          q('Multi-GB video background encoding mein bhejna hai. Queue job ka useful payload?', ['Full movie har retry message mein inline','Mutable filename alone, version ke bina',"Immutable object reference aur job metadata"],2,
             ['Large bytes har retry mein duplicate transfer aur broker limits ka issue bana sakti hain.','Filename overwrite ho sakta hai; worker unintended bytes process kar sakta hai.','Stable identity se worker intended object fetch aur verify kar sakta hai.']),
-          q('File cache hit hai. User ki permission revoke ho chuki hai. Bytes bhejne se pehle?', ['Current access policy enforce karo','Cache hit ko old permission ka proof maano','Pehle bytes bhejo; metadata baad mein check karo'],0,
+          q('File cache hit hai. User ki permission revoke ho chuki hai. Bytes bhejne se pehle?', ["Bytes se pehle current access policy check karo",'Cache hit ko old permission ka proof maano','Pehle bytes bhejo; metadata baad mein check karo'],0,
             ['Object availability aur authorization alag checks hain. Required revocation freshness enforce karo.','Cached bytes user ka current right prove nahi karti.','Sensitive bytes bhejne ke baad permission reject karna exposure undo nahi karta.']),
-          q('Database 10 minutes down tha. Queue oldest-job age badh rahi hai. Recovery ke baad kya measure karo?', ['Sirf database process running hai ya nahi','Arrival rate, drain rate, backlog age aur errors','Sirf latest queue message ka size'],1,
+          q('Database 10 minutes down tha. Queue oldest-job age badh rahi hai. Recovery ke baad kya measure karo?', ['Sirf database process running hai ya nahi',"Arrival/drain rate, backlog age aur errors",'Sirf latest queue message ka size'],1,
             ['Database up hona backlog complete hone ka proof nahi.','Workers arrival se faster useful work complete karein tab backlog drain ho sakta hai. Retry failures bhi include karo.','Single message size backlog waiting time ka complete signal nahi.'])
         ]},
         {type:'cards',title:'Uploaded se playable tak','goal':'Original media workflow. Ek completion state ko agle state ka proof mat banao.',steps:[
           {title:'Parts upload hue',say:'Multipart upload mein parts independently aa sakte hain. Failed part retry ho sakta hai. Pending parts se final object ready assume mat karo.'},
           {title:'Object complete aur identified',say:'Upload completion ke baad exact object/version verify karo. Ab metadata aur processing intent database mein publish karne ka step aata hai.'},
-          {title:'Metadata transaction fail hui',say:'Object bytes bach sakti hain, lekin processing job absent hai. Reconciliation pending upload record aur object identity compare karke retry ya cleanup decide kar sakti hai.',ask:q('Blob storage aur metadata DB alag hain. Sirf DB transaction kya guarantee karti hai?', ['Object upload aur DB commit dono atomic hain','Sirf included DB changes atomic hain','Har orphan object automatically delete hoga'],1,
+          {title:'Metadata transaction fail hui',say:'Object bytes bach sakti hain, lekin processing job absent hai. Reconciliation pending upload record aur object identity compare karke retry ya cleanup decide kar sakti hai.',ask:q('Blob storage aur metadata DB alag hain. Sirf DB transaction kya guarantee karti hai?', ['Object upload aur DB commit dono atomic hain',"Sirf transaction ke DB changes atomic hain",'Har orphan object automatically delete hoga'],1,
             ['Do systems ke operations ek local DB transaction se atomic nahi bante.','Cross-system completion aur cleanup alag workflow maangte hain.','Cleanup policy aur execution banana padega.'])},
           {title:'Encoding complete; publication baaki',say:'Required media outputs aur manifest ready hone ke baad playable state publish karo. CDN availability aur access policy verify karo. Upload accepted ko playable mat bolo.'}
         ],lesson:'State names user ko next valid action batayein: uploading, processing, playable ya failed.'}
       ],
-      interview:{title:'Interview · choice plus tradeoff',questions:[q('Interviewer poochhta hai: same template chat aur Netflix dono mein chalega? Best response?', ['Same boxes draw karke complete maan lo','Dono ke liye always same NoSQL choose karo','Shared components lo; guarantees aur data paths separately define karo'],2,
+      interview:{title:'Interview · choice plus tradeoff',questions:[q('Interviewer poochhta hai: same template chat aur Netflix dono mein chalega? Best response?', ['Same boxes draw karke complete maan lo',"Dono workloads ke liye same NoSQL choose karo","Components reuse karo; guarantees alag define karo"],2,
         ['Chat delivery aur media processing ki completion boundaries different hain.','Storage choice queries, consistency aur scale se justify honi chahiye.','Reusable components useful hain; workload-specific contracts still decide correctness.'])]},
       success:['Template ko requirement, failure aur evidence se adapt kar sakte ho.'],cards:[{front:'Architecture diagram ka next question?',back:'Har arrow par kya data jaata hai? Sender kab success bolta hai? Failure ke baad kaun retry karta hai? Reader ko result kab dikhta hai?'}]
     }
