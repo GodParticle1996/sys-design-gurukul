@@ -14,9 +14,9 @@ const HERO = [
 ];
 
 VISUALS['dr-code'] = {
-  t: 'write() order rakhta hai aur turant "ho gaya" bolta hai. Copy ka kaam tick() baad mein karta hai. Jab tak order waiting mein hai, woh sirf region A mein hai',
+  t: 'write() order rakhta hai aur turant "ho gaya" bolta hai. Copy ka kaam tick() baad mein karta hai. Async lab mein waiting unacknowledged changes rakhti hai; asli network mein B par change lagne ke baad ACK bhi kho sakta hai',
   html: SD.viz.svg(HERO, [{ from: 'wr', to: 'wt' }, { from: 'wt', to: 'b' }], {
-    nodes: { wr: { tone: 'ok', badge: 'rakho + ho gaya' }, wt: { tone: 'bad', badge: 'sirf yahan wale' }, b: { tone: 'idle', badge: 'tick() se pahunche' } },
+    nodes: { wr: { tone: 'ok', badge: 'rakho + ho gaya' }, wt: { tone: 'bad', badge: 'ACK baaki' }, b: { tone: 'idle', badge: 'tick() se pahunche' } },
     flows: [{ from: 'wr', to: 'wt', label: 'push', tone: 'ok' }, { from: 'wt', to: 'b', label: 'tick()', tone: 'slow' }],
   }, { w: 890, h: 215 }),
 };
@@ -316,7 +316,7 @@ tools/mini.js      ← apne app mein lagana                                     
           vars: { call: 'fasla × hadd', fails: '3', done: 'true', ret: 'A ke 1.50 s baad true' },
         },
       ],
-      lesson: '🎯 <b>Asli baat:</b> router ka poora dimaag ek ginti hai: <b>lagataar</b> kitne health check fail hue. Hadd tak pahunchi toh <code>true</code> — sirf ek baar, phir <code>done</code> hamesha ke liye. Pata chalne ka samay = fasla × hadd. Failover wapas nahi hota: wapsi data milakar ek insaan tay karta hai.',
+      lesson: '🎯 <b>Asli baat:</b> router ka poora dimaag ek ginti hai: <b>lagataar</b> kitne health check fail hue. Hadd tak pahunchi toh <code>true</code> — sirf ek baar, phir <code>done</code> hamesha ke liye. Fasla × hadd mota andaaza hai; check ki baari aur jawab ki der bhi gino. Failover wapas nahi hota: wapsi data milakar ek insaan tay karta hai.',
     },
 
     /* ---------------- 3. apne app mein ---------------- */
@@ -468,7 +468,7 @@ tools/mini.js      ← apne app mein lagana                                     
     'Router ka niyam likh sakte ho: lagataar fail ki ginti, hadd par ek baar <code>true</code>, aur wapsi insaan ke haath mein',
   ],
   cards: [
-    { front: 'Region gaya toh kaunse orders kho jaate hain — aur code mein kahan dikhta hai?', back: 'Jo <code>waiting</code> mein hain: "ho gaya" mil chuka, par B mein nahi. <code>pending()</code> = <code>waiting.length</code> = abhi gaya toh itne orders gaye. Slow motion ka "raaste mein" yahi ginti hai. Order list se tab hatta hai jab B ka jawab aa jaaye (line 35), pehle nahi.' },
+    { front: 'Region gaya toh kaunse orders kho jaate hain — aur code mein kahan dikhta hai?', back: 'Async lab mein waiting wale orders ki copy abhi acknowledge nahi hui; asli network mein B par asar ho chuka ho sakta hai. <code>pending()</code> = <code>waiting.length</code>; is slow-motion run mein A gaya toh itne orders khoye. Slow motion ka "raaste mein" yahi ginti hai. Order list se tab hatta hai jab B ka jawab aa jaaye (line 35), pehle nahi.' },
     { front: 'async aur sync mein write() ki kaunsi lines alag hain?', back: 'async: <code>apply</code> → <code>waiting.push</code> → return ("ho gaya"). sync: <code>await ship</code> → <code>apply</code> → return. Sync mein ship fail → write() throw → caller 503, order region A mein rakha hi nahi. Keemat: har order mein B ka ek chakkar (slow motion 0.20 s; asli raftaar median 2 ms → 45 ms).' },
     { front: 'Router "region gaya" kab maanta hai, aur kitni der mein pata chalta hai?', back: 'Lagataar <code>threshold</code> (3) health check fail. Ek pass ginti zero karta hai: ✗ ✗ ✓ ✗ ✗ ✗ → 1, 2, 0, 1, 2, 3 → chhathe par true. Pata chalne mein lagbhag fasla × hadd: slow motion 0.5 s × 3 = 1.50 s (A 4.00 s par gaya, FAILOVER 5.50 s par).' },
     { front: 'Failover apne aap wapas kyun nahi hota?', back: '<code>done</code> ek baar true toh hamesha (line 18: "sirf ek baar. Wapas nahi aata"). Naye orders B mein hain, A ka data purana — apne aap wapas gaye toh do jagah likhna. Wapsi insaan tay karta hai: pehle data milao, phir traffic badlo.' },

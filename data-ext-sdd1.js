@@ -158,7 +158,7 @@ decorrelated jitter         →   1, 2.1 s    (sabse kam calls: 782)</pre>
   cards: [
     { front: 'Full jitter vs equal jitter?', back: 'Full: random(0, base × 2ⁿ) — sabse bikhra. Equal: aadha fixed + aadha random — hamesha ek floor intezaar (jab API turant retry na le).' },
     { front: 'Retry storm todne ke teen raaste?', back: 'Client: backoff + jitter + cap · Server: crash se pehle 503 + Retry-After · Budget: retries ≤ asli requests ka ~10%. Lab 37: 5 crash → 1.' },
-    { front: 'Three layers: 3 attempts versus 3 retries each?', back: '3 total attempts each: 3×3×3=27 leaf attempts (lab 37). 3 retries each means 4 attempts: 4×4×4=64. One retry owner aur overall deadline/budget rakho.' },
+    { front: 'Har layer par 3 kul koshish — kitna bojh?', back: '3 × 3 × 3 = 27× us service par jo pehle se band hai (lab 37). Har layer par "3 retry" ka matlab 4 koshish: 4 × 4 × 4 = 64×. Retry sirf edge par, andar turant fail, aur poori request ki ek deadline.' },
   ],
 });
 
@@ -504,7 +504,7 @@ SD.extendLevel('replication', {
      dukaan chalu, ek staff — grahak bhejo, staff badhao: <b>kuch minute</b>. (4) Do poori dukaanen dono chalu: <b>turant</b> — aur dugna kiraya.</p>
      <ul>
        <li><b>RTO</b> (Recovery Time Objective) = kitni der mein wapas chalu. <b>RPO</b> (Recovery Point Objective) = kitna data khona manzoor.</li>
-       <li>Business Continuity Plan (sabse bada) ⊃ Disaster Recovery Plan · Incident Response Plan sirf cyber attacks ke liye.</li>
+       <li>Business Continuity Plan (sabse bada) ⊃ Disaster Recovery Plan · Incident Response Plan outages aur cyber incidents dono ke liye ho sakta hai.</li>
      </ul>
      <p>50 orders/s, t=4s par region A khatam (health check 500 ms × 3 = 1.5 s mein pata):</p>
      <pre>strategy                  aam din region B mein                  RTO     fail orders   "ho gaya" par kho gaye

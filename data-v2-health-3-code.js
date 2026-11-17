@@ -444,7 +444,7 @@ docker-labs/43-health-checks/lib/checker.js   ← checker ka niyam: nateeja aaya
     'Apne app mein /livez, /readyz aur SIGTERM ka kram likh sakte ho',
   ],
   cards: [
-    { front: 'live() mein kya hona chahiye?', back: '<code>return true</code>. Jawab ka aana hi saboot hai ki app atka nahi. Isme DB ya koi doosri cheez nahi: warna us cheez ki gadbad = restart.' },
+    { front: 'live() mein kya hona chahiye?', back: '<code>return true</code>. Jawab aana health handler ki pahunch ka saboot hai; doosra worker ya kaam phir bhi atka ho sakta hai. Isme DB ya koi doosri cheez nahi: warna us cheez ki gadbad = restart.' },
     { front: 'ready() kya padhta hai?', back: '<code>!stopping &amp;&amp; depOk</code> — do variable. DB se poochhna alag se, apni ghadi par (<code>refresh()</code>). Lab: har sawaal par DB 18.5 q/s · yaad se 2.5 q/s.' },
     { front: 'Checker "lagataar 3 fail" kaise ginta hai?', back: 'Har fail par ginti +1; ek pass par ginti 0. ✗ ✗ ✓ ✗ ✗ → 1, 2, 0, 1, 2 → restart nahi. Hadd tak pahuncha: readiness → traffic band; liveness / startup → restart.' },
     { front: 'Gadbad ka pata kitni der mein?', back: 'Lagbhag fasla × hadd. Lab: 1 s × 3 = ~3 s. Kubernetes default 10 s × 3 = ~30 s tak; AWS load balancer default 30 s × 2 = ~60 s tak (documentation ki defaults se hisaab).' },

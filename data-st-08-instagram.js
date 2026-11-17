@@ -106,7 +106,7 @@ kuch PHYSICAL nodes     (shuruaat mein saare logical shards EK hi machine par)</
      <p>Application sirf itna poochhta hai: "is user ka logical shard kaunsa hai?" aur us
      schema par query karta hai. Application ko pata bhi nahi hota ki logical shard ka schema kis machine par hai.</p>
      <p>Ab growth ka matlab badal jaata hai: node 7 95% bhar gaya? Naya node 16 khada
-     karo, node 7 ke <b>aadhe logical shards</b> streaming replication se copy karo, aur
+     karo, node 7 ke <b>aadhe logical shards</b> shard-scoped copy aur change capture se migrate karo, aur
      phir <b>mapping table update</b> kar do — "shard 1920-2047 ab node 16 par". Data
      waisa ka waisa, schema waise ke waise, application code waisa ka waisa. Sirf mapping
      badla.</p>

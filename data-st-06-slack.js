@@ -874,7 +874,7 @@ SD.registerLevels('stories', [
      (backlog ka memory mein hona), Kafka disk par bade backlog ke liye hi bana hai.</p>
      <p>Aasan raasta hota: Redis hata do, sab Kafka par. Slack ne aisa <b>nahi</b> kiya.
      Kafka ek log hai — ordered stream rakhne mein achha, par ek queue ka asli kaam
-     (individual tasks schedule karna aur pakka karna ki ek task do baar na chale)
+     (individual tasks schedule karna aur retries sambhaalna)
      Kafka se achha nahi hota. Redis tasks schedule karna pehle se achha kar raha tha.</p>
      <pre>Kafka  →  har job ka durable record (disk par, bada backlog aaram se)
 Redis  →  abhi chal rahe jobs ki scheduling
@@ -1092,7 +1092,7 @@ Bridge →  do chhoti Go services: ek Kafka mein likhti hai, doosri Kafka se
   cards: [
     { front: '2016 ka Slack outage — zanjeer?', back: 'DB dheema → workers dheeme → arrival > drain → backlog RAM mein (Redis) → memory full → naye jobs drop (data loss) → job nikaalne ke liye bhi memory chahiye thi → queue dono taraf jam → O(n) dequeue ne drain aur dheema kiya.' },
     { front: 'Fix kya tha?', back: 'Kafka ko Redis ke AAGE (jagah nahi) — backlog disk par durable, Redis sirf chal rahe tasks ke liye. Do chhoti Go bridge services, aur job Kafka mein done tabhi jab Redis mein safe pahunch jaaye.' },
-    { front: 'Kafka aur Redis ka batwara kyun?', back: 'Kafka = ordered durable log (bada backlog). Redis = per-task scheduling aur "ek task do baar na chale". Sab kuch ek tool se karwana rewrite ka risk tha bina faayde ke.' },
+    { front: 'Kafka aur Redis ka batwara kyun?', back: 'Kafka = ordered durable log (bada backlog). Redis = per-task scheduling aur retries; side effects ke liye idempotency chahiye. Sab kuch ek tool se karwana rewrite ka risk tha bina faayde ke.' },
     { front: 'Nebula kya hai?', back: 'Slack ka apna encrypted overlay mesh: har host ko certificate (naam + flat overlay IP + group), lighthouse discovery nodes, Noise protocol handshake, phir peer-to-peer encrypted UDP — NAT ke peechhe bhi.' },
     { front: 'Cells + edge drain?', back: 'Infra alag availability zones mein cells ki tarah, taaki failure ek cell tak simta rahe; kharab region/edge par automatic DNS drain naye connections ko agle healthy location par bhej deta hai.' },
   ],

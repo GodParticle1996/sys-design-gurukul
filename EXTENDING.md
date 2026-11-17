@@ -758,3 +758,137 @@ Lesson mein "video mein…" ya presenter ka zikr nahi. Source video ka credit si
 **6. Likhne ka dhang** (files 1–2 se): Hinglish Roman script; chhote vaakya, ek vaakya = ek vichaar; pronoun (`ye/woh/uska`) ki jagah wahi noun dohrao ("recs-service latak gayi", "woh latak gayi" nahi); roz ki misaal → sawaal jaisa heading → mechanism (kaun kya karta hai aur kyun) → number → `🎯 Asli baat:` ek line → jargon ka naam; aakhir mein "ab main kya karoon" (faisla, setting ya command). Feynman-style ("apne shabdon mein samjhao") nahi — uski jagah dry run, scenario aur "kab use karein / kab nahi".
 
 **Lab ka pattern (har topic):** `tools/slowmo.js` (chhota paimaana, tay schedule, ek line ek ghatna; random ho toh `tools/seeded.js` jaisa tay-beej wala), ek chhoti asli code file `lib/<cheez>.js` jise lab ke tools/service sach mein chalate hain, `tools/mini.js` (sabse chhota program), aur jahan ho sake asli library ka demo (`tools/<library>.js`; library scratch folder mein install karke `NODE_PATH` se chalao — project mein `node_modules` nahi). Purane exercises pehle aur baad mein chala ke milao; README fresh output se dobara likho.
+
+---
+
+## 11. 🧠 Soch Akhada — soch-vichaar wale scenario sawal (`soch.js`, `extra.css`, `data-soch-*.js`)
+
+Owner ki maang (2026-11-14): ratta nahi, **critical thinking**. Ek asli jaisi samasya → 3–5 chhote kadam (har jawab par turant
+feedback) → saare hal ki tulna → interviewer ka twist → nichod. Home page par "🧠 Soch Akhada" card se khulta hai (hamesha khula),
+aur jis level ka topic hai uske complete screen par link aata hai (`levels: [...]` se).
+
+```js
+SD.registerScenarios([{
+  id: 'stale-balance', icon: '💸', title: '...', topic: 'data', hard: 2,       // topic: soch.js ke TOPICS mein se
+  levels: ['replication', 'eventual'],                                        // in levels ke ant mein link dikhega
+  story: 'HTML — 75 shabd se kam, naam ke saath', facts: ['HTML', ...],        // 2–5 facts
+  steps: [{ t: 'Asli wajah', q: 'HTML', a: [['jawab', 'kyun'], ...] }],        // 3–5 kadam; a[0] HAMESHA sahi jawab
+  fixes: [{ n, how, cost, when }],                                             // tulna table, 3–5 rows
+  twist: { q: 'HTML', a: [['jawab', 'kyun'], ...] },                           // a[0] sahi
+  asli: 'HTML — ek line', say: 'HTML — interview mein aise bolo',
+}]);
+```
+
+- **Kadam ka kram:** `Asli wajah` → `Hal chuno` → `Keemat`. Twist mein haalaat badalte hain (bojh 10 guna, do server, network toota).
+- **Har jawab ka apna "kyun"** — galat jawab par wahi dikhta hai. Galat jawab bhi aisa ho jo ek samajhdaar insaan chun sakta hai.
+- **Lambai ka niyam** (validator fail karta hai): sahi jawab sabse lambe galat jawab ke 1.15 guna se chhota aur sabse chhote galat
+  jawab ke 0.85 guna se bada ho. Theek karna ho toh galat jawab ko lamba karo, sahi ko kaato mat.
+- **Kahani:** ChaiPay (UPI wallet): `wallet-api`, `pay-api`, `api-gateway`, `pg-primary` + `pg-replica-1/2`, users Riya aur Aman. ₹ mein number.
+- Progress `SD.state.soch` (id → stars) mein; XP sirf pehli baar. Renderer scenario data par kuch nahi likhta. Buttons: `so-opt` (`data-i`), `so-next`, `so-done`.
+- Nayi file: IIFE mein likho, `index.html` + `gallery.html` + `validate.js` ke `CONTENT` mein `data-guidance.js` se pehle jodo.
+- Jaanch: `node validate.js` ka "🧠 SOCH AKHADA" hissa har scenario ko sahi jawab se aur pehle-galat jawab se poora chalata hai.
+
+---
+
+## 12. 🧭 UX ke naye hisse (2026-11-15) — raasta, chhote lesson cards, terminal mein madad
+
+Owner ki chaar dikkatein thi: raasta saaf nahi · ek screen par bahut text · diagram saaf nahi · terminal mein atakna. Is pass mein pehli teen par kaam hua
+(diagrams ke liye ek aam "ek-ek hissa" reader bana — §12.4; likhe hue kadam abhi baaki — §12.5). Saari nayi CSS `extra.css` mein hai (`style.css` ke baad load hoti hai).
+
+### 12.1 Raasta (`app.js`)
+- **`TRACK_GROUPS`** — home par tracks chaar group mein: `core` (jo `alwaysUnlocked` nahi; card par "Kadam N"), `pro` (id `pro-` se shuru — §15),
+  `course` (id `fp-` / `sdd-` / `sds-` / `concurrency` se shuru), `side` (baaki). Naya track apne aap sahi group mein jaata hai; naya group chahiye toh is array mein ek entry jodo (pehla match jeetta hai).
+- **"👉 Agla kadam" card** (`nextStep()`) — aakhri poore kiye level ke track ka agla adhoora level; kuch poora nahi kiya toh pehla khula mukhya track.
+  Card ki class `next-card` hai, `resume-card` nahi: `resume-card` sirf asli checkpoint ke liye hai aur `dev/progress-test.js` usi class ko dhoondhta hai.
+- **`SD.nav`** — URL ka `#hash` = screen: `#track/<id>` · `#level/<id>` · `#soch` · `#soch/<id>` · `#dojo` · khaali = home. `SD.nav.set(hash)` har `show…` function
+  ke shuru mein; `SD.nav.route()` boot aur browser ke Back/Forward (`popstate`) par. Locked level ka link track ya home par girta hai. Nayi screen banao toh
+  `set()` + `route()` mein ek line jodo, warna Back button us screen ko chhod dega.
+
+### 12.2 Chhote lesson cards (`app.js` `lessonPager`)
+Level intro par `level.lesson` ek saath nahi, **ek card ek baar**. 160 shabd se lambi entry `<h3>` par toot-ti hai — sirf tab jab har tukde mein
+`div/table/ul/ol/details/pre/section` barabar khule-band hon (warna entry poori rehti hai). Isliye nayi lesson entry mein har vichaar ka apna `<h3>` rakho aur
+`<h3>` ko kisi `<div>` ke andar mat daalo. Saare cards DOM mein rehte hain (sirf `display` badalta hai), isliye validator ka render check sab par chalta hai.
+
+### 12.3 Terminal mein madad (`perfsim.js` `renderTerminal`)
+Madad ki seedhi: **👉** checklist ka pehla adhoora kaam (`li.now`) → **💡 Hint 1/3 … 3/3** → saare hints ke baad **🧭 Agla command dikhao**.
+- 🧭 button `stage.solution` ko history se **kram mein** milata hai (aakhri `sim reset` ke baad se) aur agla command input box mein bhar deta hai. Isliye `solution`
+  hamesha poora aur sahi kram mein rakho — ab learner use seedha dekhta hai. Saare command chal chuke par mission adhoora ho toh button `sim reset` sujhata hai.
+- 5 command tak checklist mein naya ✅ na aaye toh ek baar "Atak gaye?" wali line chhapti hai aur hint button chamakta hai.
+- Har madad (`sim.hintsUsed`) `HINT_COST` XP ghatati hai; mission ka XP 10 se neeche nahi jaata.
+
+### 12.4 Diagram: "▶ Ek-ek hissa dekho" (`app.js` `diagramStepper`)
+Har static diagram (`VISUALS[...]`) jisme 3 ya zyada hisse hain, apne aap ek button paata hai. Hissa = `.dg-rung` / `.dg-box` / `.dg-node` (jo kisi doosre hisse ke
+andar na ho). Button dabane par ek waqt mein ek hi hissa chamakta hai, dekhe hue halke, baaki dhundhle. Content mein kuch likhna nahi padta: naya diagram in teen
+classes se banao aur hisson ko **padhne ke kram** mein likho. 303 mein se 149 level diagrams par yeh lagta hai (baaki `SD.viz.svg` wale hain ya unme 3 se kam hisse hain).
+
+### 12.5 Baad mein kya hua (round 2, 2026-11-15)
+- Mukhya raasta ke saare 91 levels aur naye `pro-*` tracks ke diagrams ab **scene player** se chalte hain (§13). Baaki levels par §12.4 wala aam reader.
+  Playlist tracks (`fp-core`, `sdd-eda`, `sdd-resil`) pehle se `dryrun` use karte hain.
+- Soch Akhada ke saare 40 scenarios mein "🎬 Ghatna kadam-dar-kadam" scene hai (§14).
+
+---
+
+## 13. 🎬 Scene player — diagram ki kahani (`scene.js`, `data-scenes-*.js`)
+
+Kube Gurukul se port. Ek scene = dabbe (nodes) + kadam (steps). Har kadam mein ek teer chalta hai (packet dot ke saath) ya kuch dabbe chamakte hain, aur neeche
+**ek line** samjhati hai ki kya hua. `app.js` `diagramFor()` mein: level ke `VISUALS[id].scene` ho toh scene dikhta hai, aur purana static diagram
+"📋 Poori tasveer ek saath dekho" ke `<details>` mein chala jaata hai. Isliye `VISUALS[id] = { t, html }` phir bhi **laazmi** hai.
+
+```js
+SD.addScenes({                       // VISUALS[id] pehle ban chuka ho (warna SD.sceneOrphans mein jaata hai → validator error)
+  'my-level': {
+    intro: 'Ek line: kya dekhoge.',
+    nodes: [ { id: 'app', col: 0, row: 0, icon: '⚙️', label: 'payment-api', sub: 'chhoti baat', tone: 'accent' }, … ],
+    steps: [
+      { from: 'app', to: 'db', label: 'SELECT …', tone: 'bad', say: 'Ek vaakya.' },
+      { at: ['db'], set: { db: { tone: 'good', sub: 'naya sub' } }, say: 'Sirf highlight, bina teer.' },
+    ],
+  },
+});
+```
+
+**Niyam (validator `scenes()` section pakadta hai):** `col` 0–3 (4 column), rows jitni chahiye · label ≤ 20, sub ≤ 26 (step ke `set` mein bhi), arrow label ≤ 28 ·
+`say` ≤ 45 shabd aur usme yeh/woh/isse/usse/isko/usko/iska/uska/iski/uski/iske/uske nahi — dabbe ka naam likho · har level par ≤ 10 kadam · `set` sirf `tone`
+aur `sub` badalta hai · teer kisi teesre dabbe ke upar se guzre toh error: `bend` (±90) do, dabbe khiskao, ya teer ki jagah `at` + `set` se jawab dikhao.
+Scene data track-wise files mein (`data-scenes-flow.js` … `data-scenes-builds.js`), aur naye tracks mein usi track file ke andar. Numbers wahi jo lesson mein hain.
+
+## 14. 🎬 Soch Akhada ke scenes (`data-soch-scenes.js`)
+Har scenario ka `scene` sirf **ghatna** dikhata hai (kya hua, kis kram mein) — kabhi wajah ya ilaaj nahi, warna sawaal ka jawab pehle hi dikh jaata hai.
+`soch.js` scene ko "Haalaat" ke theek neeche dikhata hai. Scenario id na mile toh `SD.sceneOrphans` mein `soch:<id>` → validator error.
+
+## 15. 🏭 Production aur interview tracks (`pro-*`) aur perfsim plugins
+
+### 15.1 Teen track, 24 levels
+| Track | Files | Levels | Terminal missions |
+|---|---|---|---|
+| 🔐 `pro-sec` Security aur Multi-tenancy | `data-pro-sec-1…4.js` | sec-threat, sec-bola, sec-tokens, sec-tenancy, sec-noisy, sec-secrets, sec-abuse, boss-sec | token, tenant export, tenant load |
+| 📟 `pro-obs` Observability aur Cloud ka Kharcha | `data-pro-obs-1…4.js` | obs-cardinality, obs-trace, obs-burn, obs-capacity, obs-bill, obs-unit, obs-oncall, boss-obs | capacity, cost show/tag, cost unit/fix |
+| 🎤 `pro-iv` Interview Designs (`freeOrder`) | `data-pro-iv-1…4.js` | iv-framework, iv-feed, iv-ratelimiter, iv-typeahead, iv-notify, iv-upi, iv-kvstore, boss-iv | fanout, kv |
+
+Kahani ChaiPay (UPI wallet + merchant dashboard) ki hai, Soch Akhada jaisi. Har file ek IIFE hai aur usme sab kuch: `SD.tracks.push` (sirf hissa 1 mein),
+`SD.registerLevels`, `VISUALS`, `SD.addScenes`, aur decision guides. Load kram: `index.html`, `gallery.html` aur `validate.js` ke `CONTENT` mein
+**`data-guidance.js` se pehle** (guides isi kram par nirbhar hain).
+
+### 15.2 Decision guide track file mein (`SD.guidanceExtra`)
+```js
+(SD.guidanceExtra = SD.guidanceExtra || []).push({ id: 'pro-sec-tokens', levels: 'sec-tokens', guide: {
+  title, misaal, asli, points: [2–4], use, avoid, mistake, compare: [{ choice, when, tradeoff } ×2+], followup,
+  sources: ['idem', { title: '…', url: 'https://…' }],   // data-guidance.js ki key ya seedha { title, url }; galat key = saaf error
+} });
+```
+
+### 15.3 Fixtures (`exercise-solutions.json`)
+Har non-terminal stage aur interview ka ek fixture **haath se** likho (intended actions). File mein har exercise ek line par hai — poori file dobara
+format mat karo. Quiz/interview ka sahi jawab index 0 par (app choices shuffle karta hai). `tools/replay-exercises.js` fixture na mile toh fail hota hai.
+
+### 15.4 perfsim plugins (`perfsim-pro.js`)
+`perfsim.js` ke `exec()` ke aakhir mein ek hook: `SD.perfsimPlugins` ki har entry `{ match: /^token\b/i, help: [lines], run(api, norm) }` try hoti hai
+(`api = { sim, print, table, panel, rec, err, initialSystem }`); `help` command har plugin ki help bhi chhaapta hai. Plugin ki state `sim.sys` mein rehti hai
+(`perfsim-pro.js` `SD.defaultSys` ko badha kar `tenancy`, `tokens`, `cost`, `kv` jodta hai), isliye `sim reset`, `sim.revision` aur `SD.mission.current()` bina
+badlaav kaam karte hain. Commands: `tenant …`, `token …`, `cost …`, `capacity plan|fail`, `fanout --mode …`, `kv …` — poori list file ke upar.
+- Naam ki jaanch `own(obj, key)` se (warna `constructor` jaisa naam tenant ban jaata hai).
+- Mission ka terminal title `sys.name` se aur input ka placeholder `stage.placeholder` se (dono optional).
+- Numbers ek chhota, saaf model hain (₹ lakh, rps, ms) — output mein "model" likha hai; asli system par naapna padta hai.
+- Codex ne jobs 7–9 mein in commands ko boundaries par jaancha (token expiry, capacity rounding, fanout ke columns, mission ko bina seekhe jeetna).
+  Naya command jodo toh yahi probes chalao: galat/inherited naam, 0/NaN/bahut bade numbers, `sim reset`, aur reordered solution.
+

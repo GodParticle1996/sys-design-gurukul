@@ -371,7 +371,7 @@ SD.registerLevels('fp-core', [
         },
         {
           "title": "2. Paimana badlo",
-          "say": "CPU ka L1 cache ~0.5 ns. L1 ke 0.5 ns ko 1 second maano. Data center ke andar ek network call ~0.5 ms = 10 lakh guna = 10 lakh second ≈ <b>11.6 din</b>. Har network call ek lambi yatra hai."
+          "say": "Kalpanik scale ke liye L1 read 0.5 ns aur data-center call 0.5 ms maano; ye universal hardware timings nahi. L1 ke 0.5 ns ko 1 second maano: network call ka samay 10 lakh guna = 10 lakh second ≈ <b>11.6 din</b>. Har network call ek lambi yatra hai."
         },
         {
           "title": "3. Code tez, bill wahi",

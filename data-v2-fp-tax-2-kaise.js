@@ -362,9 +362,9 @@ SD.registerLevels('fp-core', [
         ],
         "answer": 0,
         "hint": "Kis tareeke ka samay users ke saath ~100 guna badha?",
-        "explain": "Walk ~3–4×, index wala SQL ~1.5–2×: dono sirf chhue gaye rows ka kaam karte hain. Bina index 46–52 ms se 5.0–5.2 s — ~100×, kyunki har query poori table padhti hai. Size ka dard index ke na hone mein hai.",
+        "explain": "Walk ~3–4×, index wala SQL ~1.5–2×: dono sirf chhue gaye rows ka kaam karte hain. Bina index 46–52 ms se 5.0–5.2 s — ~100×, kyunki har query poori table padhti hai. Is lab ke 2-hop, fixed-degree aur garam-cache sawaal mein bada size penalty missing index se aaya; doosre workloads mein result size, cache misses aur traversal ka kaam bhi badh sakta hai.",
         "choiceExplanations": [
-          "Walk ~3–4×, index wala SQL ~1.5–2×: dono sirf chhue gaye rows ka kaam karte hain. Bina index 46–52 ms se 5.0–5.2 s — ~100×, kyunki har query poori table padhti hai. Size ka dard index ke na hone mein hai.",
+          "Walk ~3–4×, index wala SQL ~1.5–2×: dono sirf chhue gaye rows ka kaam karte hain. Bina index 46–52 ms se 5.0–5.2 s — ~100×, kyunki har query poori table padhti hai. Is lab ke 2-hop, fixed-degree aur garam-cache sawaal mein bada size penalty missing index se aaya; doosre workloads mein result size, cache misses aur traversal ka kaam bhi badh sakta hai.",
           "Walk 100 guna nahi, ~3–4 guna badha.",
           "Index wala SQL ~2 guna badha; 100 guna sirf bina index wala."
         ]

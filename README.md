@@ -43,8 +43,34 @@ node dev/concurrency-test.js     # real Java output vs captures, lesson text and
 
 ## Kya hai isme
 
-**15 tracks · 327 levels · 1369 stages · 669 interview Qs · 1322 flashcards · 327 diagrams · 590 interactive labs · 65 lab projects**
-(ginti `node validate.js` se, 2026-11-13)
+**21 tracks · 362 levels · 1551 stages · 728 interview Qs · 1440 flashcards · 362 diagrams · 660 interactive labs · 65 lab projects · 40 soch scenarios · 155 kadam-dar-kadam scenes**
+
+### 🧠 Soch Akhada — soch-vichaar wale scenario sawal
+
+Home page par hamesha khula hissa. Har scenario ek asli jaisi samasya hai (ChaiPay ki kahani): **3 kadam** (asli wajah → hal chuno → keemat),
+har jawab par turant "kyun", phir **saare hal ki tulna** aur **interviewer ka twist**. 40 scenarios: Data 7 · API 4 · Request ka raasta 3 ·
+Resilience 6 · Distributed 7 · Security 4 · Observability aur cost 4 · Poora design 5. Jis level ka topic hai, uske complete screen par scenario ka link aata hai.
+Files: `soch.js` (engine), `extra.css`, `data-soch-1…3.js`. Naya scenario kaise jodein: `EXTENDING.md` §11. UX ke naye hisse (raasta, chhote lesson cards,
+terminal mein madad): `EXTENDING.md` §12.
+
+### 🎬 Diagram ki kahani (scene player)
+Mukhya raasta ke saare **91 levels**, naye `pro-*` tracks ke 24 levels aur saare **40 Soch Akhada scenarios** ke diagram ab kadam-dar-kadam chalte hain:
+har kadam par ek teer (chalta packet) ya chamakta dabba, aur neeche ek line. Poora static diagram "📋 Poori tasveer ek saath dekho" mein. Engine `scene.js`,
+data `data-scenes-*.js` aur `data-soch-scenes.js`. Niyam: `EXTENDING.md` §13–14.
+
+### 🏭 Production aur interview — naukri ki taiyaari (naye 3 tracks)
+Home par mukhya raasta ke theek baad. Kahani ChaiPay ki. Har level: lesson cards, interactive stage, quiz, interview round, scene aur decision guide.
+Terminal missions naye simulator commands se (`perfsim-pro.js`: `tenant`, `token`, `cost`, `capacity`, `fanout`, `kv`).
+
+| Track | Levels | Kya seekhoge |
+|---|---|---|
+| 🔐 **Security aur Multi-tenancy** | 8 | Threat model (STRIDE) · authorization ki teen deewarein (OWASP API 2023) · chori hua JWT radd karna (mission) · pool/bridge/silo + Postgres RLS (mission) · noisy neighbour quota (mission) · secrets aur envelope encryption · OTP bombing / SMS pumping · boss |
+| 📟 **Observability aur Cloud ka Kharcha** | 8 | Cardinality ka bill · tracing aur sampling · burn-rate alerts · capacity + N+1 (mission) · tags se bill (mission) · ek payment ka kharcha (mission) · raat 3 baje ka incident · boss |
+| 🎤 **Interview Designs** (free order) | 8 | 45 minute ka dhaancha · news feed (fanout mission) · rate limiter service · typeahead · notification system · UPI jaisa payment · Dynamo jaisa KV store (quorum mission) · mock interview: Stories |
+
+Files: `data-pro-sec-1…4.js`, `data-pro-obs-1…4.js`, `data-pro-iv-1…4.js`, `perfsim-pro.js`. Jodne ke niyam: `EXTENDING.md` §15.
+Facts Codex ne primary sources se jaanche (jobs 7–9 ki reports `sdg-codex-xp/jobs/deepening/` mein — repo ke bahar).
+(ginti `node validate.js` se, 2026-11-16, System Design School course merge ke baad)
 
 | Track | Levels | Kya seekhoge |
 |---|---|---|
@@ -214,6 +240,8 @@ core.js        state, XP, streak, spaced repetition (SD namespace), level regist
 data-core.js   ranks, core tracks, aur SD.sys.* system presets
 games.js       quiz · bins · order · match · fill · hotspot · incident
 perfsim.js     cost & load simulator + SD.renderers.terminal
+perfsim-pro.js naye commands (tenant · token · cost · capacity · fanout · kv) — SD.perfsimPlugins hook se
+scene.js       SD.renderScene — kadam-dar-kadam diagram player (SD.addScenes)
 canvas.js      SD.renderers.design (design canvas)
 labs.js        replay · tradeoff · estimate · archdiff   (IIFE-wrapped!)
 dockerlab.js   SD.renderers.docker — docker-labs/ project ka stage (IIFE)
@@ -230,6 +258,7 @@ data-ext-episodes.js · data-ext-sdd1.js   video batches: purane levels badhaye 
 data-v2-00-tracks.js · data-v2-<topic>-<n>-<hissa>.js   🛡️ playlist course: ek level ek file (EXTENDING.md §10.7)
 docker-labs/   46 projects: 45 Node + 1 Java concurrency lab (compose + start.js + README captures)
 data-guidance.js  59 topic guides; data-v2-concurrency.js adds 7 guides (all 275 levels assigned)
+data-pro-*.js  3 production/interview tracks (24 levels) — apne guides SD.guidanceExtra se data-guidance.js ko dete hain
 exercise-solutions.json  nonterminal exercises ke intended actions
 validate.js    structure + missions + labs + render
 ```

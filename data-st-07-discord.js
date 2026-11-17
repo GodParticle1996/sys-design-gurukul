@@ -19,7 +19,7 @@ VISUALS['st-discord-model'] = {
       <span class="dg-pill acc" data-hs="q">❓ "is channel ke latest messages do"</span><span class="dg-arrow">→</span>
       <span class="dg-pill good" data-hs="part">🗂️ partition key = channel</span><span class="dg-arrow">→</span>
       <span class="dg-pill" data-hs="clust">🔢 clustering = message id (waqt)</span><span class="dg-arrow">→</span>
-      <span class="dg-pill good">1 query · 1 partition · 1 node</span>
+      <span class="dg-pill good">bounded bucket read · replicas policy ke mutabiq</span>
     </div>
     <div class="dg-cap">Data model = schema + access pattern ek saath. Storage usi sawaal ke
       aas-paas banaya gaya jo din mein hazaron baar poochha jaata hai.</div>
@@ -86,11 +86,11 @@ VISUALS['st-discord-migrate'] = {
     <div class="dg-split">
       <div class="dg-box is-good"><span class="bx-label">📉 Pehle → baad mein</span>
         <div class="dg-cap">177 Cassandra nodes → <b>72</b> ScyllaDB nodes (har node
-          dogune se zyada data ke saath) · tail read latency 40–125 ms ke jhoole se
-          <b>~50 ms</b> sthir · worst-case write <b>~5 ms</b>.</div></div>
+          dogune se zyada disk capacity ke saath) · tail read latency 40–125 ms ke jhoole se
+          <b>15 ms p99</b> sthir · write p99 <b>~5 ms</b>.</div></div>
       <div class="dg-box is-bad"><span class="bx-label">🧾 Keemat</span>
         <div class="dg-cap">Storage hamesha badhta rahega · data model 2017 se
-          <b>tay</b> ho chuka tha (isliye Cassandra-compatible engine hi chun sakte the) ·
+          <b>tay</b> ho chuka tha (compatible engine se migration ka daayra ghata) ·
           aur coalescing layer ab hamesha ke liye Discord ki zimmedari hai.</div></div>
     </div>`,
 };
@@ -424,7 +424,7 @@ Coalescing ke saath: layer dekhti hai ki sab ek hi cheez maang rahe hain
           q: 'Discord ne 177 Cassandra nodes se 72 ScyllaDB nodes par jaakar kitne PERCENT nodes kam kiye?',
           unit: '%', given: ['177 → 72'],
           answer: 59, tol: 0.3,
-          steps: ['(177 − 72) / 177 ≈ 0.593', '≈ 59% kam nodes — aur har node par dogune se zyada data'],
+          steps: ['(177 − 72) / 177 ≈ 0.593', '≈ 59% kam nodes — aur har node par dogune se zyada disk capacity'],
           lesson: 'Engine badalna sirf latency ka faisla nahi tha, fleet size ka bhi tha.',
         },
       ],
@@ -650,19 +650,17 @@ Discord ka jawab:
    natija: ~32 lakh messages/second  →  backfill ~9 DIN mein poora</pre>
      <p>Mai 2022 mein switch hua: ScyllaDB primary store ban gaya.</p>
      <h3>📉 Pehle aur baad ka farq</h3>
-     <pre>177 Cassandra nodes   →   72 ScyllaDB nodes  (har node par dogune se zyada data)
-tail read latency 40–125 ms ka jhoola  →  lagbhag sthir ~50 ms
-worst-case write latency               →  ~5 ms
+     <pre>177 Cassandra nodes   →   72 ScyllaDB nodes  (har node par dogune se zyada disk capacity)
+tail read latency 40–125 ms ka jhoola  →  lagbhag sthir 15 ms p99
+write p99 latency               →  ~5 ms
 aur sabse badi baat: rozana ki firefighting khatam</pre>`,
     `<h3>🧾 Ab keemat — kyunki senior engineer trade-offs nahi chhodta</h3>
-     <p><b>1. Storage hamesha badhega.</b> "Kabhi delete nahi" ka matlab hai ki tum us
+     <p><b>1. Storage hamesha badhega.</b> Long-lived history ka matlab hai ki tum us
      data ko bhi hamesha rakhte ho jise sankhya ke hisaab se lagbhag koi nahi padhta —
      zyadatar reads haal ke messages ke hote hain. Par purane messages ka itihaas hi product ka vaada
      hai.</p>
      <p><b>2. Data model lock ho gaya.</b> Jab trillions messages channel se partitioned
-     ho chuke hon, toh channel se partitioning hi tumhari haqeeqat hai. Isi liye naya database
-     <b>Cassandra-compatible</b> hi ho sakta tha — model dobara sochne ka option tha hi
-     nahi. <b>2017 ke faisle ki parchhai saalon baad tak padti rahi.</b></p>
+     ho chuke hon, toh channel se partitioning hi tumhari haqeeqat hai. Isi liye Cassandra-compatible engine se migration chhoti rahi; model dobara banana mumkin par bahut mehenga tha. <b>2017 ke faisle ki parchhai saalon baad tak padti rahi.</b></p>
      <p><b>3. Layers ab hamesha ki zimmedari hain.</b> Data services layer, coalescing,
      consistent-hash routing, custom Rust tooling — data services, routing aur tooling ab Discord ka apna infrastructure
      hai jise hamesha maintain karna hai. Har taakatwar infra ka ek permanent tax hota
@@ -835,8 +833,8 @@ aur sabse badi baat: rozana ki firefighting khatam</pre>`,
   cards: [
     { front: 'ScyllaDB kyun chuna?', back: 'Wahi query language (data model bina redesign ke aa gaya), C++ mein (koi GC pause nahi), aur shard-per-core (har core ka apna data/memory — uneven load par zyada sthir).' },
     { front: 'Migration ka plan?', back: 'Dual writes se "abhi" ka data dono jagah; trillions historical messages ke liye custom Rust migrator — bade contiguous ranges, high concurrency, aur progress ka checkpoint. 3 mahine ka anumaan → ~9 din, ~32 lakh msg/s.' },
-    { front: 'Migration ke baad ke numbers?', back: '177 Cassandra → 72 Scylla nodes (har node par dogune se zyada data), tail read latency 40–125 ms se sthir ~50 ms, worst-case write ~5 ms, aur rozana ki firefighting khatam.' },
-    { front: '"Kabhi delete nahi" ki teen keematein?', back: 'Storage hamesha badhta hai (aur na padhe jaane wala data bhi rakhna padta hai); data model lock ho jaata hai (isliye compatible engine hi chun sakte the); aur coalescing/routing/tooling hamesha ke liye apni zimmedari ban jaate hain.' },
+    { front: 'Migration ke baad ke numbers?', back: '177 Cassandra → 72 Scylla nodes (har node par dogune se zyada disk capacity), tail read latency 40–125 ms se sthir 15 ms p99, write p99 ~5 ms, aur rozana ki firefighting khatam.' },
+    { front: 'Long-lived history ki teen keematein?', back: 'Storage hamesha badhta hai (aur na padhe jaane wala data bhi rakhna padta hai); data model lock ho jaata hai (compatible engine se migration ka daayra ghata); aur coalescing/routing/tooling hamesha ke liye apni zimmedari ban jaate hain.' },
   ],
 },
 ]);

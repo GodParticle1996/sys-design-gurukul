@@ -66,7 +66,7 @@ SD.registerLevels('sdd-eda', [
           "explain": "Password badalna security ka alag workflow shuru karta hai — PasswordChanged apna event."
         },
         {
-          "text": "Analytics ko OrderShipped par customer ka latest home city chahiye; customer events mein customerId aur city milte hain",
+          "text": "Analytics ko OrderShipped par home city ki thodi purani copy chalegi; shipment mein customerId, customer events mein customerId aur city milte hain",
           "bin": "copy",
           "explain": "Analytics customer events se home city ki apni copy rakhe aur customerId se jode. Shipment ke waqt ka destination city alag fact hai, jo shipment event mein ho sakta hai."
         },

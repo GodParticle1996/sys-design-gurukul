@@ -283,7 +283,7 @@ SD.registerLevels('fp-core', [
       "type": "cards",
       "title": "⏱️ Pakka karne ki keemat",
       "goal": "fsync safe hai, par mehnga. Lab 55 ex1 is machine par asli files aur asli fsync se naapta hai.",
-      "lesson": "Har record par fsync = sau-hazaar ke beech records/second. Group commit kai commits ko ek fsync mein le jaata hai: har commit phir bhi pakka, par fsyncs kam.",
+      "lesson": "Lab ke is virtual disk par har record ke baad fsync: 207–806 records/second; doosri disk aur workload par dobara naapo. Group commit kai commits ko ek fsync mein le jaata hai: har commit phir bhi pakka, par fsyncs kam.",
       "steps": [
         {
           "title": "1. Do raftaar",

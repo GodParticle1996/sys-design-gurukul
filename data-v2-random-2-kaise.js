@@ -357,9 +357,9 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
           'Har request chune hue server par do baar bhejo, taaki ek fail ho toh doosri bach jaaye',
         ],
         answer: 0,
-        explain: 'Do random servers dekho, kam load wale ko bhejo. Jo server akela sabse bhara ho, kabhi nahi chuna jaata. Aur har request alag jodi dekhti hai, toh purani jaankari par bhi sab ek hi "sabse khaali" server par nahi pahunchte. Lab ka mini program, haal S1 3 · S2 0 · S3 1: "sabse kam load" → 0 / 1000 / 0; "do mein se behtar" → 0 / 694 / 306. Asli raftaar, 0.5 s purani jaankari: line 92–106 banaam 29–32. Dhyaan do: do mein se behtar sabse accha server pakka nahi chunta — bas bura chunne se bachata hai.',
+        explain: 'Do random servers dekho, kam load wale ko bhejo. Dikh rahi ginti mein jo server akela sabse bhara ho, nahi chuna jaata. Aur har request alag jodi dekhti hai, toh purani jaankari par bhi sab ek hi "sabse khaali" server par nahi pahunchte. Lab ka mini program, haal S1 3 · S2 0 · S3 1: "sabse kam load" → 0 / 1000 / 0; "do mein se behtar" → 0 / 694 / 306. Asli raftaar, 0.5 s purani jaankari: line 92–106 banaam 29–32. Dhyaan do: do mein se behtar sabse accha server pakka nahi chunta — bas bura chunne se bachata hai.',
         choiceExplanations: [
-          'Do random servers dekho, kam load wale ko bhejo. Jo server akela sabse bhara ho, kabhi nahi chuna jaata. Aur har request alag jodi dekhti hai, toh purani jaankari par bhi sab ek hi "sabse khaali" server par nahi pahunchte. Lab ka mini program, haal S1 3 · S2 0 · S3 1: "sabse kam load" → 0 / 1000 / 0; "do mein se behtar" → 0 / 694 / 306. Asli raftaar, 0.5 s purani jaankari: line 92–106 banaam 29–32. Dhyaan do: do mein se behtar sabse accha server pakka nahi chunta — bas bura chunne se bachata hai.',
+          'Do random servers dekho, kam load wale ko bhejo. Dikh rahi ginti mein jo server akela sabse bhara ho, nahi chuna jaata. Aur har request alag jodi dekhti hai, toh purani jaankari par bhi sab ek hi "sabse khaali" server par nahi pahunchte. Lab ka mini program, haal S1 3 · S2 0 · S3 1: "sabse kam load" → 0 / 1000 / 0; "do mein se behtar" → 0 / 694 / 306. Asli raftaar, 0.5 s purani jaankari: line 92–106 banaam 29–32. Dhyaan do: do mein se behtar sabse accha server pakka nahi chunta — bas bura chunne se bachata hai.',
           'Ek hi request do servers par bhejne se kaam dugna hota hai. Power of two choices request sirf ek server ko bhejta hai — do servers sirf dekhe jaate hain.',
           'Pakke groups mein har request ki apni random jodi nahi banti. Jhund todne ke liye har request ko alag jodi dekhni chahiye.',
           'Do baar bhejna retry hai, chunne ka tareeka nahi. Power of two choices mein "do" ka matlab do servers dekhna hai.',
@@ -392,8 +392,8 @@ do sikke, phir un do mein se behtar        → ausat 0.89 s · sabse lamba 1.35 
   cards: [
     { front: 'Power of two choices?', back: 'Do alag servers random chuno; un do mein se kam load wale ko bhejo. Lab (haal S1 3 · S2 0 · S3 1): 0 / 694 / 306 — sabse bhare ko 0, aur koi ek akela dher nahi uthata.' },
     { front: 'Jhund ke liye kaunsi do cheezein chahiye?', back: '(1) Purani jaankari. (2) Sab ka ek hi faisla. Ilaaj: jaankari taaza karo (load balancer ki apni ginti), ya faisle mein random milao (do sikke).' },
-    { front: 'Load balancer ki apni ginti?', back: 'Bheji − lauti = us server par abhi kitni. Hamesha taaza, kisi se poochhna nahi. Dheema server apne aap bhara dikhta hai. Lab: line 0 (purani jaankari par 92–106).' },
-    { front: 'Do hi kyun — sab ko kyun nahi dekhte?', back: 'Sab ko dekhna = "sabse khaali" = jhund (0 / 1000 / 0). Do: sabse bhare se bachne ke liye kaafi, jhund ke liye kam, aur sau servers mein bhi sasta.' },
+    { front: 'Load balancer ki apni ginti?', back: 'Bheji − lauti = is load balancer ki chalti requests. Local ginti taaza hai; doosre balancers aur background kaam nahi dikhta. Dheema server apne aap bhara dikhta hai. Lab: line 0 (purani jaankari par 92–106).' },
+    { front: 'Do hi kyun — sab ko kyun nahi dekhte?', back: 'Is lab mein ek hi purani ginti baar-baar dekhna = jhund (0 / 1000 / 0). Do: sabse bhare se bachne ke liye kaafi, jhund ke liye kam, aur sau servers mein bhi sasta.' },
   ],
 },
 ]);

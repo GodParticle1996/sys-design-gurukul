@@ -114,11 +114,11 @@ VISUALS['latency'] = {
       <div class="dg-box is-bad"><span class="bx-label">📉 Average ka dhokha</span>
         <div class="dg-col">
           <div class="dg-node"><span class="nl">100 requests</span>
-            <span class="ns">99 requests: 10 ms<br>1 request: 5,000 ms</span></div>
-          <div class="dg-node is-gold"><span class="nl">average = 59 ms</span>
+            <span class="ns">98 requests: 10 ms<br>2 requests: 5,000 ms</span></div>
+          <div class="dg-node is-gold"><span class="nl">average = 109.8 ms</span>
             <span class="ns">"sab theek hai!" 😊</span></div>
           <div class="dg-node is-bad"><span class="nl">p99 = 5,000 ms</span>
-            <span class="ns">har 100 mein se 1 user ka 5 second barbaad 😡</span></div>
+            <span class="ns">har 100 mein se 2 requests ka 5 second barbaad 😡</span></div>
         </div>
         <div class="dg-cap">Average outliers ko <b>chhupata</b> hai. Percentile unhe <b>dikhata</b> hai.
           Isliye dashboards par hamesha p50 + p95 + p99 — kabhi sirf average nahi.</div>
@@ -127,7 +127,7 @@ VISUALS['latency'] = {
       <div class="dg-box is-accent"><span class="bx-label">🧮 Tail amplification</span>
         <div class="dg-col">
           <div class="dg-node" data-hs="one"><span class="nl">1 service call</span>
-            <span class="ns">p99 = 1% requests dheemi</span></div>
+            <span class="ns">1% calls dheemi (calls ek doosre se independent maano)</span></div>
           <div class="dg-node is-gold" data-hs="ten"><span class="nl">10 parallel calls</span>
             <span class="ns">1 − 0.99¹⁰ = <b>9.6%</b> requests dheemi</span></div>
           <div class="dg-node is-bad" data-hs="hundred"><span class="nl">100 parallel calls</span>
@@ -184,11 +184,11 @@ VISUALS['estimation'] = {
       <div class="dg-box is-good"><span class="bx-label">📦 Storage ka formula</span>
         <div class="dg-col">
           <div class="dg-node"><span class="nl">rps × bytes × seconds</span>
-            <span class="ns">14 × 2 KB × 86,400 = 2.4 GB/din</span></div>
+            <span class="ns">28 × 2 KB × 86,400 = 4.8 GB/din</span></div>
           <div class="dg-node is-gold"><span class="nl">× 365</span>
-            <span class="ns">= 880 GB/saal</span></div>
+            <span class="ns">= 1.8 TB/saal</span></div>
           <div class="dg-node is-bad"><span class="nl">× 3 (replication)</span>
-            <span class="ns">= 2.6 TB — <b>yeh number budget meeting mein chahiye</b></span></div>
+            <span class="ns">= 5.3 TB — <b>yeh number budget meeting mein chahiye</b></span></div>
         </div>
       </div>
     </div>
@@ -197,7 +197,7 @@ VISUALS['estimation'] = {
     <div class="dg-legend">
       <span class="dg-pill gold" data-hs="little">LITTLE'S LAW: L = λ × W</span>
       <span>concurrency = arrival rate × service time.
-        500 rps × 20 ms = <b>10 requests ek saath andar</b> — matlab 10 connections chahiye, 500 nahi.</span>
+        500 rps × 20 ms = <b>10 requests ek saath andar</b> — mean concurrency 10 hai; pool ko DB hold time, bursts aur headroom se size karo.</span>
     </div>
     <div class="dg-cap">Yeh ek formula tumhe bata deta hai ki pool kitna bada ho, thread kitne hon,
       aur kab woh <b>bharne</b> waala hai. Poore Resilience track ki neev yahi hai.</div>`,
@@ -253,14 +253,14 @@ VISUALS['fanout'] = {
           <div class="dg-node is-accent"><span class="ni">📄</span><span class="nl">GET /product/42</span></div>
         </div>
         <div class="dg-grid" style="margin-top:8px">
-          <div class="dg-node"><span class="nl">catalog</span><span class="ns">p99 40 ms</span></div>
-          <div class="dg-node"><span class="nl">pricing</span><span class="ns">p99 60 ms</span></div>
-          <div class="dg-node"><span class="nl">inventory</span><span class="ns">p99 90 ms</span></div>
-          <div class="dg-node"><span class="nl">reviews</span><span class="ns">p99 120 ms</span></div>
-          <div class="dg-node"><span class="nl">recommend</span><span class="ns">p99 200 ms</span></div>
+          <div class="dg-node"><span class="nl">catalog</span><span class="ns">misaal: 40 ms</span></div>
+          <div class="dg-node"><span class="nl">pricing</span><span class="ns">misaal: 60 ms</span></div>
+          <div class="dg-node"><span class="nl">inventory</span><span class="ns">misaal: 90 ms</span></div>
+          <div class="dg-node"><span class="nl">reviews</span><span class="ns">misaal: 120 ms</span></div>
+          <div class="dg-node"><span class="nl">recommend</span><span class="ns">misaal: 200 ms</span></div>
         </div>
         <div class="dg-cap" style="margin-top:8px">Parallel bhejo toh total = <b>sabse dheeme</b> ka time = 200 ms.
-          Serial bhejo toh <b>sum</b> = 510 ms. Parallel hamesha behtar — par…</div>
+          Serial bhejo toh <b>sum</b> = 510 ms. Independent calls ki is misaal mein parallel tez — par…</div>
       </div>
 
       <div class="dg-box is-bad"><span class="bx-label">💀 …tail amplification</span>
@@ -875,7 +875,7 @@ VISUALS['btree'] = {
       <span class="dg-pill gold" data-hs="heap">heap row</span>
     </div>
     <div class="dg-cap" style="margin-top:8px">2.4 crore rows mein pahunchne ke liye ~4 hops
-      (log ba 100 se). Isiliye index lookup <b>hamesha</b> tez hai — chahe table kitni bhi badi ho.</div>
+      (log ba 100 se). Isiliye lookup latency cache, selectivity aur I/O par nirbhar hai.</div>
 
     <div class="dg-rule"></div>
     <div class="dg-split">
@@ -900,10 +900,8 @@ VISUALS['btree'] = {
     <div class="dg-rule"></div>
     <div class="dg-legend">
       <span class="dg-pill gold" data-hs="sel">🎯 SELECTIVITY</span>
-      <span>= distinct values ÷ total rows. <code>email</code> (sab alag) = 1.0, perfect.
-        <code>is_active</code> (2 values) ≈ 0.0000001, bekaar.
-        <b>Index tabhi laga jab woh 90%+ rows kaat de</b> — warna optimizer use
-        ignore karke seq scan hi karega (aur woh sahi hoga).</span>
+      <span>= predicate ki matching rows ÷ total rows. Column cardinality alag hai; rare boolean value par bhi index useful ho sakta hai.
+        <b>Koi universal 90% cutoff nahi; statistics aur actual plan jaancho</b> — actual workload par EXPLAIN se plan jaancho.</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill bad" data-hs="fn">⚠️ SABSE AAM GALTI</span>
@@ -923,7 +921,7 @@ VISUALS['composite'] = {
       <div class="dg-rung g" data-hs="p1"><span class="lv">✅</span><span class="cmd">WHERE user_id = ?</span><span class="q">1/3 — index laga</span></div>
       <div class="dg-rung g" data-hs="p2"><span class="lv">✅</span><span class="cmd">WHERE user_id = ? AND created_at &gt; ?</span><span class="q">2/3 — aur gehra</span></div>
       <div class="dg-rung g" data-hs="p3"><span class="lv">✅</span><span class="cmd">WHERE user_id = ? ORDER BY created_at</span><span class="q">sort bhi MUFT mila</span></div>
-      <div class="dg-rung" style="border-left-color:var(--bad)" data-hs="broken"><span class="lv">❌</span><span class="cmd">WHERE created_at &gt; ?</span><span class="q">FULL SCAN — leading column chhoda</span></div>
+      <div class="dg-rung" style="border-left-color:var(--bad)" data-hs="broken"><span class="lv">❌</span><span class="cmd">WHERE created_at &gt; ?</span><span class="q">Broad/skip scan mumkin — EXPLAIN dekho</span></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -932,25 +930,23 @@ VISUALS['composite'] = {
         <div class="dg-node is-bad"><span class="ni">📕</span><span class="nl">(lastName, firstName) par sorted</span>
           <span class="ns">"Sharma" dhoondo → 1 second<br>"Priya" dhoondo → POORI kitaab</span></div>
         <div class="dg-cap">Index sorted hai — <b>pehle column se</b>. Doosre column ka order
-          sirf <b>us</b> pehle column ke andar hai. Isiliye leading column chhodne par
-          index bekaar ho jaata hai.</div>
+          sirf <b>us</b> pehle column ke andar hai. Missing leading column par bhi index useful ho sakta hai; plan aur cardinality jaancho.</div>
       </div>
       <div class="dg-box is-good"><span class="bx-label">🎯 Column ka kram kaise chuno</span>
         <div class="dg-stack">
           <div class="dg-node is-good" data-hs="eq"><span class="ni">1️⃣</span><span class="nl">Equality columns PEHLE</span><span class="ns">WHERE x = ? wale</span></div>
           <div class="dg-node is-accent" data-hs="sort"><span class="ni">2️⃣</span><span class="nl">Sort column BEECH mein</span><span class="ns">ORDER BY jispar hai</span></div>
-          <div class="dg-node is-gold" data-hs="range"><span class="ni">3️⃣</span><span class="nl">Range column AAKHIR mein</span><span class="ns">&gt; &lt; BETWEEN — uske baad index ruk jaata hai</span></div>
+          <div class="dg-node is-gold" data-hs="range"><span class="ni">3️⃣</span><span class="nl">Range column AAKHIR mein</span><span class="ns">&gt; &lt; BETWEEN — baad ke predicates index mein filter ho sakte hain</span></div>
         </div>
-        <div class="dg-cap">Range ke <b>baad</b> ka koi bhi column index se filter nahi hota —
-          woh sirf rows padh ke chhaanta hai.</div>
+        <div class="dg-cap">Range ke <b>baad</b> bhi index predicate filtering mumkin hai; heap visits aur seek span actual plan se jaancho.</div>
       </div>
     </div>
 
     <div class="dg-rule"></div>
     <div class="dg-legend">
       <span class="dg-pill good" data-hs="cover">🏆 COVERING INDEX</span>
-      <span>Query ke SAARE columns index mein hain → heap chhune ki zaroorat hi nahi
-        (<code>Using index</code> / <code>Index Only Scan</code>). 2-3x tez.</span>
+      <span>Query ke SAARE columns index mein hain → index-only scan mumkin; Postgres visibility ke liye heap fetch kar sakta hai
+        (<code>Using index</code> / <code>Index Only Scan</code>); speedup measure karo.</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill bad" data-hs="tax">💸 INDEX KA TAX</span>
@@ -1062,7 +1058,7 @@ VISUALS['pool'] = {
         <div class="dg-rung" style="border-left-color:var(--bad)" data-hs="wait"><span class="lv">9900</span><span class="cmd">⏳ pool.acquire()</span><span class="q">💀 YAHI HAI</span></div>
         <div class="dg-rung"><span class="lv">20ms</span><span class="cmd">db query</span><span class="q">DB bilkul theek hai!</span></div>
       </div>
-      <div class="dg-cap">Query optimize karna <b>bekaar</b> hai — SQL sirf 20 ms le raha hai.
+      <div class="dg-cap">Ek sample se query optimization <b>bekaar mat maano</b> — SQL sirf 20 ms le raha hai.
         Bottleneck DB nahi, <b>DB ke saamne ki QUEUE</b> hai.</div>
     </div>
 
@@ -1073,7 +1069,7 @@ VISUALS['pool'] = {
             <span class="ns">pool 50, query 20ms  → 2,500 rps ✅<br>
               pool 50, query 200ms → 250 rps ⚠️<br>
               pool 50, query 8s    → 6 rps 💀</span></div>
-          <div class="dg-node is-bad" data-hs="hold"><span class="nl">…aur agar 45 connections<br>ek lambi transaction ne pakad rakhe hain?</span>
+          <div class="dg-node is-bad" data-hs="hold"><span class="nl">…aur agar 45 connections<br>lambi transactions ne pakad rakhe hain?</span>
             <span class="ns">effective pool = 5 → capacity 250 rps</span></div>
         </div>
       </div>
@@ -1129,7 +1125,7 @@ return v</pre>
       <div class="dg-box is-accent"><span class="bx-label">✍️ WRITE-THROUGH / WRITE-BEHIND</span>
         <div class="dg-stack">
           <div class="dg-node is-accent" data-hs="through"><span class="nl">write-through</span>
-            <span class="ns">cache + DB dono ek saath likho<br>consistent, par write dheema</span></div>
+            <span class="ns">cache + DB dono ek saath likho<br>write dheema; crash/race par inconsistency mumkin</span></div>
           <div class="dg-node is-gold" data-hs="behind"><span class="nl">write-behind</span>
             <span class="ns">cache mein likho, DB baad mein<br>tez — par crash par DATA GAYA</span></div>
         </div>
@@ -1140,7 +1136,7 @@ return v</pre>
     <div class="dg-legend">
       <span class="dg-pill bad" data-hs="invalid">🔑 INVALIDATION — do hi tareeke</span>
       <span><b>TTL</b> (aasan, par thodi der stale) ya <b>explicit delete on write</b>
-        (fresh, par har write path yaad rakhna padega — aur ek bhool = hamesha ka stale data).
+        (fresh, par har write path yaad rakhna padega — aur ek bhool = TTL ya agle invalidation tak stale data).
         Zyadatar systems dono use karte hain: explicit delete + chhota TTL safety net ke taur par.</span>
     </div>
     <div class="dg-legend">
@@ -1407,7 +1403,7 @@ VISUALS['retries'] = {
     </div>
     <div class="dg-legend">
       <span class="dg-pill gold" data-hs="layers">⚠️ LAYERS KA GUNA</span>
-      <span>SDK 3 attempts × gateway 3 attempts × client 3 attempts = <b>27 requests</b>
+      <span>SDK 3 kul koshish × gateway 3 kul koshish × client 3 kul koshish = <b>27 requests</b>
         ek user action ke liye. Retry <b>ek</b> layer par rakho — aksar sabse upar wali.</span>
     </div>`,
 };
@@ -1714,7 +1710,7 @@ VISUALS['slo'] = {
       <div class="dg-rung a"><span class="lv">99.99%</span><span class="cmd">"chaar nines"</span><span class="q">4.3 min/mahina</span></div>
       <div class="dg-rung g"><span class="lv">99.999%</span><span class="cmd">"paanch nines"</span><span class="q">26 SECOND/mahina</span></div>
     </div>
-    <div class="dg-cap" style="margin-top:8px">Har extra 9 ki keemat lagbhag <b>10x</b> hai.
+    <div class="dg-cap" style="margin-top:8px">Har extra 9 mein manzoor errors <b>10 guna kam</b>; kharcha design par hai.
       "100% uptime" ek target nahi, ek galatfehmi hai.</div>
 
     <div class="dg-rule"></div>
@@ -1726,7 +1722,7 @@ VISUALS['slo'] = {
           <div class="dg-node is-gold" data-hs="slo"><span class="nl">SLO</span>
             <span class="ns">tumhara apna target<br>"99.9% over 30 days"</span></div>
           <div class="dg-node is-bad" data-hs="sla"><span class="nl">SLA</span>
-            <span class="ns">customer se contract + PAISA<br>hamesha SLO se DHEELA rakho</span></div>
+            <span class="ns">customer se contract + PAISA<br>aam taur par SLO se DHEELA</span></div>
         </div>
       </div>
       <div class="dg-box is-good"><span class="bx-label">💰 ERROR BUDGET — asli kaam yeh hai</span>
@@ -1736,7 +1732,7 @@ VISUALS['slo'] = {
           <div class="dg-node is-good"><span class="nl">Budget bacha hai?</span>
             <span class="ns">deploy karo, risk lo, tez chalo 🚀</span></div>
           <div class="dg-node is-bad"><span class="nl">Budget khatam?</span>
-            <span class="ns">feature freeze — sirf reliability kaam</span></div>
+            <span class="ns">tay policy; critical fixes ki saaf chhoot</span></div>
         </div>
         <div class="dg-cap">Error budget "product vs reliability" wali behes ko
           ek <b>number</b> mein badal deta hai. Yahi uski asli taakat hai.</div>
@@ -1894,7 +1890,7 @@ VISUALS['dbperservice'] = {
         </div>
         <div class="dg-ladder" style="margin-top:8px">
           <div class="dg-rung g"><span class="lv">✅</span><span class="cmd">independent deploy aur migration</span><span class="q">apna schema, apni marzi</span></div>
-          <div class="dg-rung g"><span class="lv">✅</span><span class="cmd">blast radius bandha</span><span class="q">ek DB gire toh ek service</span></div>
+          <div class="dg-rung g"><span class="lv">✅</span><span class="cmd">blast radius bandha</span><span class="q">seedha asar ek service; dependent flows bhi ruk sakte hain</span></div>
           <div class="dg-rung a"><span class="lv">⚠️</span><span class="cmd">JOIN gaya, transaction gaya</span><span class="q">ab composition aur saga</span></div>
         </div>
       </div>
@@ -2027,8 +2023,7 @@ kafka.publish(event)    ❌ crash!
 → warehouse ko pata hi nahi
 → silent data inconsistency</pre>
         <div class="dg-cap">Kram ulta karo toh ulta problem: event chala gaya
-          aur order bana hi nahi. <b>Do alag systems ko ek saath atomic likhna
-          namumkin hai.</b></div>
+          aur order bana hi nahi. <b>Bina saajhe commit protocol ke do systems mein atomic write nahi milta.</b></div>
       </div>
       <div class="dg-box is-good"><span class="bx-label">✅ OUTBOX — dono EK transaction mein</span>
         <pre style="font-size:.72rem">BEGIN;
@@ -2040,7 +2035,7 @@ COMMIT;                             ← ATOMIC ✅
 poll outbox → publish → mark sent</pre>
         <div class="dg-cap">Ab dono ek hi transaction mein hain — ya dono hue,
           ya dono nahi. Publisher crash ho toh event <b>outbox mein pada</b> hai;
-          restart par chala jaayega.</div>
+          relay recover ho aur row bachi ho toh retry hoga.</div>
       </div>
     </div>
 
@@ -2060,7 +2055,7 @@ poll outbox → publish → mark sent</pre>
       <span class="dg-pill gold" data-hs="atleast">⚠️ AT-LEAST-ONCE</span>
       <span>Publish ke <b>baad</b> aur mark ke <b>pehle</b> crash? Event dobara jaayega.
         Isiliye consumers ko <b>idempotent</b> hona hi hoga —
-        outbox exactly-once nahi deta, woh "<b>kabhi kho nahi sakta</b>" deta hai.</span>
+        outbox exactly-once nahi deta, woh <b>producer dual-write gap</b> band karta hai; DB durability, retention aur relay recovery chahiye.</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill acc" data-hs="cdc">🔄 CDC (Debezium)</span>
@@ -2070,7 +2065,7 @@ poll outbox → publish → mark sent</pre>
 };
 
 VISUALS['exactlyonce'] = {
-  t: 'Exactly-once ka jhooth — at-least-once + idempotent',
+  t: 'Exactly-once ka scope — delivery aur processing',
   html: `
     <div class="dg-split">
       <div class="dg-box is-bad"><span class="bx-label">🤔 CRASH KE BAAD — pata hi nahi chal sakta</span>
@@ -2079,7 +2074,7 @@ VISUALS['exactlyonce'] = {
           <div class="dg-rung"><span class="lv">2</span><span class="cmd">ack bhejne se PEHLE crash</span><span class="q">💥</span></div>
           <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">?</span><span class="cmd">broker ko pata nahi: kaam hua ya nahi</span><span class="q">dono ek jaise dikhte hain</span></div>
         </div>
-        <div class="dg-cap">Do hi vikalp hain — aur teesra koi nahi:</div>
+        <div class="dg-cap">Delivery retry ke vikalp; processing ka natija durable state se jaancho:</div>
         <div class="dg-stack" style="margin-top:8px">
           <div class="dg-node is-gold"><span class="nl">Dobara bhejo</span><span class="ns">at-least-once → DUPLICATES</span></div>
           <div class="dg-node is-bad"><span class="nl">Mat bhejo</span><span class="ns">at-most-once → DATA LOSS</span></div>
@@ -2217,7 +2212,7 @@ VISUALS['locks'] = {
       <div class="dg-box is-good"><span class="bx-label">🧰 KYA USE KARO</span>
         <div class="dg-ladder">
           <div class="dg-rung g"><span class="lv">1</span><span class="cmd">DB unique constraint / conditional update</span><span class="q">sabse simple, sabse strong</span></div>
-          <div class="dg-rung g"><span class="lv">2</span><span class="cmd">Partition — ek key sirf ek worker ko</span><span class="q">lock ki zaroorat hi khatam</span></div>
+          <div class="dg-rung g"><span class="lv">2</span><span class="cmd">Partition — ek key sirf ek worker ko</span><span class="q">owner badle toh stale worker guard chahiye</span></div>
           <div class="dg-rung a"><span class="lv">3</span><span class="cmd">etcd / ZooKeeper (consensus)</span><span class="q">sach mein leader chahiye toh</span></div>
           <div class="dg-rung"><span class="lv">4</span><span class="cmd">Redis lock (fencing token ke saath)</span><span class="q">sirf "best effort" kaam ke liye</span></div>
         </div>
@@ -2238,9 +2233,9 @@ VISUALS['boss-dist'] = {
     <div class="dg-rule"></div>
     <div class="dg-ladder">
       <div class="dg-rung g"><span class="lv">1</span><span class="cmd">Idempotency-Key se order banao (pending)</span><span class="q">double-submit safe</span></div>
-      <div class="dg-rung g"><span class="lv">2</span><span class="cmd">order + outbox row EK transaction mein</span><span class="q">event kabhi kho nahi sakta</span></div>
+      <div class="dg-rung g"><span class="lv">2</span><span class="cmd">order + outbox row EK transaction mein</span><span class="q">dual-write gap band; durability + relay recovery chahiye</span></div>
       <div class="dg-rung g"><span class="lv">3</span><span class="cmd">orchestrator saga chalaye</span><span class="q">flow ek jagah dikhe</span></div>
-      <div class="dg-rung g"><span class="lv">4</span><span class="cmd">har consumer idempotent</span><span class="q">at-least-once = duplicates</span></div>
+      <div class="dg-rung g"><span class="lv">4</span><span class="cmd">har consumer idempotent</span><span class="q">at-least-once = duplicates mumkin</span></div>
       <div class="dg-rung g"><span class="lv">5</span><span class="cmd">fail par compensate + state dikhao</span><span class="q">saga mein isolation nahi hai</span></div>
       <div class="dg-rung g"><span class="lv">6</span><span class="cmd">"Delhi ke pending orders" ke liye read model</span><span class="q">cross-service JOIN gaya</span></div>
     </div>
@@ -2732,7 +2727,7 @@ VISUALS['geo'] = {
     <div class="dg-split">
       <div class="dg-box is-bad"><span class="bx-label">❌ lat/lng dono par BETWEEN</span>
         <div class="dg-cap"><code>WHERE lat BETWEEN ? AND ?<br>&nbsp; AND lng BETWEEN ? AND ?</code>
-          <br><br>Composite index <b>pehli range ke baad ruk jaata hai</b>.
+          <br><br>Composite index mein <b>pehli range scan span ko bound karti hai; baad ke predicates index par filter ho sakte hain</b>.
           <code>(lat,lng)</code> index poori latitude patti tak le jaayega —
           poore desh ki us patti ke 4 lakh drivers — aur phir <code>lng</code> se
           filter karne ke liye woh saari rows padhni padengi.
@@ -3127,7 +3122,7 @@ VISUALS['numbers'] = {
     <div class="dg-ladder">
       <div class="dg-rung g"><span class="lv">1000x</span><span class="cmd">RAM vs SSD</span><span class="q">→ caching ka <b>poora</b> karan</span></div>
       <div class="dg-rung g"><span class="lv">0.5ms × 20</span><span class="cmd">20 service hops</span><span class="q">→ 10ms sirf network par, bina kaam kiye</span></div>
-      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">150ms</span><span class="cmd">cross-continent</span><span class="q">→ p99 200ms ka SLO <b>physics</b> se namumkin. Ilaaj sirf architecture</span></div>
+      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">150ms</span><span class="cmd">cross-continent</span><span class="q">→ 150ms RTT par 200ms SLO mein ~50ms baaki; actual route aur processing time naapo</span></div>
       <div class="dg-rung g"><span class="lv">100µs</span><span class="cmd">ek index lookup</span><span class="q">→ 1000 lookups (N+1) = 100ms</span></div>
       <div class="dg-rung g"><span class="lv">~10k qps</span><span class="cmd">ek Postgres</span><span class="q">→ sharding ki baat <b>abhi</b> zaroori hai ya nahi</span></div>
     </div>
@@ -3163,9 +3158,9 @@ VISUALS['ids'] = {
       <div class="dg-box is-good"><span class="bx-label">✅ Sortable id (Snowflake / ULID / autoinc)</span>
         <div class="dg-cap">Har naya row → B-tree ke <b>aakhri page</b> par
           <br>→ woh page pehle se memory mein <b>garam</b> hai
-          <br>→ koi split nahi, koi random I/O nahi
+          <br>→ locality behtar ho sakti hai; splits aur I/O phir bhi mumkin
           <br><br><code>page splits &nbsp;&nbsp;2,000</code>
-          <br><code>1L inserts &nbsp;6,000 ms</code>
+          <br><code>10L inserts &nbsp;6,000 ms</code>
           <br><code>cursor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ tie-breaker kaam karta hai</code></div>
       </div>
       <div class="dg-box is-bad"><span class="bx-label">❌ Random id (UUIDv4)</span>
@@ -3173,8 +3168,8 @@ VISUALS['ids'] = {
           <br>→ woh page shayad disk se laana pade
           <br>→ bhara hua ho toh <b>SPLIT</b>
           <br><br><code>page splits &nbsp;340,000 💥</code>
-          <br><code>1L inserts &nbsp;43,000 ms</code>
-          <br><code>cursor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;❌ sort ka matlab hi nahi</code></div>
+          <br><code>10L inserts &nbsp;43,000 ms</code>
+          <br><code>cursor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ stable unique tie-breaker; time order ke liye created_at bhi</code></div>
       </div>
     </div>
 
@@ -3188,7 +3183,7 @@ VISUALS['ids'] = {
     <div class="dg-cap"><b>Snowflake, 64 bits.</b> Timestamp <b>sabse aage</b> — isliye ids ko number ki tarah
       sort karo toh woh apne aap waqt ke kram mein aa jaati hain.
       41 bit = 69 saal · 10 bit = 1024 machines · 12 bit = 4096 ids per machine <b>per millisecond</b>.
-      Aur koi central service nahi chahiye.</div>
+      Per-ID call nahi, par unique worker-ID allocation aur clock recovery coordinate karo.</div>
     <div class="dg-legend">
       <span class="dg-pill bad">⏰ CLOCK PEECHE JAANA</span>
       <span>NTP clock peeche kar sakta hai — aur tab wahi ids <b>dobara</b> ban jaayengi.
@@ -3306,8 +3301,8 @@ VISUALS['conshash'] = {
 
     <div class="dg-rule"></div>
     <div class="dg-ladder">
-      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">1</span><span class="cmd">vnode per node</span><span class="q">node-1 45% · node-2 3% · node-3 19% · node-4 30% — <b>skew 1.9x</b></span></div>
-      <div class="dg-rung g" data-hs="vnodes"><span class="lv">150</span><span class="cmd">vnodes per node</span><span class="q">24.7% · 24.8% · 25.2% · 25.3% — <b>skew 1.01x</b></span></div>
+      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">1</span><span class="cmd">vnode per node</span><span class="q">toy: node-1 45% · node-2 3% · node-3 19% · node-4 33% — <b>max/min 15x</b></span></div>
+      <div class="dg-rung g" data-hs="vnodes"><span class="lv">150</span><span class="cmd">vnodes per node</span><span class="q">toy: 24.7% · 24.8% · 25.2% · 25.3% — <b>max/min ~1.02x</b></span></div>
     </div>
     <div class="dg-legend">
       <span class="dg-pill good">🌀 VIRTUAL NODES — DO faayde</span>
@@ -3528,8 +3523,8 @@ VISUALS['bitly'] = {
   html: `
     <div class="dg-flow">
       <span class="dg-pill">40 writes/sec</span><span class="dg-arrow">:</span>
-      <span class="dg-pill acc">12,000 reads/sec</span><span class="dg-arrow">=</span>
-      <span class="dg-pill gold">100 : 1</span>
+      <span class="dg-pill acc">4,000 average reads/sec (peak ~12,000)</span><span class="dg-arrow">=</span>
+      <span class="dg-pill gold">write:read = 1 : 100</span>
     </div>
     <div class="dg-cap">Yeh ek ratio poora design tay kar deta hai:
       write path itna chhota hai ki uspar sochna hi galti hai. <b>Saara kaam read path par hai.</b></div>
@@ -3540,7 +3535,7 @@ VISUALS['bitly'] = {
       <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">#️⃣</span><span class="cmd">md5(url) ke pehle 7</span><span class="q">wahi URL = wahi code (kabhi bug) · truncation se collisions phir bhi</span></div>
       <div class="dg-rung g"><span class="lv">🔢</span><span class="cmd">Counter → scramble → base62</span><span class="q">collision <b>namumkin</b> → lookup HAI HI NAHI · code sabse chhota</span></div>
     </div>
-    <div class="dg-cap"><code>62⁷ = 3.5 kharab codes</code> — 5 saal ke 6 arab URLs ke liye 500x margin.
+    <div class="dg-cap"><code>62⁷ ≈ 35.2 kharab codes</code> — 5 saal ke 6 arab URLs ke liye ~586x margin.
       Aur counter sortable hai, isliye index bhi khush.</div>
 
     <div class="dg-rule"></div>
@@ -3568,7 +3563,7 @@ VISUALS['bitly'] = {
           <br>❌ <b>click count khatam</b> · ❌ destination kabhi badal nahi sakte</div>
       </div>
       <div class="dg-box is-good"><span class="bx-label">↩️ 302 Found</span>
-        <div class="dg-cap">Har click server se guzarta hai.
+        <div class="dg-cap">302 explicit freshness policy se cache ho sakta hai.
           <br>✅ analytics milti hai · ✅ destination badla ja sakta hai
           <br>❌ har click ek request
           <br><br><small>Jab analytics <b>product</b> ho, woh extra load ek feature hai.</small></div>
@@ -3820,7 +3815,7 @@ VISUALS['youtube'] = {
   html: `
     <div class="dg-flow">
       <span class="dg-pill gold">100 crore watch-hours/din × ~1 GB</span><span class="dg-arrow">=</span>
-      <span class="dg-pill bad">~100 PB/din ≈ 10 Tbps</span>
+      <span class="dg-pill bad">~1 EB/din ≈ 92.6 Tbps</span>
     </div>
     <div class="dg-cap">Ek number, aur poora design tay ho gaya: yeh origin se serve karna
       <b>namumkin</b> hai. Isliye sab kuch CDN ke around banta hai —
@@ -3851,12 +3846,12 @@ VISUALS['youtube'] = {
 
     <div class="dg-legend">
       <span class="dg-pill bad">📉 HIT RATE 95% → 90%</span>
-      <span>Origin traffic <b>DUGNA</b> (5% → 10%) — aur woh 10 Tbps ka 10% hai.
+      <span>Origin traffic <b>DUGNA</b> (5% → 10%) — aur same volume/shield boundary par 92.6 Tbps ka 10% hai; byte hit ratio chahiye.
         Hit rate ek first-class SLI honi chahiye, aur uska girna ek alert.</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill acc">👁️ VIEW COUNT</span>
-      <span>100 crore views/din = 12,000 writes/sec <b>ek hot row</b> par.
+      <span>100 crore views/din ≈ 11,574 events/sec <b>poore platform</b> par; per-video skew alag naapo.
         Sahi raasta: view event → stream → windowed aggregate → periodic update.
         "1.2M views" mein exactness ka koi mol nahi.</span>
     </div>
@@ -3891,7 +3886,7 @@ VISUALS['boss-uber'] = {
 
     <div class="dg-rule"></div>
     <div class="dg-flow">
-      <span class="dg-pill">rider ki cell + 8 padosi</span><span class="dg-arrow">→</span>
+      <span class="dg-pill">radius cover karne wali saari cells</span><span class="dg-arrow">→</span>
       <span class="dg-pill">doori + ETA se rank</span><span class="dg-arrow">→</span>
       <span class="dg-pill good">top driver par HOLD<br><small>TTL 15s</small></span><span class="dg-arrow">→</span>
       <span class="dg-pill acc">offer</span>
@@ -3945,7 +3940,7 @@ VISUALS['pm-config'] = {
     <div class="dg-rule"></div>
     <div class="dg-ladder">
       <div class="dg-rung"><span class="lv">11:05</span><span class="cmd">ClickHouse permission change</span><span class="q">users ko <code>r0</code> database ke columns bhi dikhne lage</span></div>
-      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">11:15</span><span class="cmd">feature file 60 → 240 rows</span><span class="q">query mein database ka filter tha hi nahi — har column do baar</span></div>
+      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">11:15</span><span class="cmd">feature file > 200 rows</span><span class="q">query mein database ka filter tha hi nahi — har column do baar</span></div>
       <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">11:20</span><span class="cmd">FL2 proxy panic</span><span class="q">200 features pre-allocated · <code>unwrap()</code> Err par chala · 5xx</span></div>
       <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">11:35+</span><span class="cmd">har 5 min: theek → kharab → theek</span><span class="q">ClickHouse rolling update — file kabhi acche node se, kabhi kharab node se</span></div>
       <div class="dg-rung g"><span class="lv">14:30</span><span class="cmd">sahi file manually daali gayi</span><span class="q">core traffic chal pada · 17:06 par sab normal</span></div>
@@ -3994,7 +3989,7 @@ VISUALS['pm-regex'] = {
     <div class="dg-ladder">
       <div class="dg-rung"><span class="lv">x=x</span><span class="cmd">23 kadam</span><span class="q">chhota input, chhota kaam</span></div>
       <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">20 x</span><span class="cmd">555 kadam</span><span class="q">input 7x bada, kaam 24x bada</span></div>
-      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">thoda aur</span><span class="cmd">lakhon kadam</span><span class="q">exponential — CPU khatam</span></div>
+      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">thoda aur</span><span class="cmd">lakhon kadam</span><span class="q">polynomial — CPU khatam</span></div>
     </div>
     <div class="dg-cap">Ilaaj review ya timeout nahi — <b>linear-time engine</b> (RE2 / Rust regex),
       jo nested quantifiers ko exponential hone hi nahi deta.</div>
@@ -4210,7 +4205,7 @@ VISUALS['napkin'] = {
       <div class="dg-box is-good"><span class="bx-label">🔢 Little's Law</span>
         <div class="dg-cap"><code>L = λ × W</code>
           <br>50,000 rps × 40 ms = <b>2,000 concurrent</b>
-          <br>Pool 200 ka? <b>1,800 queue mein</b>
+          <br>DB hold 40 ms, pool 200? <b>Capacity 5,000 rps; queue badhegi</b>
           <br><br>Queue mein khadi request <b>CPU nahi jalati</b> —
           isliye "CPU 10% par timeout" dikhta hai.</div>
       </div>
@@ -4250,7 +4245,7 @@ VISUALS['vectors'] = {
       <div class="dg-box is-good"><span class="bx-label">🗜️ Quantization (10 crore × 768)</span>
         <div class="dg-cap">
           float32 · 3,072 B → <b>307 GB</b> · baseline recall
-          <br>int8 · 768 B → <b>77 GB</b> · recall ~1-2% kam
+          <br>int8 · 768 B → <b>77 GB</b> · recall workload par naapo
           <br>binary · 96 B → <b>10 GB</b> · recall bahut kam
           <br><br><small>Binary akela nahi — binary se candidates nikalo,
           phir float32 se <b>rerank</b>.</small></div>
@@ -4276,9 +4271,9 @@ VISUALS['multiregion'] = {
   html: `
     <div class="dg-ladder">
       <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">1️⃣</span><span class="cmd">Ek global primary</span><span class="q">strong · remote users ko poora RTT · <b>region gira toh writes BAND</b></span></div>
-      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">🗳️</span><span class="cmd">Cross-region quorum</span><span class="q">strong · <b>har write par 1 RTT</b> · 3+ regions par zinda rehta hai</span></div>
-      <div class="dg-rung g"><span class="lv">📍</span><span class="cmd">Regional-by-row</span><span class="q"><b>strong AUR local</b> · har row ka apna home region · us region ke rows hi rukte hain</span></div>
-      <div class="dg-rung"><span class="lv">🔀</span><span class="cmd">Async multi-primary</span><span class="q">local writes · <b>eventual</b> + conflicts · hamesha zinda</span></div>
+      <div class="dg-rung" style="border-left-color:var(--gold)"><span class="lv">🗳️</span><span class="cmd">Cross-region quorum</span><span class="q">strong · required remote ACK ka RTT · quorum bache toh chalta hai</span></div>
+      <div class="dg-rung g"><span class="lv">📍</span><span class="cmd">Regional-by-row</span><span class="q">home-region locality · strong · quorum aur survival goal par nirbhar</span></div>
+      <div class="dg-rung"><span class="lv">🔀</span><span class="cmd">Async multi-primary</span><span class="q">local writes · <b>eventual</b> + conflicts · failover aur capacity chahiye</span></div>
     </div>
 
     <div class="dg-rule"></div>
@@ -4289,8 +4284,7 @@ VISUALS['multiregion'] = {
       </div>
       <div class="dg-box is-good"><span class="bx-label">🌏 Ek continent ka quorum</span>
         <div class="dg-cap">write p99 = 5 ms + <b>30 ms</b> = ~35 ms
-          <br><small>isiliye asli global systems quorum ek continent mein rakhte hain
-          aur continents ke beech async replicate karte hain</small></div>
+          <br><small>locality ke liye ek continent; global strong writes/survival ko WAN quorum lag sakti hai</small></div>
       </div>
     </div>
 
@@ -4298,7 +4292,7 @@ VISUALS['multiregion'] = {
     <div class="dg-legend">
       <span class="dg-pill gold">📍 REGIONAL-BY-ROW — kam samjha jaane wala hal</span>
       <span>Mumbai ka user apna data Mumbai se padhta aur likhta hai (5 ms, strong).
-        Virginia ka user Virginia se. <b>Cross-region coordination hai hi nahi</b> —
+        Virginia ka user Virginia se. <b>Required quorum local ho toh WAN coordination bach sakti hai</b> —
         isliye tez BHI hai aur strong BHI.</span>
     </div>
     <div class="dg-legend">
@@ -4309,7 +4303,7 @@ VISUALS['multiregion'] = {
     </div>
     <div class="dg-cap"><b>Faisle ka sahi kram:</b> 1. data user-wise baanta ja sakta hai? →
       regional-by-row &nbsp;·&nbsp; 2. har jagah ek jaisa chahiye? → global table &nbsp;·&nbsp;
-      3. strong + multi-region writes? → quorum, <b>par ek continent mein</b> &nbsp;·&nbsp;
+      3. strong + multi-region writes? → quorum, <b>survival aur latency dekh kar</b> &nbsp;·&nbsp;
       4. stale read chalega? → local replica. Zyadatar teams kadam 3 se shuru karti hain,
       aur wahi sabse mehenga kadam hai.</div>`,
 };
@@ -4484,14 +4478,14 @@ VISUALS['dropbox'] = {
 
     <div class="dg-ladder">
       <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">✂️</span><span class="cmd">Fixed-size (har 5 MB par kaato)</span><span class="q">file ke SHURU mein ek byte joda → saare boundaries khisak gaye → <b>poori file dobara</b></span></div>
-      <div class="dg-rung g"><span class="lv">🌊</span><span class="cmd">Content-defined (rolling hash)</span><span class="q">wahi ek byte → sirf <b>aas-paas ke</b> chunks badle → 2 GB ki jagah ~10 MB</span></div>
+      <div class="dg-rung g"><span class="lv">🌊</span><span class="cmd">Content-defined (rolling hash)</span><span class="q">wahi ek byte → sirf <b>aas-paas ke</b> chunks badle → changed chunk bytes content aur chunker par depend</span></div>
     </div>
 
     <div class="dg-legend">
       <span class="dg-pill gold">🔄 SYNC = PUSH + POLL, DONO</span>
-      <span><b>Push</b> latency deta hai, <b>poll</b> guarantee deta hai. Websocket toot-ta hai
-        (laptop band, network badla, phone sleep) aur us dauraan ka change hamesha ke liye
-        chhoot jaata hai. "Kabhi-kabhi ek file sync nahi hoti" wale bug sirf-push design se aate hain.</span>
+      <span><b>Push</b> live latency ghatata hai; <b>durable history + cursor replay</b> recovery deta hai. Websocket toot-ta hai
+        (laptop band, network badla, phone sleep) aur bina durable replay ke us dauraan ka change
+        chhoot sakta hai. "Kabhi-kabhi ek file sync nahi hoti" wale bug sirf-push design se aate hain.</span>
     </div>`,
 };
 
@@ -4504,9 +4498,7 @@ VISUALS['crawler'] = {
       <span class="dg-pill">5 din</span><span class="dg-arrow">=</span>
       <span class="dg-pill gold">~8 machines</span>
     </div>
-    <div class="dg-cap">Sirf 8 machines — aur yahi is problem ka asli sabak hai. Crawler ka
-      bottleneck <b>bandwidth ya CPU nahi</b> hai. Bottleneck <b>politeness</b> aur <b>DNS</b>
-      hai, yaani <b>coordination</b>, capacity nahi.</div>
+    <div class="dg-cap">~8 machines sirf assumed bandwidth ka floor hai. CPU, storage, DNS aur domain politeness benchmark karo; sabse tang resource capacity tay karega.</div>
 
     <div class="dg-rule"></div>
     <div class="dg-legend">
@@ -4532,7 +4524,7 @@ VISUALS['crawler'] = {
 
     <div class="dg-rule"></div>
     <div class="dg-ladder">
-      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">🌐</span><span class="cmd">DNS — scale par <b>70% tak</b> waqt</span><span class="q">har naya domain ek network round trip</span></div>
+      <div class="dg-rung" style="border-left-color:var(--bad)"><span class="lv">🌐</span><span class="cmd">DNS — workload par <b>lookup latency aur cache hits naapo</b></span><span class="q">har naya domain ek network round trip</span></div>
       <div class="dg-rung g"><span class="lv">💾</span><span class="cmd">Local DNS cache + kai providers + connection reuse</span><span class="q">thanda: DNS+TCP+TLS+request · warm: sirf request</span></div>
       <div class="dg-rung"><span class="lv">🕳️</span><span class="cmd">Max depth 15-20 hop + per-domain page budget</span><span class="q">calendar aur faceted search anant hote hain — aur robots.txt mein <b>allowed</b> bhi</span></div>
     </div>`,
@@ -4619,13 +4611,13 @@ VISUALS['clocks'] = {
       <span class="dg-pill good">🔢 SAMAY KI JAGAH KRAM</span>
       <span><b>Lamport</b> — badhta counter (kaaran ka kram) &nbsp;·&nbsp;
         <b>Vector clock</b> — concurrent tha ya nirbhar, yeh batata hai &nbsp;·&nbsp;
-        <b>HLC</b> — wall clock jaisa dikhta hai par kram ki guarantee deta hai (aaj ka aam chunav)</span>
+        <b>HLC</b> — physical time + logical counter; causal kram bachata hai, conflict ka business niyam alag chahiye</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill gold">🛰️ SPANNER KA TRUETIME</span>
       <span>Ghadi ko <b>sahi</b> karne ki koshish nahi ki — uski <b>galti naapi</b>.
-        "Mujhe nahi pata abhi kya samay hai, par main <b>7 ms se zyada galat nahi hoon</b>" —
-        aur commit us 7 ms ka intezaar karta hai.</span>
+        "Mujhe nahi pata abhi kya samay hai, par <b>abhi ka time naape gaye uncertainty interval mein hai</b>" —
+        aur commit TT.after(commitTimestamp) true hone tak wait karta hai.</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill bad">🔪 LOCK KA SAHI TAREEKA — FENCING TOKEN</span>

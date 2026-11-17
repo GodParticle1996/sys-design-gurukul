@@ -1,0 +1,162 @@
+/* ============ 🧠 Soch Akhada (soch.js) ============ */
+.so-home { border-color: #6ea8fe66; }
+.so-panel .level-h { margin-top: 12px; }
+
+.so-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 16px; }
+.so-chip {
+  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 999px; padding: 7px 13px; font: inherit; font-size: .88rem; cursor: pointer;
+}
+.so-chip span { color: var(--muted); margin-left: 4px; font-size: .8rem; }
+.so-chip:hover, .so-chip.on { border-color: var(--accent); }
+.so-chip.on { background: #6ea8fe22; font-weight: 700; }
+
+.so-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+.so-card {
+  display: flex; align-items: center; gap: 12px; min-width: 0;
+  background: var(--panel2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; cursor: pointer; transition: transform .15s, border-color .15s;
+}
+.so-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.so-card.done { border-color: #34d39966; }
+.so-card-icon { font-size: 1.7rem; flex: 0 0 auto; }
+.so-card-body { flex: 1 1 auto; min-width: 0; }
+.so-card-title { font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.so-card-meta { color: var(--muted); font-size: .8rem; margin-top: 3px; }
+.so-card-state { flex: 0 0 auto; color: var(--gold); font-size: .86rem; font-weight: 700; white-space: nowrap; }
+
+.so-scene {
+  background: var(--panel2); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 12px; padding: 12px 16px; margin: 12px 0; line-height: 1.6;
+}
+.so-scene h4 { margin: 0 0 6px; color: var(--accent); }
+.so-scene p { margin: 0 0 8px; }
+.so-scene ul { margin: 0; padding-left: 20px; }
+.so-scene li { margin: 3px 0; overflow-wrap: anywhere; }
+.so-scene code, .so-ask code, .so-compare code, .so-end code, .so-logline code { overflow-wrap: anywhere; }
+
+.so-log { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.so-logline {
+  border: 1px solid #34d39950; background: #34d39910; color: var(--success-ink);
+  border-radius: 10px; padding: 7px 12px; font-size: .9rem; line-height: 1.45; overflow-wrap: anywhere;
+}
+.so-stage > .btn { margin-top: 14px; }
+.so-ask .choice { text-align: left; }
+.so-compare h3 { margin: 6px 0 4px; }
+.so-compare td:first-child { font-weight: 700; color: var(--accent); }
+
+.so-end { text-align: center; margin-top: 6px; }
+.so-end .asli, .so-say { text-align: left; }
+.so-say {
+  margin: 12px 0; padding: 10px 14px; border-radius: 12px; line-height: 1.6;
+  background: var(--panel2); border: 1px solid #6ea8fe44;
+}
+.so-say h4 { margin: 0 0 4px; color: var(--accent); }
+.so-say p { margin: 0; }
+.so-related { margin: 12px 0; }
+.so-related h4 { margin: 0 0 8px; }
+.so-related .btn { margin: 0 8px 8px 0; text-align: left; }
+.so-locked { color: var(--muted); margin: 4px 0; font-size: .9rem; }
+
+.so-link {
+  margin: 14px 0; padding: 10px 14px; border-radius: 12px; text-align: left;
+  background: #6ea8fe12; border: 1px solid #6ea8fe44;
+}
+.so-link p { margin: 0 0 8px; }
+.so-link .btn { margin: 0 8px 8px 0; text-align: left; }
+
+:root[data-theme="light"] .so-chip.on { background: #dbe8ff; }
+:root[data-theme="light"] .so-logline { background: #e3f6ee; color: #0b5137; }
+:root[data-theme="light"] .so-link { background: #eef4ff; }
+
+@media (max-width: 560px) {
+  .so-grid { grid-template-columns: 1fr; }
+  .so-card { align-items: flex-start; flex-wrap: wrap; }
+  .so-card-state { width: 100%; padding-left: 44px; }
+}
+
+/* ============ Raasta: home ke group + "agla kadam" card (app.js) ============ */
+.next-card { margin-top: 20px; padding: 14px 18px; background: var(--panel); border: 1px solid #6ea8fe77; border-radius: var(--radius); line-height: 1.5; }
+.tk-group { margin: 26px 0 10px; }
+.tk-group h3 { margin: 0 0 4px; font-size: 1.15rem; }
+.tk-group p { margin: 0; color: var(--muted); line-height: 1.5; font-size: .92rem; }
+.tk-group-count { white-space: nowrap; color: var(--accent); font-weight: 700; margin-left: 4px; }
+.tk-step { font-size: .72rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-bottom: 4px; }
+
+/* ============ Lesson ke chhote cards (app.js lessonPager) ============ */
+.lp-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 10px 0 4px; }
+.lp-pos { color: var(--muted); font-size: .9rem; text-align: center; flex: 1 1 140px; }
+.lp-nav .btn:disabled { opacity: .35; cursor: default; transform: none; filter: none; }
+.lp-all { background: none; border: 0; color: var(--muted); font: inherit; font-size: .82rem; text-decoration: underline; cursor: pointer; padding: 4px 0; }
+.lp-all:hover { color: var(--text); }
+
+/* ============ Terminal mein madad (perfsim.js): 👉 agla kaam, hint ki ginti, 🧭 agla command ============ */
+.term-tasks li.now { color: var(--text); font-weight: 700; }
+.term-tasks li.now::before { content: '👉 '; }
+.term-hint.pulse { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 3px #ffb34722; }
+.term-nextcmd { border-color: #6ea8fe88; color: var(--text); }
+.term-btns .btn:disabled { opacity: .45; cursor: default; transform: none; filter: none; }
+
+/* ============ Diagram: "ek-ek hissa dekho" (app.js diagramStepper) ============ */
+.dg-stepbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0 12px; }
+.dg-step-pos { color: var(--muted); font-size: .88rem; }
+.dg-stepbar .btn:disabled { opacity: .35; cursor: default; transform: none; filter: none; }
+.diagram.dg-stepping .dg-rung, .diagram.dg-stepping .dg-box, .diagram.dg-stepping .dg-node { opacity: .25; transition: opacity .2s; }
+.diagram.dg-stepping .dg-seen { opacity: .6; }
+.diagram.dg-stepping .dg-on { opacity: 1; outline: 2px solid var(--accent); outline-offset: 3px; }
+.diagram.dg-stepping .dg-on .dg-rung, .diagram.dg-stepping .dg-on .dg-box, .diagram.dg-stepping .dg-on .dg-node,
+.diagram.dg-stepping .dg-seen .dg-rung, .diagram.dg-stepping .dg-seen .dg-box, .diagram.dg-stepping .dg-seen .dg-node { opacity: 1; }
+
+/* ---------- 🎬 scene player (scene.js) — kadam-dar-kadam SVG diagram (Kube Gurukul se; rang theme ke variables se) ---------- */
+.scene { margin-top: 4px; }
+.sc-stage { overflow-x: auto; text-align: center; }
+.sc-svg { width: 100%; min-width: 520px; height: auto; display: block; margin: 0 auto; }
+/* phone: diagram thoda bada rakho (akshar padhne layak); stage sideways scroll karta hai aur scene.js abhi wale kadam ko beech mein laata hai */
+@media (max-width: 700px) { .sc-svg { min-width: 600px; } .diagram .sc-stage { margin: 0 -18px; scroll-behavior: smooth; } }
+.sc-svg text { font-family: inherit; text-anchor: middle; }
+.sc-group rect { fill: color-mix(in srgb, var(--text) 3%, transparent); stroke: var(--border); stroke-width: 1.4; stroke-dasharray: 6 5; }
+.sc-group text { text-anchor: start; font-size: 10.5px; font-weight: 800; letter-spacing: 1.2px; fill: var(--muted); text-transform: uppercase; }
+.sc-group.accent rect { stroke: var(--accent); } .sc-group.accent text { fill: var(--accent); }
+.sc-group.good rect { stroke: var(--good); } .sc-group.good text { fill: var(--good); }
+.sc-group.gold rect { stroke: var(--gold); } .sc-group.gold text { fill: var(--gold); }
+.sc-group.bad rect { stroke: var(--bad); } .sc-group.bad text { fill: var(--bad); }
+.sc-node rect { fill: var(--panel2); stroke: var(--border); stroke-width: 1.5; transition: opacity .25s; }
+.sc-node .sc-ic { font-size: 18px; }
+.sc-node .sc-lb { font-size: 12.5px; font-weight: 700; fill: var(--text); }
+.sc-node .sc-sb { font-size: 10.5px; fill: var(--muted); }
+.sc-node.accent rect { stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+.sc-node.good rect { stroke: var(--good); fill: color-mix(in srgb, var(--good) 14%, var(--panel)); }
+.sc-node.bad rect { stroke: var(--bad); fill: color-mix(in srgb, var(--bad) 14%, var(--panel)); }
+.sc-node.gold rect { stroke: var(--gold); fill: color-mix(in srgb, var(--gold) 14%, var(--panel)); }
+.sc-node.muted { opacity: .6; }
+.sc-node.dim { opacity: .38; }
+.sc-node.on rect { stroke-width: 2.6; stroke: var(--gold); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gold) 40%, transparent)); }
+.sc-node.has-about { cursor: help; }
+.sc-edge { fill: none; stroke: var(--accent); stroke-width: 2.4; }
+.sc-edge.past { opacity: .22; stroke-width: 1.6; }
+.sc-edge.now { stroke-dasharray: 7 5; }
+.sc-edge.good { stroke: var(--good); } .sc-edge.bad { stroke: var(--bad); } .sc-edge.gold { stroke: var(--gold); }
+.sc-mk path { fill: var(--accent); } .sc-mk.good path { fill: var(--good); } .sc-mk.bad path { fill: var(--bad); } .sc-mk.gold path { fill: var(--gold); }
+.sc-dot { fill: var(--accent); } .sc-dot.good { fill: var(--good); } .sc-dot.bad { fill: var(--bad); } .sc-dot.gold { fill: var(--gold); }
+.sc-elabel rect { fill: var(--panel); stroke: var(--accent); stroke-opacity: .55; }
+.sc-elabel text { font-size: 10.5px; font-weight: 700; fill: var(--accent); }
+.sc-elabel.good rect { stroke: var(--good); } .sc-elabel.good text { fill: var(--good); }
+.sc-elabel.bad rect { stroke: var(--bad); } .sc-elabel.bad text { fill: var(--bad); }
+.sc-elabel.gold rect { stroke: var(--gold); } .sc-elabel.gold text { fill: var(--gold); }
+.sc-say {
+  background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+  min-height: 58px; line-height: 1.6; font-size: .93rem; margin-top: 8px; text-align: left; overflow-wrap: anywhere;
+}
+.sc-num {
+  display: inline-block; min-width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%;
+  background: var(--gold); color: var(--bg); font-weight: 800; font-size: .76rem; margin-right: 8px;
+}
+.sc-how { color: var(--muted); }
+.sc-ctrl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.sc-count { font-size: .82rem; color: var(--muted); }
+/* scene ke neeche purana poora diagram, band dabbe mein */
+.dg-all { margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 10px; }
+.dg-all > summary { cursor: pointer; font-weight: 700; color: var(--accent); font-size: .9rem; }
+.dg-all[open] > summary { margin-bottom: 10px; }
+/* Soch Akhada scenario ke andar scene */
+.so-scene-dia { margin: 12px 0; }

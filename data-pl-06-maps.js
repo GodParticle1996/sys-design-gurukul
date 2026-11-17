@@ -30,7 +30,7 @@ VISUALS['maps-crp'] = {
         <div class="dg-cap">Kaunsi sadak kisse judi. Naksha ko cells mein baanto (kuch levels), har cell ke border nodes tay.
           Bhaari preprocessing <b>ek baar</b>.</div></div>
       <div class="dg-box is-gold"><span class="bx-label">🚗 Cost — har minute badle</span>
-        <div class="dg-cap">Har cell ke andar border-to-border travel time. Traffic badla → sirf <b>us cell</b> ke numbers dobara.
+        <div class="dg-cap">Har cell ke andar border-to-border travel time. Traffic badla → asar wale cells aur zaroori upar ke levels ke numbers dobara.
           Lab: poora naksha 1,226 ms vs ek cell 13 ms (94×).</div></div>
     </div>
     <div class="dg-rule"></div>
@@ -51,7 +51,7 @@ VISUALS['maps-tiles-s2'] = {
   html: `
     <div class="dg-split">
       <div class="dg-box is-bad"><span class="bx-label">🖼️ Raster tiles</span>
-        <div class="dg-cap">Tayyar images. Ghuma nahi sakte, 3D nahi, style badlo toh duniya ki har image dobara banao.</div></div>
+        <div class="dg-cap">Tayyar images. Image ghuma sakte hain; geometry/labels baked hain, style badlo toh duniya ki har image dobara banao.</div></div>
       <div class="dg-box is-good"><span class="bx-label">✏️ Vector tiles</span>
         <div class="dg-cap">Instructions (line, park, building) — phone ka GPU banata hai. Rotate, tilt, smooth zoom, chhote bhi.
           Kaam wahan jahan sasta: user ke device par.</div></div>
@@ -212,7 +212,7 @@ SD.registerLevels('planet', [
   homework: `<p>Lab mein <code>tools/route.js</code> ke trips array mein ek bahut chhota raasta jodo (jaise 100,100 → 110,105). Kaunsa
     algorithm jeeta? Chhote raaston par overlay ka faayda kyun kam hota hai?</p>`,
   cards: [
-    { front: 'Dijkstra vs A*?', back: 'Dijkstra har taraf failta daayra (lab: 65,260 junctions); A* manzil ki taraf compass (9,196). Kone-se-kone par A* bhi sab dekhta hai.' },
+    { front: 'Dijkstra vs A*?', back: 'Dijkstra har taraf failta daayra (lab: 65,260 junctions); A* manzil ki taraf compass (9,196). Is uniform-grid lab aur tie rule mein kone-se-kone par A* ne sab dekha.' },
     { front: 'Contraction hierarchies?', back: 'Shortcut edges (poora highway ek hop), sadkon ka rank, upar chadho-shortcut-neeche utro, bidirectional. Kamzori: travel time badle toh shortcuts purane.' },
     { front: 'Maps ki core line?', back: 'Naksha lagbhag nahi badalta, traffic har second — do alag problems: bhaari precomputed structure + patli live, forecast wali layer.' },
   ],
@@ -466,7 +466,7 @@ SD.registerLevels('planet', [
     'Geocoding aur machine-built map; paanch sabak',
   ],
   lesson: [
-    "<h3>🧩 Tiles — quadtree</h3>\n     <p>Duniya ko squares mein kaato; har zoom level par ek tile 4 mein toot-ta hai = <b>quadtree</b>. Sirf wo kuch tiles\n     (~9) bhejo jo screen par hain, tumhare paas cache.</p>\n     <table>\n       <tr><th></th><th>🖼️ Raster tiles</th><th>✏️ Vector tiles</th></tr>\n       <tr><td>Kya</td><td>Tayyar images</td><td>Instructions: line, park, building</td></tr>\n       <tr><td>Kaun banata hai</td><td>Server</td><td>Phone ka GPU</td></tr>\n       <tr><td>Ghumana / 3D / smooth zoom</td><td>Nahi</td><td>Haan</td></tr>\n       <tr><td>Style badla</td><td>Duniya ki har image dobara</td><td>Bas naye rules</td></tr>\n       <tr><td>Size</td><td>Bada</td><td>Chhota (kamzor network ke liye achha)</td></tr>\n     </table>\n     <p class=\"tip\">🎯 <b>Kaam sasti jagah par karo</b> — device rendering server work shift karti hai; battery, data, compatibility aur client compute free nahi.</p>",
+    "<h3>🧩 Tiles — quadtree</h3>\n     <p>Duniya ko squares mein kaato; har zoom level par ek tile 4 mein toot-ta hai = <b>quadtree</b>. Sirf wo kuch tiles\n     (~9) bhejo jo screen par hain, tumhare paas cache.</p>\n     <table>\n       <tr><th></th><th>🖼️ Raster tiles</th><th>✏️ Vector tiles</th></tr>\n       <tr><td>Kya</td><td>Tayyar images</td><td>Instructions: line, park, building</td></tr>\n       <tr><td>Kaun banata hai</td><td>Server</td><td>Phone ka GPU</td></tr>\n       <tr><td>Ghumana / 3D / smooth zoom</td><td>Image rotate/scale; labels baked</td><td>Geometry se render; labels alag</td></tr>\n       <tr><td>Style badla</td><td>Duniya ki har image dobara</td><td>Bas naye rules</td></tr>\n       <tr><td>Size</td><td>Bada</td><td>Chhota (kamzor network ke liye achha)</td></tr>\n     </table>\n     <p class=\"tip\">🎯 <b>Kaam sasti jagah par karo</b> — device rendering server work shift karti hai; battery, data, compatibility aur client compute free nahi.</p>",
     `<h3>📍 "Mere paas coffee"</h3>
      <p>Lat/long 2 dimensions hain — aam DB index (B-tree) ek dimension mein sort karta hai. <b>S2</b>: ek space-filling
      (Hilbert-style) ordering hierarchy ke descendant cells ko contiguous ID ranges deti hai. Region covering se
@@ -588,7 +588,7 @@ Hilbert key         264 rows    113 mile   3 ms   (16 cells) — 3,788× kam row
   homework: `<p>Apne DB mein koi "location" ya 2-D query dhoondho (lat/long, time + price, x/y). Kya use ek 1-D key (geohash, S2 cell,
     Morton/Hilbert) se B-tree range scan banaya ja sakta hai? Pehle aur baad ki rows padhne ka andaaza likho.</p>`,
   cards: [
-    { front: 'Vector vs raster tiles?', back: 'Raster = tayyar images (no rotate, style badla toh sab dobara). Vector = instructions, phone GPU draw kare: rotate/tilt/zoom, chhote, restyle aasaan.' },
+    { front: 'Vector vs raster tiles?', back: 'Raster = tayyar images (image rotate/scale mumkin; feature restyling ko rerender chahiye). Vector = instructions, phone GPU draw kare: rotate/tilt/zoom, chhote, restyle aasaan.' },
     { front: 'S2 ka jaadu?', back: 'Hierarchical cells ke descendant IDs contiguous ranges banate hain. Region ko cells se cover karo, candidate ranges scan karo aur exact geometry filter lagao. Nearby points ke ID difference par universal bound nahi. Lab: 10 lakh → 264 rows.' },
     { front: 'Maps ke paanch sabak?', back: 'Dheema vs tez badlaav alag; react nahi predict; users sensor; kai dimensions ek key; kaam sasti jagah par.' },
   ],

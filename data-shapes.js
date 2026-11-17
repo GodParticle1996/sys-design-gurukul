@@ -1187,16 +1187,17 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      <pre>SELECT * FROM drivers
 WHERE lat BETWEEN 19.05 AND 19.15
   AND lng BETWEEN 72.80 AND 72.90;</pre>
-     <p>lat/lng query ek rectangle select karti hai, circle nahi. Composite
-     B-tree <code>(lat, lng)</code> mein leading lat range scan ka hissa limit
-     karti hai. Lng condition index ke andar check ho sakti hai; har matching-lat
-     row ko table se fetch karna zaroori nahi. Lng condition scan ka hissa hamesha
-     chhota nahi karti; supported skip-scan plans kuch workloads mein kar sakte hain.
+     <p>lat/lng query ek <b>rectangle</b> chunti hai, circle nahi. Composite index
+     <code>(lat, lng)</code> mein pehla column <code>lat</code> range hai, isliye index
+     scan ko sirf <code>lat</code> ki patti tak chhota karta hai — poore desh ki us patti
+     ke saare drivers. <code>lng</code> ki shart index ke andar hi jaanchi ja sakti hai,
+     toh har row table se nahi laani padti. Par scan ki lambai <code>lng</code> se aam
+     taur par nahi ghatti (kuch DBs ke skip-scan plans apvaad hain).
      <a href="https://www.postgresql.org/docs/current/indexes-multicolumn.html" target="_blank" rel="noopener noreferrer">PostgreSQL multicolumn indexes</a>.</p>
-     <pre>Illustrative plan, measured result nahi:
-   lat range mein 4 lakh index entries scan
-   lng predicate ke baad 900 candidates
-   exact radius aur eligibility abhi check karni hain</pre>
+     <pre>(lat, lng) index ke saath (andaaza, naapa hua nahi):
+   lat 19.05–19.15 ki patti  →  4 lakh index entries scan
+   phir lng ki shart          →  900 candidates bache
+   abhi asli doori aur eligibility jaanchni baaki</pre>
      <p>Asli problem hai: <b>B-tree ek-dimension ka hai</b>, aur jagah do-dimension ki.</p>
      <h3>🔡 Geohash — do dimensions ko ek line mein badlo</h3>
      <p>Geohash duniya ko baar-baar aadha karta hai (kabhi lng, kabhi lat) aur har
@@ -1228,9 +1229,8 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
      <p>Tum cell <code>te7ud9</code> mein ho, bilkul cell ke kinare par. Sabse paas ka
      driver 50 meter door hai — par driver <b>bagal wale cell</b> mein hai. Sirf apni
      cell dekhoge toh driver milega hi nahi.</p>
-     <pre>Ilaaj: poori query radius cover karne wali cells query karo
-       current cell + 8 neighbors tabhi enough, jab poori radius cover ho
-       phir exact distance filter aur sort karo</pre>
+     <pre>Ilaaj: query radius cover karne wali saari cells query karo; radius chhota ho toh apni cell + 8 neighbours kaafi ho sakte hain
+       phir un candidates par ASLI doori nikaal ke sort karo</pre>
      <p class="tip">🎯 Yahi geo ka standard do-kadam design hai:
      <b>1. index se candidates chuno (mota chhanna), 2. unhi par sahi hisaab karo
      (baarik chhanna).</b> Index ka kaam 84 lakh ko 900 tak laana hai —
@@ -1420,9 +1420,9 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
     par box kitna bada hai aur 7 par kitna. Phir socho: tumhare use case ke liye
     kaunsi precision sahi hai — aur peak par us cell mein kitne log honge?`,
   cards: [
-    { front: 'lat/lng dono par BETWEEN — kya hota hai?', back: 'Composite index <b>pehli range ke baad ruk jaata hai</b>. Poori latitude patti padhni padti hai. B-tree 1D hai, jagah 2D.' },
+    { front: 'lat/lng dono par BETWEEN — kya hota hai?', back: 'Composite index mein <b>pehli range scan span ko bound karti hai; baad ke predicates index par bhi filter kar sakte hain</b>. Poori latitude patti padhni padti hai. B-tree 1D hai, jagah 2D.' },
     { front: 'Geohash ka kamaal?', back: 'Common prefix ek hi coarse cell dikhata hai. Paas ke points cell boundaries ke aar-paar hon toh prefixes alag ho sakte hain. Isliye "nearby" = <code>LIKE \'te7ud%\'</code> = B-tree prefix scan. 2D problem 1D ban gaya.' },
-    { front: 'Geo query ka do-kadam design?', back: '1. Index se <b>mota chhanna</b> (cell + 8 padosi → ~900 candidates). 2. Un par <b>asli doori</b> (haversine) nikaal ke sort. Index ka kaam sirf candidates dena hai.' },
+    { front: 'Geo query ka do-kadam design?', back: '1. Index se <b>mota chhanna</b> (radius cover karne wali cells → candidates). 2. Un par <b>asli doori</b> (haversine) nikaal ke sort. Index ka kaam sirf candidates dena hai.' },
     { front: 'Hot cell?', back: 'Geo data uniformly nahi bikhra — airport 8 PM par jalta hai. Hot cell <b>wahi hot key</b> problem hai: cell ko finer resolution par split karo ya replicate karo. Fixed grid size lagbhag hamesha galti hai.' },
     { front: 'Driver locations kahan store karein?', back: '<b>In-memory geo store</b> (Redis) — driver locations current state hai, history nahi. 1 lakh drivers × 15 ping/min DB par bhejna write storm hai.' },
     { front: 'H3 hexagons kyun?', back: "H3 mostly hexagonal hierarchical grid hai,pentagons aur projection distortion bhi hain.Neighbor/radius cover gridDisk ya appropriate coverage algorithm se nikalo,phir exact distance verify karo." },

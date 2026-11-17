@@ -20,7 +20,7 @@ const path = require('path');
 const vm = require('vm');
 const DIR = __dirname;
 
-const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js'];
+const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'perfsim-pro.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js'];
 const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js', 'data-dist.js', 'data-shapes.js', 'data-builds.js', 'data-feed.js', 'data-feed-2.js',
   'data-st-01-reddit.js', 'data-st-02-cloudflare.js', 'data-st-03-jira.js', 'data-st-04-snowflake.js',
   'data-st-05-airtable.js', 'data-st-06-slack.js', 'data-st-07-discord.js', 'data-st-08-instagram.js',
@@ -89,7 +89,7 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-fp-scale-1-kyun.js',
   'data-v2-fp-scale-2-kaise.js',
   'data-v2-fp-scale-3-code.js',
-  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-v2-fp-cache-1-kyun.js', 'data-v2-fp-cache-2-kaise.js', 'data-v2-fp-cache-3-code.js', 'data-v2-fp-cache-4-kab.js', 'data-v2-fp-async-1-kyun.js', 'data-v2-fp-async-2-kaise.js', 'data-v2-fp-async-3-code.js', 'data-v2-fp-async-4-kab.js', 'data-v2-fp-retry-1-kyun.js', 'data-v2-fp-retry-2-kaise.js', 'data-v2-fp-retry-3-code.js', 'data-v2-fp-retry-4-kab.js', 'data-v2-fp-micro-1-kyun.js', 'data-v2-fp-micro-2-kaise.js', 'data-v2-fp-micro-3-code.js', 'data-v2-fp-micro-4-kab.js', 'data-v2-fp-obs-1-kyun.js', 'data-v2-fp-obs-2-kaise.js', 'data-v2-fp-obs-3-code.js', 'data-v2-fp-obs-4-kab.js', 'data-v2-fp-ig-1-kyun.js', 'data-v2-fp-ig-2-kaise.js', 'data-v2-fp-ig-3-code.js', 'data-v2-fp-ig-4-kab.js', 'data-guidance.js', 'data-v2-concurrency.js', 'video-sources.js', 'data-sds-live.js', 'data-sds-contracts.js', 'data-sds-webhook.js', 'data-sds-routing.js', 'data-sds-storage.js', 'data-sds-api.js', 'data-sds-metrics.js', 'data-sds-sourcing.js', 'data-sds-threads.js', 'data-sds-messaging.js', 'data-sds-design-review.js', 'data-sds-scaling.js', 'data-sds-cache.js', 'data-sds-concurrency.js', 'data-sds-retries.js', 'data-sds-ride-hailing.js', 'data-sds-roadmap.js', 'data-sds-judge.js', 'data-sds-method.js'];
+  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-v2-fp-cache-1-kyun.js', 'data-v2-fp-cache-2-kaise.js', 'data-v2-fp-cache-3-code.js', 'data-v2-fp-cache-4-kab.js', 'data-v2-fp-async-1-kyun.js', 'data-v2-fp-async-2-kaise.js', 'data-v2-fp-async-3-code.js', 'data-v2-fp-async-4-kab.js', 'data-v2-fp-retry-1-kyun.js', 'data-v2-fp-retry-2-kaise.js', 'data-v2-fp-retry-3-code.js', 'data-v2-fp-retry-4-kab.js', 'data-v2-fp-micro-1-kyun.js', 'data-v2-fp-micro-2-kaise.js', 'data-v2-fp-micro-3-code.js', 'data-v2-fp-micro-4-kab.js', 'data-v2-fp-obs-1-kyun.js', 'data-v2-fp-obs-2-kaise.js', 'data-v2-fp-obs-3-code.js', 'data-v2-fp-obs-4-kab.js', 'data-v2-fp-ig-1-kyun.js', 'data-v2-fp-ig-2-kaise.js', 'data-v2-fp-ig-3-code.js', 'data-v2-fp-ig-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-scenes-flow.js', 'data-scenes-api.js', 'data-scenes-data.js', 'data-scenes-resil.js', 'data-scenes-dist.js', 'data-scenes-shapes.js', 'data-scenes-builds.js', 'data-soch-scenes.js', 'data-pro-sec-1.js', 'data-pro-sec-2.js', 'data-pro-sec-3.js', 'data-pro-sec-4.js', 'data-pro-obs-1.js', 'data-pro-obs-2.js', 'data-pro-obs-3.js', 'data-pro-obs-4.js', 'data-pro-iv-1.js', 'data-pro-iv-2.js', 'data-pro-iv-3.js', 'data-pro-iv-4.js', 'data-guidance.js', 'data-v2-concurrency.js', 'video-sources.js', 'data-sds-live.js', 'data-sds-contracts.js', 'data-sds-webhook.js', 'data-sds-routing.js', 'data-sds-storage.js', 'data-sds-api.js', 'data-sds-metrics.js', 'data-sds-sourcing.js', 'data-sds-threads.js', 'data-sds-messaging.js', 'data-sds-design-review.js', 'data-sds-scaling.js', 'data-sds-cache.js', 'data-sds-concurrency.js', 'data-sds-retries.js', 'data-sds-ride-hailing.js', 'data-sds-roadmap.js', 'data-sds-judge.js', 'data-sds-method.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */
@@ -97,6 +97,7 @@ const EXTRA = (process.env.EXTRA_CONTENT || '').split(',').map(s => s.trim()).fi
 EXTRA.forEach(f => { if (!CONTENT.includes(f)) CONTENT.push(f); });
 
 let errors = 0, warns = 0, checks = 0;
+let sharedHtmlProblem = () => null;   /* structure() ka HTML checker — soch() bhi yahi use karta hai */
 const fail = m => { errors++; console.log('  ❌ ' + m); };
 const warn = m => { warns++; console.log('  ⚠️  ' + m); };
 const ok = () => { checks++; };
@@ -609,6 +610,7 @@ function structure() {
     }
     return stack.length ? `band nahi hua: <${stack.join('><')}>` : null;
   };
+  sharedHtmlProblem = htmlProblem;
   const eachString = (o, p, f) => {
     if (typeof o === 'string') f(p, o);
     else if (Array.isArray(o)) o.forEach((v, i) => eachString(v, `${p}[${i}]`, f));
@@ -905,20 +907,160 @@ function dockerLabs() {
 }
 
 /* =====================================================================
+   6. SOCH AKHADA — soch-vichaar wale scenario sawal (soch.js + data-soch-*.js)
+      Shape, "lambai se jawab pata chalna", aur poori walk: sahi jawab se jeetna
+      (softlock nahi) aur pehle galat jawab dekar bhi khatam hona.
+   ===================================================================== */
+function soch() {
+  console.log('\n🧠 SOCH AKHADA (scenario sawal)');
+  const list = SD.scenarios || [];
+  if (!SD.soch) return fail('soch.js load nahi hua (SD.soch nahi mila)');
+  const topicIds = new Set(SD.soch.TOPICS.map(t => t.id));
+  const levelIds = new Set(allLevels.map(x => x.level.id));
+  const seen = new Set();
+  const plain = s => String(s == null ? '' : s).replace(/<[^>]*>/g, ' ').replace(/&(?:#\d+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
+  const strings = (o, p, f) => {
+    if (typeof o === 'string') f(p, o);
+    else if (Array.isArray(o)) o.forEach((v, i) => strings(v, `${p}[${i}]`, f));
+    else if (o && typeof o === 'object') Object.keys(o).forEach(k => strings(o[k], p ? `${p}.${k}` : k, f));
+  };
+  const answers = (at, a) => {
+    if (!Array.isArray(a) || a.length < 3) return fail(`${at}: kam se kam 3 jawab chahiye`);
+    if (a.some(x => !Array.isArray(x) || x.length !== 2 || !plain(x[0]) || !plain(x[1]))) return fail(`${at}: har jawab [jawab, kyun] ho, dono bhare hue`);
+    const len = a.map(x => [...plain(x[0])].length), wrong = len.slice(1);
+    if (len[0] >= 1.15 * Math.max(...wrong)) fail(`${at}: sahi jawab sabse lamba hai (${len.join('/')}) — lambai se jawab pata chal jaata hai`);
+    else if (len[0] <= 0.85 * Math.min(...wrong)) fail(`${at}: sahi jawab sabse chhota hai (${len.join('/')}) — lambai se jawab pata chal jaata hai`);
+    else ok();
+    const low = a.map(x => plain(x[0]).toLowerCase());
+    if (new Set(low).size !== low.length) fail(`${at}: do jawab ek jaise hain`); else ok();
+  };
+  const walk = (sc, wrongFirst) => {
+    const mount = makeEl('div'); let result = null, guard = 0;
+    SD.state.soch = {};
+    SD.soch.render(sc, mount, { onFinish: r => { result = r; } });
+    while (!one(mount, 'so-done') && guard++ < 60) {
+      const open = byClass(mount, 'so-opt').filter(b => !b.disabled);
+      if (wrongFirst) { const bad = open.find(b => b.dataset.i === '1'); if (bad) bad.click(); }
+      const right = open.find(b => b.dataset.i === '0');
+      if (right) right.click();
+      const next = byClass(mount, 'so-next').find(b => !b.disabled);
+      if (!next) break;
+      next.click();
+    }
+    const html = [mount].concat(findAll(mount)).map(n => n.innerHTML || '').join(' ');
+    return { result, finished: !!one(mount, 'so-done'), bad: /\bundefined\b|\bNaN\b/.test(html) };
+  };
+
+  list.forEach(sc => {
+    const at = `scenario '${sc.id}'`;
+    if (!/^[a-z0-9-]+$/.test(sc.id || '') || seen.has(sc.id)) fail(`${at}: id kebab-case aur unique ho`); else ok();
+    seen.add(sc.id);
+    ['icon', 'title', 'story', 'asli', 'say'].forEach(k => { if (!plain(sc[k])) fail(`${at}: '${k}' missing`); else ok(); });
+    if (!topicIds.has(sc.topic)) fail(`${at}: topic '${sc.topic}' soch.js ke TOPICS mein nahi`); else ok();
+    if (![1, 2, 3].includes(sc.hard)) fail(`${at}: hard 1, 2 ya 3 ho`); else ok();
+    if (!Array.isArray(sc.levels) || !sc.levels.length) fail(`${at}: levels[] mein kam se kam ek level id do (level ke ant mein link wahin se banta hai)`);
+    else sc.levels.forEach(id => { if (!levelIds.has(id)) fail(`${at}: level '${id}' exist nahi karta`); else ok(); });
+    if (!Array.isArray(sc.facts) || sc.facts.length < 2 || sc.facts.length > 5) fail(`${at}: facts 2–5 hon (naam ke saath)`); else ok();
+    if (plain(sc.story).split(' ').length > 75) warn(`${at}: story ${plain(sc.story).split(' ').length} shabd — 75 se chhoti rakho`); else ok();
+    if (!Array.isArray(sc.steps) || sc.steps.length < 3 || sc.steps.length > 5) return fail(`${at}: steps 3–5 hon`);
+    sc.steps.forEach((s, i) => {
+      if (!plain(s.t) || !plain(s.q)) fail(`${at} step ${i + 1}: 't' ya 'q' missing`); else ok();
+      answers(`${at} step ${i + 1}`, s.a);
+    });
+    if (!Array.isArray(sc.fixes) || sc.fixes.length < 3 || sc.fixes.length > 5) fail(`${at}: fixes (tulna) 3–5 hon`);
+    else sc.fixes.forEach((f, i) => { if (['n', 'how', 'cost', 'when'].some(k => !plain(f[k]))) fail(`${at} fix ${i + 1}: n / how / cost / when sab chahiye`); else ok(); });
+    if (!sc.twist || !plain(sc.twist.q)) return fail(`${at}: twist.q missing`);
+    answers(`${at} twist`, sc.twist.a);
+    let clean = true;
+    strings(sc, '', (p, str) => { const why = sharedHtmlProblem(str); if (why) { clean = false; fail(`${at} ${p}: ${why}`); } });
+    if (clean) ok();
+
+    const before = JSON.stringify(sc);
+    try {
+      const parts = sc.steps.length + 1;
+      const win = walk(sc, false);
+      if (!win.finished || !win.result) fail(`${at}: SOFTLOCK — sahi jawab dekar bhi ant tak nahi pahunche`);
+      else if (win.result.firstTry !== parts || win.result.total !== parts || win.result.stars !== 3) fail(`${at}: sahi walk ka score ${win.result.firstTry}/${win.result.total} (chahiye ${parts}/${parts}, 3 stars)`);
+      else ok();
+      if (win.bad) fail(`${at}: screen par 'undefined' ya 'NaN' dikha`); else ok();
+      const slow = walk(sc, true);
+      if (!slow.finished || !slow.result || slow.result.firstTry !== 0 || slow.result.stars !== 1) fail(`${at}: pehle galat jawab wali walk theek khatam nahi hui`);
+      else ok();
+    } catch (e) { fail(`${at}: render crash — ${e.message}`); }
+    if (JSON.stringify(sc) !== before) fail(`${at}: renderer ne scenario data badal diya`); else ok();
+  });
+  SD.state = SD.defaultState();
+  const per = {}; list.forEach(sc => { per[sc.topic] = (per[sc.topic] || 0) + 1; });
+  console.log(`  ${list.length} scenarios: ${Object.keys(per).map(k => `${k} ${per[k]}`).join(' · ')}`);
+}
+
+/* =====================================================================
    RUN
    ===================================================================== */
+/* =====================================================================
+   SCENES — kadam-dar-kadam diagrams (scene.js; data-scenes-*.js aur soch scenarios ke andar).
+   Har scene ko sach mein render karke "Agla kadam" se aakhri kadam tak chalao.
+   ===================================================================== */
+let sceneCount = 0;
+function scenes() {
+  console.log('\n🎬 SCENES (kadam-dar-kadam diagrams)');
+  if (typeof SD.renderScene !== 'function') return fail('scene.js load nahi hua (SD.renderScene nahi mila)');
+  (SD.sceneOrphans || []).forEach(id => fail(`SD.addScenes: VISUALS['${id}'] nahi hai (level id galat?)`));
+  const walk = (e, out = []) => { out.push(e); (e.children || []).forEach(c => walk(c, out)); return out; };
+  const plain = s => String(s == null ? '' : s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const STAND = /\b(yeh|woh|isse|usse|isko|usko|iska|uska|iski|uski|iske|uske)\b/i;
+  const strings = (o, p, f) => {
+    if (typeof o === 'string') f(p, o);
+    else if (Array.isArray(o)) o.forEach((v, i) => strings(v, `${p}[${i}]`, f));
+    else if (o && typeof o === 'object') Object.keys(o).forEach(k => strings(o[k], p ? `${p}.${k}` : k, f));
+  };
+  const check = (where, scene) => {
+    sceneCount++;
+    const bad = SD.sceneProblems(scene);
+    bad.forEach(m => fail(`${where}: ${m}`));
+    if (bad.length) return;
+    try {
+      for (let i = -1; i < scene.steps.length; i++) {
+        if (/NaN|undefined|Infinity/.test(SD.sceneSvg(scene, i, 'v'))) fail(`${where}: kadam ${i + 1} ke SVG mein NaN/undefined`);
+      }
+      const box = SD.renderScene(scene);
+      const next = walk(box).find(x => /\bbtn\b/.test(x.className || '') && /kadam/i.test(x._txt || x._html || ''));
+      if (!next) return fail(`${where}: "Agla kadam" button nahi mila`);
+      for (let i = 0; i < scene.steps.length + 2; i++) next.click();
+      if (!/Aakhri/.test(next.textContent)) fail(`${where}: "Agla kadam" se aakhri kadam tak nahi pahunche`); else ok();
+    } catch (e) { fail(`${where}: render throw — ${e.message}`); }
+    scene.steps.forEach((st, i) => {
+      const t = plain(st.say);
+      if (STAND.test(t)) fail(`${where} kadam ${i + 1}: "say" mein yeh/woh/isse jaisa shabd hai — dabbe ka naam likho`);
+      else if (t.split(' ').length > 45) fail(`${where} kadam ${i + 1}: "say" 45 shabdon se lamba hai — ek-do chhote vaakya likho`);
+      else ok();
+    });
+    strings(scene, '', (p, s) => { const why = sharedHtmlProblem(s); if (why) fail(`${where}.${p}: ${why}`); });
+  };
+  Object.keys(VISUALS).forEach(k => { if (VISUALS[k].scene) check(`VISUALS['${k}'].scene`, VISUALS[k].scene); });
+  (SD.scenarios || []).forEach(sc => { if (sc.scene) check(`soch '${sc.id}'.scene`, sc.scene); });
+  let have = 0, all = 0;
+  ['flow', 'api', 'data', 'resil', 'dist', 'shapes', 'builds'].forEach(t => (SD.levelSets[t] || []).forEach(l => {
+    all++; if (VISUALS[l.id] && VISUALS[l.id].scene) have++;
+  }));
+  const soch = SD.scenarios || [];
+  console.log(`  ${sceneCount} scenes chale · Mukhya raasta: ${have}/${all} levels ke paas scene · Soch Akhada: ${soch.filter(s => s.scene).length}/${soch.length}`);
+}
+
 if (!ONLY) structure();
 missions();
 if (!ONLY) labs();
 if (!ONLY) render();
 if (!ONLY) dockerLabs();
+if (!ONLY) soch();
+if (!ONLY) scenes();
 
 const stageCount = allLevels.reduce((a, x) => a + allStages(x.level).length, 0);
 const cardCount = allLevels.reduce((a, x) => a + (x.level.cards || []).length, 0);
 const ivCount = allLevels.reduce((a, x) => a + ((x.level.interview && x.level.interview.questions) || []).length, 0);
 console.log(`\n📊 ${SD.tracks.length} tracks · ${allLevels.length} levels · ${stageCount} stages · ` +
   `${ivCount} interview Qs · ${cardCount} flashcards · ${Object.keys(VISUALS).length} diagrams · ` +
-  `${labStages.length} interactive labs`);
+  `${labStages.length} interactive labs · ${(SD.scenarios || []).length} soch scenarios · ${sceneCount} scenes`);
 SD.tracks.forEach(t => console.log(`   ${t.icon} ${t.id.padEnd(6)} ${(SD.levelSets[t.id] || []).map(l => l.id).join(' → ')}`));
 
 if (errors) { console.log(`\n❌ ${errors} error · ${warns} warning · ${checks} checks pass\n`); process.exit(1); }

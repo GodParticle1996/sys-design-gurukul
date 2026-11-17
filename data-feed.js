@@ -367,7 +367,7 @@ SD.registerLevels('feed', [
      text ke liye aapas mein lad rahe hain. Regex engine backtracking karta hai:
      pehla <code>.*</code> jitna le sakta hai leta hai, phir peeche hatta hai,
      phir doosra <code>.*</code> koshish karta hai, phir peeche hatta hai —
-     aur combinations <b>exponentially</b> badhte jaate hain.</p>
+     aur combinations <b>polynomial raftaar se</b> badhte jaate hain.</p>
      <table>
        <tr><th>Input</th><th>Regex engine ke kadam</th></tr>
        <tr><td><code>x=x</code></td><td>23</td></tr>
@@ -631,7 +631,7 @@ SD.registerLevels('feed', [
     (feature flag ya config push) band karna ho, toh kitne click lagenge aur
     kya click girne wale system se guzarta hai?`,
   cards: [
-    { front: 'Catastrophic backtracking kya hai?', back: 'Nested quantifiers (<code>.*(?:.*=.*)</code>) mein regex engine ke kadam <b>exponentially</b> badhte hain — <code>x=x</code> par 23 kadam, 20 x par 555, thoda aur lamba par lakhon. Ilaaj: <b>linear-time engine</b> (RE2 / Rust regex).' },
+    { front: 'Catastrophic backtracking kya hai?', back: 'Nested quantifiers (<code>.*(?:.*=.*)</code>) mein regex engine ke kadam <b>polynomial raftaar se</b> badhte hain — <code>x=x</code> par 23 kadam, 20 x par 555, thoda aur lamba par lakhon. Ilaaj: <b>linear-time engine</b> (RE2 / Rust regex).' },
     { front: 'Cloudflare 2019 — detect vs mitigate?', back: 'Detect <b>3 minute</b> (13:42 deploy → 13:45 alert). Mitigate <b>25 minute</b> (→ 14:07 WAF global off). Sabak: paisa monitoring mein nahi, <b>kill switch</b> mein lagao.' },
     { front: 'Staged rollout ki asli shart?', back: '<code>bake time ≥ alert firing time</code>. Bake alert se chhota hua toh kharab change canary ke <b>baad</b> pakda jaayega — yaani global ho chuka hoga. Percentage akela kaafi nahi.' },
     { front: 'Outage mein pehla kadam — mitigate ya root cause?', back: '<b>Mitigate.</b> Cloudflare ne poora WAF global band kiya, ek kharab rule dhoondha nahi. Bleeding pehle rukti hai; root cause 14:52 tak wait kar sakta hai.' },
@@ -1726,8 +1726,7 @@ L  =  ek waqt mein andar kitne requests (concurrency)
 W  =  har request ka time (seconds)</pre>
      <p>Yahi formula tumhein pool size, thread count aur server count deta hai.
      50,000 rps aur 40 ms per request ka matlab hai <b>2,000 requests ek saath
-     andar</b>. Agar tumhara pool 200 ka hai, toh 1,800 requests <b>queue mein
-     khade</b> hain — aur isi sthiti mein CPU 10% dikhta hai aur
+     andar</b>. Agar har request connection 40 ms pakadti hai, 200 ka pool sirf 5,000 rps sambhaal sakta hai; 50,000 rps par queue <b>badhti rahegi</b> — aur isi sthiti mein CPU 10% dikhta hai aur
      timeouts aate rehte hain.</p>`,
   ],
   stages: [
@@ -1812,7 +1811,7 @@ W  =  har request ka time (seconds)</pre>
           steps: [
             'L = 50,000 × 0.04 = 2,000 concurrent requests',
             'Agar har server 250 concurrent handle karta hai → 8 servers chahiye',
-            'Agar tumhara connection pool 200 ka hai → 1,800 requests QUEUE mein khadi hain',
+            'Agar DB hold time bhi 40 ms hai → pool 200 ki capacity 5,000 rps; 50,000 par queue badhegi',
             'Queue mein khadi request CPU nahi jalati — isliye CPU 10% dikhega aur timeouts aate rahenge',
           ],
           lesson: '🎯 Little\'s Law ek hi formula se pool size, thread count aur server count deta hai. Aur is formula ka sabse mehenga sabak: <b>CPU 10% par timeout</b> ka matlab lagbhag hamesha queueing hai, capacity nahi. Queue kahan hai — pool, thread, ya socket backlog — wahi asli sawaal hai.',
@@ -1935,7 +1934,7 @@ W  =  har request ka time (seconds)</pre>
     { front: 'Estimation 2x galat — kitna bura?', back: 'Bilkul theek. Maqsad <b>paimana</b> hai. 40 vs 4,000 vs 400,000 writes/sec teen alag systems hain — un beech 100x ka farak hai. 2x tumhein usi bucket mein rakhta hai.' },
     { front: 'Cross-region RTT ka minimum?', back: '<code>2 × doori ÷ 200,000 km/s</code>. Mumbai↔Virginia (13,000 km) = <b>130 ms minimum</b>. Ilaaj sirf teen: call mat karo (cache), data paas laao (replicate), ya async kar do.' },
     { front: 'Chaar latency paimane?', back: '<b>&lt;1 ms</b>: memory (100 ns), SSD random (100 µs), same-AZ RTT (0.5 ms) · <b>1-10 ms</b>: cross-AZ, indexed row, 1 MB SSD sequential, 1 MB @ 1 Gbps (8 ms) · <b>10-100 ms</b>: disk seek, Mumbai↔Singapore · <b>100 ms+</b>: cross-continent RTT, cold start, naya TLS handshake.' },
-    { front: 'Little\'s Law?', back: '<code>L = lambda × W</code>. 50,000 rps × 40 ms = <b>2,000 concurrent</b>. Pool 200 ka hua toh 1,800 queue mein khadi hain — aur queue mein khadi request <b>CPU nahi jalati</b>, isliye CPU 10% dikhta hai.' },
+    { front: 'Little\'s Law?', back: '<code>L = lambda × W</code>. 50,000 rps × 40 ms = <b>2,000 concurrent</b>. DB hold time 40 ms ho toh pool 200 sirf 5,000 rps sambhaalega; 50,000 par queue badhegi — aur queue mein khadi request <b>CPU nahi jalati</b>, isliye CPU 10% dikhta hai.' },
   ],
   interview: {
     title: 'Interview Round — Estimation',
@@ -2004,7 +2003,7 @@ Match →  jinke vectors sabse paas hain (cosine ya dot product)</pre>
      <p>Exact nearest neighbour nikalne ke liye har vector se doori naapni padegi
      — 10 crore vectors par har query <b>10 crore</b> comparisons. Isliye asli
      systems <b>ANN</b> (Approximate Nearest Neighbour) use karte hain:
-     99% sahi jawab, 1000x kam kaam mein.</p>
+     Recall aur speed ka sauda; dono apne data par naapo.</p>
      <table>
        <tr><th>Tareeka</th><th>Kaise</th><th>Kab</th></tr>
        <tr><td><b>Flat</b> (brute force)</td><td>har vector se doori</td><td>10 lakh se kam vectors — aur 100% recall chahiye</td></tr>
@@ -2292,7 +2291,7 @@ SD.registerLevels('feed', [
   badge: 'Region Rachnakar',
   objectives: [
     '"Active-active" ke teen bilkul alag matlab',
-    'Cross-region quorum ka asli daam: har write par ek poora RTT',
+    'Cross-region quorum ka daam: required remote ACK ka RTT',
     'Regional-by-row: tez BHI aur strong BHI — par sirf single-home data par',
     'Region girne par kya hota hai — aur kis design mein kya bacha rehta hai',
   ],
@@ -2303,22 +2302,19 @@ SD.registerLevels('feed', [
      <table>
        <tr><th>Aakaar</th><th>Write kahan</th><th>Consistency</th><th>Region girne par</th></tr>
        <tr><td><b>Ek global primary</b></td><td>hamesha ek hi region</td><td>strong</td><td>writes <b>band</b> jab tak failover na ho</td></tr>
-       <tr><td><b>Cross-region quorum</b><br><small>(Spanner, CockroachDB)</small></td><td>majority regions ki ack</td><td>strong</td><td>chalta rehta hai (3+ regions par)</td></tr>
-       <tr><td><b>Regional-by-row</b><br><small>(har row ka apna home region)</small></td><td>us row ke home region mein</td><td>strong <b>us row ke liye</b></td><td>sirf us region ke rows ruke</td></tr>
+       <tr><td><b>Cross-region quorum</b><br><small>(Spanner, CockroachDB)</small></td><td>required voting replicas ki ack</td><td>strong</td><td>required quorum bache toh chalta hai</td></tr>
+       <tr><td><b>Regional-by-row</b><br><small>(har row ka apna home region)</small></td><td>us row ke home region mein</td><td>strong <b>us row ke liye</b></td><td>replicas aur survival goal par nirbhar</td></tr>
        <tr><td><b>Async multi-primary</b></td><td>har region local</td><td><b>eventual</b> + conflicts</td><td>chalta rehta hai</td></tr>
      </table>
      <h3>⏱️ Quorum ka asli daam</h3>
-     <p>Cross-region quorum ka matlab hai ki har write ko majority regions se ack
-     chahiye. Yaani har write mein <b>kam se kam ek poora inter-region RTT</b> hai.</p>
+     <p>Cross-region quorum ka matlab hai ki har write ko required voting replicas se ack
+     chahiye. Remote voting ACK zaroori ho toh write path mein <b>inter-region RTT</b> judta hai.</p>
      <pre>Teen regions ek hi continent par (~30 ms RTT):
    write p99  =  local kaam (5 ms)  +  30 ms  =  ~35 ms       theek hai
 
 Teen regions duniya bhar mein (~130 ms RTT):
    write p99  =  5 ms  +  130 ms  =  ~135 ms                  bahut zyada</pre>
-     <p class="tip">🎯 Yahi wajah hai ki asli global systems <b>quorum ko ek
-     continent ke andar rakhte hain</b> aur continents ke beech async replication
-     use karte hain. Duniya bhar ka synchronous quorum kaagaz par sundar hai aur
-     production mein har write par 130 ms hai.</p>`,
+     <p class="tip">🎯 Locality ke liye kuch systems <b>quorum ek continent mein</b> rakhte hain; region-survival ya global strong writes WAN quorum maang sakti hain. 130 ms is example ka RTT hai, universal latency nahi.</p>`,
     `<h3>📍 Regional-by-row — sabse kam samjha jaane wala hal</h3>
      <p>Sabse achha jawab aksar "poore database ko multi-region banao" nahi hota.
      Sabse achha jawab hota hai: <b>har row ko ek home region do</b>.</p>
@@ -2525,9 +2521,9 @@ Mumbai gira  →  sirf Mumbai wale rows ruke, Virginia chalta raha</pre>
     tables jinka koi ek maalik nahi (config, catalog, rates). Wahi tumhari
     "global tables" hain, aur wahi multi-region ka asli kaam hai.`,
   cards: [
-    { front: '"Active-active" ke chaar aakaar?', back: '<b>Ek global primary</b> (strong, region gire toh writes band) · <b>cross-region quorum</b> (strong, har write par 1 RTT) · <b>regional-by-row</b> (strong + local, har row ka home region) · <b>async multi-primary</b> (eventual + conflicts).' },
-    { front: 'Cross-region quorum ka daam?', back: 'Har write par <b>kam se kam ek poora inter-region RTT</b>. Ek continent (~30 ms) par theek; duniya bhar (~130 ms) par bahut zyada. Isliye quorum ek continent ke andar rakho, continents ke beech async.' },
-    { front: 'Regional-by-row tez kyun hai?', back: 'Cross-region coordination <b>hai hi nahi</b> — har row ek region ki hai, isliye write poori tarah local hai. Sabse achha optimization kaam tez karna nahi, kaam <b>hataana</b> hota hai.' },
+    { front: '"Active-active" ke chaar aakaar?', back: '<b>Ek global primary</b> (strong, region gire toh writes band) · <b>cross-region quorum</b> (strong, required remote ACK ka RTT) · <b>regional-by-row</b> (strong + local, har row ka home region) · <b>async multi-primary</b> (eventual + conflicts).' },
+    { front: 'Cross-region quorum ka daam?', back: 'Required remote voting ACK ka RTT write path mein judta hai. Replica placement, survival goal aur transaction se quorum chuno; 30/130 ms yahan example hain.' },
+    { front: 'Regional-by-row tez kyun hai?', back: 'Home region common access ko local karta hai; quorum placement, survival goal aur cross-region transactions WAN coordination maang sakte hain. Sabse achha optimization kaam tez karna nahi, kaam <b>hataana</b> hota hai.' },
     { front: 'Regional-by-row ki keemat?', back: 'Do jagah: (1) jo data kisi ek user ka nahi (config, catalog) usko <b>global table</b> banana padta hai, (2) kai regions ke rows maangne wali query ab <b>cross-region fan-out</b> hai.' },
     { front: 'Rate limit counters multi-region mein?', back: '<b>Local rakho.</b> Global limit ko regions mein baant do (1000 rps → 4 × 250). Har request par cross-region sync = har request par 130 ms, aur rate limiter ka maqsad hi sasta hona hai.' },
   ],
@@ -2801,7 +2797,7 @@ delta =  jitna farak pakadna hai (fraction mein)</pre>
     jawab chaunkane wala hota hai — teams ka canary sirf bade, saaf failures pakadta
     hai, aur wahi failures waise bhi test mein pakde jaate.`,
   cards: [
-    { front: 'Canary ka asli sawaal?', back: '<b>Kitne samples</b> — percentage nahi. samples = rps × canary% × minute. Chhota regression pakadne ke liye samples chahiye, aur samples sirf <b>zyada traffic</b> ya <b>zyada waqt</b> se aate hain. Teesra raasta nahi.' },
+    { front: 'Canary ka asli sawaal?', back: '<b>Kitne samples</b> — percentage nahi. samples = rps × canary fraction × seconds. Chhota regression pakadne ke liye samples chahiye, aur samples sirf <b>zyada traffic</b> ya <b>zyada waqt</b> se aate hain. Teesra raasta nahi.' },
     { front: 'Sample size ka formula?', back: '<code>n ≈ 16 × p × (1−p) ÷ delta²</code>. 0.1% baseline par 0.02 pp ka farak pakadne ke liye lagbhag <b>4 lakh</b> samples. Delta aadha karo toh samples <b>chaar guna</b>.' },
     { front: 'Deploy vs feature flag?', back: '<b>Deploy</b> = chalta code badalta hai, minutes mein palatta hai, version skew ka khatra. <b>Flag</b> = vyavhaar badalta hai, <b>seconds</b> mein palatta hai. Sahi aakaar: band halat mein deploy karo, phir flag se kholo.' },
     { front: 'Automatic rollback kyun?', back: 'Raat 3 baje insaan ko jagana + context + sahi button = 20 minute. Cloudflare 2019: detect 3 min, mitigate 25 min. Machine ko sirf <b>ek shart</b> chahiye.' },

@@ -375,7 +375,7 @@ pool=64   502 tx/s     pool=256   186 tx/s  ← 8× kam
   ],
   cards: [
     { front: 'PgBouncer modes?', back: 'Session mein session semantics bachi rehti hain. Transaction mein COMMIT ke baad connection share hota hai; session features audit karo. Protocol prepared plans configure hon toh support mil sakta hai. Statement mein multi-statement transactions mana hain; simple autocommit ke liye hai.' },
-    { front: 'Pool size formula?', back: '≈ cores × 2 + 1 (16 cores → 33). Lab 35: pool 16 → 1490 tx/s, 256 → 186 tx/s.' },
+    { front: 'Pool size formula?', back: 'Koi universal formula nahi; cores, I/O, query mix aur lock waits ke saath pool-size sweep karo. Lab 35: pool 16 → 1490 tx/s, 256 → 186 tx/s.' },
     { front: 'Pooler ka ek alert?', back: 'cl_waiting > 0 for > 30 s. (sv_active/pool_size > 90% saturated; avg_xact_time > 500 ms slow queries.)' },
   ],
 });
@@ -440,7 +440,7 @@ single + fencing token   double charge  0/30   (ledger ne 30 purane tokens rejec
   cards: [
     { front: 'Pause problem?', back: 'GC pause / VM migration mein process jam, lock TTL expire → doosra lock le leta hai → pehla jaag ke purane bharose par likhta hai. Lab: 30/30 double charge.' },
     { front: 'Redlock vs Kleppmann?', back: 'Redlock: 5 Redis majority. Kleppmann: pause client mein hai — servers badhane se nahi bachta. Lab: Redlock bhi 30/30. Fencing token: 0.' },
-    { front: 'Lease rules?', back: 'TTL ≈ 3–5× kaam ka time, TTL/3 par renew. Lease = liveness; fence = safety.' },
+    { front: 'Lease rules?', back: 'TTL/renewal ko measured pauses, RPC delay aur recovery need se chuno; fixed multiplier safety proof nahi. Lease = liveness; fence = safety.' },
   ],
 });
 
@@ -1145,7 +1145,7 @@ queue (line mein agla)      100 wake-ups · 0 bekaar</pre>
      <h3>🤔 Taala chahiye bhi?</h3>
      <ul>
        <li><b>Idempotent</b> kaam → <code>INSERT … ON CONFLICT DO NOTHING</code>.</li>
-       <li>Takraav pakda ja sakta hai → <b>optimistic concurrency</b> (version column, <code>WHERE version = N</code>; haara retry kare — na taala, na deadlock, na timeout).</li>
+       <li>Takraav pakda ja sakta hai → <b>optimistic concurrency</b> (version column, <code>WHERE version = N</code>; haara retry kare — read par taala nahi; UPDATE par lock wait, timeout ya deadlock phir bhi mumkin).</li>
        <li>External effects (payment/SMS) ke liye provider-supported idempotency, reconciliation aur ownership contract dekho. Fencing tabhi useful hai jab <b>resource token atomically validate</b> kare. Distributed mutex alone exactly-once effect prove nahi karta; shared-state coordination ke aur bhi valid lock use cases hain.</li>
      </ul>
      <p class="tip">🎯 Distributed lock ≠ mutex. Do alag chintayein: <b>liveness</b> (lease: mara holder hamesha na roke) aur <b>safety</b> (fencing:

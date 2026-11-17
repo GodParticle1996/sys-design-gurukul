@@ -115,7 +115,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "Heartbeat",
           "clock": "term 1",
-          "say": "Leader (node 1, term 1) heartbeat bhejta hai. Followers ka timer har heartbeat par phir se shuru.",
+          "say": "Term election ke daur ka badhta number hai; wall-clock samay nahi. Leader (node 1, term 1) heartbeat bhejta hai. Followers ka timer har heartbeat par phir se shuru.",
           "nodes": {
             "n1": {
               "tone": "ok",

@@ -343,7 +343,7 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
      receiver-enforced stable key/status contract chahiye; header alone enough nahi.
      Retry-After wait deadline se bahar ho toh stop/defer, wait shorten mat karo.</p>
      <h3>⚠️ Layers ka guna</h3>
-     <pre>SDK: 3 attempts × gateway: 3 attempts × client app: 3 attempts
+     <pre>SDK: 3 kul koshish × gateway: 3 kul koshish × client app: 3 kul koshish
 = 27 requests, EK user action ke liye</pre>
      <p class="tip">🎯 Retry <b>ek</b> layer par rakho — aksar sabse upar
      wali (jo user ke sabse kareeb hai aur jaanti hai ki request abhi
@@ -1927,7 +1927,7 @@ Readiness → thoda gehra. "Mere pool mein connection hai? critical deps ok hain
        <tr><td>99.99%</td><td>4.3 min</td><td>bahut mehenga</td></tr>
        <tr><td>99.999%</td><td><b>26 second</b></td><td>lagbhag koi nahi</td></tr>
      </table>
-     <p>Har extra 9 ki keemat lagbhag <b>10x</b> hai — multi-region, automated
+     <p>Har extra 9 error allowance ko <b>10 guna kam</b> karta hai; kharcha design par nirbhar hai — multi-region, automated
      failover, canary deploys, 24×7 on-call. "100% uptime" ek target nahi,
      ek galatfehmi hai.</p>
      <h3>📐 SLI → SLO → SLA</h3>
@@ -1938,14 +1938,14 @@ SLO  tumhara apna target
      "99.9% over 30 days"
 
 SLA  customer se contract + PAISA
-     "99.5% ya paise wapas"   ← SLO se hamesha DHEELA</pre>
-     <p>SLA ko SLO se dheela rakhna zaroori hai: tumhara internal alarm
+     "99.5% ya paise wapas"   ← aam taur par SLO se DHEELA</pre>
+     <p>SLA ko SLO se dheela rakhna aam design hai: tumhara internal alarm
      customer ke refund se <b>pehle</b> bajna chahiye.</p>`,
     `<h3>🔬 Error budget — asli kaam</h3>
      <pre>SLO 99.9% = mahine mein 43 minute ka budget
 
 Budget bacha hai?   → deploy karo, risk lo, tez chalo 🚀
-Budget khatam?      → feature freeze, sirf reliability kaam</pre>
+Budget khatam?      → tay policy maano; critical fixes ki chhoot saaf rakho</pre>
      <p>Yahi error budget ki asli taakat hai: budget <b>"product vs
      reliability" wali anant behes ko ek number mein badal deta hai</b>.</p>
      <p>Ab aisi behes nahi hoti:</p>
@@ -1964,7 +1964,7 @@ SRE:     "system stable nahi hai"
 ❌ "CPU utilization"     — user ko farak nahi padta
 ❌ "server uptime"       — server up ho par requests fail ho rahi hon?</pre>
      <p class="tip">🎯 Aur SLO <b>100% nahi</b> hona chahiye. 100% ka matlab
-     hai zero risk, zero deploys, zero progress. Budget ka <b>istemal</b>
+     hai zero error budget; target deploys ko apne aap nahi rokta. Budget ka <b>istemal</b>
      karna chahiye — apna poora budget bacha ke rakhne wali team
      bahut dheere chal rahi hai.</p>`,
   ],
@@ -1988,7 +1988,7 @@ Agar SLO 99.99% hota:
         { answer: '43,200', explain: '30 × 24 × 60 = 43,200 minutes. 43,200 base number hai jisse sab kuch nikalta hai.' },
         { answer: '43.2', explain: '0.1% × 43,200 = 43.2 minutes. 43.2 minute "teen nines" ka poora mahina bhar ka budget hai — ek lambi lunch se kam.' },
         { answer: '23.2', explain: '43.2 − 20 = 23.2 minutes bache. Ek 20-minute incident ne aadhe se zyada budget kha liya.' },
-        { answer: '4.32', explain: '0.01% × 43,200 = 4.32 minutes. 20-minute ka incident poore mahine ka budget <b>4 guna</b> paar kar jaata. Isiliye har extra 9 ki keemat 10x hai.' },
+        { answer: '4.32', explain: '0.01% × 43,200 = 4.32 minutes. 20-minute ka incident poore mahine ka budget <b>4 guna</b> paar kar jaata. Har extra 9 mein manzoor errors 10 guna kam hain; kharcha design se tay hota hai.' },
       ],
     },
     {
@@ -2002,7 +2002,7 @@ Agar SLO 99.99% hota:
       items: [
         { text: '"99.9% checkout requests 500ms mein safal"', bin: 'good', explain: 'User-facing, measurable, aur latency + success dono cover karta hai. Ye SLO ek achhe SLO ka model hai.' },
         { text: '"CPU utilization 70% se kam"', bin: 'bad', explain: 'CPU ek internal metric hai — user ko CPU ki koi parwah nahi. CPU 90% ho par sab requests tez ho rahi hon toh sab theek hai.' },
-        { text: '"100% uptime"', bin: 'bad', explain: 'Namumkin, aur budget zero — matlab koi deploy, koi risk, koi progress nahi. SLO ka poora point hi khatam.' },
+        { text: '"100% uptime"', bin: 'bad', explain: 'Budget zero; risk aur delivery ka sauda aksar bekaar hota hai. SLO ka poora point hi khatam.' },
         { text: '"99.95% notifications 30 second mein deliver"', bin: 'good', explain: 'User-visible outcome, saaf time bound. Async systems ke liye "deliver hua ya nahi" se behtar hai.' },
         { text: '"Server uptime 99.9%"', bin: 'bad', explain: 'Server up ho sakta hai aur saari requests fail ho sakti hain (pool exhaustion yaad hai?). Requests ko naapo, process ko nahi.' },
         { text: '"99% search results 1 second mein"', bin: 'good', explain: 'Search ke liye 99% theek hai — search checkout jitna critical nahi. Alag features ke alag SLO bilkul sahi hai.' },
@@ -2014,7 +2014,7 @@ Agar SLO 99.99% hota:
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'slo',
       questions: [
-        { q: 'Customer ke saath contract kaunsa hai?', target: 'sla', explain: 'SLA — usme paisa juda hota hai. Use hamesha SLO se DHEELA rakho, taaki tumhara internal alarm refund se pehle baje.' },
+        { q: 'Customer ke saath contract kaunsa hai?', target: 'sla', explain: 'SLA — usme paisa juda hota hai. Aam taur par SLO se DHEELA rakhte hain, taaki tumhara internal alarm refund se pehle baje.' },
         { q: '"Product vs reliability" ki behes ko number kaun banata hai?', target: 'budget', explain: 'Error budget. Budget bacha hai → ship karo. Khatam → reliability kaam. Feelings ki jagah number.' },
         { q: 'Jo tum naapte ho use kya kehte hain?', target: 'sli', explain: 'SLI — Service Level Indicator. Jaise "successful requests ÷ total". SLO uspar rakha gaya target hai.' },
       ],
@@ -2127,10 +2127,10 @@ Agar SLO 99.99% hota:
     metric par nahi. Phir pichhle mahine ka data dekho: kya tum use meet karte?
     Aur kitna error budget bacha hota?`,
   cards: [
-    { front: 'Nines ka matlab?', back: '99% = 432 min/mahina · 99.9% = <b>43 min</b> · 99.99% = 4.3 min · 99.999% = <b>26 second</b>. Har extra 9 ki keemat ~<b>10x</b>.' },
-    { front: 'SLI vs SLO vs SLA?', back: '<b>SLI</b> = jo naapte ho · <b>SLO</b> = tumhara target · <b>SLA</b> = customer contract + paisa. SLA ko SLO se <b>dheela</b> rakho — alarm refund se pehle baje.' },
+    { front: 'Nines ka matlab?', back: '99% = 432 min/mahina · 99.9% = <b>43 min</b> · 99.99% = 4.3 min · 99.999% = <b>26 second</b>. Har extra 9 mein manzoor errors <b>10 guna kam</b>; kharcha design par.' },
+    { front: 'SLI vs SLO vs SLA?', back: '<b>SLI</b> = jo naapte ho · <b>SLO</b> = tumhara target · <b>SLA</b> = customer contract + paisa. SLA ko SLO se <b>dheela</b> rakhna aam design hai — alarm refund se pehle baje.' },
     { front: 'Error budget ka maqsad?', back: '"Product vs reliability" behes ko ek <b>number</b> mein badalna. Budget bacha → ship karo. Khatam → reliability kaam. Feelings ki jagah data.' },
-    { front: 'SLO 100% kyun nahi?', back: 'Budget zero = koi deploy, koi risk, koi progress nahi. Budget <b>kharch karne</b> ke liye hai — poora budget bacha ke rakhne wali team bahut dheere chal rahi hai.' },
+    { front: 'SLO 100% kyun nahi?', back: 'Budget zero; deploy ka faisla tay risk policy se hota hai. Budget <b>kharch karne</b> ke liye hai — poora budget bacha ke rakhne wali team bahut dheere chal rahi hai.' },
     { front: 'SLO kis par set karo?', back: '<b>User-facing outcomes</b> par: "checkout 500ms mein safal". CPU ya "server uptime" par nahi — server up ho sakta hai aur saari requests fail ho sakti hain.' },
   ],
 },

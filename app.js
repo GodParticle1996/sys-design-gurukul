@@ -13,6 +13,109 @@ if (typeof ResizeObserver !== 'undefined')
   new ResizeObserver(() => document.documentElement.style.setProperty('--topbar-h', topbarEl.getBoundingClientRect().height + 'px')).observe(topbarEl);
 let viewEpoch = 0;
 function leaveSession() { SD.session = null; viewEpoch++; }
+
+/* ---------------- raasta: URL ka #hash = kaunsi screen ----------------
+   #track/<id> · #level/<id> · #soch · #soch/<id> · #dojo · (khaali = home)
+   Isse browser ka Back button kaam karta hai, reload par wahi screen khulti hai, aur link seedha level par le jaata hai.
+   pushState hashchange/popstate nahi chalata, isliye set() se koi loop nahi banta. */
+const canNav = typeof history !== 'undefined' && typeof history.pushState === 'function' && typeof location !== 'undefined';
+SD.nav = {
+  set(hash) {
+    if (!canNav) return;
+    const now = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+    if (now === hash) return;
+    try { history.pushState(null, '', hash ? '#' + hash : location.pathname + location.search); } catch (e) { /* file:// par kuch browser mana karte hain */ }
+  },
+  route() {
+    /* Purane cross-app links (#level=<id>, jaise SQL Gurukul se) bhi #level/<id> ki tarah khulein. */
+    const hash = (typeof location !== 'undefined' ? decodeURIComponent((location.hash || '').replace(/^#/, '')) : '').replace(/^level=/, 'level/');
+    const cut = hash.indexOf('/'), kind = cut < 0 ? hash : hash.slice(0, cut), id = cut < 0 ? '' : hash.slice(cut + 1);
+    if (kind === 'track') { const t = SD.tracks.find(x => x.id === id); if (t && SD.trackUnlocked(t)) return showTrack(t); }
+    if (kind === 'level' && SD.soch) {
+      const f = SD.soch.findLevel(id);
+      if (f && f.open) return showIntro(f.level);
+      if (f) {
+        /* Locked level ka link: track map (ya home) dikhao, aur saaf batao ki lesson kyun nahi khula. */
+        if (SD.trackUnlocked(f.track)) showTrack(f.track); else showHome();
+        appEl.insertBefore(el('p', 'lesson-card', 'Linked lesson abhi locked hai. Track map mein pichhle levels pehle poore karo.'), appEl.firstChild);
+        return;
+      }
+    }
+    if (kind === 'soch' && SD.soch) { const sc = SD.scenarios.find(s => s.id === id); return sc ? SD.soch.play(sc) : SD.soch.showList(); }
+    if (kind === 'dojo') return showDojo();
+    showHome();
+  },
+};
+if (canNav && typeof window.addEventListener === 'function') window.addEventListener('popstate', () => SD.nav.route());
+
+/* Home par tracks ke teen group — 15+ tracks ek saath dekhkar raasta khona aasaan tha.
+   Har track pehle milne wale group mein jaata hai. Naya track: id ke hisaab se apne aap sahi group mein. */
+const TRACK_GROUPS = [
+  { id: 'core', title: '🧭 Mukhya raasta — kram se', note: 'System design ki buniyaad. Ek track poora karo, tab agla khulta hai. Naye ho toh yahin se shuru karo.',
+    test: t => !t.alwaysUnlocked },
+  { id: 'pro', title: '🏭 Production aur interview — naukri ki taiyaari', note: 'Hamesha khule. Security, observability + cloud ka kharcha, aur interview ke classic designs. Mukhya raasta ke baad sabse kaam ke; har track mein terminal mission bhi.',
+    test: t => /^pro-/.test(t.id) },
+  { id: 'course', title: '🎬 Courses — ek topic, samasya se code tak', note: 'Hamesha khule. Koi bhi topic chuno; har topic 4–5 chhote level ka hai, laptop wale lab ke saath.',
+    test: t => /^(fp-|sdd-|sds-|concurrency)/.test(t.id) },
+  { id: 'side', title: '📚 Asli kahaaniyan aur side tracks', note: 'Asli companies ke design aur outages. Hamesha khule; jab mann ho tab padho.', test: () => true },
+];
+const groupOf = track => TRACK_GROUPS.find(g => g.test(track));
+
+/* "Agla kadam": aakhri poore kiye level ke track ka agla adhoora level; warna pehla khula mukhya track */
+function nextStep() {
+  const done = SD.state.completed;
+  const firstOpen = track => SD.levelsOf(track).find(l => !done.includes(l.id));
+  for (let i = done.length - 1; i >= 0; i--) {
+    const track = SD.tracks.find(t => SD.levelsOf(t).some(l => l.id === done[i]));
+    if (!track) continue;
+    const level = firstOpen(track);
+    if (level) return { track, level, why: `Pichhli baar tum <b>${track.icon} ${track.name}</b> mein the.` };
+    break;
+  }
+  const core = SD.tracks.find(t => !t.alwaysUnlocked && SD.trackUnlocked(t) && !SD.trackProgress(t).complete);
+  if (core) return { track: core, level: firstOpen(core), why: done.length ? 'Pichhla track poora ho gaya. Mukhya raaste ka agla track:' : 'Naye ho? Mukhya raasta yahin se shuru hota hai.' };
+  return null;
+}
+
+/* Lesson ke chhote cards: ek baar mein ek card. Lambi entry <h3> par toot-ti hai (sirf tab jab har tukda poora HTML ho). */
+function lessonPages(level) {
+  const pages = [];
+  const balanced = part => ['div', 'table', 'ul', 'ol', 'details', 'pre', 'section'].every(tag =>
+    (part.match(new RegExp('<' + tag + '[\\s>]', 'g')) || []).length === (part.match(new RegExp('</' + tag + '>', 'g')) || []).length);
+  (level.lesson || []).forEach(html => {
+    const parts = String(html).split(/(?=<h3[\s>])/).filter(p => p.trim());
+    if (parts.length > 1 && !/^\s*<h3/.test(parts[0]) && SD.plainText(parts[0]).split(' ').length < 30) parts.splice(0, 2, parts[0] + parts[1]);
+    if (parts.length > 1 && SD.plainText(html).split(' ').length > 160 && parts.every(balanced)) pages.push(...parts);
+    else pages.push(html);
+  });
+  return pages;
+}
+function lessonPager(level) {
+  const box = el('div', 'lesson-pager');
+  const cards = lessonPages(level).map(html => el('div', 'lesson-card', html));
+  cards.forEach(c => box.appendChild(c));
+  if (cards.length < 2) return box;
+  let i = 0, all = false;
+  const nav = el('div', 'lp-nav');
+  const prev = el('button', 'btn ghost small lp-prev', '← Pichla');
+  const pos = el('span', 'lp-pos');
+  const next = el('button', 'btn small lp-next', 'Agla card →');
+  const toggle = el('button', 'lp-all');
+  const paint = () => {
+    cards.forEach((c, k) => { c.style.display = all || k === i ? '' : 'none'; });
+    prev.disabled = i === 0; next.disabled = i === cards.length - 1;
+    pos.innerHTML = `Card <b>${i + 1}</b> / ${cards.length}${i === cards.length - 1 ? ' · ab neeche "Shuru karo" dabao' : ''}`;
+    nav.style.display = all ? 'none' : '';
+    toggle.textContent = all ? 'Ek-ek card dikhao' : 'Saare cards ek saath dikhao';
+  };
+  const step = d => { if (i + d < 0 || i + d >= cards.length) return; i += d; paint(); box.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  prev.onclick = () => step(-1); next.onclick = () => step(1);
+  toggle.onclick = () => { all = !all; paint(); };
+  nav.append(prev, pos, next);
+  box.append(nav, toggle);
+  paint();
+  return box;
+}
 function stageSignature(level) {
   // A same-title exercise can gain a question or change its success predicate.
   // Resume only when the actual exercise payload still matches the saved run.
@@ -74,8 +177,55 @@ function diagramFor(id, hero) {
   const v = (typeof VISUALS !== 'undefined') && VISUALS[id];
   if (!v) return null;
   const d = el('div', 'diagram' + (hero ? ' hero' : ''));
+  /* scene (scene.js, data-scenes-*.js) = kadam-dar-kadam diagram. Purana static html band dabbe mein neeche rehta hai:
+     usmein "ek nazar" wali summary boxes hain jo scene mein nahi. */
+  if (v.scene && typeof SD.renderScene === 'function') {
+    d.classList.add('has-scene');
+    d.innerHTML = `<div class="dg-title">📊 ${v.t}</div>`;
+    d.appendChild(SD.renderScene(v.scene));
+    const all = el('details', 'dg-all', `<summary>📋 Poori tasveer ek saath dekho</summary>${v.html}`);
+    d.appendChild(all);
+    return d;
+  }
   d.innerHTML = `<div class="dg-title">📊 ${v.t}</div>${v.html}`;
+  try { diagramStepper(d); } catch (e) { /* stepper sirf suvidha hai; diagram uske bina bhi poora hai */ }
   return d;
+}
+
+/* Purane static diagrams ko "ek-ek hissa" mein padhna: ek waqt mein ek hi hissa chamakta hai, baaki dhundhle.
+   Hissa = .dg-rung / .dg-box / .dg-node (jo kisi doosre hisse ke andar na ho). 3 se kam hisse hon toh button nahi aata.
+   Content mein kuch likhna nahi padta; SD.viz.svg wale diagrams (playlist tracks) dry run se pehle hi kadam-dar-kadam hain. */
+function diagramStepper(d) {
+  if (typeof d.querySelectorAll !== 'function') return;
+  const UNIT = '.dg-rung, .dg-box, .dg-node';
+  const units = Array.prototype.filter.call(d.querySelectorAll(UNIT), u => !(u.parentElement && u.parentElement.closest(UNIT)));
+  if (units.length < 3) return;
+  let i = -1;
+  const bar = el('div', 'dg-stepbar');
+  const start = el('button', 'btn small ghost dg-step-start', '▶ Ek-ek hissa dekho');
+  const prev = el('button', 'btn small ghost dg-step-prev', '← Pichla');
+  const pos = el('span', 'dg-step-pos');
+  const next = el('button', 'btn small dg-step-next', 'Agla hissa →');
+  const stop = el('button', 'btn small ghost dg-step-stop', 'Poora diagram');
+  const paint = () => {
+    const on = i >= 0;
+    d.classList.toggle('dg-stepping', on);
+    units.forEach((u, k) => { u.classList.toggle('dg-seen', on && k < i); u.classList.toggle('dg-on', on && k === i); });
+    start.style.display = on ? 'none' : '';
+    [prev, pos, next, stop].forEach(x => { x.style.display = on ? '' : 'none'; });
+    if (!on) return;
+    pos.innerHTML = `Hissa <b>${i + 1}</b> / ${units.length}`;
+    prev.disabled = i === 0; next.disabled = i === units.length - 1;
+    units[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+  start.onclick = () => { i = 0; paint(); };
+  prev.onclick = () => { if (i > 0) { i--; paint(); } };
+  next.onclick = () => { if (i < units.length - 1) { i++; paint(); } };
+  stop.onclick = () => { i = -1; paint(); };
+  bar.append(start, prev, pos, next, stop);
+  const title = d.querySelector('.dg-title');
+  if (title && title.after) title.after(bar); else d.appendChild(bar);
+  paint();
 }
 
 /* Topic recap (dev/REVIEW.md, decision 2): shown once per track, after the guide's LAST level in that
@@ -117,6 +267,7 @@ function topicGuide(level) {
    ============================================================ */
 function showHome() {
   leaveSession();
+  SD.nav.set('');
   renderTopbar();
   appEl.innerHTML = '';
 
@@ -144,6 +295,7 @@ function showHome() {
     </div>`;
   SD.makeInteractive(dojoCard, showDojo);
   strip.appendChild(dojoCard);
+  if (SD.soch && SD.scenarios.length) strip.appendChild(SD.soch.homeCard());
 
   const alive = SD.streakAlive() && st.count > 0;
   strip.appendChild(el('div', 'stripcard', `
@@ -173,16 +325,36 @@ function showHome() {
       if (SD.session.stageIdx === allStages(resume.level).length) levelComplete(); else runStage();
     };
     card.appendChild(go); appEl.appendChild(card);
+  } else {
+    const step = nextStep();
+    if (step && step.level) {
+      const card = el('section', 'next-card');   /* 'resume-card' nahi: wo class sirf asli checkpoint ke liye hai (dev/progress-test.js) */
+      card.appendChild(el('p', null, `👉 <b>Agla kadam.</b> ${step.why}<br>Agla level: <b>${step.level.icon} ${step.level.title}</b>`));
+      const go = el('button', 'btn', 'Yeh level kholo →');
+      go.onclick = () => showIntro(step.level);
+      card.appendChild(go); appEl.appendChild(card);
+    }
   }
 
-  // tracks
-  const map = el('section', 'trackmap');
+  // tracks — teen group mein, har group ke upar ek line ka matlab
+  const maps = {};
+  TRACK_GROUPS.forEach(g => {
+    const mine = SD.tracks.filter(t => groupOf(t) === g);
+    if (!mine.length) return;
+    const doneIn = mine.reduce((s, t) => s + SD.trackProgress(t).done, 0), allIn = mine.reduce((s, t) => s + SD.levelsOf(t).length, 0);
+    appEl.appendChild(el('div', 'tk-group', `<h3>${g.title}</h3><p>${g.note} <span class="tk-group-count">${mine.length} tracks · ${doneIn}/${allIn} levels</span></p>`));
+    maps[g.id] = el('section', 'trackmap');
+    appEl.appendChild(maps[g.id]);
+  });
+  let coreStep = 0;
   SD.tracks.forEach(track => {
+    const map = maps[groupOf(track).id];
     const p = SD.trackProgress(track);
     const unlocked = SD.trackUnlocked(track);
     const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
     const card = el('div', 'trackcard' + (p.complete ? ' done' : '') + (unlocked ? '' : ' locked'));
     card.innerHTML = `
+      ${groupOf(track).id === 'core' ? `<div class="tk-step">Kadam ${++coreStep}</div>` : ''}
       <div class="tk-icon">${track.icon}</div>
       <div class="tk-name">${track.name}</div>
       <div class="tk-blurb">${track.blurb}</div>
@@ -193,7 +365,6 @@ function showHome() {
     else if (card.setAttribute) card.setAttribute('aria-disabled', 'true');
     map.appendChild(card);
   });
-  appEl.appendChild(map);
 
   const foot = el('div', 'home-foot');
   const reset = el('button', 'btn ghost small', '↺ Saara progress reset karo');
@@ -213,6 +384,7 @@ function showHome() {
    ============================================================ */
 function showTrack(track) {
   leaveSession();
+  SD.nav.set('track/' + track.id);
   appEl.innerHTML = '';
   window.scrollTo(0, 0);
 
@@ -263,6 +435,7 @@ function showTrack(track) {
    ============================================================ */
 function showIntro(level) {
   leaveSession();
+  SD.nav.set('level/' + level.id);
   appEl.innerHTML = '';
   const track = SD.trackOf(level);
   const levels = SD.levelsOf(track);
@@ -282,7 +455,7 @@ function showIntro(level) {
   const hero = diagramFor(level.id, true);
   if (hero) wrap.appendChild(hero);
 
-  level.lesson.forEach(html => wrap.appendChild(el('div', 'lesson-card', html)));
+  wrap.appendChild(lessonPager(level));
   const videoSources = SD.renderVideoSources && SD.renderVideoSources(level);
   if (videoSources) wrap.appendChild(videoSources);
 
@@ -307,6 +480,9 @@ function showIntro(level) {
     });
     wrap.appendChild(box);
   }
+
+  const sochIntro = replay && SD.soch && SD.soch.linkBox(level);
+  if (sochIntro) wrap.appendChild(sochIntro);
 
   const row = el('div', 'btnrow');
   const back = el('button', 'btn ghost', '← Level map');
@@ -613,6 +789,9 @@ function levelComplete() {
       ${level.homework}`));
   }
 
+  const sochDone = SD.soch && SD.soch.linkBox(level);
+  if (sochDone) wrap.appendChild(sochDone);
+
   const track = SD.trackOf(level);
   const levels = SD.levelsOf(track);
   const row = el('div', 'btnrow center');
@@ -640,6 +819,7 @@ function levelComplete() {
    ============================================================ */
 function showDojo() {
   leaveSession();
+  SD.nav.set('dojo');
   appEl.innerHTML = '';
   window.scrollTo(0, 0);
 
@@ -748,18 +928,7 @@ function showCertificate(track) {
 }
 
 /* ---------------- boot ---------------- */
-SD.ui = { renderTopbar, showHome, showTrack, showIntro, showPopQuiz, runStage, stageDone, renderInterview, levelComplete, showDojo, showCertificate, allStages, diagramFor, topicGuide };
+SD.ui = { leaveSession, renderTopbar, showHome, showTrack, showIntro, showPopQuiz, runStage, stageDone, renderInterview, levelComplete, showDojo, showCertificate, allStages, diagramFor, topicGuide };
 renderTopbar();
-showHome();
-// Stable cross-app lesson links; saved completion and stage progress stay untouched.
-if (typeof location !== 'undefined') {
-  const linked = /^#level=([a-z0-9-]+)$/.exec(location.hash || '');
-  const level = linked && Object.values(SD.levelSets).flat().find(l => l.id === linked[1]);
-  if (level) {
-    const track = SD.trackOf(level), levels = SD.levelsOf(track), index = levels.indexOf(level);
-    const open = SD.trackUnlocked(track) && (track.freeOrder || index === 0 || SD.state.completed.includes(levels[index - 1].id));
-    if (open) showIntro(level);
-    else appEl.appendChild(el('p', 'lesson-card', 'Linked lesson abhi locked hai. Track map mein required pichhle levels complete karo.'));
-  }
-}
+SD.nav.route();
 })();

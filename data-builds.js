@@ -188,8 +188,8 @@ READ (12,000/sec peak — yahan sab kuch hai)
      turant lauta do. Warna tumne 12,000 reads/sec ko 12,000 writes/sec bana diya.</p>
      <h3>↩️ 301 ya 302?</h3>
      <table>
-       <tr><td><b>301</b> Permanent</td><td>Browser cache kar leta hai → agli baar tumhare server tak aata hi nahi</td><td>Server par load kam, par <b>click count khatam</b> aur link kabhi badal nahi sakte</td></tr>
-       <tr><td><b>302</b> Found</td><td>Har baar tumhare server se guzarta hai</td><td>Analytics milta hai aur destination badal sakte ho — par har click ek request hai</td></tr>
+       <tr><td><b>301</b> Permanent</td><td>Browser cache kar leta hai → agli baar tumhare server tak aata hi nahi</td><td>Server par load kam, par <b>click count khatam</b> aur cached redirect expiry tak purana destination chal sakta hai</td></tr>
+       <tr><td><b>302</b> Found</td><td>Explicit cache policy na ho toh aam taur par server tak aata hai</td><td>Analytics milta hai aur destination badal sakte ho — par har click ek request hai</td></tr>
      </table>
      <p class="tip">🎯 Zyadatar shorteners <b>302</b> chunte hain — kyunki analytics
      shorteners ka product hai. 301 vs 302 achha udaharan hai ki "kam load" hamesha sahi jawab
@@ -636,8 +636,8 @@ leaderboard:alltime              koi TTL nahi</pre>
     <code>ORDER BY … LIMIT</code> ya <code>COUNT(*)</code> hai, toh hisaab lagao
     ki data 100x hone par query kitni der legi.`,
   cards: [
-    { front: 'Leaderboard rank query costly kab ho sakti hai?', back: '<code>COUNT(*) WHERE score &gt; ?</code> ko many matching entries count karni pad sakti hain. Query plan, rank distribution, concurrency aur cache measure karo. Maintained sorted-set rank ek alternative hai.' },
-    { front: 'Redis sorted set kya deta hai?', back: '<code>ZADD</code> update · <code>ZREVRANGE</code> top-K · <code>ZREVRANK</code> rank — <b>teenon O(log n)</b>. Skip list ke span counts se rank <b>gini nahi, padhi</b> jaati hai.' },
+    { front: 'Leaderboard ka sabse mehenga sawaal?', back: '<b>"Meri rank kya hai"</b> — SQL mein <code>COUNT(*) WHERE score &gt; ?</code> ko upar wali saari entries ginni pad sakti hain, aur ye sawaal <b>har</b> player poochhta hai. Query plan aur load naap ke dekho; maintained sorted-set rank ek alternative hai.' },
+    { front: 'Redis sorted set kya deta hai?', back: '<code>ZADD</code> update · <code>ZREVRANGE</code> top-K · <code>ZREVRANK</code> rank — <b>ZADD/rank O(log n), top-K O(log n + K)</b>. Skip list ke span counts se rank <b>gini nahi, padhi</b> jaati hai.' },
     { front: 'Daily/weekly/all-time?', back: '<b>Alag keys + TTL</b>, aur update par teenon mein ZINCRBY. Ek hi set mein time se filter karne ka koi sasta tareeka nahi (set score par sorted hai, time par nahi).' },
     { front: 'Redis aur DB ka rishta?', back: 'DB <b>source of truth</b>, Redis ek <b>derived</b> read structure jo rebuild ho sake. Redis gira = leaderboard gaya, <b>scores nahi</b>.' },
     { front: '5 crore players par?', back: 'Pehle poochho: <b>exact rank sach mein chahiye?</b> Top-1000 alag set (99% reads), baaki approximate/bucketed. Sorted set shard karna mushkil hai — rank ke liye global ordering chahiye.' },
@@ -974,7 +974,7 @@ baaki:             "tumhara number 42,318 hai, ~8 minute"</pre>
              → yahan koi DB lock latka hua NAHI hai
 
 3. CONFIRM   payment ok → transaction mein:
-             seat status = 'sold', booking row, hold delete
+             valid hold owner/version jaancho, seat sold aur booking row DB transaction mein; Redis hold cleanup baad mein
              → payment fail/timeout → hold apne aap expire</pre>
      <p><b>Kyun teen kadam?</b> Ek DB lock 10 minute pakadna namumkin hai.
      Aur bina hold ke, user payment karke aaye aur seat ja chuki ho —
@@ -1258,7 +1258,7 @@ booking      →  seedha, atomic, primary par</pre>
     { front: 'Seat map ka read path?', back: 'Cache se (1-2s purana <b>bilkul theek</b>) + SSE se "seat gayi" updates. 5 lakh log ek hi map dekh rahe hain — map ek key hai. Live DB read booking path ko gira dega.' },
     { front: 'Stale seat map se galat click?', back: 'Achha error hai — turant "ye ja chuki" mil jaata hai. Bura error <b>payment ke baad</b> pata chalna hai. Achha design galtiyan <b>jaldi aur sasti</b> banata hai, khatam nahi karta.' },
     { front: 'Hold bina TTL ke?', back: 'Seats hamesha ke liye atak jaati hain — "sold out" jabki hall aadha khaali. Aur atki seats <b>error rate par dikhti hi nahi</b> (sab 200 laut raha hai). Alert business metric par lagao.' },
-    { front: 'Confirm par idempotency kyun?', back: 'Payment webhooks <b>dohraate</b> hain. Bina key ke dohraaya webhook doosri booking bana dega. Aur seat+booking+hold-delete teenon ek hi transaction mein.' },
+    { front: 'Confirm par idempotency kyun?', back: 'Payment webhooks <b>dohraate</b> hain. Bina key ke dohraaya webhook doosri booking bana dega. Seat aur booking ek DB transaction mein; hold owner/version jaancho. Redis hold delete alag cleanup hai, DB transaction ka hissa nahi.' },
   ],
 },
 
@@ -1514,7 +1514,7 @@ NON-FUNCTIONAL
     { front: 'Chat ka neev wala niyam?', back: '<b>Pehle durable store (id ke saath), phir push.</b> Push ek optimization hai, source of truth nahi. Ye kram offline + reconnect + multi-device + "message kho gaya" — chaaron hal karta hai.' },
     { front: 'Multi-device sync?', back: 'Har device ka apna <b>last_seen_id</b>. Bas. Alag sync system nahi chahiye. Har reconnect par chalne wali gap-fill query se hi sync hoti hai.' },
     { front: 'Read receipts?', back: 'Per-user <b>cursor</b> (last_read_message_id), per-message row nahi. "Kitno ne padha" = <code>COUNT(cursor &gt;= message_id)</code>.' },
-    { front: 'Group fanout — read ya write?', back: '<b>Read par</b> — chat mein ek message 20 log padhte hain (ratio kam). Feed mein <b>write par</b> — ek tweet crore log padhte hain. Ratio hi faisla hai.' },
+    { front: 'Group fanout — read ya write?', back: '<b>Read par</b> — chat mein ek message 20 log padhte hain (ratio kam). Feed mein aam users ke liye <b>write par</b>, celebrity ke liye read par merge. Read/write ratio aur followers ka skew dono matter karte hain.' },
     { front: 'Connection layer?', back: '10 crore ÷ 50k = <b>2,000 gateway nodes</b> sirf sockets ke liye, chahe koi kuch bhej na raha ho. Logic peechhe, beech mein pub/sub, aage L4 LB.' },
     { front: '2,000 nodes ka deploy?', back: '<b>Rolling restart + client backoff/jitter.</b> Warna 10 crore reconnects ek saath = self-inflicted DDoS. Restart ka tareeka design ki shart hai, ops ka detail nahi.' },
   ],

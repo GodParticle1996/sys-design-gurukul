@@ -291,7 +291,7 @@ order_items.price    ← ✅ HISTORICAL FACT
 
 ❌ WHERE is_active = 1             low selectivity (99% rows)
    → optimizer index IGNORE karega, aur index ignore karna SAHI hoga</pre>
-     <p><b>Selectivity</b> = distinct values ÷ total rows.</p>
+     <p><b>Column cardinality ratio</b> = distinct values ÷ total rows; predicate selectivity = matching rows ÷ total rows.</p>
      <pre>email       — sab alag        → 1.0        perfect index
 user_id     — 1000 users     → 0.001      achha
 status      — 5 values       → 0.0000002  theek-thaak
@@ -351,7 +351,7 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'btree',
       questions: [
-        { q: 'Index kab bekaar ho jaata hai — kaunsa concept?', target: 'sel', explain: 'Selectivity. Index tabhi laga jab index 90%+ rows kaat de. is_active (2 values) par index optimizer ignore karega — aur sahi karega.' },
+        { q: 'Index kab bekaar ho jaata hai — kaunsa concept?', target: 'sel', explain: 'Selectivity. Koi fixed 90% cutoff nahi. Rare boolean value par index kaam aa sakta hai; statistics aur EXPLAIN se plan jaancho.' },
         { q: 'Sabse aam galti kaunsi hai?', target: 'fn', explain: 'Column par function: WHERE YEAR(created_at) = 2026. Index created_at par hai, YEAR(created_at) par nahi. Range mein likho.' },
         { q: 'Index ke leaf level mein kya hota hai?', target: 'leaf', explain: 'Sorted entries — isiliye range aur ORDER BY dono muft mein mil jaate hain, sirf equality nahi.' },
       ],
@@ -447,7 +447,7 @@ is_active   — 2 values       → 0.00000008 bekaar</pre>
     Dekho: <b>rows examined ÷ rows returned</b> kitna hai? 1000:1 ho toh index ya query galat hai.`,
   cards: [
     { front: 'B-tree ki depth?', back: '<code>log₁₀₀(n)</code> — 2.4 crore rows par ~4 hops. Table 1000x badhe toh depth sirf 1.5 badhti hai. Exact latency caching,IO,selectivity aurrow lookups par depend hai;depth alone runtime guarantee nahi.' },
-    { front: 'Selectivity?', back: 'distinct values ÷ total rows. <code>email</code> = 1.0 (perfect) · <code>is_active</code> = ~0 (bekaar). <b>Thodi rows maangne wali query par index sabse kaam ka — pakka % cutoff nahi; plan dekho.</b>' },
+    { front: 'Selectivity?', back: 'Predicate selectivity = matching rows ÷ total rows. Column distinctness alag hai; rare boolean values par bhi index useful ho sakta hai. <b>Thodi rows maangne wali query par index sabse kaam ka — pakka % cutoff nahi; plan dekho.</b>' },
     { front: '4 patterns jo index maar dete hain?', back: '<b>1.</b> <code>LIKE &#39;%abc&#39;</code> (leading wildcard) <b>2.</b> <code>YEAR(col)</code> (function) <b>3.</b> <code>!=</code> <b>4.</b> low selectivity column.' },
     { front: 'Optimizer index ignore kyun karta hai?', back: 'Query bahut zyada rows laa rahi hai. Index scan mein har match par <b>random</b> lookup hota hai — bahut rows ke liye seq scan sasta pad sakta hai (pakka % nahi). Optimizer aksar sahi hota hai — EXPLAIN se jaancho.' },
     { front: 'Sabse kaam ka EXPLAIN number?', back: '<b>rows examined ÷ rows returned.</b> 1000:1 ho toh index ya query galat hai.' },
@@ -555,8 +555,8 @@ CREATE INDEX ix ON transactions(
       blanks: [
         { answer: 'user_id', explain: 'Equality column pehle. Aur user_id sabse selective hai (har user ke apne rows), isliye leading position ke liye best.' },
         { answer: 'status', explain: 'Doosra equality column. Dono equality columns range se PEHLE aane chahiye.' },
-        { answer: 'created_at', explain: 'Range + sort dono created_at par hain — isliye created_at aakhir mein. Range ke BAAD ka koi column index se filter nahi hota.' },
-        { answer: 'amount', explain: 'Query sirf <code>id</code> aur <code>amount</code> maang rahi hai. <code>amount</code> index mein daal dene se index <b>covering index</b> ban jaata hai (id toh aksar apne aap hota hai) — heap chhuna hi nahi padega.' },
+        { answer: 'created_at', explain: 'Range + sort dono created_at par hain — isliye created_at aakhir mein. Range ke baad bhi index predicate filter kar sakta hai; narrow seek ka fayda plan par nirbhar hai.' },
+        { answer: 'amount', explain: 'Query sirf <code>id</code> aur <code>amount</code> maang rahi hai. <code>amount</code> index mein daal dene se index <b>covering index</b> ban jaata hai (Postgres mein id ko index mein explicitly chahiye); heap visibility fetch phir bhi mumkin hai.' },
       ],
     },
     {
@@ -679,7 +679,7 @@ CREATE INDEX ix ON transactions(
     Jo index kisi query ka leading column match nahi karta, aisa index <b>sirf write tax</b> hai — hata do.`,
   cards: [
     { front: 'Left-most prefix rule?', back: "INDEX(a,b,c) leading equality se often narrow seek deta hai. Missing a index ko universally unusable nahi banata; PostgreSQL 18 skip scan, cardinality aur actual plan verify karo. Analogy mein firstName-only lookup ka seek less direct hai." },
-    { front: 'Column ka kram?', back: '<b>Equality → sort → range.</b> Range ke BAAD ka koi column index se filter nahi hota — DB sirf rows padh ke chhaanta hai.' },
+    { front: 'Column ka kram?', back: '<b>Equality → sort → range.</b> Range ke baad bhi index predicate filter kar sakta hai; narrow seek ka fayda plan par nirbhar hai — DB sirf rows padh ke chhaanta hai.' },
     { front: 'Covering index?', back: 'Query ke SAARE columns index mein → heap aksar chhuna nahi padta (<code>Index Only Scan</code>) — par PostgreSQL mein visibility map taaza na ho toh heap phir bhi padhna padta hai. Kitna tez hua, naap ke dekho.' },
     { front: '5 single vs 1 composite?', back: 'DB aksar <b>ek hi</b> index chunta hai, toh 5 single multi-column query ko nahi bachate — par single indexes ka write tax 5 guna hai.' },
     { front: 'Index ka tax?', back: "Indexes insert/delete maintenance, WAL aur cache space add karte hain. UPDATE ki index cost changed columns/engine par depend hai; PostgreSQL HOT kuch updates mein new index entries avoid karta hai. 8 indexes ko fixed 9 physical I/O mat maano." },
@@ -1054,7 +1054,7 @@ health green  → process ZINDA hai (bas itna)</pre>
 db query                20 ms
 ─────────────────────────────
 TOTAL                9,925 ms</pre>
-     <p>Ab sab saaf hai. <b>Query optimize karna bilkul bekaar hai</b> —
+     <p>Ab sab saaf hai. <b>Ek sample se query optimization bekaar mat maano</b> —
      SQL sirf 20 ms le raha hai. DB bhi bilkul healthy dikhega. Bottleneck
      DB nahi, <b>DB ke saamne ki QUEUE</b> hai.</p>`,
     `<h3>🔬 Health check green kyun hai?</h3>
@@ -1078,7 +1078,7 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
      hai jo "deep pagination" ko "3AM outage" se jodta hai.</p>
      <p>Aur ek aur raasta hai jisse capacity girti hai — <b>koi connections
      pakde baitha ho</b>:</p>
-     <pre>pool 50, par ek lambi transaction 45 pakde hue hai
+     <pre>pool 50, par lambi transactions 45 connections pakde hue hain
 → effective pool = 5
 → capacity = 5 × 50 = 250 rps  (2,500 nahi)</pre>`,
     `<h3>🪣 Utilization vs Saturation</h3>
@@ -2856,8 +2856,7 @@ WHILE (rows bache):                            ← chhote batches
    UPDATE ... WHERE id BETWEEN ? AND ?+5000
    COMMIT
    sleep(50ms)                                 ← DB ko saans lene do</pre>
-     <p>Chhote batches dheeme lagte hain par chhote batches <b>resumable</b> hain, replica lag
-     nahi banate, aur beech mein rok ke wapas shuru kiye ja sakte hain.
+     <p>Chhote batches dheeme lagte hain par chhote batches <b>resumable</b> hain, replica lag ko naapkar control karne dete hain, aur beech mein rok ke wapas shuru kiye ja sakte hain.
      Migration ka dhyeya "jaldi" nahi hai — <b>"kisi ko pata na chale"</b> hai.</p>
      <h3>✅ Verify ko skip mat karo</h3>
      <p>Verify sirf <code>COUNT(*)</code> nahi hai. Teen level:</p>

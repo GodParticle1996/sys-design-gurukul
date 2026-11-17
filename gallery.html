@@ -6,6 +6,7 @@
   <title>System Gurukul — Diagram Gallery</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📊</text></svg>">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="extra.css">
 </head>
 <body>
   <main id="app" style="max-width:1000px;margin:0 auto;padding:24px 18px 80px">
@@ -22,10 +23,13 @@
   <script src="visuals.js"></script>
   <script src="games.js"></script>
   <script src="perfsim.js"></script>
+  <script src="perfsim-pro.js"></script>
   <script src="canvas.js"></script>
   <script src="labs.js"></script>
   <script src="dockerlab.js"></script>
   <script src="explain.js"></script>
+  <script src="soch.js"></script>
+  <script src="scene.js"></script>
   <script src="data-flow.js"></script>
   <script src="data-api.js"></script>
   <script src="data-data.js"></script>
@@ -188,6 +192,29 @@
   <script src="data-v2-fp-ig-2-kaise.js"></script>
   <script src="data-v2-fp-ig-3-code.js"></script>
   <script src="data-v2-fp-ig-4-kab.js"></script>
+  <script src="data-soch-1.js"></script>
+  <script src="data-soch-2.js"></script>
+  <script src="data-soch-3.js"></script>
+  <script src="data-scenes-flow.js"></script>
+  <script src="data-scenes-api.js"></script>
+  <script src="data-scenes-data.js"></script>
+  <script src="data-scenes-resil.js"></script>
+  <script src="data-scenes-dist.js"></script>
+  <script src="data-scenes-shapes.js"></script>
+  <script src="data-scenes-builds.js"></script>
+  <script src="data-soch-scenes.js"></script>
+  <script src="data-pro-sec-1.js"></script>
+  <script src="data-pro-sec-2.js"></script>
+  <script src="data-pro-sec-3.js"></script>
+  <script src="data-pro-sec-4.js"></script>
+  <script src="data-pro-obs-1.js"></script>
+  <script src="data-pro-obs-2.js"></script>
+  <script src="data-pro-obs-3.js"></script>
+  <script src="data-pro-obs-4.js"></script>
+  <script src="data-pro-iv-1.js"></script>
+  <script src="data-pro-iv-2.js"></script>
+  <script src="data-pro-iv-3.js"></script>
+  <script src="data-pro-iv-4.js"></script>
   <script src="data-guidance.js"></script>
   <script src="data-v2-concurrency.js"></script>
   <script src="video-sources.js"></script>
@@ -219,8 +246,16 @@
         if (!v) return;
         seen.add(id);
         const sec = document.createElement('section');
-        sec.innerHTML = '<div class="crumb" style="margin-top:26px">' + crumb + '</div>' +
-          '<div class="diagram hero"><div class="dg-title">📊 ' + v.t + '</div>' + v.html + '</div>';
+        sec.innerHTML = '<div class="crumb" style="margin-top:26px">' + crumb + (v.scene ? ' · 🎬 scene' : '') + '</div>' +
+          '<div class="diagram hero"><div class="dg-title">📊 ' + v.t + '</div>' + (v.scene ? '' : v.html) + '</div>';
+        if (v.scene) {   /* scene + purana poora diagram band dabbe mein — level intro jaisa */
+          const d = sec.querySelector('.diagram');
+          d.appendChild(SD.renderScene(v.scene));
+          const all = document.createElement('details');
+          all.className = 'dg-all';
+          all.innerHTML = '<summary>📋 Poori tasveer ek saath dekho</summary>' + v.html;
+          d.appendChild(all);
+        }
         g.appendChild(sec);
       }
       SD.tracks.forEach(track => {

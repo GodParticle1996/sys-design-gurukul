@@ -9,7 +9,7 @@
 
 VISUALS['gmail-state'] = {
   t: 'Email file nahi, ek state machine hai',
-  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">📁 Folder</span>\n        <div class=\"dg-cap\">Ek mail = ek jagah. Do folders mein chahiye → copy ya reference. Archive = mail ko uthake doosri jagah\n          likho. Lab: 5,000 archive = <b>10.7 MB</b> likha.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🏷️ Label</span>\n        <div class=\"dg-cap\">Label = metadata. Ek hi record par work + important + travel. Archive = sirf \"inbox\" label hatao —\n          mail hilta hi nahi. Lab: <b>254 KB</b> (42× kam).</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📩 mail aaya</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">👀 khola = WRITE (unread → read)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">⭐ star / 🏷️ label / 📦 archive = aur writes</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">📱💻 har device par wahi sach</span>\n    </div>",
+  html: "\n    <div class=\"dg-split\">\n      <div class=\"dg-box is-bad\"><span class=\"bx-label\">📁 Folder</span>\n        <div class=\"dg-cap\">Ek mail = ek jagah. Do folders mein chahiye → copy ya reference. Is toy folder-move mein archive = poora mail dobara\n          likho. Lab: 5,000 archive = <b>10.7 MB</b> likha.</div></div>\n      <div class=\"dg-box is-good\"><span class=\"bx-label\">🏷️ Label</span>\n        <div class=\"dg-cap\">Label = metadata. Ek hi record par work + important + travel. Archive = sirf \"inbox\" label hatao —\n          mail hilta hi nahi. Lab: <b>254 KB</b> (42× kam).</div></div>\n    </div>\n    <div class=\"dg-rule\"></div>\n    <div class=\"dg-flow\">\n      <span class=\"dg-pill\">📩 mail aaya</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">👀 khola = WRITE (unread → read)</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill acc\">⭐ star / 🏷️ label / 📦 archive = aur writes</span><span class=\"dg-arrow\">→</span>\n      <span class=\"dg-pill good\">📱💻 har device par wahi sach</span>\n    </div>",
 };
 
 VISUALS['gmail-consistency'] = {
@@ -56,7 +56,7 @@ SD.registerLevels('planet', [
   lesson: [
     "<h3>🎁 1 April 2004 — mazaak jaisa vaada</h3>\n     <p>Gmail ne 1 GB muft diya (us waqt Hotmail se ~500× zyada) — log April Fool samjhe. Vaada: har mail hamesha\n     rakho, kabhi delete/sort na karna pade, kuch bhi turant dhoondh lo — 1.8 arab logon ke liye, exabytes mein,\n     ek byte bhi na khoye, do devices kabhi alag sach na dikhayein.</p>\n     <p>Pehla version ek engineer ne ek din mein banaya tha: Google Groups ka search code ek mailbox par laga diya.\n     Yaani Gmail \"email jisme search jodi gayi\" nahi, <b>\"tumhare email par lagi search\"</b> tha. Search-first soch se teen mushkil\n     kaam nikle:</p>\n     <ul>\n       <li>Hamesha badhta storage</li>\n       <li>Har user ka apna private index, real time mein taaza</li>\n       <li>Mailbox ek zinda database — state kabhi na khoye, kabhi alag na dikhe</li>\n     </ul>\n     <h3>🔄 Text rakhna aasaan, STATE mushkil</h3>\n     <p>Read/unread, starred, archived, labels, thread, draft. Mail <b>kholna</b> bhi ek write hai (unread flag). Aur\n     ye writes laptop, phone, tablet, browser se ek saath aati hain — sab jagah wahi sach dikhna chahiye. Video:\n     <b>\"files passive hain, email active hai.\"</b> Har mail ek record, har action ek transaction. Do cheezein par\n     koi samjhauta nahi: <b>durability</b> (log dheemapan maaf karte hain, gayab mail nahi) aur <b>consistency</b>.</p>",
     `<h3>🏷️ Folders nahi, labels</h3>
-     <p>Folder ek jagah hai — ek mail ek folder mein; do mein chahiye toh copy. Label <b>metadata</b> hai — ek hi record
+     <p>Folder ek jagah hai — ek mail ek folder mein; do mein chahiye toh copy ya reference. Label <b>metadata</b> hai — ek hi record
      par work + important + receipts + travel. Many-to-many.</p>
      <ul>
        <li><b>Archive kuch hilata nahi</b> — sirf "inbox" label hat-ta hai.</li>
@@ -67,7 +67,7 @@ SD.registerLevels('planet', [
 tareeka        rows likhe   bytes likhe
 folder-move       5000      10,757,786
 label             5000         253,893     ← 42× kam
-ek hi mail teen jagah: {"labels":["archive","inbox","work","starred"]}</pre>
+ek hi mail teen jagah: {"labels":["inbox","work","starred"]}</pre>
      <p class="tip">🎯 Video ka pehla sabak: <b>product ka faisla, bhes badla hua architecture ka faisla hai.</b>
      "Label, folder nahi" ek UX faisla lagta hai — par usne storage, sync aur search sab tay kar diya.</p>`,
   ],

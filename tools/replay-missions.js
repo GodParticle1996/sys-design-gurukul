@@ -450,6 +450,26 @@ function run(options = {}) {
     send(net, 'net trace --protocol h3 --tls 1.2', 'engine/tls');
     check(net.sim.last.tls === 80 && /TLS 1\.3/.test(net.sim.lastError || ''), 'QUIC accepted TLS 1.2');
   }
+  // pro-* missions: reordered or shortcut sequences found in Codex reviews (jobs 8–9) must not win.
+  if (!options.only) {
+    const shortcuts = [
+      ['obs-unit/stage/0', ['cost show', 'cost fix statement-pdf --lever cache', 'cost unit', 'cost fix reco --lever rightsize', 'cost fix analytics-export --lever cdn', 'cost unit'], 'baseline measured after the first fix'],
+      ['iv-kvstore/stage/0', ['kv config --w 2 --r 2', 'kv put aman 700', 'kv config --w 1 --r 1', 'kv put aman 500', 'kv get aman', 'kv repair', 'kv config --w 2 --r 2', 'kv get aman'], 'repair instead of a quorum write'],
+      ['iv-kvstore/stage/0', ['kv put aman 500', 'kv config --w 2 --r 2', 'kv get aman', 'kv put aman 700', 'kv get aman'], 'stale read at R=2 instead of R=1'],
+      ['iv-kvstore/stage/0', ['kv put aman', 'kv get aman', 'kv config --w 2 --r 2', 'kv put aman 700', 'kv get aman'], 'missing amount wrote a value'],
+    ];
+    shortcuts.forEach(([mid, cmds, why]) => {
+      const m = app.missions.find(x => x.id === mid);
+      check(!!m, `${mid}: mission missing for shortcut check`);
+      if (!m) return;
+      const t = app.terminal(m.stage);
+      cmds.forEach(c => send(t, c, mid + '/shortcut'));
+      check(!t.sim.done, `${mid}: shortcut wins (${why})`);
+    });
+    const kv = app.terminal(app.missions.find(x => x.id === 'iv-kvstore/stage/0').stage);
+    send(kv, 'kv put aman', 'engine/kv-missing-amount');
+    check(kv.sim.sys.kv.latest === 1 && !kv.sim.records.some(r => r.kind === 'kv' && r.op === 'put'), 'kv put without amount changed state or left evidence');
+  }
   check(app.issues.length === 0, 'Engine logged internal exceptions: ' + app.issues.join(' | '));
   const result = { missions, checks, commands, omissions, fuzz, failures };
   if (!options.silent) {

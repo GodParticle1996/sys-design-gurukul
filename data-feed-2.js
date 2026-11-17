@@ -636,7 +636,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
     `<h3>🍎🐧 Wahi company, zero crashes</h3>
      <p><b>macOS</b>: 2019 mein Apple ne kernel extensions deprecate kiye → <b>Endpoint Security framework</b> — security agent <b>user space</b>
      mein. Agent crash = ek process mara, restart. Machine chalti rahi.</p>
-     <p><b>Linux eBPF</b>: kernel mein chhote programs, par load se pehle <b>verifier</b> sabit karta hai: koi out-of-bounds nahi, koi infinite
+     <p><b>Linux eBPF</b>: kernel mein chhote programs, par load se pehle <b>verifier</b> apne model mein jaanchta hai: koi out-of-bounds nahi, koi infinite
      loop nahi, koi paraya memory nahi. Galat program load hi nahi hota. (Wahi soch jo AWS Zelkova mein: saare raaste prove karo, sample
      nahi.)</p>
      <p><b>Windows</b> alag kyun? Purane drivers ki duniya + 2009 EU commitment (vendors ko Defender jitna hi kernel access; bahar nikaalna =
@@ -645,8 +645,8 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
   t=2s  up=500 | agent restarts 4773
   t=8s  up=500 | agent restarts 7163     ← ek bhi machine nahi giri</pre>`,
     `<h3>📐 Test vs prove</h3>
-     <p>Tests sirf maujooda inputs ka sample hain — CrowdStrike ke tests wildcards par pass the. Failure afford na ho toh content ko
-     test mat karo — <b>prove</b> karo: interpreter ke aage ek verifier jo har rule ko sensor ki asli seemaon se sabit kare.</p>
+     <p>Tests sirf maujooda inputs ka sample hain — CrowdStrike ke tests wildcards par pass the. Failure afford na ho toh tests ke saath content ki modeled properties
+      <b>verify</b> karo: interpreter ke aage ek verifier jo har rule ko sensor ki asli seemaon se sabit kare.</p>
      <h3>📋 Paanch takeaways</h3>
      <ol>
        <li><b>Config is code</b> — reviews, tests, canary, rollback.</li>
@@ -666,7 +666,7 @@ publish c291 → 🛑 REJECTED: field 21 par asli value, par sensor sirf 20 inpu
       exercise: 'ex1-content-push',
       goal: 'Wahi zehreela content, wahi global push — par agent kernel ke bahar (user mode). Kitni machines giri?',
       why: `<code>MODE=user</code> mein fleet ka agent ek alag "process" hai: bad read → sirf agent mara aur restart, machine zinda
-        (Mac Endpoint Security / Linux eBPF jaisa crash domain).`,
+        (Mac Endpoint Security jaisa user-space crash domain; eBPF kernel mein chalta hai).`,
       steps: [
         { text: 'Fleet user mode mein chalao.', cmd: 'cd docker-labs/17-crowdstrike && MODE=user npm start ex1-content-push', expect: 'ex1-content-push' },
         { text: 'Spec + global push.', cmd: 'node tools/incident.js --validator spec --rollout global', expect: '  t=2s  up=500 bootloop=  0 manual=  0 | kabhi crash hue: 500 | agent restarts 4773\n  t=8s  up=500 bootloop=  0 manual=  0 | kabhi crash hue: 500 | agent restarts 7163' },

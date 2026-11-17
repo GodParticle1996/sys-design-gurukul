@@ -89,8 +89,7 @@ VISUALS['st-reddit-rank'] = {
         <div class="dg-cap">Rank sirf tab badalta hai jab <b>vote</b> aata hai.
           Ek vote = ek worker job = list mein ek post ki jagah badalna.</div></div>
       <div class="dg-box is-bad"><span class="bx-label">❌ Agar current time hota (Hacker News style)</span>
-        <div class="dg-cap">Har second har post ka rank badal jaata. Koi stored listing
-          seconds se zyada sahi nahi rehti — matlab har request par dobara banao.</div></div>
+        <div class="dg-cap">Age-decay relative order badal sakta hai; timed refresh chahiye. Common additive now() offset order nahi badalta; har request par full rebuild zaroori nahi.</div></div>
     </div>`,
 };
 
@@ -636,7 +635,7 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
         freshness kitni strong ho.`,
       knobs: [
         { id: 'clock', label: 'Waqt ka source (0 = submission time · 1 = current time)', min: 0, max: 1, step: 1, value: 1, unit: '',
-          note: 'Current time = rank har second badalta hai, stored answer sadne lagta hai.' },
+          note: 'Lab ka age-decay mode: relative order badal sakta hai; timed refresh chahiye.' },
         { id: 'fresh', label: 'Freshness ka weight (0 = sirf votes, 10 = bahut tez decay)', min: 0, max: 10, step: 1, value: 5, unit: '',
           note: '45,000 second wala factor is knob ka asli roop hai.' },
         { id: 'cap', label: 'Listing ka size cap', min: 100, max: 5000, step: 100, value: 5000, unit: ' entries',
@@ -661,7 +660,7 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
       },
       verdict: k => {
         const m = rankModel(k);
-        if (k.clock === 1) return { ok: false, text: `Current time par rank tik nahi sakta: ghadi chalte hi har post ka rank badal jaata hai, isliye stored listing sirf <b>${m.correct}%</b> waqt sahi rehti hai aur roz <b>${Math.round(m.work).toLocaleString('en-IN')}</b> units ka rebuild lagta hai. Hacker News isi tarah kaam karta hai — aur isiliye HN rebuild karta hai, maintain nahi.` };
+        if (k.clock === 1) return { ok: false, text: `Lab ke age-decay mode mein relative order badal sakta hai: ghadi chalte hi har post ka rank badal jaata hai, isliye stored listing sirf <b>${m.correct}%</b> waqt sahi rehti hai aur roz <b>${Math.round(m.work).toLocaleString('en-IN')}</b> units ka rebuild lagta hai. Yeh toy model ka nateeja hai; production ranking ko timed ya incremental refresh se bhi sambhaal sakte hain.` };
         if (k.fresh === 0) return { ok: false, text: 'Freshness weight 0 hai — ab sirf purane bade posts hi upar rahenge aur nayi post ko kabhi mauka nahi milega. Formula sasta zaroor hai par product mar jaayega.' };
         if (m.work > 100000) return { ok: false, text: `Kaam abhi bhi <b>${Math.round(m.work).toLocaleString('en-IN')}</b> units hai. Listing cap <b>${k.cap}</b> entries ka hai — har repair itni hi badi list chhoota hai. Reddit ne cap ~1000 rakha tha.` };
         return { ok: true, text: `Sahi. Submission time par rank tikta hai (listing <b>${m.correct}%</b> waqt sahi), freshness weight <b>${k.fresh}</b> nayi posts ko mauka deta hai, aur <b>${k.cap}</b> ka cap har repair ka kharcha bandha rakhta hai.` };
@@ -721,7 +720,7 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
           'Score expire kiye bina bhi age-dependent order stale ho sakta hai.',
         ],
       },
-      lesson: 'Derived data ka niyam: agar formula mein <b>now()</b> hai, toh tum us jawab ko store nahi kar sakte — sirf rebuild kar sakte ho.',
+      lesson: 'Derived data ka niyam: waqt se relative order badle toh stored listing ko timed refresh chahiye; common additive now() offset order nahi badalta.',
     },
   ],
   interview: {
@@ -772,12 +771,11 @@ score ×100 hona     ==  post ka 25 ghante naya hona</pre>
   homework: `<p>Apne system ki koi ek derived value chuno (ranking, score, counter,
     leaderboard). Derived value ke saare inputs likho. Ab har input ke saamne likho:
     "input kis EVENT par badalta hai?" Agar kisi input ke saamne "apne aap, waqt ke
-    saath" likha hai — aisi value store karne layak nahi hai jab tak formula badla
-    na jaaye.</p>`,
+    saath" likha hai — aisi value ko freshness contract ke hisaab se refresh chahiye; formula badalna zaroori nahi.</p>`,
   cards: [
     { front: 'Reddit ka hot rank formula?', back: '<code>log10(score) + t_submitted / 45000</code> — popularity log scale par, aur freshness seconds-since-epoch ke roop mein.' },
     { front: '45,000 ka matlab?', back: '12.5 ghante. Score ×10 hona = post ka 12.5 ghante naya hona. Isi liye "upvotes are time travel".' },
-    { front: 'Submission time vs current time?', back: 'Submission time se rank sirf vote par badalta hai → stored listing sadti nahi. Current time se rank har second badalta hai → har baar rebuild.' },
+    { front: 'Submission time vs current time?', back: 'Submission time se rank sirf vote par badalta hai → stored listing sadti nahi. Age-decay se relative order badle toh timed refresh chahiye; common additive now() offset cancel ho sakta hai.' },
     { front: '1,000 vote wale post par 1 aur vote ka asar?', back: 'Lagbhag 20 second ki freshness ke barabar. Shuruaati votes trajectory tay karte hain, baad ke lagbhag kuch nahi.' },
     { front: 'Listing par 1000 ka cap kyun?', back: 'Bounded answer = bounded storage + har repair ka bounded kharcha. "Listing ek product hai jiska spec hai."' },
   ],

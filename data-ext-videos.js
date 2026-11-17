@@ -372,8 +372,7 @@ SD.extendLevel('contention', {
      <pre>T1: A padha (lock A) ... ab B likhna hai → B par T2 ka lock → ruka
 T2: B padha (lock B) ... ab A likhna hai → A par T1 ka lock → ruka
 → dono hamesha ke liye ruke; engine ek ko maar kar rollback karta hai</pre>
-     <p>Wahi workload optimistic par deadlock nahi karta — padhne ke baad locks turant chhoot
-     jaate hain.</p>
+     <p>Optimistic UPDATE bhi row locks leta hai; kai rows alag kram mein update karne par deadlock ho sakta hai.</p>
      <table>
        <tr><th>Conflict kam (alag-alag rows)</th><th>Conflict zyada (ek hot row)</th></tr>
        <tr><td><b>Optimistic</b> — koi intezaar nahi, retry kabhi-kabhi</td><td><b>Pessimistic</b> — retry storm se line mein lagna sasta</td></tr>
@@ -442,7 +441,7 @@ T2: B padha (lock B) ... ab A likhna hai → A par T1 ka lock → ruka
     },
   ],
   cards: [
-    { front: 'Optimistic concurrency ka flow?', back: 'Row + version padho → kaam karo → UPDATE ... WHERE id=? AND version=? (version+1). 0 rows affected = kisi aur ne likh diya → rollback + retry. Deadlock nahi, par conflict par kiya hua kaam bekaar jaata hai.' },
+    { front: 'Optimistic concurrency ka flow?', back: 'Row + version padho → kaam karo → UPDATE ... WHERE id=? AND version=? (version+1). 0 rows affected = kisi aur ne likh diya → rollback + retry. UPDATE ke locks par deadlock mumkin hai; conflict par kiya hua kaam bhi bekaar jaata hai.' },
     { front: 'Pessimistic mein deadlock kaise banta hai?', back: 'T1 ne A lock kiya aur B chahiye; T2 ne B lock kiya aur A chahiye. Dono ruke. Engine ek ko rollback karta hai. Ilaaj: locks hamesha ek hi kram mein.' },
   ],
 });

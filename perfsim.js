@@ -541,18 +541,32 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     </div>
     <div class="term-out"></div>
     <div class="term-in"><span class="ps1">$</span><input type="text" autocomplete="off"
-      spellcheck="false" placeholder="GET /api/v1/transactions?page=1&amp;limit=50    (madad: help)"></div>`;
+      spellcheck="false" placeholder="${SD.escapeHtml(stage.placeholder || 'GET /api/v1/transactions?page=1&limit=50')}    (madad: help)"></div>`;
   const out = term.querySelector('.term-out');
   const input = term.querySelector('input');
 
   const btns = SD.el('div', 'term-btns');
-  const hintBtn = SD.el('button', 'btn small ghost', `💡 Hint (−${SD.HINT_COST} XP)`);
+  /* Madad ki seedhi (atakne par): 👉 checklist ka agla kaam → 💡 hints (1/3, 2/3, 3/3) → 🧭 agla command.
+     hintIdx = kitne hints dikhe; sim.hintsUsed = kul madad (XP isi se ghat-ta hai). */
+  const hintList = stage.hints || [];
+  let hintIdx = 0, tasksDone = 0, stall = 0, nudged = false;
+  const hintBtn = SD.el('button', 'btn small ghost term-hint');
   hintBtn.onclick = () => giveHint();
   btns.appendChild(hintBtn);
+  const nextBtn = SD.el('button', 'btn small ghost term-nextcmd', `🧭 Agla command dikhao (−${SD.HINT_COST} XP)`);
+  nextBtn.onclick = () => showNextCommand();
+  btns.appendChild(nextBtn);
+  function paintHelp() {
+    hintBtn.textContent = hintIdx < hintList.length ? `💡 Hint ${hintIdx + 1}/${hintList.length} (−${SD.HINT_COST} XP)` : '💡 Saare hints dekh liye';
+    hintBtn.disabled = hintIdx >= hintList.length;
+    nextBtn.style.display = hintIdx >= hintList.length && (stage.solution || []).length ? '' : 'none';
+  }
+  paintHelp();
 
   arena.append(goalBox, term, btns);
   print('sys', `perfsim ready — service '${sim.sys.name}'. 'help' se saare commands, 'sim status' se system ka haal.`);
   setTimeout(() => input.focus(), 100);
+  markNow();
 
   const cmdHistory = [];
   let histIdx = -1;
@@ -580,10 +594,48 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     out.scrollTop = out.scrollHeight;
   }
   function giveHint() {
-    const hints = stage.hints || [];
-    if (sim.hintsUsed >= hints.length) { print('hint', '💡 Aur hints nahi hain — tum kar sakte ho!'); return; }
-    print('hint', `💡 Hint ${sim.hintsUsed + 1}: ${hints[sim.hintsUsed]}`);
+    if (hintIdx >= hintList.length) { print('hint', '💡 Aur hints nahi hain — tum kar sakte ho!'); return; }
+    print('hint', `💡 Hint ${hintIdx + 1}/${hintList.length}: ${hintList[hintIdx]}`);
+    hintIdx++; sim.hintsUsed++;
+    hintBtn.classList.remove('pulse');
+    paintHelp();
+  }
+  /* Saare hints ke baad bhi atke ho: likhe hue hal (stage.solution) ka agla command, aakhri 'sim reset' ke baad se ginkar. */
+  function showNextCommand() {
+    if (sim.done) return;
+    const lastReset = sim.history.map(c => /^sim reset\b/i.test(c)).lastIndexOf(true);
+    const ran = sim.history.slice(lastReset + 1);
+    const solution = (stage.solution || []).map(normalize);
+    /* hal mein ek hi command do baar aa sakta hai (pehle naapo, theek karo, phir dobara naapo), isliye kram se milao */
+    let k = 0;
+    ran.forEach(c => { if (k < solution.length && c === solution[k]) k++; });
+    if (!solution.length) return;
+    /* hal ke saare command chal chuke par mission adhoora: beech mein kisi aur command ne system badal diya hoga → saaf shuruaat */
+    const next = k < solution.length ? solution[k] : 'sim reset';
     sim.hintsUsed++;
+    print('hint', k < solution.length
+      ? `🧭 Agla command (${k + 1}/${solution.length}): ${next}\n   Neeche box mein bhar diya hai. Enter dabao, phir output mein dekho ki kya badla.`
+      : `🧭 Hal ke saare command chal chuke, par mission poora nahi hua. Pehle system ko shuruaat par lao: ${next}\n   Enter dabao, phir yahi button dobara dabao.`);
+    input.value = next;
+    input.focus();
+  }
+  function markNow() {
+    if (!stage.tasks) return;
+    let found = false, done = 0;
+    stage.tasks.forEach((t, i) => {
+      const li = taskList.children[i], isDone = li.classList.contains('done');
+      if (isDone) done++;
+      li.classList.toggle('now', !found && !isDone);
+      if (!isDone) found = true;
+    });
+    if (done > tasksDone) { stall = 0; nudged = false; hintBtn.classList.remove('pulse'); }
+    tasksDone = done;
+  }
+  function normalize(raw) {
+    let norm = String(raw).trim().replace(/;+$/, '').replace(/^sudo\s+(?:-n\s+)?/i, '');
+    /* Preserve quoted keys/headers while accepting tabs and repeated spaces. */
+    norm = (norm.match(/'[^']*'|"[^"]*"|[^'"\s]+/g) || []).join(' ');
+    return norm.replace(/^status$/i, 'sim status').replace(/^ls$/i, 'show tables').replace(/^cls$/i, 'clear').replace(/^\?$/, 'help');
   }
   function err(msg) { const e = new Error(msg); e.simerr = true; throw e; }
   function rec(r) {
@@ -614,6 +666,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       stage.tasks.forEach((t, i) => {
         taskList.children[i].classList.toggle('done', !!(t.check && t.check(sim)));
       });
+      markNow();
     }
     if (!sim.done && stage.success && stage.success(sim)) {
       sim.done = true;
@@ -634,10 +687,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function run(raw) {
     print('cmd', raw);
     if (sim.done) return;
-    let norm = String(raw).trim().replace(/;+$/, '').replace(/^sudo\s+(?:-n\s+)?/i, '');
-    /* Preserve quoted keys/headers while accepting tabs and repeated spaces. */
-    norm = (norm.match(/'[^']*'|"[^"]*"|[^'"\s]+/g) || []).join(' ');
-    norm = norm.replace(/^status$/i, 'sim status').replace(/^ls$/i, 'show tables').replace(/^cls$/i, 'clear').replace(/^\?$/, 'help');
+    const norm = normalize(raw);
     if (!norm) return;
     sim.history.push(norm);
     sim.lastError = null;
@@ -658,6 +708,14 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       sim.lastError = e.message;
       if (e.simerr || /^400 —/.test(e.message)) print('err', e.message);
       else { console.error('perfsim error:', e); print('err', `simulator error: ${e.message} — 'sim reset' se mission dobara shuru karo`); }
+    }
+    /* 5 command tak checklist mein koi naya ✅ nahi: ek baar saaf bata do ki madad kahan hai */
+    if (!sim.done && stage.tasks && ++stall >= 5 && !nudged) {
+      nudged = true;
+      hintBtn.classList.add('pulse');
+      print('sys', hintIdx < hintList.length
+        ? 'Atak gaye? Upar checklist mein 👉 wala kaam dekho, phir neeche <b>💡 Hint</b> dabao.'
+        : 'Atak gaye? Neeche <b>🧭 Agla command dikhao</b> dabao: agla command box mein bhar jaayega.');
     }
   }
 
@@ -2619,7 +2677,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
         return;
       }
     }
-    if (/^help\b/i.test(norm)) return cmdHelp();
+    if (/^help\b/i.test(norm)) { cmdHelp(); (SD.perfsimPlugins || []).forEach(p => print('ok', p.help.join('\n'))); return; }
     if (/^clear\b/i.test(norm)) { out.innerHTML = ''; return; }
     if (/^curl\s/i.test(norm)) {
       let c = norm.replace(/^curl\s+/i, '').replace(/(^|\s)-[isSL]+(\s|$)/g, ' ');
@@ -2651,6 +2709,11 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     if (/^net\b/i.test(norm)) return cmdNet(norm);
     if (/^stream\b/i.test(norm)) return cmdStream(norm);
     if (/^book\b/i.test(norm)) return cmdBook(norm);
+    /* Plugins (perfsim-pro.js): { match: /^tenant\b/i, help: [lines], run(api, norm) }. Naye commands alag file mein,
+       taaki is badi file mein kam badlaav ho. api = is terminal ke helpers. */
+    for (const p of (SD.perfsimPlugins || [])) {
+      if (p.match.test(norm)) return p.run({ sim, print, table, panel, rec, err, initialSystem }, norm);
+    }
     err(`command samajh nahi aaya: '${norm.split(' ')[0]}'. 'help' likho.`);
   }
   return { sim, run };

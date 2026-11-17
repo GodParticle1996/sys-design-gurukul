@@ -103,7 +103,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "Laptop ka sawaal",
           "clock": "0 ms",
-          "say": "Browser ke paas sirf naam hai: <b>api.khanakart.com</b>. Packet par number (IP) likhna padta hai. Laptop apne <b>resolver</b> se poochhta hai — ISP ka, ya 1.1.1.1 jaisa.",
+          "say": "Browser ke paas sirf naam hai: <b>api.khanakart.com</b>. Packet par number (IP) likhna padta hai. Laptop apne resolver (naam ka IP dhoondhne wali service) se poochhta hai — ISP ka, ya 1.1.1.1 jaisa.",
           "nodes": {
             "lap": {
               "tone": "acc",

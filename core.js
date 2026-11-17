@@ -79,6 +79,7 @@ SD.defaultState = function () {
     theme: 'system',
     popBonus: { day: null, keys: [] },
     labsDone: [],         // 'project/exercise' — laptop par chalaaye gaye docker labs (self-reported ✔)
+    soch: {},             // scenarioId -> 1..3 stars (🧠 Soch Akhada, soch.js)
   };
 };
 
@@ -117,6 +118,10 @@ SD.normalizeState = function (s) {
   if (count(s.levelStarts)) out.levelStarts = s.levelStarts;
   if (['light', 'dark', 'system'].includes(s.theme)) out.theme = s.theme;
   if (Array.isArray(s.labsDone)) out.labsDone = [...new Set(s.labsDone.filter(x => typeof x === 'string' && x.length <= 200))];
+  if (s.soch && typeof s.soch === 'object' && !Array.isArray(s.soch))
+    Object.entries(s.soch).forEach(([id, n]) => {
+      if (!['__proto__', 'constructor', 'prototype'].includes(id) && Number.isInteger(n) && n >= 1 && n <= 3) out.soch[id] = n;
+    });
   if (s.popBonus && typeof s.popBonus.day === 'string' && Array.isArray(s.popBonus.keys))
     out.popBonus = { day: s.popBonus.day, keys: [...new Set(s.popBonus.keys.filter(x => typeof x === 'string'))] };
   const cp = s.checkpoint;

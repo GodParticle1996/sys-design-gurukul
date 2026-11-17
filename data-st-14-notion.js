@@ -35,7 +35,7 @@ VISUALS['notion-permissions'] = {
       <div class="dg-box is-good"><span class="bx-label">⬇️ Render tree</span>
         <div class="dg-cap">Page ke <code>content[]</code> arrays ke saath NEECHE chalo, order mein. Inline mention bhi yahan ek jagah par.</div></div>
       <div class="dg-box is-gold"><span class="bx-label">⬆️ Permission tree</span>
-        <div class="dg-cap"><code>parent</code> pointers ke saath UPAR chalo, workspace root tak; pehli explicit grant/deny jeet-ti hai.
+        <div class="dg-cap"><code>parent</code> pointers ke saath UPAR chalo, workspace root tak; laagu inherited aur direct access jodo; broadest access jeet-ta hai.
           Ek block ≈ 4–5 lookups; ek page = hazaron blocks.</div></div>
     </div>
     <div class="dg-rule"></div>
@@ -204,8 +204,8 @@ SD.registerLevels('stories', [
   lesson: [
     `<h3>🔑 Owner column nahi, vansh-vriksh</h3>
      <p>Aam app: <code>owner_id</code> column, ek index lookup. Notion: permissions <b>inherited</b> — top page share kiya toh har nested
-     block aur subpage bhi. Ek block dekhne ke liye: parent → parent → … → workspace root tak, har level par explicit grant/deny
-     (explicit jeet-ta hai). Ek block ≈ 4–5 lookups; ek page = hazaron blocks → permission ka hisaab <b>system ka sabse mehenga
+     block aur subpage bhi. Ek block dekhne ke liye: parent → parent → … → workspace root tak, laagu inherited aur direct permissions jodo
+     (Notion mein broadest access jeet-ta hai). Ek block ≈ 4–5 lookups; ek page = hazaron blocks → permission ka hisaab <b>system ka sabse mehenga
      kaam</b>, aur model mein hi bana hua.</p>
      <pre>lab 31 (ex1-blocks) — Team Wiki page, ~2,000 nested blocks:
 naive (har block ka poora walk)   DB lookups 17,346   379 ms
@@ -351,7 +351,7 @@ ab aman ko Team Wiki mein 4001 blocks → 2000 salary wale blocks aman ko dikh r
   homework: `<p>Apne product mein koi hierarchy dhoondho (folders, orgs → teams → projects, categories). Permission kahan tay hoti hai — har
     item par, ya upar se inherit? Ek item ko ek parent se doosre mein le jaane par kya hota hai? Kya user ko pata chalta hai?</p>`,
   cards: [
-    { front: 'Notion permissions kaise?', back: 'Inherited: block se parent → … → workspace tak walk, pehli explicit grant/deny. Ek block ~4–5 lookups; page = hazaron blocks.' },
+    { front: 'Notion permissions kaise?', back: 'Inherited: block se parent → … → workspace tak walk, laagu inherited/direct access ka broadest level. Ek block ~4–5 lookups; page = hazaron blocks.' },
     { front: 'Render tree vs permission tree?', back: 'Render: content[] neeche, order mein. Permission: parent upar. Mention render mein kahin, permission apni jagah se — isliye do pointer systems.' },
     { front: 'Lab 31: move?', back: 'Toggle ka parent badla → 2,000 salary blocks aise user ko dikhe jise HR access nahi tha. Move = permission event.' },
   ],

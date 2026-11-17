@@ -798,7 +798,7 @@ decode karne par:  { "t": "2026-04-11T09:22:04Z", "id": 8812304, "d": "desc" }</
      <p><b>Opaque rakhne ke teen faayde:</b></p>
      <p>1. <b>Kal query strategy badal sakte ho</b> — sort column badlo,
      partition key add karo, clients ko pata bhi nahi chalega.</p>
-     <p>2. <b>User anap-shanap cursor nahi bana sakta</b> — cursor "page
+     <p>2. <b>Sirf opaque/Base64 hone se cursor tampering nahi rukti; signature aur validation lagao taaki client mehenga cursor na bana sake</b> — cursor "page
      4,85,728" par jump karke mehengi query trigger nahi kar sakta.</p>
      <p>3. <b>Sort direction aur filter state</b> bhi cursor mein
      ja sakte hain, taaki server verify kar sake ki client ne beech mein
@@ -1056,9 +1056,8 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
      <pre>GET /transactions?fields=id,amount,created_at</pre>
      <p>Pehla faayda saaf hai: kam bytes network par.</p>
      <p>Doosra faayda bada hai: agar <code>(user_id, created_at, id, amount)</code>
-     par index hai, toh query <b>index se hi poori ho jaati hai</b> —
-     table ko chhuna hi nahi padta. Aise index ko <b>covering index</b> kehte hain,
-     aur covering index 2-3x tez hota hai kyunki random row lookups bach jaate hain.</p>
+     par index hai, toh query ke liye <b>index-only scan mumkin hai</b>; Postgres visibility ke liye heap phir bhi padh sakta hai. Aise index ko <b>covering index</b> kehte hain,
+     aur covering index tez ho sakta hai kyunki random row lookups bach jaate hain.</p>
      <p>Teesra faayda sabse chhupa hua hai: <code>SELECT *</code> tumhe
      schema se <b>baandh</b> deta hai. Ek din koi <code>notes TEXT</code>
      column add karega aur tumhari list API ka payload 40x ho jaayega —
@@ -1181,7 +1180,7 @@ CREATE INDEX ix ON transactions({3}, created_at, id);`,
   cards: [
     { front: 'Har column par filter — problem?', back: 'n columns = <b>2ⁿ combinations</b>. 15 columns = 32,768. Har ek ke liye index namumkin hai — kuch combinations hamesha full scan karengi.' },
     { front: 'Bounded query surface ke 4 niyam?', back: '<b>1.</b> Filters ki allow-list <b>2.</b> Sort ki allow-list <b>3.</b> Ek filter zaroori (tenant_id) <b>4.</b> default limit + max limit.' },
-    { front: 'Sparse fieldsets ka bada faayda?', back: '<b>Covering index</b> — saare maange gaye columns index mein hon toh table chhuna hi nahi padta. 2-3x tez. (Bytes bachana chhota faayda hai.)' },
+    { front: 'Sparse fieldsets ka bada faayda?', back: '<b>Covering index</b> — saare maange gaye columns index mein hon toh index-only scan mumkin hai; Postgres visibility ke liye heap fetch kar sakta hai. Speedup naapo. (Bytes bachana chhota faayda hai.)' },
     { front: 'Query param ka usool?', back: 'Har param ek <b>vaada</b> hai ki tum use sasta serve kar sakte ho. Na nibhne wala vaada param ke roop mein mat do — baad mein hataana bahut mushkil hai.' },
   ],
 },
@@ -1430,7 +1429,7 @@ Content-Type: application/problem+json
         already exists. at OrderService.java:142" }</pre>
      <p>Isme tumne bata diya: DB kaunsa hai, table ka naam, constraint ka
      naam, aur ki email registered hai (user enumeration). Sahi jawab:</p>
-     <pre>✅ 409 { "type": "/errors/email-taken", "title": "Email pehle se registered hai",
+     <pre>✅ 409 { "type": "/errors/signup-failed", "title": "Signup poora nahi hua",
         "status": 409, "trace_id": "abc123" }</pre>
      <p>Poora stack trace <b>logs</b> mein jaayega, response mein nahi.
      <code>trace_id</code> dono ko jodta hai.</p>
@@ -1829,8 +1828,7 @@ ratelimit-reset: 3</pre>
      dekh ke <b>pehle hi</b> dheeme ho jaate hain — pehle dheema hona 429 se bhi behtar hai.</p>
      <p class="tip">🎯 Distributed setup mein counter <b>shared</b> hona
      chahiye (Redis), warna 10 instances par limit 10x ho jaayegi. Aur
-     Redis down ho toh? <b>Fail open</b> (allow) — rate limiter ki kharabi
-     poore product ko na giraye.</p>`,
+     Redis down ho toh? Risk ke hisaab se bounded local fallback ya fail-open/fail-closed chuno; sensitive routes ko unlimited mat chhodo.</p>`,
   ],
   stages: [
     {
