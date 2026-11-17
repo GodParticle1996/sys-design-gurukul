@@ -323,7 +323,7 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
      <pre>✅ Full jitter:
    sleep = random(0, min(cap, base × 2^attempt))</pre>
      <p>Ab har client alag time par retry karega aur load <b>phail</b> jaayega.
-     Jitter ek line ka change hai jo retry ko safe banata hai.</p>`,
+     Jitter synchronized load phailata hai. Safe effect ke liye idempotency, deadline aur retry budget separately chahiye.</p>`,
     `<h3>🔬 Kya retry karo, kya nahi</h3>
      <table>
        <tr><th>❌ Retry MAT karo</th><th>Kyun</th></tr>
@@ -333,15 +333,17 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
        <tr><td>422</td><td>validation — data theek karna padega</td></tr>
      </table>
      <table>
-       <tr><th>✅ Retry KARO</th><th>Kaise</th></tr>
+       <tr><th>Retry consider karo, conditions ke saath</th><th>Kaise</th></tr>
        <tr><td>429</td><td><b>Retry-After ke hisaab se</b>, apne backoff se nahi</td></tr>
        <tr><td>503 / 504</td><td>backoff + jitter</td></tr>
        <tr><td>network timeout / connection reset</td><td>backoff + jitter</td></tr>
      </table>
-     <p><b>Aur sirf idempotent operations.</b> Non-idempotent POST ko retry
-     karna hai? Toh pehle Idempotency-Key lagao (Track 2).</p>
+     <p>Status alone permission nahi. Repeat-safe effect, supported recovery window,
+     remaining deadline aur retry budget check karo. Non-idempotent POST ke liye
+     receiver-enforced stable key/status contract chahiye; header alone enough nahi.
+     Retry-After wait deadline se bahar ho toh stop/defer, wait shorten mat karo.</p>
      <h3>⚠️ Layers ka guna</h3>
-     <pre>SDK: 3 retries × gateway: 3 retries × client app: 3 retries
+     <pre>SDK: 3 attempts × gateway: 3 attempts × client app: 3 attempts
 = 27 requests, EK user action ke liye</pre>
      <p class="tip">🎯 Retry <b>ek</b> layer par rakho — aksar sabse upar
      wali (jo user ke sabse kareeb hai aur jaanti hai ki request abhi
@@ -378,16 +380,16 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
     {
       type: 'bins',
       title: 'Retry karna chahiye?',
-      instructions: 'Har response ko sahi bin mein daalo.',
+      instructions: 'Assume transient failure, repeat-safe operation, valid recovery window aur enough deadline/budget. Ab unchanged request retry consider karni hai ya request/permission repair?',
       bins: [
-        { id: 'yes', label: '✅ Retry karo' },
+        { id: 'yes', label: '✅ Conditions fit: retry consider' },
         { id: 'no', label: '❌ Retry mat karo' },
       ],
       items: [
-        { text: '503 Service Unavailable', bin: 'yes', explain: 'Server bhara hua hai — transient. Backoff + jitter ke saath retry sahi hai.' },
+        { text: '503 Service Unavailable', bin: 'yes', explain: '503 transient overload ho sakta hai. Stated repeat-safety/deadline conditions ke andar bounded backoff + jitter consider karo; 503 alone no-effect proof nahi.' },
         { text: '400 Bad Request', bin: 'no', explain: 'Request hi galat hai. Dobara bhejne se galat request sahi nahi ho jaayegi — sirf load hai.' },
-        { text: 'Network timeout / connection reset', bin: 'yes', explain: 'Classic transient failure. Par dhyaan: agar operation non-idempotent hai toh Idempotency-Key chahiye.' },
-        { text: '403 Forbidden', bin: 'no', explain: 'Permission ka masla — retry se permission nahi mil jaayegi. 403 permanent hai.' },
+        { text: 'Network timeout / connection reset', bin: 'yes', explain: 'Classic transient failure. Par dhyaan: agar operation non-idempotent hai toh Receiver-enforced stable Idempotency-Key/status contract chahiye.' },
+        { text: '403 Forbidden', bin: 'no', explain: 'Permission ka masla — retry se permission nahi mil jaayegi. Same credentials/policy ke saath unchanged request repeat karna permission fix nahi karta.' },
         { text: '429 Too Many Requests', bin: 'yes', explain: 'Retry karo — par <b>Retry-After ke hisaab se</b>, apne backoff se nahi. Server ne bata diya hai ki kab aana hai.' },
         { text: '422 Unprocessable Entity', bin: 'no', explain: 'Validation fail hui. Data theek kiye bina retry bekaar hai.' },
         { text: '504 Gateway Timeout', bin: 'yes', explain: 'Upstream timeout — transient ho sakta hai. Par dhyaan rakho: request shayad SAFAL ho chuki ho, isliye idempotency zaroori hai.' },
@@ -401,7 +403,7 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
       visual: 'retries',
       questions: [
         { q: 'Backoff hone par bhi storm kyun banta hai?', target: 'nojitter', explain: 'Sab clients ne ek saath failure dekha, isliye sab ek saath wait karte hain aur ek saath maarte hain. Backoff ne storm ko kam nahi, SYNCHRONIZE kiya.' },
-        { q: 'Ek user action ke liye 27 requests kaise ban jaati hain?', target: 'layers', explain: 'Layers ka guna: SDK 3 × gateway 3 × client 3. Retry EK layer par rakho — aksar sabse upar wali.' },
+        { q: 'Ek user action ke liye 27 requests kaise ban jaati hain?', target: 'layers', explain: 'Layers ka guna: SDK 3 attempts × gateway 3 attempts × client 3 attempts. Retry EK layer par rakho — aksar sabse upar wali.' },
         { q: 'Sabse sasta fix kaunsa hai?', target: 'jitter', explain: 'Full jitter: sleep = random(0, min(cap, base × 2^n)). Ek line ka change jo load phaila deta hai.' },
       ],
     },
@@ -499,7 +501,7 @@ sab ne 4 s wait kiya → sab ne EK SAATH maara</pre>
     { front: 'Retry storm?', back: 'Errors → sab retry → load ×2 → aur errors → load ×3 → service gir gayi. Service <b>apne aap theek</b> ho jaati — retries ne mauka hi nahi diya.' },
     { front: 'Backoff kaafi kyun nahi?', back: 'Sab clients ne <b>ek saath</b> failure dekha → sab ek saath wait → sab ek saath maare. Backoff ne storm ko <b>synchronize</b> kiya. <b>Jitter</b> chahiye: <code>random(0, min(cap, base × 2^n))</code>.' },
     { front: 'Kya retry MAT karo?', back: '<b>400</b> (galat request) · <b>401/403</b> (permission) · <b>404</b> · <b>422</b> (validation). Inpar retry sirf load hai, koi umeed nahi.' },
-    { front: 'Layers ka guna?', back: 'SDK 3 × gateway 3 × client 3 = <b>27 requests</b> ek user action ke liye. Retry <b>ek</b> layer par rakho — aksar sabse upar wali.' },
+    { front: 'Layers ka guna?', back: 'SDK 3 attempts × gateway 3 attempts × client 3 attempts = <b>27 requests</b> ek user action ke liye. Retry <b>ek</b> layer par rakho — aksar sabse upar wali.' },
     { front: 'Downstream sach mein down — retry?', back: 'Nahi. Retry sirf <b>transient</b> failures ke liye hai. Down par retry p99 badhata hai, load multiply karta hai, threads bandhak rakhta hai. Down dependency ke liye <b>breaker</b> chahiye.' },
   ],
 },

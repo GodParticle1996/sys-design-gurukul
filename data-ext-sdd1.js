@@ -158,7 +158,7 @@ decorrelated jitter         →   1, 2.1 s    (sabse kam calls: 782)</pre>
   cards: [
     { front: 'Full jitter vs equal jitter?', back: 'Full: random(0, base × 2ⁿ) — sabse bikhra. Equal: aadha fixed + aadha random — hamesha ek floor intezaar (jab API turant retry na le).' },
     { front: 'Retry storm todne ke teen raaste?', back: 'Client: backoff + jitter + cap · Server: crash se pehle 503 + Retry-After · Budget: retries ≤ asli requests ka ~10%. Lab 37: 5 crash → 1.' },
-    { front: 'Har layer par 3 retries — kitna bojh?', back: '3 × 3 × 3 = 27× us service par jo pehle se band hai (lab 37). Retry sirf edge par, andar turant fail.' },
+    { front: 'Three layers: 3 attempts versus 3 retries each?', back: '3 total attempts each: 3×3×3=27 leaf attempts (lab 37). 3 retries each means 4 attempts: 4×4×4=64. One retry owner aur overall deadline/budget rakho.' },
   ],
 });
 

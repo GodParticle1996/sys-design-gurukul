@@ -1187,31 +1187,29 @@ GET /search?q=... →  abhi tak nahi mila            😕</pre>
      <pre>SELECT * FROM drivers
 WHERE lat BETWEEN 19.05 AND 19.15
   AND lng BETWEEN 72.80 AND 72.90;</pre>
-     <p>lat/lng range query sahi lagta hai. Par yaad karo composite index ka niyam:
-     <b>range column ke baad index ruk jaata hai</b>. Yahan
-     <b>dono</b> columns range hain. Index <code>(lat, lng)</code> banao toh
-     index <code>lat</code> ki range tak chalega — yaani poori latitude patti ke
-     saare drivers — aur phir <code>lng</code> se filter karne ke liye DB ko
-     saari rows padhni padengi.</p>
-     <pre>(lat, lng) index ke saath:
-   lat 19.05–19.15 ki patti  →  poore desh ki us patti ke 4 lakh drivers
-   phir lng se filter        →  bache 900
-   yaani 4 lakh rows padh ke 900 nikale</pre>
+     <p>lat/lng query ek rectangle select karti hai, circle nahi. Composite
+     B-tree <code>(lat, lng)</code> mein leading lat range scan ka hissa limit
+     karti hai. Lng condition index ke andar check ho sakti hai; har matching-lat
+     row ko table se fetch karna zaroori nahi. Lng condition scan ka hissa hamesha
+     chhota nahi karti; supported skip-scan plans kuch workloads mein kar sakte hain.
+     <a href="https://www.postgresql.org/docs/current/indexes-multicolumn.html" target="_blank" rel="noopener noreferrer">PostgreSQL multicolumn indexes</a>.</p>
+     <pre>Illustrative plan, measured result nahi:
+   lat range mein 4 lakh index entries scan
+   lng predicate ke baad 900 candidates
+   exact radius aur eligibility abhi check karni hain</pre>
      <p>Asli problem hai: <b>B-tree ek-dimension ka hai</b>, aur jagah do-dimension ki.</p>
      <h3>🔡 Geohash — do dimensions ko ek line mein badlo</h3>
      <p>Geohash duniya ko baar-baar aadha karta hai (kabhi lng, kabhi lat) aur har
      faisle ko ek bit banata hai. Un bits ko base32 mein likho — bas, ek string:</p>
-     <pre>Mumbai (19.076, 72.877)  →  te7ud9k
-
-te        →  ~1250 km ka box
-te7       →  ~156 km
-te7u      →  ~39 km
-te7ud     →  ~5 km
-te7ud9    →  ~1.2 km
-te7ud9k   →  ~150 m</pre>
+     <pre>Example nested cell prefixes:
+te → te7 → te7u → te7ud → te7ud9 → te7ud9k
+shorter prefix: larger cell
+longer prefix: smaller cell inside its parent</pre>
+     <p>Cell ki width aur height equal hona zaroori nahi. Metres mein width latitude
+     ke saath badalti hai. Character count ko fixed global radius mat samjho.</p>
      <p class="tip">🎯 Kamaal ki baat: <b>same prefix ek spatial cell deta hai;nearby points boundary ke across different prefix rakh sakte hain.</b>
      Radius cover karne wali cells ke prefixes se <b>candidate set</b> nikalo, jaise <code>WHERE geohash LIKE 'te7ud%'</code>. Query index/operator/collation verify karo; cell boundary ke across cells bhi chahiye. Final exact distance filter aur sort radius correctness dete hain.</p>
-     <p>Ismein bhi behtar: <b>H3</b> mostly hexagonal hierarchical grid hai; pentagons aur projection distortion bhi hain. Neighbor/radius coverage supported traversal se nikalo; grid hop distance exact geographic distance nahi. Candidate points par exact radius/distance verify karo.</p>`,
+     <p>Ek aur option: <b>H3</b> mostly hexagonal hierarchical grid hai; pentagons aur projection distortion bhi hain. Neighbor/radius coverage supported traversal se nikalo; grid hop distance exact geographic distance nahi. Candidate points par exact radius/distance verify karo.</p>`,
     `<h3>🔥 Hot cell — is shape ka signature failure</h3>
      <p>Geo data <b>kabhi</b> uniformly nahi bikhra hota. Aadha shehar 5% cells mein hai,
      aur 8 PM par airport wali ek cell mein poore region ka traffic aa jaata hai.</p>
@@ -1224,14 +1222,15 @@ cell te7uc2  (samundar)                        0 rps  😴</pre>
        <tr><td>Replicate karo</td><td>Us cell ka data N copies mein, alag nodes par</td></tr>
        <tr><td>Adaptive grid</td><td>Density ke hisaab se cell size — ghani jagah chhote cells</td></tr>
      </table>
-     <p>Isliye fixed grid size lagbhag hamesha galti hai. Manhattan aur Rajasthan
-     ke liye ek hi cell size sahi ho hi nahi sakta.</p>
+     <p>Cell size query radius, density aur update/query cost se choose karo. Fixed resolution
+     simple aur sufficient ho sakti hai; measured hotspots par finer ya adaptive partitions compare karo.</p>
      <h3>🧩 Cell boundary ka problem</h3>
      <p>Tum cell <code>te7ud9</code> mein ho, bilkul cell ke kinare par. Sabse paas ka
      driver 50 meter door hai — par driver <b>bagal wale cell</b> mein hai. Sirf apni
      cell dekhoge toh driver milega hi nahi.</p>
-     <pre>Ilaaj: apni cell + apni cell ke 8 padosi cells query karo (geohash ke neighbours)
-       phir un candidates par ASLI doori nikaal ke sort karo</pre>
+     <pre>Ilaaj: poori query radius cover karne wali cells query karo
+       current cell + 8 neighbors tabhi enough, jab poori radius cover ho
+       phir exact distance filter aur sort karo</pre>
      <p class="tip">🎯 Yahi geo ka standard do-kadam design hai:
      <b>1. index se candidates chuno (mota chhanna), 2. unhi par sahi hisaab karo
      (baarik chhanna).</b> Index ka kaam 84 lakh ko 900 tak laana hai —

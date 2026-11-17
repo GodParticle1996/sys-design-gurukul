@@ -1567,9 +1567,9 @@ Content-Type: application/{1}+json
   title: 'Idempotency Keys — Double Charge se Bachao',
   badge: 'Replay Guard',
   objectives: [
-    'Client kabhi nahi jaan sakta ki request pahunchi ya jawab kho gaya',
-    'Key <b>client</b> banata hai, server unique constraint se store karta hai',
-    'Same key + alag body = <b>409</b>',
+    'Timeout alone request failure aur lost reply distinguish nahi karta',
+    'Caller stable operation key bhejta hai; receiver atomic claim aur result rakhta hai',
+    'Same key + alag parameters reject karo; simulator uses <b>409</b>',
     'Kahan zaroori hai, kahan nahi',
   ],
   lesson: [
@@ -1594,22 +1594,21 @@ client → POST /payments
                               200 OK + x-idempotent-replay: true
                               (naya charge NAHI hua) 🎉</pre>`,
     `<h3>🔬 Char cheezein sahi karni hoti hain</h3>
-     <p><b>1. Key CLIENT banata hai.</b> Har <i>logical operation</i> ke
-     liye ek UUID. Server banayega toh retry par nayi key ban jaayegi aur
-     poora point khatam. Client key tab banata hai jab user "Pay" dabata
-     hai — retry par wahi key jaati hai.</p>
+     <p><b>1. Har logical operation ki stable key rakho.</b> Client UUID bana
+     sakta hai; server pehle se purchase identity de sakta hai jise client reuse kare.
+     Key retry loop ke bahar banti hai aur restart ke across save hoti hai.
+     Retry par new key banegi toh receiver usko new operation samajh sakta hai.</p>
      <p><b>2. UNIQUE constraint par store karo, app check par nahi.</b></p>
      <pre>❌ SELECT key... if not found → INSERT     (race condition!)
 ✅ INSERT ... ON CONFLICT DO NOTHING       (atomic)</pre>
      <p>Do requests ek saath aa sakti hain (retry ki puri baat hi yahi hai).
-     App-level check dono ko "nahi mili" bolega. Sirf DB constraint
-     guarantee de sakta hai.</p>
-     <p><b>3. Same key + ALAG body = 409 Conflict.</b> Agar client ne wahi
+     App-level check dono ko "nahi mili" bolega. Is database design mein unique claim ka insertion result check karo; new claim par hi local effect apply karo. Claim, effect aur saved result same transaction mein hone chahiye.</p>
+     <p><b>3. Same key + changed parameters reject karo.</b> Our simulator uses 409 Conflict; real API ka status contract alag ho sakta hai. Agar client ne wahi
      key alag amount ke saath bheji, toh bug client ka hai. Chup-chaap purana
      jawab lauta dena ek chhupa hua bug ban jaata hai — user ko lagega ₹100
      ka payment hua jabki ₹4,999 wala jawab mila.</p>
      <p><b>4. TTL documented retry/recovery window se choose karo.</b> Hamesha rakhne se table
-     anant badhegi. Zyadatar payment providers 24h rakhte hain.</p>
+     badhti rahegi. Retention provider/API version ke contract se verify karo; 24 hours universal rule nahi.</p>
      <h3>⚠️ Response bhi store karo, sirf key nahi</h3>
      <p>Replay par tumhe <b>wahi jawab</b> lautana hai jo pehli baar diya
      tha — payment id ke saath. Sirf "ho chuka hai" bolne se client ke paas
@@ -1627,10 +1626,10 @@ client → POST /payments
         yahi asli duniya ka double charge hai.
         <br><br>Idempotency on hone ke baad wahi key dobara bhejne par
         <code>x-idempotent-replay: true</code> aaya aur <b>wahi purana jawab</b> mila.
-        <br><br>Yaad rakho: key <b>client</b> banata hai (server banayega toh retry par nayi
-        ban jaayegi), server use <b>unique constraint</b> ke saath store karta hai
-        (app-level check race condition hai), aur <b>response bhi</b> store hota hai —
-        sirf key nahi.`,
+        <br><br>Yaad rakho: caller <b>same operation ki stable key</b> bhejta hai.
+        Receiver atomic claim, local effect aur response ko protect karta hai.
+        External provider ka effect us provider ke contract se protect hoga.
+        Terminal lesson simulation hai; real SQL crash practice neeche linked hai.`,
       solution: [
         "POST /v1/payments -H 'Idempotency-Key: pay-1'",
         "POST /v1/payments -H 'Idempotency-Key: pay-1'",
@@ -1670,9 +1669,9 @@ client → POST /payments
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'idempotency',
       questions: [
-        { q: 'Key kaun banata hai?', target: 'who', explain: 'Client. Server banayega toh har retry par nayi key ban jaayegi aur poora maqsad khatam ho jaayega. Client "Pay" dabne par ek UUID banata hai aur retry mein wahi bhejta hai.' },
+        { q: 'Key kaun banata hai?', target: 'who', explain: 'Caller operation ki stable identity bhejta hai. Client UUID generate kar sakta hai, ya server pehle se saved purchase key de sakta hai. Retry mein same key aur same parameters chahiye.' },
         { q: 'Key store karne ka sahi tareeka?', target: 'store', explain: 'DB unique constraint par — INSERT ... ON CONFLICT. App-level "pehle check karo phir insert" ek race condition hai, aur concurrency hi toh poora problem hai.' },
-        { q: 'Same key par ALAG body aa jaaye toh?', target: 'conflict', explain: '409 Conflict. Chup-chaap purana jawab lautana chhupa hua bug hai — client ko lagega client ka naya request safal hua.' },
+        { q: 'Same key par ALAG body aa jaaye toh?', target: 'conflict', explain: 'Parameters mismatch reject karo. Simulator 409 use karta hai; real API ka exact status contract dekho. Silently old success replay karna changed amount ko hide karega.' },
       ],
     },
     {
@@ -1705,10 +1704,10 @@ client → POST /payments
             'DB tez hai, toh duplicate banne ka mauka hi nahi milta — isliye key DB mein rakho',
           ],
           answer: 0,
-          explain: 'Wahi check-then-act race jo Boundaries level mein thi. Aur yahan concurrency hi asli scenario hai — retries aksar ek saath aati hain (jaise network wapas aate hi). App check yahan bekaar hai; sirf DB ka unique constraint atomic hai.',
+          explain: 'Wahi check-then-act race jo Boundaries level mein thi. Aur yahan concurrency hi asli scenario hai — retries aksar ek saath aati hain (jaise network wapas aate hi). Plain check-then-insert unsafe hai. Is design mein database unique claim aur same-transaction conditional effect use hote hain.',
           choiceExplanations: [
-            'Wahi check-then-act race jo Boundaries level mein thi. Aur yahan concurrency hi asli scenario hai — retries aksar ek saath aati hain (jaise network wapas aate hi). App check yahan bekaar hai; sirf DB ka unique constraint atomic hai.',
-            'SELECT kuch lock nahi karta. Do saath aayi requests dono ko "key nahi mili" dikhega.',
+            'Wahi check-then-act race jo Boundaries level mein thi. Aur yahan concurrency hi asli scenario hai — retries aksar ek saath aati hain (jaise network wapas aate hi). Plain check-then-insert unsafe hai. Is design mein database unique claim aur same-transaction conditional effect use hote hain.',
+            'Plain SELECT alone reservation nahi. Dono requests absent dekh sakti hain; engine/isolation aur explicit locking alag rules rakhte hain.',
             'Retries alag processes, alag servers se bhi aati hain — network wapas aate hi saath-saath.',
             'Raftaar race nahi rokti. Sirf atomic constraint rokta hai.',
           ],
@@ -1746,9 +1745,9 @@ client → POST /payments
           'Hamesha ke liye rakho — safety ke liye, table badhti hai toh badhne do',
         ],
         answer: 0,
-        explain: 'Soch: sabse lambi retry window se lamba, par hadd ke saath. Expiry ke baad wahi key naya operation maani ja sakti hai. Bahut se payment providers ~24 ghante rakhte hain — par 24 ghante pakka niyam nahi; apne API contract aur business se chuno, aur privacy/storage ki hadd bhi dekho.',
+        explain: 'Soch: sabse lambi retry window se lamba, par hadd ke saath. Expiry ke baad wahi key naya operation maani ja sakti hai. Provider/API version ka documented retention check karo. Apne retry/recovery contract, business history aur storage limits ko align karo.',
         choiceExplanations: [
-          'Soch: sabse lambi retry window se lamba, par hadd ke saath. Expiry ke baad wahi key naya operation maani ja sakti hai. Bahut se payment providers ~24 ghante rakhte hain — par 24 ghante pakka niyam nahi; apne API contract aur business se chuno, aur privacy/storage ki hadd bhi dekho.',
+          'Soch: sabse lambi retry window se lamba, par hadd ke saath. Expiry ke baad wahi key naya operation maani ja sakti hai. Provider/API version ka documented retention check karo. Apne retry/recovery contract, business history aur storage limits ko align karo.',
           'Kuch clients ghanton baad retry karte hain (offline phone, queue). 5 minute baad wahi key = naya payment.',
           'Settle hone ke baad bhi purana retry aa sakta hai — tab naya charge ban jaayega.',
           'Hamesha rakhne se table aur unique index lagataar badhte hain. Hadd chahiye.',
@@ -1759,7 +1758,7 @@ client → POST /payments
   success: [
     'Samjha sakte ho ki client retry kyun zaroori hai',
     'Idempotency key ka poora flow design kar sakte ho',
-    'Jaante ho ki key client banata hai aur DB constraint se store hoti hai',
+    'Stable identity, atomic claim aur saved result ki separate responsibilities explain kar sakte ho',
     'Bata sakte ho kahan key chahiye aur kahan nahi',
   ],
   homework: `Apni API ke saare POST endpoints list karo. Har endpoint ke saamne likho: "agar endpoint
@@ -1767,9 +1766,9 @@ client → POST /payments
     un endpoints ko idempotency key chahiye — aaj.`,
   cards: [
     { front: 'Client retry kyun karta hai?', back: 'Client <b>jaan hi nahi sakta</b> ki request pahunchi nahi ya jawab kho gaya — dono ek jaise dikhte hain. Isliye retry zaroori hai, aur duplicate protection bhi.' },
-    { front: 'Key kaun banata hai?', back: '<b>Client.</b> Server banayega toh retry par nayi key ban jaayegi. Key ko retry ke paar zinda rehna hai — retry ka pata sirf client ko hai.' },
+    { front: 'Key kaun banata hai?', back: 'Client generate kar sakta hai, ya server pehle se saved purchase key de sakta hai. Shart: caller same intent ke har retry mein same identity bheje.' },
     { front: 'Key kaise store karein?', back: '<b>DB unique constraint</b> — <code>INSERT ... ON CONFLICT</code>. App-level check race condition hai, aur concurrency hi asli scenario hai. <b>Response bhi store karo</b>, sirf key nahi.' },
-    { front: 'Same key, alag body?', back: '<b>409 Conflict.</b> Chup-chaap purana jawab lautana chhupa hua bug hai — client sochega client ka naya request safal hua.' },
+    { front: 'Same key, alag body?', back: 'Changed parameters reject karo. Simulator 409 choose karta hai; actual API contract ka status check karo. Original result preserve karo.' },
     { front: 'Key ka TTL?', back: "<b>Supported retry/recovery window ko cover karo.</b>24 hours ya 7 days examples hain, universal rule nahi. Hamesha rakhne se table aur table ka unique index anant badhenge." },
   ],
 },
@@ -2012,7 +2011,7 @@ POST /payments                      (koi idempotency key nahi)
             { id: 'idem', label: "POST + stable Idempotency-Key header", score: 3,
               why: 'Sahi. Server key ko unique constraint ke saath response ke SAATH store kare, aur dobara aane par wahi response lauta de.' },
             { id: 'dedupe', label: "Body ka hash hi operation ki pehchaan", score: -1,
-              why: 'Toota hua: do alag users theek same amount bhej sakte hain — dono jaayaz payments hain, duplicate nahi. Key client ko banani hi hogi.' },
+              why: 'Toota hua: do alag users theek same amount bhej sakte hain — dono jaayaz payments hain, duplicate nahi. Caller ko logical purchase ki stable identity bhejni hogi; body hash alone identity nahi.' },
           ],
         },
         {
@@ -2173,7 +2172,7 @@ SD.registerLevelsAfter('api', 'versioning', [
   title: 'Auth — Tum Kaun Ho, Client Nahi Batata',
   badge: 'Identity Rakshak',
   objectives: [
-    'Identity <b>header</b> se aati hai — body ya query se <b>kabhi nahi</b>',
+    'Identity verified credential se lo; client ke claimed user ID par bharosa mat karo',
     '401 vs 403 ka asli farak (aur client dono ko alag handle karta hai)',
     'JWT vs server session — kaun sa kab, aur revocation ka jhanjhat',
     'Default-deny: har endpoint ka auth status <b>likha</b> hona chahiye',
@@ -2184,8 +2183,11 @@ SD.registerLevelsAfter('api', 'versioning', [
      body, headers — sab. Client jo chaahe likh sakta hai.</p>
      <p>Toh phir header se identity lena "surakshit" kaise hua? Kyunki hum
      <code>Authorization</code> header ke andar jo hai use <b>verify</b> karte hain —
-     header par server ka signature (JWT) hai, ya header mein server ke paas
-     store hai. Hum header par bharosa nahi karte, hum <b>signature</b> par karte hain.</p>
+     credential signed token ho sakta hai, ya stored session ka opaque ID.
+     Token ke signature ke saath issuer, audience, expiry aur required policy validate karo;
+     session ID ko trusted store/policy se check karo. Header alone trusted nahi.
+     Browser session cookie bhi credential carry kar sakti hai; credential ka transport aur
+     credential verification alag decisions hain.</p>
      <p>Ulti galti aaj bhi sabse common API vulnerability hai:</p>
      <pre>GET /api/v1/transactions?user_id=7      ← "main user 7 hoon"
 GET /api/v1/transactions?user_id=8      ← "...ab main user 8 hoon" 😈</pre>

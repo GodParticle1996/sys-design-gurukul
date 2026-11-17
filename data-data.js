@@ -1360,12 +1360,12 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
        <tr><th>Data</th><th>Layer</th><th>Kyun</th></tr>
        <tr><td>Product image, JS bundle</td><td>CDN</td><td>public + immutable</td></tr>
        <tr><td>Public product page JSON</td><td>CDN (chhota TTL)</td><td>sab ke liye same</td></tr>
-       <tr><td>User ka dashboard data</td><td>App cache (Redis)</td><td>per-user — CDN par KABHI nahi</td></tr>
+       <tr><td>User ka dashboard data</td><td>App cache (Redis), identity-scoped</td><td>shared cache tabhi jab access isolation verify ho</td></tr>
        <tr><td>Computed aggregate</td><td>Materialized view</td><td>DB hi refresh kar le</td></tr>
      </table>
-     <p class="tip">⚠️ Per-user data CDN par daalna sirf bug nahi — per-user data ka leak ek
-     <b>security incident</b> hai. CDN shared cache hai; key aksar sirf URL
-     hoti hai.</p>`,
+     <p class="tip">⚠️ Private response ki shared cache key agar sirf URL ho,
+     toh doosra user pehle user ka data paa sakta hai. Authorization, cache keys aur
+     response policy verify karo. Private-data leak <b>security incident</b> hai.</p>`,
     `<h3>🔬 Teen patterns</h3>
      <pre>CACHE-ASIDE (sabse aam)
   v = cache.get(k)
@@ -1373,7 +1373,7 @@ pool 50, query   8 s  → 50 × 0.125 =     6 rps  💀</pre>
       v = db.query(k)
       cache.set(k, v, ttl)
   return v
-  ✅ cache down ho toh DB se chal jaayega
+  ✅ cache unavailable ho toh controlled DB fallback possible, agar capacity/deadline allow karein
   ⚠️ miss par har request DB jaayegi (stampede — agla level)
 
 WRITE-THROUGH
@@ -1384,14 +1384,16 @@ WRITE-THROUGH
 WRITE-BEHIND
   cache.set(k, v); queue.push(k)   # DB baad mein
   ✅ write bahut tez
-  💀 crash par DATA GAYA — sirf tab jab data kho sakta ho (view counts)</pre>
+  ⚠️ success ke waqt sirf volatile RAM copy ho toh crash mein acknowledged data lost ho sakta hai
+     Durable buffer choose karo toh uska acknowledgement/recovery contract alag define karo.</pre>
      <h3>🔑 Invalidation — do hi tareeke</h3>
      <pre>1. TTL              aasan · par thodi der stale
 2. Explicit delete  fresh · par HAR write path yaad rakhna padega
                     (aur ek bhool = stale data, jab tak TTL ya agla write na hataaye)</pre>
      <p>Practical jawab: <b>dono</b>. Explicit delete karo, aur chhota TTL
-     safety net ki tarah rakho — taaki ek bhool bhi 5 minute mein theek ho
-     jaaye, ghanton tak na rahe.</p>
+     safety net ki tarah rakho. Fixed TTL old entry expire karti hai; fresh result
+     ke liye refill source aur concurrent old fills bhi handle karo. Five-minute TTL
+     alone five-minute database-staleness guarantee nahi.</p>
      <h3>🗝️ Cache key design</h3>
      <pre>user:5:orders:page:1:v2
 └──┬─┘ │ └──┬──┘ └──┬───┘ └┬┘
@@ -1570,8 +1572,10 @@ request 3  → miss → ek aur
      <p><b>1. TTL par jitter (sabse sasta fix)</b></p>
      <pre>❌ cache.set(k, v, ttl=300)
 ✅ cache.set(k, v, ttl=300 + random(0, 60))</pre>
-     <p>Ab 10,000 keys 60 second mein bikhar ke expire hongi — 167 keys per
-     second, jo DB aaram se jhel lega. Ek line ka fix.</p>
+     <p>10,000 expiry times 60-second window mein spread hoti hain: expected average
+     about167 expiries/s, hard peak limit nahi. Expired keys par actual reads, concurrent
+     misses aur refreshes DB load decide karte hain. DB capacity separately measure karo.
+     Is positive jitter se maximum TTL360s ho sakti hai.</p>
      <p><b>2. Single-flight lock</b></p>
      <pre>if cache miss:
     if acquire_lock(k):          # sirf EK request jeetegi
@@ -1584,7 +1588,7 @@ request 3  → miss → ek aur
      <p>Ek key ke liye sirf ek DB query. 100 identical queries ki jagah 1.</p>
      <p><b>3. Probabilistic early refresh</b></p>
      <pre>Expiry ke paas aate hi kuch requests (badhti hui probability se)
-cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
+cache ko pehle hi refresh kar sakti hain — expiry-miss chance kam hota hai, zero guarantee nahi.</pre>
      <h3>❄️ Cold start — asli sawaal</h3>
      <p>Redis restart ho gaya. 100% miss. Ab poochho:</p>
      <p class="tip">🎯 <b>"Cache poora chala jaaye toh system zinda rahega?"</b>
@@ -1627,12 +1631,12 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
       title: 'Problem se ilaaj',
       instructions: 'Har cache problem ko sahi ilaaj se jodo.',
       pairs: [
-        { left: '🌩️ 10,000 keys ek saath expire hoti hain', right: 'TTL par jitter — ttl + random(0, 60)', explain: 'Ek line ka fix. Expiry bikhar jaati hai, 167 keys/sec — DB aaram se jhel lega.' },
+        { left: '🌩️ 10,000 keys ek saath expire hoti hain', right: 'TTL par jitter — ttl + random(0, 60)', explain: 'Expected average about167 expiries/s over60s; peak and actual miss traffic differ. Added jitter increases maximum TTL by60s. DB capacity separately check karo.' },
         { left: '🔁 Ek key ke liye 100 identical DB queries', right: 'Single-flight lock — sirf ek request DB jaaye', explain: 'Baaki requests us ek ke result ka intezaar karein. 100 queries ki jagah 1.' },
         { left: '❄️ Redis restart — 100% miss', right: 'Poochho: cache ke bina system zinda rahega?', explain: 'Agar nahi, toh cache ek dependency hai, optimization nahi. Ab cache ek SPOF hai jise tumne kabhi failure mode nahi maana.' },
         { left: '🔥 Ek celebrity key par 50,000 rps', right: 'Key replicate karo ya local in-process cache', explain: 'Sharding se faayda nahi — key ek hi hai. user:5:copy_0..9 ya app ke andar 2 second ka local cache.' },
-        { left: '📉 Cache hit rate sirf 20%', right: 'Key cardinality bahut zyada — key se kuch hatao', explain: 'Agar key mein timestamp ya request id jaisa kuch hai toh har request ki apni key hogi. Cache kabhi hit nahi karega.' },
-        { left: '🕰️ Ek write path cache delete karna bhool gaya', right: 'Chhota TTL safety net ki tarah rakho', explain: 'Explicit delete kabhi theek nahi hota agar ek path chhoot jaaye. TTL galti ko 5 minute mein mita deta hai.' },
+        { left: '📉 Same response, par har request ke random ID se alag key', right: 'Irrelevant request ID hatao; required identity/variants rakho', explain: 'Identical reusable results ko random ID unnecessarily separate karti hai. Low hit rate alone yeh cause prove nahi karti. Tenant/permission/currency dimensions sirf hit rate badhane ke liye mat hatao.' },
+        { left: '🕰️ Ek write path cache delete karna bhool gaya', right: 'Chhota TTL safety net ki tarah rakho', explain: 'Missed invalidation path fix karo. Fixed TTL old entry expire karti hai; fresh refill source aur old-reader races bhi check karo. TTL alone DB freshness guarantee nahi.' },
       ],
     },
     {
@@ -1749,25 +1753,25 @@ cache ko pehle hi refresh kar deti hain — isliye MISS hota hi nahi.</pre>
        <tr><td>Nested, alag-alag shape</td><td><b>Document</b> — catalog, CMS, event payloads</td></tr>
        <tr><td>Append-only + time range</td><td><b>Time-series</b> — metrics, IoT</td></tr>
        <tr><td>Relevance, typo, facets</td><td><b>Search</b> — Elasticsearch</td></tr>
-       <tr><td>Bade files, blobs</td><td><b>Object store</b> — S3 (DB mein KABHI nahi)</td></tr>
+       <tr><td>Media bytes, key-based upload/download</td><td><b>Object store</b> — jaise S3; workload aur operation contract verify karo</td></tr>
        <tr><td>Crore rows par aggregate</td><td><b>Columnar/OLAP</b> — ClickHouse, BigQuery</td></tr>
        <tr><td>"3 hop door kaun"</td><td><b>Graph</b> — social, fraud rings</td></tr>
      </table>
-     <p><b>Object store wali line ko underline kar lo.</b> Images, videos aur
-     PDFs DB mein daalna sabse aam mehengi galti hai: backup ghanton ka
-     ho jaata hai, replication lag badhta hai, aur buffer pool blobs se
-     bhar jaata hai. DB mein sirf <b>metadata + URL</b>.</p>`,
+     <p>Media-heavy service mein object storage bytes rakhe aur DB mein
+     <b>metadata + stable object key</b> rahe, yeh useful starting design hai.
+     Large blobs database backup aur replication ka load badha sakte hain.
+     Har blob ko DB mein rakhna galat nahi: small payload, transactional need,
+     workload aur operational cost compare karo. Expiring signed URL ko permanent identifier mat banao.</p>`,
     `<h3>🌡️ Hot · Warm · Cold</h3>
-     <p>90% queries pichhle 30 din ko chhuti hain. Par zyadatar systems
-     5 saal ka data ek hi table mein rakhte hain — aur phir <b>har</b> query
-     dheemi hoti hai:</p>
+     <p>Maan lo measured workload mein 90% queries pichhle 30 din ko chhooti hain.
+     Example retention tiers neeche hain. In windows ko apne workload aur retention needs se choose karo:</p>
      <pre>🔥 HOT   — 30 din    main DB · SSD · full index
 🌤️ WARM  — 1 saal    partition · kam index · sasti disk
 🧊 COLD  — 7 saal    S3/Glacier · parquet · dheemi par sasti query</pre>
-     <p>Purana data hataane se sirf jagah nahi bachti — <b>indexes chhote
-     ho jaate hain</b> (memory mein fit) aur buffer pool mein asli data ke
-     liye jagah banti hai. Purana data hataana ek "cleanup task" nahi, ek <b>performance
-     fix</b> hai.</p>
+     <p>Archive karne se active indexes aur working set chhote ho sakte hain.
+     Memory pressure kam ho toh relevant queries improve ho sakti hain.
+     Har query faster hona guaranteed nahi. Engine ka space-reclamation behavior,
+     cold-data retrieval, retention aur restore bhi check karo.</p>
      <h3>⚠️ Polyglot persistence ka jaal</h3>
      <p>"Har kaam ka apna DB" sunne mein sahi lagta hai. Practically:</p>
      <pre>5 databases = 5 backup plans + 5 failure modes + 5 upgrade cycles
@@ -1779,8 +1783,8 @@ PostGIS        → geo
 LISTEN/NOTIFY  → halka pub/sub
 arrays, ranges → bahut se special cases</pre>
      <p class="tip">🎯 <b>Ek DB se shuru karo.</b> Naya store tab lo jab
-     access pattern sach mein fit na ho (jaise 50 crore metrics/din — itne metrics sambhaalna
-     Postgres ka kaam nahi) — aur naye store ki poori operational keemat maan ke.</p>`,
+     access pattern ya measured capacity fit na ho — aur naye store ki
+     poori operational keemat maan ke. Daily row count akela engine reject karne ka proof nahi.</p>`,
   ],
   stages: [
     {
@@ -1789,11 +1793,11 @@ arrays, ranges → bahut se special cases</pre>
       instructions: 'Har zaroorat ko sahi store se jodo.',
       pairs: [
         { left: '🛒 Orders, payments — transactions chahiye', right: 'Relational (Postgres/MySQL)', explain: 'ACID, foreign keys, ad-hoc queries. Default choice — aur zyadatar cases mein aakhri bhi.' },
-        { left: '🎫 User sessions — key se lookup, TTL', right: 'Key-Value (Redis)', explain: 'Ek key, ek value, TTL built-in. Session lookup ke liye relational DB use karna bekaar overhead hai.' },
-        { left: '📸 Product images, invoices PDF', right: 'Object store (S3)', explain: 'DB mein blobs daalna backup, replication aur buffer pool teenon ko barbaad karta hai. DB mein sirf metadata + URL.' },
-        { left: '📈 5 crore sensor readings roz', right: 'Time-series (TimescaleDB/InfluxDB)', explain: 'Append-only + time-range queries + automatic downsampling. Postgres itne scale par sangharsh karega.' },
+        { left: '🎫 User sessions — key se lookup, TTL', right: 'Key-Value (Redis)', explain: 'Key lookup aur built-in expiry useful fit hain. Relational store bhi valid ho sakta hai; latency, expiry cleanup aur operations compare karo.' },
+        { left: '📸 Product images, invoices PDF', right: 'Object store (S3)', explain: 'Media-heavy key-based access ke liye object bytes plus DB metadata/key useful pattern hai. Blob size, consistency aur operations se choice justify karo.' },
+        { left: '📈 5 crore sensor readings roz', right: 'Time-series (TimescaleDB/InfluxDB)', explain: 'Append aur time-range workload specialized indexing, partitioning aur retention se benefit le sakta hai. Actual ingest/query rate measure karo; TimescaleDB PostgreSQL par based hai.' },
         { left: '🔎 "labtop charger" — typo ke saath', right: 'Search engine (Elasticsearch)', explain: 'Typo tolerance, relevance tuning aur facets — saari cheezein Postgres full-text se aage ki cheezein hain.' },
-        { left: '📊 "Pichhle 2 saal ka revenue by region"', right: 'Columnar / OLAP (ClickHouse)', explain: 'Crore rows par aggregate. Columnar storage sirf zaroori columns padhta hai — 100x tez.' },
+        { left: '📊 "Pichhle 2 saal ka revenue by region"', right: 'Columnar / OLAP (ClickHouse)', explain: 'Badi scans aur aggregates column pruning/compression se benefit le sakti hain. Speedup workload aur measurement se establish karo.' },
       ],
     },
     {
@@ -1802,9 +1806,9 @@ arrays, ranges → bahut se special cases</pre>
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'storage',
       questions: [
-        { q: 'Bade files (images, PDFs) kahan?', target: 'obj', explain: 'Object store (S3). DB mein blobs daalna backup ghanton ka bana deta hai, replication lag badhata hai, aur buffer pool bhar deta hai.' },
+        { q: 'Media-heavy service mein key-based image/PDF upload-download ka useful starting store?', target: 'obj', explain: 'Object store evaluate karo. DB mein metadata aur stable key rakh sakte ho; size, operations, access policy aur cost verify karo.' },
         { q: 'Default choice kaunsa hona chahiye?', target: 'rdbms', explain: 'Relational. Rishte, transactions aur ad-hoc queries — aur relational DB JSONB, full-text aur geo bhi kar leta hai. Yahin se shuru karo.' },
-        { q: '90% queries pichhle 30 din ko chhuti hain — us data ko kya kehte hain?', target: 'hot', explain: 'Hot data. Hot data main DB mein full index ke saath rakho; warm ko partition karo aur cold ko S3 par bhejo — data baantne se har query tez ho jaati hai.' },
+        { q: '90% queries pichhle 30 din ko chhuti hain — frequently accessed data ko kya kehte hain?', target: 'hot', explain: 'Hot data. Access frequency se suitable storage/indexing choose karo. Tiering ka benefit query aur working set par depend hai; har query faster nahi hoti.' },
       ],
     },
     {
@@ -1875,15 +1879,15 @@ arrays, ranges → bahut se special cases</pre>
     'Access pattern se store chun sakte ho',
     'Hot/warm/cold data tier bana sakte ho',
     'Polyglot persistence ki operational keemat bata sakte ho',
-    'Jaante ho ki blobs DB mein nahi jaate',
+    'Media bytes aur catalog ko separate karne ka benefit aur cost compare kar sakte ho',
   ],
-  homework: `Apne DB ki sabse badi table dekho. Table ka kitna data pichhle 30 din ka hai?
-    Agar 10% se kam, toh baaki 90% <b>har</b> query ko dheema kar raha hai.
-    Ek partition ya archive plan banao.`,
+  homework: `Apni sample table ka age distribution aur actual query pattern compare karo.
+    Recent data kam hona akela slowdown ka proof nahi. Working-set size, index usage,
+    query timing aur retention needs se partition/archive ka experiment plan banao.`,
   cards: [
     { front: 'Store kaise chunein?', back: '<b>Access pattern se.</b> Rishte+transactions → relational. Key se object → KV. Nested → document. Append+time → time-series. Relevance → search. Blobs → <b>object store</b>.' },
-    { front: 'Blobs DB mein kyun nahi?', back: 'Backup ghanton ka ho jaata hai, replication lag badhta hai, buffer pool bhar jaata hai. DB mein sirf <b>metadata + URL</b>.' },
-    { front: 'Hot/Warm/Cold?', back: '🔥 30 din — main DB, full index · 🌤️ 1 saal — partition, kam index · 🧊 7 saal — S3/parquet. <b>Archiving ek performance fix hai</b>, cleanup task nahi.' },
+    { front: 'Media bytes object store mein kyun?', back: 'Media-heavy service mein DB backup/replication se large byte payload alag rakh sakte ho. DB mein catalog + stable key. Small transactional blobs ke liye DB bhi valid ho sakta hai; workload compare karo.' },
+    { front: 'Hot/Warm/Cold?', back: 'Access frequency ke tiers. Example: recent 30 din hot, next year warm, older archive. Windows policy se choose karo. Active working set chhota hone se relevant queries improve ho sakti hain; measured result chahiye.' },
     { front: 'Polyglot ka jaal?', back: '5 databases = 5 backup plans + 5 failure modes + 5 upgrade cycles + 5 cheezein jo 3 baje raat ko toot sakti hain. <b>Ek se shuru karo.</b>' },
     { front: 'Postgres akela kya kar leta hai?', back: '<b>JSONB</b> (document) · <b>full-text</b> (basic search) · <b>PostGIS</b> (geo) · <b>LISTEN/NOTIFY</b> (halka pub/sub) · arrays, ranges.' },
   ],
@@ -2288,21 +2292,21 @@ SD.registerLevelsAfter('data', 'stampede', [
      </table>
      <p>Eviction, expiry aur invalidation ka farak matter karta hai. "Mera cache stale data de raha hai" ka ilaaj
      eviction policy badalna <b>nahi</b> hai — stale data invalidation ka bug hai.
-     "Mera cache hit rate gir gaya" ka ilaaj TTL badalna <b>nahi</b> hai —
-     girta hit rate aksar size ka problem hai.</p>
+     "Mera cache hit rate gir gaya" par expiry, eviction, workload aur key variants
+     alag measure karo. Evidence se decide karo ki lifetime, capacity ya key design badalni hai.</p>
      <h3>🔬 Policy ka chunav = access pattern ka sawaal</h3>
      <table>
        <tr><th>Policy</th><th>Kya nikaalti hai</th><th>Kab achhi</th><th>Kab bura</th></tr>
-       <tr><td><b>LRU</b></td><td>Jo sabse pehle use hui thi</td><td>Recency wale patterns — sessions, "abhi dekha hua"</td><td>Ek bada <b>scan</b> poora cache bahaa deta hai</td></tr>
+       <tr><td><b>LRU</b></td><td>Jiska last access sabse purana hai</td><td>Recency wale patterns — sessions, "abhi dekha hua"</td><td>Ek bada <b>scan</b> hot entries evict kar sakta hai</td></tr>
        <tr><td><b>LFU</b></td><td>Jo sabse kam baar use hui</td><td>Kuch keys hamesha hot — celeb profiles, top products</td><td>Kal ki hot key <b>chipki</b> reh jaati hai (aging chahiye)</td></tr>
        <tr><td><b>FIFO</b></td><td>Jo sabse pehle aayi thi</td><td>Rolling buffer, jahan sab barabar hain</td><td>Zyadatar asli workloads par — use kabhi hi ho</td></tr>
      </table>
      <p class="tip">🎯 LRU ki sabse badi kamzori: <b>ek scan cache ko dho deta hai</b>.
      Ek analytics job jo 10 lakh rows padhta hai, analytics job saari hot keys nikaal dega,
-     jabki analytics job ki koi bhi key dobara nahi maangi jaayegi. Isiliye asli systems
-     (Redis <code>allkeys-lru</code>, MySQL ka buffer pool) plain LRU nahi,
-     LRU ka <b>segmented/approximate</b> roop chalate hain — jismein nayi entry
-     turant "hot" area mein nahi jaati.</p>`,
+     jabki chosen scan workload mein analytics keys dobara nahi maangi jaayengi.
+     Implementations differ: Redis <code>allkeys-lru</code> sampled approximate LRU
+     use karta hai. Approximation ko automatically segmented admission policy mat samjho.
+     Actual engine policy aur workload trace check karo.</p>`,
     `<h3>🔥 Hot key — aisi problem jise sharding hal NAHI karti</h3>
      <p>Cricket final chal raha hai. Ek hi key — <code>match:live:score</code> —
      par 50,000 rps aa rahe hain. Tumhare paas 8 node ka Redis cluster hai.</p>
@@ -2316,9 +2320,10 @@ baaki 7  ·                        0 rps   😴 khaali baithe hain</pre>
      <code>#7</code> tak 8 copies; client randomly ek chunta hai. Write par saari
      8 invalidate karni padengi, isliye key replication sirf <b>read-heavy</b> keys ke liye hai.</p>
      <p><b>2. Local (in-process) cache</b> — 1 second ka TTL app ke andar hi.
-     50,000 rps ka 99.9% app ki memory se hi nikal jaayega, Redis tak jaayega hi nahi.
-     Kharch: har instance ka data 1 second tak alag ho sakta hai. Live score ke liye
-     data ka farak bilkul manzoor hai.</p>
+     Redis reads kam ho sakti hain; exact reduction instance count, request distribution
+     aur miss coalescing par depend karti hai. One-second fixed TTL local entry lifetime
+     bound karti hai; upstream freshness alag check karo. Live-score product ki allowed
+     delay confirm karo.</p>
      <h3>🤝 Coalescing — stampede ka doosra taala</h3>
      <p>Pichhle level mein tumne <b>TTL jitter</b> lagaya tha. TTL jitter expiry ko
      <b>bikherta</b> hai. Par ek popular key toh phir bhi kisi na kisi pal expire
@@ -2386,8 +2391,8 @@ saath mein:       ~1,000 miss  →       1 DB query    ✅  (har app process mei
         { left: 'User sessions — abhi active log', right: 'LRU', explain: 'Recency hi sab kuch hai. Jo user 2 ghante se nahi aaya, aise user ka session nikal jaana bilkul theek hai.' },
         { left: 'Top 100 products jo 90% traffic khaate hain', right: 'LFU', explain: 'Kuch keys hamesha hot hain. LFU hot keys ko ginti ke aadhar par bachaata hai — beech mein aane wale one-off products hot keys ko nikaal nahi paate.' },
         { left: 'Aakhri 1000 events ka rolling window', right: 'FIFO', explain: 'Yahan "purana" ka matlab hi "bekaar" hai. Kaun kitni baar padha gaya, padhne ki ginti ka koi mahatva nahi.' },
-        { left: 'Live match ka score — 50,000 rps ek key par', right: 'Local cache + key replication', explain: 'Hot key eviction ka sawaal hai hi nahi — <b>distribution</b> ka hai. 1s local TTL 99.9% traffic khaa jaata hai, aur bachi hui key ki copies alag nodes par baithti hain.' },
-        { left: 'Exchange rate — 5 min se purana nahi chahiye', right: 'TTL (jitter ke saath)', explain: 'Freshness ka rule, memory ka nahi. Aur agar 10,000 currency pairs ek saath cache hui thi toh jitter ke bina currency pairs ek saath expire hongi.' },
+        { left: 'Live match ka score — 50,000 rps ek key par', right: 'Local cache + key replication', explain: 'Hot-key load distribute karni hai. Local cache reduction measure karo; copies ki machine placement aur freshness policy verify karo. One-second TTL alone99.9% reduction guarantee nahi.' },
+        { left: 'Exchange rate — cache entry lifetime at most5min', right: 'TTL with jitter range ending by5min', explain: 'Positive jitter maximum ko exceed kar sakti hai. Example4–5min lifetime range use karo. Data-age requirement ke liye source freshness and refill timing bhi check karo.' },
       ],
     },
     {

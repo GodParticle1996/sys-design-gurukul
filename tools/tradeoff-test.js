@@ -20,7 +20,7 @@ function values(id, patch = {}) {
 }
 function wins(id, patch = {}) { return SD.tradeoffStatus(stages.get(id), values(id, patch)).ok; }
 
-expect(stages.size === 32, 'All authored knob labs must be covered');
+expect(stages.size === 33, 'All authored knob labs must be covered');
 let seed = 0x7175616c;
 for (const [id, stage] of stages) {
   expect(wins(id), `${id}: intended static configuration must satisfy the live goal`);

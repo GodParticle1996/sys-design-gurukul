@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live updates — KhanaKart lab</title>
+<style>body{font:18px/1.6 system-ui;background:#0a0f1e;color:#e4eaf5;max-width:720px;margin:auto;padding:24px}button{font:inherit;padding:10px;margin:6px;border-radius:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#111a2e;padding:12px}strong{color:#6ea8fe}</style>
+<h1>Order-41 ka live status</h1>
+<p>Lab mein ek demo order hai. Do browser tabs kholo. Ek tab se order badlo; doosre tab par update dekho. Server sirf recent 3 changes rakhta hai.</p>
+<p>Connection: <strong id="connection">Connecting</strong><br>Order: <strong id="state">Waiting for snapshot</strong></p>
+<button id="advance">Order ka next status</button><button id="drop">Server se connection todo</button>
+<button id="pause">Updates pause karo</button><button id="resume">Naya EventSource kholo</button>
+<p>Pause ke baad 4 changes karo. Naya EventSource fresh snapshot maangta hai. Server-side disconnect par wahi EventSource automatic reconnect karta hai aur apna last event ID bhejta hai.</p>
+<pre id="log" aria-live="polite"></pre>
+<p>Demo mein login nahi hai. Real app ko har stream ki authorization, shared durable history aur deployment-level monitoring chahiye. Yahan states repeat hoti hain taaki practice dobara ho sake.</p>
+<script>
+let source, current = { seq: -1, state: '' }; const rows=[];
+const log = text => { rows.push(text); if(rows.length>20)rows.shift();document.getElementById('log').textContent=rows.join('\n'); };
+function connect(){
+ if(source) source.close();
+ source=new EventSource('/events');
+ source.onopen=()=>document.getElementById('connection').textContent='Connected';
+ source.onerror=()=>document.getElementById('connection').textContent='Reconnecting';
+ for(const kind of ['snapshot','reset','update']) source.addEventListener(kind,e=>{
+  const row=JSON.parse(e.data);
+  if(kind!=='update'||row.seq>current.seq){current=row;document.getElementById('state').textContent=`${row.state} · sequence ${row.seq}`;}
+  log(`${kind}: seq=${row.seq}, state=${row.state}`);
+ });
+}
+async function post(path){try{const r=await fetch(path,{method:'POST',headers:{'X-Lab':'1'}});if(!r.ok)throw Error('HTTP '+r.status);}catch(e){log(e.message);}}
+document.getElementById('advance').onclick=()=>post('/advance');
+document.getElementById('drop').onclick=()=>post('/disconnect');
+document.getElementById('pause').onclick=()=>{source.close();document.getElementById('connection').textContent='Paused';};
+document.getElementById('resume').onclick=connect;
+connect();
+</script></html>

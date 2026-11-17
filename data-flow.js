@@ -1710,9 +1710,9 @@ Sab ek hi row par lock maang rahe hain.
           note: 'Worker crash hua, message dobara aaya',
           options: [
             { id: 'hope', label: "Broker ke \"exactly-once\" flag par bharosa karo", score: -3,
-              why: 'Exactly-once delivery distributed systems mein hoti hi nahi. Asal mein hota hai at-least-once delivery + <b>idempotent processing</b>. Exactly-once maan lena sabse common galatfehmi hai.' },
+              why: 'Broker exactly-once ka supported scope verify karo. Broker acknowledgement external notification effect ko automatically atomic nahi banati; receiver-supported idempotency/recovery chahiye.' },
             { id: 'idem', label: "Unique key (campaign_id, user_id) se dedupe karo", score: 3,
-              why: 'Sahi. "Bheja gaya" ko DB mein unique constraint ke saath likho. Dobara aane par insert fail hoga aur tum skip kar doge. At-least-once + idempotent = effectively-once.' },
+              why: 'Stable campaign/user identity useful hai, par marker alone external send protect nahi karti. Provider ko same scoped key enforce karni hogi; lost reply aur crash ke liye status/reconciliation chahiye. Local-only effect ho toh claim plus effect same transaction mein rakho.' },
             { id: 'mem', label: "Bheje gaye IDs ko worker ki memory mein rakho", score: -2,
               why: 'Worker restart par memory chali jaayegi. Aur 10 workers ki memory alag-alag hai — koi bhi doosre ka bheja hua nahi jaanta.' },
           ],
@@ -1841,7 +1841,7 @@ Sab ek hi row par lock maang rahe hain.
     Jitne sawaalon ka jawab nahi hai, utne future incidents hain.`,
   cards: [
     { front: 'Head-of-line blocking?', back: 'Bulk messages ke peeche urgent message atak jaata hai. Ilaaj: <b>alag queue + alag consumers</b> — queue-level bulkhead.' },
-    { front: 'Exactly-once ka sach?', back: 'Exactly-once hoti hi nahi. <b>At-least-once delivery + idempotent processing = effectively-once.</b> Dedupe key par unique constraint lagao.' },
+    { front: 'Exactly-once ka sach?', back: 'Guarantee ka scope bolo. Local effect ke liye unique claim plus conditional effect same transaction mein rakho. Broker delivery guarantee external provider effect ko automatically cover nahi karti.' },
     { front: 'Poison message?', back: 'Aisa message jo har baar crash karta hai. Bina DLQ ke poison message poori queue rok deta hai. Pattern: <b>N retries with backoff → DLQ</b>.' },
     { front: 'Downstream rate limit kaise respect karein?', back: '<b>Outbound rate limiter</b> — limit se thoda NEECHE (headroom). "429 par retry kar lenge" retry storm banata hai.' },
   ],

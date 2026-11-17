@@ -726,14 +726,14 @@ VISUALS['idempotency'] = {
 
     <div class="dg-rule"></div>
     <div class="dg-grid">
-      <div class="dg-node is-accent" data-hs="who"><span class="ni">🙋</span><span class="nl">Key CLIENT banata hai</span>
-        <span class="ns">UUID, har logical operation ke liye ek.<br>Server banayega toh retry par nayi ban jaayegi — bekaar.</span></div>
+      <div class="dg-node is-accent" data-hs="who"><span class="ni">🙋</span><span class="nl">Caller stable key bhejta hai</span>
+        <span class="ns">One key per logical operation.<br>Client generates ya saved server identity reuse karta hai.</span></div>
       <div class="dg-node is-accent" data-hs="store"><span class="ni">🗄️</span><span class="nl">UNIQUE constraint par store</span>
-        <span class="ns">key + response, ek transaction mein.<br>App-level check race condition hai.</span></div>
-      <div class="dg-node is-gold" data-hs="ttl"><span class="ni">⏳</span><span class="nl">TTL rakho (24h–7d)</span>
-        <span class="ns">hamesha nahi — warna table anant badhegi</span></div>
+        <span class="ns">New claim + local effect + result, one transaction.<br>External provider ka contract separately check karo.</span></div>
+      <div class="dg-node is-gold" data-hs="ttl"><span class="ni">⏳</span><span class="nl">Retry/recovery window cover karo</span>
+        <span class="ns">Retention API contract ke according; expiry ke baad old retry new lag sakti hai</span></div>
       <div class="dg-node is-bad" data-hs="conflict"><span class="ni">⚠️</span><span class="nl">Same key, ALAG body</span>
-        <span class="ns">409 Conflict bhejo — chup-chaap purana jawab<br>lautana ek chhupa hua bug hai</span></div>
+        <span class="ns">Mismatch reject karo; simulator uses 409.<br>Real API ka status contract check karo</span></div>
     </div>
     <div class="dg-cap"><b>Kahan chahiye:</b> har non-idempotent write jispar paisa,
       inventory ya notification tika ho. <code>GET/PUT/DELETE</code> pehle se idempotent hain —
@@ -1400,14 +1400,14 @@ VISUALS['retries'] = {
         <code>422</code> (validation). Inhe retry karna sirf load hai, koi umeed nahi.</span>
     </div>
     <div class="dg-legend">
-      <span class="dg-pill good" data-hs="yes">✅ RETRY KARO</span>
+      <span class="dg-pill good" data-hs="yes">✅ CONDITIONS FIT: RETRY CONSIDER</span>
       <span><code>429</code> (Retry-After ke hisaab se) · <code>503</code> ·
         <code>504</code> · network timeout · connection reset.
-        <b>Sirf idempotent operations</b> — warna Idempotency-Key ke saath.</span>
+        Repeat-safe effect, valid recovery window, deadline/budget; receiver-enforced key if needed.</span>
     </div>
     <div class="dg-legend">
       <span class="dg-pill gold" data-hs="layers">⚠️ LAYERS KA GUNA</span>
-      <span>SDK 3 retries × gateway 3 retries × client 3 retries = <b>27 requests</b>
+      <span>SDK 3 attempts × gateway 3 attempts × client 3 attempts = <b>27 requests</b>
         ek user action ke liye. Retry <b>ek</b> layer par rakho — aksar sabse upar wali.</span>
     </div>`,
 };

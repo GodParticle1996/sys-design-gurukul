@@ -1265,6 +1265,7 @@ html { scroll-padding-top: calc(var(--topbar-h, 0px) + 8px); }   /* scrollIntoVi
   /* diagram padhne layak bada rehta hai aur apne dabbe mein khisakta hai; renderer use sahi jagah le jaata hai */
   .dr-diagram { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .dr-diagram .ms-svg { min-width: 520px; }
+  .dr-diagram.dr-mobile-fit .ms-svg { min-width: 0; }
 
   /* chaudi table: har row ek card, har cell apne column ke naam ke saath (data-th renderer lagata hai) */
   .dr-say table.dr-stack, .dr-say table.dr-stack tbody, .dr-say table.dr-stack tr, .dr-say table.dr-stack td { display: block; width: auto; }

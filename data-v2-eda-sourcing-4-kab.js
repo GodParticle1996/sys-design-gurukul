@@ -18,7 +18,7 @@ SD.registerLevels('sdd-eda', [
     "Mitana, versioning aur read models ka kharcha kaise socho?"
   ],
   "lesson": [
-    "<h3>⚖️ Har kaam ko passbook nahi chahiye</h3><p>Bank ke khaate ko passbook chahiye. Ravi ke ghar ke address ko nahi; address ke liye aakhri value hi kaafi hai.</p><p>Neeche har situation ko sahi dibbe mein daalo, phir passbook ke chhupe kharche dekho.</p>"
+    "<h3>⚖️ Har kaam ko passbook nahi chahiye</h3><p>Wallet ko complete financial history chahiye. Event Sourcing us history ko model karne ka ek option hai; audit requirement akeli pattern mandatory nahi banati. Is profile example mein Ravi ke address ki sirf current value chahiye.</p><p>Neeche har situation ko sahi dibbe mein daalo, phir passbook ke chhupe kharche dekho.</p>"
   ],
   "stages": [
     {
@@ -41,9 +41,9 @@ SD.registerLevels('sdd-eda', [
       ],
       "items": [
         {
-          "text": "Bank wallet: har paise ka hisaab, aur dispute mein \"us din kitna tha\" saabit karna",
+          "text": "Wallet: approved design mein domain events authoritative record hain; unse current balance aur past versions rebuild karne hain",
           "bin": "es",
-          "explain": "Itihaas aur kisi bhi pal ki haalat hi product hai — event sourcing ka seedha kaam."
+          "explain": "Chosen requirement events ko authoritative rakhti hai aur derived state rebuild karti hai. Audit history alone hoti toh ledger/audit alternatives bhi evaluate karte."
         },
         {
           "text": "User profile: naam, photo, notification settings; bas aakhri value chahiye",
@@ -56,9 +56,9 @@ SD.registerLevels('sdd-eda', [
           "explain": "Dikkat padhne mein hai: alag read model (search index ya denormalized table) bana do. Likhne wale model ko events mein badalna zaroori nahi."
         },
         {
-          "text": "Insurance claim: regulator har badlaav ka kab-kisne-kya maangta hai, aur purani tareekh ka status",
+          "text": "Claims service: team event schema maintenance accept karti hai; authoritative business events se multiple historical projections rebuild karni hain",
           "bin": "es",
-          "explain": "Poora itihaas aur purani haalat regulator ki maang hai — events se dono seedhe milte hain."
+          "explain": "Explicit authoritative-event and rebuild requirements Event Sourcing se match karti hain. Sirf audit maang hoti toh transactional history bhi candidate hoti."
         },
         {
           "text": "Blog comments: likho, edit karo, mitao; koi audit maang nahi",

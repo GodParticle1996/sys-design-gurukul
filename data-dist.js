@@ -63,8 +63,12 @@ SD.registerLevels('dist', [
 
 CP → ERROR do          "abhi nahi bata sakta"
 AP → PURANA data do    "shayad thoda purana hai"</pre>
+     <p>Is read example mein C <b>linearizability</b> hai: completed write ke baad start hui read
+     us value ya later write ko reflect kare. A ka matlab non-failing node par requested
+     operation complete hona hai; error alone successful read nahi. Monthly availability SLO
+     alag measurement hai. Neeche examples starting points hain; actual operation ka contract decide karega.</p>
      <table>
-       <tr><th>CP sahi hai jahan</th><th>AP sahi hai jahan</th></tr>
+       <tr><th>Strict result ki zaroorat ho sakti hai</th><th>Stale result acceptable ho sakta hai</th></tr>
        <tr><td>bank balance</td><td>product catalog</td></tr>
        <tr><td>inventory / aakhri seat</td><td>social feed</td></tr>
        <tr><td>permissions</td><td>recommendations</td></tr>
@@ -1224,7 +1228,7 @@ COMMIT;</pre>
       instructions: 'Diagram mein sahi jagah click karo.',
       visual: 'exactlyonce',
       questions: [
-        { q: 'Asli formula kya hai?', target: 'formula', explain: 'at-least-once delivery + idempotent processing = effectively-once. "Exactly-once" delivery hoti hi nahi.' },
+        { q: 'Asli formula kya hai?', target: 'formula', explain: 'At-least-once delivery plus correctly enforced idempotent processing can protect the stated effect boundary. Broker exactly-once guarantees have product-specific scope; they do not automatically include an external payment.' },
         { q: 'Dedupe key ko kaise store karein?', target: 'unique', explain: 'DB UNIQUE constraint par — app-level "pehle check karo" ek race condition hai, aur concurrency hi asli scenario hai.' },
         { q: 'Side-effect aur dedupe id kahan hone chahiye?', target: 'same', explain: 'EK hi transaction mein. Alag karoge toh dual write ka problem dobara bana doge — kaam ho gaya par id nahi likhi.' },
         { q: '"Hamara broker exactly-once deta hai" — isme kya adhoora hai?', target: 'claim', explain: "Supported Kafka transactional read-process-write path ka scope inspect karo. External sink ko offsets/effect atomicity ya idempotent recovery mein cooperate karna hoga; broker setting alone payment/email effect protect nahi karti." },

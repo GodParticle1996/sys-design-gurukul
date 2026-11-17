@@ -283,6 +283,8 @@ function showIntro(level) {
   if (hero) wrap.appendChild(hero);
 
   level.lesson.forEach(html => wrap.appendChild(el('div', 'lesson-card', html)));
+  const videoSources = SD.renderVideoSources && SD.renderVideoSources(level);
+  if (videoSources) wrap.appendChild(videoSources);
 
   const totalStages = allStages(level).length;
   const bonusCount = level.stages.filter(s => s.bonus).length;
@@ -749,4 +751,15 @@ function showCertificate(track) {
 SD.ui = { renderTopbar, showHome, showTrack, showIntro, showPopQuiz, runStage, stageDone, renderInterview, levelComplete, showDojo, showCertificate, allStages, diagramFor, topicGuide };
 renderTopbar();
 showHome();
+// Stable cross-app lesson links; saved completion and stage progress stay untouched.
+if (typeof location !== 'undefined') {
+  const linked = /^#level=([a-z0-9-]+)$/.exec(location.hash || '');
+  const level = linked && Object.values(SD.levelSets).flat().find(l => l.id === linked[1]);
+  if (level) {
+    const track = SD.trackOf(level), levels = SD.levelsOf(track), index = levels.indexOf(level);
+    const open = SD.trackUnlocked(track) && (track.freeOrder || index === 0 || SD.state.completed.includes(levels[index - 1].id));
+    if (open) showIntro(level);
+    else appEl.appendChild(el('p', 'lesson-card', 'Linked lesson abhi locked hai. Track map mein required pichhle levels complete karo.'));
+  }
+}
 })();

@@ -425,25 +425,24 @@ NON-FUNCTIONAL
      <h3>❌ Seedha tareeka aur seedha tareeka kyun tootta hai</h3>
      <pre>SELECT * FROM scores ORDER BY score DESC LIMIT 100;</pre>
      <p>Index laga hoga toh query <b>tez</b> bhi chalegi — top 100 lene ke liye
-     index ke pehle 100 entries kaafi hain. Problem read mein nahi,
-     <b>write</b> mein hai: 10,000 score updates/sec, aur har update ko
-     <code>score</code> wale index mein apni jagah badalni padti hai —
-     yaani B-tree mein delete + insert. Aur saare updates ek hi
-     "top" hisse ke aas-paas ho rahe hain: <b>index hot spot</b>.</p>
-     <p>Aur asli qatl doosra sawaal karta hai:</p>
+     suitable index ki first100 entries kaafi ho sakti hain. Score-changing writes ko
+     ordered index maintain karna padta hai. Hotspot workload aur index distribution
+     par depend karta hai. Stated10k updates/s actual capacity measurement nahi hai.</p>
+     <p>Rank query ka work alag inspect karo:</p>
      <pre>SELECT COUNT(*) FROM scores WHERE score > (mera score);   ← meri rank</pre>
-     <p>COUNT(*) <b>har baar</b> lakhon rows ginta hai. 50 lakh players ke saath
-     ek rank query poore DB ko rok deti hai — aur har player rank ka sawaal
-     poochhta hai.</p>`,
+     <p>COUNT query ko higher-score matching entries count karni padti hain.
+     Lower-ranked player ke liye count bada ho sakta hai. Index, query plan, concurrency
+     aur cache behavior measure karo. One query automatically poora database block
+     nahi karti. Cached batch rankings smaller workloads ke liye sufficient ho sakti hain.</p>`,
     `<h3>✅ Redis sorted set — structure hi jawab hai</h3>
      <pre>ZADD   leaderboard 4820 player:912      score update      O(log n)
 ZREVRANGE leaderboard 0 99 WITHSCORES    top 100        O(log n + 100)
 ZREVRANK  leaderboard player:912          meri rank      O(log n)
 ZINCRBY   leaderboard 50 player:912       score badhao   O(log n)</pre>
-     <p>Andar ek <b>skip list</b> hai jo hamesha sorted rehti hai, aur har node
-     ke saath "mere neeche kitne hain" ka count. Isiliye <b>rank ek gin-ti nahi,
-     ek lookup hai</b> — O(log n). Wahi sawaal jo SQL mein poore table ka scan
-     tha, yahan microseconds ka hai.</p>
+     <p>Large Redis sorted-set encoding mein skip list aur rank spans maintained hote hain;
+     small sets compact encoding use kar sakte hain. Maintained ordering se rank lookup
+     O(log n) hai. Complexity actual microsecond latency guarantee nahi hai.
+     ZREVRANK index0 se start karta hai; UI position aur tie policy separately define karo.</p>
      <p class="tip">🎯 Is track ka ek bada sabak: kabhi-kabhi jawab
      "query optimize karo" nahi hota — jawab <b>alag data structure</b> hota hai.
      Sorted set exactly is sawaal ke liye bana hai.</p>
@@ -452,19 +451,21 @@ ZINCRBY   leaderboard 50 player:912       score badhao   O(log n)</pre>
 leaderboard:weekly:2026-W36      TTL 14 din
 leaderboard:alltime              koi TTL nahi</pre>
      <p>Score update par teenon mein <code>ZINCRBY</code> karo. Teen writes ek
-     write ki jagah — par har ek O(log n) hai aur Redis 1 lakh ops/sec aaram se
-     karta hai. Aur TTL se purane leaderboards apne aap saaf ho jaate hain.</p>
+     write ki jagah. Retry deduplication aur multi-key consistency define karo.
+     Actual throughput hardware, persistence, entry size, scripts aur other traffic par depend
+     karti hai. TTL ki expiry/window policy explicitly set karo.</p>
      <h3>📈 Aur jab 5 crore players ho jaayein?</h3>
-     <p>Ek sorted set mein 5 crore entries = ~4 GB. 4 GB ek Redis instance mein
-     aa toh jaayega, par ab Redis instance ek <b>single point</b> hai jispar 50,000 rps hai.
+     <p>5 crore entries ka memory budget member size, encoding, allocator overhead aur
+     replication par depend karta hai. Representative data se measure karo.
+     One leaderboard key apne write owner par load concentrate karti hai.
      Do raaste:</p>
      <table>
        <tr><td><b>Top-K alag karo</b></td><td>Top 1000 ek chhote set mein (sab wahi dekhte hain), poori list alag</td><td>Read ka 99% ek chhote, replicated set se</td></tr>
        <tr><td><b>Rank ko approximate karo</b></td><td>Score buckets: "tum top 5% mein ho" / "rank ~48,200"</td><td>Exact rank sirf top 1000 ke liye, jahan exact rank sach mein matter karti hai</td></tr>
      </table>
      <p class="tip">🎯 Doosra raasta ek product insight hai, engineering nahi:
-     rank 4,82,391 aur 4,84,100 mein player ke liye <b>koi farak nahi</b> hai.
-     Exactness sirf top ke paas maayne rakhti hai. Exactness kahan chahiye, poochhna
+     approximate rank acceptable hai ya nahi, product owner aur users se agree karo.
+     Rewards/cutoffs ke paas exactness zaroori ho sakti hai. Exactness kahan chahiye, poochhna
      — "kya yahan exact jawab chahiye?" — aksar poora scaling problem hi hata deta hai.</p>`,
   ],
   stages: [
@@ -635,7 +636,7 @@ leaderboard:alltime              koi TTL nahi</pre>
     <code>ORDER BY … LIMIT</code> ya <code>COUNT(*)</code> hai, toh hisaab lagao
     ki data 100x hone par query kitni der legi.`,
   cards: [
-    { front: 'Leaderboard ka sabse mehenga sawaal?', back: '<b>"Meri rank kya hai"</b> — SQL mein <code>COUNT(*) WHERE score &gt; ?</code>, har baar lakhon rows. Aur "meri rank" <b>har</b> player poochhta hai.' },
+    { front: 'Leaderboard rank query costly kab ho sakti hai?', back: '<code>COUNT(*) WHERE score &gt; ?</code> ko many matching entries count karni pad sakti hain. Query plan, rank distribution, concurrency aur cache measure karo. Maintained sorted-set rank ek alternative hai.' },
     { front: 'Redis sorted set kya deta hai?', back: '<code>ZADD</code> update · <code>ZREVRANGE</code> top-K · <code>ZREVRANK</code> rank — <b>teenon O(log n)</b>. Skip list ke span counts se rank <b>gini nahi, padhi</b> jaati hai.' },
     { front: 'Daily/weekly/all-time?', back: '<b>Alag keys + TTL</b>, aur update par teenon mein ZINCRBY. Ek hi set mein time se filter karne ka koi sasta tareeka nahi (set score par sorted hai, time par nahi).' },
     { front: 'Redis aur DB ka rishta?', back: 'DB <b>source of truth</b>, Redis ek <b>derived</b> read structure jo rebuild ho sake. Redis gira = leaderboard gaya, <b>scores nahi</b>.' },
@@ -1815,7 +1816,7 @@ NON-FUNCTIONAL
      <h3>🧩 Shapes ginno — pehle</h3>
      <table>
        <tr><th>Hissa</th><th>Shape</th><th>Failure mode (pehle se pata hai)</th></tr>
-       <tr><td>Driver locations</td><td>Write-heavy, ephemeral</td><td>1.5 crore writes/min DB par = storm</td></tr>
+       <tr><td>Driver locations</td><td>Write-heavy current projection</td><td>1.5 crore updates/min: shard, retention aur recovery budget</td></tr>
        <tr><td>Nearby search</td><td>Geo</td><td>Hot cell (airport, 8 PM)</td></tr>
        <tr><td>Matching</td><td>Contention</td><td>Ek driver do riders ko</td></tr>
        <tr><td>Ride lifecycle</td><td>Workflow</td><td>Beech mein fail → compensation</td></tr>
@@ -1826,15 +1827,15 @@ NON-FUNCTIONAL
      <p><b>Saat shapes — aur tumne inme se ek bhi cheez nayi nahi seekhi.</b>
      Har failure mode ka naam tumhe pata hai, aur har ek ka ilaaj bhi.
      Yahi is poore app ka maksad tha.</p>`,
-    `<h3>📍 Location pipeline — durable nahi, current</h3>
+    `<h3>📍 Location pipeline — current view aur durable history</h3>
      <pre>10 lakh drivers × 15 ping/min = 1.5 crore writes/min
 
-Galat:  har ping DB mein insert
-Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
-        + async stream mein bhi bhejo (analytics, trip history ke liye)</pre>
-     <p>Driver ka 20 second purana location <b>bekaar</b> hai. Location
-     <b>current state</b> hai, history nahi — aur current state ke liye
-     durable store galat aujaar hai.</p>
+Option: low-latency geo projection (Redis GEO / cell → drivers set)
+        + required durable stream/history for recovery, analytics or trip records</pre>
+     <p>Matching ko recent location chahiye; maximum accepted age product contract se define karo.
+     Historical locations trip/safety requirements ke liye useful ho sakti hain.
+     Memory store ya durable database ka throughput schema, hardware, sharding aur durability settings par measure karo.
+     Current state hone se durability automatically unnecessary nahi hoti.</p>
      <h3>🤝 Matching — geo aur contention ek saath</h3>
      <pre>1. query radius cover karne wali cells se candidates lo   (geo)
 2. asli doori + ETA se rank karo                     (baarik chhanna)
@@ -2116,7 +2117,7 @@ Sahi:   in-memory geo store (Redis GEO / cell → drivers set)
     aur yahi is poore app ka asli imtihaan. 🏛️`,
   cards: [
     { front: 'Uber mein kitne shapes?', back: '<b>Saat</b> — write-heavy locations, geo, contention (matching), workflow, realtime fanout, ledger, streaming (surge). Aur ek bhi naya nahi: har failure mode pehle se pata hai.' },
-    { front: 'Driver locations kahan?', back: '<b>In-memory geo store</b> — location current state hai, history nahi. 1.5 crore writes/min durable store par daalna galat aujaar chunna hai. History alag se stream mein.' },
+    { front: 'Driver locations kahan?', back: '<b>Taaza geo projection</b> nearby query serve kare. Memory store ek option hai; required history aur crash recovery ka durable path separately define karo. 1.5 crore updates/min capacity actual workload par measure karo.' },
     { front: 'Matching kaise?', back: 'Cell + padosi se candidates → doori/ETA se rank → top driver par <b>15s ka hold (TTL)</b> → offer → timeout par agla. Reservation pattern, sirf TTL chhota.' },
     { front: 'Payment fail, ride complete?', back: 'Ride <b>reverse nahi ho sakti</b> — service di ja chuki hai. Forward recovery chahiye: retry → outstanding balance → agli ride se pehle settle. Har saga step compensate nahi hota.' },
     { front: 'Design ka sabse kamzor hissa poochha jaaye?', back: 'Ek <b>asli</b> kamzori batao + kamzori ka <b>blast radius</b> + kamzori ka <b>detection</b>. "Koi kamzori nahi" ka matlab hai tumne socha hi nahi.' },

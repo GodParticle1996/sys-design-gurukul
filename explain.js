@@ -118,7 +118,7 @@
           `<rect x="${x}" y="${y}" width="${nw}" height="${NH}" rx="${n.kind === 'db' || n.kind === 'queue' ? 24 : 12}"/>` +
           `<text class="ms-ico" x="${x + 30}" y="${n.y + 10}">${esc(n.icon || '📦')}</text>` +
           `<text class="ms-lbl" x="${x + 56}" y="${n.y + 8}">${esc(n.label)}</text>`;
-        if (st.badge != null && st.badge !== '') {
+        if (!(opts && opts.hideBadges) && st.badge != null && st.badge !== '') {
           const bw = Math.min(380, 24 + String(st.badge).length * 9.2);
           out += `<g class="ms-badge ${tone}"><rect x="${n.x - bw / 2}" y="${n.y + NH / 2 + 6}" width="${bw}" height="28" rx="14"/><text x="${n.x}" y="${n.y + NH / 2 + 26}">${esc(st.badge)}</text></g>`;
         }
@@ -213,6 +213,7 @@
 
     const hasDiagram = (stage.nodes || []).length > 0;
     const diagram = el('div', 'dr-diagram');
+    if (stage.viz && stage.viz.mobile) diagram.classList.add('dr-mobile-fit');
     const stateBox = el('div', 'dr-state');
     const codeBox = el('div', 'dr-codebox');
     if (hasDiagram) wrap.appendChild(diagram);
@@ -252,16 +253,19 @@
         `<span class="dr-dots">${steps.map((_, k) => `<i class="${k < i ? 'seen' : k === i ? 'on' : ''}"></i>`).join('')}</span>`;
       clock.textContent = st.clk ? '⏱ ' + st.clk : '';
       if (hasDiagram) {
-        diagram.innerHTML = SD.viz.svg(stage.nodes, stage.edges || [], { nodes: st.nodes, flows: st.flows }, stage.viz);
+        const mobile = stage.viz && stage.viz.mobile && window.matchMedia('(max-width:640px)').matches;
+        const viz = mobile ? stage.viz.mobile : stage.viz;
+        const visibleNodes = mobile ? stage.viz.mobile.nodes : stage.nodes;
+        diagram.innerHTML = SD.viz.svg(visibleNodes, stage.edges || [], { nodes: st.nodes, flows: st.flows }, viz);
         /* phone par diagram apne dabbe se chauda rakha jaata hai (padhne layak). Jahan is step ka kaam ho raha hai, wahan le chalo. */
         if (diagram.scrollWidth > diagram.clientWidth + 4) {
           /* viz.focus: jab ek node door ho (load balancer → servers) aur dono phone par ek saath na aa sakein, tab hamesha yahi nodes dikhao */
-          const focus = stage.viz && stage.viz.focus;
+          const focus = viz && viz.focus;
           const ids = focus ? focus.slice() : Object.keys(s.nodes || {});
           if (!focus) (s.flows || []).forEach(f => ids.push(f.from, f.to));
-          const xs = stage.nodes.filter(n => ids.indexOf(n.id) > -1).map(n => n.x);
+          const xs = visibleNodes.filter(n => ids.indexOf(n.id) > -1).map(n => n.x);
           if (xs.length) {
-            const mid = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 / ((stage.viz && stage.viz.w) || 1000);
+            const mid = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 / ((viz && viz.w) || 1000);
             diagram.scrollLeft = Math.max(0, mid * diagram.scrollWidth - diagram.clientWidth / 2);
           }
         }

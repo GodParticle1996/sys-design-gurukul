@@ -1,0 +1,36 @@
+/* Source ryzF1vO7N4w reviewed against 240 extracted images and English captions. */
+(function () {
+  const q=(q,choices,answer,why)=>({q,choices,answer,explain:why[answer],choiceExplanations:why});
+  SD.extendLevel('fp-scale-kyun', {
+    objectives:['Completed throughput, in-flight requests aur latency ko alag count karo.'],
+    lesson:[
+      '<h3>Rate aur wait: do alag sawaal</h3><p><b>Throughput</b>: defined window mein kitna work complete hua, divided by window duration. <b>Latency</b>: ek request ke chosen start se chosen finish tak kitna time laga. <b>In-flight count</b>: abhi kitni requests incomplete hain. Units alag hain: requests/second, milliseconds, aur requests.</p><p>Example counter ko naam do: successful completions, total responses, accepted jobs ya completed jobs. In counters ko interchange karne se dashboard misleading ho sakta hai.</p>',
+      '<h3>Lab 52 ke chhe requests</h3><p>Ek worker har request par exactly 10 ms ka modeled work karta hai. Requests FIFO order mein process hoti hain. Arrival-to-completion latency mein queue wait bhi included hai.</p><pre>Request   arrival   start   finish   latency\nA            0        0       10        10 ms\nB            3       10       20        17 ms\nC            6       20       30        24 ms\nD            9       30       40        31 ms\nE           40       40       50        10 ms\nF           65       65       75        10 ms\n\nWindow: t=0 through t=75 ms\nCompleted throughput = 6 / 0.075 = 80 requests/s\nMean latency = (10+17+24+31+10+10)/6 = 17 ms</pre><p>Worker ka service time 10 ms hai, lekin har request ki latency 10 ms nahi. Continuously busy single-worker capacity is model mein 100/s ho sakti hai. Measured window throughput 80/s hai kyunki idle time bhi hai. Yeh machine benchmark nahi.</p>',
+      '<h3>Kaunsa change help karega?</h3><p>Actual bottleneck relieve hua toh throughput aur latency dono improve ho sakte hain. Batching throughput improve karke fill-wait badha sakti hai. Overload queue badha sakta hai. Universal inverse rule nahi hai.</p><p>More app servers tab help karenge jab app-worker capacity limiting ho aur downstream capacity available ho. Same overloaded database ke aage servers badhane se bottleneck move ya worsen ho sakta hai.</p>',
+      '<h3>Measurement ki boundary choose karo</h3><p>Linux <code>ping</code> ICMP round trip naapta hai. Checkout click-to-confirm latency mein network, server queue, business work aur client rendering aa sakte hain. Monitoring tool ka start/end point verify karo.</p><p>Video playback ke liye startup delay aur sustained byte delivery dono matter karte hain. Log pipeline mein intake rate, processing completion, backlog aur data freshness ko separately dekho.</p>',
+      '<h3>Existing practical se verify karo</h3><pre>cd docker-labs/52-scale-math\nnode start.js ex0-slowmo</pre><p>Zero-dependency Node simulation mein queue table print hoti hai. Output se completed count aur duration lekar 80/s khud calculate karo. Arrival times ko equally spaced karne par wait badlega; service time same reh sakta hai.</p><p><a href="docker-labs/52-scale-math/README.md" target="_blank" rel="noopener noreferrer">Lab 52 instructions and proof limits</a> · <a href="https://sre.google/sre-book/monitoring-distributed-systems/" target="_blank" rel="noopener noreferrer">Latency, traffic, errors and saturation</a></p>'
+    ],
+    stages:[
+      {type:'cards',title:'Throughput window ko naam do',goal:'Same six-request trace se rate aur latency separately nikalo.',steps:[
+        {title:'Window fixed hai',say:'t=0 se t=75 ms tak six successful requests finish hui. 75 ms = 0.075 seconds. Dono endpoints ke beech observation duration 75 ms hai.'},
+        {title:'Rate calculate karo',say:'Completed count ko seconds se divide karo.',ask:q('Is window ka successful-completion throughput?', ['6 / 75 = 0.08 requests per second','6 / 0.075 = 80 requests per second','1 / 0.010 = 100 requests per second'],1,
+          ['6/75 ki unit requests per millisecond hai. Seconds mein convert karo.','Window count 6 aur duration 0.075 s hain.','100/s continuously busy modeled capacity hai; observed window mein idle time tha.'])},
+        {title:'Ek request ka wait',say:'D t=9 ms par aayi. Worker D ko t=30 par start karta hai; finish t=40. Queue wait 21 ms, service 10 ms, total latency 31 ms.',ask:q('D ki arrival-to-completion latency?', ['31 ms','10 ms','21 ms'],0,
+          ['40 minus 9 = 31 ms; wait aur service dono included.','10 ms sirf service duration hai.','21 ms queue wait hai; work duration add karo.'])},
+        {title:'Different denominator',say:'Observation window t=0 se t=100 ms kar do aur koi nayi completion na ho. Ab rate 6 / 0.100 = 60/s. Pehle six requests ki individual latencies unchanged hain.'},
+        {title:'Errors ko chhupao mat',say:'Alag ten-second example: 100 responses, jinmein 20 errors. Total response rate 10/s; successful completion rate 8/s. Successful aur failed latency distributions separately report karna useful hai.',ask:q('10 responses/s se kya prove nahi hua?', ['Server ne responses return kiye','Specified interval 10 seconds tha','10 successful business operations/s hue'],2,
+          ['Response counter wahi count karta hai.','Example interval explicitly ten seconds hai.','20 responses errors the. Fast error response ko business success mat count karo.'])}
+      ],lesson:'Counter, boundary, unit aur time window likho. Service time ko total latency mat samjho.'},
+      {type:'quiz',title:'Interview · rate badhao ya delay ghatao?',questions:[
+        q('Intake API jobs jaldi accept karti hai, par worker backlog badh raha hai. Sahi next measurement?', ['Sirf intake response latency','Sirf gateway server count','Completed jobs/s, arrival rate aur backlog age'],2,
+          ['Fast acceptance completion prove nahi karti.','Server count processing progress ka metric nahi.','Input aur completed output compare karo; waiting jobs ki age user impact batati hai.']),
+        q('Throughput high hai. Kya har request fast hai?', ['Haan; throughput latency ka reciprocal hai','Nahi; latency distribution aur workload boundary separately dekho','Haan; simultaneous work queue wait remove karta hai'],1,
+          ['Concurrent/queued systems mein aisa universal reciprocal relation nahi.','Lots of completions aur slow individual requests coexist kar sakti hain.','Parallelism queue wait automatically eliminate nahi karta.']),
+        q('Ping 5 ms hai, checkout confirmation 700 ms. First useful step?', ['Checkout ke measured phases dekho: queue, work, dependencies, client render','Ping ko checkout latency ka final proof maano','Har service ka server count double karo'],0,
+          ['Ping application path ke saare phases measure nahi karta.','ICMP probe aur checkout different operations hain.','Bottleneck identify kiye bina scaling ka effect uncertain hai.'])
+      ]}
+    ],
+    success:['Rate ko explicit window aur success counter ke saath report kar sakte ho.'],
+    cards:[{front:'Throughput versus latency?',back:'Completed work / chosen time window is a rate. One request ka chosen start-to-finish time latency hai. In-flight count teesra metric hai. Units aur boundaries explicitly bolo.'}]
+  });
+})();
