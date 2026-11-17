@@ -43,7 +43,7 @@ node dev/concurrency-test.js     # real Java output vs captures, lesson text and
 
 ## Kya hai isme
 
-**21 tracks · 362 levels · 1551 stages · 728 interview Qs · 1440 flashcards · 362 diagrams · 660 interactive labs · 65 lab projects · 40 soch scenarios · 155 kadam-dar-kadam scenes**
+**21 tracks · 362 levels · 1562 stages · 728 interview Qs · 1449 flashcards · 362 diagrams · 668 interactive labs · 65 lab projects · 40 soch scenarios · 155 kadam-dar-kadam scenes**
 
 ### 🧠 Soch Akhada — soch-vichaar wale scenario sawal
 
