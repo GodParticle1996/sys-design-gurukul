@@ -88,6 +88,12 @@
     tailsampling: { title: 'OpenTelemetry Collector — tail sampling processor', url: 'https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/tailsamplingprocessor/README.md' },
     promlabels: { title: 'Prometheus — metric and label naming (cardinality)', url: 'https://prometheus.io/docs/practices/naming/' },
     promstorage: { title: 'Prometheus — storage (1–2 bytes per sample)', url: 'https://prometheus.io/docs/prometheus/latest/storage/' },
+    s3multipart: { title: 'Amazon S3 — multipart upload limits (5 MiB parts)', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html' },
+    s3lifecycle: { title: 'Amazon S3 — lifecycle rule filters', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html' },
+    igids: { title: 'Instagram Engineering — Sharding & IDs at Instagram (2012)', url: 'https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c' },
+    cassandralww: { title: 'Apache Cassandra — Dynamo architecture (per-column last-write-wins)', url: 'https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo.html' },
+    gdpr12: { title: 'GDPR Article 12 — one-month response', url: 'https://gdpr-info.eu/art-12-gdpr/' },
+    fboutage21: { title: 'Meta Engineering — October 4, 2021 outage details', url: 'https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -387,6 +393,27 @@
     ],
     followup: 'Checkout ka p99 raat ko 3× ho jaata hai par average hara rehta hai, DB pool 85% busy dikhta hai, aur alert hafte mein 15 baar bajta hai. Kaunse teen badlaav karoge, aur kis kram mein?',
     sources: ['signals', 'sloalert', 'postmortem', 'w3ctrace', 'traces', 'tailsampling', 'promlabels', 'promstorage', 'tailatscale'],
+  });
+  add('ig-fp', 'fp-ig-kyun fp-ig-kaise fp-ig-code fp-ig-kab', {
+    title: 'Instagram shuru se: pehle hisaab, phir har data ka apna faisla',
+    misaal: 'Halwai ki dukaan: rasoi chhoti, delivery badi. Stadium ka ek gate poori bheed rok deta hai. Bank ki teen branch: passbook ki photo kal pahunche chalega, balance abhi sahi chahiye.',
+    asli: 'Budget sheet se shuru karo: 1,157 uploads/s, 11.6 lakh views/s — bojh delivery ka. Photo object store mein, DB mein sirf metadata, app server sirf permission (presigned URL). Garam counter ko baanto ya memory mein jodo; like ko set rakho. Feed mein kaam write aur read ke beech khisakta hai (hybrid). Har data ki consistency alag: photo/likes async + CRDT, paise/password quorum. Galti ka daayra cells se, bhoolna keys se.',
+    points: [
+      '<b>Budget sheet:</b> lab 65 ex0 (hisaab) — 109.5 PB/saal, 231 GB/s egress (~$10 lakh/din list price), read:write 1,000:1, likes 57,870/s; photo DB mein ho toh WAL 5.8 GB/s.',
+      '<b>Seedha upload:</b> ex1 (asli HTTP) — app server ne 138 byte JSON padhe, store ne 1 MB; resume ne 4.5 MB bachaaye; expire hua URL same upload ke liye naya; adhoori photo ka commit 409, dobara commit par same id; pending tag wala orphan 24 ghante baad hata; S3 multipart part kam se kam 5 MiB.',
+      '<b>Likes aur feed:</b> ex2/ex3 (model) — garam row ~1,000 likes/s; likes ko pehle worker mile toh 177 ms mein 2,000 workers bhare aur feed gira (feed ko pehle mile toh nahi); 100 counter rows par sab theek. Video ke numbers par pure push 104% busy, hybrid 93% — sabse bura post 600 s → 100 ms, har read ~32 VIP lists.',
+      '<b>Duniya bhar:</b> ex4/ex5 — hedge 63% → 1% dheeme pages tabhi jab jhatke alag hon; strong write ~150 ms (Paxos majority + ~2ε commit wait saath), "7 ms" nahi; Cassandra har column par LWW; cells se galti 1%; DEK mitate hi 4 encrypted copies bekaar, plaintext log nahi.',
+    ],
+    use: 'Pehle budget sheet; blobs object store + CDN; presigned + resumable upload; user id se shard; counter rows / memory + batch; set-based likes; hybrid feed; data ke hisaab se async/CRDT/quorum; cells + wave rollout; crypto-shredding; backoff, circuit breaker, load shedding.',
+    avoid: 'Photos DB row mein; app server se hokar upload; ek garam row par counter; retry par +1; pure push celebrities ke liye; har shard par bina soche hedge; paise ke liye LWW; ek saath global config push; plaintext PII logs mein.',
+    mistake: '"Ek database, ek consistency sab ke liye" maan lena. Instagram mein photo, likes, feed, paise aur config ki zaroorat alag hai: purana dikhna kahin chalta hai, kahin bilkul nahi — har faisle ki keemat naam lekar chuno (lab 65).',
+    compare: [
+      { choice: 'Async + CRDT', when: 'Photo, profile, likes — thoda purana chalega', tradeoff: 'Tez local writes; regions mein der tak alag sach; merge (G-Counter) soch kar chuno' },
+      { choice: 'Quorum (Spanner jaisa)', when: 'Paise, password, ledger', tradeoff: 'Ek sach; har write regions ke beech majority round trip (~150 ms lab mein)' },
+      { choice: 'Cells', when: 'Galti ka daayra chhota rakhna', tradeoff: 'Rollout dheema aur operations zyada; saanjhi cheez (DNS, config) sab gira sakti hai' },
+    ],
+    followup: 'Tumhara photo app 1 crore users se 10 crore par ja raha hai. Budget sheet banao, phir batao: photo, likes, feed aur payouts ke liye kya chunoge, aur har ek ki keemat?',
+    sources: ['s3multipart', 's3lifecycle', 'igids', 'spanner', 'cassandralww', 'gdpr12', 'fboutage21', 'tailatscale'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

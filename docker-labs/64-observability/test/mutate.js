@@ -25,16 +25,34 @@ const MUTATIONS = [
 ];
 const lab = path.join(__dirname, '..'), tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lab64-mut-'));
 fs.cpSync(lab, tmp, { recursive: true });
-let missed = 0;
+// Run the suite once. 'pass' and 'fail' come from node --test itself; anything else (spawn error, signal, timeout,
+// a crash before any test ran) is an infrastructure error and must never count as a caught mutation.
+function suite() {
+  const r = spawnSync(process.execPath, ['--test', 'test/core.test.js'], { cwd: tmp, encoding: 'utf8', timeout: 120000 });
+  if (r.error || r.signal) return { kind: 'infra', why: r.error ? r.error.message : `signal ${r.signal}` };
+  const failed = Number((/^ℹ fail (\d+)/m.exec(r.stdout) || [])[1]), passed = Number((/^ℹ pass (\d+)/m.exec(r.stdout) || [])[1]);
+  if (!Number.isFinite(failed) || !Number.isFinite(passed)) return { kind: 'infra', why: 'no test summary' };
+  if (r.status === 0 && failed === 0) return { kind: 'pass' };
+  const name = (/^✖ (.+?) \(\d/m.exec(r.stdout) || [])[1] || '?';
+  return { kind: 'fail', why: name };
+}
+const base = suite();
+if (base.kind !== 'pass') {
+  console.log(`baseline did not pass (${base.kind}: ${base.why || 'tests failed'}) — fix that first; no mutation score.`);
+  fs.rmSync(tmp, { recursive: true, force: true });
+  process.exit(2);
+}
+let missed = 0, infra = 0;
 for (const [file, from, to, claim] of MUTATIONS) {
   const f = path.join(tmp, file), src = fs.readFileSync(f, 'utf8');
   if (src.split(from).length !== 2) throw new Error(`mutation anchor not found once: ${file}: ${from}`);
   fs.writeFileSync(f, src.replace(from, to));
-  const r = spawnSync(process.execPath, ['--test', 'test/core.test.js'], { cwd: tmp, encoding: 'utf8' });
+  const r = suite();
   fs.writeFileSync(f, src);
-  if (r.status === 0) missed++;
-  console.log(`${r.status === 0 ? 'MISSED' : 'caught'}  ${claim}`);
+  if (r.kind === 'pass') missed++;
+  if (r.kind === 'infra') infra++;
+  console.log(`${r.kind === 'pass' ? 'MISSED' : r.kind === 'infra' ? 'ERROR ' : 'caught'}  ${claim}${r.kind === 'fail' ? `  (failed: ${r.why})` : r.kind === 'infra' ? `  (${r.why})` : ''}`);
 }
 fs.rmSync(tmp, { recursive: true, force: true });
-console.log(`${MUTATIONS.length - missed} / ${MUTATIONS.length} mutations caught`);
-process.exitCode = missed ? 1 : 0;
+console.log(`${MUTATIONS.length - missed - infra} / ${MUTATIONS.length} mutations caught${infra ? ` · ${infra} infrastructure errors` : ''}`);
+process.exitCode = missed || infra ? 1 : 0;

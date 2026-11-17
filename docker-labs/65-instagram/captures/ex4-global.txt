@@ -1,0 +1,35 @@
+ex4 — duniya bhar mein (hedging: seeded model; RTT maane hue; conflicts: asli merge code)
+
+1) Ek page = 100 shards se jawab (sab chahiye). Har shard: median 10 ms, p95 ~20 ms, 1% chance 200 ms ka jhatka. 20,000 pages:
+   tareeka                                          page p50    page p99    100 ms se dheeme pages    extra requests
+   hedge nahi                                        208.3 ms    225.3 ms                   63.25%            0.0%
+   20 ms baad replica se bhi poochho (jhatke aazaad)   29.8 ms    204.8 ms                    1.03%            5.1%
+     … par aadhe jhatkon ka kaaran replica par bhi    32.6 ms    222.7 ms                   39.91%            5.1%
+     … har jhatka replica par bhi                    208.3 ms    225.2 ms                   63.75%            5.1%
+   Video: (1%)² → "0.001 ya 0.01%" — sahi 0.0001 = 0.01%; 100 shards par 1 − 0.9999¹⁰⁰ = 0.995% — model se mel.
+   → Hedge ~5% extra requests mein 200 ms ke jhatke kaat deta hai — par tabhi jab replica ka jhatka alag ho. Saath hi page ka p50
+     ~30 ms ho jaata hai: 100 shards mein lagbhag hamesha koi na koi 20 ms paar karta hai, aur hedge 20 ms ke baad hi jaata hai.
+     Replica thoda purana data de sakta hai (replication lag); jo request dobara chalna safe nahi, use hedge mat karo.
+
+2) Strongly consistent write (Spanner jaisa, ek Paxos group): majority ka "haan" + commit wait (~2ε, Paxos ke saath-saath).
+   TrueTime [now − ε, now + ε] deta hai; ε = 7 ms maano toh commit wait ~14 ms — ε khud nahi, interval ki poori chaudai.
+   Maane hue round trips: Tokyo↔Virginia ~150 ms, Tokyo↔Frankfurt ~230 ms. Leader Tokyo, 3 voting regions:
+   write ≈ 150 ms (sabse paas wale doosre region ka round trip) — video ka "sirf 7 ms" nahi.
+   Regions paas-paas (round trip 2–3 ms): write ≈ 14 ms — tab commit wait (2ε) hi bada hissa.
+   (Disk, CPU aur kai Paxos groups wale transaction ka kharcha is hisaab mein nahi.)
+   Async replication (video ka AP raasta): local commit ~5 ms, baaki regions baad mein.
+   → Spanner ka synchronous Paxos cross-region round trip deta hai; TrueTime ka commit wait us ke saath-saath chalta hai. Isliye asli setups
+     voting replicas ek-do paas ke regions mein rakhte hain. Lock-free snapshot reads local ho sakte hain jab replica utna up-to-date ho.
+
+3) Ek business profile, do regions, lagbhag ek saath (Tokyo ki ghadi 5 ms aage — maana):
+   alag field — bio (Tokyo), phone (Paris):
+     poori row, LWW (video ka model): bio "hello Asia", phone "+33 111" → Paris ka phone gaya
+     har column ka LWW (Cassandra aise karta hai): bio "hello Asia", phone "+33 222" → dono bache
+   same field — Tokyo "hello Asia" (asli 1000), Paris "bonjour" (asli 1003, yaani baad mein):
+     LWW: "hello Asia" jeeta — ghadi 5 ms aage thi, isliye pehle wala jeet gaya
+     vector clock: Tokyo {tokyo:1} vs Paris {paris:1} → saath-saath hue (concurrent) → dono rakho, app ya user tay kare
+     baad ka edit jisne pehla dekha tha: {tokyo:1, paris:1} vs {tokyo:1} → pehla naya (doosre ko dekh chuka)
+   barabar timestamp (1000 = 1000): A pehle aaye toh "A", B pehle aaye toh "A" — writer id se tay, har replica par same
+   → LWW ka nuksaan poori row par lagao toh zyada; Cassandra column-level hai. Ghadi ka farq jeet tay kar deta hai,
+     aur barabar timestamp par ek pakka niyam chahiye (lab: writer id; Cassandra: value ki tulna) — warna replicas alag rahenge.
+     Vector clock "saath-saath hua" pakad leta hai; merge phir bhi kisi ko likhna padta hai (likes jaise counter ke liye G-Counter, ex2).

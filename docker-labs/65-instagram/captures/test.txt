@@ -1,0 +1,14 @@
+✔ ex0: budget sheet arithmetic (1.202238ms)
+✔ ex1: presigned upload, resume, orphan sweep, tampering (real HTTP) (69.154859ms)
+✔ ex2: hot row vs counter rows, retries, region counters (197.986387ms)
+✔ ex3: feed model calibration and hybrid trade (88.390442ms)
+✔ ex4: hedging, quorum write, conflicts (333.738198ms)
+✔ ex5: blast radius and crypto-shredding (3.498699ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1344.633396
