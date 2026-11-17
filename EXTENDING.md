@@ -892,3 +892,19 @@ badlaav kaam karte hain. Commands: `tenant …`, `token …`, `cost …`, `capac
 - Codex ne jobs 7–9 mein in commands ko boundaries par jaancha (token expiry, capacity rounding, fanout ke columns, mission ko bina seekhe jeetna).
   Naya command jodo toh yahi probes chalao: galat/inherited naam, 0/NaN/bahut bade numbers, `sim reset`, aur reordered solution.
 
+
+## 16. 🎥 System Design School course (`sds-*`) — 22 videos
+
+- Source: YouTube channel @SystemDesignSchool, saare 22 lambe videos (2026-11-09 → 11-17). 19 Codex ne banaye, aakhri 3
+  (10 Patterns, Search Autocomplete, 0 to 1M) pane 2 Claude ne. Research evidence repo ke bahar hai:
+  `VixiApps/research/system-design-school/` (`DELIVERY.md` = kaunsa video kahan gaya, `reviews/<id>/ANALYSIS.md` =
+  timestamp-wise review, `media/` = downloads aur frames). App ke diagrams original hain; source frames sirf research mein.
+- Files: `data-sds-*.js` (3 naye tracks `sds-routing`, `sds-contracts`, `sds-live` + purane levels mein jode stages),
+  `video-sources.js` (`SD.videoLibrary`: id, title, chapters, levels; player click par hi load hota hai),
+  `practical-labs/<naam>/` (chhote local experiments; `node_modules` git mein nahi), `dev/sds-test.js`.
+  Database-only hissa SQL Gurukul mein hai (`sql-gurukul/data-sds-*.js`, wahan `dev/sds-test.cjs`).
+- Cross-app links purane format `#level=<id>` mein aate hain; `SD.nav.route()` unhe `#level/<id>` ki tarah kholta hai,
+  aur locked level par track map ke upar "Linked lesson abhi locked hai" note dikhata hai.
+- Naya video jodna: pehle `reviews/<id>/ANALYSIS.md`, phir maujooda level badhao (duplicate track mat banao), phir
+  `video-sources.js` entry + fixtures + `DELIVERY.md` row. Checks: is file ke saare suites + `node dev/sds-test.js`.
+- Dhyan: sds content ka bada hissa English-heavy hai. Naya text simple Hinglish mein likho; purana text sudharna baaki hai.
