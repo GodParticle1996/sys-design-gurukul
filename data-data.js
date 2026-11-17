@@ -3400,7 +3400,7 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
      Agar kisi hash ke shuru mein 20 zero mile, toh shayad tumne ~2²⁰ items dekhe hain
      (kyunki 20 zero milne ki sambhavna 1/2²⁰ hai). Bahut saare registers rakh ke
      is anumaan ka average nikaalo — bas.</p>
-     <pre>16,384 registers  →  12 KB memory  →  ±0.81% galti
+     <pre>16,384 registers  →  12 KB memory  →  ~0.81% standard error (max nahi)
    10 lakh unique?  12 KB
    10 crore unique? 12 KB      ← memory BADALTI HI NAHI</pre>
      <p class="tip">🎯 Aur ek bahut kaam ka gun: <b>HLLs merge ho sakte hain.</b>
@@ -3522,7 +3522,7 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
       title: 'Structure → kaam',
       pairs: [
         { left: 'Bloom filter', right: '"Maangi gayi cheez set mein hai?" — memory ke badle thoda jhooth', explain: 'Membership test. "Nahi" pakka, "haan" shayad. LSM SSTables, cache penetration, Safe Browsing.' },
-        { left: 'HyperLogLog', right: '"Kitne UNIQUE hain?" — fixed memory mein', explain: '12 KB mein ±0.81%, chahe 10 crore ho. Aur merge ho sakta hai, isliye distributed counting muft mein.' },
+        { left: 'HyperLogLog', right: '"Kitne UNIQUE hain?" — fixed memory mein', explain: '12 KB mein ~0.81% standard error (typical phailaav, upper limit nahi), chahe 10 crore ho. Aur merge ho sakta hai, isliye distributed counting muft mein.' },
         { left: 'Count-Min Sketch', right: '"Maanga gaya item kitni baar aaya?" — frequency ka anumaan', explain: 'Heavy hitters dhoondhne ke liye — top-k, rate limiting, hot key detection. Ginti hamesha asli se zyada ya barabar hoti hai, kabhi kam nahi.' },
         { left: 'Counting bloom filter', right: 'Bloom, par DELETE ke saath', explain: 'Bits ki jagah chhote counters. ~4x memory, par ab item hataya ja sakta hai.' },
         { left: 'Exact hash set', right: 'Jab galat jawab ka daam bada ho', explain: 'Payments, balances, permissions. Approximation ka faayda memory hai — aur payments, balances aur permissions mein memory sabse sasti cheez hai.' },
@@ -3583,7 +3583,7 @@ CHECK "rahul":   h1→bit 55 = 0        → "PAKKA nahi hai" ✅ (ek 0 kaafi hai
     { front: 'Bloom filter kya bolta hai?', back: "<b>\"Pakka nahi hai\"</b> (hamesha sach) ya <b>\"shayad hai\"</b> (kabhi-kabhi jhooth). Healthy,complete insert-only filter mein false negative nahi;lag,corruption aur unsafe deletion scope ke bahar hain. Isi asymmetry se bloom filter kaam ka hai." },
     { front: 'Bloom se delete kyun nahi?', back: 'Bits doosre items ke saath <b>share</b> hote hain — 0 karne se doosre items ka jawab toot jaayega (false negative). Delete ke liye <b>counting bloom</b> (~4x memory).' },
     { front: 'Bloom ka size kaise chunein?', back: 'Pehle poochho: <b>false positive ka daam kya hai?</b> Ek extra DB lookup → 1-5% theek. User ko dikhne wali galti → bloom galat aujaar hai. Formula: <code>m = -n·ln(p)/(ln2)²</code>.' },
-    { front: 'HyperLogLog?', back: '"Kitne <b>unique</b>?" — 16,384 registers = <b>12 KB</b>, ±0.81%, chahe 10 crore ho. Items store hi nahi hote — sirf "sabse zyada kitne leading zeros dekhe".' },
+    { front: 'HyperLogLog?', back: '"Kitne <b>unique</b>?" — 16,384 registers = <b>12 KB</b>, ~0.81% standard error (max nahi), chahe 10 crore ho. Items store hi nahi hote — sirf "sabse zyada kitne leading zeros dekhe".' },
     { front: 'HLL ka best gun?', back: 'HLL <b>merge</b> ho sakta hai. Har server apna rakhe, baad mein sab jod do — distributed unique count bina kisi central counter ke. (Redis: PFADD/PFCOUNT/PFMERGE.)' },
     { front: 'Bloom production mein kahan?', back: '<b>LSM ki har SSTable</b> par (read amplification ghatata hai) · <b>cache ke aage</b> (jo keys hain hi nahi, un keys ko DB tak jaane se rokta hai) · Chrome Safe Browsing.' },
   ],
