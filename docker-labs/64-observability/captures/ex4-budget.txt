@@ -1,0 +1,34 @@
+ex4 — error budget aur alert (hisaab + ek mahine ka minute-dar-minute model; traffic barabar maana)
+
+1) Budget, 30 din ka mahina:
+   (budget = poora band rehne ke minute, ya utne hi "poore fail minute" ke barabar errors)
+   SLO 99.90% → 43.20 min
+   SLO 99.95% → 21.60 min
+   SLO 99.99% → 4.32 min
+   Video: 5 min kharch → 38.2 min bache (hari jhandi). 2 hafte mein 40 min → 3.2 min bache (deploy rok).
+   Requests mein bhi gin sakte ho: 10 crore requests/mahina, 99.9% → 1,00,000 fail ho sakti hain.
+
+2) Paanch incidents, SLO 99.9%. "Kab" = incident shuru hone ke kitne minute baad, (us waqt tak budget kitna jala):
+   V = PAGE: error rate ≥ 1%, 10 min (video ka 1%; window maana)
+   A = PAGE: error rate ≥ SLO ki seema (99.9% par 0.1%), 10 min  (SRE Workbook approach 1)
+   B = PAGE: burn > 14.4 (1 ghanta aur 5 min)
+   C = PAGE: burn > 6 (6 ghante aur 30 min)
+   D = TICKET: burn > 1 (3 din aur 6 ghante)
+   (V aur A: pichhle 10 min ka chalta average; B–D: SRE Workbook Table 5-8, lambi aur chhoti window dono upar hon)
+   incident                    poora jala   V               A               B               C               D
+   poora outage, 20 min          46.30%     1 min (2.31%)   1 min (2.31%)   1 min (2.31%)   3 min (6.94%)   5 min (11.57%)
+   2% errors, 6 ghante           16.67%     5 min (0.23%)   1 min (0.05%)   44 min (2.04%)  109 min (5.05%) 217 min (10.05%)
+   0.3% errors, 7 din            70.00%     —               4 min (0.03%)   —               —               1441 min (10.01%)
+   5% errors, 5 min               0.58%     2 min (0.23%)   1 min (0.12%)   —               —               —
+   0.2% errors, 10 min            0.05%     —               5 min (0.02%)   —               —               —
+
+   Outage khatam hone ke baad alert kitni der bajta raha (reset time): V 9 min · A 9 min · B 4 min · C 29 min · D 359 min
+   (chhoti window ki wajah se B 4 min mein chup; D ki chhoti window 6 ghante ki hai)
+
+   → Video ka 1% rule (V): 0.3% × 7 din (budget ka 70%) aur 0.2% kabhi nahi pakadta — par 5 min ke 5% jhatke par 2 min
+     mein jagata hai. Seedha threshold A (SLO ki seema) har incident 5 min ke andar pakadta hai, par 0.58% aur 0.05% budget
+     wale jhatkon par bhi raat 3 baje jagata hai. Aise page baar-baar aayein toh log alerts ko nazarandaaz karne lagte hain.
+   → Burn-rate alerts (B, C, D) sirf tab page karte hain jab budget sach mein khatre mein ho. Keemat: 2% wale 6 ghante ke
+     incident par page 44 min baad (tab tak 2% budget jal chuka). Dheemi jalan (0.3%, 7 din) par page nahi, ticket —
+     ~1 din baad, 10% budget par. Rule ka chunaav precision, recall, detection time aur reset time ka tradeoff hai;
+     Workbook ke numbers shuruaati maan hain, apne SLO aur traffic par tune karo.

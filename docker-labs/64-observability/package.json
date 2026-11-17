@@ -1,0 +1,1 @@
+{"name":"lab-64-observability","version":"1.0.0","private":true,"scripts":{"start":"node start.js","test":"node --test test/*.test.js","mutate":"node test/mutate.js"},"engines":{"node":">=24"}}

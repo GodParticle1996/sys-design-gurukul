@@ -405,7 +405,108 @@ params/responses and owner tokens with a running lease in the idempotency store;
 assumptions; Stripe API v1 scope; 409 retry nuance; "three total attempts per caller" for 27×; EBS attribution and Netflix
 citation; 11 mutation guards in the tests.
 
+## Video 13: Microservices — Know When NOT to Use (2026-11-16)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-13-microservices/` (the first download attempt hit
+an HTTP 403; a retry worked). Built by Claude. Levels `fp-micro-kyun` → `fp-micro-kaise` → `fp-micro-code` → `fp-micro-kab`
+(`data-v2-fp-micro-1…4`, group "🧩 Microservices: Kab Nahi", guide `micro-fp`, sources `conway68`, `monolithfirst`,
+`tailatscale`, `shopifymono`, `tx`, `pgmaxconn`). Builders: `sdg-codex-xp/jobs/fp13/levels/*.py`. Lab 63
+(`docker-labs/63-microservices`, Node 24, zero deps; ex0 runs its own HTTP server on 127.0.0.1:0): a REAL comparison of an
+in-process function call, JSON serialize/parse and loopback HTTP (keep-alive vs new connection, 3 runs) with an assumed
+0.5 ms same-data-center row; a seeded fan-out model (sequential vs parallel, tail exposure 1 − 0.99^n); an exhaustive
+crash-point count for one ACID transaction vs a memory-only saga vs a saga with a durable log vs 2PC (wrong end state, visible
+middle state, blocked locks); and arithmetic for monolith copies (idle RAM vs DB connections) and Conway/Brooks (communication
+paths, expand/contract deploys for a field rename).
+
+Lab 16 (Prime Video) already runs the boundary tax and monolith copies; the `saga`, `dbperservice` and `decompose` levels teach
+the patterns. Corrections taught: the "100,000×" ratio holds only once a real network hop is added (loopback HTTP is
+~6,500×); "10 services = 20 ms" assumes sequential calls, while tail exposure grows either way; cross-database transactions
+exist (2PC/XA) at the cost of blocking; extracting a module is not "copy-paste" (network calls, sagas, deploy order); copies
+multiply DB connections, not just RAM; fault isolation is a fifth reason to split; the video's DZone/CNCF statistics were not
+verified by this course (Codex found no primary study; CNCF's 2025 "42%" is service-mesh adoption, and "35% more
+debugging" is not "35% of engineering time").
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 63 (`sdg-codex-xp/jobs/fp13/LAB-REVIEW.md`, 11 findings) and then the levels
+and guide (`LEVELS-REVIEW.md`, 12 findings) before the first push; Claude fixed all of them: ex2 rebuilt with operation-id receipts
+(idempotent saga recovery even when recovery crashes), a reader after every step for every protocol (2PC readers can see the
+middle), and participant knowledge for 2PC blocking (a logged COMMIT not yet delivered still blocks); ex0 compares equal work
+and labels best-batch averages vs HTTP medians; a shared-pause fan-out case; Conway/Brooks counts called potential links with no
+headcount verdict; "primarily" (not exclusively) organizational reasons; breaking vs compatible API changes; PCI scope needs
+real segmentation; local functions can fail too; tests guard final states, repeated recovery and percentiles.
+
+## Video 14: Observability — How to Not Fly Blind (2026-11-16)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-14-observability/`. Built by Claude. Levels
+`fp-obs-kyun` → `fp-obs-kaise` → `fp-obs-code` → `fp-obs-kab` (`data-v2-fp-obs-1…4`, group "🔭 Observability: Andhe Mat Udo",
+guide `obs-fp`, sources `signals`, `sloalert`, `postmortem`, `w3ctrace`, `traces`, `tailsampling`, `promlabels`, `promstorage`,
+`tailatscale`). Builders: `sdg-codex-xp/jobs/fp14/levels/*.py`. Lab 64 (`docker-labs/64-observability`, Node 24, zero deps;
+ex1 runs four HTTP servers on 127.0.0.1:0): arithmetic for the video's 100-request example (average vs nearest-rank and linear
+p99 vs max), sessions of k requests, and a seeded three-host case (average of p99s vs pooled p99 vs merged histogram); a REAL
+four-service HTTP mesh with W3C `traceparent` propagation (span tree from parent ids, an assumed 50 ms clock skew that reorders
+logs sorted by timestamp, and a service that drops the header); signal-cost arithmetic (logs vs metrics bytes, label
+cardinality) and a seeded head-vs-tail sampling model; a seeded FIFO queue simulation (M/M/1, D/D/1, M/D/1, M/M/8, 50%–105%
+busy) checked against the formulas; and a minute-by-minute 30-day error-budget model comparing a plain threshold with the SRE
+Workbook's multiwindow burn-rate alerts on five incidents.
+
+The `observability` and `slo` levels (Resilience) already teach RED/USE, signal roles, liveness vs readiness, symptom alerts and
+error budgets; labs 42–43 cover chaos and health checks. Corrections taught: with exactly 1% slow requests the nearest-rank p99
+does not show them (the video's own example); percentiles describe requests, not users; averaging per-host p99s is not a
+percentile; sorting logs from different machines by timestamp can invert causality — parent span ids give the structure;
+"50% busy, nobody waits" holds only without randomness (with random arrivals half the customers wait, mean wait = one service
+time); at 99% the wait is large but finite (~99× service time) and unbounded only at ≥ 100%; ρ/(1−ρ) is the M/M/1 waiting
+formula, not the utilization law (U = X·S, which says throughput grows linearly); "alert at 70%" is a single-server rule of
+thumb (a pool of 8 at 85% waits ~12× less than one server); metrics are cheap only with bounded labels; head sampling
+discards most error traces.
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 64 (`sdg-codex-xp/jobs/fp14/LAB-REVIEW.md`, 11 findings) and then the levels
+and guide (`LEVELS-REVIEW.md`, 11 findings) before the first push; Claude fixed all of them: `traceparent` validation (zero ids,
+version `ff`, future versions) and caller traces that render from an external parent; histogram edge cases (empty → NaN, the
+`+Inf` bucket is a cap); burn rules use the Workbook's strict `>` (C/D 109/217 min, ticket 1,441 min) and report reset times;
+the video's own 1% rule is a separate column (it never catches the 0.3% slow burn); metric bytes are compressed disk samples,
+not RAM; tail sampling keeps errors only from complete, timely traces; parent ids give relationships, not a full timeline;
+questions no longer derive tail odds from a p99 value, fix the direction of an average-of-p99s error, use a mean-wait formula
+for p99, or freeze releases without a stated policy; correction rows for monitoring vs observability, "optimize p99" and
+"remove every dashboard metric". Tests grew to 6 plus `npm run mutate` (19 deliberate bugs, all caught).
+
+Queued (not mine to change here): the Flow `latency` level (`data-flow.js`, currently also modified by the other agent's
+uncommitted work) calls p99 = 5 s for 99 fast + 1 slow request and counts requests as people; Lab 64 and `fp-obs-kyun`
+now point out the conflict.
+
+## Video 15: How to Build Instagram from Scratch — capstone (2026-11-16)
+
+Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-15-global-system/` (92 min, 4 parts). Built by
+Claude. Levels `fp-ig-kyun` → `fp-ig-kaise` → `fp-ig-code` → `fp-ig-kab` (`data-v2-fp-ig-1…4`, group "📸 Instagram: Sab Jodkar",
+guide `ig-fp`, sources `s3multipart`, `s3lifecycle`, `igids`, `cassandralww`, `gdpr12`, `fboutage21`, reusing `spanner`,
+`tailatscale`). Builders: `sdg-codex-xp/jobs/fp15/levels/*.py`. System Samrat 58,000 → 59,000 XP. Lab 65
+(`docker-labs/65-instagram`, Node 24, zero deps; ex1 runs two HTTP servers on 127.0.0.1:0): the video's budget sheet
+recomputed (uploads, storage, views, egress bill, likes, blob-in-Postgres WAL and TOAST, copies vs 10+4 erasure coding, fibre
+latency and handshakes); a REAL presigned-URL upload (HMAC, expiry, resumable offsets, a pending-tag lifecycle sweep for orphans);
+a 1 ms time-step model of one viral photo (hot row vs counter rows, shared app workers), retries (counter vs set) and three-region
+counters (LWW vs naive vs G-Counter, real merge code); a follower-count model calibrated to the video (Ronaldo 600 M, mean 300)
+for pull vs push vs hybrid feeds; a seeded hedged-request model (independent vs correlated stalls), quorum-write arithmetic and
+row vs column LWW vs vector clocks; cell rollout waves and real AES-256-GCM crypto-shredding.
+
+Existing material reused rather than repeated: the Instagram story level (logical shards, IDs), labs 14, 57, 58, 60, 62–64,
+26/52, 21/59. Corrections taught: 500 KB resumable chunks do not fit S3 multipart (5 MiB minimum part); S3 lifecycle filters
+select by prefix/tags/size, so tag uploads `pending` instead of expecting a "not tagged" rule; 150-byte rows fit ~72 lakh per
+GiB raw (not 1 crore); hybrid feeds barely cut average writes (~11%) but cap the worst single post (600 s → 100 ms); hedging
+needs independent stalls and adds the hedge delay to the median; (1%)² is 0.0001; Spanner writes pay a Paxos majority round trip
+plus commit wait, not "just 7 ms"; Cassandra resolves conflicts per column; DNS does not route by user id; crypto-shredding does
+not reach plaintext copies; GDPR's limit is one month (extendable), not exactly 30 days.
+
+Review: Codex (GPT-6.1-Sol xhigh) fact-checked lab 65 (`sdg-codex-xp/jobs/fp15/LAB-REVIEW.md`, 13 findings incl. 1 P1) and then
+the levels and guide (`LEVELS-REVIEW.md`, 8 findings) before the first push; Claude fixed all of them: resuming after URL expiry
+renews the URL for the same upload instead of publishing a partial object; the app records each session's size and SHA-256,
+commits only a complete match, returns the same photo id on a repeated commit, and freezes published bytes; LWW ties break on
+writer id so replicas agree; commit wait is ~2ε, not ε; the viral-photo model exposes its admission order (likes-first vs
+feeds-first decides the collateral outage) and conserves every like; the feed model reports utilization (pure push is 104% of
+the video's own capacity, hybrid 93%) and guards thresholds; G-Counter states its single-region-per-like condition (cross-region
+retry counts twice; unlike needs an OR-Set); the mutation runner requires a passing baseline and treats crashes and timeouts as
+errors (also fixed in lab 64); new correction rows for presigning, QUIC, UUIDv7/Snowflake, social graph/Bloom, Explore stages,
+metastable recovery and GDPR Articles 12/17. Tests stay at 6; `npm run mutate` now injects 39 bugs, all caught. Clean-tree max
+XP is 64,610, so System Samrat at 59,000 is 91.3%.
+
 ## Next
 
-Continue with numbered video 13, `cmiAEDVcGbE` (Microservices — Know When NOT to Use); check the existing decomposition
-levels, the Prime Video story and lab 16 first. Videos 1–12 are built; three remain.
+All fifteen numbered videos are built. Possible follow-ups: fix the Flow `latency` p99 example (see Video 14), and revisit
+earlier topics whenever a later lab changes an assumption.

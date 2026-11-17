@@ -1,0 +1,32 @@
+ex1 — photo seedha storage mein (asli HTTP, ek hi machine par; object store aur app server dono chhote Node servers; ghadi nakli)
+
+1) Ek photo (1 MB), 500 KB ke chunks, presigned URL se:
+   app server ne padhe: 138 byte (sirf JSON body) · object store ne padhe: 10,00,000 byte · metadata rows: 1
+   → 1 MB app server ko chhoota hi nahi: app ka bandwidth, connection aur memory bachi. (Video ka "dheema upload ek worker
+
+     pakadta hai" blocking server par sahi; Node jaisa async server thread nahi rokta, par bytes ka bojh phir bhi uthata.)
+
+2) Tunnel: 5 MB, 500 KB ke chunks, 9 chunk (4.5 MB) ke baad connection gaya:
+   HEAD se pata chala store ke paas 45,00,000 byte hain → baaki 5,00,000 byte bheje (shuru se: 50,00,000).
+   Dhyan: Amazon S3 multipart mein har part kam se kam 5 MiB (aakhri chhod kar) — 500 KB ke chunks ke liye apna
+   resumable upload (ya Google Cloud Storage jaisa resumable API, 256 KiB ke multiples) chahiye.
+
+3) Phone upload ke baad, "ho gaya" bolne se pehle band ho gaya (orphan):
+   objects: 3 (2 final, 1 pending) → 25 ghante baad lifecycle sweep ne 1 hataya; bache 2, sab final.
+   orphan object gaya: true · rows: 2 (orphan ki row kabhi bani hi nahi)
+   → rule "status=pending" tag ko pakadta hai: upload par tag pending, commit par final. S3 lifecycle filter tag/prefix se
+     objects CHUNTA hai; "jis par tag NAHI" jaisa ulta filter nahi hota — isliye tag upload ke waqt hi lagao.
+
+     (tmp/ prefix wala rule chuno toh commit par photo ko final key par copy karo — tag badalne se prefix rule nahi rukta.)
+
+4) URL ke saath chhed-chhaad:
+   doosri file ka naam daala → HTTP 403 · 16 min baad (URL 15 min ka) → HTTP 403 · store ne mana kiya: 2
+   → signature ek file, ek method aur ek expiry ke liye hai. Server ne permission di, bytes nahi dhoye.
+
+5) Upload ka contract (app ka apna niyam — presigned URL akela aisi guarantee nahi deta):
+   URL beech mein expire (900 / 1,000 byte ke baad): naya URL same key ke liye → mila, baaki 100 byte, photo id 3
+   adhoori photo (600 / 1,000) ka commit → HTTP 409; same upload ka dobara commit (reply kho gaya tha) → same id 3
+   publish ke baad same URL se bytes jodna → HTTP 409
+   → app server size + SHA-256 yaad rakhta hai aur poori, sahi photo par hi row banata hai. S3 ka presigned URL expiry tak
+     dobara chal sakta hai aur same key ko badal sakta hai — isliye final object ko alag key/version par rakhna app ka kaam.
+     Presigned URL banane ke liye S3 se poochhna zaroori nahi: app ka SDK apni credentials se local sign karta hai (jaise is lab ka sign()).

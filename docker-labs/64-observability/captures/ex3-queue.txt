@@ -1,0 +1,28 @@
+ex3 — line kab phatti hai (seeded simulation, har customer gina; checkout average 1 min; "wait" = line mein, apna checkout chhod kar)
+
+1) Ek cashier, log random aate hain, checkout ka time bhi random (M/M/1), 10 lakh customers:
+   gap     busy (ρ)   formula ρ/(1−ρ)·S   simulated wait   kitne ruke   p99 wait   ghante mein nikle
+   120 s    50.0%      1.00 min            1.00 min       50.0%    7.92 min   30.0
+    75 s    80.0%      4.00 min            4.03 min       79.9%    22.3 min   48.0
+    65 s    92.3%      12.0 min            12.2 min       92.2%    63.9 min   55.4
+   → 50% par "koi wait nahi karta" galat: aadhe customers rukte hain, aur average wait = ek checkout (video ka apna formula).
+   → "Ghante mein nikle" aane walon ke barabar: busy hisse ke saath kaam seedha badhta hai (utilization law, U = X·S).
+     Seedha nahi badhta toh WAIT. "50% par 1000 rps toh 100% par 2000" throughput ke liye lagbhag theek; latency ke liye nahi.
+
+2) Wait ki jad randomness hai:
+   fixed gap, fixed checkout (D/D/1)    50.0%: wait 0.00 min, ruke 0.0% · 92.3%: wait 0.00 min, ruke 0.0%
+   random gap, fixed checkout (M/D/1)   50.0%: wait 0.50 min, ruke 50.0% · 92.3%: wait 6.01 min, ruke 92.3%
+   M/D/1 formula 92.3% par 6.00 min — M/M/1 ka aadha. Jitna kam utaar-chadhaav, utni chhoti line.
+
+3) 99% busy: formula 99 min. Chhe seeds, 40 lakh customers har ek:
+   simulated wait: 90.4 min · 94.7 min · 106.2 min · 90.1 min · 99.6 min · 118.2 min
+   → bahut bada aur dheere tikta hai, par anant nahi. Anant (bina had) sirf 100% ya 100% se upar:
+   100.0%: 10,000 ke baad 40.4 min · 1,00,000 ke baad 107.1 min · 10,00,000 ke baad 486.1 min
+   105.0%: 10,000 ke baad 253.6 min · 1,00,000 ke baad 1997.7 min · 10,00,000 ke baad 22742.2 min
+   → 100% aur 105% par wait run ke saath badhta hi jaata hai — koi "average" nahi tikta.
+
+4) "70% par alert" — kitne cashier hain, us par nirbhar (85% busy dono mein, 10 lakh customers):
+   1 cashier: formula 5.67 min · simulated 5.69 min · ruke 84.9%
+   8 cashier: formula 0.48 min · simulated 0.48 min · ruke 57.0%
+   → bade pool (DB connections, threads, servers) ko ek line jitna jaldi dard nahi hota. 70% ek single-cashier
+     wala thumb rule hai; asli seema SLO, utaar-chadhaav aur pool ke size se nikalti hai — load test se naapo.

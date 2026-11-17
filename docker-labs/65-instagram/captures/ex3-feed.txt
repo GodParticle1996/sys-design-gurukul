@@ -1,0 +1,24 @@
+ex3 — feed: pull, push ya dono (model: 100 crore users, followers ~ r^−α; α ko aise chuna ki sabse bade account ke
+      60 crore aur average user ke 300 followers hon → α = 0.771. Posts sab users mein barabar baante — maana)
+
+1) Pull (padhte waqt jodo): har followed user ka shard poochho, har shard 1% chance se dheema (aazaad):
+   300 follow → 95.1% feed loads dheeme · 500 follow → 99.3% (video: 99.3% — sahi)
+
+2) Push (likhte waqt baanto) aur hybrid — VIP seema T se upar wale push nahi karte; VIP posts padhte waqt jodo.
+   Push cluster ki kshamata 10 lakh writes/s (video ka number). Busy = maangi gayi writes ÷ kshamata:
+   seema T          VIP accounts   push writes/s (peak)   busy      sabse bada ek post (akela)   VIP lists har feed read
+   koi nahi (push)            0              10,41,600   104.2%        60,00,00,000 (600 s)            0
+   10,00,000              4,018               9,88,642    98.9%         9,99,845 (1,000 ms)         15.3
+   1,00,000              79,672               9,28,809    92.9%             99,999 (100 ms)         32.5
+   10,000             15,79,733               8,10,173    81.0%              10,000 (10 ms)         66.7
+
+   → Video ke apne numbers par pure push 104.2% busy: kshamata se zyada kaam, toh push ki line bina kisi
+     celebrity ke bhi badhti rehti hai. Hybrid (T = 1 lakh) writes 11% ghataata hai → 92.9% busy: line khaali ho sakti hai.
+     Itne bhare system mein 11% bahut bada farq hai (FP14 ka queue ganit).
+   → Sabse bada ek post: 60 crore writes = 10 minute ka kaam akela; hybrid mein ~100 ms. Agar sab posts ek hi
+     FIFO line mein hon (maana), toh us beech baaki sabke posts peeche. Keemat: har feed read ~32 VIP lists jodta hai
+     (video: "kuch darjan" — model se mel). T chhota karo toh writes ghatein, reads badhein.
+
+3) Inbox ki memory (video ka hisaab): 50 crore users × 500 ids × 8 byte = 2 TB sirf ids.
+   Asli Redis mein har key aur list ka apna overhead, aur har shard ki 1–2 copies — kai guna, phir bhi sambhalne layak.
+   Sirf active users (pichhle 14 din) ko push karo; lautne wale ka feed padhte waqt bana do (video).

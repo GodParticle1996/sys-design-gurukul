@@ -77,6 +77,23 @@
     brooker15: { title: 'Marc Brooker — Exponential Backoff And Jitter (AWS Architecture Blog, 2015)', url: 'https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/' },
     awssdkretry: { title: 'AWS SDKs and Tools — retry behavior (standard mode, retry quota)', url: 'https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html' },
     metastable21: { title: 'Bronson et al. — Metastable Failures in Distributed Systems (HotOS 2021)', url: 'https://sigops.org/s/conferences/hotos/2021/papers/hotos21-s11-bronson.pdf' },
+    conway68: { title: 'Melvin Conway — How Do Committees Invent? (Datamation, 1968)', url: 'https://www.melconway.com/Home/Committees_Paper.html' },
+    monolithfirst: { title: 'Martin Fowler — MonolithFirst (2015)', url: 'https://martinfowler.com/bliki/MonolithFirst.html' },
+    fowlerconway: { title: "Martin Fowler — Conway's Law (2022)", url: 'https://martinfowler.com/bliki/ConwaysLaw.html' },
+    shopifymono: { title: 'Shopify Engineering — Deconstructing the Monolith (2019)', url: 'https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity' },
+    pgmaxconn: { title: 'PostgreSQL — connection settings (max_connections)', url: 'https://www.postgresql.org/docs/current/runtime-config-connection.html' },
+    sloalert: { title: 'Google SRE Workbook — Alerting on SLOs (burn rate)', url: 'https://sre.google/workbook/alerting-on-slos/' },
+    postmortem: { title: 'Google SRE — Postmortem Culture', url: 'https://sre.google/sre-book/postmortem-culture/' },
+    w3ctrace: { title: 'W3C — Trace Context (traceparent)', url: 'https://www.w3.org/TR/trace-context/' },
+    tailsampling: { title: 'OpenTelemetry Collector — tail sampling processor', url: 'https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/tailsamplingprocessor/README.md' },
+    promlabels: { title: 'Prometheus — metric and label naming (cardinality)', url: 'https://prometheus.io/docs/practices/naming/' },
+    promstorage: { title: 'Prometheus — storage (1–2 bytes per sample)', url: 'https://prometheus.io/docs/prometheus/latest/storage/' },
+    s3multipart: { title: 'Amazon S3 — multipart upload limits (5 MiB parts)', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html' },
+    s3lifecycle: { title: 'Amazon S3 — lifecycle rule filters', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html' },
+    igids: { title: 'Instagram Engineering — Sharding & IDs at Instagram (2012)', url: 'https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c' },
+    cassandralww: { title: 'Apache Cassandra — Dynamo architecture (per-column last-write-wins)', url: 'https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo.html' },
+    gdpr12: { title: 'GDPR Article 12 — one-month response', url: 'https://gdpr-info.eu/art-12-gdpr/' },
+    fboutage21: { title: 'Meta Engineering — October 4, 2021 outage details', url: 'https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/' },
   };
   const topics = {}, byLevel = {};
   function add(id, levels, guide) {
@@ -338,6 +355,69 @@
     ],
     followup: 'Tumhari checkout service payment gateway ko kul 3 koshish (pehli request samet) ke saath bulaati hai, gateway bank ko bhi kul 3 ke saath. Bank 2 minute dheema hua. Bank par kitni calls, kaunsi layer retry kare, aur key aur deadline kahan?',
     sources: ['brooker15', 'retry', 'awssdkretry', 'idem', 'sqsdlq', 'metastable21'],
+  });
+  add('micro-fp', 'fp-micro-kyun fp-micro-kaise fp-micro-code fp-micro-kab', {
+    title: 'Microservices: aksar teams ki azaadi ka auzaar — pehle modular monolith tolo',
+    misaal: 'Ghar ki rasoi mein teen log aaraam se khana banate hain. Shaadi ke 500 logon ke liye alag-alag rasoiyaan banti hain, har ek ka apna sardar — par rasoiyon ke beech khaana laana-le jaana mehnga aur dheema. Ghar ke khane ke liye alag rasoiyaan bekaar kharcha.',
+    asli: 'Har service boundary ek contract hai jise sambhalna padta hai, aur function call ko network call bana deti hai. Agar ek write do owners ka data chhoota hai toh transaction saga ya 2PC banta hai; todne wale API badlaav ordered deploys maangte hain. Todo tab jab koi thos faayda (team ki azaadi, alag hardware, security, fault isolation) is keemat se bada ho.',
+    points: [
+      '<b>Network ka tax:</b> lab 63 ex0 (asli) — function call 4–5 ns, loopback HTTP + JSON ~34 µs (keep-alive), naya connection ~120 µs; + 0.5 ms data center (maana) ≈ 1.2 lakh guna.',
+      '<b>Tail:</b> ex1 (model) — 10 services: sequential p50 20 ms, parallel 2.9 ms; jhatke alag-alag hon toh 9.6% requests ko kisi ek ka 50 ms jhatka (1 − 0.99^10); saanjha jhatka ho toh 1%.',
+      '<b>Do databases:</b> ex2 — ek transaction: 0 galat; saga (durable log + receipts): 0 galat, recovery crash par bhi, par reader ko beech ki haalat dikhti; 2PC: 0 galat, par faisla pahunchne tak locks (4 injected crash mein se 4).',
+      '<b>Scaling aur log:</b> ex3 — 100 copies: RAM sasta, par har pool bhare toh DB connections 2,000. ex4 — sab-se-sab taal-mel par 20 log 190, 5,000 log ~1.25 crore sambhavit raaste.',
+    ],
+    use: 'Alag teams ko alag release chahiye aur deploy ki line asli dard hai; alag hardware (GPU); alag technology; security ki deewar (PCI); fault isolation.',
+    avoid: 'Chhoti team mein "Netflix jaisa" todna, har table ki ek service, ek DB share karti aur saath deploy hoti services (distributed monolith), bina batch ke per-item network calls, aur bina source ke survey aankdon par faisla.',
+    mistake: '"Modular monolith se service nikaalna copy-paste hai" maan lena. Saaf seemayein madad karti hain, par function call network call banti hai, do owners ka data chhoone wala transaction saga/2PC banta hai, aur todne wale API badlaav expand/contract maangte hain (lab 63 ex0, ex2, ex4).',
+    compare: [
+      { choice: 'Modular monolith', when: 'Chhoti/madhyam team; ek deploy; ACID transactions', tradeoff: 'Ek release line; ek hissa gire toh poora process prabhavit' },
+      { choice: 'Monolith + alag workers', when: 'Ek hissa bhaari (image, ML) par team ek', tradeoff: 'Alag scale, same code; release packaging aur queue contract par tika ki deploy saath ho ya alag' },
+      { choice: 'Microservices', when: 'Kai teams, alag releases, alag hardware/security', tradeoff: 'Network ka tax, saga/2PC, tracing, kram wale deploys' },
+    ],
+    followup: 'Tumhari 30 logon ki team ek monolith chalati hai; payments ko PCI audit chahiye aur recommendations ko GPU. Kya nikaaloge, kya nahi, aur kyun?',
+    sources: ['conway68', 'fowlerconway', 'monolithfirst', 'tailatscale', 'shopifymono', 'tx', 'pgmaxconn'],
+  });
+  add('obs-fp', 'fp-obs-kyun fp-obs-kaise fp-obs-code fp-obs-kab', {
+    title: 'Observability: failaav dekho, safar jodo, budget se jagao',
+    misaal: 'Dhaabe ka register kehta hai "average 11 minute" — par ek grahak 2 ghante baitha raha. Courier ki tracking har godaam ka scan jodti hai, par godaam ki ghadi galat ho toh kram ulta. Aur data pack ka alert "har 100 MB par call" bekaar, "is raftaar se 3 din mein khatam" kaam ka.',
+    asli: 'Ek number poori kahani nahi batata: latency ka failaav dekho (p50, p99, p99.9/max), percentiles ka average mat lo. Metric batata hai KI, trace batata hai KAHAN (parent span id se "kaun kiske andar"), log batata hai KYA — teeno trace_id se jude. Line ka average wait randomness aur busy-pan se ρ/(1−ρ) jaisa badhta hai. Page tab jab error budget sach mein khatre mein ho.',
+    points: [
+      '<b>Average ka jhooth:</b> lab 64 ex0 (hisaab) — 99 × 10 ms + 1 × 10 s: average 109.9 ms, nearest-rank p99 10 ms, max 10 s. Hosts ke p99 ka average asli p99 se 11.8× zyada ya 2.6× kam; histogram buckets jodo.',
+      '<b>Trace ka safar:</b> ex1 (asli HTTP) — DB ka ~300 ms span trace mein saaf; logs ko timestamp se sort kiya toh product ki 50 ms peeche ghadi ne kram ulta kiya (parent id rishta batata hai, poori timeline nahi); ek service header na bheje toh trace toota.',
+      '<b>Line ka ganit:</b> ex3 (simulation) — 50% busy par 50% customers ruke (wait = ek checkout), 92.3% par 12×, 99% par ~99× (seemit), 100% par bina had. 85% par 8 cashier ka wait 1 cashier se ~12× kam.',
+      '<b>Budget aur alert:</b> ex4 (model) — 99.9% = 43.2 min/mahina. Video ka 1% rule 0.3% ki dheemi jalan (70% budget) kabhi nahi pakadta; SLO wala threshold sab 5 min mein pakadta par 0.58% wale jhatke par bhi jagata; burn-rate sirf khatre par page, 2% × 6 ghante par 44 min der.',
+    ],
+    use: 'p50/p99/p99.9 aur seema se upar ki ginti; histogram se global percentile; har hop par traceparent (OpenTelemetry); errors ke liye tail sampling; saturation (pool wait, queue depth) par jaldi nazar; SLO + error budget policy; burn-rate page aur ticket; blameless postmortem.',
+    avoid: 'Sirf average; hosts ke p99 ka average; alag machines ke logs ka timestamp se kram; metric label mein user_id; 1% head sampling se error dhoondhna; "70%" jaisa ek number har pool par; har chhote jhatke par page; bina action ke page ya laal alert.',
+    mistake: '"p99 sabse bure 1% users ka haal hai" maan lena. p99 requests ki ek seema hai — theek 1% dheeme hon toh nearest-rank p99 unhe dikhata hi nahi, aur 100 requests wale session mein 63% users ek dheemi request dekhte hain (lab 64 ex0).',
+    compare: [
+      { choice: 'Metric', when: 'Kuch galat hai? Alert, trend', tradeoff: 'Disk par sasta (compressed 1–2 byte/sample) jab tak labels gine-chune; RAM active series par; "kis user" nahi bata sakta' },
+      { choice: 'Trace', when: 'Waqt kahan gaya? Kaun kiske andar', tradeoff: 'Har hop par header chahiye; tail sampling poore, samay par aaye traces mein se errors chunta — pehle saare spans bhejne aur collector ka bojh' },
+      { choice: 'Log', when: 'Us ek request mein kya hua?', tradeoff: 'Kharcha = bytes/event × rate × sampling × din (lab ki maanyata par TB/din); trace_id se judo, rishta trace se lo' },
+    ],
+    followup: 'Checkout ka p99 raat ko 3× ho jaata hai par average hara rehta hai, DB pool 85% busy dikhta hai, aur alert hafte mein 15 baar bajta hai. Kaunse teen badlaav karoge, aur kis kram mein?',
+    sources: ['signals', 'sloalert', 'postmortem', 'w3ctrace', 'traces', 'tailsampling', 'promlabels', 'promstorage', 'tailatscale'],
+  });
+  add('ig-fp', 'fp-ig-kyun fp-ig-kaise fp-ig-code fp-ig-kab', {
+    title: 'Instagram shuru se: pehle hisaab, phir har data ka apna faisla',
+    misaal: 'Halwai ki dukaan: rasoi chhoti, delivery badi. Stadium ka ek gate poori bheed rok deta hai. Bank ki teen branch: passbook ki photo kal pahunche chalega, balance abhi sahi chahiye.',
+    asli: 'Budget sheet se shuru karo: 1,157 uploads/s, 11.6 lakh views/s — bojh delivery ka. Photo object store mein, DB mein sirf metadata, app server sirf permission (presigned URL). Garam counter ko baanto ya memory mein jodo; like ko set rakho. Feed mein kaam write aur read ke beech khisakta hai (hybrid). Har data ki consistency alag: photo/likes async + CRDT, paise/password quorum. Galti ka daayra cells se, bhoolna keys se.',
+    points: [
+      '<b>Budget sheet:</b> lab 65 ex0 (hisaab) — 109.5 PB/saal, 231 GB/s egress (~$10 lakh/din list price), read:write 1,000:1, likes 57,870/s; photo DB mein ho toh WAL 5.8 GB/s.',
+      '<b>Seedha upload:</b> ex1 (asli HTTP) — app server ne 138 byte JSON padhe, store ne 1 MB; resume ne 4.5 MB bachaaye; expire hua URL same upload ke liye naya; adhoori photo ka commit 409, dobara commit par same id; pending tag wala orphan 24 ghante baad hata; S3 multipart part kam se kam 5 MiB.',
+      '<b>Likes aur feed:</b> ex2/ex3 (model) — garam row ~1,000 likes/s; likes ko pehle worker mile toh 177 ms mein 2,000 workers bhare aur feed gira (feed ko pehle mile toh nahi); 100 counter rows par sab theek. Video ke numbers par pure push 104% busy, hybrid 93% — sabse bura post 600 s → 100 ms, har read ~32 VIP lists.',
+      '<b>Duniya bhar:</b> ex4/ex5 — hedge 63% → 1% dheeme pages tabhi jab jhatke alag hon; strong write ~150 ms (Paxos majority + ~2ε commit wait saath), "7 ms" nahi; Cassandra har column par LWW; cells se galti 1%; DEK mitate hi 4 encrypted copies bekaar, plaintext log nahi.',
+    ],
+    use: 'Pehle budget sheet; blobs object store + CDN; presigned + resumable upload; user id se shard; counter rows / memory + batch; set-based likes; hybrid feed; data ke hisaab se async/CRDT/quorum; cells + wave rollout; crypto-shredding; backoff, circuit breaker, load shedding.',
+    avoid: 'Photos DB row mein; app server se hokar upload; ek garam row par counter; retry par +1; pure push celebrities ke liye; har shard par bina soche hedge; paise ke liye LWW; ek saath global config push; plaintext PII logs mein.',
+    mistake: '"Ek database, ek consistency sab ke liye" maan lena. Instagram mein photo, likes, feed, paise aur config ki zaroorat alag hai: purana dikhna kahin chalta hai, kahin bilkul nahi — har faisle ki keemat naam lekar chuno (lab 65).',
+    compare: [
+      { choice: 'Async + CRDT', when: 'Photo, profile, likes — thoda purana chalega', tradeoff: 'Tez local writes; regions mein der tak alag sach; merge (G-Counter) soch kar chuno' },
+      { choice: 'Quorum (Spanner jaisa)', when: 'Paise, password, ledger', tradeoff: 'Ek sach; har write regions ke beech majority round trip (~150 ms lab mein)' },
+      { choice: 'Cells', when: 'Galti ka daayra chhota rakhna', tradeoff: 'Rollout dheema aur operations zyada; saanjhi cheez (DNS, config) sab gira sakti hai' },
+    ],
+    followup: 'Tumhara photo app 1 crore users se 10 crore par ja raha hai. Budget sheet banao, phir batao: photo, likes, feed aur payouts ke liye kya chunoge, aur har ek ki keemat?',
+    sources: ['s3multipart', 's3lifecycle', 'igids', 'spanner', 'cassandralww', 'gdpr12', 'fboutage21', 'tailatscale'],
   });
   add('request-path', 'lifecycle networking boundaries st-cf-anycast st-cf-defense', {
     title: 'Browser slow hai: app tak request pahunchi?',

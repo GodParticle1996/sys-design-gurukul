@@ -1,0 +1,17 @@
+ASLI: ek hi sawaal ("sku-42 kitne bache?") chaar tarah se, is machine par. Order ka JSON 392 bytes.
+
+tareeka                                                   ek call*            p99        function call se
+function call (monolith ke andar module)                        4 ns             —      1×
+JSON: request + jawab banao aur padho (transport nahi)        2.6 µs             —      589×
+HTTP + JSON, isi machine par, connection reuse (keep-alive)    33.7 µs    291.6 µs      7,602×
+HTTP + JSON, isi machine par, har call naya TCP connection   116.1 µs     1.04 ms      26,238×
+MODEL: doosri machine, same data center (+ 0.5 ms maana)    533.7 µs             —      1,20,553×
+
+* Function aur JSON rows: 5 batches ke ausat mein sabse achha. HTTP rows: asli calls ka median. Function call mein V8 checkStock ko
+  loop mein inline kar deta hai — wahi in-process ka asli fayda hai, par ye "ek jump instruction" ka naap nahi.
+
+→ Video: function call ~10 ns, network call 1–2 ms, "100,000×". Is laptop par function call ~nanoseconds mein, loopback HTTP
+  ~dasiyon µs mein — network ke bina bhi hazaaron guna. Doosri machine ka 0.5 ms (maana hua) jodo toh ~121 hazaar guna.
+  Ye anupaat is kaam aur is machine ke hain; doosri machine wali row 0.5 ms maan kar hai, naapi nahi.
+→ Local function bhi fail ho sakti hai (exception, lock, anant loop, process ka marna). Network call naye failure jodti hai:
+  timeout, connection reset, aur "kaam hua ya nahi?" ka shak. Video ka "function call kabhi fail nahi hoti" bada daava hai.

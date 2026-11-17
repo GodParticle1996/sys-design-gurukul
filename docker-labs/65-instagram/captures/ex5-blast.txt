@@ -1,0 +1,22 @@
+ex5 — galti ka daayra aur bhoolne ka haq (cells: seedha hisaab; crypto: asli AES-256-GCM)
+
+1) 100 cells × 1 crore users. Ek galat config — kitne users par pade? (waves 1 → 5 → 25 → 100 cells, har wave ke baad 30 min intezaar)
+   galti kab pakdi gayi             ek saath sab cells (global)     waves mein
+    10 min baad                       100 crore (100%)                1 crore (1%)
+    45 min baad                       100 crore (100%)                5 crore (5%)
+    75 min baad                       100 crore (100%)                25 crore (25%)
+   100 min baad                       100 crore (100%)                100 crore (100%)
+   → cells tabhi bachaate hain jab cells sach mein alag hon: alag config, alag database, alag control plane. Saanjha DNS,
+     login ya config service sab cells ko saath gira sakta hai. User → cell ka naksha ek patli routing layer rakhti hai;
+     DNS (jaise Route 53) user ID nahi dekhta — video ka "Route 53 user ID ko cell 42 par bhejta hai" seedha aise nahi hota.
+
+2) Crypto-shredding: har user ki apni data key (DEK), DEK master key (KEK) se band. Email 4 jagah encrypted copy mein:
+   db, kafka log, backup tape, cache — u2 ki copy padhi: "priya@example.com"
+   u2 ne "account delete" dabaya → sirf u2 ki DEK mitayi (keys 3 → 2). Ab u2 ki 4 copies mein se padhne layak: 0
+   1,000 random 256-bit keys aazmaayi: kaam aayi 0 (AES-GCM ka tag har galat key pakad leta hai)
+   u1 abhi bhi theek: "asha@example.com"
+   par debug log mein plaintext: 1 line abhi bhi "priya@example.com" dikhati hai.
+   → ek key mitao, har encrypted copy bekaar — logs, backups, caches chhue bina. Shart: data kahin plaintext mein na gaya ho
+     (debug logs, analytics exports, search index), aur DEK khud kisi backup mein na bachi ho. GDPR (Art. 12, 17): jawab
+     "bina der kiye, ek mahine ke andar" — video ka "30 din" lagbhag; crypto-shredding ko sab regulators poora mitaana
+     maanenge, pakka nahi — legal team se poochho.

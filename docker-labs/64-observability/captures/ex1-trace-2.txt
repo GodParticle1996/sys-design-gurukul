@@ -1,0 +1,32 @@
+ex1 — "waqt kahan gaya?" (asli HTTP, ek hi machine par; db ka 300 ms join ek daala hua sleep; product ki ghadi 50 ms peeche — maana hua)
+
+1) Metric (gateway, 200 requests):
+   average 10.3 ms · p50 4.2 ms · p99 304.2 ms · max 304.5 ms · 100 ms se upar: 4
+   → metric batata hai KI kuch dheema hai. Kahan dheema, metric nahi batata.
+
+2) Sabse dheema request ka trace (trace_id 7797d9bf…), parent span id se joda:
+   gateway  /checkout   304.5 ms
+     auth     /check        2.2 ms
+     product  /price      301.4 ms
+       db       /query      300.5 ms
+   → waqt db mein gaya. Har span ki duration span wali machine ki ghadi se naapi, isliye ghadi ka farq duration nahi bigaadta.
+
+3) Sabse dheeme request ke trace_id wale logs, timestamp se sort (jaisa video kehta hai):
+     -48 ms  product  price dhoondh raha
+       0 ms  gateway  request aaya: big-7
+       2 ms  auth     token theek
+       3 ms  db       join shuru: big-7 (bada catalog)
+     254 ms  product  price mila
+     303 ms  db       query khatam
+     304 ms  gateway  jawab bheja
+   → "price dhoondh raha" gateway ke "request aaya" se PEHLE dikh raha hai: product ki ghadi 50 ms peeche hai.
+     "price mila" bhi db ke "query khatam" se pehle — asambhav. trace_id se logs mil jaate hain, par alag machines
+     ke timestamps ka kram bharosemand nahi. Kaun kiske andar chala, parent span id batata hai.
+
+4) Ab product traceparent header aage nahi bhejta (ek bhooli hui line):
+   gateway  /checkout   304.2 ms
+     auth     /check        2.3 ms
+     product  /price      301.2 ms
+   → product ke 300 ms ke andar kya hua, trace mein nahi. db ke 200 spans apne alag, akele traces mein chale gaye.
+     Trace utna hi poora jitna har hop par header aage jaata hai. OpenTelemetry jaisi library header apne aap aage bhejti hai;
+     service mesh (jaise Istio) mein bhi app ko header aage bhejna padta hai.
