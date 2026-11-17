@@ -51,9 +51,9 @@ docker compose --profile ex1-trace up --build   # supplied, untested
   **jab tak jawab kisi finite bucket mein ho**. Sabse upar wale (+Inf) bucket mein gira toh sirf aakhri finite seema milti hai: teen 20 s
   ki requests → "10 s". Khaali histogram → NaN (Prometheus jaisa). Lab har bucket ki apni ginti rakhta hai; Prometheus ke `_bucket`
   counts cumulative hote hain — same jaankari.
-- **Flow ke `latency` level se takraav:** Flow mein 99 tez + 1 dheemi (5 s) request ko "p99 = 5,000 ms" kaha gaya hai, aur requests ko
-  log gina gaya hai. Is lab ki definitions se same data nearest-rank p99 10 ms aur linear 59.9 ms deta hai; p99 = 5 s ke liye 100 mein
-  2 dheemi chahiye. Flow wala level alag se sudhaarna baaki hai (definition likho, ya 2 dheemi requests lo).
+- **Flow ke `latency` level se rishta:** Flow ka example pehle 99 tez + 1 dheemi (5 s) par "p99 = 5,000 ms" kehta tha, aur requests ko
+  log ginta tha. Is lab ki definitions se us data ka nearest-rank p99 10 ms aur linear 59.9 ms aata. Flow level ab sudhar gaya hai:
+  98 tez + 2 dheemi requests, "nearest-rank" likha hai, aur ginti requests ki hai, logon ki nahi.
 
 ## ex1-trace — waqt kahan gaya
 

@@ -248,6 +248,9 @@ Ek mara: 2,400 ÷ 5 = 480 rps har server = 120% → queue, timeouts</pre>
 Ek mara:    2,400 ÷ 9 = 267 rps = 67% ✅
 Spare +1 deploy ke liye: 11 servers</pre>
      <p><b>Keemat:</b> 6 ki jagah 11 servers — lagbhag 1.8 guna kharcha. Bharosa sasta nahi hai.</p>
+     <p><b>60% kyun, 85% kyun nahi?</b> 60% ka zyada hissa failure aur burst ke liye hai: ek server mare toh baaki par load chadhta hai.
+       Sirf queue ka ganit dekho toh bahut workers wala server 85% par bhi kam rukta hai (First Principles ka level
+       "Observability 3 · Code", Erlang C). Isliye target load test aur failure plan se chuno, kisi fixed number se nahi.</p>
      <ul>
        <li><b>Autoscaling</b> madad karta hai, par naya server aane mein minute lagte hain. Peak aur failure seconds mein aate hain.</li>
        <li><b>3 AZ</b> (availability zones: alag failure waale data centres) mein baanto. Ek AZ gaya toh baaki do milke poora peak jhelein.</li>

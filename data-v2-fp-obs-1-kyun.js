@@ -239,7 +239,7 @@ SD.registerLevels('fp-core', [
         {
           "title": "p99 — doosri definition",
           "clock": "linear",
-          "say": "Kai tools 99wi aur 100wi jagah ke beech line kheench kar p99 nikaalte hain (linear): 10 ms se 10 s ka 1% raasta = 109.9 ms. Same data, tool badla, number badla. Dhyan: course ke Flow <code>latency</code> level mein isi shape (99 tez, 1 dheemi) par \"p99 = 5 s\" likha hai — nearest-rank p99 tabhi dheemi value deta hai jab 100 mein kam se kam 2 dheemi hon.",
+          "say": "Kai tools 99wi aur 100wi jagah ke beech line kheench kar p99 nikaalte hain (linear): 10 ms se 10 s ka 1% raasta = 109.9 ms. Same data, tool badla, number badla. Dhyan: nearest-rank p99 tabhi dheemi value deta hai jab 100 mein kam se kam 2 dheemi hon. Isiliye course ke Flow <code>latency</code> level ka example 98 tez aur 2 dheemi requests leta hai.",
           "nodes": {
             "req": {
               "tone": "busy",

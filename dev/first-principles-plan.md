@@ -468,9 +468,9 @@ questions no longer derive tail odds from a p99 value, fix the direction of an a
 for p99, or freeze releases without a stated policy; correction rows for monitoring vs observability, "optimize p99" and
 "remove every dashboard metric". Tests grew to 6 plus `npm run mutate` (19 deliberate bugs, all caught).
 
-Queued (not mine to change here): the Flow `latency` level (`data-flow.js`, currently also modified by the other agent's
-uncommitted work) calls p99 = 5 s for 99 fast + 1 slow request and counts requests as people; Lab 64 and `fp-obs-kyun`
-now point out the conflict.
+Done on branch `deepening` (2026-11-16, commit f508f01 + cross-check after merging FP13–15): the Flow `latency` level now uses
+98 fast + 2 slow requests, names nearest-rank, and counts requests, not people. Lab 64 README and `fp-obs-kyun` were updated
+to describe the fixed level instead of the conflict.
 
 ## Video 15: How to Build Instagram from Scratch — capstone (2026-11-16)
 
@@ -508,5 +508,5 @@ XP is 64,610, so System Samrat at 59,000 is 91.3%.
 
 ## Next
 
-All fifteen numbered videos are built. Possible follow-ups: fix the Flow `latency` p99 example (see Video 14), and revisit
+All fifteen numbered videos are built. Possible follow-up: revisit
 earlier topics whenever a later lab changes an assumption.

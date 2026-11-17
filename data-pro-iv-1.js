@@ -238,6 +238,9 @@ Pull (read fanout):
 GET /feed   → apni feed cache + jin celebrities ko follow karte ho unke latest posts
             → post ids se post data (post cache) → rank → jawab</pre>
      <p><b>Threshold</b> celebrities ke followers se <b>baraabar ya neeche</b> hona chahiye, warna celebrities bhi push ho jaayengi.</p>
+     <p>Asli system mein threshold apne cluster ki naap se chuno: jitne followers tak ka push 1–2 second mein ho jaaye.
+       First Principles ke level "Instagram 2 · Kaise" ke model mein ye lagbhag 1 lakh followers aata hai.
+       Threshold neeche karo toh likhna sasta, par har feed read par zyada celebrity lists judti hain.</p>
      <p>Aur chhote sudhaar: lambe samay se inactive users ko push mat karo; feed cache mein sirf ids rakho, poora post nahi.</p>`,
   ],
   stages: [
