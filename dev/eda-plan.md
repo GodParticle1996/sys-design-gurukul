@@ -26,7 +26,7 @@ Five behavioral tests cover independent payload copies, read/ack semantics, reje
 ## Source coverage and corrections
 
 Use the user's Video-Translate tool. First bundle:
-`/home/vibekdutta/VixiApps/video-translate/vu_output/sd5-eda-beginner/` — transcript available, ten sampled frames and contact sheet inspected.
+`video-translate/vu_output/sd5-eda-beginner/` — transcript available, ten sampled frames and contact sheet inspected.
 Source title: *A Beginner's Guide to Event-Driven Architecture*, video ID `RojKJnF_WWQ`.
 
 The first topic covers the foundational flow and event-notification mechanics. It does **not** claim to finish all the overview's patterns.

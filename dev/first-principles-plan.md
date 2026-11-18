@@ -31,7 +31,7 @@ The Software Developer Diaries Resilience and EDA tracks remain separate; unfini
 
 ## Video 1: source and corrections
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-01-physics/`.
+Bundle: `video-translate/vu_output/first-principles-01-physics/`.
 Full 2,275-word transcript read; ten sampled frames/contact sheet and the Little's Law frame inspected.
 No source references/timestamps in lesson screens; source credit in code comments only.
 
@@ -87,7 +87,7 @@ The earlier `/tmp/system-gurukul-physics-review/` run is superseded; it mixed th
 
 ## Video 2: Math of Scale (2026-11-08)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-02-math/`. Built by Claude; Codex fact-checked.
+Bundle: `video-translate/vu_output/first-principles-02-math/`. Built by Claude; Codex fact-checked.
 Levels `fp-scale-kyun` → `fp-scale-kaise` → `fp-scale-code` → `fp-scale-kab` (`data-v2-fp-scale-1…4`, group "📈 Math of Scale",
 guide `scale`). Builders: `sdg-codex-xp/jobs/fp2/levels/*.py`. Lab 52 (`docker-labs/52-scale-math`): seeded simulations for
 tail, fan-out, knee and hedging; real worker threads for Amdahl (lock held/wait time measured).
@@ -114,7 +114,7 @@ mean/median wording made exact; Amdahl no longer named before the Kab level; bel
 
 ## Video 3: Cost of Communication (2026-11-09)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-03-communication/`. Built by Claude; Codex fact-checked.
+Bundle: `video-translate/vu_output/first-principles-03-communication/`. Built by Claude; Codex fact-checked.
 Levels `fp-comm-kyun` → `fp-comm-kaise` → `fp-comm-code` → `fp-comm-kab` (`data-v2-fp-comm-1…4`, group "📡 Cost of Communication",
 guide `comm`, sources `protobufenc`, `tls13`, `http2spec`). Builders: `sdg-codex-xp/jobs/fp3/levels/*.py` (`check.js` = stand-in
 check incl. short spellings). Lab 53 (`docker-labs/53-communication-tax`): real HTTP/1.1, keep-alive and HTTP/2 (separate server
@@ -150,7 +150,7 @@ the proxy-order test now proves separate arrivals with hooks and cannot leave ti
 
 ## Video 4: Anatomy of a Request (2026-11-09)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-04-request/`. Built by Claude; Codex fact-checked.
+Bundle: `video-translate/vu_output/first-principles-04-request/`. Built by Claude; Codex fact-checked.
 Levels `fp-req-kyun` → `fp-req-kaise` → `fp-req-code` → `fp-req-kab` (`data-v2-fp-req-1…4`, group "🛣️ Anatomy of a Request",
 guide `req`, sources `dnsspec`, `ecs`, `bgpspec`). Builders: `sdg-codex-xp/jobs/fp4/levels/*.py`. Lab 54
 (`docker-labs/54-request-anatomy`): a real UDP DNS chain (root, .com and khanakart.com servers on 127.0.0.2/.3/.4:6510, a
@@ -186,7 +186,7 @@ port vs destination port 53; packet-header accounting assumptions; standalone gu
 
 ## Video 5: The Physics of Persistence (2026-11-09)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-05-persistence/`. Built by Claude; Codex
+Bundle: `video-translate/vu_output/first-principles-05-persistence/`. Built by Claude; Codex
 fact-checked. Levels `fp-per-kyun` → `fp-per-kaise` → `fp-per-code` → `fp-per-kab` (`data-v2-fp-per-1…4`, group
 "💾 Physics of Persistence", guide `per`, sources `gfs`, `fast08`, `wiredtiger`). Builders: `sdg-codex-xp/jobs/fp5/levels/*.py`.
 Lab 55 (`docker-labs/55-persistence`): REAL write() vs fsync and group commit (1/8/64 clients), REAL SIGKILL of a writer and
@@ -222,7 +222,7 @@ are the new runs. 14 lab tests; new guards mutation-checked except the unreachab
 
 ## Video 6: The Taxonomy of Storage (2026-11-11)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-06-taxonomy/`. Built by Claude; Codex
+Bundle: `video-translate/vu_output/first-principles-06-taxonomy/`. Built by Claude; Codex
 fact-checked. Levels `fp-tax-kyun` → `fp-tax-kaise` → `fp-tax-code` → `fp-tax-kab` (`data-v2-fp-tax-1…4`, group
 "🗂️ Taxonomy of Storage", guide `tax`, sources `dynamo`, `spanner`, `pgvector`). Builders: `sdg-codex-xp/jobs/fp6/levels/*.py`.
 Lab 56 (`docker-labs/56-storage-taxonomy`, Node 24 `node:sqlite`): REAL SQLite for three shapes on the same 1 lakh users
@@ -244,7 +244,7 @@ assignments, IVF counts omitted centroids, no migration test; generation-stamp o
 
 ## Video 7: Sharding (2026-11-13)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-07-sharding/`. Built by Claude; Codex
+Bundle: `video-translate/vu_output/first-principles-07-sharding/`. Built by Claude; Codex
 fact-checked the video claims (`sdg-codex-xp/jobs/fp7/CLAIMS-REVIEW.md`) and the lab. Levels `fp-shard-kyun` →
 `fp-shard-kaise` → `fp-shard-code` → `fp-shard-kab` (`data-v2-fp-shard-1…4`, group "🔪 Sharding", guide `shard`, sources
 `karger`, `rediscluster`, `twsnowflake`, `rfc9562`, `stripemig`). Builders: `sdg-codex-xp/jobs/fp7/levels/*.py`.
@@ -271,7 +271,7 @@ SQLite REPLACE semantics, and dry-run clock values shown as t − EPOCH.
 
 ## Video 8: CAP Theorem & PACELC (2026-11-13)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-08-cap/`. Built by Claude; Codex fact-checked
+Bundle: `video-translate/vu_output/first-principles-08-cap/`. Built by Claude; Codex fact-checked
 the video claims (`sdg-codex-xp/jobs/fp8/CLAIMS-REVIEW.md`) and the lab. Levels `fp-cap-kyun` → `fp-cap-kaise` →
 `fp-cap-code` → `fp-cap-kab` (`data-v2-fp-cap-1…4`, group "🔀 CAP & PACELC", guide `capelc`, sources `brewer12`, `abadi`,
 `terry94`, `crdt11`). Builders: `sdg-codex-xp/jobs/fp8/levels/*.py`.
@@ -294,7 +294,7 @@ Terry taxonomy and the 54.6% stale-read cause.
 
 ## Video 9: Distributed Consensus & Raft (2026-11-13)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-09-raft/`. Built by Claude. Levels
+Bundle: `video-translate/vu_output/first-principles-09-raft/`. Built by Claude. Levels
 `fp-raft-kyun` → `fp-raft-kaise` → `fp-raft-code` → `fp-raft-kab` (`data-v2-fp-raft-1…4`, group "🗳️ Consensus & Raft",
 guide `raft`, sources `raft`, `lamport01`, `etcdtune`). Builders: `sdg-codex-xp/jobs/fp9/levels/*.py`.
 Lab 59 (`docker-labs/59-consensus`, Node 24, zero deps): exact quorum arithmetic (every subset; binomial availability), a
@@ -315,7 +315,7 @@ thesis §6.4 with the no-op-entry condition; two over-strong wrong-answer notes 
 
 ## Video 10: Caching (2026-11-15)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-10-caching/`. Built by Claude. Levels
+Bundle: `video-translate/vu_output/first-principles-10-caching/`. Built by Claude. Levels
 `fp-cache-kyun` → `fp-cache-kaise` → `fp-cache-code` → `fp-cache-kab` (`data-v2-fp-cache-1…4`, group "⚡ Caching",
 guide `cache-fp`, sources `breslau99`, `memcache13`, `cache`, `linuxvm`, `karlton`). Builders: `sdg-codex-xp/jobs/fp10/levels/*.py`.
 Lab 60 (`docker-labs/60-caching`, Node 24, zero deps): a REAL latency ladder on this laptop (pointer chasing L1 → RAM,
@@ -348,7 +348,7 @@ coalesced deadlines (mutation-checked). All ex0/ex2/ex3/ex4 captures regenerated
 
 ## Video 11: Kafka vs RabbitMQ vs SQS — Async System (2026-11-15)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-11-queues/`. Built by Claude. Levels
+Bundle: `video-translate/vu_output/first-principles-11-queues/`. Built by Claude. Levels
 `fp-async-kyun` → `fp-async-kaise` → `fp-async-code` → `fp-async-kab` (`data-v2-fp-async-1…4`, group "📮 Async: Queue vs
 Stream", guide `queue-fp`, sources `kafka`, `kafkaintro`, `sqsvis`, `sqsdlq`, `idem`, `outboxpat`). Builders:
 `sdg-codex-xp/jobs/fp11/levels/*.py`. Lab 61 (`docker-labs/61-queues`, Node 24, zero deps, no ports): a fluid spike/backlog
@@ -377,7 +377,7 @@ skipping a FIFO event breaks order (150 s is idealized); compaction is not a ful
 
 ## Video 12: Mathematics of the Second Attempt — retries (2026-11-15)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-12-retries/`. Built by Claude. Levels
+Bundle: `video-translate/vu_output/first-principles-12-retries/`. Built by Claude. Levels
 `fp-retry-kyun` → `fp-retry-kaise` → `fp-retry-code` → `fp-retry-kab` (`data-v2-fp-retry-1…4`, group "🔁 Retries: Doosri
 Koshish", guide `retry-fp`, sources `brooker15`, `retry`, `awssdkretry`, `idem`, `sqsdlq`, `metastable21`). Builders:
 `sdg-codex-xp/jobs/fp12/levels/*.py`. Lab 62 (`docker-labs/62-second-attempt`, Node 24, zero deps, no ports, deterministic):
@@ -407,7 +407,7 @@ citation; 11 mutation guards in the tests.
 
 ## Video 13: Microservices — Know When NOT to Use (2026-11-16)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-13-microservices/` (the first download attempt hit
+Bundle: `video-translate/vu_output/first-principles-13-microservices/` (the first download attempt hit
 an HTTP 403; a retry worked). Built by Claude. Levels `fp-micro-kyun` → `fp-micro-kaise` → `fp-micro-code` → `fp-micro-kab`
 (`data-v2-fp-micro-1…4`, group "🧩 Microservices: Kab Nahi", guide `micro-fp`, sources `conway68`, `monolithfirst`,
 `tailatscale`, `shopifymono`, `tx`, `pgmaxconn`). Builders: `sdg-codex-xp/jobs/fp13/levels/*.py`. Lab 63
@@ -436,7 +436,7 @@ real segmentation; local functions can fail too; tests guard final states, repea
 
 ## Video 14: Observability — How to Not Fly Blind (2026-11-16)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-14-observability/`. Built by Claude. Levels
+Bundle: `video-translate/vu_output/first-principles-14-observability/`. Built by Claude. Levels
 `fp-obs-kyun` → `fp-obs-kaise` → `fp-obs-code` → `fp-obs-kab` (`data-v2-fp-obs-1…4`, group "🔭 Observability: Andhe Mat Udo",
 guide `obs-fp`, sources `signals`, `sloalert`, `postmortem`, `w3ctrace`, `traces`, `tailsampling`, `promlabels`, `promstorage`,
 `tailatscale`). Builders: `sdg-codex-xp/jobs/fp14/levels/*.py`. Lab 64 (`docker-labs/64-observability`, Node 24, zero deps;
@@ -474,7 +474,7 @@ to describe the fixed level instead of the conflict.
 
 ## Video 15: How to Build Instagram from Scratch — capstone (2026-11-16)
 
-Bundle: `/home/vibekdutta/VixiApps/video-translate/vu_output/first-principles-15-global-system/` (92 min, 4 parts). Built by
+Bundle: `video-translate/vu_output/first-principles-15-global-system/` (92 min, 4 parts). Built by
 Claude. Levels `fp-ig-kyun` → `fp-ig-kaise` → `fp-ig-code` → `fp-ig-kab` (`data-v2-fp-ig-1…4`, group "📸 Instagram: Sab Jodkar",
 guide `ig-fp`, sources `s3multipart`, `s3lifecycle`, `igids`, `cassandralww`, `gdpr12`, `fboutage21`, reusing `spanner`,
 `tailatscale`). Builders: `sdg-codex-xp/jobs/fp15/levels/*.py`. System Samrat 58,000 → 59,000 XP. Lab 65

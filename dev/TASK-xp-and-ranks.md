@@ -1,7 +1,7 @@
 # Task: make XP fair across stage types and stretch the rank ladder
 
 You are picking up a small, self-contained task in **System Gurukul**, a Hinglish system-design learning app at
-`/home/vibekdutta/VixiApps/sys-design-gurukul`. It is plain HTML/JS with no build step: open `index.html` in a
+`sys-design-gurukul`. It is plain HTML/JS with no build step: open `index.html` in a
 browser. The XP rules feel uneven to the learner, and the top rank comes far too early. Check every claim below
 against the code before you rely on it; the numbers were measured on 2026-10-29 and content keeps changing.
 
@@ -77,7 +77,7 @@ The user has not chosen a direction yet. Before you change any code, ask them on
 Recompute the economy with this (it counts first-try items per stage type):
 
 ```bash
-cd /home/vibekdutta/VixiApps/sys-design-gurukul && node -e '
+cd sys-design-gurukul && node -e '
 const { loadApp } = require("./dev/load-app.js"); const { levels, context } = loadApp();
 const RANKS = require("vm").runInContext("RANKS", context);
 const path = st => { let n = 0, id = st.start, seen = new Set(); while (id && st.nodes[id] && !st.nodes[id].end && !seen.has(id)) { seen.add(id); n++; const g = st.nodes[id].choices.find(c => c.good); id = g && g.next; } return n; };
