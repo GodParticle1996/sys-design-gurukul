@@ -907,4 +907,6 @@ badlaav kaam karte hain. Commands: `tenant …`, `token …`, `cost …`, `capac
   aur locked level par track map ke upar "Linked lesson abhi locked hai" note dikhata hai.
 - Naya video jodna: pehle `reviews/<id>/ANALYSIS.md`, phir maujooda level badhao (duplicate track mat banao), phir
   `video-sources.js` entry + fixtures + `DELIVERY.md` row. Checks: is file ke saare suites + `node dev/sds-test.js`.
-- Dhyan: sds content ka bada hissa English-heavy hai. Naya text simple Hinglish mein likho; purana text sudharna baaki hai.
+- 2026-11-17: Codex ki 19 files ka saara dikhne wala text simple Hinglish mein dobara likha gaya (facts, numbers, option ka kram aur
+  answer index wahi); Codex ne har batch ki jaanch ki. 3 naye sds tracks ke 11 levels ke kadam-dar-kadam scenes `data-scenes-sds.js` mein hain
+  (sabhi `data-sds-*.js` ke baad load). Naya text bhi isi simple Hinglish mein likho.
