@@ -4,7 +4,7 @@ Node 24+ chahiye. Koi npm package nahi chahiye. Lab `node:sqlite` use karta hai.
 Code ek local teaching server hai. Login, distributed workers aur production deployment included nahi hain.
 
 ```bash
-cd /home/vibekdutta/VixiApps/sys-design-gurukul
+cd sys-design-gurukul
 node practical-labs/live-updates/test.cjs
 node practical-labs/live-updates/server.cjs
 ```

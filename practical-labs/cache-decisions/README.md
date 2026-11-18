@@ -2,7 +2,7 @@
 
 Start with existing `caching`, `stampede` and `eviction` levels. Yeh original Node experiments hain. Maps and controlled promises run in one process; Redis, real database and HTTP load run nahi hota. Two independent pending maps model two app instances, not actual child processes. No timer in learner steps.
 
-App folder `/home/vibekdutta/VixiApps/sys-design-gurukul` mein:
+App folder `sys-design-gurukul` mein:
 
 ```bash
 node practical-labs/cache-decisions/run.cjs keys

@@ -2,7 +2,7 @@
 
 System Gurukul mein `#level=fp-scale-kab` kholo. Har run se pehle prediction likho. Timer nahi hai. Yeh original, deterministic models hain. Redis, PostgreSQL replication, cloud queues aur real request load run nahi hote.
 
-App folder `/home/vibekdutta/VixiApps/sys-design-gurukul` mein Node se run karo:
+App folder `sys-design-gurukul` mein Node se run karo:
 
 ```bash
 node practical-labs/scaling-decisions/run.cjs traffic
