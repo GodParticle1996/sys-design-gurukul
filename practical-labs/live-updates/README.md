@@ -3,8 +3,9 @@
 Node 24+ chahiye. Koi npm package nahi chahiye. Lab `node:sqlite` use karta hai.
 Code ek local teaching server hai. Login, distributed workers aur production deployment included nahi hain.
 
+System Gurukul ka folder kholo, jahan `index.html` aur `practical-labs` hain. Wahin ye commands chalao:
+
 ```bash
-cd sys-design-gurukul
 node practical-labs/live-updates/test.cjs
 node practical-labs/live-updates/server.cjs
 ```
