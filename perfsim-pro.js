@@ -514,3 +514,94 @@
     },
   });
 })();
+
+/* =====================================================================
+   FLEET — edge config rollout (2026-11-25, on-call shift boss-feed)
+   Cloudflare 18 Nov 2025 (data-feed.js pm-config): feature file har 5 minute banti hai; proxy ki hardcoded
+   hadd 200 features (aam ~60). ClickHouse ke nodes aadhe update → file baari-baari KHARAB (230) / THEEK (60)
+   → outage "flicker" karta hai. Model (har `fleet run N`, 5-minute slots):
+     generator ON  → har slot nayi file (230, 60, 230, …)        · paused → koi nayi file nahi
+     validate ON   → 200 se badi file REJECT, purani (LKG) par raho · OFF → panic → 5xx
+     staged ON     → nayi file pehle 1 region (canary); kharab nikli toh wahin ruki · OFF → saare 6 regions ek saath
+     probes        → internal = proxy ke andar se (proxy gira toh status page purana "hara") · external = user ka raasta
+   ===================================================================== */
+(function () {
+  const baseDefault = SD.defaultSys;
+  const REGIONS = ['mumbai', 'delhi', 'singapore', 'frankfurt', 'virginia', 'saopaulo'];
+  SD.defaultSys = function () {
+    const s = baseDefault();
+    s.fleet = { cur: 230, lkg: 60, generator: true, slot: 0, validate: false, staged: false, probes: 'internal', down: REGIONS.length, log: [] };
+    return s;
+  };
+  const LIMIT = 200, PATTERN = [60, 230];   // agla slot theek, phir kharab, … (flicker)
+  const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
+  (SD.perfsimPlugins = SD.perfsimPlugins || []).push({
+    match: /^fleet\b/i,
+    help: ['FLEET (edge config: feature file har 5 min; proxy ki hadd 200 features)',
+      '  fleet status · fleet history          regions ka haal · pichhle pushes (kya deploy hua?)',
+      '  fleet run 10                          10 minute dekho (2 slots)',
+      '  fleet generator pause|resume · fleet rollback   nayi files roko · sab regions LKG par',
+      '  fleet validate on|off · fleet staged on|off · fleet probe internal|external'],
+    run(api, norm) {
+      const { sim, print, table, panel, rec, err } = api;
+      const F = sim.sys.fleet;
+      const verb = word(norm, 1), arg = word(norm, 2);
+      const onoff = v => { if (!['on', 'off'].includes(v)) err('400 — on ya off likho'); return v === 'on'; };
+      const lied = () => F.probes === 'internal' && F.down > 0;
+      if (!verb || verb === 'status') {
+        table(['region', 'feature file', 'users ko'], REGIONS.map((r, i) => [r, (i < F.down ? F.cur : F.lkg) + ' features', i < F.down ? '5xx ❌' : '200 ✅']));
+        print(F.down ? 'err' : 'ok', `status page (${F.probes} probes): ${lied() ? '🟢 "sab theek" — par probes khud gire hue proxy ke andar se jaate hain (purana data!)' : F.down ? `🔴 ${F.down}/6 regions down` : '🟢 sab theek'}` +
+          `\ngenerator ${F.generator ? 'ON (har 5 min nayi file)' : 'PAUSED'} · validate ${F.validate ? 'ON' : 'OFF'} · staged ${F.staged ? 'ON (canary pehle)' : 'OFF (sab regions ek saath)'}`);
+        return rec({ kind: 'fleet', op: 'status', down: F.down, probes: F.probes, statusPageLied: lied() });
+      }
+      if (verb === 'history') {
+        print('ok', ['pichhle 30 minute ke deploys:', '  -30 min  ClickHouse permission change (security ke liye) — nodes ek-ek karke',
+          ...(F.log.length ? F.log.slice(-6) : ['  -25 min  feature file 230 features → sab regions', '  -20 min  feature file 60 features → sab regions', '  -15 min  feature file 230 features → sab regions', '  -10 min  feature file 60 features → sab regions', '   -5 min  feature file 230 features → sab regions'])].join('\n'));
+        return rec({ kind: 'fleet', op: 'history' });
+      }
+      if (verb === 'generator') {
+        if (!['pause', 'resume'].includes(arg)) err('400 — fleet generator pause | resume');
+        F.generator = arg === 'resume';
+        print('ok', F.generator ? 'Generator chalu — har 5 minute nayi feature file.' : 'Generator PAUSED — nayi files nahi banengi. (Jo file abhi lagi hai, woh lagi rahegi.)');
+        return rec({ kind: 'fleet', op: 'generator', generator: F.generator });
+      }
+      if (verb === 'rollback') {
+        F.down = 0; F.cur = F.lkg;
+        print('ok', `Saare regions last-known-good file (${F.lkg} features) par.`);
+        return rec({ kind: 'fleet', op: 'rollback', down: 0 });
+      }
+      if (verb === 'validate') { F.validate = onoff(arg); print('ok', F.validate ? `Proxy ab har nayi file jaanchega: ${LIMIT} se zyada features → REJECT + alert, purani file par rahega.` : 'Validation band — badi file par proxy panic karega.'); return rec({ kind: 'fleet', op: 'validate', validate: F.validate }); }
+      if (verb === 'staged') { F.staged = onoff(arg); print('ok', F.staged ? 'Staged rollout: nayi file pehle 1 region (canary); kharab nikli toh wahin rukegi.' : 'Staged band — har file saare regions par ek saath.'); return rec({ kind: 'fleet', op: 'staged', staged: F.staged }); }
+      if (verb === 'probe') {
+        if (!['internal', 'external'].includes(arg)) err('400 — fleet probe internal | external');
+        F.probes = arg; print('ok', arg === 'external' ? 'Status page ab bahar se (user ke raaste) probe karta hai.' : 'Status page proxy ke andar se probe karta hai.');
+        return rec({ kind: 'fleet', op: 'probe', probes: arg });
+      }
+      if (verb === 'run') {
+        const N = arg ? parseInt(arg, 10) : 10;
+        if (!Number.isInteger(N) || N < 5 || N > 60 || N % 5) err('400 — 5 ke guna mein minute do (5–60): fleet run 10');
+        sim.timeSec += N * 60;
+        let errMinutes = 0, maxDown = F.down, rejected = 0, pushes = 0, liedSlots = 0;
+        const lines = [];
+        for (let k = 0; k < N / 5; k++) {
+          errMinutes += F.down ? 5 : 0;           // is slot ki shuruaat mein jo down hain, 5 minute down
+          if (lied()) liedSlots++;
+          if (!F.generator) { lines.push(`  +${(k + 1) * 5} min  koi nayi file nahi (generator paused) · ${F.down}/6 down`); continue; }
+          const feat = PATTERN[F.slot % 2]; F.slot++; pushes++;
+          if (feat > LIMIT && F.validate) { rejected++; lines.push(`  +${(k + 1) * 5} min  nayi file ${feat} features → REJECT (validate) · purani par · ${F.down}/6 down`); }
+          else if (feat > LIMIT) {
+            const hit = F.staged ? 1 : REGIONS.length;
+            F.down = Math.max(F.down, hit); F.cur = feat;
+            lines.push(`  +${(k + 1) * 5} min  nayi file ${feat} features → ${F.staged ? 'canary (mumbai) par PANIC, rollout ruka' : 'SAB regions par PANIC'} · ${F.down}/6 down`);
+            if (F.staged) { F.down = 0; F.cur = F.lkg; }   // canary kharab → wahin wapas LKG (agle slot tak)
+          } else { F.down = 0; F.cur = feat; F.lkg = feat; lines.push(`  +${(k + 1) * 5} min  nayi file ${feat} features → sab theek · 0/6 down`); }
+          maxDown = Math.max(maxDown, F.down, feat > LIMIT && !F.validate ? (F.staged ? 1 : REGIONS.length) : 0);
+        }
+        F.log.push(...lines.map(l => l.replace(/^\s+\+/, '  ')));
+        panel(`FLEET RUN — ${N} min`, [...lines, `5xx wale minute: ${errMinutes} · REJECT: ${rejected} · status page ne jhooth bola: ${liedSlots ? liedSlots + ' slot ❌' : 'nahi ✅'}`]);
+        return rec({ kind: 'fleet', op: 'run', minutes: N, errMinutes, maxDown, rejected, pushes, liedSlots, down: F.down });
+      }
+      err(`400 — 'fleet ${verb}' samajh nahi aaya. 'help' dekho.`);
+    },
+  });
+})();
