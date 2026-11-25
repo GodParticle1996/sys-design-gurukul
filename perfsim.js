@@ -548,8 +548,11 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   const btns = SD.el('div', 'term-btns');
   /* Madad ki seedhi (atakne par): 👉 checklist ka agla kaam → 💡 hints (1/3, 2/3, 3/3) → 🧭 agla command.
      hintIdx = kitne hints dikhe; sim.hintsUsed = kul madad (XP isi se ghat-ta hai). */
-  const hintList = stage.hints || [];
-  let hintIdx = 0, tasksDone = 0, stall = 0, nudged = false;
+  /* On-call shift (oncall.js) har alert ke alag hints deta hai: stage.hintsFor(sim) → { key, list }.
+     Har key ki ginti alag (sim.hintPos[key]), taaki naya alert aate hi hints 1/3 se shuru hon. */
+  const curHints = () => (stage.hintsFor && sim.oc ? stage.hintsFor(sim) : null) || { key: '_', list: stage.hints || [] };
+  sim.hintPos = {};
+  let tasksDone = 0, stall = 0, nudged = false;
   const hintBtn = SD.el('button', 'btn small ghost term-hint');
   hintBtn.onclick = () => giveHint();
   btns.appendChild(hintBtn);
@@ -557,14 +560,16 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   nextBtn.onclick = () => showNextCommand();
   btns.appendChild(nextBtn);
   function paintHelp() {
+    const { key, list: hintList } = curHints(), hintIdx = sim.hintPos[key] || 0;
     hintBtn.textContent = hintIdx < hintList.length ? `💡 Hint ${hintIdx + 1}/${hintList.length} (−${SD.HINT_COST} XP)` : '💡 Saare hints dekh liye';
     hintBtn.disabled = hintIdx >= hintList.length;
     nextBtn.style.display = hintIdx >= hintList.length && (stage.solution || []).length ? '' : 'none';
   }
-  paintHelp();
 
   arena.append(goalBox, term, btns);
   print('sys', `perfsim ready — service '${sim.sys.name}'. 'help' se saare commands, 'sim status' se system ka haal.`);
+  if (stage.onInit) stage.onInit(sim, print);   // 📟 on-call: ghadi + pehla alert
+  paintHelp();
   setTimeout(() => input.focus(), 100);
   markNow();
 
@@ -594,9 +599,10 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     out.scrollTop = out.scrollHeight;
   }
   function giveHint() {
+    const { key, list: hintList } = curHints(), hintIdx = sim.hintPos[key] || 0;
     if (hintIdx >= hintList.length) { print('hint', '💡 Aur hints nahi hain — tum kar sakte ho!'); return; }
     print('hint', `💡 Hint ${hintIdx + 1}/${hintList.length}: ${hintList[hintIdx]}`);
-    hintIdx++; sim.hintsUsed++;
+    sim.hintPos[key] = hintIdx + 1; sim.hintsUsed++;
     hintBtn.classList.remove('pulse');
     paintHelp();
   }
@@ -611,6 +617,10 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
     ran.forEach(c => { if (k < solution.length && c === solution[k]) k++; });
     if (!solution.length) return;
     /* hal ke saare command chal chuke par mission adhoora: beech mein kisi aur command ne system badal diya hoga → saaf shuruaat */
+    if (k >= solution.length && stage.oncall) {
+      print('hint', '🧭 Hal ke saare command chal chuke. Upar pager dekho: jo alert khula hai, uska "pakka karo" wala command dobara chalao.');
+      return;
+    }
     const next = k < solution.length ? solution[k] : 'sim reset';
     sim.hintsUsed++;
     print('hint', k < solution.length
@@ -709,11 +719,17 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       if (e.simerr || /^400 —/.test(e.message)) print('err', e.message);
       else { console.error('perfsim error:', e); print('err', `simulator error: ${e.message} — 'sim reset' se mission dobara shuru karo`); }
     }
+    /* 📟 on-call: har command = shift ki ghadi mein 1 minute; alerts yahin fire/resolve hote hain */
+    if (stage.onTick && !sim.done) {
+      try { stage.onTick(sim, print); } catch (e) { console.error('oncall error:', e); print('err', `on-call engine error: ${e.message}`); }
+      refresh();
+    }
+    paintHelp();
     /* 5 command tak checklist mein koi naya ✅ nahi: ek baar saaf bata do ki madad kahan hai */
     if (!sim.done && stage.tasks && ++stall >= 5 && !nudged) {
       nudged = true;
       hintBtn.classList.add('pulse');
-      print('sys', hintIdx < hintList.length
+      print('sys', (sim.hintPos[curHints().key] || 0) < curHints().list.length
         ? 'Atak gaye? Upar checklist mein 👉 wala kaam dekho, phir neeche <b>💡 Hint</b> dabao.'
         : 'Atak gaye? Neeche <b>🧭 Agla command dikhao</b> dabao: agla command box mein bhar jaayega.');
     }

@@ -20,7 +20,7 @@ const path = require('path');
 const vm = require('vm');
 const DIR = __dirname;
 
-const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'perfsim-pro.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js', 'drill.js'];
+const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'perfsim-pro.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js', 'drill.js', 'oncall.js'];
 const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js', 'data-dist.js', 'data-shapes.js', 'data-builds.js', 'data-feed.js', 'data-feed-2.js',
   'data-st-01-reddit.js', 'data-st-02-cloudflare.js', 'data-st-03-jira.js', 'data-st-04-snowflake.js',
   'data-st-05-airtable.js', 'data-st-06-slack.js', 'data-st-07-discord.js', 'data-st-08-instagram.js',
@@ -89,7 +89,7 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-fp-scale-1-kyun.js',
   'data-v2-fp-scale-2-kaise.js',
   'data-v2-fp-scale-3-code.js',
-  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-v2-fp-cache-1-kyun.js', 'data-v2-fp-cache-2-kaise.js', 'data-v2-fp-cache-3-code.js', 'data-v2-fp-cache-4-kab.js', 'data-v2-fp-async-1-kyun.js', 'data-v2-fp-async-2-kaise.js', 'data-v2-fp-async-3-code.js', 'data-v2-fp-async-4-kab.js', 'data-v2-fp-retry-1-kyun.js', 'data-v2-fp-retry-2-kaise.js', 'data-v2-fp-retry-3-code.js', 'data-v2-fp-retry-4-kab.js', 'data-v2-fp-micro-1-kyun.js', 'data-v2-fp-micro-2-kaise.js', 'data-v2-fp-micro-3-code.js', 'data-v2-fp-micro-4-kab.js', 'data-v2-fp-obs-1-kyun.js', 'data-v2-fp-obs-2-kaise.js', 'data-v2-fp-obs-3-code.js', 'data-v2-fp-obs-4-kab.js', 'data-v2-fp-ig-1-kyun.js', 'data-v2-fp-ig-2-kaise.js', 'data-v2-fp-ig-3-code.js', 'data-v2-fp-ig-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-scenes-flow.js', 'data-scenes-api.js', 'data-scenes-data.js', 'data-scenes-resil.js', 'data-scenes-dist.js', 'data-scenes-shapes.js', 'data-scenes-builds.js', 'data-soch-scenes.js', 'data-pro-sec-1.js', 'data-pro-sec-2.js', 'data-pro-sec-3.js', 'data-pro-sec-4.js', 'data-pro-obs-1.js', 'data-pro-obs-2.js', 'data-pro-obs-3.js', 'data-pro-obs-4.js', 'data-pro-iv-1.js', 'data-pro-iv-2.js', 'data-pro-iv-3.js', 'data-pro-iv-4.js', 'data-guidance.js', 'data-v2-concurrency.js', 'video-sources.js', 'data-sds-live.js', 'data-sds-contracts.js', 'data-sds-webhook.js', 'data-sds-routing.js', 'data-sds-storage.js', 'data-sds-api.js', 'data-sds-metrics.js', 'data-sds-sourcing.js', 'data-sds-threads.js', 'data-sds-messaging.js', 'data-sds-design-review.js', 'data-sds-scaling.js', 'data-sds-cache.js', 'data-sds-concurrency.js', 'data-sds-retries.js', 'data-sds-ride-hailing.js', 'data-sds-roadmap.js', 'data-sds-judge.js', 'data-sds-method.js', 'data-sds-patterns.js', 'data-sds-typeahead.js', 'data-sds-scale-bands.js', 'data-scenes-sds.js', 'data-drill-resil.js'];
+  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-v2-fp-cache-1-kyun.js', 'data-v2-fp-cache-2-kaise.js', 'data-v2-fp-cache-3-code.js', 'data-v2-fp-cache-4-kab.js', 'data-v2-fp-async-1-kyun.js', 'data-v2-fp-async-2-kaise.js', 'data-v2-fp-async-3-code.js', 'data-v2-fp-async-4-kab.js', 'data-v2-fp-retry-1-kyun.js', 'data-v2-fp-retry-2-kaise.js', 'data-v2-fp-retry-3-code.js', 'data-v2-fp-retry-4-kab.js', 'data-v2-fp-micro-1-kyun.js', 'data-v2-fp-micro-2-kaise.js', 'data-v2-fp-micro-3-code.js', 'data-v2-fp-micro-4-kab.js', 'data-v2-fp-obs-1-kyun.js', 'data-v2-fp-obs-2-kaise.js', 'data-v2-fp-obs-3-code.js', 'data-v2-fp-obs-4-kab.js', 'data-v2-fp-ig-1-kyun.js', 'data-v2-fp-ig-2-kaise.js', 'data-v2-fp-ig-3-code.js', 'data-v2-fp-ig-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-scenes-flow.js', 'data-scenes-api.js', 'data-scenes-data.js', 'data-scenes-resil.js', 'data-scenes-dist.js', 'data-scenes-shapes.js', 'data-scenes-builds.js', 'data-soch-scenes.js', 'data-pro-sec-1.js', 'data-pro-sec-2.js', 'data-pro-sec-3.js', 'data-pro-sec-4.js', 'data-pro-obs-1.js', 'data-pro-obs-2.js', 'data-pro-obs-3.js', 'data-pro-obs-4.js', 'data-pro-iv-1.js', 'data-pro-iv-2.js', 'data-pro-iv-3.js', 'data-pro-iv-4.js', 'data-guidance.js', 'data-v2-concurrency.js', 'video-sources.js', 'data-sds-live.js', 'data-sds-contracts.js', 'data-sds-webhook.js', 'data-sds-routing.js', 'data-sds-storage.js', 'data-sds-api.js', 'data-sds-metrics.js', 'data-sds-sourcing.js', 'data-sds-threads.js', 'data-sds-messaging.js', 'data-sds-design-review.js', 'data-sds-scaling.js', 'data-sds-cache.js', 'data-sds-concurrency.js', 'data-sds-retries.js', 'data-sds-ride-hailing.js', 'data-sds-roadmap.js', 'data-sds-judge.js', 'data-sds-method.js', 'data-sds-patterns.js', 'data-sds-typeahead.js', 'data-sds-scale-bands.js', 'data-scenes-sds.js', 'data-drill-resil.js', 'data-oncall-resil.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */
@@ -178,7 +178,7 @@ const ONLY = process.argv[2];
 /* =====================================================================
    1. STRUCTURE
    ===================================================================== */
-const LAB_TYPES = ['replay', 'tradeoff', 'estimate', 'archdiff', 'docker', 'dryrun', 'cards', 'drill'];
+const LAB_TYPES = ['replay', 'tradeoff', 'estimate', 'archdiff', 'docker', 'dryrun', 'cards', 'drill', 'oncall'];
 const LAB_IDS = new Set();   // drill / oncall / chaos stage ids — poore app mein unique (best score inhi par save hota hai)
 const labStages = [];
 const allLevels = [];
@@ -341,6 +341,26 @@ function structure() {
       }
 
       if (LAB_TYPES.includes(st.type)) labStages.push({ at: sat, st });
+
+      /* 📟 ONCALL (oncall.js) — shift registered + har alert poora */
+      if (st.type === 'oncall') {
+        if (!st.id || !/^oncall-[a-z0-9-]+$/.test(st.id)) fail(`${sat}: id 'oncall-…' chahiye`);
+        else if (LAB_IDS.has(st.id)) fail(`${sat}: id '${st.id}' do baar`);
+        else { LAB_IDS.add(st.id); ok(); }
+        const S = SD.oncall && SD.oncall.get(st.shift);
+        if (!S) fail(`${sat}: shift '${st.shift}' SD.oncall mein registered nahi`);
+        else {
+          if (!(S.INC || []).length) fail(`${sat}: shift mein koi alert nahi`);
+          (S.INC || []).forEach((x, xi) => {
+            const xat = `${sat} INC[${xi}] ${x.id || ''}`;
+            if (!x.id || !x.text || !x.verifyText || !/SEV[12]/.test(x.sev || '')) fail(`${xat}: id/sev/text/verifyText missing`);
+            if (typeof x.fixed !== 'function') fail(`${xat}: fixed(sim) function chahiye`);
+            if (!(x.verify instanceof RegExp) && typeof x.verify !== 'function') fail(`${xat}: verify regex ya function chahiye`);
+            if ((x.hints || []).length !== 3) fail(`${xat}: 3 hints chahiye (dekho → socho → lagbhag hal)`);
+            else ok();
+          });
+        }
+      }
 
       /* ⚡ DRILL (drill.js) — lakshan → fix */
       if (st.type === 'drill') {
@@ -914,6 +934,31 @@ function labs() {
       if (!done) fail(`${at}: SOFTLOCK — har sawaal ka THEEK jawab dene par bhi lab poora nahi hua`);
       else if (done.firstTry !== done.total)
         fail(`${at}: exact answers diye par firstTry ${done.firstTry}/${done.total} aaya — tol bahut sakht hai`);
+      else ok();
+    }
+
+    if (st.type === 'oncall' && !(arena._oncall && arena._oncall.ctl)) fail(`${at}: oncall renderer ne terminal controller (arena._oncall.ctl) nahi diya`);
+    if (st.type === 'oncall' && arena._oncall && arena._oncall.ctl) {
+      const { ctl, INC, mission } = arena._oncall, sim = ctl.sim, sol = mission.solution || [];
+      let pre = true;
+      try { pre = !!INC[0].fixed(sim); } catch (e) { fail(`${at}: INC[0].fixed() crash — ${e.message}`); }
+      if (pre) fail(`${at}: pehla alert SHURU MEIN HI theek hai — kuch karna hi nahi padega`);
+      if (!sol.length) fail(`${at}: solution khaali`);
+      let earlyAt = -1;
+      sol.forEach((cmd, ci) => {
+        if (typeof cmd !== 'string') return fail(`${at}: solution[${ci}] string nahi`);
+        ctl.run(cmd);
+        if (sim.lastError) fail(`${at}: solution[${ci}] '${cmd}' par error — ${sim.lastError}`);
+        if (sim.oc && sim.oc.over && earlyAt < 0) earlyAt = ci;
+      });
+      if (sim.oc && sim.oc.risky) fail(`${at}: solution ke ${sim.oc.risky} command khud risky gine gaye — ${sim.oc.riskyList.join(' · ')}`);
+      if (!sim.oc || !sim.oc.over) fail(`${at}: SOFTLOCK — poora solution chala par shift khatam nahi hui (alert ${sim.oc ? sim.oc.inc + 1 : '?'} khula)`);
+      else if (earlyAt !== sol.length - 1) fail(`${at}: shift solution ke command ${earlyAt + 1}/${sol.length} par hi khatam — baaki hal faltu hai (ya alert bina kaam ke resolve)`);
+      else ok();
+      const nx = one(arena, 'oc-next');
+      if (nx) nx.click();
+      if (!done) fail(`${at}: report card ke baad stage poora nahi hua`);
+      else if (done.total !== INC.length || done.firstTry !== INC.length) fail(`${at}: bina hint ke poori shift par score ${done.firstTry}/${done.total}`);
       else ok();
     }
 

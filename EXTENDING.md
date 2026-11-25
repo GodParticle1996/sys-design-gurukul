@@ -931,3 +931,22 @@ Niyam (validator inhe pakadta hai):
 - Galat options **lalchaane wale** hon — asli engineer wahi galti karte hain (bada instance, timeout badhao, retry
   lagao). Saaf bekaar option mat do. Numbers usi level ke lesson se — naya daava mat gadho.
 - Lakshan mein woh number ho jo jawab kholta hai (errors 0%, unique requests normal, growth +5%/s).
+
+### 17.2 📟 `oncall` — live shift (`oncall.js`, ek file per shift: `data-oncall-<track>.js`)
+perfsim terminal + pager panel. 3–4 **jude hue** alerts: agla alert pichhle fix ke baad dikhta hai (ya `onFire` se
+system mein kuch badalta hai). Har command = 1 minute. Alert RESOLVE = `fixed(sim)` true **aur** fix ke baad ka
+`verify` (regex = command, function = record). Report card: MTTR, hints per alert, roke gaye commands, grade A/B/C.
+Format `oncall.js` ke header mein; model: **`data-oncall-resil.js`** (shift `nightcart`, boss-resil).
+
+perfsim terminal mein engine ke hooks: `stage.onInit(sim, print)`, `stage.onTick(sim, print)` (har command ke baad,
+error par bhi), `stage.hintsFor(sim)` (har alert ke alag 3 hints), aur on-call mein "Agla command" `sim reset` nahi
+sujhata. Risky commands `responses` se rukte hain — `exec()` mein responses builtins se PEHLE chalte hain, isliye
+state badalne se pehle hi ruk jaate hain. Engine ke default risky: `sim reset`, `sim inject`.
+
+Niyam (validator inhe pakadta hai): `id: 'oncall-<naam>'` unique · shift registered · har alert mein id, sev (SEV1/2),
+text, `fixed` function, `verify` regex/function, `verifyText`, **3 hints** · pehla alert shuru mein theek NA ho ·
+`solution` ka har command bina error, koi risky nahi · shift theek **aakhri** solution command par khatam ho (pehle
+khatam = faltu hal ya bina kaam ke resolve) · report card ke baad stage poora.
+
+Likhne se pehle har kadam perfsim par chala ke dekho (`dev/load-app.js` ka `terminal()`), aur numbers wahi likho jo
+output mein aaye. Alert ke text mein ghadi ka time mat likho — khiladi ki speed se badalta hai.
