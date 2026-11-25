@@ -1377,7 +1377,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       const d = sys.deps[dn];
       lines.push(`dep ${dn.padEnd(11)} p99 ${d.p99}ms${d.down ? ' 🔴 DOWN' : ''}` +
         (d.timeoutMs ? ` · timeout ${d.timeoutMs}ms` : ' · ⚠️ no timeout') +
-        (d.retry ? ` · retry×${d.retry.max}` : '') + (d.breaker ? ' · breaker' : '') + (d.fallback ? ' · fallback' : ''));
+        (d.retry ? ` · retry×${d.retry.max}` : '') + (d.breaker ? ` · breaker ${String(d.breakerState || 'closed').toUpperCase()} (cooldown ${d.breaker.halfOpenAfter}s)` : '') + (d.fallback ? ' · fallback' : ''));
     });
     Object.entries(sys.app.bulkheads || {}).forEach(([name, cap]) => lines.push(`bulkhead ${name} cap ${cap} concurrent`));
     panel('SYSTEM', lines);
