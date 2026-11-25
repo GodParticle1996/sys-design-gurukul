@@ -210,3 +210,10 @@
 .oc-term + .lab-after .oc-card { flex: 1 1 100%; }
 .term-out .t-task { color: var(--good); font-weight: 600; }
 @media (max-width: 700px) { .oc-pager { position: static; } }
+
+/* 🎲 Chaos round (chaos.js) */
+.cx-head { background: var(--panel2); border: 1px dashed var(--gold); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: .9rem; line-height: 1.5; }
+.cx-intro { color: var(--muted); margin-top: 4px; }
+.cx-q { margin: 14px 0 8px; font-size: 1rem; line-height: 1.5; }
+.cx-term + .lab-after { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.cx-term + .lab-after > .cx-q, .cx-term + .lab-after > .choices, .cx-term + .lab-after > .feedback { flex: 1 1 100%; }

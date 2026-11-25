@@ -20,7 +20,7 @@ const path = require('path');
 const vm = require('vm');
 const DIR = __dirname;
 
-const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'perfsim-pro.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js', 'drill.js', 'oncall.js'];
+const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'perfsim-pro.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js', 'drill.js', 'oncall.js', 'chaos.js'];
 const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js', 'data-dist.js', 'data-shapes.js', 'data-builds.js', 'data-feed.js', 'data-feed-2.js',
   'data-st-01-reddit.js', 'data-st-02-cloudflare.js', 'data-st-03-jira.js', 'data-st-04-snowflake.js',
   'data-st-05-airtable.js', 'data-st-06-slack.js', 'data-st-07-discord.js', 'data-st-08-instagram.js',
@@ -89,7 +89,7 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-fp-scale-1-kyun.js',
   'data-v2-fp-scale-2-kaise.js',
   'data-v2-fp-scale-3-code.js',
-  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-v2-fp-cache-1-kyun.js', 'data-v2-fp-cache-2-kaise.js', 'data-v2-fp-cache-3-code.js', 'data-v2-fp-cache-4-kab.js', 'data-v2-fp-async-1-kyun.js', 'data-v2-fp-async-2-kaise.js', 'data-v2-fp-async-3-code.js', 'data-v2-fp-async-4-kab.js', 'data-v2-fp-retry-1-kyun.js', 'data-v2-fp-retry-2-kaise.js', 'data-v2-fp-retry-3-code.js', 'data-v2-fp-retry-4-kab.js', 'data-v2-fp-micro-1-kyun.js', 'data-v2-fp-micro-2-kaise.js', 'data-v2-fp-micro-3-code.js', 'data-v2-fp-micro-4-kab.js', 'data-v2-fp-obs-1-kyun.js', 'data-v2-fp-obs-2-kaise.js', 'data-v2-fp-obs-3-code.js', 'data-v2-fp-obs-4-kab.js', 'data-v2-fp-ig-1-kyun.js', 'data-v2-fp-ig-2-kaise.js', 'data-v2-fp-ig-3-code.js', 'data-v2-fp-ig-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-scenes-flow.js', 'data-scenes-api.js', 'data-scenes-data.js', 'data-scenes-resil.js', 'data-scenes-dist.js', 'data-scenes-shapes.js', 'data-scenes-builds.js', 'data-soch-scenes.js', 'data-pro-sec-1.js', 'data-pro-sec-2.js', 'data-pro-sec-3.js', 'data-pro-sec-4.js', 'data-pro-obs-1.js', 'data-pro-obs-2.js', 'data-pro-obs-3.js', 'data-pro-obs-4.js', 'data-pro-iv-1.js', 'data-pro-iv-2.js', 'data-pro-iv-3.js', 'data-pro-iv-4.js', 'data-guidance.js', 'data-v2-concurrency.js', 'video-sources.js', 'data-sds-live.js', 'data-sds-contracts.js', 'data-sds-webhook.js', 'data-sds-routing.js', 'data-sds-storage.js', 'data-sds-api.js', 'data-sds-metrics.js', 'data-sds-sourcing.js', 'data-sds-threads.js', 'data-sds-messaging.js', 'data-sds-design-review.js', 'data-sds-scaling.js', 'data-sds-cache.js', 'data-sds-concurrency.js', 'data-sds-retries.js', 'data-sds-ride-hailing.js', 'data-sds-roadmap.js', 'data-sds-judge.js', 'data-sds-method.js', 'data-sds-patterns.js', 'data-sds-typeahead.js', 'data-sds-scale-bands.js', 'data-scenes-sds.js', 'data-drill-resil.js', 'data-oncall-resil.js'];
+  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-v2-fp-cache-1-kyun.js', 'data-v2-fp-cache-2-kaise.js', 'data-v2-fp-cache-3-code.js', 'data-v2-fp-cache-4-kab.js', 'data-v2-fp-async-1-kyun.js', 'data-v2-fp-async-2-kaise.js', 'data-v2-fp-async-3-code.js', 'data-v2-fp-async-4-kab.js', 'data-v2-fp-retry-1-kyun.js', 'data-v2-fp-retry-2-kaise.js', 'data-v2-fp-retry-3-code.js', 'data-v2-fp-retry-4-kab.js', 'data-v2-fp-micro-1-kyun.js', 'data-v2-fp-micro-2-kaise.js', 'data-v2-fp-micro-3-code.js', 'data-v2-fp-micro-4-kab.js', 'data-v2-fp-obs-1-kyun.js', 'data-v2-fp-obs-2-kaise.js', 'data-v2-fp-obs-3-code.js', 'data-v2-fp-obs-4-kab.js', 'data-v2-fp-ig-1-kyun.js', 'data-v2-fp-ig-2-kaise.js', 'data-v2-fp-ig-3-code.js', 'data-v2-fp-ig-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-scenes-flow.js', 'data-scenes-api.js', 'data-scenes-data.js', 'data-scenes-resil.js', 'data-scenes-dist.js', 'data-scenes-shapes.js', 'data-scenes-builds.js', 'data-soch-scenes.js', 'data-pro-sec-1.js', 'data-pro-sec-2.js', 'data-pro-sec-3.js', 'data-pro-sec-4.js', 'data-pro-obs-1.js', 'data-pro-obs-2.js', 'data-pro-obs-3.js', 'data-pro-obs-4.js', 'data-pro-iv-1.js', 'data-pro-iv-2.js', 'data-pro-iv-3.js', 'data-pro-iv-4.js', 'data-guidance.js', 'data-v2-concurrency.js', 'video-sources.js', 'data-sds-live.js', 'data-sds-contracts.js', 'data-sds-webhook.js', 'data-sds-routing.js', 'data-sds-storage.js', 'data-sds-api.js', 'data-sds-metrics.js', 'data-sds-sourcing.js', 'data-sds-threads.js', 'data-sds-messaging.js', 'data-sds-design-review.js', 'data-sds-scaling.js', 'data-sds-cache.js', 'data-sds-concurrency.js', 'data-sds-retries.js', 'data-sds-ride-hailing.js', 'data-sds-roadmap.js', 'data-sds-judge.js', 'data-sds-method.js', 'data-sds-patterns.js', 'data-sds-typeahead.js', 'data-sds-scale-bands.js', 'data-scenes-sds.js', 'data-drill-resil.js', 'data-oncall-resil.js', 'data-chaos-data.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */
@@ -178,7 +178,7 @@ const ONLY = process.argv[2];
 /* =====================================================================
    1. STRUCTURE
    ===================================================================== */
-const LAB_TYPES = ['replay', 'tradeoff', 'estimate', 'archdiff', 'docker', 'dryrun', 'cards', 'drill', 'oncall'];
+const LAB_TYPES = ['replay', 'tradeoff', 'estimate', 'archdiff', 'docker', 'dryrun', 'cards', 'drill', 'oncall', 'chaos'];
 const LAB_IDS = new Set();   // drill / oncall / chaos stage ids — poore app mein unique (best score inhi par save hota hai)
 const labStages = [];
 const allLevels = [];
@@ -357,6 +357,49 @@ function structure() {
             if (typeof x.fixed !== 'function') fail(`${xat}: fixed(sim) function chahiye`);
             if (!(x.verify instanceof RegExp) && typeof x.verify !== 'function') fail(`${xat}: verify regex ya function chahiye`);
             if ((x.hints || []).length !== 3) fail(`${xat}: 3 hints chahiye (dekho → socho → lagbhag hal)`);
+            else ok();
+          });
+        }
+      }
+
+      /* 🎲 CHAOS (chaos.js) — deck registered, har card: shuru mein toota, hal aakhri command par jeetata, base swasth */
+      if (st.type === 'chaos') {
+        if (!st.id || !/^chaos-[a-z0-9-]+$/.test(st.id)) fail(`${sat}: id 'chaos-…' chahiye`);
+        else if (LAB_IDS.has(st.id)) fail(`${sat}: id '${st.id}' do baar`);
+        else { LAB_IDS.add(st.id); ok(); }
+        const D = SD.chaos && SD.chaos.deck(st.deck);
+        if (!D) fail(`${sat}: deck '${st.deck}' SD.chaos mein registered nahi`);
+        else if (!D._checked) {
+          D._checked = true;
+          const cards = D.cards || [];
+          if (cards.length < 5) fail(`${sat}: deck mein ${cards.length} cards — kam se kam 5 (dobara khelne par nayi galti)`);
+          if (!D.alert) fail(`${sat}: deck ka alert missing`);
+          const titles = new Set();
+          const drive = m => { const ar = makeEl('div'); let won = 0; const ctl = SD.renderers.terminal(m, ar, () => { won++; }); return { ctl, won: () => won }; };
+          let base = null;
+          try { base = drive(SD.chaos.mission(D.id, null)).ctl.sim; } catch (e) { fail(`${sat}: base system crash — ${e.message}`); }
+          cards.forEach(c => {
+            const cat = `${sat} card '${c.id}'`;
+            if (!c.id || !c.title || !c.why || !c.verifyText || !c.sys) return fail(`${cat}: id/title/why/verifyText/sys missing`);
+            if (titles.has(c.title)) fail(`${cat}: title do baar`); titles.add(c.title);
+            if (typeof c.fixed !== 'function' || typeof c.verify !== 'function') return fail(`${cat}: fixed/verify functions chahiye`);
+            if ((c.hints || []).length !== 3) fail(`${cat}: 3 hints chahiye`);
+            if (base) { let f = false; try { f = !!c.fixed(base); } catch (e) { fail(`${cat}: fixed() base par crash — ${e.message}`); }
+              if (!f) fail(`${cat}: SWASTH base par bhi fixed() false — card ek se zyada cheez badalta hai, ya base hi toota hai`); else ok(); }
+            let r;
+            try { r = drive(SD.chaos.mission(D.id, c.id)); } catch (e) { return fail(`${cat}: render crash — ${e.message}`); }
+            const sim = r.ctl.sim;
+            if (c.fixed(sim)) fail(`${cat}: galti SHURU MEIN HI theek hai`);
+            const sol = c.solution || [];
+            if (!sol.length) return fail(`${cat}: solution khaali`);
+            let wonAt = -1;
+            sol.forEach((cmd, ci) => {
+              r.ctl.run(cmd);
+              if (sim.lastError) fail(`${cat}: solution[${ci}] '${cmd}' par error — ${sim.lastError}`);
+              if (r.won() && wonAt < 0) wonAt = ci;
+            });
+            if (wonAt < 0) fail(`${cat}: SOFTLOCK — poora solution chala par round jeeta nahi`);
+            else if (wonAt !== sol.length - 1) fail(`${cat}: solution ke command ${wonAt + 1}/${sol.length} par hi jeet — baaki hal faltu`);
             else ok();
           });
         }
@@ -960,6 +1003,25 @@ function labs() {
       if (!done) fail(`${at}: report card ke baad stage poora nahi hua`);
       else if (done.total !== INC.length || done.firstTry !== INC.length) fail(`${at}: bina hint ke poori shift par score ${done.firstTry}/${done.total}`);
       else ok();
+    }
+
+    if (st.type === 'chaos') {
+      const cx = arena._chaos;
+      if (!cx || !cx.ctl) fail(`${at}: chaos renderer ne terminal controller (arena._chaos.ctl) nahi diya`);
+      else {
+        (cx.card.solution || []).forEach(cmd => cx.ctl.run(cmd));
+        const right = byClass(arena, 'cx-opt').filter(b => b.dataset.id === cx.card.id)[0];
+        if (!right) fail(`${at}: "kya toota tha" mein sahi option nahi mila (card ${cx.card.id})`);
+        else {
+          if (byClass(arena, 'cx-opt').length !== 3) fail(`${at}: "kya toota tha" mein 3 options chahiye`);
+          right.click();
+          const nx = one(arena, 'cx-next');
+          if (nx) nx.click();
+          if (!done) fail(`${at}: SOFTLOCK — chaos round poora nahi hua`);
+          else if (done.firstTry !== 2 || done.total !== 2) fail(`${at}: bina hint + sahi jawab par score ${done.firstTry}/${done.total}`);
+          else ok();
+        }
+      }
     }
 
     if (st.type === 'drill') {

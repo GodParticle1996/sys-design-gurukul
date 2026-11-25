@@ -1367,6 +1367,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       'admission       ' + (sys.api.admission ? fmt(sys.api.admission.maxRps) + ' rps andar' : '—'),
       '',
       'app instances   ' + sys.app.instances,
+      'app cpu/request ' + sys.app.cpuMsPerReq + ' ms' + (sys.app.cpuMsPerReq > 50 ? '   ⚠️ har request par itna CPU' : ''),
       'db pool         ' + sys.pool.size + (sys.db.longTxHolding ? `   ⚠️ ${sys.db.longTxHolding} atke hue → effective ${eff}` : ''),
       'buffer pool     ' + sys.db.bufferPoolMB + ' MB',
       'replicas        ' + sys.db.replicas + '   lag ' + sys.db.replicaLagSec + 's',

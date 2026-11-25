@@ -950,3 +950,18 @@ khatam = faltu hal ya bina kaam ke resolve) · report card ke baad stage poora.
 
 Likhne se pehle har kadam perfsim par chala ke dekho (`dev/load-app.js` ka `terminal()`), aur numbers wahi likho jo
 output mein aaye. Alert ke text mein ghadi ka time mat likho — khiladi ki speed se badalta hai.
+
+### 17.3 🎲 `chaos` — ek chhupi galti (`chaos.js`, ek file per deck: `data-chaos-<track>.js`)
+Deck = ek **swasth base system** + 5–8 cards; har card base par **ek** badlaav (kal raat ki deploy ki galti). Har run
+random card (pichhle 2 nahi). Khiladi probe chalata hai, theek karta hai, pakka karta hai, phir **"kya toota tha?"**
+(3 options: asli card + deck ke 2 aur) — andaaze se theek karna kaafi nahi. Aakhir mein "tumne N badlaav kiye · hal
+mein M chahiye tha". Format `chaos.js` ke header mein; model: **`data-chaos-data.js`** (boss-data, 6 cards).
+
+Niyam (validator inhe pakadta hai): `id: 'chaos-<naam>'` unique · deck registered · ≥ 5 cards · har card: id, title
+(unique), why, verifyText, `sys` badlaav, `fixed` + `verify` functions, 3 hints · **swasth base par har card ka
+`fixed()` true** (warna card ek se zyada cheez badalta hai ya base toota hai) · card shuru mein toota · `solution`
+bina error ke theek **aakhri** command par jeetata hai · UI walk: hal → sahi option → Aage badho = 2/2.
+
+Galti **hamari config** mein ho (pool, index, count, timeout, cache, admission, auth…), bahar ke provider ki
+speed mein nahi — "provider ko tez karo" koi fix nahi hota. Sab cards ek hi `alert` se shuru hon (galti ka naam
+nahi), aur alag-alag cards ke lakshan ek jaise dikh sakte hain — farak probe/trace/status se nikle.
