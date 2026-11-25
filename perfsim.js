@@ -1138,7 +1138,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
   function setPath(obj, path, val) {
     const enums = { 'api.pagination': ['offset', 'cursor'], 'api.auth': ['body', 'param', 'header', 'null', 'none'], 'db.engine': ['postgres', 'mysql', 'lsm', 'rocksdb', 'cassandra', 'leveldb'], 'booking.mode': ['none', 'optimistic', 'pessimistic', 'reservation'], streamKind: ['log', 'queue', 'sqs', 'rabbit'] };
     const bools = ['api.countTotal', 'api.idempotency'];
-    const positive = ['api.maxLimit', 'api.maxPageDepth', 'pool.size', 'pool.acquireTimeoutMs', 'app.instances', 'app.cpuMsPerReq', 'db.bufferPoolMB', 'db.replicas'];
+    const positive = ['api.maxLimit', 'api.maxPageDepth', 'pool.size', 'pool.acquireTimeoutMs', 'app.instances', 'app.cpuMsPerReq', 'db.bufferPoolMB', 'db.replicas', 'booking.holdTtl'];
     const nonnegative = ['db.longTxHolding', 'db.replicaLagSec'];
     if (enums[path]) {
       val = String(val).toLowerCase();
@@ -2512,6 +2512,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       const sold = Object.keys(B.seats).length, held = Object.keys(B.holds).length;
       print('ok', [
         `mode             ${B.mode}`,
+        `hold ttl         ${B.holdTtl ? B.holdTtl + 's' : '600s'} (bina --ttl wale holds; sim set booking.holdTtl N)`,
         `seats sold       ${sold}${sold ? '  (' + Object.keys(B.seats).join(', ') + ')' : ''}`,
         `active holds     ${held}${held ? '  (' + Object.keys(B.holds).join(', ') + ')' : ''}`,
         ...Object.entries(B.holds).map(([seat, h]) => `${seat}: owner=${h.owner}, remaining=${Math.max(0, h.expiresAt - sim.timeSec)}s`),
@@ -2529,7 +2530,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       const mode = B.mode;
 
       if (verb === 'hold') {
-        const ttl = parseInt(f.ttl, 10) || 600;
+        const ttl = parseInt(f.ttl, 10) || Math.round(+B.holdTtl) || 600;   // --ttl na ho toh app ki setting (sim set booking.holdTtl N)
         if (B.seats[seat]) { print('err', `${seat} pehle hi bik chuka hai.`); return rec({ kind: 'book', op: 'hold', seat, ok: false, mode }); }
         const owner = String(f.owner || 'holder');
         if (B.holds[seat] && B.holds[seat].owner !== owner) {
@@ -2678,6 +2679,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       'CONTENTION',
       '  sim set booking.mode none|optimistic|pessimistic|reservation',
       '  book seat A1 --concurrent 2   book hold A1 --ttl 600 --owner alice',
+      '  sim set booking.holdTtl 600   (app ka default hold, jab --ttl na do)',
       '  book confirm A1 --owner alice   book status   sim advance 15',
     ].join('\n'));
     return rec({ kind: 'help' });
