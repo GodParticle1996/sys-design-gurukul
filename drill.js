@@ -52,8 +52,6 @@
     const picked = choose(stage);
     const total = picked.length;
     SD.state.labs = SD.state.labs || { drill: {}, oncall: {}, seen: {} };
-    SD.state.labs.seen['drill:' + stage.id] = picked.map(o => String(o.i));
-    SD.saveState();
     const best = SD.state.labs.drill[stage.id];
 
     let k = 0, right = 0, fast = 0, used = 0, tRound = 0, answered = false, over = false, optBtns = [], nextBtn = null;
@@ -62,7 +60,7 @@
     box.appendChild(el('div', 'dl-intro', `${stage.intro || ''}
       <div class="dl-rules">${total} rounds · har round mein <b>ek</b> koshish · ghadi sirf <b>sochne</b> ka samay ginti hai
       (jawab ke baad padhna mufat) · ⚡ = ${FAST}s ke andar sahi · keyboard: <b>1 2 3</b> chuno, <b>Enter</b> = agla.
-      ${stage.par ? `<br>Lakshya: <b>${total}/${total}</b>, kul <b>${stage.par}s</b> se kam.` : ''}${best ? ` Pichhla best: <b>${best.score}/${total}</b> · <b>${best.secs}s</b>.` : ''}</div>`));
+      ${stage.par ? `<br>Lakshya: <b>${total}/${total}</b>, kul <b>${stage.par}s</b> tak.` : ''}${best ? ` Pichhla best: <b>${best.score}/${total}</b> · <b>${best.secs}s</b>.` : ''}</div>`));
     const startBtn = el('button', 'btn big dl-start', '▶ Shuru karo');
     const top = el('div', 'dl-top');
     const sym = el('div', 'dl-sym');
@@ -133,10 +131,10 @@
       const slow = log.filter(x => x.ok && x.secs > FAST * 2).map(x => stage.rounds[x.i]);
       const win = el('div', 'lab-win pop dl-card',
         `<div class="dl-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
-        <div><b>${right}/${total} sahi</b> · sochne ka samay <b>${secs}s</b>${stage.par ? ` (lakshya ${stage.par}s)` : ''} · ⚡ ${fast}${better && prev ? ' — <b>naya best!</b>' : ''}</div>` +
+        <div><b>${right}/${total} sahi</b> · sochne ka samay <b>${secs}s</b>${stage.par ? ` (lakshya ${stage.par}s tak)` : ''} · ⚡ ${fast}${better && prev ? ' — <b>naya best!</b>' : ''}</div>` +
         (misses.length ? `<div class="dl-miss"><b>Dobara padho:</b>${misses.map(r => `<div>❌ ${esc(String(r.sym).split('\n')[0])} → <b>${esc(r.good)}</b> <span class="dl-where">(${esc(levelTitle(r.level))})</span></div>`).join('')}</div>` : '<div>Ek bhi galti nahi. 🔥</div>') +
         (slow.length ? `<div class="dl-miss"><b>Sahi, par dheere (${FAST * 2}s+):</b>${slow.map(r => `<div>🐢 ${esc(String(r.sym).split('\n')[0])}</div>`).join('')}</div>` : '') +
-        `<div class="dl-rules">⭐⭐⭐ = sab sahi + lakshya se kam samay · ⭐⭐ = 75%+ sahi. Dobara khelo toh pool se naye rounds aate hain.</div>`);
+        `<div class="dl-rules">⭐⭐⭐ = sab sahi + lakshya ke andar samay · ⭐⭐ = 75%+ sahi. Dobara khelo toh pool se naye rounds aate hain.</div>`);
       const again = el('button', 'btn ghost dl-again', '🔁 Dobara (naye rounds)');
       again.onclick = () => { arena.innerHTML = ''; renderDrill(stage, arena, onDone); };
       const done = el('button', 'btn big dl-done', 'Aage badho →');
@@ -147,6 +145,9 @@
     startBtn.onclick = () => {
       if (k || answered || top.isConnected) return;
       startBtn.style.display = 'none';
+      /* "dekhe hue" tabhi jab sach mein shuru kiya — sirf kholne se nahi (Codex ne pakda, 2026-11-25) */
+      SD.state.labs.seen['drill:' + stage.id] = picked.map(o => String(o.i));
+      SD.saveState();
       box.append(top, sym, opts, fb, nav, after);
       show();
     };

@@ -2480,9 +2480,12 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
      BOOK — contention: do log, ek seat
      ===================================================================== */
   // Hold authority stores expiry and owner; every command advances/observes virtual time.
+  /* `sim set booking.mode X` generic setter se sirf { mode } banata hai — seats/holds yahan bharo (warna crash) */
+  const bookFill = B => { if (!B.seats || typeof B.seats !== 'object') B.seats = {}; if (!B.holds || typeof B.holds !== 'object') B.holds = {}; return B; };
   function expireHolds() {
     const B = sim.sys.booking;
-    if (!B) return;
+    if (!B || typeof B !== 'object') return;
+    bookFill(B);
     Object.entries(B.holds).forEach(([seat, hold]) => {
       if (hold.expiresAt <= sim.timeSec) {
         B.expiredHolds = B.expiredHolds || {};
