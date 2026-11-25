@@ -18,6 +18,7 @@
        verifyText: 'kya chala kar pakka karna hai',
        hints: ['1', '2', '3 (lagbhag poora hal)'],
        onFire?: (sim, print) => {},                 // alert aate hi system mein kuch badlo (sim.sys)
+       // record par tika fixed()? sim.records.slice(sim.oc.incs[i].firedRec) = is alert ke aane ke baad ke records
      } ],
      build: ({ risky }) => ({
        sys: { ... },                                 // shuruaati system (perfsim stage.sys jaisa)
@@ -63,6 +64,7 @@
       if (k + 1 < INC.length) {
         c.inc = k + 1;
         c.incs[k + 1].fired = c.clock;
+        c.incs[k + 1].firedRec = sim.records.length;   // record-wale fixed() checks: "alert aane ke BAAD" ke records
         if (INC[k + 1].onFire) INC[k + 1].onFire(sim, print);
         print('err', `📟 ${hhmm(c.start, c.clock)}  [FIRING] ${INC[k + 1].sev} ${INC[k + 1].id} — ${INC[k + 1].text}`);
       } else { c.over = true; print('task', `📟 ${hhmm(c.start, c.clock)}  🌅 Saare alerts shaant. Shift handover ka waqt.`); }
@@ -74,7 +76,7 @@
   }
 
   function init(def, sim, print, onUpdate) {
-    sim.oc = { clock: 0, start: def.start, inc: 0, over: false, risky: 0, riskyList: [], incs: def.INC.map((x, i) => ({ fired: i === 0 ? 0 : null })) };
+    sim.oc = { clock: 0, start: def.start, inc: 0, over: false, risky: 0, riskyList: [], incs: def.INC.map((x, i) => ({ fired: i === 0 ? 0 : null, firedRec: 0 })) };
     const first = def.INC[0];
     if (first.onFire) first.onFire(sim, print);
     print('err', `📟 ${hhmm(def.start, 0)}  [FIRING] ${first.sev} ${first.id} — ${first.text}`);
