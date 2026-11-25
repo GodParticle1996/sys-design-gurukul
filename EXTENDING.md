@@ -965,3 +965,28 @@ bina error ke theek **aakhri** command par jeetata hai · UI walk: hal → sahi 
 Galti **hamari config** mein ho (pool, index, count, timeout, cache, admission, auth…), bahar ke provider ki
 speed mein nahi — "provider ko tez karo" koi fix nahi hota. Sab cards ek hi `alert` se shuru hon (galti ka naam
 nahi), aur alag-alag cards ke lakshan ek jaise dikh sakte hain — farak probe/trace/status se nikle.
+
+### 17.4 Kahan kya hai (2026-11-25)
+| Track | ⚡ Drill | 📟 On-call (shift id) | 🎲 Chaos (deck) |
+|---|---|---|---|
+| flow | boss-flow | boss-flow (`diwalipush`) | syncasync (`flow`) |
+| api | boss-api | boss-api (`clearpay`) | ratelimit (`api`) |
+| data | boss-data | boss-data (`ledgermove`) | boss-data (`data`) |
+| resil | boss-resil | boss-resil (`nightcart`) | chaos (`resil`) |
+| dist | boss-dist | boss-dist (`walletkv`) | contention (`dist`) |
+| shapes | boss-shapes | realtime (`chatdock`) | — |
+| builds | boss-uber | ticketmaster (`tixnow`) | — |
+| feed | boss-feed | boss-feed (`edgepost`) | — |
+| pro-sec | boss-sec | boss-sec (`monthend`) | sec-abuse (`sec`) |
+| pro-obs | boss-obs | boss-obs (`rehearsal`) | — |
+| pro-iv | boss-iv | boss-iv (`designlive`) | — |
+| fp-core | fp-ig-kab | fp-cache-kab (`results`) | — |
+| sdd-resil | ch-kab | cb-kab (`passbook`) | — |
+| stories | notion-scale | notion-scale (`chaichat`) | — |
+
+Chaos decks sirf wahan jahan 5+ **dikhne wale, alag** cards bante hain. Jaise fp-core cache: coalescing on ho toh jitter-0 / TTL / hit-rate cards load mein dikhte hi nahi; baaki cards data deck jaise ho jaate. Resil deck mein bulkhead card nahi: breaker OPEN ho toh ledger calls 1ms mein fail hoti hain, pool bhookha hi nahi hota.
+
+### 17.5 Labs ke liye perfsim mein jo juda (2026-11-25)
+- **Plugins (`perfsim-pro.js`):** `jobs` (OTP + campaign lanes, FCM 1,000/s, cap, DLQ, dedup, usercap), `fleet` (feature file har 5 min, hadd 200, validate / staged / probes), `rt` (20 gateways × 50,000 sockets: persist, jitter, backlog-limit), `fanout status|use` (production feed mode; `fanout --mode` what-if hi rehta hai).
+- **perfsim.js:** `booking.holdTtl` setting · `sim set booking.mode` se pehle `book status` na ho toh crash nahi · `migrate backfill` replica-lag gauge set karta hai, `migrate status` batch dikhata hai · `sim status` mein `app cpu/request` aur breaker ki haalat + cooldown.
+- **Shift likhne ka niyam:** hal ka koi command error na de (diagnosis wale 503 hints mein rakho, solution mein nahi) · alert ke text mein ghadi ka time nahi · scripted badlaav (`onFire`) sirf woh jo asli zindagi mein bahar se hota hai (provider theek hua, kisi ne hotfix kiya, product ne TTL badla).
