@@ -605,3 +605,86 @@
     },
   });
 })();
+
+/* =====================================================================
+   RT — realtime gateways (2026-11-25, on-call shift boss-shapes; data-shapes.js 'realtime' lesson)
+   10 lakh concurrent ÷ 50,000 per node = 20 gateways. Ek node ~1,000 reconnects/second sambhalta hai
+   (auth + subscriptions + "kya miss hua"). Model:
+     send      100 members ka group: 90 online (push), 10 offline → persist OFF = message hamesha ke liye gaya
+     restart   ek gateway ke 50,000 clients: bina jitter ~1 second mein sab baaki 19 par → 2,632/node → overload → cascade
+               full jitter ~30 second mein phailata hai → 88/node/second
+     reconnect 3 din baad lauti user ka backlog 40,000 messages → bina hadd ~12s tak us gateway par sab ruke
+   ===================================================================== */
+(function () {
+  const baseDefault = SD.defaultSys;
+  SD.defaultSys = function () {
+    const s = baseDefault();
+    s.rt = { users: 1000000, perNode: 50000, nodes: 20, persist: false, jitter: false, backlogLimit: 0 };
+    return s;
+  };
+  const num = n => Math.round(n).toLocaleString('en-IN');
+  const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
+  const PER_NODE_RECONNECT = 1000, MISSED = 40000, MS_PER_MSG = 0.3;
+  (SD.perfsimPlugins = SD.perfsimPlugins || []).push({
+    match: /^rt\b/i,
+    help: ['RT (realtime chat: 20 gateways × 50,000 sockets)',
+      '  rt status                           gateways aur settings',
+      '  rt send                             100 members ke group mein ek message (10 offline)',
+      '  rt restart gateway-3                ek gateway ka deploy — uske clients reconnect karenge',
+      '  rt reconnect riya                   3 din baad lauti user ka backlog',
+      '  rt persist on|off · rt jitter on|off · rt backlog-limit <N>'],
+    run(api, norm) {
+      const { sim, print, panel, rec, err } = api;
+      const R = sim.sys.rt;
+      const verb = word(norm, 1), arg = word(norm, 2);
+      const onoff = v => { if (!['on', 'off'].includes(v)) err('400 — on ya off likho'); return v === 'on'; };
+      if (!verb || verb === 'status') {
+        panel('RT GATEWAYS', [
+          `users online     ${num(R.users)} · ${R.nodes} gateways × ${num(R.perNode)} sockets`,
+          `persist          ${R.persist ? 'ON — pehle store, phir push ✅' : 'OFF — sirf push (offline ko kuch nahi)'}`,
+          `reconnect        ${R.jitter ? 'exponential backoff + full jitter (~30s mein phaila)' : 'fixed 1s — sab ek saath'}`,
+          `backlog limit    ${R.backlogLimit ? num(R.backlogLimit) + ' messages, phir "aur load karo"' : '— (jitna miss hua, sab ek saath)'}`,
+        ]);
+        return rec({ kind: 'rt', op: 'status', persist: R.persist, jitter: R.jitter, backlogLimit: R.backlogLimit });
+      }
+      if (verb === 'persist') { R.persist = onoff(arg); print('ok', R.persist ? 'Ab har message pehle log/DB mein, phir connected logon ko push. Reconnect par client last_seen_id se gap bharega.' : 'Persist band — sirf push.'); return rec({ kind: 'rt', op: 'persist', persist: R.persist }); }
+      if (verb === 'jitter') { R.jitter = onoff(arg); print('ok', R.jitter ? 'Clients ab exponential backoff + full jitter se reconnect karenge.' : 'Jitter band — fixed 1s.'); return rec({ kind: 'rt', op: 'jitter', jitter: R.jitter }); }
+      if (verb === 'backlog-limit') {
+        const v = parseInt(arg, 10);
+        if (!Number.isInteger(v) || v < 0 || v > 100000) err('400 — 0 se 100000 ke beech (0 = hadd nahi)');
+        R.backlogLimit = v; print('ok', v ? `Reconnect par max ${num(v)} messages; baaki "aur load karo" se pagination.` : 'Backlog limit hata.');
+        return rec({ kind: 'rt', op: 'backlog-limit', backlogLimit: v });
+      }
+      if (verb === 'send') {
+        sim.timeSec++;
+        const online = 90, offline = 10, lost = R.persist ? 0 : offline;
+        print(lost ? 'err' : 'ok', `group "dinner-plans" (100 members): ${online} online ko push ✅ · ${offline} offline → ${lost ? `${lost} ke liye message HAMESHA ke liye gaya ❌ (store hi nahi hua)` : 'store hua, reconnect par milega ✅'}`);
+        return rec({ kind: 'rt', op: 'send', online, offline, lost });
+      }
+      if (verb === 'restart') {
+        if (!/^gateway-\d+$/.test(arg)) err('400 — rt restart gateway-3');
+        sim.timeSec += 30;
+        const conns = R.perNode, rest = R.nodes - 1;
+        const spreadSec = R.jitter ? 30 : 1;
+        const perNodeRate = conns / spreadSec / rest;
+        const over = perNodeRate > PER_NODE_RECONNECT;
+        const cascade = over ? 3 : 0;
+        panel(`RESTART ${arg}`, [
+          `${num(conns)} clients reconnect · ${R.jitter ? '~30s mein phaile (jitter)' : '~1 second mein ek saath'}`,
+          `baaki ${rest} gateways par: ${num(perNodeRate)} reconnects/node/second (hadd ~${num(PER_NODE_RECONNECT)})`,
+          over ? `💥 OVERLOAD — ${cascade} aur gateways gire, unke ${num(cascade * conns)} clients bhi reconnect… cascade` : '✅ sab gateways hadd ke andar',
+        ]);
+        return rec({ kind: 'rt', op: 'restart', perNodeRate: Math.round(perNodeRate), cascade, jitter: R.jitter });
+      }
+      if (verb === 'reconnect') {
+        sim.timeSec++;
+        const sent = R.backlogLimit ? Math.min(R.backlogLimit, MISSED) : MISSED;
+        const blockedMs = Math.round(sent * MS_PER_MSG);
+        print(blockedMs > 1000 ? 'err' : 'ok', `${arg || 'riya'} 3 din baad lauti: ${num(MISSED)} messages miss hue → ${num(sent)} ek saath bheje` +
+          (R.backlogLimit ? ` + "aur load karo" ✅` : '') + ` · us gateway par baaki users ${blockedMs > 1000 ? (blockedMs / 1000).toFixed(1) + 's ruke ❌' : blockedMs + 'ms ✅'}`);
+        return rec({ kind: 'rt', op: 'reconnect', sent, blockedMs });
+      }
+      err(`400 — 'rt ${verb}' samajh nahi aaya. 'help' dekho.`);
+    },
+  });
+})();
