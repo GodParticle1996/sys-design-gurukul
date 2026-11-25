@@ -65,6 +65,20 @@ SD.extendLevel = function (levelId, add) {
   return lvl;
 };
 
+/* Naya LAB stage (⚡ drill / 📟 on-call / 🎲 chaos) kisi level mein jodna:
+     SD.addLab('boss-resil', { type: 'drill', id: 'drill-resil', ... })
+   Stage 🎁 bonus stage se PEHLE judta hai (bonus hamesha aakhir mein rahe); bonus na ho toh aakhir mein.
+   Level na mile toh ERROR (extendLevel jaisa). */
+SD.addLab = function (levelId, stage) {
+  let lvl = null;
+  Object.keys(SD.levelSets).forEach(t => (SD.levelSets[t] || []).forEach(l => { if (l.id === levelId) lvl = l; }));
+  if (!lvl) throw new Error(`SD.addLab: level '${levelId}' nahi mila — file order check karo`);
+  lvl.stages = lvl.stages || [];
+  const b = lvl.stages.findIndex(s => s.bonus);
+  if (b < 0) lvl.stages.push(stage); else lvl.stages.splice(b, 0, stage);
+  return lvl;
+};
+
 /* ---------------- persistence ---------------- */
 SD.defaultState = function () {
   return {
@@ -80,6 +94,7 @@ SD.defaultState = function () {
     popBonus: { day: null, keys: [] },
     labsDone: [],         // 'project/exercise' — laptop par chalaaye gaye docker labs (self-reported ✔)
     soch: {},             // scenarioId -> 1..3 stars (🧠 Soch Akhada, soch.js)
+    labs: { drill: {}, oncall: {}, seen: {} },   // ⚡ drill best {score, secs} · 📟 on-call best {grade, mins} · pichhli baar dikhe ids (drill/chaos)
   };
 };
 
@@ -122,6 +137,13 @@ SD.normalizeState = function (s) {
     Object.entries(s.soch).forEach(([id, n]) => {
       if (!['__proto__', 'constructor', 'prototype'].includes(id) && Number.isInteger(n) && n >= 1 && n <= 3) out.soch[id] = n;
     });
+  const L = s.labs;
+  if (L && typeof L === 'object' && !Array.isArray(L)) {
+    const each = (obj, fn) => { if (obj && typeof obj === 'object' && !Array.isArray(obj)) Object.entries(obj).forEach(([id, v]) => { if (!['__proto__', 'constructor', 'prototype'].includes(id) && id.length <= 80) fn(id, v); }); };
+    each(L.drill, (id, v) => { if (v && count(v.score) && count(v.secs)) out.labs.drill[id] = { score: v.score, secs: v.secs }; });
+    each(L.oncall, (id, v) => { if (v && ['A', 'B', 'C'].includes(v.grade) && count(v.mins)) out.labs.oncall[id] = { grade: v.grade, mins: v.mins }; });
+    each(L.seen, (id, v) => { if (Array.isArray(v)) out.labs.seen[id] = v.filter(x => typeof x === 'string' && x.length <= 80).slice(0, 40); });
+  }
   if (s.popBonus && typeof s.popBonus.day === 'string' && Array.isArray(s.popBonus.keys))
     out.popBonus = { day: s.popBonus.day, keys: [...new Set(s.popBonus.keys.filter(x => typeof x === 'string'))] };
   const cp = s.checkpoint;

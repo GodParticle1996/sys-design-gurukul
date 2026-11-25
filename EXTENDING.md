@@ -910,3 +910,24 @@ badlaav kaam karte hain. Commands: `tenant …`, `token …`, `cost …`, `capac
 - 2026-11-17: Codex ki 19 files ka saara dikhne wala text simple Hinglish mein dobara likha gaya (facts, numbers, option ka kram aur
   answer index wahi); Codex ne har batch ki jaanch ki. 3 naye sds tracks ke 11 levels ke kadam-dar-kadam scenes `data-scenes-sds.js` mein hain
   (sabhi `data-sds-*.js` ke baad load). Naya text bhi isi simple Hinglish mein likho.
+
+## 17. ⚡ 📟 🎲 Naye lab types: drill · on-call · chaos (2026-11-25 se)
+
+Kube Gurukul ke teen lab types ab yahan bhi. Teeno **`SD.addLab(levelId, stage)`** (core.js) se kisi bhi level mein
+judte hain — stage 🎁 bonus stage se pehle lagta hai, level na mile toh ERROR. Best score / dekhe hue ids
+`SD.state.labs` mein (`{ drill, oncall, seen }`, `normalizeState` inhe saaf karta hai).
+
+### 17.1 ⚡ `drill` — Lakshan → fix (`drill.js`, ek file per track: `data-drill-<track>.js`)
+Dashboard ka ek lakshan → 3 options (diagnosis → fix) → ek hi koshish. Ghadi sirf **sochne** ka samay ginti hai;
+jawab ke baad "kyun" padhte waqt ghadi ruki rehti hai. Har run pool se `pick` rounds (pichhli baar wale baad mein).
+Poora format `drill.js` ke header mein; model: **`data-drill-resil.js`**.
+
+Niyam (validator inhe pakadta hai):
+- `id: 'drill-<naam>'`, poore app mein unique · pool ≥ `pick + 4` · `par` (second) zaroori.
+- Har round: `sym` (saada text, `\n` = nayi line, ≤ 200 chars) · `good` + 2–3 `bad` (saada text, ≤ 90 chars) ·
+  `why` (HTML chalega, ≤ 260 chars) · `level` = jis level mein yeh sikhaya gaya (asli id).
+- **Length bias:** sahi option sabse lambe galat se 15%+ lamba ya sabse chhote se 15%+ chhota na ho, aur poore drill
+  mein sahi option aadhe se zyada rounds mein sabse lamba na ho.
+- Galat options **lalchaane wale** hon — asli engineer wahi galti karte hain (bada instance, timeout badhao, retry
+  lagao). Saaf bekaar option mat do. Numbers usi level ke lesson se — naya daava mat gadho.
+- Lakshan mein woh number ho jo jawab kholta hai (errors 0%, unique requests normal, growth +5%/s).

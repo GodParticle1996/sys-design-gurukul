@@ -20,7 +20,7 @@ const path = require('path');
 const vm = require('vm');
 const DIR = __dirname;
 
-const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'perfsim-pro.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js'];
+const ENGINE = ['core.js', 'data-core.js', 'visuals.js', 'games.js', 'perfsim.js', 'perfsim-pro.js', 'canvas.js', 'labs.js', 'dockerlab.js', 'explain.js', 'soch.js', 'scene.js', 'drill.js'];
 const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js', 'data-dist.js', 'data-shapes.js', 'data-builds.js', 'data-feed.js', 'data-feed-2.js',
   'data-st-01-reddit.js', 'data-st-02-cloudflare.js', 'data-st-03-jira.js', 'data-st-04-snowflake.js',
   'data-st-05-airtable.js', 'data-st-06-slack.js', 'data-st-07-discord.js', 'data-st-08-instagram.js',
@@ -89,7 +89,7 @@ const CONTENT = ['data-flow.js', 'data-api.js', 'data-data.js', 'data-resil.js',
   'data-v2-fp-scale-1-kyun.js',
   'data-v2-fp-scale-2-kaise.js',
   'data-v2-fp-scale-3-code.js',
-  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-v2-fp-cache-1-kyun.js', 'data-v2-fp-cache-2-kaise.js', 'data-v2-fp-cache-3-code.js', 'data-v2-fp-cache-4-kab.js', 'data-v2-fp-async-1-kyun.js', 'data-v2-fp-async-2-kaise.js', 'data-v2-fp-async-3-code.js', 'data-v2-fp-async-4-kab.js', 'data-v2-fp-retry-1-kyun.js', 'data-v2-fp-retry-2-kaise.js', 'data-v2-fp-retry-3-code.js', 'data-v2-fp-retry-4-kab.js', 'data-v2-fp-micro-1-kyun.js', 'data-v2-fp-micro-2-kaise.js', 'data-v2-fp-micro-3-code.js', 'data-v2-fp-micro-4-kab.js', 'data-v2-fp-obs-1-kyun.js', 'data-v2-fp-obs-2-kaise.js', 'data-v2-fp-obs-3-code.js', 'data-v2-fp-obs-4-kab.js', 'data-v2-fp-ig-1-kyun.js', 'data-v2-fp-ig-2-kaise.js', 'data-v2-fp-ig-3-code.js', 'data-v2-fp-ig-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-scenes-flow.js', 'data-scenes-api.js', 'data-scenes-data.js', 'data-scenes-resil.js', 'data-scenes-dist.js', 'data-scenes-shapes.js', 'data-scenes-builds.js', 'data-soch-scenes.js', 'data-pro-sec-1.js', 'data-pro-sec-2.js', 'data-pro-sec-3.js', 'data-pro-sec-4.js', 'data-pro-obs-1.js', 'data-pro-obs-2.js', 'data-pro-obs-3.js', 'data-pro-obs-4.js', 'data-pro-iv-1.js', 'data-pro-iv-2.js', 'data-pro-iv-3.js', 'data-pro-iv-4.js', 'data-guidance.js', 'data-v2-concurrency.js', 'video-sources.js', 'data-sds-live.js', 'data-sds-contracts.js', 'data-sds-webhook.js', 'data-sds-routing.js', 'data-sds-storage.js', 'data-sds-api.js', 'data-sds-metrics.js', 'data-sds-sourcing.js', 'data-sds-threads.js', 'data-sds-messaging.js', 'data-sds-design-review.js', 'data-sds-scaling.js', 'data-sds-cache.js', 'data-sds-concurrency.js', 'data-sds-retries.js', 'data-sds-ride-hailing.js', 'data-sds-roadmap.js', 'data-sds-judge.js', 'data-sds-method.js', 'data-sds-patterns.js', 'data-sds-typeahead.js', 'data-sds-scale-bands.js', 'data-scenes-sds.js'];
+  'data-v2-fp-scale-4-kab.js', 'data-v2-fp-comm-1-kyun.js', 'data-v2-fp-comm-2-kaise.js', 'data-v2-fp-comm-3-code.js', 'data-v2-fp-comm-4-kab.js', 'data-v2-fp-req-1-kyun.js', 'data-v2-fp-req-2-kaise.js', 'data-v2-fp-req-3-code.js', 'data-v2-fp-req-4-kab.js', 'data-v2-fp-per-1-kyun.js', 'data-v2-fp-per-2-kaise.js', 'data-v2-fp-per-3-code.js', 'data-v2-fp-per-4-kab.js', 'data-v2-fp-tax-1-kyun.js', 'data-v2-fp-tax-2-kaise.js', 'data-v2-fp-tax-3-code.js', 'data-v2-fp-tax-4-kab.js', 'data-v2-fp-shard-1-kyun.js', 'data-v2-fp-shard-2-kaise.js', 'data-v2-fp-shard-3-code.js', 'data-v2-fp-shard-4-kab.js', 'data-v2-fp-cap-1-kyun.js', 'data-v2-fp-cap-2-kaise.js', 'data-v2-fp-cap-3-code.js', 'data-v2-fp-cap-4-kab.js', 'data-v2-fp-raft-1-kyun.js', 'data-v2-fp-raft-2-kaise.js', 'data-v2-fp-raft-3-code.js', 'data-v2-fp-raft-4-kab.js', 'data-v2-fp-cache-1-kyun.js', 'data-v2-fp-cache-2-kaise.js', 'data-v2-fp-cache-3-code.js', 'data-v2-fp-cache-4-kab.js', 'data-v2-fp-async-1-kyun.js', 'data-v2-fp-async-2-kaise.js', 'data-v2-fp-async-3-code.js', 'data-v2-fp-async-4-kab.js', 'data-v2-fp-retry-1-kyun.js', 'data-v2-fp-retry-2-kaise.js', 'data-v2-fp-retry-3-code.js', 'data-v2-fp-retry-4-kab.js', 'data-v2-fp-micro-1-kyun.js', 'data-v2-fp-micro-2-kaise.js', 'data-v2-fp-micro-3-code.js', 'data-v2-fp-micro-4-kab.js', 'data-v2-fp-obs-1-kyun.js', 'data-v2-fp-obs-2-kaise.js', 'data-v2-fp-obs-3-code.js', 'data-v2-fp-obs-4-kab.js', 'data-v2-fp-ig-1-kyun.js', 'data-v2-fp-ig-2-kaise.js', 'data-v2-fp-ig-3-code.js', 'data-v2-fp-ig-4-kab.js', 'data-soch-1.js', 'data-soch-2.js', 'data-soch-3.js', 'data-scenes-flow.js', 'data-scenes-api.js', 'data-scenes-data.js', 'data-scenes-resil.js', 'data-scenes-dist.js', 'data-scenes-shapes.js', 'data-scenes-builds.js', 'data-soch-scenes.js', 'data-pro-sec-1.js', 'data-pro-sec-2.js', 'data-pro-sec-3.js', 'data-pro-sec-4.js', 'data-pro-obs-1.js', 'data-pro-obs-2.js', 'data-pro-obs-3.js', 'data-pro-obs-4.js', 'data-pro-iv-1.js', 'data-pro-iv-2.js', 'data-pro-iv-3.js', 'data-pro-iv-4.js', 'data-guidance.js', 'data-v2-concurrency.js', 'video-sources.js', 'data-sds-live.js', 'data-sds-contracts.js', 'data-sds-webhook.js', 'data-sds-routing.js', 'data-sds-storage.js', 'data-sds-api.js', 'data-sds-metrics.js', 'data-sds-sourcing.js', 'data-sds-threads.js', 'data-sds-messaging.js', 'data-sds-design-review.js', 'data-sds-scaling.js', 'data-sds-cache.js', 'data-sds-concurrency.js', 'data-sds-retries.js', 'data-sds-ride-hailing.js', 'data-sds-roadmap.js', 'data-sds-judge.js', 'data-sds-method.js', 'data-sds-patterns.js', 'data-sds-typeahead.js', 'data-sds-scale-bands.js', 'data-scenes-sds.js', 'data-drill-resil.js'];
 /* dev: jo file abhi register nahi hui (index.html / upar ki list mein nahi), use bhi parkhna ho:
      EXTRA_CONTENT=data-v2-x-1-kyun.js,data-v2-x-2-kaise.js node validate.js
    In files par "index.html mein script tag hai?" wali jaanch nahi lagti. Asli register tabhi karo jab file tayyar ho. */
@@ -178,7 +178,8 @@ const ONLY = process.argv[2];
 /* =====================================================================
    1. STRUCTURE
    ===================================================================== */
-const LAB_TYPES = ['replay', 'tradeoff', 'estimate', 'archdiff', 'docker', 'dryrun', 'cards'];
+const LAB_TYPES = ['replay', 'tradeoff', 'estimate', 'archdiff', 'docker', 'dryrun', 'cards', 'drill'];
+const LAB_IDS = new Set();   // drill / oncall / chaos stage ids — poore app mein unique (best score inhi par save hota hai)
 const labStages = [];
 const allLevels = [];
 SD.tracks.forEach(t => (SD.levelSets[t.id] || []).forEach(l => allLevels.push({ track: t, level: l })));
@@ -192,6 +193,8 @@ function allStages(l) {
 function structure() {
   console.log('\n🔎 STRUCTURE');
   const seen = new Set();
+  const levelById = {};
+  allLevels.forEach(({ level }) => { if (level.id) levelById[level.id] = level; });
 
   SD.tracks.forEach(t => {
     if (!SD.levelSets[t.id] || !SD.levelSets[t.id].length) fail(`track '${t.id}' mein koi level nahi`);
@@ -338,6 +341,43 @@ function structure() {
       }
 
       if (LAB_TYPES.includes(st.type)) labStages.push({ at: sat, st });
+
+      /* ⚡ DRILL (drill.js) — lakshan → fix */
+      if (st.type === 'drill') {
+        if (!st.id || !/^drill-[a-z0-9-]+$/.test(st.id)) fail(`${sat}: id 'drill-…' chahiye`);
+        else if (LAB_IDS.has(st.id)) fail(`${sat}: id '${st.id}' do baar`);
+        else { LAB_IDS.add(st.id); ok(); }
+        const rounds = st.rounds || [], pick = st.pick || 8;
+        if (pick < 5) fail(`${sat}: pick ${pick} — kam se kam 5 rounds per run`);
+        if (rounds.length < pick + 4) fail(`${sat}: pool mein ${rounds.length} rounds — pick (${pick}) + 4 chahiye, taaki dobara khelne par naye rounds aayein`);
+        else ok();
+        if (!(st.par > 0)) fail(`${sat}: par (second) chahiye`); else ok();
+        const plain = x => String(x == null ? '' : x).replace(/<[^>]*>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+        const syms = new Set();
+        let goodLongest = 0;
+        rounds.forEach((r, ri) => {
+          const rat = `${sat} round[${ri}]`;
+          if (!r.sym || !r.good || !r.why || !r.level) return fail(`${rat}: sym/good/why/level missing`);
+          if (!Array.isArray(r.bad) || r.bad.length < 2 || r.bad.length > 3) return fail(`${rat}: bad mein 2–3 galat options chahiye`);
+          if (/<[a-z]/i.test(r.sym + r.good + r.bad.join(''))) fail(`${rat}: sym/good/bad saada text hon (HTML sirf why mein)`);
+          if (String(r.sym).length > 200) fail(`${rat}: sym ${String(r.sym).length} chars — 200 tak (ek nazar mein padha jaaye)`);
+          [r.good].concat(r.bad).forEach(c => { if (String(c).length > 90) fail(`${rat}: option "${String(c).slice(0, 40)}…" ${String(c).length} chars — 90 tak`); });
+          if (plain(r.why).length > 260) fail(`${rat}: why ${plain(r.why).length} chars — 260 tak`);
+          if (!levelById[r.level]) fail(`${rat}: level '${r.level}' nahi mila`); else ok();
+          const all = [r.good].concat(r.bad).map(c => plain(c).toLowerCase());
+          if (new Set(all).size !== all.length) fail(`${rat}: do options ek jaise`);
+          if (syms.has(plain(r.sym))) fail(`${rat}: yahi lakshan pehle bhi hai`); syms.add(plain(r.sym));
+          /* length bias (tools/quiz-quality.js wala niyam): sahi option sabse lamba ya sabse chhota na dikhe */
+          const L = all.map(c => [...c].length), g = L[0], w = L.slice(1);
+          if (g > Math.max(...w)) goodLongest++;
+          if (g >= 1.15 * Math.max(...w)) fail(`${rat}: sahi option sabse lamba (${g} vs ${Math.max(...w)}) — lambai se jawab dikh jaata hai`);
+          else if (g <= 0.85 * Math.min(...w)) fail(`${rat}: sahi option sabse chhota (${g} vs ${Math.min(...w)})`);
+          else ok();
+        });
+        /* poore drill mein: sahi option aadhe se zyada rounds mein sabse lamba ho toh khiladi "lamba = sahi" seekh leta hai */
+        if (rounds.length && goodLongest > rounds.length / 2) fail(`${sat}: ${goodLongest}/${rounds.length} rounds mein sahi option sabse lamba — aadhe se kam rakho`);
+        else ok();
+      }
 
       if (st.type === 'replay') {
         const frames = st.frames || [];
@@ -875,6 +915,26 @@ function labs() {
       else if (done.firstTry !== done.total)
         fail(`${at}: exact answers diye par firstTry ${done.firstTry}/${done.total} aaya — tol bahut sakht hai`);
       else ok();
+    }
+
+    if (st.type === 'drill') {
+      const start = one(arena, 'dl-start');
+      if (!start) fail(`${at}: start button (dl-start) nahi mila`);
+      else {
+        start.click();
+        const n = Math.min(st.pick || 8, (st.rounds || []).length);
+        for (let i = 0; i < n + 2 && !done; i++) {
+          const right = byClass(arena, 'dl-opt').filter(b => b.dataset.i === '0' && !b.disabled)[0];
+          if (right) right.click();
+          const nx = byClass(arena, 'dl-next').filter(b => b.style.display !== 'none').pop();
+          if (nx) nx.click();
+          const fin = one(arena, 'dl-done');
+          if (fin) fin.click();
+        }
+        if (!done) fail(`${at}: SOFTLOCK — har round sahi par bhi drill poori nahi hui`);
+        else if (done.firstTry !== n || done.total !== n) fail(`${at}: sab sahi par score ${done.firstTry}/${done.total} (rounds ${n})`);
+        else ok();
+      }
     }
 
     if (st.type === 'tradeoff') {
