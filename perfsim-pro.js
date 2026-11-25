@@ -286,15 +286,25 @@
   P.push({
     match: /^fanout\b/i,
     help: ['FANOUT (feed · aam users ke 1 crore posts/din, har ek ke 200 dost; 100 celebrities × 50 lakh followers × 20 posts/din)',
-      '  fanout --mode write | read | hybrid [--celeb-threshold 100000]'],
+      '  fanout --mode write | read | hybrid [--celeb-threshold 100000]   (what-if: production nahi badalta)',
+      '  fanout status                     production abhi kis mode par hai',
+      '  fanout use hybrid --celeb-threshold 100000   production ka mode badlo'],
     run(api, norm) {
-      const { table, print, rec, err } = api;
-      const mode = ((norm.match(/--mode\s+(\S+)/i) || [])[1] || '').toLowerCase();
-      if (!['write', 'read', 'hybrid'].includes(mode)) err('400 — --mode write, read ya hybrid do');
-      const thrRaw = flag(norm, 'celeb-threshold');
-      if (mode !== 'hybrid' && thrRaw != null) err('400 — --celeb-threshold sirf hybrid mode mein');
-      const thr = thrRaw == null ? 100000 : thrRaw;
-      if (!Number.isFinite(thr) || thr < 1000 || thr > 1e8) err('400 — --celeb-threshold 1000 se 10 crore ke beech do');
+      const { sim, table, print, rec, err } = api;
+      /* production ka feed mode (on-call shift isi ko badalti hai); what-if calculator ise nahi chhoota */
+      if (!sim.sys.feed) sim.sys.feed = { mode: 'write', threshold: 100000 };
+      const F = sim.sys.feed;
+      const verb = /^fanout\s+(status|use)\b/i.test(norm) ? norm.split(/\s+/)[1].toLowerCase() : 'whatif';
+      let mode, thr;
+      if (verb === 'status') { mode = F.mode; thr = F.threshold; }
+      else {
+        mode = (verb === 'use' ? (norm.split(/\s+/)[2] || '') : ((norm.match(/--mode\s+(\S+)/i) || [])[1] || '')).toLowerCase();
+        if (!['write', 'read', 'hybrid'].includes(mode)) err(verb === 'use' ? '400 — fanout use write | read | hybrid [--celeb-threshold N]' : '400 — --mode write, read ya hybrid do');
+        const thrRaw = flag(norm, 'celeb-threshold');
+        if (mode !== 'hybrid' && thrRaw != null) err('400 — --celeb-threshold sirf hybrid mode mein');
+        thr = thrRaw == null ? 100000 : thrRaw;
+        if (!Number.isFinite(thr) || thr < 1000 || thr > 1e8) err('400 — --celeb-threshold 1000 se 10 crore ke beech do');
+      }
       /* postsPerDay = aam users ke posts; celebrity posts alag (100 × 20 = 2,000). */
       const sourcePosts = FEED.postsPerDay + FEED.celebs * FEED.celebPostsPerDay;
       const normalCopies = FEED.postsPerDay * FEED.friends, celebCopies = FEED.celebs * FEED.celebPostsPerDay * FEED.celebFollowers;
@@ -302,11 +312,13 @@
       if (mode === 'write') { inboxCopies = normalCopies + celebCopies; feedMs = 20; celebLagMin = Math.round(FEED.celebFollowers / 50000 / 60); }
       else if (mode === 'read') { inboxCopies = 0; feedMs = 800; celebLagMin = 0; }
       else { celebPushed = thr > FEED.celebFollowers; /* ≥ threshold followers = pull */ inboxCopies = normalCopies + (celebPushed ? celebCopies : 0); feedMs = celebPushed ? 20 : 60; celebLagMin = celebPushed ? Math.round(FEED.celebFollowers / 50000 / 60) : 0; }
+      if (verb === 'use') { F.mode = mode; F.threshold = thr; print('ok', `Production feed ab ${mode}${mode === 'hybrid' ? ` (≥ ${num(thr)} followers = pull)` : ''} par.`); }
+      if (verb === 'status') print('ok', 'PRODUCTION feed:');
       table(['mode', 'naye posts / din', 'inbox copies / din', 'feed p99', 'celebrity post ka lag'], [[mode + (mode === 'hybrid' ? ` (≥ ${num(thr)} followers = pull)` : ''), num(sourcePosts), inboxCopies ? crore(inboxCopies) : '0', feedMs + ' ms', celebLagMin ? celebLagMin + ' min tak' : 'turant (padhte waqt)']]);
       print('ok', { write: 'Post karte hi har dost ki inbox mein copy. Padhna sasta; celebrity ka ek post = 50 lakh writes.',
         read: 'Post sirf ek baar likho; feed khulne par 200 doston ke posts jodo. Likhna sasta, padhna mehenga.',
         hybrid: celebPushed ? `Threshold ${num(thr)} celebrities ke 50 lakh followers se upar hai, toh celebrities bhi push ho rahi hain — write mode jaisa bojh.` : 'Aam users push (write par), celebrities pull (padhte waqt). Dono ka sasta hissa.' }[mode] + '  (Model ke chune hue numbers; feed ka SLO: p99 200 ms. Celebrity lag maan ke: 50,000 inbox writes/second.)');
-      return rec({ kind: 'fanout', mode, threshold: mode === 'hybrid' ? thr : null, sourcePosts, inboxCopies, feedMs, celebLagMin });
+      return rec({ kind: 'fanout', op: verb, prod: verb !== 'whatif', mode, threshold: mode === 'hybrid' ? thr : null, sourcePosts, inboxCopies, feedMs, celebLagMin });
     },
   });
   /* ------------------------------------------------------------------ KV (quorum) */
@@ -381,6 +393,124 @@
         return rec({ kind: 'kv', op: 'get', value: v, ver, latest: K.latest, stale, w: K.w, r: K.r });
       }
       err(`400 — 'kv ${verb}' samajh nahi aaya. 'help' dekho.`);
+    },
+  });
+})();
+
+/* =====================================================================
+   JOBS — notification queues (2026-11-25, on-call shifts boss-flow / boss-iv)
+   OTP (transactional) aur campaign (bulk) — ek provider (FCM) ki hadd 1000 rps (data-flow.js boss-flow).
+   Model (har `jobs run S`):
+     shared FIFO   → OTP poore campaign backlog ke peeche: age = backlog ÷ bheje gaye/sec
+     split lanes   → OTP pehle; par provider budget saajha: koshish > 1000/s → 429 sab par barabar
+     cap campaign  → campaign ki koshish baandho; OTP + campaign ≤ hadd = 429 nahi
+     poison        → ek job hamesha fail; bina DLQ campaign lane usi ko retry karti rehti hai
+     dedup / usercap → duplicate events aur ek user ko bahut offers
+   ===================================================================== */
+(function () {
+  const baseDefault = SD.defaultSys;
+  SD.defaultSys = function () {
+    const s = baseDefault();
+    s.jobs = { providerRps: 1000, workerRps: 1500, lanes: 'shared', capCampaign: 0, otpRps: 40, backlog: 5000000,
+      poison: false, dlq: false, dlqCount: 0, dedup: false, dupRate: 0, userCap: 0, offersPerUser: 0 };
+    return s;
+  };
+  const num = n => Math.round(n).toLocaleString('en-IN');
+  const dur = sec => !isFinite(sec) ? '∞ (kabhi nahi)' : sec < 90 ? Math.round(sec) + 's' : sec < 5400 ? Math.round(sec / 60) + ' min' : (Math.round(sec / 360) / 10) + ' ghante';
+  const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
+  (SD.perfsimPlugins = SD.perfsimPlugins || []).push({
+    match: /^jobs\b/i,
+    help: ['JOBS (notifications: OTP + campaign, provider FCM 1000 rps)',
+      '  jobs status                       lanes, backlog, provider, guards',
+      '  jobs run 60                       60 second chalao (OTP age, 429, campaign, poison)',
+      '  jobs split priority               OTP ki alag lane (jobs lanes shared = wapas)',
+      '  jobs cap campaign 800             campaign ki koshish/sec baandho (0 = hatao)',
+      '  jobs dlq on                       3 koshish ke baad kharab job DLQ mein',
+      '  jobs dedup on · jobs usercap 3    duplicate events roko · ek user ko din mein max offers'],
+    run(api, norm) {
+      const { sim, print, panel, rec, err } = api;
+      const J = sim.sys.jobs;
+      const verb = word(norm, 1), arg = word(norm, 2);
+      const onoff = v => { if (!['on', 'off'].includes(v)) err('400 — on ya off likho'); return v === 'on'; };
+      if (!verb || verb === 'status') {
+        panel('JOBS', [
+          `lanes            ${J.lanes === 'split' ? 'split — OTP ki alag lane ✅' : 'shared FIFO — OTP aur campaign ek hi line'}`,
+          `provider (FCM)   ${num(J.providerRps)} rps hadd · workers ${num(J.workerRps)}/s koshish karte hain`,
+          `campaign cap     ${J.capCampaign ? num(J.capCampaign) + '/s' : '— (workers jitna tez)'}`,
+          `campaign backlog ${num(J.backlog)} notifications`,
+          `OTP aane ki dar  ${num(J.otpRps)}/s · target: 30s ke andar pahunche`,
+          `DLQ              ${J.dlq ? 'ON (3 koshish, phir park)' : 'OFF — fail job baar-baar retry'}${J.dlqCount ? ' · parked ' + J.dlqCount : ''}`,
+          `dedup            ${J.dedup ? 'ON (event_id + user + channel)' : 'OFF'}`,
+          `user cap         ${J.userCap ? J.userCap + ' offers/din' : '—'}`,
+        ]);
+        return rec({ kind: 'jobs', op: 'status', lanes: J.lanes, capCampaign: J.capCampaign, dlq: J.dlq, dedup: J.dedup, userCap: J.userCap });
+      }
+      if (verb === 'split' || verb === 'lanes') {
+        const v = verb === 'split' ? 'split' : arg;
+        if (!['split', 'shared'].includes(v)) err('400 — jobs split priority | jobs lanes shared');
+        J.lanes = v;
+        print('ok', v === 'split' ? 'OTP ab apni lane mein — campaign ke peeche nahi lagega. (Provider ka budget abhi bhi saajha hai.)' : 'Lanes wapas shared FIFO.');
+        return rec({ kind: 'jobs', op: 'lanes', lanes: v });
+      }
+      if (verb === 'cap') {
+        if (arg !== 'campaign') err('400 — jobs cap campaign <rps>');
+        const v = parseInt(word(norm, 3), 10);
+        if (!Number.isInteger(v) || v < 0 || v > 100000) err('400 — 0 se 100000 ke beech number do (0 = cap hatao)');
+        J.capCampaign = v;
+        print('ok', v ? `Campaign ab max ${num(v)}/s koshish karega.` : 'Campaign cap hata.');
+        return rec({ kind: 'jobs', op: 'cap', capCampaign: v });
+      }
+      if (verb === 'dlq') { J.dlq = onoff(arg); print('ok', `DLQ ${J.dlq ? 'ON' : 'OFF'}`); return rec({ kind: 'jobs', op: 'dlq', dlq: J.dlq }); }
+      if (verb === 'dedup') { J.dedup = onoff(arg); print('ok', `Dedup ${J.dedup ? 'ON — event_id + user + channel ki key, retry window tak yaad' : 'OFF'}`); return rec({ kind: 'jobs', op: 'dedup', dedup: J.dedup }); }
+      if (verb === 'usercap') {
+        const v = parseInt(arg, 10);
+        if (!Number.isInteger(v) || v < 0 || v > 100) err('400 — 0 se 100 ke beech (0 = hatao)');
+        J.userCap = v; print('ok', v ? `Har user ko din mein max ${v} marketing offers.` : 'User cap hata.');
+        return rec({ kind: 'jobs', op: 'usercap', userCap: v });
+      }
+      if (verb === 'run') {
+        const S = arg ? parseInt(arg, 10) : 60;
+        if (!Number.isInteger(S) || S < 1 || S > 3600) err('400 — 1 se 3600 second: jobs run 60');
+        sim.timeSec += S;
+        const P = J.providerRps;
+        let camp = J.capCampaign ? Math.min(J.capCampaign, J.workerRps) : J.workerRps;
+        let poisonRetries = 0, parked = 0, campBlocked = false;
+        if (J.poison) {
+          if (J.dlq) { parked = 1; J.poison = false; J.dlqCount++; }
+          else { poisonRetries = camp * S; campBlocked = true; }
+        }
+        let otpAgeSec, throttledRps, campaignRps, otpThrottlePct;
+        if (J.lanes === 'split') {
+          const tries = J.otpRps + (campBlocked ? 0 : camp);
+          const frac = tries > P ? (tries - P) / tries : 0;
+          throttledRps = Math.round(tries * frac);
+          otpThrottlePct = Math.round(frac * 100);
+          otpAgeSec = frac > 0 ? 8 : 1;              // 429 ke baad backoff wali retry
+          campaignRps = campBlocked ? 0 : Math.round(camp * (1 - frac));
+        } else {
+          const tries = campBlocked ? 0 : camp;       // poison sabse aage: poori line ruki
+          const sent = Math.min(tries, P);
+          throttledRps = Math.max(0, tries - P);
+          otpThrottlePct = tries ? Math.round(throttledRps / tries * 100) : 0;
+          otpAgeSec = sent ? J.backlog / sent : Infinity;
+          campaignRps = sent;
+        }
+        J.backlog = Math.max(0, J.backlog - campaignRps * S);
+        const dupSent = J.dedup ? 0 : Math.round(J.otpRps * J.dupRate * S);
+        const offers = J.offersPerUser ? (J.userCap ? Math.min(J.userCap, J.offersPerUser) : J.offersPerUser) : 0;
+        const ok = otpAgeSec <= 30;
+        panel(`JOBS RUN — ${S}s`, [
+          `lanes            ${J.lanes === 'split' ? 'split (OTP alag)' : 'shared FIFO'}`,
+          `provider (FCM)   hadd ${num(P)}/s · 429 ${throttledRps ? num(throttledRps) + '/s ❌' : '0 ✅'}`,
+          `OTP              ${num(J.otpRps)}/s aaye · age p99 ${dur(otpAgeSec)} ${ok ? '✅' : '❌'} (target 30s)` + (J.lanes === 'split' && otpThrottlePct ? ` · ${otpThrottlePct}% pehli koshish mein 429` : ''),
+          `campaign         ${num(campaignRps)}/s bheje · backlog ${num(J.backlog)}` + (campaignRps ? ` · ETA ~${dur(J.backlog / campaignRps)}` : ''),
+          ...(campBlocked ? [`poison           ek hi job ${num(poisonRetries)} baar retry — campaign lane ruki ❌`] : parked ? ['poison           1 kharab job 3 koshish ke baad DLQ mein ✅ — lane chal padi'] : []),
+          ...(J.dupRate ? [`duplicates       ${dupSent ? num(dupSent) + ' notifications do baar gaye ❌' : '0 ✅ (dedup)'}`] : []),
+          ...(offers ? [`offers per user  ${offers}/din ${J.userCap ? '✅' : '❌ (cap nahi)'}`] : []),
+        ]);
+        return rec({ kind: 'jobs', op: 'run', secs: S, lanes: J.lanes, otpAgeSec: isFinite(otpAgeSec) ? Math.round(otpAgeSec) : 999999, otpThrottlePct, throttledRps, campaignRps, backlog: J.backlog, poisonRetries, parked, dupSent, offersPerUser: offers });
+      }
+      err(`400 — 'jobs ${verb}' samajh nahi aaya. 'help' dekho.`);
     },
   });
 })();
