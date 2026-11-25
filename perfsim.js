@@ -1852,6 +1852,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       print('ok', [
         `purani table     ${fmt(M.total)} rows`,
         `dual-write       ${M.dualWrite ? 'ON  ✅' : 'OFF ❌'}`,
+        `batch size       ${M.batch ? fmt(M.batch) + ' rows' + (M.batch > 50000 ? '  ⚠️ ek batch = ek lambi transaction' : '') : '—'}`,
         `backfill         ${fmt(M.backfilled)} / ${fmt(M.total)}  (${pct()}%)`,
         `drift            ${M.drift ? fmt(M.drift) + ' rows  ❌' : '0 rows'}`,
         `verified         ${M.verified ? 'haan ✅' : 'nahi'}`,
@@ -1880,6 +1881,7 @@ SD.renderers.terminal = function renderTerminal(stage, arena, onDone) {
       M.backfilled = M.total;
       if (!M.dualWrite) { M.drift += newWrites; M.writesDuring += newWrites; }
       const lockRisk = batch > 50000;
+      sim.sys.db.replicaLagSec = lockRisk ? Math.round(batch / 900) : Math.max(1, Math.round(batch / 20000));   // metrics ka gauge bhi wahi bole
       print(lockRisk ? 'err' : 'ok', [
         `batch size       ${fmt(batch)} rows`,
         `copy kiya        ${fmt(M.total)} / ${fmt(M.total)} rows`,
