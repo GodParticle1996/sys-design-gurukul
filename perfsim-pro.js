@@ -607,24 +607,31 @@
 })();
 
 /* =====================================================================
-   RT — realtime gateways (2026-11-25, on-call shift boss-shapes; data-shapes.js 'realtime' lesson)
-   10 lakh concurrent ÷ 50,000 per node = 20 gateways. Ek node ~1,000 reconnects/second sambhalta hai
-   (auth + subscriptions + "kya miss hua"). Model:
-     send      100 members ka group: 90 online (push), 10 offline → persist OFF = message hamesha ke liye gaya
+   RT — realtime gateways (2026-11-25: on-call shift 'chatdock' + chaos deck 'shapes', level realtime;
+   data-shapes.js 'realtime' lesson). 10 lakh concurrent ÷ 50,000 per node = 20 gateways. Ek node ~1,000
+   reconnects/second sambhalta hai (auth + subscriptions + "kya miss hua"). Model:
+     send      100 members ka group: 90 online, 10 offline. persist OFF = jise live push nahi mila, uska message
+               hamesha ke liye gaya. Online mein se sirf 5 sender ke gateway par (90 ÷ 20 gateways); pubsub OFF = baaki
+               85 tak push pahunchta hi nahi ("gateway-3 ko pata hi nahi B kahan hai"). 30 online members 2 min se chup;
+               proxy/NAT ~60s idle par connection chupchaap kaat dete hain (nginx / AWS ALB ka default 60s) —
+               heartbeat (ping < 60s) na ho toh server unhe "online" maanta rehta hai aur push hawa mein jaata hai.
      restart   ek gateway ke 50,000 clients: bina jitter ~1 second mein sab baaki 19 par → 2,632/node → overload → cascade
                full jitter ~30 second mein phailata hai → 88/node/second
      reconnect 3 din baad lauti user ka backlog 40,000 messages → bina hadd ~12s tak us gateway par sab ruke
+   Default mein persist/jitter/backlog-limit TOOTE hain (shift unhe theek karti hai); pubsub/heartbeat SWASTH hain.
    ===================================================================== */
 (function () {
   const baseDefault = SD.defaultSys;
   SD.defaultSys = function () {
     const s = baseDefault();
-    s.rt = { users: 1000000, perNode: 50000, nodes: 20, persist: false, jitter: false, backlogLimit: 0 };
+    s.rt = { users: 1000000, perNode: 50000, nodes: 20, persist: false, jitter: false, backlogLimit: 0, pubsub: true, heartbeatSec: 25 };
     return s;
   };
   const num = n => Math.round(n).toLocaleString('en-IN');
   const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
   const PER_NODE_RECONNECT = 1000, MISSED = 40000, MS_PER_MSG = 0.3;
+  const IDLE_CUT = 60, SAME_GW = 5, IDLE = 30, SAME_GW_IDLE = 2;
+  const hbOk = R => R.heartbeatSec > 0 && R.heartbeatSec < IDLE_CUT;
   (SD.perfsimPlugins = SD.perfsimPlugins || []).push({
     match: /^rt\b/i,
     help: ['RT (realtime chat: 20 gateways × 50,000 sockets)',
@@ -632,7 +639,8 @@
       '  rt send                             100 members ke group mein ek message (10 offline)',
       '  rt restart gateway-3                ek gateway ka deploy — uske clients reconnect karenge',
       '  rt reconnect riya                   3 din baad lauti user ka backlog',
-      '  rt persist on|off · rt jitter on|off · rt backlog-limit <N>'],
+      '  rt persist on|off · rt jitter on|off · rt backlog-limit <N>',
+      '  rt pubsub on|off · rt heartbeat <sec> (0 = band)'],
     run(api, norm) {
       const { sim, print, panel, rec, err } = api;
       const R = sim.sys.rt;
@@ -640,12 +648,22 @@
       const onoff = v => { if (!['on', 'off'].includes(v)) err('400 — on ya off likho'); return v === 'on'; };
       if (!verb || verb === 'status') {
         panel('RT GATEWAYS', [
-          `users online     ${num(R.users)} · ${R.nodes} gateways × ${num(R.perNode)} sockets`,
+          `users online     ${num(R.users)}${hbOk(R) ? '' : ' (registry ka andaaza — bina ping sach pata nahi)'} · ${R.nodes} gateways × ${num(R.perNode)} sockets`,
           `persist          ${R.persist ? 'ON — pehle store, phir push ✅' : 'OFF — sirf push (offline ko kuch nahi)'}`,
+          `pubsub           ${R.pubsub ? 'ON — gateways ke beech Redis pub/sub (har gateway tak message)' : 'OFF — har gateway sirf apne sockets jaanta hai'}`,
+          `heartbeat        ${R.heartbeatSec > 0 ? 'har ' + R.heartbeatSec + 's ping/pong' : '— (koi ping nahi)'} · proxy/NAT idle cut ~${IDLE_CUT}s`,
           `reconnect        ${R.jitter ? 'exponential backoff + full jitter (~30s mein phaila)' : 'fixed 1s — sab ek saath'}`,
           `backlog limit    ${R.backlogLimit ? num(R.backlogLimit) + ' messages, phir "aur load karo"' : '— (jitna miss hua, sab ek saath)'}`,
         ]);
-        return rec({ kind: 'rt', op: 'status', persist: R.persist, jitter: R.jitter, backlogLimit: R.backlogLimit });
+        return rec({ kind: 'rt', op: 'status', persist: R.persist, jitter: R.jitter, backlogLimit: R.backlogLimit, pubsub: R.pubsub, heartbeatSec: R.heartbeatSec });
+      }
+      if (verb === 'pubsub') { R.pubsub = onoff(arg); print('ok', R.pubsub ? 'Pub/sub ON: gateway message ko channel par daalta hai; jis gateway par member ka socket hai, wahi push karta hai.' : 'Pub/sub band — har gateway sirf apne sockets tak.'); return rec({ kind: 'rt', op: 'pubsub', pubsub: R.pubsub }); }
+      if (verb === 'heartbeat') {
+        const v = parseInt(arg, 10);
+        if (!Number.isInteger(v) || v < 0 || v > 300) err('400 — rt heartbeat <0 se 300 second> (0 = band)');
+        R.heartbeatSec = v;
+        print('ok', v ? `Ab har ${v}s ping/pong: idle connection zinda rehti hai, aur jo pong na de use server band karke "offline" maanta hai.${v >= IDLE_CUT ? ` Dhyaan: proxy/NAT ~${IDLE_CUT}s idle par kaat dete hain.` : ''}` : 'Heartbeat band.');
+        return rec({ kind: 'rt', op: 'heartbeat', heartbeatSec: v });
       }
       if (verb === 'persist') { R.persist = onoff(arg); print('ok', R.persist ? 'Ab har message pehle log/DB mein, phir connected logon ko push. Reconnect par client last_seen_id se gap bharega.' : 'Persist band — sirf push.'); return rec({ kind: 'rt', op: 'persist', persist: R.persist }); }
       if (verb === 'jitter') { R.jitter = onoff(arg); print('ok', R.jitter ? 'Clients ab exponential backoff + full jitter se reconnect karenge.' : 'Jitter band — fixed 1s.'); return rec({ kind: 'rt', op: 'jitter', jitter: R.jitter }); }
@@ -657,9 +675,19 @@
       }
       if (verb === 'send') {
         sim.timeSec++;
-        const online = 90, offline = 10, lost = R.persist ? 0 : offline;
-        print(lost ? 'err' : 'ok', `group "dinner-plans" (100 members): ${online} online ko push ✅ · ${offline} offline → ${lost ? `${lost} ke liye message HAMESHA ke liye gaya ❌ (store hi nahi hua)` : 'store hua, reconnect par milega ✅'}`);
-        return rec({ kind: 'rt', op: 'send', online, offline, lost });
+        const online = 90, offline = 10;
+        const reach = R.pubsub ? online : SAME_GW;                       // jin members ke gateway tak message pahuncha
+        const ghost = hbOk(R) ? 0 : (R.pubsub ? IDLE : SAME_GW_IDLE);    // "online" dikhte, socket beech raste mar chuka
+        const pushed = reach - ghost, missedOnline = online - pushed;
+        const lost = R.persist ? 0 : missedOnline + offline;
+        const lines = [`group "dinner-plans" (100 members, alag-alag gateways par): ${pushed} ko turant push ✅`];
+        if (!R.pubsub) lines.push(`❌ ${online - SAME_GW} online members doosre gateways par — sender ke gateway-3 ko pata hi nahi woh kahan hain, unhe push gaya hi nahi`);
+        if (ghost) lines.push(`❌ ${ghost} "online" members ke socket ~${IDLE_CUT}s idle par proxy/NAT ne chupchaap kaat diye — server ko pata nahi, push hawa mein gaya`);
+        lines.push(`${offline} offline → ${R.persist ? 'store hua, reconnect par milega ✅' : 'store hi nahi hua'}`);
+        if (missedOnline) lines.push(R.persist ? `(message store hai, toh ${missedOnline} online members ko app refresh/dobara kholne par milega — live nahi)` : '');
+        if (lost) lines.push(`❌ ${lost} ke liye message HAMESHA ke liye gaya (sirf push tha, store nahi)`);
+        print(lost || missedOnline ? 'err' : 'ok', lines.filter(Boolean).join('\n'));
+        return rec({ kind: 'rt', op: 'send', online, offline, lost, pushed, missedOnline, ghost, pubsub: R.pubsub, heartbeatSec: R.heartbeatSec });
       }
       if (verb === 'restart') {
         if (!/^gateway-\d+$/.test(arg)) err('400 — rt restart gateway-3');
