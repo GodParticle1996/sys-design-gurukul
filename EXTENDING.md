@@ -979,8 +979,8 @@ nahi), aur alag-alag cards ke lakshan ek jaise dikh sakte hain — farak probe/t
 | feed | boss-feed | boss-feed (`edgepost`) | — |
 | pro-sec | boss-sec | boss-sec (`monthend`) | sec-abuse (`sec`) |
 | pro-obs | boss-obs | boss-obs (`rehearsal`) | — |
-| pro-iv | boss-iv | boss-iv (`designlive`) | — |
-| fp-core | fp-ig-kab | fp-cache-kab (`results`) | — |
+| pro-iv | boss-iv | boss-iv (`designlive`) | iv-feed (`pro-iv`) |
+| fp-core | fp-ig-kab | fp-cache-kab (`results`) | fp-retry-kab (`fp-core`) |
 | sdd-resil | ch-kab | cb-kab (`passbook`) | — |
 | stories | notion-scale | notion-scale (`chaichat`) | — |
 
@@ -988,5 +988,6 @@ Chaos decks sirf wahan jahan 5+ **dikhne wale, alag** cards bante hain. Jaise fp
 
 ### 17.5 Labs ke liye perfsim mein jo juda (2026-11-25)
 - **Plugins (`perfsim-pro.js`):** `jobs` (OTP + campaign lanes, FCM 1,000/s, cap, DLQ, dedup, usercap), `fleet` (feature file har 5 min, hadd 200, validate / staged / probes), `rt` (20 gateways × 50,000 sockets: persist, jitter, backlog-limit, pubsub, heartbeat — pubsub/heartbeat default swasth, baaki default toote), `fanout status|use` (production feed mode; `fanout --mode` what-if hi rehta hai).
+- **Plugins (2026-11-26, chaos decks):** `canary` (release gate: n ≈ 16·p·(1−p)/delta², 5% / 15 min / auto rollback — rollout lesson), `clicks` (ad click pipeline: watermark, event vs processing time, consumers vs partitions, hot-ad salts — adclick lesson), `experiment` (game day: passive ejection, abort rule, baseline check, latency in hypothesis — ch-kab lab rows), `chain` (user → A → B → C: deadline aage, C cancel, retries deadline mein, SQS DLQ retention + alert — lab 62), `fanout run` + `fanout entry|hydrate|skip-inactive` (iv-feed canvas). Sabke default swasth; har probe EK command (`canary run`, `clicks run`, `experiment run <case>`, `chain run|retries|dlq`, `fanout run`) taaki ek nazar mein laal line dikhe.
 - **perfsim.js:** `booking.holdTtl` setting · `sim set booking.mode` se pehle `book status` na ho toh crash nahi · `migrate backfill` replica-lag gauge set karta hai, `migrate status` batch dikhata hai · `sim status` mein `app cpu/request` aur breaker ki haalat + cooldown.
 - **Shift likhne ka niyam:** hal ka koi command error na de (diagnosis wale 503 hints mein rakho, solution mein nahi) · alert ke text mein ghadi ka time nahi · scripted badlaav (`onFire`) sirf woh jo asli zindagi mein bahar se hota hai (provider theek hua, kisi ne hotfix kiya, product ne TTL badla).

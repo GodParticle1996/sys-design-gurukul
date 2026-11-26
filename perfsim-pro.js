@@ -360,6 +360,7 @@
       print('ok', { write: 'Post karte hi har dost ki inbox mein copy. Padhna sasta; celebrity ka ek post = 50 lakh writes.',
         read: 'Post sirf ek baar likho; feed khulne par 200 doston ke posts jodo. Likhna sasta, padhna mehenga.',
         hybrid: celebPushed ? `Threshold ${num(thr)} celebrities ke 50 lakh followers se upar hai, toh celebrities bhi push ho rahi hain — write mode jaisa bojh.` : 'Aam users push (write par), celebrities pull (padhte waqt). Dono ka sasta hissa.' }[mode] + '  (Model ke chune hue numbers; feed ka SLO: p99 200 ms. Celebrity lag maan ke: 50,000 inbox writes/second.)');
+      if (verb === 'status') print('ok', `inbox entry: ${F.entry === 'id' ? 'sirf post id' : 'poora post'} · hydrate: ${F.hydrate === 'batch' ? 'ek batch read' : 'har id ki alag query'} · 6 mahine se gayab users: ${F.skipInactive ? 'push nahi (lautne par pull)' : 'unhe bhi push'}`);
       return rec({ kind: 'fanout', op: verb, prod: verb !== 'whatif', mode, threshold: mode === 'hybrid' ? thr : null, sourcePosts, inboxCopies, feedMs, celebLagMin });
     },
   });
