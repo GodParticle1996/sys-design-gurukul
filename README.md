@@ -43,7 +43,7 @@ node dev/concurrency-test.js     # real Java output vs captures, lesson text and
 
 ## Kya hai isme
 
-**21 tracks · 362 levels · 1599 stages · 728 interview Qs · 1449 flashcards · 362 diagrams · 705 interactive labs · 65 lab projects · 40 soch scenarios · 155 kadam-dar-kadam scenes**
+**21 tracks · 362 levels · 1603 stages · 728 interview Qs · 1449 flashcards · 362 diagrams · 709 interactive labs · 65 lab projects · 40 soch scenarios · 155 kadam-dar-kadam scenes**
 
 ### 🧠 Soch Akhada — soch-vichaar wale scenario sawal
 
@@ -147,7 +147,7 @@ Teen naye lab types — Kube Gurukul jaise, par perfsim ke upar (format aur niya
 |---|---|---|
 | ⚡ `drill` (`drill.js`) | **Lakshan → fix:** dashboard ka lakshan, 3 options (diagnosis → fix), ek koshish. Ghadi sirf **sochne** ka samay ginti hai; har run pool se 8 naye rounds | 14 drills × 17 rounds: har boss level + fp-core, sdd-resil, stories |
 | 📟 `oncall` (`oncall.js`) | **Live shift:** pager + perfsim terminal, 3 jude hue alerts (agla pichhle fix ke baad), har command = 1 minute, "theek karo → pakka karo", khatarnaak commands roke aur gine jaate hain, aakhir mein report card (MTTR, hints, grade) | 14 shifts: resil, api, data, dist, sec, obs, flow, iv, feed bosses · ticketmaster · realtime · fp-cache-kab · cb-kab · notion-scale |
-| 🎲 `chaos` (`chaos.js`) | **Ek chhupi galti:** swasth base + "kal raat ki deploy" ka ek badlaav (random card). Probe → theek → pakka → **"kya toota tha?"** | 9 decks: data (boss-data) · resil (chaos) · api (ratelimit) · dist (contention) · sec (sec-abuse) · flow (syncasync) · shapes (realtime) · fp-core (fp-retry-kab) · pro-iv (iv-feed) |
+| 🎲 `chaos` (`chaos.js`) | **Ek chhupi galti:** swasth base + "kal raat ki deploy" ka ek badlaav (random card). Probe → theek → pakka → **"kya toota tha?"** | 13 decks: data (boss-data) · resil (chaos) · api (ratelimit) · dist (contention) · sec (sec-abuse) · flow (syncasync) · shapes (realtime) · fp-core (fp-retry-kab) · pro-iv (iv-feed) · pro-obs (obs-unit) · feed (rollout) · builds (adclick) · sdd-resil (ch-kab) |
 
 Har shift aur deck ka har number pehle perfsim par chala ke dekha gaya. Validator har shift ka poora hal chalata hai (pehla alert shuru mein toota, hal bina error, shift theek aakhri command par khatam) aur har chaos card ko alag chalata hai (swasth base par har card ka fix-check sahi = ek hi badlaav).
 Naye perfsim plugins (`perfsim-pro.js`): `jobs` (notification lanes), `fleet` (edge config rollout), `rt` (realtime gateways), `fanout status|use`.

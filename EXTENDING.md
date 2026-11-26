@@ -975,13 +975,13 @@ nahi), aur alag-alag cards ke lakshan ek jaise dikh sakte hain — farak probe/t
 | resil | boss-resil | boss-resil (`nightcart`) | chaos (`resil`) |
 | dist | boss-dist | boss-dist (`walletkv`) | contention (`dist`) |
 | shapes | boss-shapes | realtime (`chatdock`) | realtime (`shapes`) |
-| builds | boss-uber | ticketmaster (`tixnow`) | — |
-| feed | boss-feed | boss-feed (`edgepost`) | — |
+| builds | boss-uber | ticketmaster (`tixnow`) | adclick (`builds`) |
+| feed | boss-feed | boss-feed (`edgepost`) | rollout (`feed`) |
 | pro-sec | boss-sec | boss-sec (`monthend`) | sec-abuse (`sec`) |
-| pro-obs | boss-obs | boss-obs (`rehearsal`) | — |
+| pro-obs | boss-obs | boss-obs (`rehearsal`) | obs-unit (`pro-obs`) |
 | pro-iv | boss-iv | boss-iv (`designlive`) | iv-feed (`pro-iv`) |
 | fp-core | fp-ig-kab | fp-cache-kab (`results`) | fp-retry-kab (`fp-core`) |
-| sdd-resil | ch-kab | cb-kab (`passbook`) | — |
+| sdd-resil | ch-kab | cb-kab (`passbook`) | ch-kab (`sdd-resil`) |
 | stories | notion-scale | notion-scale (`chaichat`) | — |
 
 Chaos decks sirf wahan jahan 5+ **dikhne wale, alag** cards bante hain. Jaise fp-core cache: coalescing on ho toh jitter-0 / TTL / hit-rate cards load mein dikhte hi nahi; baaki cards data deck jaise ho jaate. Resil deck mein bulkhead card nahi: breaker OPEN ho toh ledger calls 1ms mein fail hoti hain, pool bhookha hi nahi hota.
