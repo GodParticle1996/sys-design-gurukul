@@ -716,3 +716,262 @@
     },
   });
 })();
+
+/* =====================================================================
+   CANARY — release gate ka ganit (2026-11-26, chaos deck 'feed', level rollout; data-feed.js 'rollout' lesson)
+   Service 20,000 rps · baseline error 0.1% · naya version +0.02 percentage point (0.12%).
+   Samples chahiye n ≈ 16 × p × (1 − p) ÷ delta² = 16 × 0.001 × 0.999 ÷ 0.0002² ≈ 3,99,600 (lesson: ~4,00,000).
+   5% canary = 1,000 rps → ~400s (~6.7 min) mein farak dikhta hai. Budget: detect ≤ 15 min, canary ≤ 5%.
+   Mitigation: automatic ~1 min, insaan ~20 min (lesson readout; Cloudflare 2019: detect 3 min, mitigate 25 min).
+   `canary run` = ek rehearsal release jisme yahi chhupa +0.02pp regression hai:
+     bake ke andar n samples mile → gate pakadta hai → rollback (auto 1 min / manual 20 min)
+     bake khatam, samples kam → gate andha PASS → 100% par promote, control group gaya → 1 ghante tak kisi ko pata nahi
+   ===================================================================== */
+(function () {
+  const baseDefault = SD.defaultSys;
+  SD.defaultSys = function () {
+    const s = baseDefault();
+    s.canary = { trafficPct: 5, bakeMin: 15, autoRollback: true };
+    return s;
+  };
+  const RPS = 20000, P = 0.001, DELTA = 0.0002, NEED = Math.round(16 * P * (1 - P) / (DELTA * DELTA));
+  const AUTO_MIN = 1, HUMAN_MIN = 20, BLIND_MIN = 60, BUDGET_MIN = 15, BUDGET_PCT = 5;
+  const num = n => Math.round(n).toLocaleString('en-IN');
+  const min1 = m => (Math.round(m * 10) / 10).toFixed(1);
+  const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
+  /* gate ka hisaab — status aur run dono isi se */
+  SD.canaryModel = C => {
+    const canaryRps = RPS * C.trafficPct / 100, samples = canaryRps * C.bakeMin * 60;
+    const detectMin = NEED / canaryRps / 60, detected = samples >= NEED;
+    const mitigationMin = detected ? (C.autoRollback ? AUTO_MIN : HUMAN_MIN) : null;
+    const v2Rps = detected ? canaryRps : RPS;                       // andha PASS = sab par
+    const exposedMin = detected ? detectMin + mitigationMin : C.bakeMin + BLIND_MIN;
+    const extraErrors = detected ? canaryRps * DELTA * exposedMin * 60 : canaryRps * DELTA * C.bakeMin * 60 + RPS * DELTA * BLIND_MIN * 60;
+    return { canaryRps, samples, detectMin, detected, mitigationMin, blastPct: detected ? C.trafficPct : 100, v2Rps, exposedMin, extraErrors };
+  };
+  (SD.perfsimPlugins = SD.perfsimPlugins || []).push({
+    match: /^canary\b/i,
+    help: ['CANARY (release gate · service 20,000 rps · baseline error 0.1% · naye version mein chhupa +0.02pp)',
+      '  canary status                       settings aur gate ka hisaab',
+      '  canary run                          ek rehearsal release chalao (gate pakadta hai ya nahi?)',
+      '  canary set traffic <1-50> · canary set bake <1-60 min> · canary rollback auto|manual'],
+    run(api, norm) {
+      const { sim, print, panel, rec, err } = api;
+      const C = sim.sys.canary;
+      const verb = word(norm, 1), arg = word(norm, 2), val = word(norm, 3);
+      if (!verb || verb === 'status') {
+        const m = SD.canaryModel(C);
+        panel('CANARY GATE', [
+          `service          ${num(RPS)} rps · baseline error 0.1% · pakadna hai +0.02pp`,
+          `samples chahiye  n ≈ 16 × p × (1 − p) ÷ delta² ≈ ${num(NEED)}`,
+          `canary traffic   ${C.trafficPct}% = ${num(m.canaryRps)} rps (budget ≤ ${BUDGET_PCT}%)`,
+          `bake             ${C.bakeMin} min → ${num(m.samples)} samples`,
+          `rollback         ${C.autoRollback ? 'automatic (error baseline se upar → canary khud band)' : 'manual (pager → insaan → button)'}`,
+        ]);
+        return rec({ kind: 'canary', op: 'status', trafficPct: C.trafficPct, bakeMin: C.bakeMin, autoRollback: C.autoRollback, samples: Math.round(m.samples), need: NEED });
+      }
+      if (verb === 'set') {
+        const v = parseInt(val, 10);
+        if (arg === 'traffic') { if (!Number.isInteger(v) || v < 1 || v > 50) err('400 — canary set traffic <1 se 50 %>'); C.trafficPct = v; print('ok', `Canary ab ${v}% traffic (${num(RPS * v / 100)} rps) par.`); }
+        else if (arg === 'bake') { if (!Number.isInteger(v) || v < 1 || v > 60) err('400 — canary set bake <1 se 60 minute>'); C.bakeMin = v; print('ok', `Gate ab ${v} minute dekhega, phir faisla.`); }
+        else err('400 — canary set traffic <N> ya canary set bake <min>');
+        return rec({ kind: 'canary', op: 'set', trafficPct: C.trafficPct, bakeMin: C.bakeMin });
+      }
+      if (verb === 'rollback') {
+        if (!['auto', 'manual'].includes(arg)) err('400 — canary rollback auto ya manual');
+        C.autoRollback = arg === 'auto';
+        print('ok', C.autoRollback ? 'Rollback automatic: error baseline se upar gaya toh canary khud band.' : 'Rollback manual: gate alert bhejega, insaan rollback karega.');
+        return rec({ kind: 'canary', op: 'rollback', autoRollback: C.autoRollback });
+      }
+      if (verb === 'run') {
+        const m = SD.canaryModel(C);
+        sim.timeSec += Math.round(m.exposedMin * 60);
+        const lines = [
+          `v2 → canary ${C.trafficPct}% = ${num(m.canaryRps)} rps · bake ${C.bakeMin} min · chhupa regression 0.1% → 0.12%`,
+          m.detected
+            ? `gate             ${min1(m.detectMin)} min par ${num(NEED)} samples — farak PAKDA ✅`
+            : `gate             bake khatam: ${num(m.samples)} samples (chahiye ~${num(NEED)}) → andha PASS ❌`,
+          m.detected
+            ? `rollback         ${C.autoRollback ? `automatic — ${AUTO_MIN} min mein canary band ✅` : `pager → insaan jaaga → ~${HUMAN_MIN} min baad rollback ❌`}`
+            : `promote          v2 100% par; control group gaya, 0.02pp kisi alert mein nahi: ${BLIND_MIN}+ min ❌`,
+          `blast radius     ${m.blastPct}% traffic par v2 ${m.blastPct > BUDGET_PCT ? `❌ (budget ${BUDGET_PCT}%; bada bug = ${m.blastPct}% users)` : '✅'}`,
+          `nuksaan          v2 par ${min1(m.exposedMin)} min · ~${num(m.extraErrors)} extra failed requests`,
+        ];
+        panel('CANARY RUN', lines);
+        return rec({ kind: 'canary', op: 'run', trafficPct: C.trafficPct, bakeMin: C.bakeMin, autoRollback: C.autoRollback, samples: Math.round(m.samples), need: NEED,
+          detected: m.detected, detectMin: m.detected ? Math.round(m.detectMin * 10) / 10 : null, mitigationMin: m.mitigationMin, blastPct: m.blastPct,
+          exposedMin: Math.round(m.exposedMin * 10) / 10, extraErrors: Math.round(m.extraErrors) });
+      }
+      err(`400 — 'canary ${verb}' samajh nahi aaya. 'help' dekho.`);
+    },
+  });
+})();
+
+/* =====================================================================
+   CLICKS — ad click pipeline (2026-11-26, chaos deck 'builds', level adclick; data-builds.js 'adclick' lesson)
+   browser → ingest → Kafka (partition by ad_id, 12 partitions) → Flink (event-time 1-min window) → OLAP → dashboard/billing.
+   `clicks run` = 08:59 wali window ek baar chalao:
+     late      10,00,000 clicks, 4% late (lesson simulator) · pakde = late × min(1, watermark ÷ 30)  (stream window wala formula)
+     clock     click 8:59:58 par hua, 9:00:03 par pahuncha → event time = 08:59 ✅ · processing time = 09:00 ❌
+     workers   ek partition ek consumer — consumers > partitions = baaki khaali (lesson: --partitions 12 --consumers 20)
+     hot ad    peak 10 lakh/s, ek ad (Super Bowl) 40% = 4,00,000/s · baaki 6,00,000/s 12 partitions par (50,000 each)
+               salts N → ad_id:0…N-1 alag partitions par → sabse bhaari partition 50,000 + 4,00,000 ÷ N
+   ===================================================================== */
+(function () {
+  const baseDefault = SD.defaultSys;
+  SD.defaultSys = function () {
+    const s = baseDefault();
+    s.clicks = { watermarkSec: 30, clock: 'event', partitions: 12, consumers: 12, salts: 8 };
+    return s;
+  };
+  const EVENTS = 1000000, LATE_PCT = 4, PEAK = 1000000, HOT_PCT = 40;
+  const num = n => Math.round(n).toLocaleString('en-IN');
+  const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
+  SD.clicksModel = K => {
+    const late = EVENTS * LATE_PCT / 100, caught = K.watermarkSec <= 0 ? 0 : Math.round(late * Math.min(1, K.watermarkSec / 30));
+    const hotRps = PEAK * HOT_PCT / 100, restPer = (PEAK - hotRps) / K.partitions, spread = Math.min(K.salts, K.partitions);
+    const hottest = restPer + hotRps / spread, avg = PEAK / K.partitions;
+    const active = Math.min(K.consumers, K.partitions);
+    return { late, caught, dropped: late - caught, wrongMinute: K.clock !== 'event', active, idle: Math.max(0, K.consumers - K.partitions),
+      hotRps, hottest, avg, hotSkewed: hottest > 2 * avg };
+  };
+  (SD.perfsimPlugins = SD.perfsimPlugins || []).push({
+    match: /^clicks\b/i,
+    help: ['CLICKS (ad click pipeline · Kafka 12 partitions by ad_id → Flink 1-min window → billing)',
+      '  clicks status                       pipeline ki settings',
+      '  clicks run                          08:59 wali window chalao (late clicks, minute, workers, hot ad)',
+      '  clicks set watermark <sec> · clicks set clock event|processing · clicks set consumers <N> · clicks set salts <N>'],
+    run(api, norm) {
+      const { sim, print, panel, rec, err } = api;
+      const K = sim.sys.clicks;
+      const verb = word(norm, 1), arg = word(norm, 2), val = word(norm, 3);
+      if (!verb || verb === 'status') {
+        panel('CLICK PIPELINE', [
+          `kafka            ${K.partitions} partitions (key: ad_id${K.salts > 1 ? ` + salt 0…${K.salts - 1} hot ad ke liye` : ''})`,
+          `consumers        ${K.consumers}`,
+          `window           1 min · ${K.clock === 'event' ? 'event time (click kab hua)' : 'processing time (event kab pahuncha)'}`,
+          `watermark        ${K.watermarkSec ? K.watermarkSec + 's tak late events ka intezaar' : '— (window ghadi par band)'}`,
+          `hot ad salts     ${K.salts}`,
+        ]);
+        return rec({ kind: 'clicks', op: 'status', ...K });
+      }
+      if (verb === 'set') {
+        if (arg === 'clock') { if (!['event', 'processing'].includes(val)) err('400 — clicks set clock event|processing'); K.clock = val; print('ok', `Window ab ${val} time se.`); }
+        else {
+          const v = parseInt(val, 10);
+          const lim = { watermark: [0, 600], consumers: [1, 100], salts: [1, 64] }[arg];
+          if (!lim) err('400 — clicks set watermark|clock|consumers|salts <value>');
+          if (!Number.isInteger(v) || v < lim[0] || v > lim[1]) err(`400 — ${arg}: ${lim[0]} se ${lim[1]} ke beech`);
+          K[{ watermark: 'watermarkSec', consumers: 'consumers', salts: 'salts' }[arg]] = v;
+          print('ok', { watermark: v ? `Window ab ${v}s tak late clicks ka intezaar karegi.` : 'Watermark hata — window ghadi par band.', consumers: `${v} consumers.`, salts: v > 1 ? `Hot ad ki key ab ${v} tukdon mein (ad_id:0…${v - 1}); dashboard tukde jodta hai.` : 'Salt nahi — hot ad ek hi key par.' }[arg]);
+        }
+        return rec({ kind: 'clicks', op: 'set', ...K });
+      }
+      if (verb === 'run') {
+        sim.timeSec += 60;
+        const m = SD.clicksModel(K);
+        panel('CLICKS RUN — window 08:59', [
+          `late clicks      ${num(EVENTS)} clicks, ${num(m.late)} late (${LATE_PCT}%) → ${m.dropped ? `${num(m.dropped)} chhoote ❌ (bill se gayab)` : 'sab pakde ✅'}`,
+          `8:59:58 ka click 9:00:03 par pahuncha → ${m.wrongMinute ? '09:00 window ❌ (campaign 9:00 par khatam, bill se bahar)' : '08:59 window mein ✅'}`,
+          `workers          ${K.partitions} partitions · ${K.consumers} consumers → ${m.active} kaam par${m.idle ? `, ${m.idle} khaali ❌ (1 partition = 1 consumer)` : ' ✅'}`,
+          `hot ad           ${num(m.hotRps)}/s (${HOT_PCT}%) · sabse bhaari partition ${num(m.hottest)}/s (ausat ${num(m.avg)}) ${m.hotSkewed ? '❌ hot partition' : '✅'}`,
+        ]);
+        return rec({ kind: 'clicks', op: 'run', late: m.late, caught: m.caught, dropped: m.dropped, wrongMinute: m.wrongMinute, partitions: K.partitions, consumers: K.consumers,
+          active: m.active, idle: m.idle, salts: K.salts, hottestRps: Math.round(m.hottest), avgRps: Math.round(m.avg), hotSkewed: m.hotSkewed });
+      }
+      err(`400 — 'clicks ${verb}' samajh nahi aaya. 'help' dekho.`);
+    },
+  });
+})();
+
+/* =====================================================================
+   EXPERIMENT — chaos experiment aur uske guards (2026-11-26, chaos deck 'sdd-resil', level ch-kab;
+   data-v2-chaos-4-kab.js — tools/faults.js aur tools/experiment.js ke asli output, 100 req/s, 4 s ki chot):
+     zombie  (payments: health check + retry)  bimaar instance tak 133 · + passive ejection → 4 · fail 0, p99 28 / 24 ms
+     slow    (payments, + retry + ejection)     fail 0, par 36 requests > 200 ms, p99 515 ms (ejection bina 133, p99 517)
+     search  (sirf health check)                abort rule < 80% (har 500 ms) → ABORT 0.5 s, 17 fail · bina rule 6.0 s, 200 fail
+             (kharab haalat mein 68% safal — 50% wala rule kabhi nahi bajta)
+     staging (instance 3 pehle se zombie)       steady 68% → "shuru hi mat karo" · bina baseline check chot shuru
+   Hypothesis: ≥ 95% safal; latency naapo toh "safal" = 200 ms ke andar.
+   ===================================================================== */
+(function () {
+  const baseDefault = SD.defaultSys;
+  SD.defaultSys = function () {
+    const s = baseDefault();
+    s.experiment = { eject: true, abortPct: 80, baseline: true, latency: true };
+    return s;
+  };
+  const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
+  const HEAD = (c, t) => `chot             ${c} · instance 2 · ${t || '4 s'} · 100 req/s`;
+  (SD.perfsimPlugins = SD.perfsimPlugins || []).push({
+    match: /^experiment\b/i,
+    help: ['EXPERIMENT (game day: chaos experiment ke guards · numbers ch-kab lab ke)',
+      '  experiment status                   guards aur services',
+      '  experiment run zombie|slow          payments (health check + retry) par chot',
+      '  experiment run search               search (sirf health check) par zombie chot',
+      '  experiment run staging              staging par chot (wahan instance 3 pehle se bimaar)',
+      '  experiment set eject on|off · experiment set abort <pct>|off · experiment set baseline on|off · experiment set latency on|off'],
+    run(api, norm) {
+      const { sim, print, panel, rec, err } = api;
+      const E = sim.sys.experiment;
+      const verb = word(norm, 1), arg = word(norm, 2), val = word(norm, 3);
+      const onoff = v => { if (!['on', 'off'].includes(v)) err('400 — on ya off likho'); return v === 'on'; };
+      if (!verb || verb === 'status') {
+        panel('GAME DAY', [
+          `payments         health check + retry${E.eject ? ' + passive ejection (asli requests fail hon toh instance hatao)' : ' (passive ejection band)'}`,
+          `search           sirf health check`,
+          `abort rule       ${E.abortPct ? `safal < ${E.abortPct}% → turant roko (har 500 ms naap)` : '— (koi rok nahi; chot poore 6 s)'}`,
+          `baseline check   ${E.baseline ? 'chot se pehle steady state ≥ 95%? warna shuru hi mat karo' : '— (bina jaanche shuru)'}`,
+          `hypothesis       ≥ 95% safal · ${E.latency ? '"safal" = jawab aaya AUR 200 ms ke andar' : '"safal" = jawab aaya (waqt nahi gina)'}`,
+        ]);
+        return rec({ kind: 'experiment', op: 'status', ...E });
+      }
+      if (verb === 'set') {
+        if (arg === 'eject') E.eject = onoff(val);
+        else if (arg === 'baseline') E.baseline = onoff(val);
+        else if (arg === 'latency') E.latency = onoff(val);
+        else if (arg === 'abort') {
+          if (val === 'off') E.abortPct = 0;
+          else { const v = parseInt(val, 10); if (!Number.isInteger(v) || v < 10 || v > 99) err('400 — experiment set abort <10 se 99> ya off'); E.abortPct = v; }
+        } else err('400 — experiment set eject|abort|baseline|latency <value>');
+        print('ok', 'Theek. experiment status mein dekho.');
+        return rec({ kind: 'experiment', op: 'set', ...E });
+      }
+      if (verb !== 'run') err(`400 — 'experiment ${verb}' samajh nahi aaya. 'help' dekho.`);
+      sim.timeSec += 10;
+      let L, r;
+      if (arg === 'zombie') {
+        const toBad = E.eject ? 4 : 133, p99 = E.eject ? 24 : 28;
+        L = [HEAD('zombie (health check hara, asli calls fail)'), `payments         safal 100% · fail 0 · p99 ${p99} ms`,
+          `bimaar tak       ${toBad} requests bimaar instance par ${toBad > 20 ? '❌ (har ek ka retry = double kaam)' : '✅ (jaldi hataya)'}`,
+          `faisla           hypothesis tika`];
+        r = { scenario: 'zombie', fails: 0, toBad, p99, verdict: 'tika' };
+      } else if (arg === 'slow') {
+        const slow = E.eject ? 36 : 133, p99 = E.eject ? 515 : 517;
+        const pct = E.latency ? Math.round((400 - slow) / 400 * 1000) / 10 : 100;
+        const verdict = pct >= 95 ? 'tika' : 'toota';
+        L = [HEAD('dheema instance'), `payments         jawab 100% aaye · ${slow} requests 200 ms se dheemi · p99 ${p99} ms`,
+          `hypothesis       ≥ 95% safal · ${E.latency ? `200 ms ke andar ${pct}%` : 'safal 100% (waqt nahi gina)'}`,
+          `faisla           ${verdict === 'tika' ? 'hypothesis tika ✅ — report: "sab theek"' : `hypothesis TOOTA — report: ${slow} dheemi, p99 ${p99} ms (sach)`}`];
+        r = { scenario: 'slow', fails: 0, slow, p99, verdict, slowReported: E.latency };
+      } else if (arg === 'search') {
+        const aborted = E.abortPct > 0 && 68 < E.abortPct;
+        const faultSec = aborted ? 0.5 : 6.0, fails = aborted ? 17 : 200;
+        L = [HEAD('zombie, service search (sirf health check)', '6 s tak'), `steady           100% → chot ke baad 68% safal`,
+          aborted ? `abort rule       0.5 s par 68% < ${E.abortPct}% → ABORT ✅` : `abort rule       ${E.abortPct ? `68% < ${E.abortPct}%? nahi — rule nahi baja` : 'nahi'} → chot poore 6.0 s ❌`,
+          `users par        ${fails} requests fail${aborted ? '' : ' ❌'} · faisla: hypothesis toota${aborted ? ' (jaldi roka)' : ''}`];
+        r = { scenario: 'search', aborted, faultSec, fails, verdict: 'toota' };
+      } else if (arg === 'staging') {
+        const started = !E.baseline;
+        const aborted = started && E.abortPct > 0 && 68 < E.abortPct;
+        L = [HEAD('zombie, service staging (instance 3 pehle se zombie)', '6 s tak'), `steady           68% safal — chot se PEHLE`,
+          E.baseline ? 'baseline check   68% < 95% → shuru hi mat karo ✅ (pehle system theek karo)'
+            : `baseline check   nahi → instance 2 par bhi chot shuru ❌${aborted ? ' · 0.5 s par ABORT' : ' · 6.0 s'}`,
+          started ? 'faisla           kuch nahi seekha — 68% chot se pehle hi tha; bimaar system ko aur chot di ❌' : 'faisla           experiment nahi chala (sahi)'];
+        r = { scenario: 'staging', baselinePct: 68, started, aborted };
+      } else err('400 — experiment run zombie | slow | search | staging');
+      panel(`EXPERIMENT — ${arg}`, L);
+      return rec({ kind: 'experiment', op: 'run', ...r });
+    },
+  });
+})();
