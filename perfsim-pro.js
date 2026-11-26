@@ -288,15 +288,40 @@
     help: ['FANOUT (feed · aam users ke 1 crore posts/din, har ek ke 200 dost; 100 celebrities × 50 lakh followers × 20 posts/din)',
       '  fanout --mode write | read | hybrid [--celeb-threshold 100000]   (what-if: production nahi badalta)',
       '  fanout status                     production abhi kis mode par hai',
-      '  fanout use hybrid --celeb-threshold 100000   production ka mode badlo'],
+      '  fanout use hybrid --celeb-threshold 100000   production ka mode badlo',
+      '  fanout run                        production feed ka ek din (copies, p99, edit, cold feed, gayab dost)',
+      '  fanout entry id|full · fanout hydrate batch|each · fanout skip-inactive on|off'],
     run(api, norm) {
-      const { sim, table, print, rec, err } = api;
+      const { sim, table, print, panel, rec, err } = api;
       /* production ka feed mode (on-call shift isi ko badalti hai); what-if calculator ise nahi chhoota */
       if (!sim.sys.feed) sim.sys.feed = { mode: 'write', threshold: 100000 };
       const F = sim.sys.feed;
-      const verb = /^fanout\s+(status|use)\b/i.test(norm) ? norm.split(/\s+/)[1].toLowerCase() : 'whatif';
+      /* iv-feed lesson (data-pro-iv-1.js design canvas): inbox mein ~500 post ids (post badle toh ek jagah badlo) ·
+         post cache + EK batch read (har id ki alag query = 500 queries, N+1) · 6 mahine se gayab users ko push mat karo.
+         Gayab doston ka hissa is example ka maana hua: har aam user ke 200 mein se 50. skipInactive default false —
+         purane stages (designlive shift) ke numbers waise hi rahein. */
+      if (F.entry == null) F.entry = 'id';
+      if (F.hydrate == null) F.hydrate = 'batch';
+      if (F.skipInactive == null) F.skipInactive = false;
+      const sub = (norm.split(/\s+/)[1] || '').toLowerCase(), subArg = (norm.split(/\s+/)[2] || '').toLowerCase();
+      if (sub === 'entry') {
+        if (!['id', 'full'].includes(subArg)) err('400 — fanout entry id|full');
+        F.entry = subArg; print('ok', subArg === 'id' ? 'Inbox mein ab sirf post id; post ka data post cache se.' : 'Inbox mein ab poora post (text + photo URL) copy hoga.');
+        return rec({ kind: 'fanout', op: 'entry', entry: F.entry });
+      }
+      if (sub === 'hydrate') {
+        if (!['batch', 'each'].includes(subArg)) err('400 — fanout hydrate batch|each');
+        F.hydrate = subArg; print('ok', subArg === 'batch' ? 'Feed ke saare ids ek batch read mein (post cache, miss par posts DB).' : 'Har id ke liye alag query, ek-ek karke.');
+        return rec({ kind: 'fanout', op: 'hydrate', hydrate: F.hydrate });
+      }
+      if (sub === 'skip-inactive') {
+        if (!['on', 'off'].includes(subArg)) err('400 — fanout skip-inactive on|off');
+        F.skipInactive = subArg === 'on'; print('ok', F.skipInactive ? '6 mahine se gayab users ko push band; lautne par pull se feed banegi.' : 'Gayab users ko bhi har post push hogi.');
+        return rec({ kind: 'fanout', op: 'skip-inactive', skipInactive: F.skipInactive });
+      }
+      const verb = /^fanout\s+(status|use|run)\b/i.test(norm) ? norm.split(/\s+/)[1].toLowerCase() : 'whatif';
       let mode, thr;
-      if (verb === 'status') { mode = F.mode; thr = F.threshold; }
+      if (verb === 'status' || verb === 'run') { mode = F.mode; thr = F.threshold; }
       else {
         mode = (verb === 'use' ? (norm.split(/\s+/)[2] || '') : ((norm.match(/--mode\s+(\S+)/i) || [])[1] || '')).toLowerCase();
         if (!['write', 'read', 'hybrid'].includes(mode)) err(verb === 'use' ? '400 — fanout use write | read | hybrid [--celeb-threshold N]' : '400 — --mode write, read ya hybrid do');
@@ -312,6 +337,23 @@
       if (mode === 'write') { inboxCopies = normalCopies + celebCopies; feedMs = 20; celebLagMin = Math.round(FEED.celebFollowers / 50000 / 60); }
       else if (mode === 'read') { inboxCopies = 0; feedMs = 800; celebLagMin = 0; }
       else { celebPushed = thr > FEED.celebFollowers; /* ≥ threshold followers = pull */ inboxCopies = normalCopies + (celebPushed ? celebCopies : 0); feedMs = celebPushed ? 20 : 60; celebLagMin = celebPushed ? Math.round(FEED.celebFollowers / 50000 / 60) : 0; }
+      const INACTIVE = 50, dormant = FEED.postsPerDay * INACTIVE, pushNormal = mode !== 'read';
+      if (verb !== 'whatif' && F.skipInactive && pushNormal) inboxCopies -= dormant;
+      if (verb === 'run') {
+        sim.timeSec += 60;
+        const stale = F.entry === 'full' && pushNormal ? FEED.friends - (F.skipInactive ? INACTIVE : 0) : 0;
+        const queries = F.hydrate === 'batch' ? 1 : 500, dormantCopies = pushNormal && !F.skipInactive ? dormant : 0;
+        panel(`FEED — ek din (production: ${mode}${mode === 'hybrid' ? `, ≥ ${num(thr)} followers = pull` : ''})`, [
+          `inbox copies     ${inboxCopies ? crore(inboxCopies) : '0'}/din`,
+          `feed p99         ${feedMs} ms ${feedMs <= 200 ? '✅' : '❌'} (SLO 200 ms)`,
+          `celebrity post   ${celebLagMin ? celebLagMin + ' min tak late ❌ (50 lakh inbox writes)' : 'turant ✅'}`,
+          `post edit        ${!pushNormal ? 'inbox nahi (read mode) — ek jagah badla ✅' : stale ? `Riya ne caption badla → ${stale} inbox copies mein PURANA ❌ (har copy alag badlo)` : 'Riya ne caption badla → inbox mein sirf id, sab feeds mein naya ✅'}`,
+          `cold feed        500 post ids → ${queries === 1 ? '1 batch read ✅' : '500 alag queries ❌ (N+1)'}`,
+          `gayab dost       ${!pushNormal ? '— (read mode)' : dormantCopies ? `${crore(dormantCopies)} copies/din 6 mahine se gayab doston ko ❌ (koi padhega nahi)` : `${crore(dormant)} copies/din bachi ✅ (lautne par pull)`}`,
+        ]);
+        return rec({ kind: 'fanout', op: 'run', prod: true, mode, threshold: mode === 'hybrid' ? thr : null, sourcePosts, inboxCopies, feedMs, celebLagMin,
+          entry: F.entry, staleCopies: stale, hydrate: F.hydrate, coldQueries: queries, skipInactive: F.skipInactive, dormantCopies });
+      }
       if (verb === 'use') { F.mode = mode; F.threshold = thr; print('ok', `Production feed ab ${mode}${mode === 'hybrid' ? ` (≥ ${num(thr)} followers = pull)` : ''} par.`); }
       if (verb === 'status') print('ok', 'PRODUCTION feed:');
       table(['mode', 'naye posts / din', 'inbox copies / din', 'feed p99', 'celebrity post ka lag'], [[mode + (mode === 'hybrid' ? ` (≥ ${num(thr)} followers = pull)` : ''), num(sourcePosts), inboxCopies ? crore(inboxCopies) : '0', feedMs + ' ms', celebLagMin ? celebLagMin + ' min tak' : 'turant (padhte waqt)']]);
@@ -972,6 +1014,93 @@
       } else err('400 — experiment run zombie | slow | search | staging');
       panel(`EXPERIMENT — ${arg}`, L);
       return rec({ kind: 'experiment', op: 'run', ...r });
+    },
+  });
+})();
+
+/* =====================================================================
+   CHAIN — timeout, deadline, retries aur DLQ (2026-11-26, chaos deck 'fp-core', level fp-retry-kab;
+   data-v2-fp-retry-4-kab.js — docker-labs/62-second-attempt ex2-deadline aur ex4-dlq-mttr ke asli output):
+     run      user → A → B → C; C ek baar 20 s latka; user 10 s rukta hai; A→B 3 s, B→C 1 s; har layer 3 koshish, 100 ms backoff
+              deadline aage + C cancel maane → C par 9 calls, C 8.4 s, user ke jaane ke baad 0 s
+              deadline aage, C cancel na maane → C 180 s, user ke baad 127.8 s · deadline hi nahi → wahi (C ko pata hi nahi)
+     retries  10 s deadline, 3 s timeout, backoff 2/4/8 s: koshish 1 (0–3), 2 (5–8) kaam ki; 3 (12–15), 4 (23–26) user ke baad
+     dlq      SQS standard: DLQ retention PEHLE bheje samay se ginti; messages pehle 72 ghante mein barabar fail.
+              lost = (72 + jaanch ka intezaar − retention) ÷ 72  → 4 din/48 h = 33% · 14 din/300 h = 50% · 14 din/48 h = 0%
+   ===================================================================== */
+(function () {
+  const baseDefault = SD.defaultSys;
+  SD.defaultSys = function () {
+    const s = baseDefault();
+    s.chain = { deadline: true, cancel: true, retryStop: true, dlqRetentionDays: 14, dlqAlert: true };
+    return s;
+  };
+  const word = (norm, i) => (norm.split(/\s+/)[i] || '').toLowerCase();
+  const ROWS = {   /* lab 62 ex2: [A, B, C thread-samay, C bekaar kaam, user ke jaane ke baad] */
+    blind: [9.2, 9.6, 180.0, 180.0, 127.8], nocancel: [9.2, 9.0, 180.0, 180.0, 127.8], ok: [9.2, 9.0, 8.4, 8.4, 0.0] };
+  SD.chainDlqLost = (retDays, waitH) => Math.round(Math.max(0, Math.min(1, (72 + waitH - retDays * 24) / 72)) * 100);
+  (SD.perfsimPlugins = SD.perfsimPlugins || []).push({
+    match: /^chain\b/i,
+    help: ['CHAIN (user → A → B → C · timeout, deadline, retries, DLQ · numbers lab 62 ke)',
+      '  chain status                        settings',
+      '  chain run                           ek request: C ek baar 20 s latka, user 10 s rukta hai',
+      '  chain retries                       10 s deadline mein retries ka hisaab (backoff 2/4/8 s)',
+      '  chain dlq                           DLQ mein messages jaanch se pehle mit toh nahi rahe?',
+      '  chain set deadline|cancel|retry-stop|dlq-alert on|off · chain set dlq-retention <din>'],
+    run(api, norm) {
+      const { sim, print, panel, rec, err } = api;
+      const K = sim.sys.chain;
+      const verb = word(norm, 1), arg = word(norm, 2), val = word(norm, 3);
+      const onoff = v => { if (!['on', 'off'].includes(v)) err('400 — on ya off likho'); return v === 'on'; };
+      const waitH = K.dlqAlert ? 48 : 300;
+      if (!verb || verb === 'status') {
+        panel('CHAIN SETTINGS', [
+          `deadline         ${K.deadline ? 'aage bhejte hain (har call ke saath "kitna samay bacha")' : '— (sirf timeouts; neeche wale ko samay ka pata nahi)'}`,
+          `C cancel         ${K.cancel ? 'deadline par kaam rokta hai (cooperative cancellation)' : 'nahi — deadline aaye toh bhi kaam karta rehta hai'}`,
+          `retries          ${K.retryStop ? 'agli koshish deadline mein fit na ho toh ruko' : 'hamesha 4 koshish (deadline nahi dekhte)'}`,
+          `DLQ              SQS standard · retention ${K.dlqRetentionDays} din (source 4 din) · ${K.dlqAlert ? 'depth/umar par alert (on-call ~48 ghante mein dekhta hai)' : 'koi alert nahi'}`,
+        ]);
+        return rec({ kind: 'chain', op: 'status', ...K });
+      }
+      if (verb === 'set') {
+        const key = { deadline: 'deadline', cancel: 'cancel', 'retry-stop': 'retryStop', 'dlq-alert': 'dlqAlert' }[arg];
+        if (key) K[key] = onoff(val);
+        else if (arg === 'dlq-retention') { const v = parseInt(val, 10); if (!Number.isInteger(v) || v < 1 || v > 14) err('400 — SQS retention 1 se 14 din'); K.dlqRetentionDays = v; }
+        else err('400 — chain set deadline|cancel|retry-stop|dlq-alert on|off · chain set dlq-retention <din>');
+        print('ok', 'Theek. chain status mein dekho.');
+        return rec({ kind: 'chain', op: 'set', ...K });
+      }
+      if (verb === 'run') {
+        sim.timeSec += 30;
+        const row = !K.deadline ? ROWS.blind : K.cancel ? ROWS.ok : ROWS.nocancel;
+        const [a, b, c, waste, after] = row;
+        panel('CHAIN RUN — user → A → B → C', [
+          `haalat           C ek baar 20 s latka · user 10 s rukta hai · A→B 3 s, B→C 1 s · har layer 3 koshish`,
+          `C par calls      9 (3 × 3)`,
+          `thread-samay     A ${a.toFixed(1)} s · B ${b.toFixed(1)} s · C ${c.toFixed(1)} s`,
+          `C ka bekaar kaam ${waste.toFixed(1)} s · user ke jaane ke baad ${after.toFixed(1)} s ${after > 1 ? '❌ (zombie kaam)' : '✅'}`,
+        ]);
+        return rec({ kind: 'chain', op: 'run', callsC: 9, threadA: a, threadB: b, threadC: c, cWaste: waste, afterUser: after });
+      }
+      if (verb === 'retries') {
+        const tries = [[0, 3], [5, 8], [12, 15], [23, 26]];
+        const L = tries.map(([s, e], i) => s + 3 <= 10 ? `koshish ${i + 1}       ${s}–${e} s ✓ deadline ke andar`
+          : K.retryStop ? `koshish ${i + 1}       ${s} s par shuru hoti — deadline khatam, NAHI bheji ✅` : `koshish ${i + 1}       ${s}–${e} s ✗ user ja chuka (bekaar) ❌`);
+        const wasted = K.retryStop ? 0 : 2;
+        panel('RETRY PLAN — user 10 s · timeout 3 s · backoff 2, 4, 8 s', [...L, `→ kaam ki 2 · bekaar ${wasted}`]);
+        return rec({ kind: 'chain', op: 'retries', useful: 2, wasted });
+      }
+      if (verb === 'dlq') {
+        const lost = SD.chainDlqLost(K.dlqRetentionDays, waitH);
+        panel('DLQ — SQS standard (retention pehle bheje samay se)', [
+          `fail hote hain   pehle 72 ghante mein (barabar) · source retention 4 din`,
+          `DLQ retention    ${K.dlqRetentionDays} din`,
+          `koi dekhta hai   ${K.dlqAlert ? 'alert → ~48 ghante baad' : 'koi alert nahi → ~300 ghante (12.5 din) baad'}`,
+          `jaanch se pehle mit gaye  ${lost}% ${lost ? '❌' : '✅'}`,
+        ]);
+        return rec({ kind: 'chain', op: 'dlq', retentionDays: K.dlqRetentionDays, waitH, lostPct: lost });
+      }
+      err(`400 — 'chain ${verb}' samajh nahi aaya. 'help' dekho.`);
     },
   });
 })();
