@@ -567,13 +567,16 @@
      validate ON   → 200 se badi file REJECT, purani (LKG) par raho · OFF → panic → 5xx
      staged ON     → nayi file pehle 1 region (canary); kharab nikli toh wahin ruki · OFF → saare 6 regions ek saath
      probes        → internal = proxy ke andar se (proxy gira toh status page purana "hara") · external = user ka raasta
+     bug           → 'size' (default) = kharab file 230 features, validate pakadta hai ·
+                     'rule' = kharab file 60 features + galat rule: size theek, validate PASS — sirf staged bachata hai
+                     (stories deck, data-st-02-cloudflare.js: "ek galat config bhi seconds mein har server par" → staged)
    ===================================================================== */
 (function () {
   const baseDefault = SD.defaultSys;
   const REGIONS = ['mumbai', 'delhi', 'singapore', 'frankfurt', 'virginia', 'saopaulo'];
   SD.defaultSys = function () {
     const s = baseDefault();
-    s.fleet = { cur: 230, lkg: 60, generator: true, slot: 0, validate: false, staged: false, probes: 'internal', down: REGIONS.length, log: [] };
+    s.fleet = { cur: 230, lkg: 60, generator: true, slot: 0, validate: false, staged: false, probes: 'internal', bug: 'size', down: REGIONS.length, log: [] };
     return s;
   };
   const LIMIT = 200, PATTERN = [60, 230];   // agla slot theek, phir kharab, … (flicker)
@@ -630,15 +633,20 @@
           errMinutes += F.down ? 5 : 0;           // is slot ki shuruaat mein jo down hain, 5 minute down
           if (lied()) liedSlots++;
           if (!F.generator) { lines.push(`  +${(k + 1) * 5} min  koi nayi file nahi (generator paused) · ${F.down}/6 down`); continue; }
-          const feat = PATTERN[F.slot % 2]; F.slot++; pushes++;
-          if (feat > LIMIT && F.validate) { rejected++; lines.push(`  +${(k + 1) * 5} min  nayi file ${feat} features → REJECT (validate) · purani par · ${F.down}/6 down`); }
-          else if (feat > LIMIT) {
+          const rule = F.bug === 'rule';
+          const bad = PATTERN[F.slot % 2] > LIMIT;                 // is slot ki file kharab hai?
+          const feat = rule ? PATTERN[0] : PATTERN[F.slot % 2];    // 'rule': size theek, andar galat rule
+          const label = rule && bad ? `galat rule wali file${F.validate ? ' (validate PASS)' : ''}` : `nayi file ${feat} features`;
+          F.slot++; pushes++;
+          const crash = bad && (rule || !F.validate);
+          if (bad && !crash) { rejected++; lines.push(`  +${(k + 1) * 5} min  nayi file ${feat} features → REJECT (validate) · purani par · ${F.down}/6 down`); }
+          else if (crash) {
             const hit = F.staged ? 1 : REGIONS.length;
             F.down = Math.max(F.down, hit); F.cur = feat;
-            lines.push(`  +${(k + 1) * 5} min  nayi file ${feat} features → ${F.staged ? 'canary (mumbai) par PANIC, rollout ruka' : 'SAB regions par PANIC'} · ${F.down}/6 down`);
+            lines.push(`  +${(k + 1) * 5} min  ${label} → ${F.staged ? 'canary (mumbai) par PANIC, rollout ruka' : 'SAB regions par PANIC'} · ${F.down}/6 down`);
             if (F.staged) { F.down = 0; F.cur = F.lkg; }   // canary kharab → wahin wapas LKG (agle slot tak)
           } else { F.down = 0; F.cur = feat; F.lkg = feat; lines.push(`  +${(k + 1) * 5} min  nayi file ${feat} features → sab theek · 0/6 down`); }
-          maxDown = Math.max(maxDown, F.down, feat > LIMIT && !F.validate ? (F.staged ? 1 : REGIONS.length) : 0);
+          maxDown = Math.max(maxDown, F.down, crash ? (F.staged ? 1 : REGIONS.length) : 0);
         }
         F.log.push(...lines.map(l => l.replace(/^\s+\+/, '  ')));
         panel(`FLEET RUN — ${N} min`, [...lines, `5xx wale minute: ${errMinutes} · REJECT: ${rejected} · status page ne jhooth bola: ${liedSlots ? liedSlots + ' slot ❌' : 'nahi ✅'}`]);
